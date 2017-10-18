@@ -15,6 +15,7 @@ class OrchestratorService(BaseService):
         self.event_publish(body)
 
     def process_error(self, ch, method, properties, body):
+        self.message_ack(method.delivery_tag)
         print(
             'Orchestrator, do something with job error!: %s' % json.loads(
                 body.decode()

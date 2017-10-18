@@ -11,6 +11,7 @@ class LoggerService(BaseService):
     exchange = 'logger'
 
     def process_log(self, ch, method, properties, body):
+        self.message_ack(method.delivery_tag)
         print(
             '{}: {}'.format(
                 method.routing_key,

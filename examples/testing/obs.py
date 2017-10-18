@@ -11,6 +11,7 @@ class ObsService(BaseService):
     exchange = 'obs'
 
     def download_image(self, ch, method, properties, body):
+        self.message_ack(method.delivery_tag)
         data = json.loads(body)
         job_id = data['id']
         provider = data['provider']

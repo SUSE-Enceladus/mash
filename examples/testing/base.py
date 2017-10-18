@@ -99,6 +99,9 @@ class BaseService(object):
     def get_routing_key(self, key, exchange=None):
         return '{}.{}.{}'.format('mash', exchange or self.exchange, key)
 
+    def message_ack(self, tag):
+        self.channel.basic_ack(tag)
+
     def open_connection(self):
         if not self.connection or self.connection.is_closed:
             self.connection = pika.BlockingConnection(
@@ -123,9 +126,10 @@ class BaseService(object):
         return queue
 
     def queue_consume(self, callback, queue):
-        self.channel.basic_consume(getattr(self, callback),
-                                   queue=queue,
-                                   no_ack=True)
+        self.channel.basic_consume(
+            getattr(self, callback),
+            queue=queue
+        )
 
     def queue_declare(self, queue):
         self.channel.queue_declare(queue=queue)

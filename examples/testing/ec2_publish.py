@@ -10,6 +10,7 @@ class EC2PublisherService(BasePublisherService):
     name = 'ec2 publisher'
 
     def publish_image(self, ch, method, properties, body):
+        self.message_ack(method.delivery_tag)
         job_id = json.loads(body)['id']
 
         # Do some work
