@@ -1,6 +1,6 @@
 # Mash - Public Cloud Release Tool
 
-[![Build Status](https://travis-ci.org/SUSE/mash.svg?branch=master)](https://travis-ci.org/SUSE/mash)
+[![Build Status](https://travis-ci.com/SUSE/mash.svg?branch=master)](https://travis-ci.com/SUSE/mash)
 
 Service based Process for Image Release automation into
 the Public Cloud Systems from Amazon EC2, Google Compute Engine and
