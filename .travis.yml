@@ -1,0 +1,13 @@
+language: python
+branches:
+  except:
+  - gh-pages
+matrix:
+  include:
+  - python: 2.7
+    env: TOXENV=2.7,check,doc_travis
+install:
+- pip install --upgrade pip
+- pip install -r .travis.requirements.txt
+script:
+- tox
