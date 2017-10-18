@@ -1,0 +1,45 @@
+= MASH Technical Discussion
+
+== Orchestrator REST API
+
+I think this still could be Django instead of Flask. In the end MASH will
+need authentication and user/group permissions management. This is nicely
+provided by Django. Instead of templates it would use DRF. There's a use
+for ORM which would simplify data persistence.
+
+Another option instead of Flask is the Hug framework which is built on
+top of Falcon and provides a nice way to build REST API's that are exposed
+to both CLI and Web. The same method is exposed via code, CLI and HTTP
+with the addition of two decorators.
+
+== Web Frontend
+
+This should just be lightweight JS framework that consumes the REST API.
+Maybe something like backbone.js.
+
+== CLI Client
+
+Can implement in Click like IPA. Or if using Hug framework the CLI is
+leveraging argparse.
+
+== Message Broker
+
+RabbitMQ using pub/sub still I think is the way to go. RabbitMQ provides
+persistence to messages in all queues. So even if the server goes down the
+Queues remain on restart. The pub/sub doesn't really add design complexity
+and provides scalability out of the box.
+
+== Microservice Framework
+
+Nameko is a nice framework for abstracting microservices. It simplifies
+setting up messaging channels with Rabbit MQ. Provides testability and simple
+scalability.
+
+However, it does lock all services into Python and may make it more complex
+for integrating the web frontend. Also, with abstracting out the messaging
+we lose some control here.
+
+== Logging
+
+This could just be a simple service that builds the log messages and send them
+off to the log aggregator.

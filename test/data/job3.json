@@ -1,0 +1,8 @@
+{
+  "obsjob": {
+    "id": "123",
+    "project": "Virtualization:Appliances:Images:Testing_x86",
+    "image": "test-image-oem",
+    "utctime": "Wed Oct 11 17:50:26 UTC 2017"
+  }
+}

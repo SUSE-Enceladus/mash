@@ -1,0 +1,14 @@
+# Manifest describing source package contents
+
+graft mash/services
+graft mash/services/obs
+graft package
+graft config
+
+include tox.ini
+include README.md
+include LICENSE
+
+recursive-include doc *.py *.rst
+
+global-exclude *.py[cod] __pycache__

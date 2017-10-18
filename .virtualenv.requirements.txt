@@ -1,0 +1,13 @@
+#
+# Requirement files for Python Virtual Environments
+#
+# After activation of the env, install it with:
+# $ pip install -U pip setuptools
+# $ pip install -r .virtualenv.requirements.txt
+
+setuptools
+PyYAML
+APScheduler
+python-dateutil
+build-service-osc
+pika

@@ -1,0 +1,78 @@
+#
+# spec file for package mash
+#
+# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
+
+# Please submit bugfixes or comments via http://bugs.opensuse.org/
+#
+
+
+Name:           mash
+Version:        %%VERSION
+Release:        0
+Url:            https://gitlab.suse.de/pub-cloud/mash
+Summary:        Mash - Public Cloud Release Tool
+License:        GPL-3.0+
+Group:          System/Management
+Source:         mash-%{version}.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+BuildRequires:  python-devel
+BuildRequires:  python-setuptools
+Requires:       osc
+Requires:       rabbitmq-server
+Requires:       python-PyYAML
+Requires:       python-pika
+Requires:       python-APScheduler >= 3.3.1
+Requires:       python-python-dateutil
+BuildArch:      noarch
+
+%description
+Public Cloud Release Tool for release automation from image
+build in obs to image available for customers in the public
+cloud
+
+%package -n mash-obs-service
+Summary:        Mash - OBS service
+License:        GPL-3.0+
+Group:          System/Management
+Requires:       mash == %{version}
+
+%description -n mash-obs-service
+Provides OBS service
+
+%prep
+%setup -q -n mash-%{version}
+
+%build
+python setup.build.py build
+
+%install
+python setup.build.py install --prefix=%{_prefix} --root=%{buildroot}
+
+install -D -m 644 config/obs_result.service \
+    %{buildroot}%{_unitdir}/obs_result.service
+
+install -D -m 644 config/obs_config.yml \
+    %{buildroot}%{_sysconfdir}/%{name}/obs_config.yml
+
+%files
+%defattr(-,root,root,-)
+%{python_sitelib}/*
+%dir %{_sysconfdir}/%{name}
+
+%files -n mash-obs-service
+%defattr(-,root,root,-)
+%{_bindir}/obs-service-2
+%{_unitdir}/obs_result.service
+%config(noreplace) %{_sysconfdir}/%{name}/obs_config.yml
+
+%changelog

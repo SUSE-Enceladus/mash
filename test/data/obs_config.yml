@@ -1,0 +1,5 @@
+obs:
+  log_port: 8888
+  control_port: 9999
+  logfile: /tmp/foo.log
+  download_directory: /images

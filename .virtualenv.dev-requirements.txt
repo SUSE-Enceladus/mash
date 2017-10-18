@@ -1,0 +1,33 @@
+#
+# Requirement files for Python Virtual Environments
+#
+# After activation of the env, install it with:
+# $ pip install -U pip setuptools
+# $ pip install -r .virtualenv.dev-requirements.txt
+
+-r .virtualenv.requirements.txt
+
+# setuptools for pypi upload
+setuptools
+
+# python unit testing framework
+pytest
+pytest-cov
+mock
+coverage
+
+# Python style guide checker
+flake8
+
+# Version-bump your software with a single command!
+bumpversion
+
+# for building documentation
+sphinx
+sphinx_rtd_theme
+sphinxcontrib-spelling
+pyenchant
+
+# for travis deployment tasks
+travis-sphinx
+ghp-import
