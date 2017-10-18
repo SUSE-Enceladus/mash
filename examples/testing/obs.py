@@ -1,7 +1,7 @@
 import json
 import time
 
-from random import randint
+from random import choice, randint
 
 from base import BaseService
 
@@ -19,9 +19,12 @@ class ObsService(BaseService):
         self.logger.info('Downloading binaries for job %s...' % job_id)
         time.sleep(randint(1, 5))
 
-        # Done, pass job to queue for consumption by publisher
-        self.event_publish(body, provider)
-        self.logger.info('Binaries downloaded for job %s...' % job_id)
+        # Done, pass job to queue for consumption by publisher if no error
+        if choice((True, False)):
+            self.event_publish(body, 'error')
+        else:
+            self.event_publish(body, provider)
+            self.logger.info('Binaries downloaded for job %s...' % job_id)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,9 @@
+import json
 import logging
 import logging.config
 import pika
 import sys
+import time
 
 LOG_CONFIG = {
     'version': 1,
@@ -73,9 +75,26 @@ class BaseService(object):
         )
 
     def event_publish(self, body, key='events'):
-        self.channel.basic_publish(exchange=self.exchange,
-                                   routing_key=self.get_routing_key(key),
-                                   body=body)
+        received = False
+        count = 5
+        while not received and count:
+            received = self.channel.basic_publish(
+                exchange=self.exchange,
+                routing_key=self.get_routing_key(key),
+                body=body,
+                properties=pika.BasicProperties(
+                    content_type='text/plain',
+                    delivery_mode=1
+                ),
+                mandatory=True
+            )
+            count -= 1
+            time.sleep(1)
+
+        if not received:
+            self.logger.error(
+                'Job was not received by a queue: %s' % json.loads(body)['id']
+            )
 
     def get_routing_key(self, key, exchange=None):
         return '{}.{}.{}'.format('mash', exchange or self.exchange, key)
@@ -91,6 +110,7 @@ class BaseService(object):
 
         if not self.channel or self.channel.is_closed:
             self.channel = self.connection.channel()
+            self.channel.confirm_delivery()
 
     def queue_bind(self, exchange, routing_key):
         queue = self.get_routing_key(routing_key, exchange)

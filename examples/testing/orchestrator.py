@@ -1,6 +1,4 @@
 import json
-import random
-import time
 
 from base import BaseService
 
@@ -16,15 +14,18 @@ class OrchestratorService(BaseService):
         self.logger.info('Start job %s...' % job_id)
         self.event_publish(body)
 
+    def process_error(self, ch, method, properties, body):
+        job_id = json.loads(body)['id']
+
+        self.logger.info('Error occured processing job %s...' % job_id)
+
 
 if __name__ == '__main__':
     # Initiate orchestrator service with RabbitMQ connection
     orchestrator = OrchestratorService()
 
-    while True:
-        orchestrator.start_image_release(
-            json.dumps(
-                {'id': random.randint(1, 100)}
-            )
-        )
-        time.sleep(.5)
+    queue = orchestrator.queue_bind(exchange='obs', routing_key='error')
+    orchestrator.queue_consume('process_error', queue=queue)
+
+    # Start consuming forever (until error or KeyboardInterrupt.)
+    orchestrator.start_consuming()
