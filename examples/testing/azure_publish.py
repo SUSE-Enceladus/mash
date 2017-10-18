@@ -17,8 +17,8 @@ class AzurePublisherService(BasePublisherService):
         time.sleep(randint(1, 5))
 
         # Done, pass job to queue for consumption by publisher
-        self.event_publish(body)
         self.logger.info('Azure image published for job %s...' % job_id)
+        self.event_publish(body)
 
 
 if __name__ == '__main__':

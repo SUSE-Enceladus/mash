@@ -21,10 +21,10 @@ class ObsService(BaseService):
 
         # Done, pass job to queue for consumption by publisher if no error
         if choice((True, False)):
-            self.event_publish(body, 'error')
+            self.logger.error('Error downloading binaries for job %s' % job_id)
         else:
-            self.event_publish(body, provider)
             self.logger.info('Binaries downloaded for job %s...' % job_id)
+            self.event_publish(body, provider)
 
 
 if __name__ == '__main__':
