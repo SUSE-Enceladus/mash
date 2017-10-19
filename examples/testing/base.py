@@ -155,9 +155,10 @@ class BaseService(object):
             )
             self.channel.start_consuming()
         except KeyboardInterrupt:
+            print('See you later!')
+        finally:
             for queue in self.queues.values():
                 self.channel.queue_delete(queue=queue)
 
-            print('See you later!')
             self.close_connection()
             sys.exit(0)
