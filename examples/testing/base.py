@@ -40,8 +40,10 @@ LOG_CONFIG = {
 
 
 class BaseService(object):
-    queues = {}
+    channel = None
+    connection = None
     jobs = {}
+    queues = {}
 
     def __init__(self):
         if not self.name:
@@ -50,17 +52,30 @@ class BaseService(object):
         if not self.exchange:
             raise Exception('Exchange is required in child class.')
 
+        # Create logger from log config and add service name
         LOG_CONFIG['handlers']['rabbit']['fields']['source'] = self.name
         logging.config.dictConfig(LOG_CONFIG)
         self.logger = logging.getLogger('mash')
 
-        # Connect to RabbitMQ instance
-        self.connection = None
-        self.channel = None
-        self.open_connection()
+        # Connect to RabbitMQ instance (using connection parameters
+        # probably from config)
+        params = pika.ConnectionParameters(
+            host='localhost',
+            port=5672
+        )
+        self.open_connection(params)
 
         # Declare service exchange exist
         self.exchange_declare(self.exchange)
+
+    def bind_service_queue(self, service):
+        key = 'mash.{}.{}'.format(service, self.name)
+        self.channel.queue_bind(
+            exchange=service,
+            queue=key,
+            routing_key=key
+        )
+        return key
 
     def close_connection(self):
         if self.channel:
@@ -78,22 +93,21 @@ class BaseService(object):
             durable=True
         )
 
-    def event_publish(self, body, key):
+    def event_publish(self, body, key, wait=1, timeout=5):
         received = False
-        count = 5
-        while not received and count:
+        while not received and timeout:
             received = self.channel.basic_publish(
                 exchange=self.exchange,
                 routing_key=self.get_routing_key(key),
                 body=body,
                 properties=pika.BasicProperties(
-                    content_type='text/plain',
+                    content_type='application/json',
                     delivery_mode=1
                 ),
                 mandatory=True
             )
-            count -= 1
-            time.sleep(1)
+            timeout -= 1
+            time.sleep(wait)
 
         if not received:
             self.logger.error(
@@ -114,14 +128,9 @@ class BaseService(object):
     def message_ack(self, tag):
         self.channel.basic_ack(tag)
 
-    def open_connection(self):
+    def open_connection(self, params):
         if not self.connection or self.connection.is_closed:
-            self.connection = pika.BlockingConnection(
-                pika.ConnectionParameters(
-                    host='localhost',
-                    port=5672
-                )
-            )
+            self.connection = pika.BlockingConnection(params)
 
         if not self.channel or self.channel.is_closed:
             self.channel = self.connection.channel()

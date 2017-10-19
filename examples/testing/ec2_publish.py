@@ -7,7 +7,7 @@ from base_publish import BasePublisherService
 
 
 class EC2PublisherService(BasePublisherService):
-    name = 'ec2 publisher'
+    name = 'ec2_publish'
 
     def publish_image(self, ch, method, properties, body):
         self.message_ack(method.delivery_tag)

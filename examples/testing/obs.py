@@ -29,12 +29,7 @@ if __name__ == '__main__':
     obs = ObsService()
 
     # Bind to orchestrator events queue
-    queue = obs.get_queue('orchestrator')
-    obs.channel.queue_bind(
-        exchange='orchestrator',
-        queue=queue,
-        routing_key='mash.orchestrator.obs'
-    )
+    queue = obs.bind_service_queue('orchestrator')
 
     # Set callback for orchestrator events
     obs.queue_consume('download_image', queue=queue)

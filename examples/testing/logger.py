@@ -1,9 +1,6 @@
 import json
-import pprint
 
 from base import BaseService
-
-pp = pprint.PrettyPrinter(indent=2)
 
 
 class LoggerService(BaseService):

@@ -7,7 +7,7 @@ from base_publish import BasePublisherService
 
 
 class AzurePublisherService(BasePublisherService):
-    name = 'azure publisher'
+    name = 'azure_publish'
 
     def publish_image(self, ch, method, properties, body):
         self.message_ack(method.delivery_tag)
