@@ -25,15 +25,12 @@ def mash():
           properties:
             image:
               type: string
-            provider:
-               type: string
     responses:
       200:
         description: Please wait the image will be released
     """
     image = request.json.get('image')
-    provider = request.json.get('provider')
-    data = json.dumps({'id': image, 'provider': provider})
+    data = json.dumps({'id': image})
     orchestrator.start_image_release(data)
     return Response(status=204)
 
@@ -47,19 +44,17 @@ def home():
         <style>body { max-width: 500px; margin: auto; padding: 1em; background: black; color: #fff; font: 16px/1.6 menlo, monospace; }</style>
         <p><b>Enter image ID to release!</b></p>
         <p>Image ID: <input id="image" /></p>
-        <p>Provider: <input id="provider" /></p>
         <pre id="out"></pre>
         <script>
-            $('#provider').keyup(function(e){
+            $('#image').keyup(function(e){
                 if (e.keyCode == 13) {
                     $.ajax({
                       type: "POST",
                       contentType: "application/json",
                       url: "/mash",
-                      data: JSON.stringify({'image': $('#image').val(), 'provider': $(this).val()}),
+                      data: JSON.stringify({'image': $(this).val()}),
                       dataType: "json"
                     });
-                    $('#image').val('');
                     $(this).val('');
                 }
             });

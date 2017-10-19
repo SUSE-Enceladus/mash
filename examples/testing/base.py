@@ -40,6 +40,9 @@ LOG_CONFIG = {
 
 
 class BaseService(object):
+    queues = {}
+    jobs = {}
+
     def __init__(self):
         if not self.name:
             raise Exception('Service name is required in child class.')
@@ -71,10 +74,11 @@ class BaseService(object):
     def exchange_declare(self, exchange):
         self.channel.exchange_declare(
             exchange=exchange,
-            exchange_type='topic'
+            exchange_type='topic',
+            durable=True
         )
 
-    def event_publish(self, body, key='events'):
+    def event_publish(self, body, key):
         received = False
         count = 5
         while not received and count:
@@ -95,6 +99,14 @@ class BaseService(object):
             self.logger.error(
                 'Job was not received by a queue: %s' % json.loads(body)['id']
             )
+
+    def get_queue(self, service):
+        if service not in self.queues:
+            result = self.channel.queue_declare(durable=True)
+            queue_name = result.method.queue
+            self.queues[service] = queue_name
+
+        return self.queues[service]
 
     def get_routing_key(self, key, exchange=None):
         return '{}.{}.{}'.format('mash', exchange or self.exchange, key)
@@ -143,6 +155,9 @@ class BaseService(object):
             )
             self.channel.start_consuming()
         except KeyboardInterrupt:
+            for queue in self.queues.values():
+                self.channel.queue_delete(queue=queue)
+
             print('See you later!')
             self.close_connection()
             sys.exit(0)

@@ -1,7 +1,7 @@
 import json
 import time
 
-from random import choice, randint
+from random import randint
 
 from base import BaseService
 
@@ -14,18 +14,14 @@ class ObsService(BaseService):
         self.message_ack(method.delivery_tag)
         data = json.loads(body)
         job_id = data['id']
-        provider = data['provider']
 
         # Do some work
         self.logger.info('Downloading binaries for job %s...' % job_id)
         time.sleep(randint(1, 5))
 
         # Done, pass job to queue for consumption by publisher if no error
-        if choice((True, False)):
-            self.logger.error('Error downloading binaries for job %s' % job_id)
-        else:
-            self.logger.info('Binaries downloaded for job %s...' % job_id)
-            self.event_publish(body, provider)
+        self.logger.info('Binaries downloaded for job %s...' % job_id)
+        self.event_publish(body, job_id)
 
 
 if __name__ == '__main__':
@@ -33,7 +29,12 @@ if __name__ == '__main__':
     obs = ObsService()
 
     # Bind to orchestrator events queue
-    queue = obs.queue_bind(exchange='orchestrator', routing_key='events')
+    queue = obs.get_queue('orchestrator')
+    obs.channel.queue_bind(
+        exchange='orchestrator',
+        queue=queue,
+        routing_key='mash.orchestrator.obs'
+    )
 
     # Set callback for orchestrator events
     obs.queue_consume('download_image', queue=queue)

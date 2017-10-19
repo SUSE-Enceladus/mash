@@ -12,7 +12,9 @@ class OrchestratorService(BaseService):
 
         # Do some work
         self.logger.info('Start job %s...' % job_id)
-        self.event_publish(body)
+
+        for service in ['obs', 'azure_publish']:
+            self.event_publish(body, service)
 
     def process_error(self, ch, method, properties, body):
         self.message_ack(method.delivery_tag)
@@ -27,8 +29,7 @@ if __name__ == '__main__':
     # Initiate orchestrator service with RabbitMQ connection
     orchestrator = OrchestratorService()
 
-    queue = '{}.{}'.format('mash', 'orchestrator', 'log')
-    orchestrator.queue_declare(queue)
+    queue = orchestrator.get_queue('logger')
     orchestrator.channel.queue_bind(
         exchange='logger',
         queue=queue,
