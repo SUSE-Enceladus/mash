@@ -11,7 +11,10 @@ class OrchestratorService(BaseService):
         job_id = json.loads(body)['id']
 
         # Do some work
-        self.logger.info('Start job %s...' % job_id)
+        self.logger.info(
+            'Start job %s...' % job_id,
+            extra=self.get_log_extra(job_id)
+        )
 
         for service in ['obs', 'azure_publish']:
             self.event_publish(body, service)

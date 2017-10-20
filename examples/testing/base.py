@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import logging.config
@@ -52,8 +53,6 @@ class BaseService(object):
         if not self.exchange:
             raise Exception('Exchange is required in child class.')
 
-        # Create logger from log config and add service name
-        LOG_CONFIG['handlers']['rabbit']['fields']['source'] = self.name
         logging.config.dictConfig(LOG_CONFIG)
         self.logger = logging.getLogger('mash')
 
@@ -70,6 +69,7 @@ class BaseService(object):
 
     def bind_service_queue(self, service):
         key = 'mash.{}.{}'.format(service, self.name)
+        self.queue_declare(key)
         self.channel.queue_bind(
             exchange=service,
             queue=key,
@@ -113,6 +113,14 @@ class BaseService(object):
             self.logger.error(
                 'Job was not received by a queue: %s' % json.loads(body)['id']
             )
+
+    def get_log_extra(self, job):
+        timestamp = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        return {
+            'job_id': job,
+            'service': self.name,
+            'timestamp': timestamp
+        }
 
     def get_queue(self, service):
         if service not in self.queues:

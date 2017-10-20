@@ -1,6 +1,9 @@
 import json
+import pprint
 
 from base import BaseService
+
+pp = pprint.PrettyPrinter(indent=2)
 
 
 class LoggerService(BaseService):
@@ -9,12 +12,14 @@ class LoggerService(BaseService):
 
     def process_log(self, ch, method, properties, body):
         self.message_ack(method.delivery_tag)
-        print(
-            '{}: {}'.format(
-                method.routing_key,
-                json.loads(body.decode())['msg']
-            )
-        )
+        log = json.loads(body.decode())
+        pp.pprint(log)
+        # pint(
+        #    '{}: {}'.format(
+        #        method.routing_key,
+        #        json.loads(body.decode())['msg']
+        #    )
+        # )
 
 
 if __name__ == '__main__':
