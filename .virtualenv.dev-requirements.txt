@@ -7,9 +7,6 @@
 
 -r .virtualenv.requirements.txt
 
-# setuptools for pypi upload
-setuptools
-
 # python unit testing framework
 pytest
 pytest-cov
