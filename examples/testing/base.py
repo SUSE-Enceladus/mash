@@ -12,22 +12,12 @@ LOG_CONFIG = {
     'handlers': {
         'rabbit': {
             'level': 'DEBUG',
-            'class': 'python_logging_rabbitmq.RabbitMQHandler',
+            'class': 'handlers.RabbitMQHandler',
             'host': 'localhost',
             'port': 5672,
             'username': 'guest',
             'password': 'guest',
             'exchange': 'logger',
-            'declare_exchange': False,
-            'connection_params': {
-                'virtual_host': '/',
-                'connection_attempts': 3,
-                'socket_timeout': 5000
-            },
-            'fields': {
-                'env': 'production'
-            },
-            'fields_under_root': True
         }
     },
     'loggers': {
@@ -102,7 +92,7 @@ class BaseService(object):
                 body=body,
                 properties=pika.BasicProperties(
                     content_type='application/json',
-                    delivery_mode=1
+                    delivery_mode=2
                 ),
                 mandatory=True
             )

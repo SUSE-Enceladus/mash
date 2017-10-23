@@ -11,4 +11,3 @@ APScheduler
 python-dateutil
 build-service-osc
 pika
-python_logging_rabbitmq

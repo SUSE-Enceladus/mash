@@ -71,7 +71,7 @@ class OBSImageBuildResultService(BaseService):
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(logging.DEBUG)
-        MashLog.set_logfile(self.log, self.logfile)
+        MashLog.set_logfile(self.log, self.logfile, self.host)
 
         mkpath(self.job_directory)
 
@@ -94,8 +94,6 @@ class OBSImageBuildResultService(BaseService):
         # read and launch open jobs
         for job_file in os.listdir(self.job_directory):
             self._start_job(os.sep.join([self.job_directory, job_file]))
-
-        self.bind_log_queue()
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_job(
@@ -120,7 +118,7 @@ class OBSImageBuildResultService(BaseService):
             response = {
                 'obs_control_response': result
             }
-            self.publish_log_message(self._json_message(response))
+            self.log.info(self._json_message(response))
 
     def _run_control_consumer(self):
         self.consume_queue(
@@ -157,7 +155,7 @@ class OBSImageBuildResultService(BaseService):
         for job_id, job in list(self.jobs.items()):
             result['obs_job_log'][job_id] = job.get_image_status()
         if self.last_log_result != result:
-            self.publish_log_message(self._json_message(result))
+            self.log.info(self._json_message(result))
         self.last_log_result = copy.deepcopy(result)
 
     def _control_in(self, channel, method, properties, message):
@@ -170,6 +168,8 @@ class OBSImageBuildResultService(BaseService):
         2. add job to listener
         3. delete job
         """
+        self.channel.basic_ack(method.delivery_tag)
+
         message_data = {}
         try:
             message_data = self._json_loads_byteified(format(message))
