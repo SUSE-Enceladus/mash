@@ -46,6 +46,11 @@ class BaseService(object):
         self.connection = None
         self._open_connection(host)
 
+        self.pika_properties = pika.BasicProperties(
+            content_type='application/json',
+            delivery_mode=2
+        )
+
         self.host = host
         self.service_exchange = service_exchange
         self.service_key = 'service_event'
@@ -96,10 +101,7 @@ class BaseService(object):
             exchange=exchange,
             routing_key=routing_key,
             body=message,
-            properties=pika.BasicProperties(
-                content_type='application/json',
-                delivery_mode=2
-            ),
+            properties=self.pika_properties,
             mandatory=True
         )
 

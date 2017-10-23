@@ -20,7 +20,7 @@ class TestOBS(object):
         mock_OBSConfig.return_value = self.config
         main(event_loop=False)
         mock_OBSImageBuildResultService.assert_called_once_with(
-            host='localhost', service_exchange='obs', logging_exchange='logger',
+            host='localhost', service_exchange='obs',
             custom_args={
                 'logfile': '/tmp/obs_service.log',
                 'download_dir': '/tmp'
