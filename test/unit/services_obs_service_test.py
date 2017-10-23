@@ -23,11 +23,12 @@ class TestOBSImageBuildResultService(object):
     @patch.object(OBSImageBuildResultService, '_job_listener')
     @patch.object(OBSImageBuildResultService, '_log_listener')
     @patch('logging.getLogger')
+    @patch('atexit.register')
     @patch_open
     def setup(
-        self, mock_open, mock_log, mock_log_listener, mock_job_listener,
-        mock_start_job, mock_run_control_consumer, mock_listdir,
-        mock_BackgroundScheduler, mock_BaseService,
+        self, mock_open, mock_register, mock_log, mock_log_listener,
+        mock_job_listener, mock_start_job, mock_run_control_consumer,
+        mock_listdir, mock_BackgroundScheduler, mock_BaseService,
         mock_pickle_load, mock_MashLog, mock_mkpath
     ):
         self.log = Mock()

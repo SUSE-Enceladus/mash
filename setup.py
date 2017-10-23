@@ -24,8 +24,7 @@ config = {
         'PyYAML',
         'python-dateutil',
         'APScheduler>=3.3.1',
-        'pika',
-        'python_logging_rabbitmq'
+        'pika'
     ],
     'packages': ['mash'],
     'entry_points': {
