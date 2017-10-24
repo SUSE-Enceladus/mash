@@ -32,12 +32,13 @@ def main(event_loop=True):
     logging.basicConfig()
     log = logging.getLogger('mash')
     log.setLevel(logging.DEBUG)
+    obs = None
     try:
         config = OBSConfig()
         # run service, enter main loop
-        OBSImageBuildResultService(
+        obs = OBSImageBuildResultService(
             host='localhost', service_exchange='obs',
-            logging_exchange='logger', custom_args={
+            custom_args={
                 'logfile': config.get_log_file(),
                 'download_dir': config.get_download_directory()
             }
@@ -58,3 +59,6 @@ def main(event_loop=True):
         # exception we did no expect, show python backtrace
         log.error('Unexpected error:')
         raise
+    finally:
+        if obs:
+            obs.close_connection()

@@ -41,9 +41,8 @@ class TestOBSImageBuildResultService(object):
         mock_BaseService.return_value = None
 
         self.obs_result = OBSImageBuildResultService()
-        self.obs_result.bind_log_queue = Mock()
+        self.obs_result.host = 'localhost'
         self.obs_result.publish_listener_message = Mock()
-        self.obs_result.publish_log_message = Mock()
         self.obs_result.bind_listener_queue = Mock()
         self.obs_result.consume_queue = Mock()
         self.obs_result.bind_service_queue = Mock()
@@ -56,7 +55,6 @@ class TestOBSImageBuildResultService(object):
         )
         mock_start_job.assert_called_once_with('/var/tmp/mash/obs_jobs//job')
         mock_pickle_load.assert_called_once_with(context.file_mock)
-        self.obs_result.bind_log_queue.assert_called_once_with()
         assert scheduler.add_job.call_args_list == [
             call(mock_run_control_consumer, 'date'),
             call(mock_job_listener, 'interval', max_instances=1, seconds=3),
@@ -84,11 +82,7 @@ class TestOBSImageBuildResultService(object):
             'ok': True
         }
         self.obs_result._send_control_response(result, True)
-        self.obs_result.log.info.assert_called_once_with('message')
-        self.obs_result.publish_log_message.assert_called_once_with(
-            '{\n    "obs_control_response": ' +
-            '{\n        "message": "message",\n        "ok": true\n    }\n}'
-        )
+        assert self.obs_result.log.info.call_count == 2
 
     @patch.object(OBSImageBuildResultService, '_control_in')
     def test_run_control_consumer(self, mock_control_in):
@@ -144,9 +138,6 @@ class TestOBSImageBuildResultService(object):
         client = Mock()
         self.obs_result.log_clients = [client]
         self.obs_result._log_listener()
-        self.obs_result.publish_log_message.assert_called_once_with(
-            '{\n    "obs_job_log": {\n        "815": {}\n    }\n}'
-        )
 
     @patch.object(OBSImageBuildResultService, '_delete_job')
     @patch.object(OBSImageBuildResultService, '_add_job')

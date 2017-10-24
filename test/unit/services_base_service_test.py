@@ -19,6 +19,8 @@ class TestBaseService(object):
         self.connection.is_closed = True
         mock_pika_BlockingConnection.return_value = self.connection
         self.service = BaseService('localhost', 'obs')
+        self.basic_properties = Mock()
+        self.service.pika_properties = self.basic_properties
         mock_pika_BlockingConnection.side_effect = Exception
         with raises(MashPikaConnectionError):
             BaseService('localhost', 'obs')
@@ -29,37 +31,25 @@ class TestBaseService(object):
 
     def test_publish_service_message(self):
         self.service.publish_service_message('message')
-        self.connection.connect.assert_called_once_with()
-        self.channel.open.assert_called_once_with()
         self.channel.basic_publish.assert_called_once_with(
-            body='message', exchange='obs', routing_key='service_event'
+            body='message', exchange='obs', mandatory=True,
+            properties=self.basic_properties, routing_key='service_event'
         )
 
     def test_publish_listener_message(self):
         self.service.publish_listener_message('id', 'message')
         self.channel.basic_publish.assert_called_once_with(
-            body='message', exchange='obs', routing_key='listener_id'
-        )
-
-    def test_publish_log_message(self):
-        self.service.publish_log_message('message')
-        self.channel.basic_publish.assert_called_once_with(
-            body='message', exchange='logger', routing_key='log_event'
+            body='message', exchange='obs', mandatory=True,
+            properties=self.basic_properties, routing_key='listener_id'
         )
 
     def test_bind_service_queue(self):
         assert self.service.bind_service_queue() == 'queue'
         self.channel.exchange_declare.assert_called_once_with(
-            exchange='obs', exchange_type='direct'
+            durable=True, exchange='obs', exchange_type='topic'
         )
         self.channel.queue_bind.assert_called_once_with(
             exchange='obs', queue='queue', routing_key='service_event'
-        )
-
-    def test_bind_log_queue(self):
-        self.service.bind_log_queue()
-        self.channel.queue_bind.assert_called_once_with(
-            exchange='logger', queue='queue', routing_key='log_event'
         )
 
     def test_bind_listener_queue(self):
@@ -80,3 +70,13 @@ class TestBaseService(object):
         self.channel.basic_consume.assert_called_once_with(
             callback, no_ack=True, queue='queue'
         )
+
+    def test_close_connection(self):
+        self.connection.close.return_value = None
+        self.service.close_connection()
+        self.connection.close.assert_called_once_with()
+
+        self.connection.close.reset_mock()
+        self.connection.close.side_effect = Exception('Error!')
+        self.service.close_connection()
+        assert self.connection.close.call_count == 0
