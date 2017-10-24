@@ -29,7 +29,10 @@ class TestMashLog(object):
             '%(levelname)-6s: %(asctime)-8s | %(message)s', '%H:%M:%S'
         )
 
-        mock_RabbitMQHandler.assert_called_once_with(host='localhost')
+        mock_RabbitMQHandler.assert_called_once_with(
+            host='localhost',
+            routing_key='mash.{level}'
+        )
         log.addHandler.assert_has_calls(
             [call(logfile_handler), call(rabbit_handler)]
         )

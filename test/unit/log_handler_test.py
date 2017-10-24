@@ -45,7 +45,14 @@ class TestRabbitMQHandler(object):
 
         mock_pika_BlockingConnection.return_value = self.connection
         mock_pika_ConnectionParams.return_value = None
-        socket = RabbitMQSocket('host', 1234, 'user', 'pass', 'exchange')
+        socket = RabbitMQSocket(
+            'host',
+            1234,
+            'user',
+            'pass',
+            'exchange',
+            'mash.{level}'
+        )
 
         mock_pika_BlockingConnection.assert_called_once_with(None)
         mock_pika_ConnectionParams.assert_called_once_with(
