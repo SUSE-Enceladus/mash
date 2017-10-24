@@ -11,13 +11,15 @@ class RabbitMQHandler(SocketHandler):
                  port='5672',
                  exchange='logger',
                  username='guest',
-                 password='guest'):
+                 password='guest',
+                 routing_key='logger.{level}'):
         """Initialize the handler rinstance."""
         super(RabbitMQHandler, self).__init__(host, port)
 
         self.username = username
         self.password = password
         self.exchange = exchange
+        self.routing_key = routing_key
 
     def makeSocket(self):
         """Create a new instance of RabbitMQ socket connection."""
@@ -26,7 +28,8 @@ class RabbitMQHandler(SocketHandler):
             self.port,
             self.username,
             self.password,
-            self.exchange
+            self.exchange,
+            self.routing_key
         )
 
     def makePickle(self, record):
@@ -54,13 +57,15 @@ class RabbitMQSocket(object):
                  port,
                  username,
                  password,
-                 exchange):
+                 exchange,
+                 routing_key):
         """Initialize RabbitMQ socket instance."""
         self.host = host
         self.port = port
         self.username = username
         self.password = password
         self.exchange = exchange
+        self.routing_key = routing_key
         self.connection = None
         self.channel = None
         self.open()
@@ -92,7 +97,7 @@ class RabbitMQSocket(object):
         level = json.loads(msg)['levelname']
         self.channel.basic_publish(
             exchange=self.exchange,
-            routing_key='mash.{}'.format(level),
+            routing_key=self.routing_key.format(level=level),
             body=msg,
             properties=pika.BasicProperties(
                 content_type='application/json',
