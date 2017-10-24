@@ -70,3 +70,13 @@ class TestBaseService(object):
         self.channel.basic_consume.assert_called_once_with(
             callback, no_ack=True, queue='queue'
         )
+
+    def test_close_connection(self):
+        self.connection.close.return_value = None
+        self.service.close_connection()
+        self.connection.close.assert_called_once_with()
+
+        self.connection.close.reset_mock()
+        self.connection.close.side_effect = Exception('Error!')
+        self.service.close_connection()
+        assert self.connection.close.call_count == 0

@@ -120,7 +120,7 @@ class BaseService(object):
             self.channel = self.connection.channel()
             self.channel.confirm_delivery()
 
-    def _close_connection(self):
+    def close_connection(self):
         try:
             self.connection.close()
         except Exception:
