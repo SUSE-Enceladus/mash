@@ -34,7 +34,10 @@ class MashLog(object):
             )
             log.addHandler(logfile_handler)
 
-            rabbit_handler = RabbitMQHandler(host=host)
+            rabbit_handler = RabbitMQHandler(
+                host=host,
+                routing_key='mash.{level}'
+            )
             log.addHandler(rabbit_handler)
         except Exception as e:
             raise MashLogSetupError(
