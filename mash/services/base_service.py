@@ -73,10 +73,10 @@ class BaseService(object):
         pass
 
     def publish_service_message(self, message):
-        self._publish(self.service_exchange, self.service_key, message)
+        return self._publish(self.service_exchange, self.service_key, message)
 
     def publish_listener_message(self, identifier, message):
-        self._publish(
+        return self._publish(
             self.service_exchange, 'listener_{0}'.format(identifier), message
         )
 
