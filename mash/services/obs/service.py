@@ -71,7 +71,7 @@ class OBSImageBuildResultService(BaseService):
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(logging.DEBUG)
-        MashLog.set_logfile(self.log, self.logfile)
+        MashLog.set_logfile(self.log, self.logfile, self.host)
 
         mkpath(self.job_directory)
 
@@ -120,7 +120,7 @@ class OBSImageBuildResultService(BaseService):
             response = {
                 'obs_control_response': result
             }
-            self.publish_log_message(self._json_message(response))
+            self.log.info(self._json_message(response))
 
     def _run_control_consumer(self):
         self.consume_queue(
@@ -157,7 +157,7 @@ class OBSImageBuildResultService(BaseService):
         for job_id, job in list(self.jobs.items()):
             result['obs_job_log'][job_id] = job.get_image_status()
         if self.last_log_result != result:
-            self.publish_log_message(self._json_message(result))
+            self.log.info(self._json_message(result))
         self.last_log_result = copy.deepcopy(result)
 
     def _control_in(self, channel, method, properties, message):
@@ -194,6 +194,7 @@ class OBSImageBuildResultService(BaseService):
                 'message': 'No idea what to do with: {0}'.format(message_data)
             }
         self._send_control_response(result, publish=True)
+        self.channel.basic_ack(method.delivery_tag)
 
     def _add_to_listener(self, job_id):
         """

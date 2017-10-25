@@ -15,39 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import logging
 import pika
-import time
 
 # project
 from mash.exceptions import MashPikaConnectionError
-
-LOG_CONFIG = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'rabbit': {
-            'level': 'DEBUG',
-            'class': 'python_logging_rabbitmq.RabbitMQHandler',
-            'host': 'localhost',
-            'username': 'guest',
-            'password': 'guest',
-            'exchange': 'logger',
-            'connection_params': {
-                'virtual_host': '/',
-                'connection_attempts': 3,
-                'socket_timeout': 5000
-            }
-        }
-    },
-    'loggers': {
-        'mash': {
-            'handlers': ['rabbit'],
-            'level': 'DEBUG',
-            'propagate': False
-        }
-    }
-}
 
 
 class BaseService(object):
@@ -68,18 +39,16 @@ class BaseService(object):
     * :attr:`custom_args`
       Custom arguments dictionary
     """
-    channel = None
-    connection = None
 
     def __init__(
-        self, host, service_exchange, logging_exchange='logger',
-        custom_args=None
+        self, host, service_exchange, custom_args=None
     ):
-        logging.config.dictConfig(LOG_CONFIG)
-        self.logger = logging.getLogger('mash')
+        self.channel = None
+        self.connection = None
 
         self._open_connection(host)
 
+        self.host = host
         self.service_exchange = service_exchange
         self.service_key = 'service_event'
         self._declare_topic_exchange(
@@ -97,9 +66,6 @@ class BaseService(object):
         :param list custom_args: unused
         """
         pass
-
-    def ack_message(self, tag):
-        self.channel.basic_ack(tag)
 
     def publish_service_message(self, message):
         self._publish(self.service_exchange, self.service_key, message)
@@ -127,26 +93,17 @@ class BaseService(object):
             callback, queue=queue, no_ack=True
         )
 
-    def _publish(self, exchange, routing_key, message, wait=1, timeout=5):
-        received = False
-        while not received and timeout:
-            self.channel.basic_publish(
-                exchange=exchange,
-                routing_key=routing_key,
-                body=message,
-                properties=pika.BasicProperties(
-                    content_type='application/json',
-                    delivery_mode=1
-                ),
-                mandatory=True
-            )
-            timeout -= 1
-            time.sleep(wait)
-
-        if not received:
-            self.logger.warning(
-                'Message was not received by a queue: %s' % message
-            )
+    def _publish(self, exchange, routing_key, message):
+        return self.channel.basic_publish(
+            exchange=exchange,
+            routing_key=routing_key,
+            body=message,
+            properties=pika.BasicProperties(
+                content_type='application/json',
+                delivery_mode=2
+            ),
+            mandatory=True
+        )
 
     def _open_connection(self, host):
         if not self.connection or self.connection.is_closed:
@@ -164,11 +121,10 @@ class BaseService(object):
             self.channel.confirm_delivery()
 
     def _close_connection(self):
-        if self.channel:
-            self.channel.close()
-
-        if self.connection:
+        try:
             self.connection.close()
+        except Exception:
+            pass
 
         self.connection, self.channel = None, None
 
