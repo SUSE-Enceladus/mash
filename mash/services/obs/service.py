@@ -95,8 +95,6 @@ class OBSImageBuildResultService(BaseService):
         for job_file in os.listdir(self.job_directory):
             self._start_job(os.sep.join([self.job_directory, job_file]))
 
-        self.bind_log_queue()
-
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_job(
             self._run_control_consumer, 'date'
