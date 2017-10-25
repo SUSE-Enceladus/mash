@@ -17,7 +17,6 @@
 #
 import atexit
 import json
-import copy
 import os
 import pickle
 import logging
@@ -42,7 +41,15 @@ class OBSImageBuildResultService(BaseService):
 
     * :attr:`custom_args`
       Custom obs arguments:
-
+    def _log_listener(self):
+        result = {
+            'obs_job_log': {}
+        }
+        for job_id, job in list(self.jobs.items()):
+            result['obs_job_log'][job_id] = job.get_image_status()
+        if self.last_log_result != result:
+            self.log.info(self._json_message(result))
+        self.last_log_result = copy.deepcopy(result)
       [logfile]:
           local obs logfile name, defaults to: /tmp/obs_service.log
 
@@ -77,7 +84,6 @@ class OBSImageBuildResultService(BaseService):
 
         self.jobs = {}
         self.clients = {}
-        self.last_log_result = {}
 
         # read and reload done jobs
         jobs_done_dir = Defaults.get_jobs_done_dir()
@@ -101,9 +107,6 @@ class OBSImageBuildResultService(BaseService):
         )
         self.scheduler.add_job(
             self._job_listener, 'interval', max_instances=1, seconds=3
-        )
-        self.scheduler.add_job(
-            self._log_listener, 'interval', max_instances=1, seconds=3
         )
         atexit.register(lambda: os._exit(0))
         self.scheduler.start()
@@ -147,16 +150,6 @@ class OBSImageBuildResultService(BaseService):
                 except Exception:
                     # failed to publish, don't dequeue
                     pass
-
-    def _log_listener(self):
-        result = {
-            'obs_job_log': {}
-        }
-        for job_id, job in list(self.jobs.items()):
-            result['obs_job_log'][job_id] = job.get_image_status()
-        if self.last_log_result != result:
-            self.log.info(self._json_message(result))
-        self.last_log_result = copy.deepcopy(result)
 
     def _control_in(self, channel, method, properties, message):
         """
