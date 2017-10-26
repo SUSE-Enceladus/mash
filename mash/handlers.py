@@ -8,7 +8,7 @@ class RabbitMQHandler(SocketHandler):
     """Log handler for sending messages to RabbitMQ."""
     def __init__(self,
                  host='localhost',
-                 port='5672',
+                 port=5672,
                  exchange='logger',
                  username='guest',
                  password='guest',
@@ -88,7 +88,7 @@ class RabbitMQSocket(object):
         self.channel = self.connection.channel()
         self.channel.exchange_declare(
             exchange=self.exchange,
-            type='topic',
+            exchange_type='topic',
             durable=True
         )
 
