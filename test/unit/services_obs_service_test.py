@@ -73,15 +73,21 @@ class TestOBSImageBuildResultService(object):
             'ok': False
         }
         self.obs_result._send_control_response(result)
-        self.obs_result.log.error.assert_called_once_with('message')
+        self.obs_result.log.error.assert_called_once_with(
+            'message',
+            extra={'obs_control_response': result}
+        )
 
     def test_send_control_response_public(self):
         result = {
             'message': 'message',
             'ok': True
         }
-        self.obs_result._send_control_response(result, True)
-        assert self.obs_result.log.info.call_count == 2
+        self.obs_result._send_control_response(result)
+        self.obs_result.log.info.assert_called_once_with(
+            'message',
+            extra={'obs_control_response': result}
+        )
 
     @patch.object(OBSImageBuildResultService, '_control_in')
     def test_run_control_consumer(self, mock_control_in):

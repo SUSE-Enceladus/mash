@@ -104,17 +104,16 @@ class OBSImageBuildResultService(BaseService):
         atexit.register(lambda: os._exit(0))
         self.scheduler.start()
 
-    def _send_control_response(self, result, publish=False):
+    def _send_control_response(self, result):
         message = result['message']
+        extra = {
+            'obs_control_response': result
+        }
+
         if result['ok']:
-            self.log.info(message)
+            self.log.info(message, extra=extra)
         else:
-            self.log.error(message)
-        if publish:
-            response = {
-                'obs_control_response': result
-            }
-            self.log.info(self._json_message(response))
+            self.log.error(message, extra=extra)
 
     def _run_control_consumer(self):
         self.consume_queue(
