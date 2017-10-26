@@ -9,17 +9,12 @@ from mash.exceptions import MashLogSetupError
 class TestMashLog(object):
     @patch('logging.FileHandler')
     @patch('logging.Formatter')
-    @patch('mash.logging_logfile.RabbitMQHandler')
     def test_set_logfile(
-        self, mock_RabbitMQHandler, mock_logging_Formatter,
-        mock_logging_FileHandler
+        self, mock_logging_Formatter, mock_logging_FileHandler
     ):
         log = Mock()
         logfile_handler = Mock()
         mock_logging_FileHandler.return_value = logfile_handler
-
-        rabbit_handler = Mock()
-        mock_RabbitMQHandler.return_value = rabbit_handler
 
         MashLog.set_logfile(log, '/some/log')
         mock_logging_FileHandler.assert_called_once_with(
@@ -29,12 +24,8 @@ class TestMashLog(object):
             '%(levelname)-6s: %(asctime)-8s | %(message)s', '%H:%M:%S'
         )
 
-        mock_RabbitMQHandler.assert_called_once_with(
-            host='localhost',
-            routing_key='mash.{level}'
-        )
         log.addHandler.assert_has_calls(
-            [call(logfile_handler), call(rabbit_handler)]
+            [call(logfile_handler)]
         )
 
     @patch('logging.FileHandler')

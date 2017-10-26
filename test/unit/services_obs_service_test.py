@@ -21,17 +21,17 @@ class TestOBSImageBuildResultService(object):
     @patch.object(OBSImageBuildResultService, '_run_control_consumer')
     @patch.object(OBSImageBuildResultService, '_start_job')
     @patch.object(OBSImageBuildResultService, '_job_listener')
+    @patch.object(OBSImageBuildResultService, '_log_listener')
     @patch('logging.getLogger')
     @patch('atexit.register')
     @patch_open
     def setup(
-        self, mock_open, mock_register, mock_log,
+        self, mock_open, mock_register, mock_log, mock_log_listener,
         mock_job_listener, mock_start_job, mock_run_control_consumer,
         mock_listdir, mock_BackgroundScheduler, mock_BaseService,
         mock_pickle_load, mock_MashLog, mock_mkpath
     ):
         self.log = Mock()
-        mock_log.return_value = self.log
         context = context_manager()
         mock_open.return_value = context.context_manager_mock
         scheduler = Mock()
@@ -40,7 +40,7 @@ class TestOBSImageBuildResultService(object):
         mock_BaseService.return_value = None
 
         self.obs_result = OBSImageBuildResultService()
-        self.obs_result.host = 'localhost'
+        self.obs_result.log = self.log
         self.obs_result.publish_listener_message = Mock()
         self.obs_result.bind_listener_queue = Mock()
         self.obs_result.consume_queue = Mock()
@@ -56,7 +56,8 @@ class TestOBSImageBuildResultService(object):
         mock_pickle_load.assert_called_once_with(context.file_mock)
         assert scheduler.add_job.call_args_list == [
             call(mock_run_control_consumer, 'date'),
-            call(mock_job_listener, 'interval', max_instances=1, seconds=3)
+            call(mock_job_listener, 'interval', max_instances=1, seconds=3),
+            call(mock_log_listener, 'interval', max_instances=1, seconds=3)
         ]
         scheduler.start.assert_called_once_with()
         mock_pickle_load.side_effect = Exception('error')
@@ -126,6 +127,16 @@ class TestOBSImageBuildResultService(object):
         mock_delete_job.assert_called_once_with('815')
         self.obs_result.publish_listener_message.side_effect = Exception
         self.obs_result._job_listener()
+
+    def test_log_listener(self):
+        job = Mock()
+        job.get_image_status.return_value = {}
+        self.obs_result.jobs = {
+            '815': job
+        }
+        client = Mock()
+        self.obs_result.log_clients = [client]
+        self.obs_result._log_listener()
 
     @patch.object(OBSImageBuildResultService, '_delete_job')
     @patch.object(OBSImageBuildResultService, '_add_job')

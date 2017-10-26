@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+import logging
 import pika
+
+from mash.handlers import RabbitMQHandler
 
 # project
 from mash.exceptions import MashPikaConnectionError
@@ -59,6 +63,15 @@ class BaseService(object):
         self._declare_topic_exchange(
             self.service_exchange
         )
+
+        logging.basicConfig()
+        self.log = logging.getLogger(self.__class__.__name__)
+        self.log.setLevel(logging.DEBUG)
+        rabbit_handler = RabbitMQHandler(
+            host=self.host,
+            routing_key='mash.{level}'
+        )
+        self.log.addHandler(rabbit_handler)
 
         self.post_init(custom_args)
 

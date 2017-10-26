@@ -17,12 +17,11 @@
 #
 import logging
 from mash.exceptions import MashLogSetupError
-from mash.handlers import RabbitMQHandler
 
 
 class MashLog(object):
     @classmethod
-    def set_logfile(self, log, logfile, host='localhost'):
+    def set_logfile(self, log, logfile):
         try:
             logfile_handler = logging.FileHandler(
                 filename=logfile, encoding='utf-8'
@@ -33,12 +32,6 @@ class MashLog(object):
                 )
             )
             log.addHandler(logfile_handler)
-
-            rabbit_handler = RabbitMQHandler(
-                host=host,
-                routing_key='mash.{level}'
-            )
-            log.addHandler(rabbit_handler)
         except Exception as e:
             raise MashLogSetupError(
                 'Log setup failed: {0}'.format(e)

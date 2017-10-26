@@ -17,9 +17,9 @@
 #
 import atexit
 import json
+import copy
 import os
 import pickle
-import logging
 import dateutil.parser
 from distutils.dir_util import mkpath
 from tempfile import NamedTemporaryFile
@@ -41,6 +41,7 @@ class OBSImageBuildResultService(BaseService):
 
     * :attr:`custom_args`
       Custom obs arguments:
+
       [logfile]:
           local obs logfile name, defaults to: /tmp/obs_service.log
 
@@ -66,15 +67,13 @@ class OBSImageBuildResultService(BaseService):
         self.job_directory = custom_args['job_dir'] \
             if 'job_dir' in custom_args else Defaults.get_jobs_dir()
 
-        logging.basicConfig()
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.log.setLevel(logging.DEBUG)
-        MashLog.set_logfile(self.log, self.logfile, self.host)
+        MashLog.set_logfile(self.log, self.logfile)
 
         mkpath(self.job_directory)
 
         self.jobs = {}
         self.clients = {}
+        self.last_log_result = {}
 
         # read and reload done jobs
         jobs_done_dir = Defaults.get_jobs_done_dir()
@@ -98,6 +97,9 @@ class OBSImageBuildResultService(BaseService):
         )
         self.scheduler.add_job(
             self._job_listener, 'interval', max_instances=1, seconds=3
+        )
+        self.scheduler.add_job(
+            self._log_listener, 'interval', max_instances=1, seconds=3
         )
         atexit.register(lambda: os._exit(0))
         self.scheduler.start()
@@ -141,6 +143,16 @@ class OBSImageBuildResultService(BaseService):
                 except Exception:
                     # failed to publish, don't dequeue
                     pass
+
+    def _log_listener(self):
+        result = {
+            'obs_job_log': {}
+        }
+        for job_id, job in list(self.jobs.items()):
+            result['obs_job_log'][job_id] = job.get_image_status()
+        if self.last_log_result != result:
+            self.log.info(self._json_message(result))
+        self.last_log_result = copy.deepcopy(result)
 
     def _control_in(self, channel, method, properties, message):
         """
