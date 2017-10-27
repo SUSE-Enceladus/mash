@@ -40,15 +40,6 @@ Public Cloud Release Tool for release automation from image
 build in obs to image available for customers in the public
 cloud
 
-%package -n mash-obs-service
-Summary:        Mash - OBS service
-License:        GPL-3.0+
-Group:          System/Management
-Requires:       mash == %{version}
-
-%description -n mash-obs-service
-Provides OBS service
-
 %prep
 %setup -q -n mash-%{version}
 
@@ -68,9 +59,6 @@ install -D -m 644 config/obs_config.yml \
 %defattr(-,root,root,-)
 %{python_sitelib}/*
 %dir %{_sysconfdir}/%{name}
-
-%files -n mash-obs-service
-%defattr(-,root,root,-)
 %{_bindir}/obs-service-2
 %{_unitdir}/obs_result.service
 %config(noreplace) %{_sysconfdir}/%{name}/obs_config.yml
