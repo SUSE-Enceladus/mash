@@ -1,3 +1,20 @@
+# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+#
+# This file is part of mash.
+#
+# mash is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# mash is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with mash.  If not, see <http://www.gnu.org/licenses/>
+#
 import json
 import pika
 
@@ -5,15 +22,17 @@ from logging.handlers import SocketHandler
 
 
 class RabbitMQHandler(SocketHandler):
-    """Log handler for sending messages to RabbitMQ."""
-    def __init__(self,
-                 host='localhost',
-                 port=5672,
-                 exchange='logger',
-                 username='guest',
-                 password='guest',
-                 routing_key='logger.{level}'):
-        """Initialize the handler rinstance."""
+    """
+    Log handler for sending messages to RabbitMQ.
+    """
+    def __init__(
+        self, host='localhost', port=5672, exchange='logger',
+        username='guest', password='guest',
+        routing_key='logger.{level}'
+    ):
+        """
+        Initialize the handler instance.
+        """
         super(RabbitMQHandler, self).__init__(host, port)
 
         self.username = username
@@ -22,7 +41,9 @@ class RabbitMQHandler(SocketHandler):
         self.routing_key = routing_key
 
     def makeSocket(self):
-        """Create a new instance of RabbitMQ socket connection."""
+        """
+        Create a new instance of RabbitMQ socket connection.
+        """
         return RabbitMQSocket(
             self.host,
             self.port,
@@ -33,7 +54,9 @@ class RabbitMQHandler(SocketHandler):
         )
 
     def makePickle(self, record):
-        """Format the log message to a json string."""
+        """
+        Format the log message to a json string.
+        """
         data = record.__dict__.copy()
 
         if 'args' in data and data['args']:
@@ -49,17 +72,15 @@ class RabbitMQSocket(object):
     """
     RabbitMQ socket class.
 
-    Maintains a connection for logging and publishing logs to
-    exchange.
+    Maintains a connection for logging and publishing
+    logs to exchange.
     """
-    def __init__(self,
-                 host,
-                 port,
-                 username,
-                 password,
-                 exchange,
-                 routing_key):
-        """Initialize RabbitMQ socket instance."""
+    def __init__(
+        self, host, port, username, password, exchange, routing_key
+    ):
+        """
+        Initialize RabbitMQ socket instance.
+        """
         self.host = host
         self.port = port
         self.username = username
@@ -71,14 +92,18 @@ class RabbitMQSocket(object):
         self.open()
 
     def close(self):
-        """Close socket connection."""
+        """
+        Close socket connection.
+        """
         try:
             self.connection.close()
         except Exception:
             pass
 
     def open(self):
-        """"Create/open connection and declare logging exchange."""
+        """"
+        Create/open connection and declare logging exchange.
+        """
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=self.host,
@@ -93,7 +118,9 @@ class RabbitMQSocket(object):
         )
 
     def sendall(self, msg):
-        """Override socket sendall method to publish message to exchange."""
+        """
+        Override socket sendall method to publish message to exchange.
+        """
         level = json.loads(msg)['levelname']
         self.channel.basic_publish(
             exchange=self.exchange,

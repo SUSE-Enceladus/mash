@@ -68,7 +68,7 @@ class TestBaseService(object):
         callback = Mock()
         self.service.consume_queue(callback, 'queue')
         self.channel.basic_consume.assert_called_once_with(
-            callback, no_ack=True, queue='queue'
+            callback, queue='queue'
         )
 
     def test_close_connection(self):

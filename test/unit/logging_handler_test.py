@@ -2,12 +2,15 @@ import logging
 
 from mock import Mock, patch
 
-from mash.handlers import RabbitMQHandler, RabbitMQSocket
+from mash.logging_handler import (
+    RabbitMQHandler,
+    RabbitMQSocket
+)
 
 
 class TestRabbitMQHandler(object):
-    @patch('mash.handlers.pika.BlockingConnection')
-    @patch('mash.handlers.pika.ConnectionParameters')
+    @patch('mash.logging_handler.pika.BlockingConnection')
+    @patch('mash.logging_handler.pika.ConnectionParameters')
     def setup(self, mock_pika_ConnectionParams, mock_pika_BlockingConnection):
         self.connection = Mock()
         self.channel = Mock()
@@ -30,9 +33,9 @@ class TestRabbitMQHandler(object):
         except Exception:
             log.exception('Test exc_info')
 
-    @patch('mash.handlers.pika.BasicProperties')
-    @patch('mash.handlers.pika.BlockingConnection')
-    @patch('mash.handlers.pika.ConnectionParameters')
+    @patch('mash.logging_handler.pika.BasicProperties')
+    @patch('mash.logging_handler.pika.BlockingConnection')
+    @patch('mash.logging_handler.pika.ConnectionParameters')
     def test_rabbit_socket(self, mock_pika_ConnectionParams,
                            mock_pika_BlockingConnection,
                            mock_pika_BasicProperties):
@@ -63,7 +66,7 @@ class TestRabbitMQHandler(object):
         self.connection.channel.assert_called_once_with()
         self.channel.exchange_declare.assert_called_once_with(
             exchange='exchange',
-            type='topic',
+            exchange_type='topic',
             durable=True
         )
 

@@ -15,13 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-
 import logging
 import pika
 
-from mash.handlers import RabbitMQHandler
-
 # project
+from mash.logging_handler import RabbitMQHandler
 from mash.exceptions import MashPikaConnectionError
 
 
@@ -36,9 +34,6 @@ class BaseService(object):
 
     * :attr:`service_exchange`
       Name of service exchange
-
-    * :attr:`logging_exchange`
-      Name of logging exchange, defaults to 'logger'
 
     * :attr:`custom_args`
       Custom arguments dictionary
@@ -86,7 +81,9 @@ class BaseService(object):
         pass
 
     def publish_service_message(self, message):
-        return self._publish(self.service_exchange, self.service_key, message)
+        return self._publish(
+            self.service_exchange, self.service_key, message
+        )
 
     def publish_listener_message(self, identifier, message):
         return self._publish(
@@ -94,7 +91,9 @@ class BaseService(object):
         )
 
     def bind_service_queue(self):
-        return self._bind_queue(self.service_exchange, self.service_key)
+        return self._bind_queue(
+            self.service_exchange, self.service_key
+        )
 
     def bind_listener_queue(self, identifier):
         return self._bind_queue(
@@ -108,7 +107,7 @@ class BaseService(object):
 
     def consume_queue(self, callback, queue):
         self.channel.basic_consume(
-            callback, queue=queue, no_ack=True
+            callback, queue=queue
         )
 
     def _publish(self, exchange, routing_key, message):

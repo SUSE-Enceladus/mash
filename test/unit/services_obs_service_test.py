@@ -155,7 +155,10 @@ class TestOBSImageBuildResultService(object):
         message = '{"obsjob":{"id": "4711","project": ' + \
             '"Virtualization:Appliances:Images:Testing_x86","image": ' + \
             '"test-image-docker","utctime": "always"}}'
-        self.obs_result._control_in(Mock(), Mock(), Mock(), message)
+        channel = Mock()
+        method = Mock()
+        self.obs_result._control_in(channel, method, Mock(), message)
+        channel.basic_ack.assert_called_once_with(method.delivery_tag)
         mock_add_job.assert_called_once_with(
             {
                 'obsjob': {
@@ -181,15 +184,15 @@ class TestOBSImageBuildResultService(object):
         message = 'foo'
         self.obs_result._control_in(Mock(), Mock(), Mock(), message)
         assert mock_send_control_response.call_args_list == [
-            call(mock_add_job.return_value, publish=True),
-            call(mock_add_to_listener.return_value, publish=True),
-            call(mock_delete_job.return_value, publish=True),
+            call(mock_add_job.return_value),
+            call(mock_add_to_listener.return_value),
+            call(mock_delete_job.return_value),
             call(
                 {
                     'message':
                         "No idea what to do with: {'job_delete': '4711'}",
                     'ok': False
-                }, publish=True
+                }
             ),
             call(
                 {
@@ -197,7 +200,7 @@ class TestOBSImageBuildResultService(object):
                         'JSON:deserialize error: foo : ' +
                         'No JSON object could be decoded',
                     'ok': False
-                }, publish=True
+                }
             )
         ]
 
