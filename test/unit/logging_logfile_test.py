@@ -1,5 +1,5 @@
 from pytest import raises
-from mock import patch
+from mock import call, patch
 from mock import Mock
 
 from mash.logging_logfile import MashLog
@@ -15,6 +15,7 @@ class TestMashLog(object):
         log = Mock()
         logfile_handler = Mock()
         mock_logging_FileHandler.return_value = logfile_handler
+
         MashLog.set_logfile(log, '/some/log')
         mock_logging_FileHandler.assert_called_once_with(
             encoding='utf-8', filename='/some/log'
@@ -22,7 +23,10 @@ class TestMashLog(object):
         mock_logging_Formatter.assert_called_once_with(
             '%(levelname)-6s: %(asctime)-8s | %(message)s', '%H:%M:%S'
         )
-        log.addHandler.assert_called_once_with(logfile_handler)
+
+        log.addHandler.assert_has_calls(
+            [call(logfile_handler)]
+        )
 
     @patch('logging.FileHandler')
     def test_set_logfile_raises(self, mock_logging_FileHandler):

@@ -20,8 +20,8 @@ import json
 import copy
 import os
 import pickle
-import logging
 import dateutil.parser
+import logging
 from distutils.dir_util import mkpath
 from tempfile import NamedTemporaryFile
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -30,6 +30,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from mash.services.base_service import BaseService
 from mash.services.obs.defaults import Defaults
 from mash.services.obs.build_result import OBSImageBuildResult
+from mash.logging_filter import SchedulerLoggingFilter
 from mash.logging_logfile import MashLog
 
 
@@ -68,9 +69,6 @@ class OBSImageBuildResultService(BaseService):
         self.job_directory = custom_args['job_dir'] \
             if 'job_dir' in custom_args else Defaults.get_jobs_dir()
 
-        logging.basicConfig()
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.log.setLevel(logging.DEBUG)
         MashLog.set_logfile(self.log, self.logfile)
 
         mkpath(self.job_directory)
@@ -95,8 +93,6 @@ class OBSImageBuildResultService(BaseService):
         for job_file in os.listdir(self.job_directory):
             self._start_job(os.sep.join([self.job_directory, job_file]))
 
-        self.bind_log_queue()
-
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_job(
             self._run_control_consumer, 'date'
@@ -107,20 +103,23 @@ class OBSImageBuildResultService(BaseService):
         self.scheduler.add_job(
             self._log_listener, 'interval', max_instances=1, seconds=3
         )
+        # no log info for apscheduler skip events
+        logging.getLogger("apscheduler.scheduler").addFilter(
+            SchedulerLoggingFilter()
+        )
         atexit.register(lambda: os._exit(0))
         self.scheduler.start()
 
-    def _send_control_response(self, result, publish=False):
+    def _send_control_response(self, result):
         message = result['message']
+        extra = {
+            'obs_control_response': result
+        }
+
         if result['ok']:
-            self.log.info(message)
+            self.log.info(message, extra=extra)
         else:
-            self.log.error(message)
-        if publish:
-            response = {
-                'obs_control_response': result
-            }
-            self.publish_log_message(self._json_message(response))
+            self.log.error(message, extra=extra)
 
     def _run_control_consumer(self):
         self.consume_queue(
@@ -145,7 +144,7 @@ class OBSImageBuildResultService(BaseService):
                         job_id, self._json_message(trigger_info)
                     )
                     job_info = self._delete_job(job_id)
-                    self._send_control_response(job_info, publish=False)
+                    self._send_control_response(job_info)
                 except Exception:
                     # failed to publish, don't dequeue
                     pass
@@ -157,7 +156,7 @@ class OBSImageBuildResultService(BaseService):
         for job_id, job in list(self.jobs.items()):
             result['obs_job_log'][job_id] = job.get_image_status()
         if self.last_log_result != result:
-            self.publish_log_message(self._json_message(result))
+            self.log.info(self._json_message(result))
         self.last_log_result = copy.deepcopy(result)
 
     def _control_in(self, channel, method, properties, message):
@@ -170,6 +169,7 @@ class OBSImageBuildResultService(BaseService):
         2. add job to listener
         3. delete job
         """
+        channel.basic_ack(method.delivery_tag)
         message_data = {}
         try:
             message_data = self._json_loads_byteified(format(message))
@@ -180,7 +180,7 @@ class OBSImageBuildResultService(BaseService):
                     'message': 'JSON:deserialize error: {0} : {1}'.format(
                         message, e
                     )
-                }, publish=True
+                }
             )
         if 'obsjob' in message_data:
             result = self._add_job(message_data)
@@ -193,7 +193,7 @@ class OBSImageBuildResultService(BaseService):
                 'ok': False,
                 'message': 'No idea what to do with: {0}'.format(message_data)
             }
-        self._send_control_response(result, publish=True)
+        self._send_control_response(result)
 
     def _add_to_listener(self, job_id):
         """
