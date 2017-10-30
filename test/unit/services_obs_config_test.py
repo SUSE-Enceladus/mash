@@ -16,14 +16,6 @@ class TestOBSConfig(object):
         with raises(MashConfigError):
             OBSConfig('../data/obs_config.yml')
 
-    def test_get_log_port(self):
-        assert self.config.get_log_port() == 8888
-        assert self.config_defaults.get_log_port() == 9001
-
-    def test_get_control_port(self):
-        assert self.config.get_control_port() == 9999
-        assert self.config_defaults.get_control_port() == 9000
-
     def test_get_log_file(self):
         assert self.config.get_log_file() == '/tmp/foo.log'
         assert self.config_defaults.get_log_file() == '/tmp/obs_service.log'

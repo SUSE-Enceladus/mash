@@ -43,42 +43,6 @@ class OBSConfig(object):
                 )
             )
 
-    def get_log_port(self):
-        """
-        Return logger port:
-
-        obs:
-          log_port: 9001
-
-        if no configuration exists the log port from
-        the Defaults class is returned
-
-        :rtype: int
-        """
-        log_port = self._get_attribute(
-            element='obs', attribute='log_port'
-        )
-        return log_port if log_port else \
-            Defaults.get_log_port()
-
-    def get_control_port(self):
-        """
-        Return control port:
-
-        obs:
-          control_port: 9000
-
-        if no configuration exists the control port from
-        the Defaults class is returned
-
-        :rtype: int
-        """
-        control_port = self._get_attribute(
-            element='obs', attribute='control_port'
-        )
-        return control_port if control_port else \
-            Defaults.get_control_port()
-
     def get_log_file(self):
         """
         Return log file name:

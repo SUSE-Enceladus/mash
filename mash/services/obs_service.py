@@ -21,7 +21,6 @@ import sys
 
 # project
 from mash.exceptions import MashError
-from mash.services.obs.config import OBSConfig
 from mash.services.obs.service import OBSImageBuildResultService
 
 
@@ -29,19 +28,14 @@ def main(event_loop=True):
     """
     mash - obs service application entry point
     """
-    logging.basicConfig()
-    log = logging.getLogger('mash')
-    log.setLevel(logging.DEBUG)
     obs = None
     try:
-        config = OBSConfig()
+        logging.basicConfig()
+        log = logging.getLogger('mash')
+        log.setLevel(logging.DEBUG)
         # run service, enter main loop
         obs = OBSImageBuildResultService(
             host='localhost', service_exchange='obs',
-            custom_args={
-                'logfile': config.get_log_file(),
-                'download_dir': config.get_download_directory()
-            }
         )
         while event_loop:
             time.sleep(5)

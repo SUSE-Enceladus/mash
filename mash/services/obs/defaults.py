@@ -39,14 +39,6 @@ class Defaults(object):
         return '/etc/mash/obs_config.yml'
 
     @classmethod
-    def get_control_port(self):
-        return 9000
-
-    @classmethod
-    def get_log_port(self):
-        return 9001
-
-    @classmethod
     def get_log_file(self):
         return '/tmp/obs_service.log'
 

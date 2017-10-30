@@ -34,14 +34,9 @@ class BaseService(object):
 
     * :attr:`service_exchange`
       Name of service exchange
-
-    * :attr:`custom_args`
-      Custom arguments dictionary
     """
 
-    def __init__(
-        self, host, service_exchange, custom_args=None
-    ):
+    def __init__(self, host, service_exchange):
         self.channel = None
         self.connection = None
 
@@ -68,15 +63,13 @@ class BaseService(object):
         )
         self.log.addHandler(rabbit_handler)
 
-        self.post_init(custom_args)
+        self.post_init()
 
-    def post_init(self, custom_args=None):
+    def post_init(self):
         """
         Post initialization method
 
         Implementation in specialized service class
-
-        :param list custom_args: unused
         """
         pass
 

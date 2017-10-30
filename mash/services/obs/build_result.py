@@ -46,7 +46,6 @@ from osc.core import (
 # project
 from mash.services.obs.defaults import Defaults
 from mash.logging_filter import SchedulerLoggingFilter
-from mash.logging_logfile import MashLog
 from mash.exceptions import (
     MashOBSLookupError,
     MashImageDownloadError,
@@ -68,9 +67,6 @@ class OBSImageBuildResult(object):
 
     * :attr:`job_file`
       job file containing the job description
-
-    * :attr:`logfile`
-      logfile name
 
     * :attr:`project`
       Buildservice project path name
@@ -102,15 +98,10 @@ class OBSImageBuildResult(object):
       Download directory name, defaults to: /tmp
     """
     def __init__(
-        self, job_id, job_file, logfile, project, package, conditions=None,
+        self, job_id, job_file, project, package, conditions=None,
         arch='x86_64', api_url='https://api.opensuse.org', repository='images',
         download_directory=Defaults.get_download_dir()
     ):
-        logging.basicConfig()
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.log.setLevel(logging.DEBUG)
-        MashLog.set_logfile(self.log, logfile)
-
         self.job_id = job_id
         self.job_file = job_file
         self.download_directory = download_directory
@@ -239,7 +230,7 @@ class OBSImageBuildResult(object):
     def _init_status(self):
         image_status = {
             'name': self.package,
-            'job_status': 'queued',
+            'job_status': 'prepared',
             'image_source': 'unknown',
             'packages_checksum': 'unknown',
             'version': 'unknown',
@@ -253,11 +244,7 @@ class OBSImageBuildResult(object):
         return image_status
 
     def _job_submit_event(self, event):
-        self.log.info(
-            'Job[{0}]: Started watching on {1}/{2}'.format(
-                self.job_id, self.project, self.package
-            )
-        )
+        self.image_status['job_status'] = 'queued'
 
     def _job_skipped_event(self, event):
         # Job is still active while the next _update_image_status
@@ -330,7 +317,6 @@ class OBSImageBuildResult(object):
             # delete what we can't pickle from self.__dict__
             job_backup = self.job
             scheduler_backup = self.scheduler
-            log_backup = self.log
             retired_job = os.sep.join(
                 [self.jobs_done_dir, self.job_id + '.pickle']
             )
@@ -339,11 +325,9 @@ class OBSImageBuildResult(object):
             with open(retired_job, 'wb') as retired:
                 self.job = None
                 self.scheduler = None
-                self.log = None
                 pickle.dump(self, retired)
             self.job = job_backup
             self.scheduler = scheduler_backup
-            self.log = log_backup
         except Exception as e:
             raise MashJobRetireError(
                 'Job[{0}]: Failed to retire: {1}'.format(self.job_id, e)
@@ -366,7 +350,6 @@ class OBSImageBuildResult(object):
             list(set(self.image_status['errors']))
         )
         self.image_status['job_status'] = 'failed'
-        self.log.error(message)
 
     def _update_image_status(self):
         try:

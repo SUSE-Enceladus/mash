@@ -20,7 +20,6 @@ config = {
     'version': __VERSION__,
     'install_requires': [
         'setuptools>=5.4',
-        'osc',
         'PyYAML',
         'python-dateutil',
         'APScheduler>=3.3.1',

@@ -12,8 +12,9 @@ from mash.services.base_service import BaseService
 
 
 class TestOBSImageBuildResultService(object):
+    @patch('mash.services.obs.service.OBSConfig')
+    @patch('mash.services.obs.service.MashLog.set_logfile')
     @patch('mash.services.obs.service.mkpath')
-    @patch('mash.services.obs.service.MashLog')
     @patch('mash.services.obs.service.pickle.load')
     @patch.object(BaseService, '__init__')
     @patch('mash.services.obs.service.BackgroundScheduler')
@@ -29,8 +30,11 @@ class TestOBSImageBuildResultService(object):
         self, mock_open, mock_register, mock_log, mock_log_listener,
         mock_job_listener, mock_start_job, mock_run_control_consumer,
         mock_listdir, mock_BackgroundScheduler, mock_BaseService,
-        mock_pickle_load, mock_MashLog, mock_mkpath
+        mock_pickle_load, mock_mkpath, mock_set_logfile, mock_OBSConfig
     ):
+        config = Mock()
+        config.get_log_file.return_value = 'logfile'
+        mock_OBSConfig.return_value = config
         self.log = Mock()
         context = context_manager()
         mock_open.return_value = context.context_manager_mock
@@ -47,6 +51,8 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.bind_service_queue = Mock()
         self.obs_result.channel = Mock()
         self.obs_result.post_init()
+
+        mock_set_logfile.assert_called_once_with(self.log, 'logfile')
 
         mock_mkpath.assert_called_once_with('/var/tmp/mash/obs_jobs/')
         mock_open.assert_called_once_with(
@@ -74,8 +80,8 @@ class TestOBSImageBuildResultService(object):
         }
         self.obs_result._send_control_response(result)
         self.obs_result.log.error.assert_called_once_with(
-            'message',
-            extra={'obs_control_response': result}
+            '{\n    "obs_control_response": ' +
+            '{\n        "message": "message",\n        "ok": false\n    }\n}'
         )
 
     def test_send_control_response_public(self):
@@ -85,8 +91,8 @@ class TestOBSImageBuildResultService(object):
         }
         self.obs_result._send_control_response(result)
         self.obs_result.log.info.assert_called_once_with(
-            'message',
-            extra={'obs_control_response': result}
+            '{\n    "obs_control_response": ' +
+            '{\n        "message": "message",\n        "ok": true\n    }\n}'
         )
 
     @patch.object(OBSImageBuildResultService, '_control_in')

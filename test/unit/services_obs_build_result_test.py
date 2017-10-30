@@ -30,11 +30,10 @@ from mash.exceptions import (
 
 class TestOBSImageBuildResult(object):
     @patch('distutils.dir_util.mkpath')
-    @patch('mash.services.obs.build_result.MashLog')
     @patch('osc.conf')
-    def setup(self, mock_osc_conf, mock_MashLog, mock_mkpath):
+    def setup(self, mock_osc_conf, mock_mkpath):
         self.obs_result = OBSImageBuildResult(
-            '815', 'job_file', 'logfile', 'obs_project', 'obs_package'
+            '815', 'job_file', 'obs_project', 'obs_package'
         )
         mock_mkpath.assert_called_once_with('/var/tmp/mash/obs_jobs_done/')
         mock_osc_conf.get_config.assert_called_once_with()
@@ -43,7 +42,7 @@ class TestOBSImageBuildResult(object):
         self.obs_result.conditions = [{'status': None}]
         self.obs_result.image_status = self.obs_result._init_status()
         assert self.obs_result.get_image_status() == {
-            'job_status': 'queued',
+            'job_status': 'prepared',
             'errors': [],
             'name': 'obs_package',
             'packages_checksum': 'unknown',
@@ -52,19 +51,15 @@ class TestOBSImageBuildResult(object):
             'image_source': 'unknown'
         }
 
-    @patch('mash.services.obs.build_result.logging.getLogger')
-    @patch('mash.services.obs.build_result.MashLog')
     @patch('osc.conf')
-    def test_init_error_reading_osc_config(
-        self, mock_osc_conf, mock_MashLog, mock_logging_getLogger
-    ):
+    def test_init_error_reading_osc_config(self, mock_osc_conf):
         mock_osc_conf.get_config.side_effect = Exception('osc_error')
         obs_result = OBSImageBuildResult(
-            '815', 'job_file', 'logfile', 'obs_project', 'obs_package'
+            '815', 'job_file', 'obs_project', 'obs_package'
         )
-        obs_result.log.error.assert_called_once_with(
+        assert obs_result.image_status['errors'] == [
             'Reading osc config failed: osc_error'
-        )
+        ]
 
     @patch('mash.services.obs.build_result.BackgroundScheduler')
     @patch.object(OBSImageBuildResult, '_update_image_status')
@@ -196,9 +191,7 @@ class TestOBSImageBuildResult(object):
     def test_job_submit_event(self):
         self.obs_result.log = Mock()
         self.obs_result._job_submit_event(Mock())
-        self.obs_result.log.info.assert_called_once_with(
-            'Job[815]: Started watching on obs_project/obs_package'
-        )
+        assert self.obs_result.image_status['job_status'] == 'queued'
 
     def test_job_skipped_event(self):
         self.obs_result.log = Mock()
@@ -223,13 +216,13 @@ class TestOBSImageBuildResult(object):
         )
 
     @patch('mash.services.obs.build_result.meta_exists')
-    def test_log_error(self, mock_meta_exists):
+    def test_lock_error(self, mock_meta_exists):
         self.obs_result.log = Mock()
         mock_meta_exists.side_effect = Exception('error')
         self.obs_result._lock()
-        self.obs_result.log.error.assert_called_once_with(
+        assert self.obs_result.image_status['errors'] == [
             'Lock failed for obs_project/obs_package: Exception: error'
-        )
+        ]
 
     @patch('mash.services.obs.build_result.unlock_package')
     def test_unlock(self, mock_unlock_package):
@@ -245,9 +238,9 @@ class TestOBSImageBuildResult(object):
         self.obs_result.log = Mock()
         mock_unlock_package.side_effect = Exception('error')
         self.obs_result._unlock()
-        self.obs_result.log.error.assert_called_once_with(
+        assert self.obs_result.image_status['errors'] == [
             'Unlock failed for obs_project/obs_package: Exception: error'
-        )
+        ]
 
     @patch('mash.services.obs.build_result.get_results')
     def test_wait_for_new_image(self, mock_get_results):
@@ -355,7 +348,7 @@ class TestOBSImageBuildResult(object):
     def test_update_image_status_lock_failed(self, mock_unlock, mock_lock):
         mock_lock.return_value = False
         self.obs_result._update_image_status()
-        assert self.obs_result.image_status['job_status'] == 'queued'
+        assert self.obs_result.image_status['job_status'] == 'prepared'
         mock_lock.assert_called_once_with()
         mock_unlock.assert_called_once_with()
 
@@ -366,9 +359,6 @@ class TestOBSImageBuildResult(object):
         mock_lock.side_effect = MashError('error')
         self.obs_result._update_image_status()
         mock_unlock.assert_called_once_with()
-        self.obs_result.log.error.assert_called_once_with(
-            'MashError: error'
-        )
         assert self.obs_result.image_status['errors'] == [
             'MashError: error'
         ]

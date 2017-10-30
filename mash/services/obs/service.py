@@ -30,46 +30,26 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from mash.services.base_service import BaseService
 from mash.services.obs.defaults import Defaults
 from mash.services.obs.build_result import OBSImageBuildResult
-from mash.logging_filter import SchedulerLoggingFilter
+from mash.services.obs.config import OBSConfig
 from mash.logging_logfile import MashLog
+from mash.logging_filter import SchedulerLoggingFilter
 
 
 class OBSImageBuildResultService(BaseService):
     """
     Implements Open BuildService image result network
     service
-
-    Attributes
-
-    * :attr:`custom_args`
-      Custom obs arguments:
-
-      [logfile]:
-          local obs logfile name, defaults to: /tmp/obs_service.log
-
-      [job_dir]:
-          Directory to create and manage OBSImageBuildResult
-          watchdog jobs, defaults to: /var/tmp/obs_service/
-
-      [download_dir]:
-          Directory name passed to instances of OBSImageBuildResult
-          where it is used to determine the location for image
-          downloads, defaults to /tmp
     """
-    def post_init(self, custom_args=None):
-        if not custom_args:
-            custom_args = {}
+    def post_init(self):
+        # read config file
+        config = OBSConfig()
 
-        self.logfile = custom_args['logfile'] \
-            if 'logfile' in custom_args else Defaults.get_log_file()
+        # setup service log file
+        MashLog.set_logfile(self.log, config.get_log_file())
 
-        self.download_directory = custom_args['download_dir'] \
-            if 'download_dir' in custom_args else Defaults.get_download_dir()
-
-        self.job_directory = custom_args['job_dir'] \
-            if 'job_dir' in custom_args else Defaults.get_jobs_dir()
-
-        MashLog.set_logfile(self.log, self.logfile)
+        # setup service data directories
+        self.download_directory = config.get_download_directory()
+        self.job_directory = Defaults.get_jobs_dir()
 
         mkpath(self.job_directory)
 
@@ -111,15 +91,13 @@ class OBSImageBuildResultService(BaseService):
         self.scheduler.start()
 
     def _send_control_response(self, result):
-        message = result['message']
-        extra = {
+        message = {
             'obs_control_response': result
         }
-
         if result['ok']:
-            self.log.info(message, extra=extra)
+            self.log.info(self._json_message(message))
         else:
-            self.log.error(message, extra=extra)
+            self.log.error(self._json_message(message))
 
     def _run_control_consumer(self):
         self.consume_queue(
@@ -358,7 +336,7 @@ class OBSImageBuildResultService(BaseService):
                 time = dateutil.parser.parse(job['utctime']).isoformat()
 
             job_worker = OBSImageBuildResult(
-                job_id=job_id, job_file=job_file, logfile=self.logfile,
+                job_id=job_id, job_file=job_file,
                 project=job['project'], package=job['image'],
                 conditions=job['conditions'],
                 download_directory=self.download_directory
