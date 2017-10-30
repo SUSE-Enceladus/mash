@@ -254,17 +254,16 @@ class OBSImageBuildResult(object):
 
     def _job_submit_event(self, event):
         self.log.info(
-            'Job[{0}]: Started watching on  {1}/{2}'.format(
+            'Job[{0}]: Started watching on {1}/{2}'.format(
                 self.job_id, self.project, self.package
             )
         )
 
     def _job_skipped_event(self, event):
-        self.log.info(
-            'Job[{0}]: Still waiting for result change on {1}/{2}'.format(
-                self.job_id, self.project, self.package
-            )
-        )
+        # Job is still active while the next _update_image_status
+        # event was scheduled. In this case we just skip the event
+        # and keep the active job waiting for an obs change
+        pass
 
     def _lock(self):
         try:

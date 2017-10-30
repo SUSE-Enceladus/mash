@@ -197,16 +197,12 @@ class TestOBSImageBuildResult(object):
         self.obs_result.log = Mock()
         self.obs_result._job_submit_event(Mock())
         self.obs_result.log.info.assert_called_once_with(
-            'Job[815]: Started watching on  obs_project/obs_package'
+            'Job[815]: Started watching on obs_project/obs_package'
         )
 
     def test_job_skipped_event(self):
         self.obs_result.log = Mock()
         self.obs_result._job_skipped_event(Mock())
-        self.obs_result.log.info.assert_called_once_with(
-            'Job[815]: Still waiting for result change on ' +
-            'obs_project/obs_package'
-        )
 
     @patch('mash.services.obs.build_result.meta_exists')
     @patch('mash.services.obs.build_result.edit_meta')
