@@ -1,5 +1,3 @@
 obs:
-  log_port: 9001
-  control_port: 9000
   logfile: /var/log/obs_service.log
   download_directory: /var/tmp/mash/images
