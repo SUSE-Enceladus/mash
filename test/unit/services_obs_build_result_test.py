@@ -191,7 +191,7 @@ class TestOBSImageBuildResult(object):
     def test_job_submit_event(self):
         self.obs_result.log = Mock()
         self.obs_result._job_submit_event(Mock())
-        assert self.obs_result.image_status['job_status'] == 'queued'
+        assert self.obs_result.image_status['job_status'] == 'oneshot'
 
     def test_job_skipped_event(self):
         self.obs_result.log = Mock()

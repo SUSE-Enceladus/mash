@@ -244,7 +244,8 @@ class OBSImageBuildResult(object):
         return image_status
 
     def _job_submit_event(self, event):
-        self.image_status['job_status'] = 'queued'
+        if not self.job_nonstop:
+            self.image_status['job_status'] = 'oneshot'
 
     def _job_skipped_event(self, event):
         # Job is still active while the next _update_image_status
@@ -356,6 +357,7 @@ class OBSImageBuildResult(object):
             if self.job_nonstop:
                 self.image_status['errors'] = []
             if not self._lock():
+                self._unlock()
                 return
             self.image_status['job_status'] = 'running'
             packages = self._lookup_image_packages_metadata()
@@ -383,16 +385,16 @@ class OBSImageBuildResult(object):
                 self.image_status['job_status'] = 'success'
             if self.image_status['job_status'] != 'success':
                 self.image_status['job_status'] = 'failed'
+            self._unlock()
             if self.job_nonstop:
                 self._wait_for_new_image()
             else:
                 self._retire_job()
         except MashError as e:
+            self._unlock()
             self._log_error(
                 '{0}: {1}'.format(type(e).__name__, e)
             )
-        finally:
-            self._unlock()
 
     def _lookup_image_packages_metadata(self):
         packages_file = NamedTemporaryFile()
