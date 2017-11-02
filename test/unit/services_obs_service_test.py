@@ -78,10 +78,10 @@ class TestOBSImageBuildResultService(object):
             'message': 'message',
             'ok': False
         }
-        self.obs_result._send_control_response(result)
+        self.obs_result._send_control_response(result, '4711')
         self.obs_result.log.error.assert_called_once_with(
-            '{\n    "obs_control_response": ' +
-            '{\n        "message": "message",\n        "ok": false\n    }\n}'
+            'message',
+            extra={'job_id': '4711'}
         )
 
     def test_send_control_response_public(self):
@@ -91,8 +91,8 @@ class TestOBSImageBuildResultService(object):
         }
         self.obs_result._send_control_response(result)
         self.obs_result.log.info.assert_called_once_with(
-            '{\n    "obs_control_response": ' +
-            '{\n        "message": "message",\n        "ok": true\n    }\n}'
+            'message',
+            extra={}
         )
 
     @patch.object(OBSImageBuildResultService, '_control_in')
@@ -190,15 +190,16 @@ class TestOBSImageBuildResultService(object):
         message = 'foo'
         self.obs_result._control_in(Mock(), Mock(), Mock(), message)
         assert mock_send_control_response.call_args_list == [
-            call(mock_add_job.return_value),
-            call(mock_add_to_listener.return_value),
-            call(mock_delete_job.return_value),
+            call(mock_add_job.return_value, '4711'),
+            call(mock_add_to_listener.return_value, '4711'),
+            call(mock_delete_job.return_value, '4711'),
             call(
                 {
                     'message':
                         "No idea what to do with: {'job_delete': '4711'}",
                     'ok': False
-                }
+                },
+                None
             ),
             call(
                 {
