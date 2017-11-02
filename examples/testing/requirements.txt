@@ -1,2 +1,0 @@
-pika
-python_logging_rabbitmq
