@@ -30,7 +30,8 @@ config = {
         'console_scripts': [
             'obs-service-{0}=mash.services.obs_service:main'.format(
                 python_version
-            )
+            ),
+            'mash-logger-service=mash.services.logger_service:main'
         ]
     },
     'include_package_data': True,

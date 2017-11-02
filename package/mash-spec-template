@@ -55,6 +55,12 @@ install -D -m 644 config/obs_result.service \
 install -D -m 644 config/obs_config.yml \
     %{buildroot}%{_sysconfdir}/%{name}/obs_config.yml
 
+install -D -m 644 config/mash_logger.service \
+    %{buildroot}%{_unitdir}/mash_logger.service
+
+install -D -m 644 config/logger_config.yml \
+    %{buildroot}%{_sysconfdir}/%{name}/logger_config.yml
+
 %files
 %defattr(-,root,root,-)
 %{python_sitelib}/*
@@ -62,5 +68,9 @@ install -D -m 644 config/obs_config.yml \
 %{_bindir}/obs-service-2
 %{_unitdir}/obs_result.service
 %config(noreplace) %{_sysconfdir}/%{name}/obs_config.yml
+
+%{_bindir}/mash-logger-service
+%{_unitdir}/mash_logger.service
+%config(noreplace) %{_sysconfdir}/%{name}/logger_config.yml
 
 %changelog

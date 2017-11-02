@@ -1,0 +1,2 @@
+logger:
+  log_dir: /var/log/mash/
