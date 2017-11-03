@@ -23,7 +23,7 @@ class TestUploadAmazon(object):
             'launch_ami': 'ami-bc5b48d0',
             'sriov_type': 'simple',
             'ena_support': True,
-            'region': 'us-eas-1'
+            'region': 'us-east-1'
         }
         self.uploader = UploadAmazon(
             self.credentials, 'file', 'name', 'description', custom_args
@@ -57,7 +57,7 @@ class TestUploadAmazon(object):
 
     def test_upload(self):
         self.uploader.upload()
-        self.uploader.ec2.set_region.assert_called_once_with('us-eas-1')
+        self.uploader.ec2.set_region.assert_called_once_with('us-east-1')
         self.uploader.ec2.create_image.assert_called_once_with('file')
         self.uploader.ec2.create_image.side_effect = Exception
         with raises(MashUploadError):
