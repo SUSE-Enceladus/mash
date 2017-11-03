@@ -54,6 +54,18 @@ class MashConfigError(MashError):
     """
 
 
+class MashCredentialsError(MashError):
+    """
+    Exception raised if no credentials handler for this cloud provider exists.
+    """
+
+
+class MashConventionsError(MashError):
+    """
+    Exception raised if no conventions handler for this cloud provider exists.
+    """
+
+
 class MashImageDownloadError(MashError):
     """
     Exception raised if download of image file failed
@@ -75,6 +87,18 @@ class MashOBSLookupError(MashError):
 class MashOBSResultError(MashError):
     """
     Exception raised if the OBS result request failed
+    """
+
+
+class MashUploadError(MashError):
+    """
+    Exception raised if image upload to csp failed
+    """
+
+
+class MashUploadSetupError(MashError):
+    """
+    Exception raised if no image upload handler for this cloud provider exists.
     """
 
 
