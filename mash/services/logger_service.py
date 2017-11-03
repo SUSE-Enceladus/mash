@@ -42,7 +42,7 @@ def main():
         logger.channel.start_consuming()
     except MashError as e:
         # known exception
-        log.error('%s: %s', type(e).__name__, format(e))
+        log.error('{0}: {1}'.format(type(e).__name__, format(e)))
         sys.exit(1)
     except KeyboardInterrupt:
         log.info('Tschuss')

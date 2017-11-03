@@ -20,7 +20,7 @@ import os
 
 from mash.exceptions import MashLoggerException
 from mash.services.base_config import BaseConfig
-from mash.services.logger.constants import DEFAULT_LOG_DIR, LOG_SERVICE_CONFIG
+from mash.services.logger.defaults import Defaults
 
 
 class LoggerConfig(BaseConfig):
@@ -33,7 +33,7 @@ class LoggerConfig(BaseConfig):
     formatted file containing information to control the behavior
     of the logger service.
     """
-    def __init__(self, config_file=LOG_SERVICE_CONFIG):
+    def __init__(self, config_file=Defaults.get_config()):
         super(LoggerConfig, self).__init__(config_file)
 
     def get_log_dir(self):
@@ -51,7 +51,7 @@ class LoggerConfig(BaseConfig):
         log_dir = self._get_attribute(
             element='logger', attribute='log_dir'
         )
-        log_dir = log_dir or DEFAULT_LOG_DIR
+        log_dir = log_dir or Defaults.get_log_dir()
 
         if not os.path.exists(log_dir):
             try:

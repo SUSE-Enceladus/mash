@@ -16,5 +16,16 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-LOG_SERVICE_CONFIG = '/etc/mash/logger_config.yml'
-DEFAULT_LOG_DIR = '/var/log/mash/'
+
+class Defaults(object):
+    """
+    Default values
+    """
+
+    @classmethod
+    def get_config(self):
+        return '/etc/mash/logger_config.yml'
+
+    @classmethod
+    def get_log_dir(self):
+        return '/var/log/mash/'

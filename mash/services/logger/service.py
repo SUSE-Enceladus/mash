@@ -97,12 +97,12 @@ class LoggerService(BaseService):
                         data['levelname'],
                         data['timestamp'],
                         data['name'],
-                        '\n',
+                        os.linesep,
                         data['msg'],
-                        '\n'
+                        os.linesep
                     ])
                 )
         except Exception as e:
             raise MashLoggerException(
-                'Could not write to log file: {}'.format(e)
+                'Could not write to log file: {0}'.format(e)
             )

@@ -93,14 +93,14 @@ class OBSImageBuildResultService(BaseService):
     def _send_control_response(self, result, job_id=None):
         message = result['message']
 
-        extra = {}
+        job_metadata = {}
         if job_id:
-            extra['job_id'] = job_id
+            job_metadata['job_id'] = job_id
 
         if result['ok']:
-            self.log.info(message, extra=extra)
+            self.log.info(message, extra=job_metadata)
         else:
-            self.log.error(message, extra=extra)
+            self.log.error(message, extra=job_metadata)
 
     def _run_control_consumer(self):
         self.consume_queue(
