@@ -17,7 +17,7 @@
 #
 
 
-class MashError(Exception):
+class MashException(Exception):
     """
     Base class to handle all known exceptions.
 
@@ -35,80 +35,80 @@ class MashError(Exception):
         return format(self.message)
 
 
-class MashPikaConnectionError(MashError):
+class MashPikaConnectionException(MashException):
     """
     Exception raised of connection to RabbitMQ server failed
     """
 
 
-class MashVersionExpressionError(MashError):
+class MashVersionExpressionException(MashException):
     """
     Exception raised if the version information in a job
     condition description is invalid
     """
 
 
-class MashConfigError(MashError):
+class MashConfigException(MashException):
     """
     Exception raised if config file can not be read
     """
 
 
-class MashCredentialsError(MashError):
+class MashCredentialsException(MashException):
     """
     Exception raised if no credentials handler for this cloud provider exists.
     """
 
 
-class MashConventionsError(MashError):
+class MashConventionsException(MashException):
     """
     Exception raised if no conventions handler for this cloud provider exists.
     """
 
 
-class MashImageDownloadError(MashError):
+class MashImageDownloadException(MashException):
     """
     Exception raised if download of image file failed
     """
 
 
-class MashLogSetupError(MashError):
+class MashLogSetupException(MashException):
     """
     Exception raised if log file setup failed
     """
 
 
-class MashOBSLookupError(MashError):
+class MashOBSLookupException(MashException):
     """
     Exception raised if a request to OBS failed
     """
 
 
-class MashOBSResultError(MashError):
+class MashOBSResultException(MashException):
     """
     Exception raised if the OBS result request failed
     """
 
 
-class MashUploadError(MashError):
+class MashUploadException(MashException):
     """
     Exception raised if image upload to csp failed
     """
 
 
-class MashUploadSetupError(MashError):
+class MashUploadSetupException(MashException):
     """
     Exception raised if no image upload handler for this cloud provider exists.
     """
 
 
-class MashJobRetireError(MashError):
+class MashJobRetireException(MashException):
     """
     Exception raised if the pickle dump of an OBSImageBuildResult failed
     """
 
 
-class MashLoggerException(MashError):
+class MashLoggerException(MashException):
     """
     Base class to handle all logger service exceptions.
     """

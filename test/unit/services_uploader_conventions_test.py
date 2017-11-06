@@ -2,7 +2,7 @@ from pytest import raises
 from mock import patch
 
 from mash.services.uploader.conventions import Conventions
-from mash.exceptions import MashConventionsError
+from mash.mash_exceptions import MashConventionsException
 
 
 class TestConventions(object):
@@ -10,5 +10,5 @@ class TestConventions(object):
     def test_conventions_amazon(self, mock_ConventionsAmazon):
         Conventions('ec2')
         mock_ConventionsAmazon.assert_called_once_with()
-        with raises(MashConventionsError):
+        with raises(MashConventionsException):
             Conventions('foo')

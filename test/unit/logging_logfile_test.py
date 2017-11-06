@@ -3,7 +3,7 @@ from mock import call, patch
 from mock import Mock
 
 from mash.logging_logfile import MashLog
-from mash.exceptions import MashLogSetupError
+from mash.mash_exceptions import MashLogSetupException
 
 
 class TestMashLog(object):
@@ -31,5 +31,5 @@ class TestMashLog(object):
     @patch('logging.FileHandler')
     def test_set_logfile_raises(self, mock_logging_FileHandler):
         mock_logging_FileHandler.side_effect = Exception
-        with raises(MashLogSetupError):
+        with raises(MashLogSetupException):
             MashLog.set_logfile(Mock(), '/some/log')

@@ -17,7 +17,7 @@
 #
 # project
 from mash.services.uploader.upload_base import UploadBase
-from mash.exceptions import MashUploadError
+from mash.mash_exceptions import MashUploadException
 
 # TODO: ec2uploadimg is not on pypi
 # from ec2utils.ec2uploadimg import EC2ImageUploader
@@ -76,6 +76,6 @@ class UploadAmazon(UploadBase):
                 self.system_image_file
             )
         except Exception as e:
-            raise MashUploadError(
+            raise MashUploadException(
                 'Upload to Amazon EC2 failed with: {0}'.format(e)
             )

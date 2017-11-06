@@ -15,10 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-
 import yaml
 
-from mash.exceptions import MashConfigError
+from mash.mash_exceptions import MashConfigException
 
 
 class BaseConfig(object):
@@ -34,7 +33,7 @@ class BaseConfig(object):
             with open(config_file, 'r') as config:
                 self.config_data = yaml.load(config)
         except Exception as e:
-            raise MashConfigError(
+            raise MashConfigException(
                 'Failed reading config file: {config}: {error}'.format(
                     config=config_file, error=e
                 )

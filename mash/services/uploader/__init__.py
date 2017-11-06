@@ -21,7 +21,7 @@ from mash.services.uploader.conventions import Conventions
 from mash.services.uploader.credentials import Credentials
 from mash.csp import CSP
 
-from mash.exceptions import MashUploadSetupError
+from mash.mash_exceptions import MashUploadSetupException
 
 
 class Upload(object):
@@ -58,7 +58,7 @@ class Upload(object):
                 cloud_image_description, custom_uploader_args
             )
         else:
-            raise MashUploadSetupError(
+            raise MashUploadSetupException(
                 'Support for {csp} Cloud Service not implemented'.format(
                     csp=csp_name
                 )
