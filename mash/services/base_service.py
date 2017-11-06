@@ -57,6 +57,7 @@ class BaseService(object):
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(logging.DEBUG)
+        self.log.propagate = False
         rabbit_handler = RabbitMQHandler(
             host=self.host,
             routing_key='mash.{level}'

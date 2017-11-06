@@ -15,13 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import yaml
 
+from mash.services.base_config import BaseConfig
 from mash.services.obs.defaults import Defaults
-from mash.exceptions import MashConfigError
 
 
-class OBSConfig(object):
+class OBSConfig(BaseConfig):
     """
     Implements reading of obs service configuration file:
 
@@ -32,16 +31,7 @@ class OBSConfig(object):
     of the obs service.
     """
     def __init__(self, config_file=Defaults.get_config()):
-        self.config_data = None
-        try:
-            with open(config_file, 'r') as config:
-                self.config_data = yaml.load(config)
-        except Exception as e:
-            raise MashConfigError(
-                'Failed reading config file: {config}: {error}'.format(
-                    config=config_file, error=e
-                )
-            )
+        super(OBSConfig, self).__init__(config_file)
 
     def get_log_file(self):
         """
@@ -78,9 +68,3 @@ class OBSConfig(object):
         )
         return download_directory if download_directory else \
             Defaults.get_download_dir()
-
-    def _get_attribute(self, element, attribute):
-        if self.config_data:
-            if element in self.config_data:
-                if attribute in self.config_data[element]:
-                    return self.config_data[element][attribute]

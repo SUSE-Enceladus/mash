@@ -27,6 +27,7 @@ class TestRabbitMQHandler(object):
         log.addHandler(self.handler)
         log.setLevel(logging.DEBUG)
         log.info('Test %s', 'args')
+        log.info('Job finished!', extra={'job_id': '4711'})
 
         try:
             raise Exception('Broken')
@@ -88,5 +89,6 @@ class TestRabbitMQHandler(object):
 
         self.connection.close.reset_mock()
         self.connection.close.side_effect = Exception('Already closed!')
+
         socket.close()
         self.connection.close.assert_called_once_with()

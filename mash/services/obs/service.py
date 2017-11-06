@@ -90,14 +90,17 @@ class OBSImageBuildResultService(BaseService):
         atexit.register(lambda: os._exit(0))
         self.scheduler.start()
 
-    def _send_control_response(self, result):
-        message = {
-            'obs_control_response': result
-        }
+    def _send_control_response(self, result, job_id=None):
+        message = result['message']
+
+        job_metadata = {}
+        if job_id:
+            job_metadata['job_id'] = job_id
+
         if result['ok']:
-            self.log.info(self._json_message(message))
+            self.log.info(message, extra=job_metadata)
         else:
-            self.log.error(self._json_message(message))
+            self.log.error(message, extra=job_metadata)
 
     def _run_control_consumer(self):
         self.consume_queue(
@@ -122,7 +125,7 @@ class OBSImageBuildResultService(BaseService):
                         job_id, self._json_message(trigger_info)
                     )
                     job_info = self._delete_job(job_id)
-                    self._send_control_response(job_info)
+                    self._send_control_response(job_info, job_id)
                 except Exception:
                     # failed to publish, don't dequeue
                     pass
@@ -149,6 +152,8 @@ class OBSImageBuildResultService(BaseService):
         """
         channel.basic_ack(method.delivery_tag)
         message_data = {}
+        job_id = None
+
         try:
             message_data = self._json_loads_byteified(format(message))
         except Exception as e:
@@ -162,16 +167,19 @@ class OBSImageBuildResultService(BaseService):
             )
         if 'obsjob' in message_data:
             result = self._add_job(message_data)
+            job_id = message_data['obsjob'].get('id', None)
         elif 'obsjob_listen' in message_data:
-            result = self._add_to_listener(message_data['obsjob_listen'])
+            job_id = message_data['obsjob_listen']
+            result = self._add_to_listener(job_id)
         elif 'obsjob_delete' in message_data and message_data['obsjob_delete']:
-            result = self._delete_job(message_data['obsjob_delete'])
+            job_id = message_data['obsjob_delete']
+            result = self._delete_job(job_id)
         else:
             result = {
                 'ok': False,
                 'message': 'No idea what to do with: {0}'.format(message_data)
             }
-        self._send_control_response(result)
+        self._send_control_response(result, job_id)
 
     def _add_to_listener(self, job_id):
         """

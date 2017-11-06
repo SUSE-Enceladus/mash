@@ -106,3 +106,9 @@ class MashJobRetireError(MashError):
     """
     Exception raised if the pickle dump of an OBSImageBuildResult failed
     """
+
+
+class MashLoggerException(MashError):
+    """
+    Base class to handle all logger service exceptions.
+    """
