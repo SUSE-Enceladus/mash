@@ -2,6 +2,7 @@
 
 graft mash/services
 graft mash/services/obs
+graft mash/services/logger
 graft package
 graft config
 
