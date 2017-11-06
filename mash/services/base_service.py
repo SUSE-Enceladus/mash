@@ -40,8 +40,6 @@ class BaseService(object):
         self.channel = None
         self.connection = None
 
-        self._open_connection(host)
-
         self.pika_properties = pika.BasicProperties(
             content_type='application/json',
             delivery_mode=2
@@ -50,9 +48,9 @@ class BaseService(object):
         self.host = host
         self.service_exchange = service_exchange
         self.service_key = 'service_event'
-        self._declare_topic_exchange(
-            self.service_exchange
-        )
+
+        self._open_connection()
+        self._declare_topic_exchange(self.service_exchange)
 
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
@@ -74,6 +72,56 @@ class BaseService(object):
         """
         pass
 
+    def _bind_queue(self, exchange, routing_key):
+        self._declare_topic_exchange(exchange)
+        declared_queue = self._declare_queue(
+            '{0}.{1}'.format(exchange, routing_key)
+        )
+        self.channel.queue_bind(
+            exchange=exchange,
+            queue=declared_queue.method.queue,
+            routing_key=routing_key
+        )
+        return declared_queue.method.queue
+
+    def _declare_queue(self, queue):
+        return self.channel.queue_declare(
+            queue=queue, durable=True
+        )
+
+    def _declare_topic_exchange(self, service_exchange):
+        self.channel.exchange_declare(
+            exchange=service_exchange, exchange_type='topic', durable=True
+        )
+
+    def _open_connection(self):
+        if not self.connection or self.connection.is_closed:
+            try:
+                self.connection = pika.BlockingConnection(
+                    pika.ConnectionParameters(
+                        host=self.host,
+                        heartbeat_interval=600
+                    )
+                )
+            except Exception as e:
+                raise MashPikaConnectionException(
+                    'Connection to RabbitMQ server failed: {0}'.format(e)
+                )
+
+        if not self.channel or self.channel.is_closed:
+            self.channel = self.connection.channel()
+            self.channel.confirm_delivery()
+
+    def _publish(self, exchange, routing_key, message):
+        self._open_connection()
+        return self.channel.basic_publish(
+            exchange=exchange,
+            routing_key=routing_key,
+            body=message,
+            properties=self.pika_properties,
+            mandatory=True
+        )
+
     def publish_service_message(self, message):
         return self._publish(
             self.service_exchange, self.service_key, message
@@ -94,64 +142,24 @@ class BaseService(object):
             self.service_exchange, 'listener_{0}'.format(identifier)
         )
 
-    def delete_listener_queue(self, identifier):
-        self.channel.queue_delete(
-            queue='{0}.listener_{1}'.format(self.service_exchange, identifier)
+    def bind_orchestrator_queue(self):
+        return self._bind_queue(
+            'orchestrator', 'job_event.{}'.format(self.service_exchange)
         )
+
+    def close_connection(self):
+        if self.channel:
+            self.channel.close()
+
+        if self.connection:
+            self.connection.close()
 
     def consume_queue(self, callback, queue):
         self.channel.basic_consume(
             callback, queue=queue
         )
 
-    def _publish(self, exchange, routing_key, message):
-        return self.channel.basic_publish(
-            exchange=exchange,
-            routing_key=routing_key,
-            body=message,
-            properties=self.pika_properties,
-            mandatory=True
+    def delete_listener_queue(self, identifier):
+        self.channel.queue_delete(
+            queue='{0}.listener_{1}'.format(self.service_exchange, identifier)
         )
-
-    def _open_connection(self, host):
-        if not self.connection or self.connection.is_closed:
-            try:
-                self.connection = pika.BlockingConnection(
-                    pika.ConnectionParameters(host=host)
-                )
-            except Exception as e:
-                raise MashPikaConnectionException(
-                    'Connection to RabbitMQ server failed: {0}'.format(e)
-                )
-
-        if not self.channel or self.channel.is_closed:
-            self.channel = self.connection.channel()
-            self.channel.confirm_delivery()
-
-    def close_connection(self):
-        try:
-            self.connection.close()
-        except Exception:
-            pass
-
-        self.connection, self.channel = None, None
-
-    def _bind_queue(self, exchange, routing_key):
-        self._declare_topic_exchange(exchange)
-        declared_queue = self._declare_queue(
-            '{0}.{1}'.format(exchange, routing_key)
-        )
-        self.channel.queue_bind(
-            exchange=exchange,
-            queue=declared_queue.method.queue,
-            routing_key=routing_key
-        )
-        return declared_queue.method.queue
-
-    def _declare_topic_exchange(self, exchange):
-        self.channel.exchange_declare(
-            exchange=exchange, exchange_type='topic', durable=True
-        )
-
-    def _declare_queue(self, queue):
-        return self.channel.queue_declare(queue=queue, durable=True)
