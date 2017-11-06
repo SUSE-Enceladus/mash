@@ -49,8 +49,8 @@ python setup.build.py build
 %install
 python setup.build.py install --prefix=%{_prefix} --root=%{buildroot}
 
-install -D -m 644 config/obs_result.service \
-    %{buildroot}%{_unitdir}/obs_result.service
+install -D -m 644 config/mash_obs.service \
+    %{buildroot}%{_unitdir}/mash_obs.service
 
 install -D -m 644 config/obs_config.yml \
     %{buildroot}%{_sysconfdir}/%{name}/obs_config.yml
@@ -65,8 +65,8 @@ install -D -m 644 config/logger_config.yml \
 %defattr(-,root,root,-)
 %{python_sitelib}/*
 %dir %{_sysconfdir}/%{name}
-%{_bindir}/obs-service-2
-%{_unitdir}/obs_result.service
+%{_bindir}/mash-obs-service
+%{_unitdir}/mash_obs.service
 %config(noreplace) %{_sysconfdir}/%{name}/obs_config.yml
 
 %{_bindir}/mash-logger-service
