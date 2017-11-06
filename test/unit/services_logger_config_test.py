@@ -1,7 +1,7 @@
 from mock import patch
 from pytest import raises
 
-from mash.exceptions import MashLoggerException
+from mash.mash_exceptions import MashLoggerException
 from mash.services.logger.config import LoggerConfig
 
 

@@ -18,7 +18,7 @@
 
 import os
 
-from mash.exceptions import MashLoggerException
+from mash.mash_exceptions import MashLoggerException
 from mash.services.base_config import BaseConfig
 from mash.services.logger.defaults import Defaults
 

@@ -20,7 +20,7 @@ import logging
 import sys
 
 # project
-from mash.exceptions import MashError
+from mash.mash_exceptions import MashException
 from mash.services.logger.service import LoggerService
 
 
@@ -40,7 +40,7 @@ def main():
             host='localhost', service_exchange='logger'
         )
         logger.channel.start_consuming()
-    except MashError as e:
+    except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))
         sys.exit(1)

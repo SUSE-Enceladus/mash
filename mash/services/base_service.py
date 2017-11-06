@@ -20,7 +20,7 @@ import pika
 
 # project
 from mash.logging_handler import RabbitMQHandler
-from mash.exceptions import MashPikaConnectionError
+from mash.mash_exceptions import MashPikaConnectionException
 
 
 class BaseService(object):
@@ -120,7 +120,7 @@ class BaseService(object):
                     pika.ConnectionParameters(host=host)
                 )
             except Exception as e:
-                raise MashPikaConnectionError(
+                raise MashPikaConnectionException(
                     'Connection to RabbitMQ server failed: {0}'.format(e)
                 )
 

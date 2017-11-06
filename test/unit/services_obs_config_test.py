@@ -1,7 +1,7 @@
 from pytest import raises
 from .test_helper import patch_open
 
-from mash.exceptions import MashConfigError
+from mash.mash_exceptions import MashConfigException
 from mash.services.obs.config import OBSConfig
 
 
@@ -13,7 +13,7 @@ class TestOBSConfig(object):
     @patch_open
     def test_init_error(self, mock_open):
         mock_open.side_effect = Exception
-        with raises(MashConfigError):
+        with raises(MashConfigException):
             OBSConfig('../data/obs_config.yml')
 
     def test_get_log_file(self):

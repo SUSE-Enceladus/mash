@@ -19,7 +19,7 @@
 import os
 import json
 
-from mash.exceptions import MashLoggerException
+from mash.mash_exceptions import MashLoggerException
 from mash.services.logger.config import LoggerConfig
 from mash.services.base_service import BaseService
 

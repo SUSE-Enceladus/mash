@@ -18,13 +18,13 @@ from apscheduler.events import (
 )
 
 from mash.services.obs.build_result import OBSImageBuildResult
-from mash.exceptions import (
-    MashOBSLookupError,
-    MashImageDownloadError,
-    MashVersionExpressionError,
-    MashOBSResultError,
-    MashJobRetireError,
-    MashError
+from mash.mash_exceptions import (
+    MashOBSLookupException,
+    MashImageDownloadException,
+    MashVersionExpressionException,
+    MashOBSResultException,
+    MashJobRetireException,
+    MashException
 )
 
 
@@ -169,7 +169,7 @@ class TestOBSImageBuildResult(object):
     @patch('mash.services.obs.build_result.get_binarylist')
     def test_get_image_obs_error(self, mock_get_binary_list):
         mock_get_binary_list.side_effect = Exception
-        with raises(MashOBSLookupError):
+        with raises(MashOBSLookupException):
             self.obs_result.get_image()
 
     @patch('mash.services.obs.build_result.get_binary_file')
@@ -185,7 +185,7 @@ class TestOBSImageBuildResult(object):
             binary_list_type(name='image.raw.xz.sha256', mtime='time')
         ]
         mock_get_binary_file.side_effect = Exception
-        with raises(MashImageDownloadError):
+        with raises(MashImageDownloadException):
             self.obs_result.get_image()
 
     def test_job_submit_event(self):
@@ -254,7 +254,7 @@ class TestOBSImageBuildResult(object):
     @patch('mash.services.obs.build_result.get_results')
     def test_wait_for_new_image_error(self, mock_get_results):
         mock_get_results.side_effect = Exception
-        with raises(MashOBSResultError):
+        with raises(MashOBSResultException):
             self.obs_result._wait_for_new_image()
 
     @patch('mash.services.obs.build_result.pickle.dump')
@@ -272,7 +272,7 @@ class TestOBSImageBuildResult(object):
     @patch('os.remove')
     def test_retire_job_job_file_removal_error(self, mock_os_remove):
         mock_os_remove.side_effect = Exception
-        with raises(MashJobRetireError):
+        with raises(MashJobRetireException):
             self.obs_result._retire_job()
 
     def test_image_conditions_complied(self):
@@ -356,11 +356,11 @@ class TestOBSImageBuildResult(object):
     @patch.object(OBSImageBuildResult, '_unlock')
     def test_update_image_status_error(self, mock_unlock, mock_lock):
         self.obs_result.log = Mock()
-        mock_lock.side_effect = MashError('error')
+        mock_lock.side_effect = MashException('error')
         self.obs_result._update_image_status()
         mock_unlock.assert_called_once_with()
         assert self.obs_result.image_status['errors'] == [
-            'MashError: error'
+            'MashException: error'
         ]
 
     @patch('mash.services.obs.build_result.get_binarylist')
@@ -427,7 +427,7 @@ class TestOBSImageBuildResult(object):
         assert self.obs_result._lookup_package(
             packages, ['file-magic', '<5.32', '<1.2']
         ) is False
-        with raises(MashVersionExpressionError):
+        with raises(MashVersionExpressionException):
             self.obs_result._lookup_package(
                 packages, ['file-magic', '=5.32']
             )

@@ -20,7 +20,7 @@ import logging
 import sys
 
 # project
-from mash.exceptions import MashError
+from mash.mash_exceptions import MashException
 from mash.services.obs.service import OBSImageBuildResultService
 
 
@@ -39,7 +39,7 @@ def main(event_loop=True):
         )
         while event_loop:
             time.sleep(5)
-    except MashError as e:
+    except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))
         sys.exit(1)

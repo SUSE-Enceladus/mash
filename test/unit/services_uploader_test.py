@@ -3,7 +3,7 @@ from mock import patch
 from mock import Mock
 
 from mash.services.uploader import Upload
-from mash.exceptions import MashUploadSetupError
+from mash.mash_exceptions import MashUploadSetupException
 
 
 class TestUpload(object):
@@ -20,5 +20,5 @@ class TestUpload(object):
         mock_UploadAmazon.assert_called_once_with(
             mock_Credentials.return_value, 'file', 'name', 'description', None
         )
-        with raises(MashUploadSetupError):
+        with raises(MashUploadSetupException):
             Upload('foo', 'file', 'name', 'description')

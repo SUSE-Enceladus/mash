@@ -2,7 +2,7 @@ from pytest import raises
 from mock import patch
 from mock import Mock
 
-from mash.exceptions import MashError
+from mash.mash_exceptions import MashException
 from mash.services.obs_service import main
 
 
@@ -24,7 +24,7 @@ class TestOBS(object):
     def test_main_mash_error(
         self, mock_exit, mock_OBSImageBuildResultService
     ):
-        mock_OBSImageBuildResultService.side_effect = MashError('error')
+        mock_OBSImageBuildResultService.side_effect = MashException('error')
         main(event_loop=False)
         mock_exit.assert_called_once_with(1)
 

@@ -2,7 +2,7 @@ from pytest import raises
 from mock import Mock
 
 from mash.services.uploader.upload_amazon import UploadAmazon
-from mash.exceptions import MashUploadError
+from mash.mash_exceptions import MashUploadException
 
 import mash
 
@@ -60,5 +60,5 @@ class TestUploadAmazon(object):
         self.uploader.ec2.set_region.assert_called_once_with('us-east-1')
         self.uploader.ec2.create_image.assert_called_once_with('file')
         self.uploader.ec2.create_image.side_effect = Exception
-        with raises(MashUploadError):
+        with raises(MashUploadException):
             self.uploader.upload()

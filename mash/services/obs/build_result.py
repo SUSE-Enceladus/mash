@@ -46,13 +46,13 @@ from osc.core import (
 # project
 from mash.services.obs.defaults import Defaults
 from mash.logging_filter import SchedulerLoggingFilter
-from mash.exceptions import (
-    MashOBSLookupError,
-    MashImageDownloadError,
-    MashVersionExpressionError,
-    MashOBSResultError,
-    MashJobRetireError,
-    MashError
+from mash.mash_exceptions import (
+    MashOBSLookupException,
+    MashImageDownloadException,
+    MashVersionExpressionException,
+    MashOBSResultException,
+    MashJobRetireException,
+    MashException
 )
 
 
@@ -212,7 +212,7 @@ class OBSImageBuildResult(object):
                     )
                     downloaded.append(target_filename)
                 except Exception as e:
-                    raise MashImageDownloadError(
+                    raise MashImageDownloadException(
                         'Job[{0}]: Download {1}:{2}/{3} failed with {4}'.format(
                             self.job_id, self.project, self.package,
                             binary.name, e
@@ -307,7 +307,7 @@ class OBSImageBuildResult(object):
             # JFI: get_results prints unwanted messages on stdout
             get_results(**parameters)
         except Exception as e:
-            raise MashOBSResultError(
+            raise MashOBSResultException(
                 'Job[{0}]: Wait for new image failed {1}/{2}: {3}: {4}'.format(
                     self.job_id, self.project, self.package, type(e).__name__, e
                 )
@@ -330,7 +330,7 @@ class OBSImageBuildResult(object):
             self.job = job_backup
             self.scheduler = scheduler_backup
         except Exception as e:
-            raise MashJobRetireError(
+            raise MashJobRetireException(
                 'Job[{0}]: Failed to retire: {1}'.format(self.job_id, e)
             )
 
@@ -390,7 +390,7 @@ class OBSImageBuildResult(object):
                 self._wait_for_new_image()
             else:
                 self._retire_job()
-        except MashError as e:
+        except MashException as e:
             self._unlock()
             self._log_error(
                 '{0}: {1}'.format(type(e).__name__, e)
@@ -451,7 +451,7 @@ class OBSImageBuildResult(object):
         if re.match('^\d+ (<|>|<=|>=|==)\d+$', expression):
             return eval(expression)
         else:
-            raise MashVersionExpressionError(
+            raise MashVersionExpressionException(
                 'Job[{0}]: Invalid version compare expression: "{1}"'.format(
                     self.job_id, expression
                 )
@@ -494,7 +494,7 @@ class OBSImageBuildResult(object):
                 self.package, verbose=True
             )
         except Exception as e:
-            raise MashOBSLookupError(
+            raise MashOBSLookupException(
                 'Job[{0}]: {1}/{2} said {3}'.format(
                     self.job_id, self.project, self.package, e
                 )

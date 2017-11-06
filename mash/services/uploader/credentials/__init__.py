@@ -19,7 +19,7 @@
 from mash.services.uploader.credentials.amazon import CredentialsAmazon
 from mash.csp import CSP
 
-from mash.exceptions import MashCredentialsError
+from mash.mash_exceptions import MashCredentialsException
 
 
 class Credentials(object):
@@ -35,7 +35,7 @@ class Credentials(object):
         if csp_name == CSP.ec2:
             return CredentialsAmazon(custom_args)
         else:
-            raise MashCredentialsError(
+            raise MashCredentialsException(
                 'Support for {csp} Cloud Service not implemented'.format(
                     csp=csp_name
                 )

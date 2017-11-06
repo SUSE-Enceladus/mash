@@ -2,7 +2,7 @@ from mock import patch
 from mock import Mock
 from pytest import raises
 
-from mash.exceptions import MashPikaConnectionError
+from mash.mash_exceptions import MashPikaConnectionException
 from mash.services.base_service import BaseService
 
 
@@ -22,7 +22,7 @@ class TestBaseService(object):
         self.basic_properties = Mock()
         self.service.pika_properties = self.basic_properties
         mock_pika_BlockingConnection.side_effect = Exception
-        with raises(MashPikaConnectionError):
+        with raises(MashPikaConnectionException):
             BaseService('localhost', 'obs')
         self.channel.reset_mock()
 

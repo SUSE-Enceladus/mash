@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import logging
-from mash.exceptions import MashLogSetupError
+from mash.mash_exceptions import MashLogSetupException
 
 
 class MashLog(object):
@@ -33,6 +33,6 @@ class MashLog(object):
             )
             log.addHandler(logfile_handler)
         except Exception as e:
-            raise MashLogSetupError(
+            raise MashLogSetupException(
                 'Log setup failed: {0}'.format(e)
             )
