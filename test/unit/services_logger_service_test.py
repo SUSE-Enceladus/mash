@@ -39,39 +39,38 @@ class TestLoggerService(object):
 
     @patch.object(LoggerConfig, '__init__')
     @patch.object(LoggerService, '_bind_logger_queue')
+    @patch.object(LoggerService, '_process_log')
     @patch.object(LoggerService, 'consume_queue')
     def test_logger_post_init(
-        self, mock_consume_queue, mock_bind_logger_queue, mock_logger_config
+        self, mock_consume_queue, mock_process_log,
+        mock_bind_logger_queue, mock_logger_config
     ):
         mock_logger_config.return_value = None
         self.logger.post_init()
+        mock_consume_queue.assert_called_once_with(
+            mock_process_log, mock_bind_logger_queue.return_value
+        )
+        mock_bind_logger_queue.assert_called_once_with(
+            queue_name='mash.logger', route='mash.*'
+        )
 
     @patch.object(LoggerService, '_declare_topic_exchange')
     @patch.object(LoggerService, '_declare_queue')
     def test_logger_bind_logger_queue(
         self, mock_declare_queue, mock_declare_topic_exchange
     ):
-        mock_declare_topic_exchange.return_value = None
-
-        channel = Mock()
-        channel.queue_bind.return_value = None
-        self.logger.channel = channel
-
-        queue = Mock()
-        queue.method.queue = 'mash.*'
-        mock_declare_queue.return_value = queue
-
+        self.logger.channel = Mock()
         self.logger.service_exchange = 'logger'
 
-        queue_name = self.logger._bind_logger_queue()
-
-        assert queue_name == 'mash.*'
+        assert self.logger._bind_logger_queue(
+            queue_name='mash.logger', route='mash.*'
+        ) == 'mash.logger'
 
         mock_declare_topic_exchange.assert_called_once_with('logger')
-        mock_declare_queue.assert_called_once_with('mash.*')
-        channel.queue_bind.assert_called_once_with(
+        mock_declare_queue.assert_called_once_with('mash.logger')
+        self.logger.channel.queue_bind.assert_called_once_with(
             exchange='logger',
-            queue='mash.*',
+            queue='mash.logger',
             routing_key='mash.*'
         )
 
