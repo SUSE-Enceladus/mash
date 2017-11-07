@@ -80,24 +80,6 @@ class TestLoggerService(object):
             self.logger._process_log(self.channel, Mock(), Mock(), '')
 
     @patch('os.path.exists')
-    def test_logger_process_no_job_id(
-        self, mock_path_exists
-    ):
-        mock_path_exists.return_value = False
-        self.logger.config = self.config
-
-        with patch(open_name, create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.logger._process_log(
-                self.channel, Mock(), Mock(), json.dumps(self.message)
-            )
-            file_handle = mock_open.return_value.__enter__.return_value
-            file_handle.write.assert_called_with(
-                u'INFO 2017-11-01 11:36:36.782072 '
-                'LoggerService \n Test log message! \n'
-            )
-
-    @patch('os.path.exists')
     def test_logger_process_append(
         self, mock_path_exists
     ):
@@ -122,6 +104,7 @@ class TestLoggerService(object):
     ):
         mock_path_exists.return_value = True
         self.logger.config = self.config
+        self.message['job_id'] = '4711'
 
         with patch(open_name, create=True) as mock_open:
             mock_open.return_value = MagicMock(spec=io.IOBase)
