@@ -61,7 +61,8 @@ class TestRabbitMQHandler(object):
         mock_pika_BlockingConnection.assert_called_once_with(None)
         mock_pika_ConnectionParams.assert_called_once_with(
             host='host',
-            port=1234
+            port=1234,
+            heartbeat_interval=600
         )
 
         self.connection.channel.assert_called_once_with()
@@ -86,9 +87,4 @@ class TestRabbitMQHandler(object):
 
         socket.close()
         self.connection.close.assert_called_once_with()
-
-        self.connection.close.reset_mock()
-        self.connection.close.side_effect = Exception('Already closed!')
-
-        socket.close()
-        self.connection.close.assert_called_once_with()
+        self.channel.close.assert_called_once_with()

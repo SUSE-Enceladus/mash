@@ -100,38 +100,48 @@ class RabbitMQSocket(object):
         self.connection = None
         self.channel = None
         self.open()
+        self.declare_exchange()
 
     def close(self):
         """
         Close socket connection.
         """
-        try:
-            self.connection.close()
-        except Exception:
-            pass
+        if self.channel:
+            self.channel.close()
 
-    def open(self):
-        """"
-        Create/open connection and declare logging exchange.
-        """
-        self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host=self.host,
-                port=self.port
-            )
-        )
-        self.channel = self.connection.channel()
+        if self.connection:
+            self.connection.close()
+
+    def declare_exchange(self):
         self.channel.exchange_declare(
             exchange=self.exchange,
             exchange_type='topic',
             durable=True
         )
 
+    def open(self):
+        """"
+        Create/open connection and declare logging exchange.
+        """
+        if not self.connection or self.connection.is_closed:
+            self.connection = pika.BlockingConnection(
+                pika.ConnectionParameters(
+                    host=self.host,
+                    port=self.port,
+                    heartbeat_interval=600
+                )
+            )
+
+        if not self.channel or self.channel.is_closed:
+            self.channel = self.connection.channel()
+
     def sendall(self, msg):
         """
         Override socket sendall method to publish message to exchange.
         """
         level = json.loads(msg)['levelname']
+
+        self.open()
         self.channel.basic_publish(
             exchange=self.exchange,
             routing_key=self.routing_key.format(level=level),
