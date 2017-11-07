@@ -16,7 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import os
 import json
 
 from mash.mash_exceptions import MashLoggerException
@@ -40,27 +39,25 @@ class LoggerService(BaseService):
         """
         self.config = LoggerConfig()
 
-        queue = self._bind_logger_queue()
-        self.consume_queue(self._process_log, queue)
+        self.consume_queue(
+            self._process_log, self._bind_logger_queue(
+                queue_name='mash.logger', route='mash.*'
+            )
+        )
 
-    def _bind_logger_queue(self):
+    def _bind_logger_queue(self, queue_name, route):
         """
         Declare logger exchange and bind queue with routing
         key for logs.
         """
         self._declare_topic_exchange(self.service_exchange)
-        routing_key = '{0}.{1}'.format('mash', '*')
-        declared_queue = self._declare_queue(
-            'mash.{exchange}'.format(
-                exchange=self.service_exchange
-            )
-        )
+        self._declare_queue(queue_name)
         self.channel.queue_bind(
             exchange=self.service_exchange,
-            queue=declared_queue.method.queue,
-            routing_key=routing_key
+            queue=queue_name,
+            routing_key=route
         )
-        return declared_queue.method.queue
+        return queue_name
 
     def _process_log(self, channel, method, properties, message):
         """
