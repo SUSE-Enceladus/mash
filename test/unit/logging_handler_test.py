@@ -86,9 +86,4 @@ class TestRabbitMQHandler(object):
 
         socket.close()
         self.connection.close.assert_called_once_with()
-
-        self.connection.close.reset_mock()
-        self.connection.close.side_effect = Exception('Already closed!')
-
-        socket.close()
-        self.connection.close.assert_called_once_with()
+        self.channel.close.assert_called_once_with()

@@ -29,14 +29,18 @@ class TestBaseService(object):
     def test_post_init(self):
         self.service.post_init()
 
-    def test_publish_service_message(self):
+    @patch('mash.services.base_service.pika.BlockingConnection')
+    def test_publish_service_message(self, mock_pika_BlockingConnection):
+        mock_pika_BlockingConnection.return_value = self.connection
         self.service.publish_service_message('message')
         self.channel.basic_publish.assert_called_once_with(
             body='message', exchange='obs', mandatory=True,
             properties=self.basic_properties, routing_key='service_event'
         )
 
-    def test_publish_listener_message(self):
+    @patch('mash.services.base_service.pika.BlockingConnection')
+    def test_publish_listener_message(self, mock_pika_BlockingConnection):
+        mock_pika_BlockingConnection.return_value = self.connection
         self.service.publish_listener_message('id', 'message')
         self.channel.basic_publish.assert_called_once_with(
             body='message', exchange='obs', mandatory=True,
@@ -58,6 +62,12 @@ class TestBaseService(object):
             exchange='obs', queue='queue', routing_key='listener_id'
         )
 
+    def test_bind_orchestrator_queue(self):
+        self.service.bind_orchestrator_queue()
+        self.channel.queue_bind.assert_called_once_with(
+            exchange='orchestrator', queue='queue', routing_key='job_event.obs'
+        )
+
     def test_delete_listener_queue(self):
         self.service.delete_listener_queue('id')
         self.channel.queue_delete.assert_called_once_with(
@@ -73,10 +83,7 @@ class TestBaseService(object):
 
     def test_close_connection(self):
         self.connection.close.return_value = None
+        self.channel.close.return_value = None
         self.service.close_connection()
         self.connection.close.assert_called_once_with()
-
-        self.connection.close.reset_mock()
-        self.connection.close.side_effect = Exception('Error!')
-        self.service.close_connection()
-        assert self.connection.close.call_count == 0
+        self.channel.close.assert_called_once_with()
