@@ -55,7 +55,7 @@ class OBSImageBuildResultService(BaseService):
 
         self.jobs = {}
         self.clients = {}
-        self.last_log_result = {}
+        self.last_log = {}
 
         # read and reload done jobs
         jobs_done_dir = Defaults.get_jobs_done_dir()
@@ -131,14 +131,17 @@ class OBSImageBuildResultService(BaseService):
                     pass
 
     def _log_listener(self):
-        result = {
-            'obs_job_log': {}
-        }
         for job_id, job in list(self.jobs.items()):
-            result['obs_job_log'][job_id] = job.get_image_status()
-        if self.last_log_result != result:
-            self.log.info(self._json_message(result))
-        self.last_log_result = copy.deepcopy(result)
+            status = job.get_image_status()
+            result = {
+                'obs_job_log': {job_id: status}
+            }
+            if job_id in self.last_log and self.last_log[job_id] == result:
+                return
+            self.log.info(
+                self._json_message(result), extra={'job_id': job_id}
+            )
+            self.last_log[job_id] = copy.deepcopy(result)
 
     def _control_in(self, channel, method, properties, message):
         """
@@ -264,10 +267,17 @@ class OBSImageBuildResultService(BaseService):
                 if job_worker:
                     job_worker.stop_watchdog()
 
-                # delete job from job and listener queue
+                # delete obs job instance
                 del self.jobs[job_id]
+
+                # delete reference in listener queue if present
                 if job_id in self.clients:
                     del self.clients[job_id]
+
+                # delete reference in last log queue if present
+                if job_id in self.last_log:
+                    del self.last_log[job_id]
+
                 return {
                     'ok': True,
                     'message': 'Job:[{0}]: Deleted'.format(job_id)
