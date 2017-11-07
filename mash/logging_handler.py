@@ -17,6 +17,7 @@
 #
 
 import json
+import os
 import pika
 
 from datetime import datetime
@@ -59,23 +60,27 @@ class RabbitMQHandler(SocketHandler):
         """
         Format the log message to a json string.
         """
-        rabbit_attrs = ['msg', 'levelname', 'name', 'job_id']
+        rabbit_attrs = ['msg', 'levelname', 'job_id']
 
         data = {}
+        self.format(record)
 
         for attr in rabbit_attrs:
             if hasattr(record, attr):
                 data[attr] = getattr(record, attr)
 
-        data['timestamp'] = datetime.now().isoformat(' ')
-
-        if hasattr(record, 'args') and record.args:
-            data['msg'] = data['msg'] % record.args
-
         if hasattr(record, 'exc_info') and record.exc_info:
             data['exc_info'] = self.formatException(record.exc_info)
 
         return json.dumps(data)
+
+    def format(self, record):
+        TEMPLATE = '{levelname} {timestamp} {name}{newline}' \
+                   '    {msg}{newline}'
+
+        record.timestamp = datetime.now().isoformat(' ')
+        record.newline = os.linesep
+        record.msg = TEMPLATE.format(**record.__dict__)
 
 
 class RabbitMQSocket(object):

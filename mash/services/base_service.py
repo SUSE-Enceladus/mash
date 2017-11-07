@@ -19,6 +19,7 @@ import logging
 import pika
 
 # project
+from mash.logging_filter import JobFilter
 from mash.logging_handler import RabbitMQHandler
 from mash.mash_exceptions import MashPikaConnectionException
 
@@ -61,6 +62,8 @@ class BaseService(object):
             routing_key='mash.{level}'
         )
         self.log.addHandler(rabbit_handler)
+        job_filter = JobFilter()
+        self.log.addFilter(job_filter)
 
         self.post_init()
 

@@ -22,3 +22,15 @@ class SchedulerLoggingFilter(logging.Filter):
     def filter(self, record):
         ignore = 'maximum number of running instances reached'
         return ignore not in record.msg
+
+
+class JobFilter(logging.Filter):
+    """
+    Filter mash job logs.
+
+    Only log if msg is json and has keys job_id and msg.
+    """
+    def filter(self, record):
+        if not hasattr(record, 'job_id'):
+            return False
+        return True
