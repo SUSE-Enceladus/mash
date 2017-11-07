@@ -27,9 +27,8 @@ class TestLoggerService(object):
 
         self.message = {
             "levelname": "INFO",
-            "timestamp": "2017-11-01 11:36:36.782072",
-            "name": "LoggerService",
-            "msg": "Test log message!",
+            "msg": u"INFO 2017-11-01 11:36:36.782072 "
+                   "LoggerService \n Test log message! \n"
         }
 
         self.channel = Mock()
