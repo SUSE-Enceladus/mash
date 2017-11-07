@@ -31,7 +31,6 @@ def main():
     logging.basicConfig()
     log = logging.getLogger('mash')
     log.setLevel(logging.INFO)
-    log.propagate = False
 
     logger = None
     try:
