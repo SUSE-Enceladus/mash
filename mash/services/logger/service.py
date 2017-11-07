@@ -51,7 +51,9 @@ class LoggerService(BaseService):
         self._declare_topic_exchange(self.service_exchange)
         routing_key = '{0}.{1}'.format('mash', '*')
         declared_queue = self._declare_queue(
-            routing_key
+            'mash.{exchange}'.format(
+                exchange=self.service_exchange
+            )
         )
         self.channel.queue_bind(
             exchange=self.service_exchange,
