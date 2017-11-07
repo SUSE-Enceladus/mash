@@ -132,10 +132,10 @@ class OBSImageBuildResultService(BaseService):
 
     def _log_listener(self):
         result = {
-            'obs_job_log': {}
+            'obs_job_log': []
         }
         for job_id, job in list(self.jobs.items()):
-            result['obs_job_log'][job_id] = job.get_image_status()
+            result['obs_job_log'].append(job.get_image_status())
         if self.last_log_result != result:
             self.log.info(self._json_message(result))
         self.last_log_result = copy.deepcopy(result)

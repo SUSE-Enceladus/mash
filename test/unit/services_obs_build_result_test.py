@@ -42,6 +42,7 @@ class TestOBSImageBuildResult(object):
         self.obs_result.conditions = [{'status': None}]
         self.obs_result.image_status = self.obs_result._init_status()
         assert self.obs_result.get_image_status() == {
+            'job_id': '815',
             'job_status': 'prepared',
             'errors': [],
             'name': 'obs_package',
@@ -322,6 +323,7 @@ class TestOBSImageBuildResult(object):
         mock_retire_job.assert_called_once_with()
         mock_unlock.assert_called_once_with()
         assert self.obs_result.image_status == {
+            'job_id': '815',
             'job_status': 'success',
             'errors': [],
             'name': 'obs_package',

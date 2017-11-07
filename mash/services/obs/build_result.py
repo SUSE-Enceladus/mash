@@ -229,6 +229,7 @@ class OBSImageBuildResult(object):
 
     def _init_status(self):
         image_status = {
+            'job_id': self.job_id,
             'name': self.package,
             'job_status': 'prepared',
             'image_source': 'unknown',
