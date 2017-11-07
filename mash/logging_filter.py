@@ -29,9 +29,6 @@ class JobFilter(logging.Filter):
     Filter mash job logs.
 
     Only log if msg is json and has keys job_id and msg.
-
-    Expected format:
-    '{"job_id": "123", "msg": "Some message..."}'
     """
     def filter(self, record):
         if not hasattr(record, 'job_id'):
