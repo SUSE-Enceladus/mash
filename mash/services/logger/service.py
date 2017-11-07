@@ -85,16 +85,7 @@ class LoggerService(BaseService):
 
             try:
                 with open(log_file, 'a') as job_log:
-                    job_log.write(
-                        ' '.join([
-                            data['levelname'],
-                            data['timestamp'],
-                            data['name'],
-                            os.linesep,
-                            data['msg'],
-                            os.linesep
-                        ])
-                    )
+                    job_log.write(data['msg'])
             except Exception as e:
                 raise MashLoggerException(
                     'Could not write to log file: {0}'.format(e)

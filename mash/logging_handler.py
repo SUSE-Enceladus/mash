@@ -59,7 +59,7 @@ class RabbitMQHandler(SocketHandler):
         """
         Format the log message to a json string.
         """
-        rabbit_attrs = ['msg', 'levelname', 'name', 'job_id']
+        rabbit_attrs = ['msg', 'levelname', 'job_id']
 
         data = {}
         self.format(record)
