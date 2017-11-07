@@ -79,30 +79,21 @@ class LoggerService(BaseService):
 
         if 'job_id' in data:
             file_name = data.get('job_id')
-        else:
-            file_name = data.get('name', 'Mash')
+            log_file = self.config.get_log_file(file_name)
 
-        # Append log dir to file_name
-        log_file = self.config.get_log_file(file_name)
-
-        if os.path.exists(log_file):
-            mode = 'a'
-        else:
-            mode = 'w'
-
-        try:
-            with open(log_file, mode) as job_log:
-                job_log.write(
-                    ' '.join([
-                        data['levelname'],
-                        data['timestamp'],
-                        data['name'],
-                        os.linesep,
-                        data['msg'],
-                        os.linesep
-                    ])
+            try:
+                with open(log_file, 'a') as job_log:
+                    job_log.write(
+                        ' '.join([
+                            data['levelname'],
+                            data['timestamp'],
+                            data['name'],
+                            os.linesep,
+                            data['msg'],
+                            os.linesep
+                        ])
+                    )
+            except Exception as e:
+                raise MashLoggerException(
+                    'Could not write to log file: {0}'.format(e)
                 )
-        except Exception as e:
-            raise MashLoggerException(
-                'Could not write to log file: {0}'.format(e)
-            )
