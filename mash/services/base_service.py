@@ -40,8 +40,6 @@ class BaseService(object):
         self.channel = None
         self.connection = None
 
-        self._open_connection(host)
-
         self.pika_properties = pika.BasicProperties(
             content_type='application/json',
             delivery_mode=2
@@ -50,9 +48,9 @@ class BaseService(object):
         self.host = host
         self.service_exchange = service_exchange
         self.service_key = 'service_event'
-        self._declare_topic_exchange(
-            self.service_exchange
-        )
+
+        self._open_connection()
+        self._declare_topic_exchange(self.service_exchange)
 
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
@@ -113,11 +111,14 @@ class BaseService(object):
             mandatory=True
         )
 
-    def _open_connection(self, host):
+    def _open_connection(self):
         if not self.connection or self.connection.is_closed:
             try:
                 self.connection = pika.BlockingConnection(
-                    pika.ConnectionParameters(host=host)
+                    pika.ConnectionParameters(
+                        host=self.host,
+                        heartbeat_interval=600
+                    )
                 )
             except Exception as e:
                 raise MashPikaConnectionException(
@@ -129,12 +130,11 @@ class BaseService(object):
             self.channel.confirm_delivery()
 
     def close_connection(self):
-        try:
-            self.connection.close()
-        except Exception:
-            pass
+        if self.channel:
+            self.channel.close()
 
-        self.connection, self.channel = None, None
+        if self.connection:
+            self.connection.close()
 
     def _bind_queue(self, exchange, routing_key):
         self._declare_topic_exchange(exchange)
