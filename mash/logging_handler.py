@@ -17,6 +17,7 @@
 #
 
 import json
+import os
 import pika
 
 from datetime import datetime
