@@ -23,6 +23,9 @@ from mash.logging_filter import JobFilter
 from mash.logging_handler import RabbitMQHandler
 from mash.mash_exceptions import MashPikaConnectionException
 
+fmt = '%(newline)s%(levelname)s %(asctime)s %(name)s%(newline)s' \
+      '    %(message)s%(newline)s'
+
 
 class BaseService(object):
     """
@@ -57,11 +60,15 @@ class BaseService(object):
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(logging.DEBUG)
         self.log.propagate = False
+
         rabbit_handler = RabbitMQHandler(
             host=self.host,
             routing_key='mash.{level}'
         )
+        formatter = logging.Formatter(fmt=fmt)
+        rabbit_handler.setFormatter(formatter)
         self.log.addHandler(rabbit_handler)
+
         job_filter = JobFilter()
         self.log.addFilter(job_filter)
 
