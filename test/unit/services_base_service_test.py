@@ -44,7 +44,7 @@ class TestBaseService(object):
         self.service.publish_listener_message('id', 'message')
         self.channel.basic_publish.assert_called_once_with(
             body='message', exchange='obs', mandatory=True,
-            properties=self.basic_properties, routing_key='listener_id'
+            properties=self.basic_properties, routing_key='listener.id'
         )
 
     def test_bind_service_queue(self):
@@ -59,13 +59,13 @@ class TestBaseService(object):
     def test_bind_listener_queue(self):
         self.service.bind_listener_queue('id')
         self.channel.queue_bind.assert_called_once_with(
-            exchange='obs', queue='queue', routing_key='listener_id'
+            exchange='obs', queue='queue', routing_key='listener.id'
         )
 
     def test_delete_listener_queue(self):
         self.service.delete_listener_queue('id')
         self.channel.queue_delete.assert_called_once_with(
-            queue='obs.listener_id'
+            queue='obs.listener.id'
         )
 
     def test_consume_queue(self):

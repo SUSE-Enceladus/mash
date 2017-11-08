@@ -79,7 +79,7 @@ class BaseService(object):
 
     def publish_listener_message(self, identifier, message):
         return self._publish(
-            self.service_exchange, 'listener_{0}'.format(identifier), message
+            self.service_exchange, 'listener.{0}'.format(identifier), message
         )
 
     def bind_service_queue(self):
@@ -89,12 +89,17 @@ class BaseService(object):
 
     def bind_listener_queue(self, identifier):
         return self._bind_queue(
-            self.service_exchange, 'listener_{0}'.format(identifier)
+            self.service_exchange, 'listener.{0}'.format(identifier)
+        )
+
+    def bind_orchestrator_queue(self):
+        return self._bind_queue(
+            'orchestrator', 'job_event.{0}'.format(self.service_exchange)
         )
 
     def delete_listener_queue(self, identifier):
         self.channel.queue_delete(
-            queue='{0}.listener_{1}'.format(self.service_exchange, identifier)
+            queue='{0}.listener.{1}'.format(self.service_exchange, identifier)
         )
 
     def consume_queue(self, callback, queue):
