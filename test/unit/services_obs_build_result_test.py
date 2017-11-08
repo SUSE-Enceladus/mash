@@ -7,6 +7,7 @@ from datetime import datetime
 from collections import namedtuple
 import dateutil.parser
 from xml.etree import cElementTree as ET
+import subprocess
 
 from .test_helper import (
     patch_open,
@@ -23,7 +24,6 @@ from mash.mash_exceptions import (
     MashOBSLookupException,
     MashImageDownloadException,
     MashVersionExpressionException,
-    MashOBSResultException,
     MashJobRetireException,
     MashException
 )
@@ -302,20 +302,34 @@ class TestOBSImageBuildResult(object):
             'Unlock failed for obs_project/obs_package: Exception: error'
         ]
 
-    @patch('mash.services.obs.build_result.get_results')
-    def test_wait_for_new_image(self, mock_get_results):
-        self.obs_result._wait_for_new_image()
-        mock_get_results.assert_called_once_with(
-            apiurl='https://api.opensuse.org',
-            arch=['x86_64'], package='obs_package', project='obs_project',
-            repository=['images'], wait=True
-        )
+    @patch('mash.services.obs.build_result.threading.Thread')
+    @patch.object(OBSImageBuildResult, '_watch_obs_result')
+    def test_wait_for_new_image(self, mock_watch_obs_result, mock_Thread):
+        osc_result_thread = Mock()
+        osc_result_thread.is_alive.return_value = True
+        mock_Thread.return_value = osc_result_thread
+        self.obs_result.osc_process = Mock()
+        self.obs_result._wait_for_new_image(10)
+        mock_Thread.assert_called_once_with(target=mock_watch_obs_result)
+        osc_result_thread.start.assert_called_once_with()
+        assert osc_result_thread.join.call_args_list == [
+            call(10), call()
+        ]
+        self.obs_result.osc_process.terminate.assert_called_once_with()
 
-    @patch('mash.services.obs.build_result.get_results')
-    def test_wait_for_new_image_error(self, mock_get_results):
-        mock_get_results.side_effect = Exception
-        with raises(MashOBSResultException):
-            self.obs_result._wait_for_new_image()
+    @patch('mash.services.obs.build_result.subprocess.Popen')
+    def test_watch_obs_result(self, mock_Popen):
+        self.obs_result._watch_obs_result()
+        mock_Popen.assert_called_once_with(
+            [
+                'osc', '-A', 'https://api.opensuse.org', 'results',
+                '--arch', 'x86_64', '--repo', 'images', '--watch',
+                'obs_project', 'obs_package'
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        self.obs_result.osc_process.communicate.assert_called_once_with()
 
     @patch('mash.services.obs.build_result.pickle.dump')
     @patch('os.remove')
