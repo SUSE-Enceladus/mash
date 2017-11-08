@@ -68,6 +68,12 @@ class TestBaseService(object):
             queue='obs.listener.id'
         )
 
+    def test_bind_orchestrator_queue(self):
+        self.service.bind_orchestrator_queue()
+        self.channel.queue_bind.assert_called_once_with(
+            exchange='orchestrator', queue='queue', routing_key='job_event.obs'
+        )
+
     def test_consume_queue(self):
         callback = Mock()
         self.service.consume_queue(callback, 'queue')
