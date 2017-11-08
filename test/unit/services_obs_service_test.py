@@ -149,6 +149,24 @@ class TestOBSImageBuildResultService(object):
         client = Mock()
         self.obs_result.log_clients = [client]
         self.obs_result._log_listener()
+        self.obs_result.log.info.assert_called_once_with(
+            '{\n    "obs_job_log": {\n        "815": {}\n    }\n}',
+            extra={'job_id': '815'}
+        )
+
+    def test_log_listener_result_not_changed(self):
+        job = Mock()
+        job.get_image_status.return_value = {}
+        self.obs_result.last_log['815'] = {
+            'obs_job_log': {'815': job.get_image_status.return_value}
+        }
+        self.obs_result.jobs = {
+            '815': job
+        }
+        client = Mock()
+        self.obs_result.log_clients = [client]
+        self.obs_result._log_listener()
+        assert not self.obs_result.log.info.called
 
     @patch.object(OBSImageBuildResultService, '_delete_job')
     @patch.object(OBSImageBuildResultService, '_add_job')
@@ -269,6 +287,7 @@ class TestOBSImageBuildResultService(object):
         job_worker = Mock()
         job_worker.job_file = 'job_file'
         self.obs_result.clients = {'815': None}
+        self.obs_result.last_log = {'815': None}
         self.obs_result.jobs = {'815': job_worker}
         assert self.obs_result._delete_job('815') == {
             'message': 'Job:[815]: Deleted', 'ok': True
@@ -277,6 +296,7 @@ class TestOBSImageBuildResultService(object):
         job_worker.stop_watchdog.assert_called_once_with()
         assert '815' not in self.obs_result.clients
         assert '815' not in self.obs_result.jobs
+        assert '815' not in self.obs_result.last_log
         self.obs_result.jobs = {'815': job_worker}
         mock_os_remove.side_effect = Exception('remove_error')
         assert self.obs_result._delete_job('815') == {
