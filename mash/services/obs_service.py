@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import time
 import logging
 import sys
 
@@ -28,17 +27,14 @@ def main(event_loop=True):
     """
     mash - obs service application entry point
     """
-    obs = None
     try:
         logging.basicConfig()
         log = logging.getLogger('mash')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        obs = OBSImageBuildResultService(
+        OBSImageBuildResultService(
             host='localhost', service_exchange='obs',
         )
-        while event_loop:
-            time.sleep(5)
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))
@@ -46,13 +42,10 @@ def main(event_loop=True):
     except KeyboardInterrupt:
         log.info('bye')
         sys.exit(0)
-    except SystemExit as e:
+    except SystemExit:
         # user exception, program aborted by user
-        sys.exit(e)
+        sys.exit(0)
     except Exception:
         # exception we did no expect, show python backtrace
         log.error('Unexpected error:')
         raise
-    finally:
-        if obs:
-            obs.close_connection()

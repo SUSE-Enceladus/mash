@@ -17,14 +17,11 @@
 #
 import atexit
 import json
-import copy
 import os
 import pickle
 import dateutil.parser
-import logging
 from distutils.dir_util import mkpath
 from tempfile import NamedTemporaryFile
-from apscheduler.schedulers.background import BackgroundScheduler
 
 # project
 from mash.services.base_service import BaseService
@@ -32,7 +29,6 @@ from mash.services.obs.defaults import Defaults
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.services.obs.config import OBSConfig
 from mash.logging_logfile import MashLog
-from mash.logging_filter import SchedulerLoggingFilter
 
 
 class OBSImageBuildResultService(BaseService):
@@ -55,7 +51,6 @@ class OBSImageBuildResultService(BaseService):
 
         self.jobs = {}
         self.clients = {}
-        self.last_log = {}
 
         # read and reload done jobs
         jobs_done_dir = Defaults.get_jobs_done_dir()
@@ -73,22 +68,37 @@ class OBSImageBuildResultService(BaseService):
         for job_file in os.listdir(self.job_directory):
             self._start_job(os.sep.join([self.job_directory, job_file]))
 
-        self.scheduler = BackgroundScheduler()
-        self.scheduler.add_job(
-            self._run_control_consumer, 'date'
-        )
-        self.scheduler.add_job(
-            self._job_listener, 'interval', max_instances=1, seconds=3
-        )
-        self.scheduler.add_job(
-            self._log_listener, 'interval', max_instances=1, seconds=3
-        )
-        # no log info for apscheduler skip events
-        logging.getLogger("apscheduler.scheduler").addFilter(
-            SchedulerLoggingFilter()
-        )
+        # consume on service queue
         atexit.register(lambda: os._exit(0))
-        self.scheduler.start()
+        self.consume_queue(
+            self._control_in, self.bind_service_queue()
+        )
+        try:
+            self.channel.start_consuming()
+        except KeyboardInterrupt:
+            if self.channel.is_open:
+                self.channel.close()
+
+    def _send_job_response(self, job_id, status_message):
+        result = {
+            'obs_job_log': {job_id: status_message}
+        }
+        self.log.info(
+            self._json_message(result), extra={'job_id': job_id}
+        )
+
+    def _send_listen_response(self, job_id, trigger_info):
+        if job_id in self.clients:
+            try:
+                self.bind_listener_queue(job_id)
+                self.publish_listener_message(
+                    job_id, self._json_message(trigger_info)
+                )
+                job_info = self._delete_job(job_id)
+                self._send_control_response(job_info, job_id)
+            except Exception:
+                # failed to publish, don't dequeue
+                pass
 
     def _send_control_response(self, result, job_id=None):
         message = result['message']
@@ -101,47 +111,6 @@ class OBSImageBuildResultService(BaseService):
             self.log.info(message, extra=job_metadata)
         else:
             self.log.error(message, extra=job_metadata)
-
-    def _run_control_consumer(self):
-        self.consume_queue(
-            self._control_in, self.bind_service_queue()
-        )
-        try:
-            self.channel.start_consuming()
-        except KeyboardInterrupt:
-            if self.channel.is_open:
-                self.channel.close()
-
-    def _job_listener(self):
-        for job_id, listener in list(self.clients.items()):
-            job_data = listener['job'].get_image_status()
-            if job_data['job_status'] == 'success':
-                trigger_info = {
-                    'image_source': job_data['image_source']
-                }
-                try:
-                    self.bind_listener_queue(job_id)
-                    self.publish_listener_message(
-                        job_id, self._json_message(trigger_info)
-                    )
-                    job_info = self._delete_job(job_id)
-                    self._send_control_response(job_info, job_id)
-                except Exception:
-                    # failed to publish, don't dequeue
-                    pass
-
-    def _log_listener(self):
-        for job_id, job in list(self.jobs.items()):
-            status = job.get_image_status()
-            result = {
-                'obs_job_log': {job_id: status}
-            }
-            if job_id in self.last_log and self.last_log[job_id] == result:
-                return
-            self.log.info(
-                self._json_message(result), extra={'job_id': job_id}
-            )
-            self.last_log[job_id] = copy.deepcopy(result)
 
     def _control_in(self, channel, method, properties, message):
         """
@@ -274,10 +243,6 @@ class OBSImageBuildResultService(BaseService):
                 if job_id in self.clients:
                     del self.clients[job_id]
 
-                # delete reference in last log queue if present
-                if job_id in self.last_log:
-                    del self.last_log[job_id]
-
                 return {
                     'ok': True,
                     'message': 'Job:[{0}]: Deleted'.format(job_id)
@@ -359,6 +324,8 @@ class OBSImageBuildResultService(BaseService):
                 conditions=job['conditions'],
                 download_directory=self.download_directory
             )
+            job_worker.set_log_handler(self._send_job_response)
+            job_worker.set_result_handler(self._send_listen_response)
             job_worker.start_watchdog(
                 nonstop=nonstop, isotime=time
             )

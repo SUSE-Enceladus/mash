@@ -16,21 +16,18 @@ class TestOBSImageBuildResultService(object):
     @patch('mash.services.obs.service.MashLog.set_logfile')
     @patch('mash.services.obs.service.mkpath')
     @patch('mash.services.obs.service.pickle.load')
-    @patch.object(BaseService, '__init__')
-    @patch('mash.services.obs.service.BackgroundScheduler')
-    @patch('os.listdir')
-    @patch.object(OBSImageBuildResultService, '_run_control_consumer')
     @patch.object(OBSImageBuildResultService, '_start_job')
-    @patch.object(OBSImageBuildResultService, '_job_listener')
-    @patch.object(OBSImageBuildResultService, '_log_listener')
+    @patch.object(OBSImageBuildResultService, '_control_in')
+    @patch.object(BaseService, '__init__')
+    @patch('os.listdir')
     @patch('logging.getLogger')
     @patch('atexit.register')
     @patch_open
     def setup(
-        self, mock_open, mock_register, mock_log, mock_log_listener,
-        mock_job_listener, mock_start_job, mock_run_control_consumer,
-        mock_listdir, mock_BackgroundScheduler, mock_BaseService,
-        mock_pickle_load, mock_mkpath, mock_set_logfile, mock_OBSConfig
+        self, mock_open, mock_register, mock_log, mock_listdir,
+        mock_BaseService, mock_control_in, mock_start_job,
+        mock_pickle_load, mock_mkpath, mock_set_logfile,
+        mock_OBSConfig
     ):
         config = Mock()
         config.get_log_file.return_value = 'logfile'
@@ -38,18 +35,15 @@ class TestOBSImageBuildResultService(object):
         self.log = Mock()
         context = context_manager()
         mock_open.return_value = context.context_manager_mock
-        scheduler = Mock()
-        mock_BackgroundScheduler.return_value = scheduler
         mock_listdir.return_value = ['job']
         mock_BaseService.return_value = None
 
         self.obs_result = OBSImageBuildResultService()
         self.obs_result.log = self.log
-        self.obs_result.publish_listener_message = Mock()
-        self.obs_result.bind_listener_queue = Mock()
         self.obs_result.consume_queue = Mock()
         self.obs_result.bind_service_queue = Mock()
         self.obs_result.channel = Mock()
+
         self.obs_result.post_init()
 
         mock_set_logfile.assert_called_once_with(self.log, 'logfile')
@@ -58,20 +52,56 @@ class TestOBSImageBuildResultService(object):
         mock_open.assert_called_once_with(
             '/var/tmp/mash/obs_jobs_done/job', 'rb'
         )
-        mock_start_job.assert_called_once_with('/var/tmp/mash/obs_jobs//job')
+        mock_start_job.assert_called_once_with(
+            '/var/tmp/mash/obs_jobs//job'
+        )
         mock_pickle_load.assert_called_once_with(context.file_mock)
-        assert scheduler.add_job.call_args_list == [
-            call(mock_run_control_consumer, 'date'),
-            call(mock_job_listener, 'interval', max_instances=1, seconds=3),
-            call(mock_log_listener, 'interval', max_instances=1, seconds=3)
-        ]
-        scheduler.start.assert_called_once_with()
+        self.obs_result.consume_queue.assert_called_once_with(
+            mock_control_in,
+            self.obs_result.bind_service_queue.return_value
+        )
+        self.obs_result.channel.start_consuming.assert_called_once_with()
+
+        self.obs_result.channel.start_consuming.side_effect = KeyboardInterrupt
+        self.obs_result.channel.is_open.return_value = True
+        self.obs_result.post_init()
+        self.obs_result.channel.close.assert_called_once_with()
+        self.obs_result.channel.reset_mock()
+
         mock_pickle_load.side_effect = Exception('error')
         self.obs_result.post_init()
         self.log.error.assert_called_once_with(
             'Could not reload job: error'
         )
         self.log.reset_mock()
+
+    def test_send_job_response(self):
+        self.obs_result._send_job_response('815', {})
+        self.obs_result.log.info.assert_called_once_with(
+            '{\n    "obs_job_log": {\n        "815": {}\n    }\n}',
+            extra={'job_id': '815'}
+        )
+
+    @patch.object(BaseService, 'bind_listener_queue')
+    @patch.object(BaseService, 'publish_listener_message')
+    @patch.object(OBSImageBuildResultService, '_delete_job')
+    @patch.object(OBSImageBuildResultService, '_send_control_response')
+    def test_send_listen_response(
+        self, mock_send_control_response, mock_delete_job,
+        mock_publish_listener_message, mock_bind_listener_queue
+    ):
+        self.obs_result.clients['815'] = Mock()
+        self.obs_result._send_listen_response('815', {})
+        mock_bind_listener_queue.assert_called_once_with('815')
+        mock_publish_listener_message.assert_called_once_with('815', '{}')
+        mock_delete_job.assert_called_once_with('815')
+        mock_send_control_response.assert_called_once_with(
+            mock_delete_job.return_value, '815'
+        )
+        mock_delete_job.reset_mock()
+        mock_bind_listener_queue.side_effect = Exception
+        self.obs_result._send_listen_response('815', {})
+        assert not mock_delete_job.called
 
     def test_send_control_response_local(self):
         result = {
@@ -94,79 +124,6 @@ class TestOBSImageBuildResultService(object):
             'message',
             extra={}
         )
-
-    @patch.object(OBSImageBuildResultService, '_control_in')
-    def test_run_control_consumer(self, mock_control_in):
-        service_queue = Mock()
-        self.obs_result.bind_service_queue.return_value = service_queue
-        self.obs_result._run_control_consumer()
-        self.obs_result.consume_queue.assert_called_once_with(
-            mock_control_in, service_queue
-        )
-        self.obs_result.channel.start_consuming.assert_called_once_with()
-
-    @patch.object(OBSImageBuildResultService, '_control_in')
-    def test_run_control_consumer_keyboard_interrupt(self, mock_control_in):
-        service_queue = Mock()
-        self.obs_result.bind_service_queue.return_value = service_queue
-        self.obs_result.channel.start_consuming.side_effect = KeyboardInterrupt
-        self.obs_result.channel.is_open = True
-        self.obs_result._run_control_consumer()
-        self.obs_result.channel.close.assert_called_once_with()
-
-    @patch.object(OBSImageBuildResultService, '_delete_job')
-    @patch.object(OBSImageBuildResultService, '_send_control_response')
-    def test_job_listener(self, mock_send_control_response, mock_delete_job):
-        mock_delete_job.return_value = 'job deleted'
-        job_data = {
-            'job_status': 'success',
-            'image_source': ['img', 'sha']
-        }
-        obs_result = Mock()
-        obs_result.get_image_status.return_value = job_data
-        listener = {
-            'job': obs_result
-        }
-        self.obs_result.clients = {
-            '815': listener
-        }
-        self.obs_result._job_listener()
-        self.obs_result.bind_listener_queue.assert_called_once_with('815')
-        self.obs_result.publish_listener_message.assert_called_once_with(
-            '815',
-            '{\n    "image_source": [\n        "img",\n        "sha"\n    ]\n}'
-        )
-        mock_delete_job.assert_called_once_with('815')
-        self.obs_result.publish_listener_message.side_effect = Exception
-        self.obs_result._job_listener()
-
-    def test_log_listener(self):
-        job = Mock()
-        job.get_image_status.return_value = {}
-        self.obs_result.jobs = {
-            '815': job
-        }
-        client = Mock()
-        self.obs_result.log_clients = [client]
-        self.obs_result._log_listener()
-        self.obs_result.log.info.assert_called_once_with(
-            '{\n    "obs_job_log": {\n        "815": {}\n    }\n}',
-            extra={'job_id': '815'}
-        )
-
-    def test_log_listener_result_not_changed(self):
-        job = Mock()
-        job.get_image_status.return_value = {}
-        self.obs_result.last_log['815'] = {
-            'obs_job_log': {'815': job.get_image_status.return_value}
-        }
-        self.obs_result.jobs = {
-            '815': job
-        }
-        client = Mock()
-        self.obs_result.log_clients = [client]
-        self.obs_result._log_listener()
-        assert not self.obs_result.log.info.called
 
     @patch.object(OBSImageBuildResultService, '_delete_job')
     @patch.object(OBSImageBuildResultService, '_add_job')
@@ -287,7 +244,6 @@ class TestOBSImageBuildResultService(object):
         job_worker = Mock()
         job_worker.job_file = 'job_file'
         self.obs_result.clients = {'815': None}
-        self.obs_result.last_log = {'815': None}
         self.obs_result.jobs = {'815': job_worker}
         assert self.obs_result._delete_job('815') == {
             'message': 'Job:[815]: Deleted', 'ok': True
@@ -296,7 +252,6 @@ class TestOBSImageBuildResultService(object):
         job_worker.stop_watchdog.assert_called_once_with()
         assert '815' not in self.obs_result.clients
         assert '815' not in self.obs_result.jobs
-        assert '815' not in self.obs_result.last_log
         self.obs_result.jobs = {'815': job_worker}
         mock_os_remove.side_effect = Exception('remove_error')
         assert self.obs_result._delete_job('815') == {
@@ -348,7 +303,15 @@ class TestOBSImageBuildResultService(object):
     def test_start_job_with_conditions(self, mock_OBSImageBuildResult):
         job_worker = Mock()
         mock_OBSImageBuildResult.return_value = job_worker
+        self.obs_result._send_job_response = Mock()
+        self.obs_result._send_listen_response = Mock()
         self.obs_result._start_job('../data/job1.json')
+        job_worker.set_log_handler.assert_called_once_with(
+            self.obs_result._send_job_response
+        )
+        job_worker.set_result_handler.assert_called_once_with(
+            self.obs_result._send_listen_response
+        )
         job_worker.start_watchdog.assert_called_once_with(
             isotime=None, nonstop=False
         )

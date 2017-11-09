@@ -29,30 +29,27 @@ class TestOBS(object):
         mock_exit.assert_called_once_with(1)
 
     @patch('mash.services.obs_service.OBSImageBuildResultService')
-    @patch('time.sleep')
     @patch('sys.exit')
     def test_main_keyboard_interrupt(
-        self, mock_exit, mock_time, mock_OBSImageBuildResultService
+        self, mock_exit, mock_OBSImageBuildResultService
     ):
-        mock_time.side_effect = KeyboardInterrupt
+        mock_OBSImageBuildResultService.side_effect = KeyboardInterrupt
         main()
         mock_exit.assert_called_once_with(0)
 
     @patch('mash.services.obs_service.OBSImageBuildResultService')
-    @patch('time.sleep')
     @patch('sys.exit')
     def test_main_system_exit(
-        self, mock_exit, mock_time, mock_OBSImageBuildResultService
+        self, mock_exit, mock_OBSImageBuildResultService
     ):
-        mock_time.side_effect = SystemExit()
+        mock_OBSImageBuildResultService.side_effect = SystemExit
         main()
-        mock_exit.assert_called_once_with(mock_time.side_effect)
+        mock_exit.assert_called_once_with(0)
 
     @patch('mash.services.obs_service.OBSImageBuildResultService')
-    @patch('time.sleep')
     def test_main_unexpected_error(
-        self, mock_time, mock_OBSImageBuildResultService
+        self, mock_OBSImageBuildResultService
     ):
-        mock_time.side_effect = Exception
+        mock_OBSImageBuildResultService.side_effect = Exception
         with raises(Exception):
             main()
