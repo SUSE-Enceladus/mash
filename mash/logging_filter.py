@@ -15,10 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
 import logging
+import os
 
 
 class SchedulerLoggingFilter(logging.Filter):
     def filter(self, record):
         ignore = 'maximum number of running instances reached'
         return ignore not in record.msg
+
+
+class JobFilter(logging.Filter):
+    """
+    Filter mash job logs.
+
+    Only log if msg is json and has keys job_id and msg.
+    """
+    def filter(self, record):
+        if hasattr(record, 'job_id'):
+            record.newline = os.linesep
+            return True
+        return False
