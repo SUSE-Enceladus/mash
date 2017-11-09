@@ -84,12 +84,6 @@ class MashOBSLookupException(MashException):
     """
 
 
-class MashOBSResultException(MashException):
-    """
-    Exception raised if the OBS result request failed
-    """
-
-
 class MashUploadException(MashException):
     """
     Exception raised if image upload to csp failed

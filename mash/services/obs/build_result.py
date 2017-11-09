@@ -32,13 +32,14 @@ from apscheduler.events import (
     EVENT_JOB_SUBMITTED
 )
 from xml.etree import cElementTree as ET
+import subprocess
+import threading
 
 # from osc project
 import osc
 from osc.core import (
     get_binarylist,
     get_binary_file,
-    get_results,
     meta_exists,
     unlock_package,
     edit_meta
@@ -51,7 +52,6 @@ from mash.mash_exceptions import (
     MashOBSLookupException,
     MashImageDownloadException,
     MashVersionExpressionException,
-    MashOBSResultException,
     MashJobRetireException,
     MashException
 )
@@ -119,6 +119,7 @@ class OBSImageBuildResult(object):
         self.log_callback = None
         self.result_callback = None
         self.last_log = None
+        self.osc_process = None
 
         self.image_status = self._init_status()
 
@@ -337,24 +338,25 @@ class OBSImageBuildResult(object):
                 )
                 return False
 
-    def _wait_for_new_image(self):
-        parameters = {
-            'apiurl': self.api_url,
-            'project': self.project,
-            'package': self.package,
-            'repository': [self.repository],
-            'arch': [self.arch],
-            'wait': True
-        }
-        try:
-            # JFI: get_results prints unwanted messages on stdout
-            get_results(**parameters)
-        except Exception as e:
-            raise MashOBSResultException(
-                'Job[{0}]: Wait for new image failed {1}/{2}: {3}: {4}'.format(
-                    self.job_id, self.project, self.package, type(e).__name__, e
-                )
-            )
+    def _wait_for_new_image(self, timeout_sec=300):
+        osc_result_thread = threading.Thread(target=self._watch_obs_result)
+        osc_result_thread.start()
+        osc_result_thread.join(timeout_sec)
+        if osc_result_thread.is_alive():
+            self.osc_process.terminate()
+            osc_result_thread.join()
+
+    def _watch_obs_result(self):
+        self.osc_process = subprocess.Popen(
+            [
+                'osc', '-A', self.api_url,
+                'results', '--arch', self.arch, '--repo', self.repository,
+                '--watch', self.project, self.package
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        self.osc_process.communicate()
 
     def _retire_job(self):
         try:
