@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+import copy
 import os
 import pickle
 import re
@@ -112,11 +113,14 @@ class OBSImageBuildResult(object):
         self.project = project
         self.package = package
         self.conditions = conditions
-        self.image_status = self._init_status()
         self.scheduler = None
         self.job = None
         self.job_nonstop = False
-        self.lock_set_by_this_instance = False
+        self.log_callback = None
+        self.result_callback = None
+        self.last_log = None
+
+        self.image_status = self._init_status()
 
         try:
             osc.conf.get_config()
@@ -182,6 +186,12 @@ class OBSImageBuildResult(object):
         except Exception:
             pass
 
+    def set_log_handler(self, function):
+        self.log_callback = function
+
+    def set_result_handler(self, function):
+        self.result_callback = function
+
     def get_image_status(self):
         """
         Return status of the image and condition states
@@ -220,6 +230,20 @@ class OBSImageBuildResult(object):
                     )
         return downloaded
 
+    def _log_callback(self):
+        if self.log_callback and self.last_log != self.image_status:
+            self.log_callback(self.job_id, self.image_status)
+        self.last_log = copy.deepcopy(self.image_status)
+
+    def _result_callback(self):
+        job_status = self.image_status['job_status']
+        if self.result_callback and job_status == 'success':
+            self.result_callback(
+                self.job_id, {
+                    'image_source': self.image_status['image_source']
+                }
+            )
+
     def _match_image_file(self, name):
         extensions = ['.xz', '.iso', 'xz.sha256', 'iso.sha256']
         for extension in extensions:
@@ -253,7 +277,7 @@ class OBSImageBuildResult(object):
         # and keep the active job waiting for an obs change
         pass
 
-    def _lock(self):
+    def _get_pkg_metadata(self):
         try:
             obs_target = (self.project, self.package)
             obs_type = 'pkg'
@@ -261,8 +285,25 @@ class OBSImageBuildResult(object):
                 metatype=obs_type, path_args=obs_target,
                 create_new=False, apiurl=self.api_url
             )
-            root = ET.fromstring(''.join(meta))
-            if not root.find('lock'):
+            return ET.fromstring(''.join(meta))
+        except Exception:
+            return None
+
+    def _is_locked(self, metadata):
+        if metadata:
+            if metadata.find('lock'):
+                return True
+            else:
+                return False
+        else:
+            return None
+
+    def _lock(self):
+        root = self._get_pkg_metadata()
+        if self._is_locked(root) is False:
+            try:
+                obs_target = (self.project, self.package)
+                obs_type = 'pkg'
                 lock = ET.SubElement(root, 'lock')
                 ET.SubElement(lock, 'enable')
                 meta = ET.tostring(root)
@@ -271,28 +312,30 @@ class OBSImageBuildResult(object):
                     metatype=obs_type, path_args=obs_target,
                     data=meta, msg='lock'
                 )
-                self.lock_set_by_this_instance = True
-            return True
-        except Exception as e:
-            self._log_error(
-                'Lock failed for {0}/{1}: {2}: {3}'.format(
-                    self.project, self.package, type(e).__name__, e
+                return True
+            except Exception as e:
+                self._log_error(
+                    'Lock failed for {0}/{1}: {2}: {3}'.format(
+                        self.project, self.package, type(e).__name__, e
+                    )
                 )
-            )
-            return False
+                return False
 
     def _unlock(self):
-        if self.lock_set_by_this_instance:
+        root = self._get_pkg_metadata()
+        if self._is_locked(root) is True:
             try:
                 unlock_package(
                     self.api_url, self.project, self.package, 'unlock'
                 )
+                return True
             except Exception as e:
                 self._log_error(
                     'Unlock failed for {0}/{1}: {2}: {3}'.format(
                         self.project, self.package, type(e).__name__, e
                     )
                 )
+                return False
 
     def _wait_for_new_image(self):
         parameters = {
@@ -318,6 +361,8 @@ class OBSImageBuildResult(object):
             # delete what we can't pickle from self.__dict__
             job_backup = self.job
             scheduler_backup = self.scheduler
+            log_callback_backup = self.log_callback
+            result_callback_backup = self.result_callback
             retired_job = os.sep.join(
                 [self.jobs_done_dir, self.job_id + '.pickle']
             )
@@ -326,7 +371,11 @@ class OBSImageBuildResult(object):
             with open(retired_job, 'wb') as retired:
                 self.job = None
                 self.scheduler = None
+                self.log_callback = None
+                self.result_callback = None
                 pickle.dump(self, retired)
+            self.log_callback = log_callback_backup
+            self.result_callback = result_callback_backup
             self.job = job_backup
             self.scheduler = scheduler_backup
         except Exception as e:
@@ -354,10 +403,10 @@ class OBSImageBuildResult(object):
 
     def _update_image_status(self):
         try:
+            self._log_callback()
             if self.job_nonstop:
                 self.image_status['errors'] = []
-            if not self._lock():
-                self._unlock()
+            if self._lock() is False:
                 return
             self.image_status['job_status'] = 'running'
             packages = self._lookup_image_packages_metadata()
@@ -373,6 +422,7 @@ class OBSImageBuildResult(object):
                     else:
                         condition['status'] = False
 
+            self._log_callback()
             if self._image_conditions_complied():
                 packages_digest = hashlib.md5()
                 packages_digest.update(format(packages))
@@ -380,21 +430,26 @@ class OBSImageBuildResult(object):
                 if packages_checksum != self.image_status['packages_checksum']:
                     self.image_status['image_source'] = 'downloading...'
                     self.image_status['packages_checksum'] = 'unknown'
+                    self._log_callback()
                     self.image_status['image_source'] = self.get_image()
                 self.image_status['packages_checksum'] = packages_checksum
                 self.image_status['job_status'] = 'success'
             if self.image_status['job_status'] != 'success':
                 self.image_status['job_status'] = 'failed'
             self._unlock()
+            self._log_callback()
             if self.job_nonstop:
+                self._result_callback()
                 self._wait_for_new_image()
             else:
                 self._retire_job()
+                self._result_callback()
         except MashException as e:
             self._unlock()
             self._log_error(
                 '{0}: {1}'.format(type(e).__name__, e)
             )
+            self._log_callback()
 
     def _lookup_image_packages_metadata(self):
         packages_file = NamedTemporaryFile()
