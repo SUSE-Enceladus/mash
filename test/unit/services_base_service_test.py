@@ -1,9 +1,14 @@
 from mock import patch
+from mock import call
 from mock import Mock
 from pytest import raises
 
-from mash.mash_exceptions import MashPikaConnectionException
 from mash.services.base_service import BaseService
+
+from mash.mash_exceptions import (
+    MashPikaConnectionException,
+    MashLogSetupException
+)
 
 
 class TestBaseService(object):
@@ -19,6 +24,7 @@ class TestBaseService(object):
         self.connection.is_closed = True
         mock_pika_BlockingConnection.return_value = self.connection
         self.service = BaseService('localhost', 'obs')
+        self.service.log = Mock()
         self.basic_properties = Mock()
         self.service.pika_properties = self.basic_properties
         mock_pika_BlockingConnection.side_effect = Exception
@@ -28,6 +34,25 @@ class TestBaseService(object):
 
     def test_post_init(self):
         self.service.post_init()
+
+    @patch('logging.FileHandler')
+    def test_set_logfile(self, mock_logging_FileHandler):
+        logfile_handler = Mock()
+        mock_logging_FileHandler.return_value = logfile_handler
+
+        self.service.set_logfile('/some/log')
+        mock_logging_FileHandler.assert_called_once_with(
+            encoding='utf-8', filename='/some/log'
+        )
+        self.service.log.addHandler.assert_has_calls(
+            [call(logfile_handler)]
+        )
+
+    @patch('logging.FileHandler')
+    def test_set_logfile_raises(self, mock_logging_FileHandler):
+        mock_logging_FileHandler.side_effect = Exception
+        with raises(MashLogSetupException):
+            self.service.set_logfile('/some/log')
 
     @patch('mash.services.base_service.pika.BlockingConnection')
     def test_publish_service_message(self, mock_pika_BlockingConnection):

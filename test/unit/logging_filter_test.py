@@ -3,8 +3,9 @@ from mock import Mock
 
 from mash.logging_filter import (
     SchedulerLoggingFilter,
-    JobFilter
+    BaseServiceFilter
 )
+import os
 
 
 class TestSchedulerLoggingFilter(object):
@@ -25,16 +26,20 @@ class TestSchedulerLoggingFilter(object):
         assert self.log_filter.filter(record) is False
 
 
-class TestJobFilter(object):
+class TestBaseServiceFilter(object):
     def setup(self):
-        self.log_filter = JobFilter()
+        self.log_filter = BaseServiceFilter()
         self.record = Mock()
         self.record.msg = 'Log Message!'
-        self.record.job_id = '123'
 
     def test_filter_with_job_id(self):
+        self.record.job_id = '123'
         assert self.log_filter.filter(self.record) is True
+        assert self.record.newline == os.linesep
+        assert self.record.job == 'Job[123]:'
 
     def test_filter_no_job_id(self):
-        del self.record.job_id
-        assert self.log_filter.filter(self.record) is False
+        delattr(self.record, 'job_id')
+        assert self.log_filter.filter(self.record) is True
+        assert self.record.newline == os.linesep
+        assert self.record.job == ''

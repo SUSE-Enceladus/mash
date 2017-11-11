@@ -26,14 +26,23 @@ class SchedulerLoggingFilter(logging.Filter):
         return ignore not in record.msg
 
 
-class JobFilter(logging.Filter):
+class BaseServiceFilter(logging.Filter):
     """
-    Filter mash job logs.
+    Filter rule for BaseService logger
 
-    Only log if msg is json and has keys job_id and msg.
+    The message format this filter applies to contains
+    two custom fields not part of the standard logging
+
+    * %newline
+      will be set to whatever os.linesep is
+
+    * %job
+      will be set to job_id or empty if not present
     """
     def filter(self, record):
+        record.newline = os.linesep
         if hasattr(record, 'job_id'):
-            record.newline = os.linesep
-            return True
-        return False
+            record.job = 'Job[{0}]:'.format(record.job_id)
+        else:
+            record.job = ''
+        return True

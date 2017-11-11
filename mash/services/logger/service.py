@@ -44,6 +44,11 @@ class LoggerService(BaseService):
                 queue_name='mash.logger', route='mash.*'
             )
         )
+        try:
+            self.channel.start_consuming()
+        except KeyboardInterrupt:
+            self.channel.stop_consuming()
+            self.close_connection()
 
     def _bind_logger_queue(self, queue_name, route):
         """
@@ -82,7 +87,11 @@ class LoggerService(BaseService):
 
             try:
                 with open(log_file, 'a') as job_log:
-                    job_log.write(data['msg'])
+                    job_log.write(
+                        data['msg'].replace(
+                            'Job[{0}]: '.format(data['job_id']), ''
+                        )
+                    )
             except Exception as e:
                 raise MashLoggerException(
                     'Could not write to log file: {0}'.format(e)

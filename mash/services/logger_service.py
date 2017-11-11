@@ -26,34 +26,26 @@ from mash.services.logger.service import LoggerService
 
 def main():
     """
-    mash - obs service application entry point
+    mash - logger service application entry point
     """
-    logging.basicConfig()
-    log = logging.getLogger('mash')
-    log.setLevel(logging.INFO)
-
-    logger = None
     try:
+        logging.basicConfig()
+        log = logging.getLogger('MashService')
+        log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        logger = LoggerService(
+        LoggerService(
             host='localhost', service_exchange='logger'
         )
-        logger.channel.start_consuming()
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))
         sys.exit(1)
     except KeyboardInterrupt:
-        log.info('Tschuss')
         sys.exit(0)
-    except SystemExit as e:
+    except SystemExit:
         # user exception, program aborted by user
-        sys.exit(e)
+        sys.exit(0)
     except Exception:
         # exception we did no expect, show python backtrace
         log.error('Unexpected error:')
         raise
-    finally:
-        if logger:
-            logger.channel.stop_consuming()
-            logger.close_connection()

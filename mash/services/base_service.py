@@ -19,12 +19,12 @@ import logging
 import pika
 
 # project
-from mash.logging_filter import JobFilter
+from mash.logging_filter import BaseServiceFilter
 from mash.logging_handler import RabbitMQHandler
-from mash.mash_exceptions import MashPikaConnectionException
-
-fmt = '%(newline)s%(levelname)s %(asctime)s %(name)s%(newline)s' \
-      '    %(message)s%(newline)s'
+from mash.mash_exceptions import (
+    MashPikaConnectionException,
+    MashLogSetupException
+)
 
 
 class BaseService(object):
@@ -65,12 +65,14 @@ class BaseService(object):
             host=self.host,
             routing_key='mash.{level}'
         )
-        formatter = logging.Formatter(fmt=fmt)
-        rabbit_handler.setFormatter(formatter)
+        rabbit_handler.setFormatter(
+            logging.Formatter(
+                '%(newline)s%(levelname)s %(asctime)s %(name)s%(newline)s'
+                '    %(job)s %(message)s%(newline)s'
+            )
+        )
         self.log.addHandler(rabbit_handler)
-
-        job_filter = JobFilter()
-        self.log.addFilter(job_filter)
+        self.log.addFilter(BaseServiceFilter())
 
         self.post_init()
 
@@ -81,6 +83,20 @@ class BaseService(object):
         Implementation in specialized service class
         """
         pass
+
+    def set_logfile(self, logfile):
+        """
+        Allow to set a custom service log file
+        """
+        try:
+            logfile_handler = logging.FileHandler(
+                filename=logfile, encoding='utf-8'
+            )
+            self.log.addHandler(logfile_handler)
+        except Exception as e:
+            raise MashLogSetupException(
+                'Log setup failed: {0}'.format(e)
+            )
 
     def publish_service_message(self, message):
         return self._publish(
