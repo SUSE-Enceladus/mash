@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import copy
 import os
 import pickle
 import re
@@ -118,7 +117,6 @@ class OBSImageBuildResult(object):
         self.job_nonstop = False
         self.log_callback = None
         self.result_callback = None
-        self.last_log = None
         self.osc_process = None
 
         self.image_status = self._init_status()
@@ -231,10 +229,9 @@ class OBSImageBuildResult(object):
                     )
         return downloaded
 
-    def _log_callback(self):
-        if self.log_callback and self.last_log != self.image_status:
-            self.log_callback(self.job_id, self.image_status)
-        self.last_log = copy.deepcopy(self.image_status)
+    def _log_callback(self, message):
+        if self.log_callback:
+            self.log_callback(self.job_id, message)
 
     def _result_callback(self):
         job_status = self.image_status['job_status']
@@ -259,8 +256,7 @@ class OBSImageBuildResult(object):
             'image_source': 'unknown',
             'packages_checksum': 'unknown',
             'version': 'unknown',
-            'conditions': [],
-            'errors': []
+            'conditions': []
         }
         if self.conditions:
             for condition in self.conditions:
@@ -269,8 +265,10 @@ class OBSImageBuildResult(object):
         return image_status
 
     def _job_submit_event(self, event):
-        if not self.job_nonstop:
-            self.image_status['job_status'] = 'oneshot'
+        if self.job_nonstop:
+            self._log_callback('Nonstop job submitted')
+        else:
+            self._log_callback('Oneshot Job submitted')
 
     def _job_skipped_event(self, event):
         # Job is still active while the next _update_image_status
@@ -303,6 +301,9 @@ class OBSImageBuildResult(object):
         root = self._get_pkg_metadata()
         if self._is_locked(root) is False:
             try:
+                self._log_callback(
+                    'Lock: {0}/{1}'.format(self.project, self.package)
+                )
                 obs_target = (self.project, self.package)
                 obs_type = 'pkg'
                 lock = ET.SubElement(root, 'lock')
@@ -326,6 +327,9 @@ class OBSImageBuildResult(object):
         root = self._get_pkg_metadata()
         if self._is_locked(root) is True:
             try:
+                self._log_callback(
+                    'Unlock: {0}/{1}'.format(self.project, self.package)
+                )
                 unlock_package(
                     self.api_url, self.project, self.package, 'unlock'
                 )
@@ -396,21 +400,15 @@ class OBSImageBuildResult(object):
         return True
 
     def _log_error(self, message):
-        self.image_status['errors'].append(message)
-        # delete duplicate entries from error list, order is not preserved
-        self.image_status['errors'] = sorted(
-            list(set(self.image_status['errors']))
-        )
         self.image_status['job_status'] = 'failed'
+        self._log_callback('Error: {0}'.format(message))
 
     def _update_image_status(self):
         try:
-            self._log_callback()
-            if self.job_nonstop:
-                self.image_status['errors'] = []
             if self._lock() is False:
+                self.image_status['job_status'] = 'failed'
                 return
-            self.image_status['job_status'] = 'running'
+            self._log_callback('Job running')
             packages = self._lookup_image_packages_metadata()
             for condition in self.image_status['conditions']:
                 if 'image' in condition:
@@ -424,26 +422,35 @@ class OBSImageBuildResult(object):
                     else:
                         condition['status'] = False
 
-            self._log_callback()
             if self._image_conditions_complied():
                 packages_digest = hashlib.md5()
                 packages_digest.update(format(packages))
                 packages_checksum = packages_digest.hexdigest()
                 if packages_checksum != self.image_status['packages_checksum']:
-                    self.image_status['image_source'] = 'downloading...'
+                    self._log_callback('Downloading image...')
                     self.image_status['packages_checksum'] = 'unknown'
-                    self._log_callback()
                     self.image_status['image_source'] = self.get_image()
+                    self._log_callback(
+                        'Downloaded: {0}'.format(
+                            self.image_status['image_source']
+                        )
+                    )
                 self.image_status['packages_checksum'] = packages_checksum
                 self.image_status['job_status'] = 'success'
-            if self.image_status['job_status'] != 'success':
+            else:
+                self._log_callback('Unaccomplished job download conditions')
                 self.image_status['job_status'] = 'failed'
+
+            self._log_callback(
+                'Job status: {0}'.format(self.image_status['job_status'])
+            )
             self._unlock()
-            self._log_callback()
             if self.job_nonstop:
                 self._result_callback()
+                self._log_callback('Waiting for image update')
                 self._wait_for_new_image()
             else:
+                self._log_callback('Job done')
                 self._retire_job()
                 self._result_callback()
         except MashException as e:
@@ -451,7 +458,6 @@ class OBSImageBuildResult(object):
             self._log_error(
                 '{0}: {1}'.format(type(e).__name__, e)
             )
-            self._log_callback()
 
     def _lookup_image_packages_metadata(self):
         packages_file = NamedTemporaryFile()

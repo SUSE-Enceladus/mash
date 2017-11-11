@@ -78,8 +78,7 @@ class TestOBSImageBuildResultService(object):
     def test_send_job_response(self):
         self.obs_result._send_job_response('815', {})
         self.obs_result.log.info.assert_called_once_with(
-            '{\n    "obs_job_log": {\n        "815": {}\n    }\n}',
-            extra={'job_id': '815'}
+            {}, extra={'job_id': '815'}
         )
 
     @patch.object(BaseService, 'bind_listener_queue')

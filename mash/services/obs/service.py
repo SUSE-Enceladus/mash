@@ -80,12 +80,7 @@ class OBSImageBuildResultService(BaseService):
                 self.channel.close()
 
     def _send_job_response(self, job_id, status_message):
-        result = {
-            'obs_job_log': {job_id: status_message}
-        }
-        self.log.info(
-            self._json_message(result), extra={'job_id': job_id}
-        )
+        self.log.info(status_message, extra={'job_id': job_id})
 
     def _send_listen_response(self, job_id, trigger_info):
         if job_id in self.clients:
