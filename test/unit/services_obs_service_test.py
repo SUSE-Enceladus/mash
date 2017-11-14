@@ -13,7 +13,7 @@ from mash.services.base_service import BaseService
 
 class TestOBSImageBuildResultService(object):
     @patch('mash.services.obs.service.OBSConfig')
-    @patch('mash.services.obs.service.MashLog.set_logfile')
+    @patch('mash.services.base_service.BaseService.set_logfile')
     @patch('mash.services.obs.service.mkpath')
     @patch('mash.services.obs.service.pickle.load')
     @patch.object(OBSImageBuildResultService, '_start_job')
@@ -43,10 +43,11 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.consume_queue = Mock()
         self.obs_result.bind_service_queue = Mock()
         self.obs_result.channel = Mock()
+        self.obs_result.close_connection = Mock()
 
         self.obs_result.post_init()
 
-        mock_set_logfile.assert_called_once_with(self.log, 'logfile')
+        mock_set_logfile.assert_called_once_with('logfile')
 
         mock_mkpath.assert_called_once_with('/var/tmp/mash/obs_jobs/')
         mock_open.assert_called_once_with(
@@ -63,9 +64,9 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.channel.start_consuming.assert_called_once_with()
 
         self.obs_result.channel.start_consuming.side_effect = KeyboardInterrupt
-        self.obs_result.channel.is_open.return_value = True
         self.obs_result.post_init()
-        self.obs_result.channel.close.assert_called_once_with()
+        self.obs_result.channel.stop_consuming.assert_called_once_with()
+        self.obs_result.close_connection.assert_called_once_with()
         self.obs_result.channel.reset_mock()
 
         mock_pickle_load.side_effect = Exception('error')
@@ -187,11 +188,11 @@ class TestOBSImageBuildResultService(object):
 
     def test_add_to_listener(self):
         assert self.obs_result._add_to_listener('815') == {
-            'message': 'Job:[815]: No such job', 'ok': False
+            'message': 'No such job', 'ok': False
         }
         self.obs_result.jobs = {'815': Mock()}
         assert self.obs_result._add_to_listener('815') == {
-            'message': 'Job:[815]: Now in listener queue', 'ok': True
+            'message': 'Now in listener queue', 'ok': True
         }
 
     @patch.object(OBSImageBuildResultService, '_validate_job_description')
@@ -238,14 +239,14 @@ class TestOBSImageBuildResultService(object):
     @patch('os.remove')
     def test_delete_job(self, mock_os_remove):
         assert self.obs_result._delete_job('815') == {
-            'message': 'No such job id: 815', 'ok': False
+            'message': 'No such job', 'ok': False
         }
         job_worker = Mock()
         job_worker.job_file = 'job_file'
         self.obs_result.clients = {'815': None}
         self.obs_result.jobs = {'815': job_worker}
         assert self.obs_result._delete_job('815') == {
-            'message': 'Job:[815]: Deleted', 'ok': True
+            'message': 'Job Deleted', 'ok': True
         }
         mock_os_remove.assert_called_once_with('job_file')
         job_worker.stop_watchdog.assert_called_once_with()
@@ -254,7 +255,7 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.jobs = {'815': job_worker}
         mock_os_remove.side_effect = Exception('remove_error')
         assert self.obs_result._delete_job('815') == {
-            'message': 'Job[815]: Deletion failed: remove_error', 'ok': False
+            'message': 'Job deletion failed: remove_error', 'ok': False
         }
 
     @patch('mash.services.obs.service.dateutil.parser.parse')
@@ -270,15 +271,15 @@ class TestOBSImageBuildResultService(object):
         }
         job_data = {"obsjob": {"id": "123"}}
         assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Job:[123]: Invalid job: no image name', 'ok': False
+            'message': 'Invalid job: no image name', 'ok': False
         }
         job_data = {"obsjob": {"id": "123", "image": "foo"}}
         assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Job:[123]: Invalid job: no project name', 'ok': False
+            'message': 'Invalid job: no project name', 'ok': False
         }
         job_data = {"obsjob": {"id": "123", "image": "foo", "project": "foo"}}
         assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Job:[123]: Invalid job: no time given', 'ok': False
+            'message': 'Invalid job: no time given', 'ok': False
         }
         job_data = {
             "obsjob": {
@@ -287,7 +288,7 @@ class TestOBSImageBuildResultService(object):
             }
         }
         assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Job:[123]: Invalid time: mytime', 'ok': False
+            'message': 'Invalid job time: mytime', 'ok': False
         }
         mock_dateutil_parse.side_effect = None
         assert self.obs_result._validate_job_description(job_data) == {
@@ -295,7 +296,7 @@ class TestOBSImageBuildResultService(object):
         }
         self.obs_result.jobs = {'123': None}
         assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Job:[123]: Already exists', 'ok': False
+            'message': 'Job already exists', 'ok': False
         }
 
     @patch('mash.services.obs.service.OBSImageBuildResult')

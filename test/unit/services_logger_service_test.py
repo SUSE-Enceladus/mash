@@ -28,13 +28,15 @@ class TestLoggerService(object):
         self.message = {
             "levelname": "INFO",
             "msg": u"INFO 2017-11-01 11:36:36.782072 "
-                   "LoggerService \n Test log message! \n"
+                   "LoggerService \n Job[4711]: Test log message! \n"
         }
 
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
 
         self.logger = LoggerService()
+        self.logger.channel = self.channel
+        self.logger.close_connection = Mock()
 
     @patch.object(LoggerConfig, '__init__')
     @patch.object(LoggerService, '_bind_logger_queue')
@@ -52,6 +54,10 @@ class TestLoggerService(object):
         mock_bind_logger_queue.assert_called_once_with(
             queue_name='mash.logger', route='mash.*'
         )
+        self.logger.channel.start_consuming.side_effect = KeyboardInterrupt
+        self.logger.post_init()
+        self.logger.channel.stop_consuming.assert_called_once_with()
+        self.logger.close_connection.assert_called_once_with()
 
     @patch.object(LoggerService, '_declare_topic_exchange')
     @patch.object(LoggerService, '_declare_queue')

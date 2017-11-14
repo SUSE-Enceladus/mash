@@ -28,7 +28,6 @@ from mash.services.base_service import BaseService
 from mash.services.obs.defaults import Defaults
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.services.obs.config import OBSConfig
-from mash.logging_logfile import MashLog
 
 
 class OBSImageBuildResultService(BaseService):
@@ -41,7 +40,7 @@ class OBSImageBuildResultService(BaseService):
         config = OBSConfig()
 
         # setup service log file
-        MashLog.set_logfile(self.log, config.get_log_file())
+        self.set_logfile(config.get_log_file())
 
         # setup service data directories
         self.download_directory = config.get_download_directory()
@@ -76,8 +75,8 @@ class OBSImageBuildResultService(BaseService):
         try:
             self.channel.start_consuming()
         except KeyboardInterrupt:
-            if self.channel.is_open:
-                self.channel.close()
+            self.channel.stop_consuming()
+            self.close_connection()
 
     def _send_job_response(self, job_id, status_message):
         self.log.info(status_message, extra={'job_id': job_id})
@@ -133,13 +132,25 @@ class OBSImageBuildResultService(BaseService):
                 }
             )
         if 'obsjob' in message_data:
-            result = self._add_job(message_data)
             job_id = message_data['obsjob'].get('id', None)
+            self.log.info(
+                self._json_message(message_data),
+                extra={'job_id': job_id}
+            )
+            result = self._add_job(message_data)
         elif 'obsjob_listen' in message_data:
             job_id = message_data['obsjob_listen']
+            self.log.info(
+                'Setting Job to listen pipeline',
+                extra={'job_id': job_id}
+            )
             result = self._add_to_listener(job_id)
         elif 'obsjob_delete' in message_data and message_data['obsjob_delete']:
             job_id = message_data['obsjob_delete']
+            self.log.info(
+                'Deleting Job'.format(job_id),
+                extra={'job_id': job_id}
+            )
             result = self._delete_job(job_id)
         else:
             result = {
@@ -160,14 +171,14 @@ class OBSImageBuildResultService(BaseService):
         if job_id not in self.jobs:
             return {
                 'ok': False,
-                'message': 'Job:[{0}]: No such job'.format(job_id)
+                'message': 'No such job'
             }
         self.clients[job_id] = {
             'job': self.jobs[job_id]
         }
         return {
             'ok': True,
-            'message': 'Job:[{0}]: Now in listener queue'.format(job_id)
+            'message': 'Now in listener queue'
         }
 
     def _add_job(self, data):
@@ -212,7 +223,7 @@ class OBSImageBuildResultService(BaseService):
         if job_id not in self.jobs:
             return {
                 'ok': False,
-                'message': 'No such job id: {0}'.format(job_id)
+                'message': 'No such job'
             }
         else:
             job_worker = self.jobs[job_id]
@@ -222,9 +233,7 @@ class OBSImageBuildResultService(BaseService):
             except Exception as e:
                 return {
                     'ok': False,
-                    'message': 'Job[{0}]: Deletion failed: {1}'.format(
-                        job_id, e
-                    )
+                    'message': 'Job deletion failed: {0}'.format(e)
                 }
             else:
                 # stop running job
@@ -240,7 +249,7 @@ class OBSImageBuildResultService(BaseService):
 
                 return {
                     'ok': True,
-                    'message': 'Job:[{0}]: Deleted'.format(job_id)
+                    'message': 'Job Deleted'
                 }
 
     def _validate_job_description(self, job_data):
@@ -258,28 +267,22 @@ class OBSImageBuildResultService(BaseService):
         if job['id'] in self.jobs:
             return {
                 'ok': False,
-                'message': 'Job:[{0}]: Already exists'.format(job['id'])
+                'message': 'Job already exists'
             }
         if 'image' not in job:
             return {
                 'ok': False,
-                'message': 'Job:[{0}]: Invalid job: no image name'.format(
-                    job['id']
-                )
+                'message': 'Invalid job: no image name'
             }
         if 'project' not in job:
             return {
                 'ok': False,
-                'message': 'Job:[{0}]: Invalid job: no project name'.format(
-                    job['id']
-                )
+                'message': 'Invalid job: no project name'
             }
         if 'utctime' not in job:
             return {
                 'ok': False,
-                'message': 'Job:[{0}]: Invalid job: no time given'.format(
-                    job['id']
-                )
+                'message': 'Invalid job: no time given'
             }
         elif job['utctime'] != 'now' and job['utctime'] != 'always':
             try:
@@ -287,9 +290,7 @@ class OBSImageBuildResultService(BaseService):
             except Exception as e:
                 return {
                     'ok': False,
-                    'message': 'Job:[{0}]: Invalid time: {1}'.format(
-                        job['id'], e
-                    )
+                    'message': 'Invalid job time: {0}'.format(e)
                 }
         return {
             'ok': True,
@@ -327,7 +328,7 @@ class OBSImageBuildResultService(BaseService):
             self.jobs[job_id] = job_worker
             return {
                 'ok': True,
-                'message': 'Job:[{0}]: Started'.format(job_id)
+                'message': 'Job started'
             }
 
     def _json_load_byteified(self, file_handle):

@@ -29,7 +29,7 @@ def main(event_loop=True):
     """
     try:
         logging.basicConfig()
-        log = logging.getLogger('mash')
+        log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
         OBSImageBuildResultService(
@@ -37,10 +37,9 @@ def main(event_loop=True):
         )
     except MashException as e:
         # known exception
-        log.error('%s: %s', type(e).__name__, format(e))
+        log.error('{0}: {1}'.format(type(e).__name__, format(e)))
         sys.exit(1)
     except KeyboardInterrupt:
-        log.info('bye')
         sys.exit(0)
     except SystemExit:
         # user exception, program aborted by user

@@ -41,7 +41,7 @@ class TestLogger(object):
         mock_logger_service.side_effect = SystemExit()
 
         main()
-        mock_exit.assert_called_once_with(mock_logger_service.side_effect)
+        mock_exit.assert_called_once_with(0)
 
     @patch('mash.services.logger_service.LoggerService')
     def test_logger_main_unexpected_error(self, mock_logger_service):
