@@ -118,6 +118,7 @@ class OBSImageBuildResult(object):
         self.log_callback = None
         self.result_callback = None
         self.osc_process = None
+        self.iteration_count = 0
 
         self.image_status = self._init_status()
 
@@ -228,7 +229,11 @@ class OBSImageBuildResult(object):
 
     def _log_callback(self, message):
         if self.log_callback:
-            self.log_callback(self.job_id, message)
+            self.log_callback(
+                self.job_id, 'Pass[{0}]: {1}'.format(
+                    self.iteration_count, message
+                )
+            )
 
     def _result_callback(self):
         job_status = self.image_status['job_status']
@@ -403,6 +408,7 @@ class OBSImageBuildResult(object):
 
     def _update_image_status(self):
         try:
+            self.iteration_count += 1
             if self._lock() is False:
                 self.image_status['job_status'] = 'failed'
                 return
