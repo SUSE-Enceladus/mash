@@ -188,11 +188,12 @@ class TestOBSImageBuildResultService(object):
 
     def test_add_to_listener(self):
         assert self.obs_result._add_to_listener('815') == {
-            'message': 'No such job', 'ok': False
+            'message': 'Job does not exist, can not add to listen pipeline',
+            'ok': False
         }
         self.obs_result.jobs = {'815': Mock()}
         assert self.obs_result._add_to_listener('815') == {
-            'message': 'Now in listener queue', 'ok': True
+            'message': 'Job now in listen pipeline', 'ok': True
         }
 
     @patch.object(OBSImageBuildResultService, '_validate_job_description')
@@ -239,7 +240,7 @@ class TestOBSImageBuildResultService(object):
     @patch('os.remove')
     def test_delete_job(self, mock_os_remove):
         assert self.obs_result._delete_job('815') == {
-            'message': 'No such job', 'ok': False
+            'message': 'Job does not exist, can not delete it', 'ok': False
         }
         job_worker = Mock()
         job_worker.job_file = 'job_file'

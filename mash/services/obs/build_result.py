@@ -222,10 +222,7 @@ class OBSImageBuildResult(object):
                     downloaded.append(target_filename)
                 except Exception as e:
                     raise MashImageDownloadException(
-                        'Job[{0}]: Download {1}:{2}/{3} failed with {4}'.format(
-                            self.job_id, self.project, self.package,
-                            binary.name, e
-                        )
+                        'Image Download failed with: {0}'.format(e)
                     )
         return downloaded
 
@@ -347,6 +344,7 @@ class OBSImageBuildResult(object):
         osc_result_thread.start()
         osc_result_thread.join(timeout_sec)
         if osc_result_thread.is_alive():
+            self._log_callback('Wait for new image timeout reached')
             self.osc_process.terminate()
             osc_result_thread.join()
 
@@ -386,7 +384,7 @@ class OBSImageBuildResult(object):
             self.scheduler = scheduler_backup
         except Exception as e:
             raise MashJobRetireException(
-                'Job[{0}]: Failed to retire: {1}'.format(self.job_id, e)
+                'Retire Job failed with: {0}'.format(e)
             )
 
     def _image_conditions_complied(self):
@@ -515,9 +513,7 @@ class OBSImageBuildResult(object):
             return eval(expression)
         else:
             raise MashVersionExpressionException(
-                'Job[{0}]: Invalid version compare expression: "{1}"'.format(
-                    self.job_id, expression
-                )
+                'Invalid version compare expression: "{0}"'.format(expression)
             )
 
     def _lookup_package(self, packages, package_search_data):
@@ -558,7 +554,5 @@ class OBSImageBuildResult(object):
             )
         except Exception as e:
             raise MashOBSLookupException(
-                'Job[{0}]: {1}/{2} said {3}'.format(
-                    self.job_id, self.project, self.package, e
-                )
+                'OBS binary lookup failed with: {0}'.format(e)
             )

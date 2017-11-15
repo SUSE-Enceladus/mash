@@ -171,14 +171,14 @@ class OBSImageBuildResultService(BaseService):
         if job_id not in self.jobs:
             return {
                 'ok': False,
-                'message': 'No such job'
+                'message': 'Job does not exist, can not add to listen pipeline'
             }
         self.clients[job_id] = {
             'job': self.jobs[job_id]
         }
         return {
             'ok': True,
-            'message': 'Now in listener queue'
+            'message': 'Job now in listen pipeline'
         }
 
     def _add_job(self, data):
@@ -223,7 +223,7 @@ class OBSImageBuildResultService(BaseService):
         if job_id not in self.jobs:
             return {
                 'ok': False,
-                'message': 'No such job'
+                'message': 'Job does not exist, can not delete it'
             }
         else:
             job_worker = self.jobs[job_id]
