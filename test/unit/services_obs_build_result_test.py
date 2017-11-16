@@ -74,9 +74,10 @@ class TestOBSImageBuildResult(object):
 
     def test_log_callback(self):
         self.obs_result.log_callback = Mock()
+        self.obs_result.iteration_count = 1
         self.obs_result._log_callback('message')
         self.obs_result.log_callback.assert_called_once_with(
-            '815', 'message'
+            '815', 'Pass[1]: message'
         )
 
     def test_result_callback(self):
