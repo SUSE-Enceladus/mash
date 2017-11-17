@@ -16,7 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import atexit
-import json
 import os
 import pickle
 import dateutil.parser
@@ -28,6 +27,7 @@ from mash.services.base_service import BaseService
 from mash.services.obs.defaults import Defaults
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.services.obs.config import OBSConfig
+from mash.utils.json_format import JsonFormat
 
 
 class OBSImageBuildResultService(BaseService):
@@ -86,7 +86,7 @@ class OBSImageBuildResultService(BaseService):
             try:
                 self.bind_listener_queue(job_id)
                 self.publish_listener_message(
-                    job_id, self._json_message(trigger_info)
+                    job_id, JsonFormat.json_message(trigger_info)
                 )
                 job_info = self._delete_job(job_id)
                 self._send_control_response(job_info, job_id)
@@ -121,7 +121,7 @@ class OBSImageBuildResultService(BaseService):
         job_id = None
 
         try:
-            message_data = self._json_loads_byteified(format(message))
+            message_data = JsonFormat.json_loads_byteified(format(message))
         except Exception as e:
             return self._send_control_response(
                 {
@@ -134,7 +134,7 @@ class OBSImageBuildResultService(BaseService):
         if 'obsjob' in message_data:
             job_id = message_data['obsjob'].get('id', None)
             self.log.info(
-                self._json_message(message_data),
+                JsonFormat.json_message(message_data),
                 extra={'job_id': job_id}
             )
             result = self._add_job(message_data)
@@ -208,7 +208,7 @@ class OBSImageBuildResultService(BaseService):
                 dir=self.job_directory, delete=False
             )
             with open(job_file.name, 'w') as job_description:
-                job_description.write(self._json_message(data))
+                job_description.write(JsonFormat.json_message(data))
             return self._start_job(job_file.name)
 
     def _delete_job(self, job_id):
@@ -299,7 +299,7 @@ class OBSImageBuildResultService(BaseService):
 
     def _start_job(self, job_file):
         with open(job_file) as job_description:
-            job = self._json_load_byteified(job_description)['obsjob']
+            job = JsonFormat.json_load_byteified(job_description)['obsjob']
             if 'conditions' not in job:
                 job['conditions'] = None
 
@@ -330,38 +330,3 @@ class OBSImageBuildResultService(BaseService):
                 'ok': True,
                 'message': 'Job started'
             }
-
-    def _json_load_byteified(self, file_handle):
-        return self._byteify(
-            json.load(file_handle, object_hook=self._byteify),
-            ignore_dicts=True
-        )
-
-    def _json_loads_byteified(self, json_text):
-        return self._byteify(
-            json.loads(json_text, object_hook=self._byteify),
-            ignore_dicts=True
-        )
-
-    def _byteify(self, data, ignore_dicts=False):
-        # if this is a unicode string, return its string representation
-        if isinstance(data, unicode):
-            return data.encode('utf-8')
-        # if this is a list of values, return list of byteified values
-        if isinstance(data, list):
-            return [self._byteify(item, ignore_dicts=True) for item in data]
-        # if this is a dictionary, return dictionary of byteified keys
-        # and values but only if we haven't already byteified it
-        if isinstance(data, dict) and not ignore_dicts:
-            return {
-                self._byteify(key, ignore_dicts=True): self._byteify(
-                    value, ignore_dicts=True
-                ) for key, value in data.iteritems()
-            }
-        # if it's anything else, return it in its original form
-        return data
-
-    def _json_message(self, data_dict):
-        return json.dumps(
-            data_dict, sort_keys=True, indent=4, separators=(',', ': ')
-        )
