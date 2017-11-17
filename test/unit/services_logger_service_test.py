@@ -52,31 +52,31 @@ class TestLoggerService(object):
             mock_process_log, mock_bind_logger_queue.return_value
         )
         mock_bind_logger_queue.assert_called_once_with(
-            queue_name='mash.logger', route='mash.*'
+            queue_name='mash.logger', route='mash.logger'
         )
         self.logger.channel.start_consuming.side_effect = KeyboardInterrupt
         self.logger.post_init()
         self.logger.channel.stop_consuming.assert_called_once_with()
         self.logger.close_connection.assert_called_once_with()
 
-    @patch.object(LoggerService, '_declare_topic_exchange')
+    @patch.object(LoggerService, '_declare_direct_exchange')
     @patch.object(LoggerService, '_declare_queue')
     def test_logger_bind_logger_queue(
-        self, mock_declare_queue, mock_declare_topic_exchange
+        self, mock_declare_queue, mock_declare_direct_exchange
     ):
         self.logger.channel = Mock()
         self.logger.service_exchange = 'logger'
 
         assert self.logger._bind_logger_queue(
-            queue_name='mash.logger', route='mash.*'
+            queue_name='mash.logger', route='mash.logger'
         ) == 'mash.logger'
 
-        mock_declare_topic_exchange.assert_called_once_with('logger')
+        mock_declare_direct_exchange.assert_called_once_with('logger')
         mock_declare_queue.assert_called_once_with('mash.logger')
         self.logger.channel.queue_bind.assert_called_once_with(
             exchange='logger',
             queue='mash.logger',
-            routing_key='mash.*'
+            routing_key='mash.logger'
         )
 
     def test_logger_process_invalid_log(self):

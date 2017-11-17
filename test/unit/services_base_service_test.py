@@ -75,7 +75,7 @@ class TestBaseService(object):
     def test_bind_service_queue(self):
         assert self.service.bind_service_queue() == 'queue'
         self.channel.exchange_declare.assert_called_once_with(
-            durable=True, exchange='obs', exchange_type='topic'
+            durable=True, exchange='obs', exchange_type='direct'
         )
         self.channel.queue_bind.assert_called_once_with(
             exchange='obs', queue='queue', routing_key='service_event'

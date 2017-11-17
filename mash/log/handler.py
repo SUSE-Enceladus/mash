@@ -29,7 +29,7 @@ class RabbitMQHandler(SocketHandler):
     def __init__(
         self, host='localhost', port=5672, exchange='logger',
         username='guest', password='guest',
-        routing_key='logger.{level}'
+        routing_key='mash.logger'
     ):
         """
         Initialize the handler instance.
@@ -58,7 +58,7 @@ class RabbitMQHandler(SocketHandler):
         """
         Format the log message to a json string.
         """
-        rabbit_attrs = ['msg', 'levelname', 'job_id']
+        rabbit_attrs = ['msg', 'job_id']
 
         data = {}
         record.msg = self.format(record)
@@ -107,7 +107,7 @@ class RabbitMQSocket(object):
     def declare_exchange(self):
         self.channel.exchange_declare(
             exchange=self.exchange,
-            exchange_type='topic',
+            exchange_type='direct',
             durable=True
         )
 
@@ -131,12 +131,10 @@ class RabbitMQSocket(object):
         """
         Override socket sendall method to publish message to exchange.
         """
-        level = json.loads(msg)['levelname']
-
         self.open()
         self.channel.basic_publish(
             exchange=self.exchange,
-            routing_key=self.routing_key.format(level=level),
+            routing_key=self.routing_key,
             body=msg,
             properties=pika.BasicProperties(
                 content_type='application/json',

@@ -41,7 +41,7 @@ class LoggerService(BaseService):
 
         self.consume_queue(
             self._process_log, self._bind_logger_queue(
-                queue_name='mash.logger', route='mash.*'
+                queue_name='mash.logger', route='mash.logger'
             )
         )
         try:
@@ -55,7 +55,7 @@ class LoggerService(BaseService):
         Declare logger exchange and bind queue with routing
         key for logs.
         """
-        self._declare_topic_exchange(self.service_exchange)
+        self._declare_direct_exchange(self.service_exchange)
         self._declare_queue(queue_name)
         self.channel.queue_bind(
             exchange=self.service_exchange,
@@ -69,7 +69,7 @@ class LoggerService(BaseService):
         Callback for logger queue.
 
         1. Attempt to de-serialize the log message.
-        2. Determine log file name based on job_id or class name.
+        2. Determine log file name based on job_id.
         3. Write or append to log file.
         """
         channel.basic_ack(method.delivery_tag)
