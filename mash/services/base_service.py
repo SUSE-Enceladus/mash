@@ -19,8 +19,8 @@ import logging
 import pika
 
 # project
-from mash.logging_filter import BaseServiceFilter
-from mash.logging_handler import RabbitMQHandler
+from mash.log.filter import BaseServiceFilter
+from mash.log.handler import RabbitMQHandler
 from mash.mash_exceptions import (
     MashPikaConnectionException,
     MashLogSetupException

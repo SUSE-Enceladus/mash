@@ -46,7 +46,7 @@ from osc.core import (
 
 # project
 from mash.services.obs.defaults import Defaults
-from mash.logging_filter import SchedulerLoggingFilter
+from mash.log.filter import SchedulerLoggingFilter
 from mash.mash_exceptions import (
     MashOBSLookupException,
     MashImageDownloadException,

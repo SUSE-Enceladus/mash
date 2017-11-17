@@ -2,15 +2,15 @@ import logging
 
 from mock import Mock, patch
 
-from mash.logging_handler import (
+from mash.log.handler import (
     RabbitMQHandler,
     RabbitMQSocket
 )
 
 
 class TestRabbitMQHandler(object):
-    @patch('mash.logging_handler.pika.BlockingConnection')
-    @patch('mash.logging_handler.pika.ConnectionParameters')
+    @patch('mash.log.handler.pika.BlockingConnection')
+    @patch('mash.log.handler.pika.ConnectionParameters')
     def setup(self, mock_pika_ConnectionParams, mock_pika_BlockingConnection):
         self.connection = Mock()
         self.channel = Mock()
@@ -34,9 +34,9 @@ class TestRabbitMQHandler(object):
         except Exception:
             log.exception('Test exc_info')
 
-    @patch('mash.logging_handler.pika.BasicProperties')
-    @patch('mash.logging_handler.pika.BlockingConnection')
-    @patch('mash.logging_handler.pika.ConnectionParameters')
+    @patch('mash.log.handler.pika.BasicProperties')
+    @patch('mash.log.handler.pika.BlockingConnection')
+    @patch('mash.log.handler.pika.ConnectionParameters')
     def test_rabbit_socket(self, mock_pika_ConnectionParams,
                            mock_pika_BlockingConnection,
                            mock_pika_BasicProperties):

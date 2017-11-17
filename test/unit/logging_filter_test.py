@@ -1,7 +1,7 @@
 from collections import namedtuple
 from mock import Mock
 
-from mash.logging_filter import (
+from mash.log.filter import (
     SchedulerLoggingFilter,
     BaseServiceFilter
 )
