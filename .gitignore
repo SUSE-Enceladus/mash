@@ -9,3 +9,14 @@ dist/
 .cache
 .env2
 test/unit/.coverage
+htmlcov/
+
+### Vim ###
+# swap
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+# session
+Session.vim
+# temporary
+.netrwhist
+*i~
