@@ -29,5 +29,8 @@ class CredentialsBase(object):
     def post_init(self):
         pass
 
+    def set_credentials(self, secret_token):
+        raise NotImplementedError
+
     def get_credentials(self):
         raise NotImplementedError

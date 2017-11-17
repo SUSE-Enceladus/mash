@@ -21,5 +21,5 @@ class ConventionsBase(object):
     """
     Implements base Conventions interface class
     """
-    def is_valid_name(self):
+    def is_valid_name(self, name):
         raise NotImplementedError
