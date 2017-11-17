@@ -16,13 +16,27 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 # project
-from mash.services.uploader.conventions.base import ConventionsBase
+from mash.services.credentials.amazon import CredentialsAmazon
+from mash.csp import CSP
+
+from mash.mash_exceptions import MashCredentialsException
 
 
-class ConventionsAmazon(ConventionsBase):
+class Credentials(object):
     """
-    Implements Conventions class for Amazon
+    Credentials Factory
+
+    Attributes
+
+    * :attr:`csp_name`
+        cloud service provider name
     """
-    def is_valid_name(self, name):
-        # TODO: needs definition by public cloud Team
-        return name
+    def __new__(self, csp_name, custom_args=None):
+        if csp_name == CSP.ec2:
+            return CredentialsAmazon(custom_args)
+        else:
+            raise MashCredentialsException(
+                'Support for {csp} Cloud Service not implemented'.format(
+                    csp=csp_name
+                )
+            )

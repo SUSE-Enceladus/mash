@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 # project
-from mash.services.uploader.upload_base import UploadBase
+from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
 
 # TODO: ec2uploadimg is not on pypi
