@@ -16,27 +16,27 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 # project
-from mash.services.uploader.credentials.amazon import CredentialsAmazon
-from mash.csp import CSP
-
-from mash.mash_exceptions import MashCredentialsException
+from mash.services.credentials.base import CredentialsBase
 
 
-class Credentials(object):
+class CredentialsAmazon(CredentialsBase):
     """
-    Credentials Factory
-
-    Attributes
-
-    * :attr:`csp_name`
-        cloud service provider name
+    Implements credentials handling for Amazon
     """
-    def __new__(self, csp_name, custom_args=None):
-        if csp_name == CSP.ec2:
-            return CredentialsAmazon(custom_args)
-        else:
-            raise MashCredentialsException(
-                'Support for {csp} Cloud Service not implemented'.format(
-                    csp=csp_name
-                )
-            )
+    def post_init(self):
+        """
+        Initialize secret information we need to access Amazon EC2
+        """
+        self.credentials = {
+            'ssh_key_pair_name': None,
+            'ssh_key_private_key_file': None,
+            'access_key': None,
+            'secret_key': None
+        }
+
+    def set_credentials(self, secret_token):
+        self.secret_token = secret_token
+
+    def get_credentials(self):
+        # TODO: fill in secret information from token
+        return self.credentials

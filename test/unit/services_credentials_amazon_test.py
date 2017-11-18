@@ -1,9 +1,13 @@
-from mash.services.uploader.credentials.amazon import CredentialsAmazon
+from mash.services.credentials.amazon import CredentialsAmazon
 
 
 class TestCredentialsAmazon(object):
     def setup(self):
         self.credentials = CredentialsAmazon()
+
+    def test_set_credentials(self):
+        self.credentials.set_credentials('token')
+        assert self.credentials.secret_token == 'token'
 
     def test_get_credentials(self):
         assert self.credentials.get_credentials() == {

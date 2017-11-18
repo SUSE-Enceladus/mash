@@ -9,4 +9,4 @@ class TestConventionsBase(object):
 
     def test_is_valid_name(self):
         with raises(NotImplementedError):
-            self.conventions.is_valid_name()
+            self.conventions.is_valid_name('name')

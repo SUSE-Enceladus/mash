@@ -6,4 +6,4 @@ class TestConventionsBase(object):
         self.conventions = ConventionsAmazon()
 
     def test_is_valid_name(self):
-        self.conventions.is_valid_name()
+        self.conventions.is_valid_name('name')

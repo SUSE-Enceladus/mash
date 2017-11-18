@@ -1,7 +1,7 @@
 from mock import Mock
 from pytest import raises
 
-from mash.services.uploader.upload_base import UploadBase
+from mash.services.uploader.cloud.base import UploadBase
 
 
 class TestUploadBase(object):

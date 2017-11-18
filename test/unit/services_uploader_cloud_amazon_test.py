@@ -1,7 +1,7 @@
 from pytest import raises
 from mock import Mock
 
-from mash.services.uploader.upload_amazon import UploadAmazon
+from mash.services.uploader.cloud.amazon import UploadAmazon
 from mash.mash_exceptions import MashUploadException
 
 import mash
@@ -10,7 +10,7 @@ import mash
 class TestUploadAmazon(object):
     def setup(self):
         self.ec2 = Mock()
-        mash.services.uploader.upload_amazon.EC2ImageUploader = self.ec2
+        mash.services.uploader.cloud.amazon.EC2ImageUploader = self.ec2
         self.credentials = Mock()
         self.credentials.get_credentials.return_value = {
             'ssh_key_pair_name': 'name',
