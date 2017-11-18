@@ -1,8 +1,7 @@
 # Manifest describing source package contents
 
 graft mash/services
-graft mash/services/obs
-graft mash/services/logger
+graft mash/utils
 graft mash/log
 graft package
 graft config
