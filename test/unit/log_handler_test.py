@@ -55,7 +55,7 @@ class TestRabbitMQHandler(object):
             'user',
             'pass',
             'exchange',
-            'mash.{level}'
+            'mash.logger'
         )
 
         mock_pika_BlockingConnection.assert_called_once_with(None)
@@ -68,7 +68,7 @@ class TestRabbitMQHandler(object):
         self.connection.channel.assert_called_once_with()
         self.channel.exchange_declare.assert_called_once_with(
             exchange='exchange',
-            exchange_type='topic',
+            exchange_type='direct',
             durable=True
         )
 
@@ -80,7 +80,7 @@ class TestRabbitMQHandler(object):
 
         self.channel.basic_publish.assert_called_once_with(
             exchange='exchange',
-            routing_key='mash.INFO',
+            routing_key='mash.logger',
             body=msg,
             properties=props
         )

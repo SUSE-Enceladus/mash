@@ -54,7 +54,7 @@ class BaseService(object):
         self.service_key = 'service_event'
 
         self._open_connection()
-        self._declare_topic_exchange(self.service_exchange)
+        self._declare_direct_exchange(self.service_exchange)
 
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
@@ -163,7 +163,7 @@ class BaseService(object):
             self.connection.close()
 
     def _bind_queue(self, exchange, routing_key):
-        self._declare_topic_exchange(exchange)
+        self._declare_direct_exchange(exchange)
         declared_queue = self._declare_queue(
             '{0}.{1}'.format(exchange, routing_key)
         )
@@ -174,9 +174,9 @@ class BaseService(object):
         )
         return declared_queue.method.queue
 
-    def _declare_topic_exchange(self, exchange):
+    def _declare_direct_exchange(self, exchange):
         self.channel.exchange_declare(
-            exchange=exchange, exchange_type='topic', durable=True
+            exchange=exchange, exchange_type='direct', durable=True
         )
 
     def _declare_queue(self, queue):
