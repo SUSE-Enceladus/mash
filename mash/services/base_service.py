@@ -63,7 +63,7 @@ class BaseService(object):
 
         rabbit_handler = RabbitMQHandler(
             host=self.host,
-            routing_key='mash.{level}'
+            routing_key='mash.logger'
         )
         rabbit_handler.setFormatter(
             logging.Formatter(
