@@ -344,7 +344,7 @@ class OBSImageBuildResult(object):
                 )
                 return False
 
-    def _wait_for_new_image(self, timeout_sec=300):
+    def _wait_for_new_image(self, timeout_sec=3600):
         osc_result_thread = threading.Thread(target=self._watch_obs_result)
         osc_result_thread.start()
         osc_result_thread.join(timeout_sec)
