@@ -30,6 +30,7 @@ BuildRequires:  python-setuptools
 Requires:       osc
 Requires:       rabbitmq-server
 Requires:       python-PyYAML
+Requires:       python-PyJWT
 Requires:       python-pika
 Requires:       python-APScheduler >= 3.3.1
 Requires:       python-python-dateutil
@@ -61,6 +62,9 @@ install -D -m 644 config/mash_logger.service \
 install -D -m 644 config/logger_config.yml \
     %{buildroot}%{_sysconfdir}/%{name}/logger_config.yml
 
+install -D -m 644 config/mash_credentials.service \
+    %{buildroot}%{_unitdir}/mash_credentials.service
+
 %files
 %defattr(-,root,root,-)
 %{python_sitelib}/*
@@ -72,5 +76,8 @@ install -D -m 644 config/logger_config.yml \
 %{_bindir}/mash-logger-service
 %{_unitdir}/mash_logger.service
 %config(noreplace) %{_sysconfdir}/%{name}/logger_config.yml
+
+%{_bindir}/mash-credentials-service
+%{_unitdir}/mash_credentials.service
 
 %changelog

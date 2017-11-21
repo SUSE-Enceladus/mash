@@ -5,11 +5,7 @@ class TestCredentialsAmazon(object):
     def setup(self):
         self.credentials = CredentialsAmazon()
 
-    def test_set_credentials(self):
-        self.credentials.set_credentials('token')
-        assert self.credentials.secret_token == 'token'
-
-    def test_get_credentials(self):
+    def test_post_init(self):
         assert self.credentials.get_credentials() == {
             'access_key': None,
             'secret_key': None,

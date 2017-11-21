@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-# project
+import jwt
 
 
 class CredentialsBase(object):
@@ -27,10 +27,12 @@ class CredentialsBase(object):
         self.post_init()
 
     def post_init(self):
-        pass
+        self.credentials = {}
 
     def set_credentials(self, secret_token):
-        raise NotImplementedError
+        self.credentials.update(
+            jwt.decode(secret_token, 'secret', algorithms=['HS256'])
+        )
 
     def get_credentials(self):
-        raise NotImplementedError
+        return self.credentials
