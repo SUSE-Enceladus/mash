@@ -75,7 +75,10 @@ class UploadImage(object):
         self.system_image_file = None
         self.credentials_token = None
 
-    def upload(self, obs_lookup_timeout=None):
+        self._setup_request_for_credentials_token()
+        self._setup_request_for_obs_image()
+
+    def upload(self, service_lookup_timeout_sec=None):
         """
         Upload image to the specified cloud
 
@@ -85,18 +88,25 @@ class UploadImage(object):
         as well as the information handed over in the custom
         uploader and credentials arguments
         """
-        uploader = Upload(
-            self.csp_name, self._get_obs_image(obs_lookup_timeout),
-            self.cloud_image_name, self.cloud_image_description,
-            self._get_credentials_token(),
-            self.custom_uploader_args,
-            self.custom_credentials_args
-        )
-        return uploader.upload()
+        if service_lookup_timeout_sec:
+            self.connection.add_timeout(
+                service_lookup_timeout_sec, self._consuming_timeout
+            )
+        self.channel.start_consuming()
 
-    def _get_credentials_token(self):
+        if self.system_image_file and self.credentials_token:
+            uploader = Upload(
+                self.csp_name, self.system_image_file,
+                self.cloud_image_name, self.cloud_image_description,
+                self.credentials_token,
+                self.custom_uploader_args,
+                self.custom_credentials_args
+            )
+            return uploader.upload()
+
+    def _setup_request_for_credentials_token(self):
         """
-        Lookup credentials from the credentials service for the specified job
+        Lookup credentials from the credentials service for the specified csp
         """
         self.channel.queue_declare(
             queue=self.credentials_listen_queue, durable=True
@@ -104,17 +114,10 @@ class UploadImage(object):
         self.channel.basic_consume(
             self._credentials_job_data, queue=self.credentials_listen_queue
         )
-        self.channel.start_consuming()
-        return self.credentials_token
 
-    def _get_obs_image(self, timeout=None):
+    def _setup_request_for_obs_image(self):
         """
         Lookup image from the obs service for the specified job
-
-        At best this information is present at the time we want
-        to upload. If no timeout is specified this call will
-        block the upload until the obs service provided some
-        information.
         """
         self.channel.queue_declare(
             queue=self.obs_listen_queue, durable=True
@@ -122,24 +125,16 @@ class UploadImage(object):
         self.channel.basic_consume(
             self._obs_job_data, queue=self.obs_listen_queue
         )
-        if timeout:
-            self.connection.add_timeout(
-                timeout, self._obs_job_timeout
-            )
-        self.channel.start_consuming()
-        return self.system_image_file
 
     def _obs_job_data(self, channel, method, properties, body):
-        self._obs_delete_queue()
+        channel.basic_ack(method.delivery_tag)
+        self.channel.queue_delete(queue=self.obs_listen_queue)
         obs_result = JsonFormat.json_loads_byteified(body)
         self.system_image_file = obs_result['image_source'][0]
-
-    def _obs_job_timeout(self):
-        self._obs_delete_queue()
-
-    def _obs_delete_queue(self):
-        self.channel.queue_delete(queue=self.obs_listen_queue)
 
     def _credentials_job_data(self, channel, method, properties, body):
         credentials_result = JsonFormat.json_loads_byteified(body)
         self.credentials_token = credentials_result['credentials']
+
+    def _consuming_timeout(self):
+        return
