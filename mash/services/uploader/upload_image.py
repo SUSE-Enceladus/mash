@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+import pika
+import time
+from apscheduler.schedulers.background import BackgroundScheduler
+
 # project
 from mash.utils.json_format import JsonFormat
 from mash.services.uploader.cloud import Upload
@@ -30,9 +34,6 @@ class UploadImage(object):
     This class implements the pipeline connection to obs and credentials
     services and provides an interface to upload into the cloud
 
-    * :attr:`pika_connection`
-        instance of pika.BlockingConnection
-
     * :attr:`job_id`
         job number
 
@@ -46,6 +47,12 @@ class UploadImage(object):
     * :attr:`cloud_image_description`
         description of the image in the public cloud
 
+    * :attr:`host`
+        pika connection host, defaults to localhost
+
+    * :attr:`service_lookup_timeout_sec`
+        optional timeout for waiting on results of services
+
     * :attr:`custom_uploader_args`
         dictionary of parameters for the used upload tool
         specific to the selected cloud and uploader class
@@ -56,29 +63,37 @@ class UploadImage(object):
         credentials class
     """
     def __init__(
-        self, pika_connection, job_id, csp_name,
-        cloud_image_name, cloud_image_description,
+        self, job_id, csp_name, cloud_image_name, cloud_image_description,
+        host='localhost', service_lookup_timeout_sec=None,
         custom_uploader_args=None, custom_credentials_args=None
     ):
         self.job_id = job_id
         self.csp_name = csp_name
+        self.host = host
         self.cloud_image_name = cloud_image_name
         self.cloud_image_description = cloud_image_description
+        self.custom_uploader_args = custom_uploader_args
+        self.custom_credentials_args = custom_credentials_args
+        self.service_lookup_timeout_sec = service_lookup_timeout_sec
+
         self.obs_listen_queue = 'obs.listener_{0}'.format(
             self.job_id
         )
-        self.credentials_listen_queue = 'credentials.{0}'.format(csp_name)
-        self.connection = pika_connection
-        self.channel = self.connection.channel()
-        self.custom_uploader_args = custom_uploader_args
-        self.custom_credentials_args = custom_credentials_args
+        self.credentials_listen_queue = 'credentials.{0}'.format(
+            self.csp_name
+        )
+
         self.system_image_file = None
         self.credentials_token = None
+        self.consuming_timeout_reached = False
 
-        self._setup_request_for_credentials_token()
-        self._setup_request_for_obs_image()
+        self.scheduler = BackgroundScheduler()
+        self.job = self.scheduler.add_job(
+            self._consume_service_information
+        )
+        self.scheduler.start()
 
-    def upload(self, service_lookup_timeout_sec=None):
+    def upload(self):
         """
         Upload image to the specified cloud
 
@@ -88,47 +103,54 @@ class UploadImage(object):
         as well as the information handed over in the custom
         uploader and credentials arguments
         """
-        if service_lookup_timeout_sec:
-            self.connection.add_timeout(
-                service_lookup_timeout_sec, self._consuming_timeout
-            )
-        self.channel.start_consuming()
+        # wait for background thread to provide required information
+        while True:
+            if self.consuming_timeout_reached:
+                return
+            if self.system_image_file and self.credentials_token:
+                break
+            else:
+                time.sleep(1)
 
-        if self.system_image_file and self.credentials_token:
-            uploader = Upload(
-                self.csp_name, self.system_image_file,
-                self.cloud_image_name, self.cloud_image_description,
-                self.credentials_token,
-                self.custom_uploader_args,
-                self.custom_credentials_args
-            )
-            return uploader.upload()
+        # upload to the cloud
+        uploader = Upload(
+            self.csp_name, self.system_image_file,
+            self.cloud_image_name, self.cloud_image_description,
+            self.credentials_token,
+            self.custom_uploader_args,
+            self.custom_credentials_args
+        )
+        return uploader.upload()
 
-    def _setup_request_for_credentials_token(self):
-        """
-        Lookup credentials from the credentials service for the specified csp
-        """
-        self.channel.queue_declare(
+    def _consume_service_information(self):
+        # pika requires one connection per thread
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=self.host)
+        )
+        channel = connection.channel()
+        # lookup authenitcation data from credentials service
+        channel.queue_declare(
             queue=self.credentials_listen_queue, durable=True
         )
-        self.channel.basic_consume(
+        channel.basic_consume(
             self._credentials_job_data, queue=self.credentials_listen_queue
         )
-
-    def _setup_request_for_obs_image(self):
-        """
-        Lookup image from the obs service for the specified job
-        """
-        self.channel.queue_declare(
+        # lookup image file data from obs service
+        channel.queue_declare(
             queue=self.obs_listen_queue, durable=True
         )
-        self.channel.basic_consume(
+        channel.basic_consume(
             self._obs_job_data, queue=self.obs_listen_queue
         )
+        if self.service_lookup_timeout_sec:
+            connection.add_timeout(
+                self.service_lookup_timeout_sec, self._consuming_timeout
+            )
+        channel.start_consuming()
 
     def _obs_job_data(self, channel, method, properties, body):
         channel.basic_ack(method.delivery_tag)
-        self.channel.queue_delete(queue=self.obs_listen_queue)
+        channel.queue_delete(queue=self.obs_listen_queue)
         obs_result = JsonFormat.json_loads_byteified(body)
         self.system_image_file = obs_result['image_source'][0]
 
@@ -137,4 +159,4 @@ class UploadImage(object):
         self.credentials_token = credentials_result['credentials']
 
     def _consuming_timeout(self):
-        return
+        self.consuming_timeout_reached = True
