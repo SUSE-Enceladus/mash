@@ -1,6 +1,6 @@
-from pytest import raises
-
 from mash.services.credentials.base import CredentialsBase
+
+import jwt
 
 
 class TestCredentialsBase(object):
@@ -8,9 +8,11 @@ class TestCredentialsBase(object):
         self.credentials = CredentialsBase()
 
     def test_set_credentials(self):
-        with raises(NotImplementedError):
-            self.credentials.set_credentials('token')
+        token = jwt.encode(
+            {'some': 'payload'}, 'secret', algorithm='HS256'
+        )
+        self.credentials.set_credentials(token)
+        assert self.credentials.credentials['some'] == 'payload'
 
     def test_get_credentials(self):
-        with raises(NotImplementedError):
-            self.credentials.get_credentials()
+        assert self.credentials.get_credentials() == {}

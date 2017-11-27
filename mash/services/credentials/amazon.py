@@ -33,10 +33,3 @@ class CredentialsAmazon(CredentialsBase):
             'access_key': None,
             'secret_key': None
         }
-
-    def set_credentials(self, secret_token):
-        self.secret_token = secret_token
-
-    def get_credentials(self):
-        # TODO: fill in secret information from token
-        return self.credentials

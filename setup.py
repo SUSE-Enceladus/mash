@@ -21,6 +21,7 @@ config = {
     'install_requires': [
         'setuptools>=5.4',
         'PyYAML',
+        'PyJWT',
         'python-dateutil',
         'APScheduler>=3.3.1',
         'pika'
@@ -29,7 +30,8 @@ config = {
     'entry_points': {
         'console_scripts': [
             'mash-obs-service=mash.services.obs_service:main',
-            'mash-logger-service=mash.services.logger_service:main'
+            'mash-logger-service=mash.services.logger_service:main',
+            'mash-credentials-service=mash.services.credentials_service:main'
         ]
     },
     'include_package_data': True,

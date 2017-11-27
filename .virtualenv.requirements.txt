@@ -7,6 +7,7 @@
 
 setuptools
 PyYAML
+PyJWT
 APScheduler
 python-dateutil
 build-service-osc
