@@ -98,10 +98,10 @@ class RabbitMQSocket(object):
         """
         Close socket connection.
         """
-        if self.channel:
+        if self.channel and self.channel.is_open:
             self.channel.close()
 
-        if self.connection:
+        if self.connection and self.connection.is_open:
             self.connection.close()
 
     def declare_exchange(self):
