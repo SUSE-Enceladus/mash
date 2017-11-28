@@ -156,10 +156,10 @@ class BaseService(object):
             self.channel.confirm_delivery()
 
     def close_connection(self):
-        if self.channel:
+        if self.channel and self.channel.is_open:
             self.channel.close()
 
-        if self.connection:
+        if self.connection and self.connection.is_open:
             self.connection.close()
 
     def _bind_queue(self, exchange, routing_key):
