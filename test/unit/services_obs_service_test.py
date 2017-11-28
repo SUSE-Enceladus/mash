@@ -84,24 +84,20 @@ class TestOBSImageBuildResultService(object):
 
     @patch.object(BaseService, 'bind_listener_queue')
     @patch.object(BaseService, 'publish_listener_message')
-    @patch.object(OBSImageBuildResultService, '_delete_job')
     @patch.object(OBSImageBuildResultService, '_send_control_response')
     def test_send_listen_response(
-        self, mock_send_control_response, mock_delete_job,
+        self, mock_send_control_response,
         mock_publish_listener_message, mock_bind_listener_queue
     ):
         self.obs_result.clients['815'] = Mock()
         self.obs_result._send_listen_response('815', {})
         mock_bind_listener_queue.assert_called_once_with('815')
         mock_publish_listener_message.assert_called_once_with('815', '{}')
-        mock_delete_job.assert_called_once_with('815')
-        mock_send_control_response.assert_called_once_with(
-            mock_delete_job.return_value, '815'
-        )
-        mock_delete_job.reset_mock()
+        assert '815' not in self.obs_result.clients
+        self.obs_result.clients['815'] = Mock()
         mock_bind_listener_queue.side_effect = Exception
         self.obs_result._send_listen_response('815', {})
-        assert not mock_delete_job.called
+        assert '815' in self.obs_result.clients
 
     def test_send_control_response_local(self):
         result = {

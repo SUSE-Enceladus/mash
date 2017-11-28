@@ -135,7 +135,7 @@ class TestOBSImageBuildResult(object):
         )
         scheduler.add_job.assert_called_once_with(
             mock_update_image_status, 'interval',
-            max_instances=1, seconds=30, start_date=run_time,
+            max_instances=1, seconds=5, start_date=run_time,
             timezone='utc'
         )
         assert scheduler.add_listener.call_args_list == [
@@ -226,9 +226,10 @@ class TestOBSImageBuildResult(object):
         self.obs_result._job_submit_event(Mock())
         mock_log_callback.assert_called_once_with('Oneshot Job submitted')
 
-    def test_job_skipped_event(self):
-        self.obs_result.log = Mock()
+    @patch.object(OBSImageBuildResult, '_result_callback')
+    def test_job_skipped_event(self, mock_result_callback):
         self.obs_result._job_skipped_event(Mock())
+        mock_result_callback.assert_called_once_with()
 
     @patch('mash.services.obs.build_result.meta_exists')
     def test_get_pkg_metadata(self, mock_meta_exists):

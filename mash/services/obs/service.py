@@ -88,8 +88,11 @@ class OBSImageBuildResultService(BaseService):
                 self.publish_listener_message(
                     job_id, JsonFormat.json_message(trigger_info)
                 )
-                job_info = self._delete_job(job_id)
-                self._send_control_response(job_info, job_id)
+                del self.clients[job_id]
+                self.log.info(
+                    'Job deleted from listen pipeline',
+                    extra={'job_id': job_id}
+                )
             except Exception:
                 # failed to publish, don't dequeue
                 pass

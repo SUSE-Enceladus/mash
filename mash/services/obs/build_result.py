@@ -130,7 +130,7 @@ class OBSImageBuildResult(object):
             )
 
     def start_watchdog(
-        self, interval_sec=30, nonstop=False, isotime=None
+        self, interval_sec=5, nonstop=False, isotime=None
     ):
         """
         Start a background job which triggers the update
@@ -275,8 +275,9 @@ class OBSImageBuildResult(object):
     def _job_skipped_event(self, event):
         # Job is still active while the next _update_image_status
         # event was scheduled. In this case we just skip the event
-        # and keep the active job waiting for an obs change
-        pass
+        # call the result callback and keep the active job waiting
+        # for an obs change
+        self._result_callback()
 
     def _get_pkg_metadata(self):
         try:
