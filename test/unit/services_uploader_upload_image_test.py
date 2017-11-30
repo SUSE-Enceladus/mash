@@ -57,6 +57,7 @@ class TestUploadImage(object):
     ):
         connection = Mock()
         channel = Mock()
+        channel.is_open = True
         connection.channel.return_value = channel
         mock_BlockingConnection.return_value = connection
         self.upload_image._consume_service_information()
@@ -67,13 +68,13 @@ class TestUploadImage(object):
             host='localhost'
         )
         assert channel.queue_declare.call_args_list == [
-            call(durable=True, queue='credentials.ec2'),
+            call(durable=True, queue='credentials.ec2_123'),
             call(durable=True, queue='obs.listener_123')
         ]
         assert channel.basic_consume.call_args_list == [
             call(
                 self.upload_image._credentials_job_data,
-                queue='credentials.ec2'
+                queue='credentials.ec2_123'
             ),
             call(
                 self.upload_image._obs_job_data,
@@ -84,11 +85,18 @@ class TestUploadImage(object):
             100, self.upload_image._consuming_timeout
         )
         channel.start_consuming.assert_called_once_with()
+        channel.start_consuming.side_effect = Exception
+        self.upload_image._consume_service_information()
+        channel.stop_consuming.assert_called_once_with()
+        channel.close.assert_called_once_with()
+        connection.close.assert_called_once_with()
 
     def test_obs_job_data(self):
         body = '{"image_source": ["image", "checksum"]}'
         channel = Mock()
-        self.upload_image._obs_job_data(channel, Mock(), Mock(), body)
+        method = Mock()
+        self.upload_image._obs_job_data(channel, method, Mock(), body)
+        channel.basic_ack.assert_called_once_with(method.delivery_tag)
         channel.queue_delete.assert_called_once_with(
             queue='obs.listener_123'
         )
@@ -96,7 +104,13 @@ class TestUploadImage(object):
 
     def test_credentials_job_data(self):
         body = '{"credentials": "abc"}'
-        self.upload_image._credentials_job_data(Mock(), Mock(), Mock(), body)
+        channel = Mock()
+        method = Mock()
+        self.upload_image._credentials_job_data(channel, method, Mock(), body)
+        channel.basic_ack.assert_called_once_with(method.delivery_tag)
+        channel.queue_delete.assert_called_once_with(
+            queue='credentials.ec2_123'
+        )
         assert self.upload_image.credentials_token == 'abc'
 
     def test_consuming_timeout(self):

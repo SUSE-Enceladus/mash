@@ -79,13 +79,15 @@ class UploadImage(object):
         self.obs_listen_queue = 'obs.listener_{0}'.format(
             self.job_id
         )
-        self.credentials_listen_queue = 'credentials.{0}'.format(
-            self.csp_name
+        self.credentials_listen_queue = 'credentials.{0}_{1}'.format(
+            self.csp_name, self.job_id
         )
 
         self.system_image_file = None
         self.credentials_token = None
         self.consuming_timeout_reached = False
+        self.connection = None
+        self.channel = None
 
         self.scheduler = BackgroundScheduler()
         self.job = self.scheduler.add_job(
@@ -124,29 +126,32 @@ class UploadImage(object):
 
     def _consume_service_information(self):
         # pika requires one connection per thread
-        connection = pika.BlockingConnection(
+        self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=self.host)
         )
-        channel = connection.channel()
+        self.channel = self.connection.channel()
         # lookup authenitcation data from credentials service
-        channel.queue_declare(
+        self.channel.queue_declare(
             queue=self.credentials_listen_queue, durable=True
         )
-        channel.basic_consume(
+        self.channel.basic_consume(
             self._credentials_job_data, queue=self.credentials_listen_queue
         )
         # lookup image file data from obs service
-        channel.queue_declare(
+        self.channel.queue_declare(
             queue=self.obs_listen_queue, durable=True
         )
-        channel.basic_consume(
+        self.channel.basic_consume(
             self._obs_job_data, queue=self.obs_listen_queue
         )
         if self.service_lookup_timeout_sec:
-            connection.add_timeout(
+            self.connection.add_timeout(
                 self.service_lookup_timeout_sec, self._consuming_timeout
             )
-        channel.start_consuming()
+        try:
+            self.channel.start_consuming()
+        except Exception:
+            self._close_connection()
 
     def _obs_job_data(self, channel, method, properties, body):
         channel.basic_ack(method.delivery_tag)
@@ -155,8 +160,17 @@ class UploadImage(object):
         self.system_image_file = obs_result['image_source'][0]
 
     def _credentials_job_data(self, channel, method, properties, body):
+        channel.basic_ack(method.delivery_tag)
+        channel.queue_delete(queue=self.credentials_listen_queue)
         credentials_result = JsonFormat.json_loads_byteified(body)
         self.credentials_token = credentials_result['credentials']
 
     def _consuming_timeout(self):
         self.consuming_timeout_reached = True
+        self._close_connection()
+
+    def _close_connection(self):
+        if self.channel and self.channel.is_open:
+            self.channel.stop_consuming()
+            self.channel.close()
+            self.connection.close()
