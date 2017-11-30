@@ -34,6 +34,7 @@ Requires:       python-PyJWT
 Requires:       python-pika
 Requires:       python-APScheduler >= 3.3.1
 Requires:       python-python-dateutil
+Requires:       python3-ipa
 BuildArch:      noarch
 
 %description
@@ -65,6 +66,12 @@ install -D -m 644 config/logger_config.yml \
 install -D -m 644 config/mash_credentials.service \
     %{buildroot}%{_unitdir}/mash_credentials.service
 
+install -D -m 644 config/mash_testing.service \
+    %{buildroot}%{_unitdir}/mash_testing.service
+
+install -D -m 644 config/testing_config.yml \
+    %{buildroot}%{_sysconfdir}/%{name}/testing_config.yml
+
 %files
 %defattr(-,root,root,-)
 %{python_sitelib}/*
@@ -79,5 +86,9 @@ install -D -m 644 config/mash_credentials.service \
 
 %{_bindir}/mash-credentials-service
 %{_unitdir}/mash_credentials.service
+
+%{_bindir}/mash-testing-service
+%{_unitdir}/mash_testing.service
+%config(noreplace) %{_sysconfdir}/%{name}/testing_config.yml
 
 %changelog
