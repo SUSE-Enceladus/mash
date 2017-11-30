@@ -12,3 +12,4 @@ APScheduler
 python-dateutil
 build-service-osc
 pika
+ec2uploadimg
