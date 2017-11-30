@@ -43,6 +43,7 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.consume_queue = Mock()
         self.obs_result.bind_service_queue = Mock()
         self.obs_result.channel = Mock()
+        self.obs_result.channel.is_open = True
         self.obs_result.close_connection = Mock()
 
         self.obs_result.post_init()
@@ -63,7 +64,7 @@ class TestOBSImageBuildResultService(object):
         )
         self.obs_result.channel.start_consuming.assert_called_once_with()
 
-        self.obs_result.channel.start_consuming.side_effect = KeyboardInterrupt
+        self.obs_result.channel.start_consuming.side_effect = Exception
         self.obs_result.post_init()
         self.obs_result.channel.stop_consuming.assert_called_once_with()
         self.obs_result.close_connection.assert_called_once_with()

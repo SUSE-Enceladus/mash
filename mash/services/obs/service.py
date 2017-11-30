@@ -74,9 +74,10 @@ class OBSImageBuildResultService(BaseService):
         )
         try:
             self.channel.start_consuming()
-        except KeyboardInterrupt:
-            self.channel.stop_consuming()
-            self.close_connection()
+        except Exception:
+            if self.channel and self.channel.is_open:
+                self.channel.stop_consuming()
+                self.close_connection()
 
     def _send_job_response(self, job_id, status_message):
         self.log.info(status_message, extra={'job_id': job_id})
