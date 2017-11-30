@@ -106,3 +106,9 @@ class MashLoggerException(MashException):
     """
     Base class to handle all logger service exceptions.
     """
+
+
+class MashTestingException(MashException):
+    """
+    Base exception for testing service.
+    """
