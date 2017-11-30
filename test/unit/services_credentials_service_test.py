@@ -12,6 +12,7 @@ class TestCredentialsService(object):
         self.service = CredentialsService()
         self.service.service_exchange = 'credentials'
         self.service.channel = Mock()
+        self.service.channel.is_open = True
         self.service.close_connection = Mock()
         self.service.consume_queue = Mock()
         self.service.bind_service_queue = Mock()
@@ -26,28 +27,40 @@ class TestCredentialsService(object):
             mock_control_in, self.service.bind_service_queue.return_value
         )
         self.service.channel.start_consuming.assert_called_once_with()
-        self.service.channel.start_consuming.side_effect = KeyboardInterrupt
+        self.service.channel.start_consuming.side_effect = Exception
         self.service.post_init()
         self.service.channel.stop_consuming.assert_called_once_with()
         self.service.close_connection.assert_called_once_with()
 
-    def test_send_control_response(self):
+    def test_send_control_response_local(self):
         result = {
             'message': 'message',
             'ok': False
         }
+        self.service._send_control_response(result, '4711')
+        self.service.log.error.assert_called_once_with(
+            'message',
+            extra={'job_id': '4711'}
+        )
+
+    def test_send_control_response_public(self):
+        result = {
+            'message': 'message',
+            'ok': True
+        }
         self.service._send_control_response(result)
-        self.service.log.error.assert_called_once_with('message')
-        result['ok'] = True
-        self.service._send_control_response(result)
-        self.service.log.info.assert_called_once_with('message')
+        self.service.log.info.assert_called_once_with(
+            'message',
+            extra={}
+        )
 
     @patch.object(CredentialsService, '_create_credentials')
     @patch.object(CredentialsService, '_send_control_response')
     def test_control_in(
         self, mock_send_control_response, mock_create_credentials
     ):
-        message = '{"credentials": {"csp": "ec2", "payload": {"foo": "bar"}}}'
+        message = '{"credentials": ' + \
+            '{"id": "123", "csp": "ec2", "payload": {"foo": "bar"}}}'
         channel = Mock()
         method = Mock()
         self.service._control_in(channel, method, Mock(), message)
@@ -55,15 +68,12 @@ class TestCredentialsService(object):
         mock_create_credentials.assert_called_once_with(
             {
                 'credentials': {
+                    'id': '123',
                     'payload': {'foo': 'bar'},
                     'csp': 'ec2'
                 }
             }
         )
-        mock_send_control_response.assert_called_once_with(
-            mock_create_credentials.return_value
-        )
-        mock_send_control_response.reset_mock()
         message = 'foo'
         self.service._control_in(channel, method, Mock(), message)
         mock_send_control_response.assert_called_once_with(
@@ -84,26 +94,35 @@ class TestCredentialsService(object):
             }
         )
 
-    def test_create_credentials(self):
+    @patch.object(CredentialsService, '_send_control_response')
+    def test_create_credentials(self, mock_send_control_response):
         data = {
             'credentials': {
+                'id': '123',
                 'csp': 'ec2',
                 'payload': {'foo': 'bar'}
             }
         }
-        assert self.service._create_credentials(data) == {
-            'ok': True,
-            'message': 'Credentials token created'
-        }
+        self.service._create_credentials(data)
+        mock_send_control_response.assert_called_once_with(
+            {
+                'ok': True,
+                'message': 'Credentials token created'
+            }, '123'
+        )
         self.service._bind_queue.assert_called_once_with(
-            'credentials', 'ec2'
+            'credentials', 'ec2_123'
         )
         self.service._publish.assert_called_once_with(
-            'credentials', 'ec2', '{\n    "credentials": ' +
+            'credentials', 'ec2_123', '{\n    "credentials": ' +
             '"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIif' +
             'Q.dtxWM6MIcgoeMgH87tGvsNDY6cHWL6MGW4LeYvnm1JA"\n}'
         )
-        assert self.service._create_credentials({}) == {
-            'ok': False,
-            'message': 'Insufficient job information'
-        }
+        mock_send_control_response.reset_mock()
+        self.service._create_credentials({})
+        mock_send_control_response.assert_called_once_with(
+            {
+                'ok': False,
+                'message': 'Insufficient job information'
+            }, None
+        )

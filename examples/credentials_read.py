@@ -6,7 +6,7 @@ connection = pika.BlockingConnection(
 )
 channel = connection.channel()
 
-listen_to_queue = 'credentials.ec2'
+listen_to_queue = 'credentials.ec2_4711'
 channel.queue_declare(queue=listen_to_queue, durable=True)
 
 print('waiting for credentials service...')

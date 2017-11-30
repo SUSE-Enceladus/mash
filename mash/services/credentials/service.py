@@ -40,16 +40,22 @@ class CredentialsService(BaseService):
         )
         try:
             self.channel.start_consuming()
-        except KeyboardInterrupt:
-            self.channel.stop_consuming()
-            self.close_connection()
+        except Exception:
+            if self.channel and self.channel.is_open:
+                self.channel.stop_consuming()
+                self.close_connection()
 
-    def _send_control_response(self, result):
+    def _send_control_response(self, result, job_id=None):
         message = result['message']
+
+        job_metadata = {}
+        if job_id:
+            job_metadata['job_id'] = job_id
+
         if result['ok']:
-            self.log.info(message)
+            self.log.info(message, extra=job_metadata)
         else:
-            self.log.error(message)
+            self.log.error(message, extra=job_metadata)
 
     def _control_in(self, channel, method, properties, message):
         """
@@ -73,13 +79,16 @@ class CredentialsService(BaseService):
                 }
             )
         if 'credentials' in message_data:
-            result = self._create_credentials(message_data)
+            self._create_credentials(message_data)
         else:
-            result = {
-                'ok': False,
-                'message': 'No idea what to do with: {0}'.format(message_data)
-            }
-        self._send_control_response(result)
+            self._send_control_response(
+                {
+                    'ok': False,
+                    'message': 'No idea what to do with: {0}'.format(
+                        message_data
+                    )
+                }
+            )
 
     def _create_credentials(self, data):
         """
@@ -89,6 +98,7 @@ class CredentialsService(BaseService):
         credentials description example:
         {
           "credentials": {
+              "id": "123"
               "csp": "ec2",
               "payload": {
                   ...credentials data
@@ -98,20 +108,24 @@ class CredentialsService(BaseService):
         """
         payload = None
         csp = None
+        job_id = None
         if 'credentials' in data:
             job = data['credentials']
+            if 'id' in job:
+                job_id = data['credentials']['id']
             if 'payload' in job:
                 payload = data['credentials']['payload']
             if 'csp' in job:
                 csp = data['credentials']['csp']
 
-        if payload and csp:
+        if payload and csp and job_id:
             token = jwt.encode(
                 payload, 'secret', algorithm='HS256'
             )
-            self._bind_queue(self.service_exchange, csp)
+            queue_name = '{0}_{1}'.format(csp, job_id)
+            self._bind_queue(self.service_exchange, queue_name)
             self._publish(
-                self.service_exchange, csp, JsonFormat.json_message(
+                self.service_exchange, queue_name, JsonFormat.json_message(
                     {'credentials': token}
                 )
             )
@@ -124,4 +138,4 @@ class CredentialsService(BaseService):
                 'ok': False,
                 'message': 'Insufficient job information'
             }
-        return result
+        self._send_control_response(result, job_id)
