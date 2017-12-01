@@ -28,12 +28,12 @@ def main():
     """
     mash - obs service application entry point
     """
-    logging.basicConfig()
-    log = logging.getLogger('mash')
-    log.setLevel(logging.INFO)
-
     testing = None
     try:
+        logging.basicConfig()
+        log = logging.getLogger('MashService')
+        log.setLevel(logging.INFO)
+
         # run service, enter main loop
         testing = TestingService(
             host='localhost', service_exchange='testing'
