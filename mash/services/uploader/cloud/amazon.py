@@ -15,12 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+from ec2utils.ec2uploadimg import EC2ImageUploader
+
 # project
 from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
-
-# TODO: ec2uploadimg is not on pypi
-# from ec2utils.ec2uploadimg import EC2ImageUploader
 
 
 class UploadAmazon(UploadBase):
