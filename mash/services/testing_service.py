@@ -28,24 +28,19 @@ def main():
     """
     mash - obs service application entry point
     """
-    testing = None
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.INFO)
 
         # run service, enter main loop
-        testing = TestingService(
+        TestingService(
             host='localhost', service_exchange='testing'
         )
-        testing.start()
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))
         sys.exit(1)
-    except KeyboardInterrupt:
-        log.info('Bye')
-        sys.exit(0)
     except SystemExit as e:
         # user exception, program aborted by user
         sys.exit(e)
@@ -53,6 +48,3 @@ def main():
         # exception we did no expect, show python backtrace
         log.error('Unexpected error:')
         raise
-    finally:
-        if testing:
-            testing.stop()

@@ -37,6 +37,15 @@ class TestingService(BaseService):
         """
         self.config = TestingConfig()
 
+        try:
+            self.start()
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            raise
+        finally:
+            self.stop()
+
     def start(self):
         """
         Start testing service.
