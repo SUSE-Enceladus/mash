@@ -95,7 +95,8 @@ class TestCredentialsService(object):
         )
 
     @patch.object(CredentialsService, '_send_control_response')
-    def test_create_credentials(self, mock_send_control_response):
+    @patch('jwt.encode')
+    def test_create_credentials(self, mock_jwt_encode, mock_send_control_response):
         data = {
             'credentials': {
                 'id': '123',
@@ -103,7 +104,11 @@ class TestCredentialsService(object):
                 'payload': {'foo': 'bar'}
             }
         }
+        mock_jwt_encode.return_value = 'token'
         self.service._create_credentials(data)
+        mock_jwt_encode.assert_called_once_with(
+            data['credentials']['payload'], 'secret', algorithm='HS256'
+        )
         mock_send_control_response.assert_called_once_with(
             {
                 'ok': True,
@@ -114,9 +119,7 @@ class TestCredentialsService(object):
             'credentials', 'ec2_123'
         )
         self.service._publish.assert_called_once_with(
-            'credentials', 'ec2_123', '{\n    "credentials": ' +
-            '"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIif' +
-            'Q.dtxWM6MIcgoeMgH87tGvsNDY6cHWL6MGW4LeYvnm1JA"\n}'
+            'credentials', 'ec2_123', '{\n    "credentials": "token"\n}'
         )
         mock_send_control_response.reset_mock()
         self.service._create_credentials({})
