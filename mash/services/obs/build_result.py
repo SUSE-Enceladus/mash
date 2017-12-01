@@ -192,6 +192,9 @@ class OBSImageBuildResult(object):
     def set_result_handler(self, function):
         self.result_callback = function
 
+    def call_result_handler(self):
+        self._result_callback()
+
     def get_image_status(self):
         """
         Return status of the image and condition states

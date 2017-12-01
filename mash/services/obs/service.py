@@ -180,6 +180,7 @@ class OBSImageBuildResultService(BaseService):
         self.clients[job_id] = {
             'job': self.jobs[job_id]
         }
+        self.jobs[job_id].call_result_handler()
         return {
             'ok': True,
             'message': 'Job now in listen pipeline'

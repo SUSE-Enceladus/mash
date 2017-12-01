@@ -188,10 +188,12 @@ class TestOBSImageBuildResultService(object):
             'message': 'Job does not exist, can not add to listen pipeline',
             'ok': False
         }
-        self.obs_result.jobs = {'815': Mock()}
+        job = Mock()
+        self.obs_result.jobs = {'815': job}
         assert self.obs_result._add_to_listener('815') == {
             'message': 'Job now in listen pipeline', 'ok': True
         }
+        job.call_result_handler.assert_called_once_with()
 
     @patch.object(OBSImageBuildResultService, '_validate_job_description')
     @patch.object(OBSImageBuildResultService, '_start_job')

@@ -72,6 +72,11 @@ class TestOBSImageBuildResult(object):
         self.obs_result.set_result_handler(function)
         assert self.obs_result.result_callback == function
 
+    @patch.object(OBSImageBuildResult, '_result_callback')
+    def test_call_result_handler(self, mock_result_callback):
+        self.obs_result.call_result_handler()
+        mock_result_callback.assert_called_once_with()
+
     def test_log_callback(self):
         self.obs_result.log_callback = Mock()
         self.obs_result.iteration_count = 1
