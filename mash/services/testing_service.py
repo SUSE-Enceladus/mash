@@ -26,7 +26,7 @@ from mash.services.testing.service import TestingService
 
 def main():
     """
-    mash - obs service application entry point
+    mash - testing service application entry point
     """
     try:
         logging.basicConfig()
