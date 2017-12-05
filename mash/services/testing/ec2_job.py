@@ -16,6 +16,16 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import jwt
+import logging
+
+from datetime import datetime, timedelta
+
+from ipa.ipa_controller import test_image
+
+from jwt import ExpiredSignatureError, InvalidTokenError
+
+from mash.mash_exceptions import MashTestingException
 from mash.services.testing.job import TestingJob
 
 
@@ -26,6 +36,7 @@ class EC2TestingJob(TestingJob):
     __test__ = False
 
     def __init__(self,
+                 distro,
                  job_id,
                  provider,
                  tests,
@@ -33,7 +44,6 @@ class EC2TestingJob(TestingJob):
                  account=None,
                  access_key_id=None,
                  desc=None,
-                 distro=None,
                  instance_type=None,
                  region=None,
                  secret_access_key=None,
@@ -41,12 +51,12 @@ class EC2TestingJob(TestingJob):
                  ssh_private_key=None,
                  ssh_user=None):
         super(EC2TestingJob, self).__init__(
+            distro,
             job_id,
             provider,
             tests,
             utctime,
             desc=desc,
-            distro=distro,
             instance_type=instance_type,
             region=region
         )
@@ -56,3 +66,70 @@ class EC2TestingJob(TestingJob):
         self.ssh_key_name = ssh_key_name
         self.ssh_private_key = ssh_private_key
         self.ssh_user = ssh_user
+
+    def _get_credential_request(self):
+        """
+        Return json dictionary with credentials request message.
+        """
+        request = {
+            'exp': datetime.utcnow() + timedelta(minutes=5),
+            'iat': datetime.utcnow(),
+            'sub': 'testing.get_credentials',
+            'credentials': {
+                'csp': self.provider,
+                'account': self.account
+            }
+        }
+        return jwt.encode(request, 'mash.services.testing', algorithm='HS256')
+
+    def _process_credentials(self, credentials):
+        """
+        Verify credential request successful and update self.
+        Update instance attrs with credentials.
+        """
+        try:
+            payload = jwt.decode(
+                credentials,
+                'mash.services.testing',
+                algorithm='HS256'
+            )
+        except ExpiredSignatureError:
+            raise MashTestingException(
+                'Token has expired, cannot retrieve credentials.'
+            )
+        except InvalidTokenError:
+            raise MashTestingException(
+                'Invalid token, cannot retrieve credentials.'
+            )
+
+        try:
+            creds = payload['credentials']
+            self.secret_access_key = creds['secret_access_key']
+            self.access_key_id = creds['access_key_id']
+            self.ssh_key_name = creds['ssh_key_name']
+            self.ssh_private_key = creds['ssh_private_key']
+        except KeyError:
+            raise MashTestingException(
+                'Credentials not found in token.'
+            )
+
+    def _run_tests(self):
+        """
+        Tests image with IPA and update status and results.
+        """
+        self.status, self.results = test_image(
+            self.provider,
+            access_key_id=self.access_key_id,
+            account=self.account,
+            desc=self.desc,
+            distro=self.distro,
+            image_id=self.image_id,
+            instance_type=self.instance_type,
+            log_level=logging.WARNING,
+            region=self.region,
+            secret_access_key=self.secret_access_key,
+            ssh_key_name=self.ssh_key_name,
+            ssh_private_key=self.ssh_private_key,
+            ssh_user=self.ssh_user,
+            tests=self.tests
+        )

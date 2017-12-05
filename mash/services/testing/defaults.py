@@ -25,3 +25,7 @@ class Defaults(object):
     @classmethod
     def get_config(self):
         return '/etc/mash/testing_config.yml'
+
+    @classmethod
+    def get_log_file(self):
+        return '/var/log/mash/testing_service.log'
