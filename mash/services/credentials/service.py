@@ -57,7 +57,7 @@ class CredentialsService(BaseService):
         else:
             self.log.error(message, extra=job_metadata)
 
-    def _control_in(self, channel, method, properties, message):
+    def _control_in(self, message, channel, method, properties):
         """
         On message sent by client
 
@@ -65,7 +65,7 @@ class CredentialsService(BaseService):
 
         1. add new credentials payload
         """
-        channel.basic_ack(method.delivery_tag)
+        channel.basic.ack(delivery_tag=method['delivery_tag'])
         message_data = {}
         try:
             message_data = JsonFormat.json_loads_byteified(format(message))

@@ -62,9 +62,10 @@ class TestCredentialsService(object):
         message = '{"credentials": ' + \
             '{"id": "123", "csp": "ec2", "payload": {"foo": "bar"}}}'
         channel = Mock()
-        method = Mock()
-        self.service._control_in(channel, method, Mock(), message)
-        channel.basic_ack.assert_called_once_with(method.delivery_tag)
+        tag = Mock()
+        method = {'delivery_tag': tag}
+        self.service._control_in(message, channel, method, Mock())
+        channel.basic.ack.assert_called_once_with(delivery_tag=tag)
         mock_create_credentials.assert_called_once_with(
             {
                 'credentials': {
@@ -75,7 +76,7 @@ class TestCredentialsService(object):
             }
         )
         message = 'foo'
-        self.service._control_in(channel, method, Mock(), message)
+        self.service._control_in(message, channel, method, Mock())
         mock_send_control_response.assert_called_once_with(
             {
                 'message':
@@ -86,7 +87,7 @@ class TestCredentialsService(object):
         )
         mock_send_control_response.reset_mock()
         message = '{"foo": "bar"}'
-        self.service._control_in(channel, method, Mock(), message)
+        self.service._control_in(message, channel, method, Mock())
         mock_send_control_response.assert_called_once_with(
             {
                 'message': "No idea what to do with: {'foo': 'bar'}",
