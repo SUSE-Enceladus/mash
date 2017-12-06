@@ -17,7 +17,8 @@
 #
 
 import json
-import pika
+
+from amqpstorm import UriConnection
 
 from logging.handlers import SocketHandler
 
@@ -105,7 +106,7 @@ class RabbitMQSocket(object):
             self.connection.close()
 
     def declare_exchange(self):
-        self.channel.exchange_declare(
+        self.channel.exchange.declare(
             exchange=self.exchange,
             exchange_type='direct',
             durable=True
@@ -116,11 +117,10 @@ class RabbitMQSocket(object):
         Create/open connection and declare logging exchange.
         """
         if not self.connection or self.connection.is_closed:
-            self.connection = pika.BlockingConnection(
-                pika.ConnectionParameters(
-                    host=self.host,
-                    port=self.port,
-                    heartbeat_interval=600
+            self.connection = UriConnection(
+                'amqp://guest:guest@{0}:{1}/%2F?heartbeat=600'.format(
+                    self.host,
+                    self.port
                 )
             )
 
@@ -132,12 +132,12 @@ class RabbitMQSocket(object):
         Override socket sendall method to publish message to exchange.
         """
         self.open()
-        self.channel.basic_publish(
-            exchange=self.exchange,
-            routing_key=self.routing_key,
+        self.channel.basic.publish(
             body=msg,
-            properties=pika.BasicProperties(
-                content_type='application/json',
-                delivery_mode=2
-            )
+            routing_key=self.routing_key,
+            exchange=self.exchange,
+            properties={
+                'content_type': 'application/json',
+                'delivery_mode': 2
+            }
         )

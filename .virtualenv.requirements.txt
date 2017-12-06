@@ -11,5 +11,5 @@ PyJWT
 APScheduler
 python-dateutil
 build-service-osc
-pika
+amqpstorm
 ec2uploadimg
