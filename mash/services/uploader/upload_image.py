@@ -159,8 +159,10 @@ class UploadImage(object):
         end = time.time() + timeout
         while self.channel.is_open and time.time() < end:
             self.channel.process_data_events()
+            if not self.channel.consumer_tags:
+                break
 
-        if self.channel.is_open:
+        if self.channel.consumer_tags:
             self._consuming_timeout()
 
     def _obs_job_data(self, body, channel, method, properties):

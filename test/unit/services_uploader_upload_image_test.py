@@ -6,14 +6,22 @@ from mash.services.uploader.upload_image import UploadImage
 
 
 class MockChannel(Mock):
-    vals = [True, False, True, True, True, True]
-    count = 0
+    vals = [True, True, True, True, True]
+    tags = [[], ['tag']]
+    open_count = 0
+    tags_count = 0
 
     @property
     def is_open(self):
-        val = self.vals[self.count]
-        self.count += 1
+        val = self.vals[self.open_count]
+        self.open_count += 1
         return val
+
+    @property
+    def consumer_tags(self):
+        tag = self.tags[self.tags_count]
+        self.tags_count += 1
+        return tag
 
 
 class TestUploadImage(object):
