@@ -1,9 +1,10 @@
-import pika
 import sys
+from amqpstorm import UriConnection
 
-connection = pika.BlockingConnection(
-    pika.ConnectionParameters(host='localhost')
+connection = UriConnection(
+    'amqp://guest:guest@localhost:5672/%2F?heartbeat=600'
 )
+
 channel = connection.channel()
 
 # asume we are the uploader service running job 0815 and in
@@ -11,12 +12,12 @@ channel = connection.channel()
 # to get its part of job 0815 done
 
 listen_to_queue = 'obs.listener_0815'
-channel.queue_declare(queue=listen_to_queue, durable=True)
+channel.queue.declare(queue=listen_to_queue, durable=True)
 
 print('waiting for obs service...')
 
-def callback(channel, method, properties, body):
-    channel.queue_delete(queue=listen_to_queue)
+def callback(body, channel, method, properties):
+    channel.queue.delete(queue=listen_to_queue)
     print(body)
 
     print('..we have all data, lets upload')
@@ -24,10 +25,10 @@ def callback(channel, method, properties, body):
     sys.exit(0)
 
 try:
-    channel.basic_consume(
+    channel.basic.consume(
         callback, queue=listen_to_queue
     )
-    channel.start_consuming()
+    channel.start_consuming(to_tuple=True)
 except KeyboardInterrupt:
     if channel.is_open:
         channel.close()

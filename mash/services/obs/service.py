@@ -73,7 +73,7 @@ class OBSImageBuildResultService(BaseService):
             self._control_in, self.bind_service_queue()
         )
         try:
-            self.channel.start_consuming()
+            self.channel.start_consuming(to_tuple=True)
         except Exception:
             if self.channel and self.channel.is_open:
                 self.channel.stop_consuming()
@@ -110,7 +110,7 @@ class OBSImageBuildResultService(BaseService):
         else:
             self.log.error(message, extra=job_metadata)
 
-    def _control_in(self, channel, method, properties, message):
+    def _control_in(self, message, channel, method, properties):
         """
         On message sent by client
 
@@ -120,7 +120,7 @@ class OBSImageBuildResultService(BaseService):
         2. add job to listener
         3. delete job
         """
-        channel.basic_ack(method.delivery_tag)
+        channel.basic.ack(delivery_tag=method['delivery_tag'])
         message_data = {}
         job_id = None
 

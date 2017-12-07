@@ -350,13 +350,13 @@ class TestingService(BaseService):
         Start testing service.
         """
         self.scheduler.start()
-        self.channel.start_consuming()
+        self.channel.start_consuming(to_tuple=True)
 
     def stop(self):
         """
         Stop testing service.
 
-        Stop consuming queues and close pika connections.
+        Stop consuming queues and close rabbitmq connections.
         """
         self.scheduler.shutdown()
         self.channel.stop_consuming()
