@@ -62,7 +62,9 @@ class TestOBSImageBuildResultService(object):
             mock_control_in,
             self.obs_result.bind_service_queue.return_value
         )
-        self.obs_result.channel.start_consuming.assert_called_once_with()
+        self.obs_result.channel.start_consuming.assert_called_once_with(
+            to_tuple=True
+        )
 
         self.obs_result.channel.start_consuming.side_effect = Exception
         self.obs_result.post_init()

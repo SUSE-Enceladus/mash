@@ -106,7 +106,9 @@ class TestUploadImage(object):
 
         self.upload_image.service_lookup_timeout_sec = None
         self.upload_image._consume_service_information()
-        channel.start_consuming.assert_called_once_with()
+        channel.start_consuming.assert_called_once_with(
+            to_tuple=True
+        )
 
     def test_obs_job_data(self):
         body = '{"image_source": ["image", "checksum"]}'

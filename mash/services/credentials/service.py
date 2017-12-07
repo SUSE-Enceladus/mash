@@ -39,7 +39,7 @@ class CredentialsService(BaseService):
             self._control_in, self.bind_service_queue()
         )
         try:
-            self.channel.start_consuming()
+            self.channel.start_consuming(to_tuple=True)
         except Exception:
             if self.channel and self.channel.is_open:
                 self.channel.stop_consuming()

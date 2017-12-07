@@ -26,7 +26,9 @@ class TestCredentialsService(object):
         self.service.consume_queue.assert_called_once_with(
             mock_control_in, self.service.bind_service_queue.return_value
         )
-        self.service.channel.start_consuming.assert_called_once_with()
+        self.service.channel.start_consuming.assert_called_once_with(
+            to_tuple=True
+        )
         self.service.channel.start_consuming.side_effect = Exception
         self.service.post_init()
         self.service.channel.stop_consuming.assert_called_once_with()

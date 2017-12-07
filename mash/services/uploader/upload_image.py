@@ -151,7 +151,7 @@ class UploadImage(object):
             if self.service_lookup_timeout_sec:
                 self._timed_consume(self.service_lookup_timeout_sec)
             else:
-                self.channel.start_consuming()
+                self.channel.start_consuming(to_tuple=True)
         except Exception:
             self._close_connection()
 

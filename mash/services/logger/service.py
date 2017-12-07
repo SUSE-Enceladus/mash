@@ -45,7 +45,7 @@ class LoggerService(BaseService):
             )
         )
         try:
-            self.channel.start_consuming()
+            self.channel.start_consuming(to_tuple=True)
         except KeyboardInterrupt:
             self.channel.stop_consuming()
             self.close_connection()
