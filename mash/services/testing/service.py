@@ -167,7 +167,7 @@ class TestingService(BaseService):
 
         return json.dumps(data)
 
-    def _handle_jobs(self, channel, method, properties, message):
+    def _handle_jobs(self, message, channel, method, properties):
         """
         Callback for events from jobcreator.
 
@@ -182,7 +182,7 @@ class TestingService(BaseService):
             }
         }
         """
-        channel.basic_ack(method.delivery_tag)
+        channel.basic.ack(method['delivery_tag'])
 
         try:
             job_desc = json.loads(message.decode())
@@ -287,7 +287,7 @@ class TestingService(BaseService):
         job = self.jobs[job_id]
         job.test_image(host=self.host)
 
-    def _test_image(self, channel, method, properties, message):
+    def _test_image(self, message, channel, method, properties):
         """
         Callback for image testing:
 
@@ -297,7 +297,7 @@ class TestingService(BaseService):
            image in the cloud provider.
         3. Process and log results.
         """
-        channel.basic_ack(method.delivery_tag)
+        channel.basic.ack(method['delivery_tag'])
 
         try:
             job = json.loads(message)['uploader_result']

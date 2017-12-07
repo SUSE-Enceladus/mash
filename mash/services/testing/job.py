@@ -17,8 +17,9 @@
 #
 
 import dateutil.parser
-import pika
 import time
+
+from amqpstorm import UriConnection
 
 from mash.mash_exceptions import MashTestingException
 from mash.services.status_levels import UNKOWN
@@ -65,10 +66,10 @@ class TestingJob(object):
         Credentials service will respond to credentials request by publishing
         a JWT to the queue.
         """
-        self.channel.queue_declare(queue=self.credential_queue, durable=True)
-        self.channel.queue_bind(
-            self.credential_queue,
-            'testing',
+        self.channel.queue.declare(queue=self.credential_queue, durable=True)
+        self.channel.queue.bind(
+            queue=self.credential_queue,
+            exchange='testing',
             routing_key=self.credential_queue
         )
 
@@ -90,7 +91,7 @@ class TestingJob(object):
 
     def _get_credentials(self, host):
         """
-        Setup pika channel and queues to collect credentials.
+        Setup rabbitmq channel and queues to collect credentials.
 
         Published a credential request to credential service. Awaits
         response on queue with credentials JWT.
@@ -98,14 +99,14 @@ class TestingJob(object):
         self._open_connection(host)
         self._bind_credential_queue()
 
-        self.channel.basic_publish(
-            'credentials',
+        self.channel.basic.publish(
+            self._get_credential_request(),
             'credentials.request',
-            self._get_credential_request()
+            exchange='credentials'
         )
         credentials = self._wait_for_credentials()
 
-        self.channel.queue_delete(queue=self.credential_queue)
+        self.channel.queue.delete(queue=self.credential_queue)
         self._close_connection()
 
         self._process_credentials(credentials)
@@ -118,17 +119,16 @@ class TestingJob(object):
 
     def _open_connection(self, host):
         """
-        Open pika connection and channel.
+        Open rabbitmq connection and channel.
         """
-        self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(
-                host=host,
-                heartbeat_interval=600
+        self.connection = UriConnection(
+            'amqp://guest:guest@{0}:5672/%2F?heartbeat=600'.format(
+                host
             )
         )
 
         self.channel = self.connection.channel()
-        self.channel.confirm_delivery()
+        self.channel.confirm_deliveries()
 
     def _process_credentials(self, credentials):
         """
@@ -152,7 +152,7 @@ class TestingJob(object):
         body = None
 
         while not body and timeout:
-            method_frame, header_frame, body = self.channel.basic_get(
+            body = self.channel.basic.get(
                 queue=self.credential_queue
             )
 
