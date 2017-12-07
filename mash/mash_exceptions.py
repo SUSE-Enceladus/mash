@@ -35,7 +35,7 @@ class MashException(Exception):
         return format(self.message)
 
 
-class MashPikaConnectionException(MashException):
+class MashRabbitConnectionException(MashException):
     """
     Exception raised of connection to RabbitMQ server failed
     """

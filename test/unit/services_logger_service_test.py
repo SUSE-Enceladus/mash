@@ -32,11 +32,14 @@ class TestLoggerService(object):
         }
 
         self.channel = Mock()
-        self.channel.basic_ack.return_value = None
+        self.channel.basic.ack.return_value = None
 
         self.logger = LoggerService()
         self.logger.channel = self.channel
         self.logger.close_connection = Mock()
+
+        self.tag = Mock()
+        self.method = {'delivery_tag': self.tag}
 
     @patch.object(LoggerConfig, '__init__')
     @patch.object(LoggerService, '_bind_logger_queue')
@@ -73,7 +76,7 @@ class TestLoggerService(object):
 
         mock_declare_direct_exchange.assert_called_once_with('logger')
         mock_declare_queue.assert_called_once_with('mash.logger')
-        self.logger.channel.queue_bind.assert_called_once_with(
+        self.logger.channel.queue.bind.assert_called_once_with(
             exchange='logger',
             queue='mash.logger',
             routing_key='mash.logger'
@@ -81,7 +84,7 @@ class TestLoggerService(object):
 
     def test_logger_process_invalid_log(self):
         with raises(MashLoggerException):
-            self.logger._process_log(self.channel, Mock(), Mock(), '')
+            self.logger._process_log('', self.channel, self.method, Mock())
 
     @patch('os.path.exists')
     def test_logger_process_append(
@@ -94,7 +97,7 @@ class TestLoggerService(object):
         with patch(open_name, create=True) as mock_open:
             mock_open.return_value = MagicMock(spec=io.IOBase)
             self.logger._process_log(
-                self.channel, Mock(), Mock(), json.dumps(self.message)
+                json.dumps(self.message), self.channel, self.method, Mock()
             )
             file_handle = mock_open.return_value.__enter__.return_value
             file_handle.write.assert_called_with(
@@ -117,5 +120,5 @@ class TestLoggerService(object):
 
             with raises(MashLoggerException):
                 self.logger._process_log(
-                    self.channel, Mock(), Mock(), json.dumps(self.message)
+                    json.dumps(self.message), self.channel, self.method, Mock()
                 )

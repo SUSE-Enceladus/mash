@@ -24,7 +24,7 @@ config = {
         'PyJWT',
         'python-dateutil',
         'APScheduler>=3.3.1',
-        'pika'
+        'amqpstorm'
     ],
     'packages': ['mash'],
     'entry_points': {

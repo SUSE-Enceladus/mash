@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import pika
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
+
+from amqpstorm import UriConnection
 
 # project
 from mash.utils.json_format import JsonFormat
@@ -48,7 +49,7 @@ class UploadImage(object):
         description of the image in the public cloud
 
     * :attr:`host`
-        pika connection host, defaults to localhost
+        rabbit connection host, defaults to localhost
 
     * :attr:`service_lookup_timeout_sec`
         optional timeout for waiting on results of services
@@ -125,43 +126,54 @@ class UploadImage(object):
         return uploader.upload()
 
     def _consume_service_information(self):
-        # pika requires one connection per thread
-        self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host=self.host)
+        self.connection = UriConnection(
+            'amqp://guest:guest@{0}:5672/%2F?heartbeat=600'.format(
+                self.host
+            )
         )
         self.channel = self.connection.channel()
         # lookup authenitcation data from credentials service
-        self.channel.queue_declare(
+        self.channel.queue.declare(
             queue=self.credentials_listen_queue, durable=True
         )
-        self.channel.basic_consume(
-            self._credentials_job_data, queue=self.credentials_listen_queue
+        self.channel.basic.consume(
+            callback=self._credentials_job_data,
+            queue=self.credentials_listen_queue
         )
         # lookup image file data from obs service
-        self.channel.queue_declare(
+        self.channel.queue.declare(
             queue=self.obs_listen_queue, durable=True
         )
-        self.channel.basic_consume(
-            self._obs_job_data, queue=self.obs_listen_queue
+        self.channel.basic.consume(
+            callback=self._obs_job_data, queue=self.obs_listen_queue
         )
-        if self.service_lookup_timeout_sec:
-            self.connection.add_timeout(
-                self.service_lookup_timeout_sec, self._consuming_timeout
-            )
         try:
-            self.channel.start_consuming()
+            if self.service_lookup_timeout_sec:
+                self._timed_consume(self.service_lookup_timeout_sec)
+            else:
+                self.channel.start_consuming()
         except Exception:
             self._close_connection()
 
-    def _obs_job_data(self, channel, method, properties, body):
-        channel.basic_ack(method.delivery_tag)
-        channel.queue_delete(queue=self.obs_listen_queue)
+    def _timed_consume(self, timeout=None):
+        end = time.time() + timeout
+        while self.channel.is_open and time.time() < end:
+            self.channel.process_data_events()
+            if not self.channel.consumer_tags:
+                break
+
+        if self.channel.consumer_tags:
+            self._consuming_timeout()
+
+    def _obs_job_data(self, body, channel, method, properties):
+        channel.basic.ack(delivery_tag=method['delivery_tag'])
+        channel.queue.delete(queue=self.obs_listen_queue)
         obs_result = JsonFormat.json_loads_byteified(body)
         self.system_image_file = obs_result['image_source'][0]
 
-    def _credentials_job_data(self, channel, method, properties, body):
-        channel.basic_ack(method.delivery_tag)
-        channel.queue_delete(queue=self.credentials_listen_queue)
+    def _credentials_job_data(self, body, channel, method, properties):
+        channel.basic.ack(delivery_tag=method['delivery_tag'])
+        channel.queue.delete(queue=self.credentials_listen_queue)
         credentials_result = JsonFormat.json_loads_byteified(body)
         self.credentials_token = credentials_result['credentials']
 

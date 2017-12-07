@@ -16,13 +16,14 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import logging
-import pika
+
+from amqpstorm import UriConnection
 
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.mash_exceptions import (
-    MashPikaConnectionException,
+    MashRabbitConnectionException,
     MashLogSetupException
 )
 
@@ -44,10 +45,10 @@ class BaseService(object):
         self.channel = None
         self.connection = None
 
-        self.pika_properties = pika.BasicProperties(
-            content_type='application/json',
-            delivery_mode=2
-        )
+        self.msg_properties = {
+            'content_type': 'application/json',
+            'delivery_mode': 2
+        }
 
         self.host = host
         self.service_exchange = service_exchange
@@ -119,41 +120,40 @@ class BaseService(object):
         )
 
     def delete_listener_queue(self, identifier):
-        self.channel.queue_delete(
+        self.channel.queue.delete(
             queue='{0}.listener_{1}'.format(self.service_exchange, identifier)
         )
 
     def consume_queue(self, callback, queue):
-        self.channel.basic_consume(
-            callback, queue=queue
+        self.channel.basic.consume(
+            callback=callback, queue=queue
         )
 
     def _publish(self, exchange, routing_key, message):
-        return self.channel.basic_publish(
-            exchange=exchange,
-            routing_key=routing_key,
+        return self.channel.basic.publish(
             body=message,
-            properties=self.pika_properties,
+            routing_key=routing_key,
+            exchange=exchange,
+            properties=self.msg_properties,
             mandatory=True
         )
 
     def _open_connection(self):
         if not self.connection or self.connection.is_closed:
             try:
-                self.connection = pika.BlockingConnection(
-                    pika.ConnectionParameters(
-                        host=self.host,
-                        heartbeat_interval=600
+                self.connection = UriConnection(
+                    'amqp://guest:guest@{0}:5672/%2F?heartbeat=600'.format(
+                        self.host
                     )
                 )
             except Exception as e:
-                raise MashPikaConnectionException(
+                raise MashRabbitConnectionException(
                     'Connection to RabbitMQ server failed: {0}'.format(e)
                 )
 
         if not self.channel or self.channel.is_closed:
             self.channel = self.connection.channel()
-            self.channel.confirm_delivery()
+            self.channel.confirm_deliveries()
 
     def close_connection(self):
         if self.channel and self.channel.is_open:
@@ -164,20 +164,19 @@ class BaseService(object):
 
     def _bind_queue(self, exchange, routing_key):
         self._declare_direct_exchange(exchange)
-        declared_queue = self._declare_queue(
-            '{0}.{1}'.format(exchange, routing_key)
-        )
-        self.channel.queue_bind(
+        queue = '{0}.{1}'.format(exchange, routing_key)
+        self._declare_queue(queue)
+        self.channel.queue.bind(
             exchange=exchange,
-            queue=declared_queue.method.queue,
+            queue=queue,
             routing_key=routing_key
         )
-        return declared_queue.method.queue
+        return queue
 
     def _declare_direct_exchange(self, exchange):
-        self.channel.exchange_declare(
+        self.channel.exchange.declare(
             exchange=exchange, exchange_type='direct', durable=True
         )
 
     def _declare_queue(self, queue):
-        return self.channel.queue_declare(queue=queue, durable=True)
+        return self.channel.queue.declare(queue=queue, durable=True)

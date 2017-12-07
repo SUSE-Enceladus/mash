@@ -57,14 +57,14 @@ class LoggerService(BaseService):
         """
         self._declare_direct_exchange(self.service_exchange)
         self._declare_queue(queue_name)
-        self.channel.queue_bind(
+        self.channel.queue.bind(
             exchange=self.service_exchange,
             queue=queue_name,
             routing_key=route
         )
         return queue_name
 
-    def _process_log(self, channel, method, properties, message):
+    def _process_log(self, message, channel, method, properties):
         """
         Callback for logger queue.
 
@@ -72,7 +72,7 @@ class LoggerService(BaseService):
         2. Determine log file name based on job_id.
         3. Write or append to log file.
         """
-        channel.basic_ack(method.delivery_tag)
+        channel.basic.ack(delivery_tag=method['delivery_tag'])
 
         try:
             data = json.loads(message.decode())
