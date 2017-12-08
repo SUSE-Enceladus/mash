@@ -32,6 +32,7 @@ Requires:       rabbitmq-server
 Requires:       python-PyYAML
 Requires:       python-PyJWT
 Requires:       python-pika
+Requires:       python-future
 Requires:       python-APScheduler >= 3.3.1
 Requires:       python-python-dateutil
 Requires:       python-ec2uploadimg

@@ -10,6 +10,6 @@ PyYAML
 PyJWT
 APScheduler
 python-dateutil
-build-service-osc
 amqpstorm
 ec2uploadimg
+future

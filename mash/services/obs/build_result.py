@@ -30,21 +30,11 @@ from apscheduler.events import (
     EVENT_JOB_MAX_INSTANCES,
     EVENT_JOB_SUBMITTED
 )
-from xml.etree import cElementTree as ET
 import subprocess
 import threading
 
-# from osc project
-import osc
-from osc.core import (
-    get_binarylist,
-    get_binary_file,
-    meta_exists,
-    unlock_package,
-    edit_meta
-)
-
 # project
+from mash.utils.command import Command
 from mash.services.obs.defaults import Defaults
 from mash.log.filter import SchedulerLoggingFilter
 from mash.mash_exceptions import (
@@ -117,17 +107,10 @@ class OBSImageBuildResult(object):
         self.job_nonstop = False
         self.log_callback = None
         self.result_callback = None
-        self.osc_process = None
+        self.osc_results_process = None
         self.iteration_count = 0
 
         self.image_status = self._init_status()
-
-        try:
-            osc.conf.get_config()
-        except Exception as e:
-            self._log_error(
-                'Reading osc config failed: {0}'.format(e)
-            )
 
     def start_watchdog(
         self, interval_sec=5, nonstop=False, isotime=None
@@ -204,26 +187,25 @@ class OBSImageBuildResult(object):
     def get_image(self):
         """
         Download image and shasum to given file
-
-        :param string target_filename: target file name
         """
         downloaded = []
         binary_list = self._get_binary_list()
         mkpath(self.download_directory)
         for binary in binary_list:
-            if self._match_image_file(binary.name):
-                target_filename = os.sep.join(
-                    [self.download_directory, binary.name]
-                )
+            if self._match_image_file(binary):
                 try:
-                    get_binary_file(
-                        self.api_url, self.project, self.repository, self.arch,
-                        binary.name,
-                        package=self.package,
-                        target_filename=target_filename,
-                        target_mtime=binary.mtime
+                    Command.run(
+                        [
+                            'osc', '-A', self.api_url,
+                            'getbinaries', '-d', self.download_directory, '-q',
+                            self.project, self.package,
+                            self.repository, self.arch,
+                            binary
+                        ]
                     )
-                    downloaded.append(target_filename)
+                    downloaded.append(
+                        os.sep.join([self.download_directory, binary])
+                    )
                 except Exception as e:
                     raise MashImageDownloadException(
                         'Image Download failed with: {0}'.format(e)
@@ -282,71 +264,32 @@ class OBSImageBuildResult(object):
         # for an obs change
         self._result_callback()
 
-    def _get_pkg_metadata(self):
-        try:
-            obs_target = (self.project, self.package)
-            obs_type = 'pkg'
-            meta = meta_exists(
-                metatype=obs_type, path_args=obs_target,
-                create_new=False, apiurl=self.api_url
-            )
-            return ET.fromstring(''.join(meta))
-        except Exception:
-            return None
-
-    def _is_locked(self, metadata):
-        if metadata:
-            if metadata.find('lock'):
-                return True
-            else:
-                return False
-        else:
-            return None
-
     def _lock(self):
-        root = self._get_pkg_metadata()
-        if self._is_locked(root) is False:
-            try:
-                self._log_callback(
-                    'Lock: {0}/{1}'.format(self.project, self.package)
-                )
-                obs_target = (self.project, self.package)
-                obs_type = 'pkg'
-                lock = ET.SubElement(root, 'lock')
-                ET.SubElement(lock, 'enable')
-                meta = ET.tostring(root)
-                # JFI: edit_meta prints unwanted messages on stdout
-                edit_meta(
-                    metatype=obs_type, path_args=obs_target,
-                    data=meta, msg='lock'
-                )
-                return True
-            except Exception as e:
-                self._log_error(
-                    'Lock failed for {0}/{1}: {2}: {3}'.format(
-                        self.project, self.package, type(e).__name__, e
-                    )
-                )
-                return False
+        return self._setup_lock(command='lock')
 
     def _unlock(self):
-        root = self._get_pkg_metadata()
-        if self._is_locked(root) is True:
-            try:
-                self._log_callback(
-                    'Unlock: {0}/{1}'.format(self.project, self.package)
+        return self._setup_lock(command='unlock')
+
+    def _setup_lock(self, command):
+        try:
+            self._log_callback(
+                '{0}: {1}/{2}'.format(command, self.project, self.package)
+            )
+            Command.run(
+                [
+                    'osc', '-A', self.api_url,
+                    command, '-m', 'mash_{0}'.format(command),
+                    self.project, self.package
+                ]
+            )
+            return True
+        except Exception as e:
+            self._log_error(
+                '{0} failed for {1}/{2}: {3}: {4}'.format(
+                    command, self.project, self.package, type(e).__name__, e
                 )
-                unlock_package(
-                    self.api_url, self.project, self.package, 'unlock'
-                )
-                return True
-            except Exception as e:
-                self._log_error(
-                    'Unlock failed for {0}/{1}: {2}: {3}'.format(
-                        self.project, self.package, type(e).__name__, e
-                    )
-                )
-                return False
+            )
+            return False
 
     def _wait_for_new_image(self, timeout_sec=3600):
         osc_result_thread = threading.Thread(target=self._watch_obs_result)
@@ -354,11 +297,11 @@ class OBSImageBuildResult(object):
         osc_result_thread.join(timeout_sec)
         if osc_result_thread.is_alive():
             self._log_callback('Wait for new image timeout reached')
-            self.osc_process.terminate()
+            self.osc_results_process.terminate()
             osc_result_thread.join()
 
     def _watch_obs_result(self):
-        self.osc_process = subprocess.Popen(
+        self.osc_results_process = subprocess.Popen(
             [
                 'osc', '-A', self.api_url,
                 'results', '--arch', self.arch, '--repo', self.repository,
@@ -367,7 +310,7 @@ class OBSImageBuildResult(object):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        self.osc_process.communicate()
+        self.osc_results_process.communicate()
 
     def _retire_job(self):
         try:
@@ -470,30 +413,33 @@ class OBSImageBuildResult(object):
     def _lookup_image_packages_metadata(self):
         packages_file = NamedTemporaryFile()
         for binary in self._get_binary_list():
-            if binary.name.endswith('.sha256'):
+            if binary.endswith('.sha256'):
                 try:
                     # The .sha256 file name uses the same name format than
                     # the real image name. However the name extension of the
                     # real image differs according to the image type. Matching
                     # against the unique .sha256 file is therefore the most
                     # simple file match
-                    self.image_status['version'] = binary.name.split('-')[-2]
+                    self.image_status['version'] = binary.split('-')[-2]
                 except Exception:
                     # naming conventions for image names in obs violated
                     # or no image exists. This will reset the image status
                     # back to unknown
                     self.image_status['version'] = 'unknown'
                     self._log_error(
-                        'Unexpected image name format: {0}'.format(binary.name)
+                        'Unexpected image name format: {0}'.format(binary)
                     )
-            if '.packages' in binary.name:
-                get_binary_file(
-                    self.api_url, self.project, self.repository, self.arch,
-                    binary.name,
-                    package=self.package,
-                    target_filename=packages_file.name,
-                    target_mtime=binary.mtime
+            if '.packages' in binary:
+                Command.run(
+                    [
+                        'osc', '-A', self.api_url,
+                        'getbinaries', '-d', '/tmp', '-q',
+                        self.project, self.package,
+                        self.repository, self.arch,
+                        binary
+                    ]
                 )
+                os.rename('/tmp/' + binary, packages_file.name)
         if self.image_status['version'] == 'unknown':
             self._log_error('No image binary found')
         package_type = namedtuple(
@@ -558,10 +504,13 @@ class OBSImageBuildResult(object):
 
     def _get_binary_list(self):
         try:
-            return get_binarylist(
-                self.api_url, self.project, self.repository, self.arch,
-                self.package, verbose=True
+            osc_ls_call = Command.run(
+                [
+                    'osc', '-A', self.api_url, 'ls', '-b', self.project,
+                    self.package, self.repository, self.arch
+                ]
             )
+            return osc_ls_call.output.split(os.linesep)
         except Exception as e:
             raise MashOBSLookupException(
                 'OBS binary lookup failed with: {0}'.format(e)

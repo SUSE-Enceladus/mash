@@ -24,7 +24,8 @@ config = {
         'PyJWT',
         'python-dateutil',
         'APScheduler>=3.3.1',
-        'amqpstorm'
+        'amqpstorm',
+        'future'
     ],
     'packages': ['mash'],
     'entry_points': {

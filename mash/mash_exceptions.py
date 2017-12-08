@@ -35,6 +35,14 @@ class MashException(Exception):
         return format(self.message)
 
 
+class MashCommandException(MashException):
+    """
+    Exception raised if an external command called via a Command
+    instance has returned with an exit code != 0 or could not
+    be called at all.
+    """
+
+
 class MashRabbitConnectionException(MashException):
     """
     Exception raised of connection to RabbitMQ server failed
