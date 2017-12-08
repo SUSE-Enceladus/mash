@@ -20,6 +20,8 @@ import json
 
 from datetime import datetime
 
+from amqpstorm import AMQPError
+
 from apscheduler import events
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -52,7 +54,7 @@ class TestingService(BaseService):
 
         # Bind and consume job_events from jobcreator
         self.consume_queue(
-            self._handle_jobs,
+            self._process_message,
             self.bind_service_queue()
         )
 
@@ -90,7 +92,7 @@ class TestingService(BaseService):
             self.jobs[job.job_id] = job
 
             self.consume_queue(
-                self._test_image,
+                self._process_message,
                 self.bind_listener_queue(job.job_id)
             )
 
@@ -122,7 +124,7 @@ class TestingService(BaseService):
                 )
                 self._publish_message(
                     'jobcreator',
-                    job.job_id,
+                    job,
                     self._get_status_message(job)
                 )
 
@@ -167,7 +169,7 @@ class TestingService(BaseService):
 
         return json.dumps(data)
 
-    def _handle_jobs(self, message, channel, method, properties):
+    def _handle_jobs(self, message):
         """
         Callback for events from jobcreator.
 
@@ -182,10 +184,10 @@ class TestingService(BaseService):
             }
         }
         """
-        channel.basic.ack(method['delivery_tag'])
+        message.ack()
 
         try:
-            job_desc = json.loads(message.decode())
+            job_desc = json.loads(message.body)
         except ValueError as e:
             self.log.error('Invalid job config file: {}.'.format(e))
         else:
@@ -228,6 +230,17 @@ class TestingService(BaseService):
         else:
             self._process_test_result(event)
 
+    def _process_message(self, message):
+        """
+        Channel callback, handles incoming messages in queues.
+
+        Send message to proper method based on routing_key.
+        """
+        if message.method['routing_key'] == 'service_event':
+            self._handle_jobs(message)
+        else:
+            self._test_image(message)
+
     def _process_test_result(self, event):
         """
         Callback when testing background process finishes.
@@ -266,19 +279,25 @@ class TestingService(BaseService):
 
         self._publish_message(
             'publisher',
-            job_id,
+            job,
             self._get_status_message(job)
         )
 
-    def _publish_message(self, exchange, identifier, message):
+    def _publish_message(self, exchange, job, message):
         """
         Publish status message to provided service exchange.
         """
-        return self._publish(
-            exchange,
-            'listener_{0}'.format(identifier),
-            message
-        )
+        try:
+            self._publish(
+                exchange,
+                'listener_{0}'.format(job.job_id),
+                message
+            )
+        except AMQPError:
+            self.log.warning(
+                'Message not received: {0}'.format(message),
+                extra=job._get_metadata()
+            )
 
     def _run_test(self, job_id):
         """
@@ -287,7 +306,7 @@ class TestingService(BaseService):
         job = self.jobs[job_id]
         job.test_image(host=self.host)
 
-    def _test_image(self, message, channel, method, properties):
+    def _test_image(self, message):
         """
         Callback for image testing:
 
@@ -297,15 +316,15 @@ class TestingService(BaseService):
            image in the cloud provider.
         3. Process and log results.
         """
-        channel.basic.ack(method['delivery_tag'])
+        message.ack()
 
         try:
-            job = json.loads(message)['uploader_result']
+            job = json.loads(message.body)['uploader_result']
             job_id = job['job_id']
             image_id = job['image_id']
         except Exception:
             self.log.error(
-                'Invalid uploader result file: {0}'.format(message)
+                'Invalid uploader result file: {0}'.format(message.body)
             )
         else:
             self.jobs[job_id].image_id = image_id
@@ -350,7 +369,15 @@ class TestingService(BaseService):
         Start testing service.
         """
         self.scheduler.start()
-        self.channel.start_consuming(to_tuple=True)
+
+        while True:
+            try:
+                self.channel.start_consuming()
+                if not self.channel.consumer_tags:
+                    break
+            except AMQPError as error:
+                self.log.warning(str(error))
+                self._open_connection()
 
     def stop(self):
         """

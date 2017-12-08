@@ -19,7 +19,7 @@
 import dateutil.parser
 import time
 
-from amqpstorm import UriConnection
+from amqpstorm import AMQPError, Connection
 
 from mash.mash_exceptions import MashTestingException
 from mash.services.status_levels import UNKOWN
@@ -99,11 +99,17 @@ class TestingJob(object):
         self._open_connection(host)
         self._bind_credential_queue()
 
-        self.channel.basic.publish(
-            self._get_credential_request(),
-            'credentials.request',
-            exchange='credentials'
-        )
+        try:
+            self.channel.basic.publish(
+                self._get_credential_request(),
+                'credentials.request',
+                exchange='credentials'
+            )
+        except AMQPError:
+            raise MashTestingException(
+                'Credentials message not received by RabbitMQ.'
+            )
+
         credentials = self._wait_for_credentials()
 
         self.channel.queue.delete(queue=self.credential_queue)
@@ -121,10 +127,11 @@ class TestingJob(object):
         """
         Open rabbitmq connection and channel.
         """
-        self.connection = UriConnection(
-            'amqp://guest:guest@{0}:5672/%2F?heartbeat=600'.format(
-                host
-            )
+        self.connection = Connection(
+            host,
+            'guest',
+            'guest',
+            kwargs={'heartbeat': 600}
         )
 
         self.channel = self.connection.channel()
@@ -149,15 +156,16 @@ class TestingJob(object):
         Waits in a while loop for message with credentials to be received.
         """
         timeout = 6
-        body = None
+        message = None
 
-        while not body and timeout:
-            body = self.channel.basic.get(
+        while not message and timeout:
+            message = self.channel.basic.get(
                 queue=self.credential_queue
             )
 
-            if body:
-                return body
+            if message:
+                message.ack()
+                return message.body
 
             time.sleep(10)
             timeout -= 1
@@ -165,6 +173,16 @@ class TestingJob(object):
         raise MashTestingException(
             'Credentials message not received from credential service.'
         )
+
+    def send_log(self, message):
+        if self.log_callback:
+            self.log_callback(
+                'Pass[{0}]: {1}'.format(
+                    self.iteration_count,
+                    message
+                ),
+                self._get_metadata()
+            )
 
     def set_log_callback(self, callback):
         """
@@ -177,14 +195,7 @@ class TestingJob(object):
         Get credentials and run image tests with IPA.
         """
         self.iteration_count += 1
-
-        if self.log_callback:
-            self.log_callback(
-                'Pass[{0}]: Running IPA tests against image.'.format(
-                    self.iteration_count
-                ),
-                self._get_metadata()
-            )
+        self.send_log('Running IPA tests against image.')
 
         self._get_credentials(host)
         self._run_tests()

@@ -97,9 +97,9 @@ class EC2TestingJob(TestingJob):
             raise MashTestingException(
                 'Token has expired, cannot retrieve credentials.'
             )
-        except InvalidTokenError:
+        except InvalidTokenError as error:
             raise MashTestingException(
-                'Invalid token, cannot retrieve credentials.'
+                'Invalid token, cannot retrieve credentials: {0}'.format(error)
             )
 
         try:
