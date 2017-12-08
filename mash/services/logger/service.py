@@ -18,6 +18,8 @@
 
 import json
 
+from amqpstorm import AMQPError
+
 from mash.mash_exceptions import MashLoggerException
 from mash.services.logger.config import LoggerConfig
 from mash.services.base_service import BaseService
@@ -45,10 +47,13 @@ class LoggerService(BaseService):
             )
         )
         try:
-            self.channel.start_consuming(to_tuple=True)
+            self.start()
         except KeyboardInterrupt:
-            self.channel.stop_consuming()
-            self.close_connection()
+            pass
+        except Exception:
+            raise
+        finally:
+            self.stop()
 
     def _bind_logger_queue(self, queue_name, route):
         """
@@ -64,7 +69,7 @@ class LoggerService(BaseService):
         )
         return queue_name
 
-    def _process_log(self, message, channel, method, properties):
+    def _process_log(self, message):
         """
         Callback for logger queue.
 
@@ -72,10 +77,10 @@ class LoggerService(BaseService):
         2. Determine log file name based on job_id.
         3. Write or append to log file.
         """
-        channel.basic.ack(delivery_tag=method['delivery_tag'])
+        message.ack()
 
         try:
-            data = json.loads(message.decode())
+            data = json.loads(message.body)
         except Exception:
             raise MashLoggerException(
                 'Could not de-serialize log message.'
@@ -96,3 +101,22 @@ class LoggerService(BaseService):
                 raise MashLoggerException(
                     'Could not write to log file: {0}'.format(e)
                 )
+
+    def start(self):
+        """
+        Start logger service.
+        """
+        while True:
+            try:
+                self.channel.start_consuming()
+                if not self.channel.consumer_tags:
+                    break
+            except AMQPError as error:
+                self._open_connection()
+
+    def stop(self):
+        """
+        Stop logger service.
+        """
+        self.channel.stop_consuming()
+        self.close_connection()
