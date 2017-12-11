@@ -18,7 +18,7 @@
 
 import json
 
-from amqpstorm import UriConnection
+from amqpstorm import Connection
 
 from logging.handlers import SocketHandler
 
@@ -117,11 +117,12 @@ class RabbitMQSocket(object):
         Create/open connection and declare logging exchange.
         """
         if not self.connection or self.connection.is_closed:
-            self.connection = UriConnection(
-                'amqp://guest:guest@{0}:{1}/%2F?heartbeat=600'.format(
-                    self.host,
-                    self.port
-                )
+            self.connection = Connection(
+                self.host,
+                self.username,
+                self.password,
+                port=self.port,
+                kwargs={'heartbeat': 600}
             )
 
         if not self.channel or self.channel.is_closed:

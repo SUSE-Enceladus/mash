@@ -9,15 +9,15 @@ from mash.log.handler import (
 
 
 class TestRabbitMQHandler(object):
-    @patch('mash.log.handler.UriConnection')
-    def setup(self, mock_uri_connection):
+    @patch('mash.log.handler.Connection')
+    def setup(self, mock_connection):
         self.connection = Mock()
         self.channel = Mock()
         self.channel.exchange.declare.return_value = None
         self.channel.basic.publish.return_value = None
         self.connection.channel.return_value = self.channel
 
-        mock_uri_connection.return_value = self.connection
+        mock_connection.return_value = self.connection
         self.handler = RabbitMQHandler()
 
     def test_rabbit_handler_messages(self):
@@ -32,8 +32,8 @@ class TestRabbitMQHandler(object):
         except Exception:
             log.exception('Test exc_info')
 
-    @patch('mash.log.handler.UriConnection')
-    def test_rabbit_socket(self, mock_uri_connection):
+    @patch('mash.log.handler.Connection')
+    def test_rabbit_socket(self, mock_connection):
         self.connection = Mock()
         self.channel = Mock()
         self.channel.exchange.declare.return_value = None
@@ -41,7 +41,7 @@ class TestRabbitMQHandler(object):
         self.connection.channel.return_value = self.channel
         self.connection.close.return_value = None
 
-        mock_uri_connection.return_value = self.connection
+        mock_connection.return_value = self.connection
         socket = RabbitMQSocket(
             'host',
             1234,
@@ -51,8 +51,12 @@ class TestRabbitMQHandler(object):
             'mash.logger'
         )
 
-        mock_uri_connection.assert_called_once_with(
-            'amqp://guest:guest@host:1234/%2F?heartbeat=600'
+        mock_connection.assert_called_once_with(
+            'host',
+            'user',
+            'pass',
+            port=1234,
+            kwargs={'heartbeat': 600}
         )
 
         self.connection.channel.assert_called_once_with()
