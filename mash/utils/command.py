@@ -19,8 +19,6 @@ import os
 import subprocess
 from collections import namedtuple
 
-from builtins import bytes
-
 # project
 from mash.mash_exceptions import MashCommandException
 

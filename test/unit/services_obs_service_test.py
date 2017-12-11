@@ -180,7 +180,7 @@ class TestOBSImageBuildResultService(object):
                 {
                     'message':
                         'JSON:deserialize error: foo : ' +
-                        'No JSON object could be decoded',
+                        'Expecting value: line 1 column 1 (char 0)',
                     'ok': False
                 }
             )

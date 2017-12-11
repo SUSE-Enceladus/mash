@@ -23,10 +23,10 @@ The following procedure describes how to create such an environment:
     $ tox
     ```
 
-2.  Activate the virtual environment of your choice
+2.  Activate the virtual environment
 
     ```
-    $ source .tox/2.7/bin/activate
+    $ source .tox/3.4/bin/activate
     ```
 
 3.  Install requirements inside the virtual environment:
@@ -52,5 +52,5 @@ $ deactivate
 ```
 
 To resume your work, change into your local Git repository and
-run `source .tox/2.7/bin/activate` again. Skip step 3 and 4 as
+run `source .tox/3.4/bin/activate` again. Skip step 3 and 4 as
 the requirements are already installed.

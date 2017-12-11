@@ -68,7 +68,7 @@ class CredentialsService(BaseService):
         channel.basic.ack(delivery_tag=method['delivery_tag'])
         message_data = {}
         try:
-            message_data = JsonFormat.json_loads_byteified(format(message))
+            message_data = JsonFormat.json_loads(format(message))
         except Exception as e:
             return self._send_control_response(
                 {

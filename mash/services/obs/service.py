@@ -125,7 +125,7 @@ class OBSImageBuildResultService(BaseService):
         job_id = None
 
         try:
-            message_data = JsonFormat.json_loads_byteified(format(message))
+            message_data = JsonFormat.json_loads(format(message))
         except Exception as e:
             return self._send_control_response(
                 {
@@ -304,7 +304,7 @@ class OBSImageBuildResultService(BaseService):
 
     def _start_job(self, job_file):
         with open(job_file) as job_description:
-            job = JsonFormat.json_load_byteified(job_description)['obsjob']
+            job = JsonFormat.json_load(job_description)['obsjob']
             if 'conditions' not in job:
                 job['conditions'] = None
 

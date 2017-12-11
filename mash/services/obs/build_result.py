@@ -375,7 +375,7 @@ class OBSImageBuildResult(object):
 
             if self._image_conditions_complied():
                 packages_digest = hashlib.md5()
-                packages_digest.update(format(packages))
+                packages_digest.update(format(packages).encode())
                 packages_checksum = packages_digest.hexdigest()
                 if packages_checksum != self.image_status['packages_checksum']:
                     self._log_callback('Downloading image...')
@@ -451,7 +451,7 @@ class OBSImageBuildResult(object):
         with open(packages_file.name) as packages:
             for package in packages.readlines():
                 package_digest = hashlib.md5()
-                package_digest.update(package)
+                package_digest.update(package.encode())
                 package_info = package.split('|')
                 package_name = package_info[0]
                 package_result = package_type(

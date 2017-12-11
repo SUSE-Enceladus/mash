@@ -168,13 +168,13 @@ class UploadImage(object):
     def _obs_job_data(self, body, channel, method, properties):
         channel.basic.ack(delivery_tag=method['delivery_tag'])
         channel.queue.delete(queue=self.obs_listen_queue)
-        obs_result = JsonFormat.json_loads_byteified(body)
+        obs_result = JsonFormat.json_loads(body)
         self.system_image_file = obs_result['image_source'][0]
 
     def _credentials_job_data(self, body, channel, method, properties):
         channel.basic.ack(delivery_tag=method['delivery_tag'])
         channel.queue.delete(queue=self.credentials_listen_queue)
-        credentials_result = JsonFormat.json_loads_byteified(body)
+        credentials_result = JsonFormat.json_loads(body)
         self.credentials_token = credentials_result['credentials']
 
     def _consuming_timeout(self):

@@ -25,17 +25,16 @@ License:        GPL-3.0+
 Group:          System/Management
 Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-BuildRequires:  python-devel
-BuildRequires:  python-setuptools
+BuildRequires:  python3-devel
+BuildRequires:  python3-setuptools
 Requires:       osc
 Requires:       rabbitmq-server
-Requires:       python-PyYAML
-Requires:       python-PyJWT
-Requires:       python-pika
-Requires:       python-future
-Requires:       python-APScheduler >= 3.3.1
-Requires:       python-python-dateutil
-Requires:       python-ec2uploadimg
+Requires:       python3-PyYAML
+Requires:       python3-PyJWT
+Requires:       python3-amqpstorm
+Requires:       python3-APScheduler >= 3.3.1
+Requires:       python3-python-dateutil
+Requires:       python3-ec2uploadimg
 BuildArch:      noarch
 
 %description
