@@ -12,8 +12,8 @@ from mash.mash_exceptions import (
 
 
 class TestBaseService(object):
-    @patch('mash.services.base_service.UriConnection')
-    def setup(self, mock_uri_onnection):
+    @patch('mash.services.base_service.Connection')
+    def setup(self, mock_connection):
         self.connection = Mock()
         self.channel = Mock()
         self.msg_properties = {
@@ -26,10 +26,10 @@ class TestBaseService(object):
         self.channel.exchange.declare.return_value = queue
         self.connection.channel.return_value = self.channel
         self.connection.is_closed = True
-        mock_uri_onnection.return_value = self.connection
+        mock_connection.return_value = self.connection
         self.service = BaseService('localhost', 'obs')
         self.service.log = Mock()
-        mock_uri_onnection.side_effect = Exception
+        mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
             BaseService('localhost', 'obs')
         self.channel.reset_mock()
@@ -56,18 +56,18 @@ class TestBaseService(object):
         with raises(MashLogSetupException):
             self.service.set_logfile('/some/log')
 
-    @patch('mash.services.base_service.UriConnection')
-    def test_publish_service_message(self, mock_uri_connection):
-        mock_uri_connection.return_value = self.connection
+    @patch('mash.services.base_service.Connection')
+    def test_publish_service_message(self, mock_connection):
+        mock_connection.return_value = self.connection
         self.service.publish_service_message('message')
         self.channel.basic.publish.assert_called_once_with(
             body='message', exchange='obs', mandatory=True,
             properties=self.msg_properties, routing_key='service_event'
         )
 
-    @patch('mash.services.base_service.UriConnection')
-    def test_publish_listener_message(self, mock_uri_connection):
-        mock_uri_connection.return_value = self.connection
+    @patch('mash.services.base_service.Connection')
+    def test_publish_listener_message(self, mock_connection):
+        mock_connection.return_value = self.connection
         self.service.publish_listener_message('id', 'message')
         self.channel.basic.publish.assert_called_once_with(
             body='message', exchange='obs', mandatory=True,
