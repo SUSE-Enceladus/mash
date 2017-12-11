@@ -14,7 +14,12 @@ print('waiting for credentials service...')
 
 def callback(message):
     message.ack()
-    print(message.body)
+    # Note: activate the following print statement only if you
+    # can trust the output console and the information can be
+    # read by trusted parties only
+    # --
+    # print(message.body)
+    # --
     connection.close()
     sys.exit(0)
 
