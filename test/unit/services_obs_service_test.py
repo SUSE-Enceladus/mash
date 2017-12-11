@@ -62,9 +62,7 @@ class TestOBSImageBuildResultService(object):
             mock_control_in,
             self.obs_result.bind_service_queue.return_value
         )
-        self.obs_result.channel.start_consuming.assert_called_once_with(
-            to_tuple=True
-        )
+        self.obs_result.channel.start_consuming.assert_called_once_with()
 
         self.obs_result.channel.start_consuming.side_effect = Exception
         self.obs_result.post_init()
@@ -132,14 +130,12 @@ class TestOBSImageBuildResultService(object):
         self, mock_send_control_response, mock_add_to_listener,
         mock_add_job, mock_delete_job
     ):
-        message = '{"obsjob":{"id": "4711","project": ' + \
+        message = Mock()
+        message.body = '{"obsjob":{"id": "4711","project": ' + \
             '"Virtualization:Appliances:Images:Testing_x86","image": ' + \
             '"test-image-docker","utctime": "always"}}'
-        channel = Mock()
-        tag = Mock()
-        method = {'delivery_tag': tag}
-        self.obs_result._control_in(message, channel, method, Mock())
-        channel.basic.ack.assert_called_once_with(delivery_tag=tag)
+        self.obs_result._control_in(message)
+        message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with(
             {
                 'obsjob': {
@@ -150,20 +146,20 @@ class TestOBSImageBuildResultService(object):
                 }
             }
         )
-        message = '{"obsjob_listen": "4711"}'
-        self.obs_result._control_in(message, Mock(), method, Mock())
+        message.body = '{"obsjob_listen": "4711"}'
+        self.obs_result._control_in(message)
         mock_add_to_listener.assert_called_once_with(
             '4711'
         )
-        message = '{"obsjob_delete": "4711"}'
-        self.obs_result._control_in(message, Mock(), method, Mock())
+        message.body = '{"obsjob_delete": "4711"}'
+        self.obs_result._control_in(message)
         mock_delete_job.assert_called_once_with(
             '4711'
         )
-        message = '{"job_delete": "4711"}'
-        self.obs_result._control_in(message, Mock(), method, Mock())
-        message = 'foo'
-        self.obs_result._control_in(message, Mock(), method, Mock())
+        message.body = '{"job_delete": "4711"}'
+        self.obs_result._control_in(message)
+        message.body = 'foo'
+        self.obs_result._control_in(message)
         assert mock_send_control_response.call_args_list == [
             call(mock_add_job.return_value, '4711'),
             call(mock_add_to_listener.return_value, '4711'),

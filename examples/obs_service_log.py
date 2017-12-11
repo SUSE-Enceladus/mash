@@ -16,15 +16,15 @@ channel.queue.bind(
     exchange='logger', queue='mash.logger', routing_key='mash.*'
 )
 
-def callback(body, channel, method, properties):
-    channel.basic.ack(delivery_tag=method['delivery_tag'])
-    print(body)
+def callback(message):
+    message.ack()
+    print(message.body)
 
 try:
     channel.basic.consume(
         callback, queue='mash.logger'
     )
-    channel.start_consuming(to_tuple=True)
+    channel.start_consuming()
 except KeyboardInterrupt:
     if channel.is_open:
         channel.close()

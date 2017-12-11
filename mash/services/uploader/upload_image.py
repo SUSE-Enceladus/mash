@@ -151,11 +151,11 @@ class UploadImage(object):
             if self.service_lookup_timeout_sec:
                 self._timed_consume(self.service_lookup_timeout_sec)
             else:
-                self.channel.start_consuming(to_tuple=True)
+                self.channel.start_consuming()
         except Exception:
             self._close_connection()
 
-    def _timed_consume(self, timeout=None):
+    def _timed_consume(self, timeout):
         end = time.time() + timeout
         while self.channel.is_open and time.time() < end:
             self.channel.process_data_events()
@@ -165,16 +165,16 @@ class UploadImage(object):
         if self.channel.consumer_tags:
             self._consuming_timeout()
 
-    def _obs_job_data(self, body, channel, method, properties):
-        channel.basic.ack(delivery_tag=method['delivery_tag'])
-        channel.queue.delete(queue=self.obs_listen_queue)
-        obs_result = JsonFormat.json_loads(body)
+    def _obs_job_data(self, message):
+        message.ack()
+        message.channel.queue.delete(queue=self.obs_listen_queue)
+        obs_result = JsonFormat.json_loads(message.body)
         self.system_image_file = obs_result['image_source'][0]
 
-    def _credentials_job_data(self, body, channel, method, properties):
-        channel.basic.ack(delivery_tag=method['delivery_tag'])
-        channel.queue.delete(queue=self.credentials_listen_queue)
-        credentials_result = JsonFormat.json_loads(body)
+    def _credentials_job_data(self, message):
+        message.ack()
+        message.channel.queue.delete(queue=self.credentials_listen_queue)
+        credentials_result = JsonFormat.json_loads(message.body)
         self.credentials_token = credentials_result['credentials']
 
     def _consuming_timeout(self):

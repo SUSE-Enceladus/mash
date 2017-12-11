@@ -12,9 +12,9 @@ channel.queue.declare(queue=listen_to_queue, durable=True)
 
 print('waiting for credentials service...')
 
-def callback(body, channel, method, properties):
-    channel.basic.ack(delivery_tag=method['delivery_tag'])
-    print(body)
+def callback(message):
+    message.ack()
+    print(message.body)
     connection.close()
     sys.exit(0)
 
@@ -22,7 +22,7 @@ try:
     channel.basic.consume(
         callback, queue=listen_to_queue
     )
-    channel.start_consuming(to_tuple=True)
+    channel.start_consuming()
 except KeyboardInterrupt:
     if channel.is_open:
         channel.close()
