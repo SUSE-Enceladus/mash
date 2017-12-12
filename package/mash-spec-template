@@ -47,10 +47,10 @@ cloud
 %setup -q -n mash-%{version}
 
 %build
-python setup.build.py build
+python3 setup.build.py build
 
 %install
-python setup.build.py install --prefix=%{_prefix} --root=%{buildroot}
+python3 setup.build.py install --prefix=%{_prefix} --root=%{buildroot}
 
 install -D -m 644 config/mash_obs.service \
     %{buildroot}%{_unitdir}/mash_obs.service
@@ -69,7 +69,7 @@ install -D -m 644 config/mash_credentials.service \
 
 %files
 %defattr(-,root,root,-)
-%{python_sitelib}/*
+%{python3_sitelib}/*
 %dir %{_sysconfdir}/%{name}
 %{_bindir}/mash-obs-service
 %{_unitdir}/mash_obs.service
