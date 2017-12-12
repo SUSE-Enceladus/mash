@@ -51,7 +51,6 @@ class TestingJob(object):
         self.iteration_count = 0
         self.job_id = job_id
         self.log_callback = None
-        self.log_file = None
         self.provider = self.validate_provider(provider)
         self.region = region
         self.results = None
