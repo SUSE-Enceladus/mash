@@ -83,7 +83,7 @@ class TestCredentialsService(object):
             {
                 'message':
                     'JSON:deserialize error: foo : ' +
-                    'No JSON object could be decoded',
+                    'Expecting value: line 1 column 1 (char 0)',
                 'ok': False
             }
         )
@@ -99,7 +99,9 @@ class TestCredentialsService(object):
 
     @patch.object(CredentialsService, '_send_control_response')
     @patch('jwt.encode')
-    def test_create_credentials(self, mock_jwt_encode, mock_send_control_response):
+    def test_create_credentials(
+        self, mock_jwt_encode, mock_send_control_response
+    ):
         data = {
             'credentials': {
                 'id': '123',

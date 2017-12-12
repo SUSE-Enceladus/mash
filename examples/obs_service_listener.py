@@ -16,9 +16,9 @@ channel.queue.declare(queue=listen_to_queue, durable=True)
 
 print('waiting for obs service...')
 
-def callback(body, channel, method, properties):
-    channel.queue.delete(queue=listen_to_queue)
-    print(body)
+def callback(message):
+    message.ack()
+    print(message.body)
 
     print('..we have all data, lets upload')
     connection.close()
@@ -28,7 +28,7 @@ try:
     channel.basic.consume(
         callback, queue=listen_to_queue
     )
-    channel.start_consuming(to_tuple=True)
+    channel.start_consuming()
 except KeyboardInterrupt:
     if channel.is_open:
         channel.close()
