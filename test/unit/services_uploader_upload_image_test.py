@@ -51,19 +51,22 @@ class TestUploadImage(object):
         mock_sleep.assert_called_once_with(1)
 
     @patch.object(UploadImage, '_consuming_timeout')
-    @patch('mash.services.uploader.upload_image.UriConnection')
+    @patch('mash.services.uploader.upload_image.Connection')
     def test_consume_service_information(
-        self, mock_uri_connection, mock_consuming_timeout
+        self, mock_connection, mock_consuming_timeout
     ):
+        def no_consumer_tags():
+            self.upload_image.channel.consumer_tags = []
+
         connection = Mock()
         channel = Mock()
         channel.is_open = True
         connection.channel.return_value = channel
-        mock_uri_connection.return_value = connection
+        mock_connection.return_value = connection
         self.upload_image.service_lookup_timeout_sec = 0.01
         self.upload_image._consume_service_information()
-        mock_uri_connection.assert_called_once_with(
-            'amqp://guest:guest@localhost:5672/%2F?heartbeat=600'
+        mock_connection.assert_called_once_with(
+            'localhost', 'guest', 'guest', kwargs={'heartbeat': 600}
         )
         assert channel.queue.declare.call_args_list == [
             call(durable=True, queue='credentials.ec2_123'),
@@ -81,6 +84,15 @@ class TestUploadImage(object):
         ]
         assert channel.process_data_events.called
         mock_consuming_timeout.assert_called_once_with()
+
+        mock_consuming_timeout.reset_mock()
+        channel.process_data_events.side_effect = no_consumer_tags
+        self.upload_image._consume_service_information()
+        assert not mock_consuming_timeout.called
+
+        channel.stop_consuming.reset_mock()
+        channel.close.reset_mock()
+        connection.close.reset_mock()
         channel.process_data_events.side_effect = Exception
         self.upload_image._consume_service_information()
         channel.stop_consuming.assert_called_once_with()

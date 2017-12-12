@@ -1,8 +1,8 @@
 import sys
-from amqpstorm import UriConnection
+from amqpstorm import Connection
 
-connection = UriConnection(
-    'amqp://guest:guest@localhost:5672/%2F?heartbeat=600'
+connection = Connection(
+    'localhost', 'guest', 'guest', kwargs={'heartbeat': 600}
 )
 
 channel = connection.channel()

@@ -18,7 +18,7 @@
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from amqpstorm import UriConnection
+from amqpstorm import Connection
 
 # project
 from mash.utils.json_format import JsonFormat
@@ -126,10 +126,8 @@ class UploadImage(object):
         return uploader.upload()
 
     def _consume_service_information(self):
-        self.connection = UriConnection(
-            'amqp://guest:guest@{0}:5672/%2F?heartbeat=600'.format(
-                self.host
-            )
+        self.connection = Connection(
+            self.host, 'guest', 'guest', kwargs={'heartbeat': 600}
         )
         self.channel = self.connection.channel()
         # lookup authenitcation data from credentials service
