@@ -35,7 +35,8 @@ Requires:       python3-PyJWT
 # Requires:       python3-amqpstorm
 Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil
-Requires:       python3-ec2uploadimg
+# Note: Activate this requirement as soon as we have the package
+# Requires:       python3-ec2uploadimg
 BuildArch:      noarch
 
 %description
