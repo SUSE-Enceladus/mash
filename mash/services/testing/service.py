@@ -122,11 +122,7 @@ class TestingService(BaseService):
                     'Job is overdue, notifying jobcreator.',
                     extra=job._get_metadata()
                 )
-                self._publish_message(
-                    'jobcreator',
-                    job,
-                    self._get_status_message(job)
-                )
+                self._publish_message(job)
 
     def _delete_job(self, job_id):
         """
@@ -153,6 +149,20 @@ class TestingService(BaseService):
                 'Job deletion failed, job is not queued.',
                 extra={'job_id': job_id}
             )
+
+    def _get_error_message(self, job):
+        """
+        Build and return json error message with status.
+
+        Error message sent to job creator.
+        """
+        data = {
+            'service': self.service_exchange,
+            'job_id': job.job_id,
+            'status': job.status
+        }
+
+        return json.dumps(data)
 
     def _get_status_message(self, job):
         """
@@ -277,22 +287,23 @@ class TestingService(BaseService):
                 extra=metata
             )
 
-        self._publish_message(
-            'publisher',
-            job,
-            self._get_status_message(job)
-        )
+        self._publish_message(job)
 
-    def _publish_message(self, exchange, job, message):
+    def _publish_message(self, job):
         """
         Publish status message to provided service exchange.
         """
+        if job.status == 0:
+            exchange = 'publisher'
+            key = 'listener_{0}'.format(job.job_id)
+            message = self._get_status_message(job)
+        else:
+            exchange = 'jobcreator'
+            key = 'job_error'
+            message = self._get_error_message(job)
+
         try:
-            self._publish(
-                exchange,
-                'listener_{0}'.format(job.job_id),
-                message
-            )
+            self._publish(exchange, key, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
