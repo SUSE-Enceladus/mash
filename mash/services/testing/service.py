@@ -303,6 +303,7 @@ class TestingService(BaseService):
             message = self._get_error_message(job)
 
         try:
+            self._bind_queue(exchange, key)
             self._publish(exchange, key, message)
         except AMQPError:
             self.log.warning(

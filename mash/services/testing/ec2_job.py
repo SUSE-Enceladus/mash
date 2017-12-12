@@ -75,6 +75,8 @@ class EC2TestingJob(TestingJob):
             'exp': datetime.utcnow() + timedelta(minutes=5),
             'iat': datetime.utcnow(),
             'sub': 'testing.get_credentials',
+            'service': 'testing',
+            'job_id': self.job_id,
             'credentials': {
                 'csp': self.provider,
                 'account': self.account

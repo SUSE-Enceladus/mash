@@ -99,11 +99,20 @@ class TestingJob(object):
         self._open_connection(host)
         self._bind_credential_queue()
 
+        exchange = 'credentials'
+        key = 'request'
+        queue = '{0}.{1}'.format(exchange, key)
         try:
+            self.channel.queue.declare(queue=queue, durable=True)
+            self.channel.queue.bind(
+                exchange=exchange,
+                queue=queue,
+                routing_key=key
+            )
             self.channel.basic.publish(
                 self._get_credential_request(),
-                'credentials.request',
-                exchange='credentials'
+                key,
+                exchange=exchange
             )
         except AMQPError:
             raise MashTestingException(
