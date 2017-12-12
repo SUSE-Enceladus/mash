@@ -17,9 +17,13 @@
 #
 
 import dateutil.parser
+import time
+
+from amqpstorm import AMQPError, Connection
 
 from mash.mash_exceptions import MashTestingException
 from mash.services.status_levels import UNKOWN
+from mash.services.testing.constants import NOT_IMPLEMENTED
 
 
 class TestingJob(object):
@@ -29,22 +33,24 @@ class TestingJob(object):
     __test__ = False
 
     def __init__(self,
+                 distro,
                  job_id,
                  provider,
                  tests,
                  utctime,
                  desc=None,
-                 distro=None,
                  instance_type=None,
                  region=None):
         self.channel = None
         self.connection = None
         self.credential_queue = 'credentials.testing.{0}'.format(job_id)
         self.desc = desc
-        self.distro = distro
+        self.distro = self.validate_distro(distro)
         self.image_id = None
         self.instance_type = instance_type
+        self.iteration_count = 0
         self.job_id = job_id
+        self.log_callback = None
         self.log_file = None
         self.provider = self.validate_provider(provider)
         self.region = region
@@ -52,6 +58,157 @@ class TestingJob(object):
         self.status = UNKOWN
         self.tests = self.validate_tests(tests)
         self.utctime = self.validate_timestamp(utctime)
+
+    def _bind_credential_queue(self):
+        """
+        Declare and bind listener queue to retrieve credentials.
+
+        Credentials service will respond to credentials request by publishing
+        a JWT to the queue.
+        """
+        self.channel.queue.declare(queue=self.credential_queue, durable=True)
+        self.channel.queue.bind(
+            queue=self.credential_queue,
+            exchange='testing',
+            routing_key=self.credential_queue
+        )
+
+    def _close_connection(self):
+        """
+        Close connection and channel.
+        """
+        if self.channel and self.channel.is_open:
+            self.channel.close()
+
+        if self.connection and self.connection.is_open:
+            self.connection.close()
+
+    def _get_credential_request(self):
+        """
+        Return json dictionary with credentials request message.
+        """
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
+    def _get_credentials(self, host):
+        """
+        Setup rabbitmq channel and queues to collect credentials.
+
+        Published a credential request to credential service. Awaits
+        response on queue with credentials JWT.
+        """
+        self._open_connection(host)
+        self._bind_credential_queue()
+
+        try:
+            self.channel.basic.publish(
+                self._get_credential_request(),
+                'credentials.request',
+                exchange='credentials'
+            )
+        except AMQPError:
+            raise MashTestingException(
+                'Credentials message not received by RabbitMQ.'
+            )
+
+        credentials = self._wait_for_credentials()
+
+        self.channel.queue.delete(queue=self.credential_queue)
+        self._close_connection()
+
+        self._process_credentials(credentials)
+
+    def _get_metadata(self):
+        """
+        Return dictionary of metadata based on job.
+        """
+        return {'job_id': self.job_id}
+
+    def _open_connection(self, host):
+        """
+        Open rabbitmq connection and channel.
+        """
+        self.connection = Connection(
+            host,
+            'guest',
+            'guest',
+            kwargs={'heartbeat': 600}
+        )
+
+        self.channel = self.connection.channel()
+        self.channel.confirm_deliveries()
+
+    def _process_credentials(self, credentials):
+        """
+        Verify credential request successful and update self.
+
+        Update instance attrs with credentials.
+        """
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
+    def _run_tests(self):
+        """
+        Tests image with IPA and update status and results.
+        """
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
+    def _wait_for_credentials(self):
+        """
+        Waits in a while loop for message with credentials to be received.
+        """
+        timeout = 6
+        message = None
+
+        while not message and timeout:
+            message = self.channel.basic.get(
+                queue=self.credential_queue
+            )
+
+            if message:
+                message.ack()
+                return message.body
+
+            time.sleep(10)
+            timeout -= 1
+
+        raise MashTestingException(
+            'Credentials message not received from credential service.'
+        )
+
+    def send_log(self, message):
+        if self.log_callback:
+            self.log_callback(
+                'Pass[{0}]: {1}'.format(
+                    self.iteration_count,
+                    message
+                ),
+                self._get_metadata()
+            )
+
+    def set_log_callback(self, callback):
+        """
+        Set log_callback function to callback.
+        """
+        self.log_callback = callback
+
+    def test_image(self, host):
+        """
+        Get credentials and run image tests with IPA.
+        """
+        self.iteration_count += 1
+        self.send_log('Running IPA tests against image.')
+
+        self._get_credentials(host)
+        self._run_tests()
+
+    def validate_distro(self, distro):
+        """
+        Validate the distro is supported for testing.
+        """
+        if distro not in ('openSUSE_Leap', 'SLES'):
+            raise MashTestingException(
+                'Distro: {0} not supported.'.format(distro)
+            )
+        return distro
 
     def validate_provider(self, provider):
         """

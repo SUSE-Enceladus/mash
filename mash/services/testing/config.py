@@ -34,3 +34,17 @@ class TestingConfig(BaseConfig):
 
     def __init__(self, config_file=Defaults.get_config()):
         super(TestingConfig, self).__init__(config_file)
+
+    def get_log_file(self):
+        """
+        Return log file name:
+        testing:
+          logfile: /var/log/mash/testing_service.log
+        If no configuration exists the log file name from the
+        Defaults class is returned
+        :rtype: string
+        """
+        logfile = self._get_attribute(
+            element='testing', attribute='logfile'
+        )
+        return logfile if logfile else Defaults.get_log_file()
