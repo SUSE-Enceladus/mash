@@ -17,7 +17,7 @@
 #
 import logging
 
-from amqpstorm import UriConnection
+from amqpstorm import Connection
 
 # project
 from mash.log.filter import BaseServiceFilter
@@ -141,10 +141,11 @@ class BaseService(object):
     def _open_connection(self):
         if not self.connection or self.connection.is_closed:
             try:
-                self.connection = UriConnection(
-                    'amqp://guest:guest@{0}:5672/%2F?heartbeat=600'.format(
-                        self.host
-                    )
+                self.connection = Connection(
+                    self.host,
+                    'guest',
+                    'guest',
+                    kwargs={'heartbeat': 600}
                 )
             except Exception as e:
                 raise MashRabbitConnectionException(
