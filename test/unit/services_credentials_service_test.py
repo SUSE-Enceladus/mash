@@ -105,7 +105,7 @@ class TestCredentialsService(object):
                 'payload': {'foo': 'bar'}
             }
         }
-        mock_jwt_encode.return_value = 'token'
+        mock_jwt_encode.return_value = b'token'
         self.service._create_credentials(data)
         mock_jwt_encode.assert_called_once_with(
             data['credentials']['payload'], 'secret', algorithm='HS256'

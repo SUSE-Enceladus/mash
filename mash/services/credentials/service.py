@@ -126,7 +126,7 @@ class CredentialsService(BaseService):
             self._bind_queue(self.service_exchange, queue_name)
             self._publish(
                 self.service_exchange, queue_name, JsonFormat.json_message(
-                    {'credentials': token}
+                    {'credentials': token.decode()}
                 )
             )
             result = {
