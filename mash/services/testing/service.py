@@ -18,8 +18,6 @@
 
 import json
 
-from datetime import datetime
-
 from amqpstorm import AMQPError
 
 from apscheduler import events
@@ -27,7 +25,7 @@ from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from mash.services.base_service import BaseService
-from mash.services.status_levels import EXCEPTION, OVERDUE
+from mash.services.status_levels import EXCEPTION
 from mash.services.testing.config import TestingConfig
 from mash.services.testing.ec2_job import EC2TestingJob
 
@@ -60,17 +58,8 @@ class TestingService(BaseService):
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
-            self._process_event,
+            self._process_test_result,
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
-        )
-        self.scheduler.add_job(
-            self._cleanup_jobs,
-            'interval',
-            id='cleanupjobs',
-            max_instances=1,
-            seconds=60,
-            misfire_grace_time=30,
-            coalesce=True
         )
 
         try:
@@ -106,27 +95,20 @@ class TestingService(BaseService):
                 extra=job._get_metadata()
             )
 
-    def _cleanup_jobs(self):
+    def _cleanup_job(self, job_id, status):
         """
-        Notify jobcreator of all jobs that have not complete and are overdue.
+        Job failed upstream.
 
-        Update job status to OVERDUE. If job is to be deleted jobcreator
-        will send a testing_job_delete message.
+        Delete job if not set to always and notify the publisher.
         """
-        for job in list(self.jobs.values()):
-            if isinstance(job.utctime, datetime) \
-                    and job.utctime < datetime.utcnow() \
-                    and job.status != OVERDUE:
-                job.status = OVERDUE
-                self.log.warning(
-                    'Job is overdue, notifying jobcreator.',
-                    extra=job._get_metadata()
-                )
-                self._publish_message(
-                    'jobcreator',
-                    job,
-                    self._get_status_message(job)
-                )
+        job = self.jobs[job_id]
+        job.status = status
+        self.log.warning('Failed upstream.', extra=job._get_metadata())
+
+        # TODO: The flow of job errors, and dropping of jobs is TBD
+        if job.utctime != 'always':
+            self._delete_job(job_id)
+        self._publish_message(job)
 
     def _delete_job(self, job_id):
         """
@@ -208,28 +190,6 @@ class TestingService(BaseService):
         """
         self.log.info(msg, extra=metadata)
 
-    def _process_cleanup_jobs(self, event):
-        """
-        Handle exceptions during cleanup job.
-
-        Log exception message.
-        """
-        if event.exception:
-            self.log.error(
-                'Exception while cleaning up jobs: {0}'.format(event.exception)
-            )
-
-    def _process_event(self, event):
-        """
-        Callback when background event finishes.
-
-        Determine event type and call the proper process method.
-        """
-        if event.job_id == 'cleanupjobs':
-            self._process_cleanup_jobs(event)
-        else:
-            self._process_test_result(event)
-
     def _process_message(self, message):
         """
         Channel callback, handles incoming messages in queues.
@@ -277,22 +237,20 @@ class TestingService(BaseService):
                 extra=metata
             )
 
-        self._publish_message(
-            'publisher',
-            job,
-            self._get_status_message(job)
-        )
+        # TODO: The flow of job errors, and dropping of jobs is TBD
+        self._publish_message(job)
 
-    def _publish_message(self, exchange, job, message):
+    def _publish_message(self, job):
         """
         Publish status message to provided service exchange.
         """
+        exchange = 'publisher'
+        key = 'listener_{0}'.format(job.job_id)
+        message = self._get_status_message(job)
+
         try:
-            self._publish(
-                exchange,
-                'listener_{0}'.format(job.job_id),
-                message
-            )
+            self._bind_queue(exchange, key)
+            self._publish(exchange, key, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
@@ -310,23 +268,41 @@ class TestingService(BaseService):
         """
         Callback for image testing:
 
-        {"uploader_result": {"job_id": "1", "image_id": "ami-2c40774c"}}
+        {
+            "uploader_result": {
+                "job_id": "1",
+                "image_id": "ami-2c40774c",
+                "status": 0
+            }
+        }
 
         1. Create IPA testing instance and launch tests on given
            image in the cloud provider.
         3. Process and log results.
+
+        TODO: The flow of job errors, and dropping of jobs is TBD
         """
         message.ack()
 
+        job_id = None
         try:
             job = json.loads(message.body)['uploader_result']
             job_id = job['job_id']
             image_id = job['image_id']
+            status = job['status']
         except Exception:
             self.log.error(
                 'Invalid uploader result file: {0}'.format(message.body)
             )
-        else:
+            status = EXCEPTION
+
+        if not job_id:
+            self.log.error('No job_id in uploader result file.')
+        elif not self.jobs.get(job_id):
+            self.log.error(
+                'Invalid job from uploader with id: {0}.'.format(job_id)
+            )
+        elif status == 0:
             self.jobs[job_id].image_id = image_id
             self.scheduler.add_job(
                 self._run_test,
@@ -336,6 +312,8 @@ class TestingService(BaseService):
                 misfire_grace_time=None,
                 coalesce=True
             )
+        else:
+            self._cleanup_job(job_id, status)
 
     def _validate_job(self, job_config):
         """

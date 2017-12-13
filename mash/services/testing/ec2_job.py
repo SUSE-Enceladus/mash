@@ -75,6 +75,8 @@ class EC2TestingJob(TestingJob):
             'exp': datetime.utcnow() + timedelta(minutes=5),
             'iat': datetime.utcnow(),
             'sub': 'testing.get_credentials',
+            'service': 'testing',
+            'job_id': self.job_id,
             'credentials': {
                 'csp': self.provider,
                 'account': self.account
@@ -133,3 +135,16 @@ class EC2TestingJob(TestingJob):
             ssh_user=self.ssh_user,
             tests=self.tests
         )
+
+        if self.results and self.results.get('info'):
+            if self.results['info'].get('log_file'):
+                self.send_log(
+                    'Log file: {0}'.format(self.results['info']['log_file'])
+                )
+
+            if self.results['info'].get('results_file'):
+                self.send_log(
+                    'Results file: {0}'.format(
+                        self.results['info']['results_file']
+                    )
+                )
