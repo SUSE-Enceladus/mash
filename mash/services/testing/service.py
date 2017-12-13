@@ -105,6 +105,7 @@ class TestingService(BaseService):
         job.status = status
         self.log.warning('Failed upstream.', extra=job._get_metadata())
 
+        # TODO: The flow of job errors, and dropping of jobs is TBD
         if job.utctime != 'always':
             self._delete_job(job_id)
         self._publish_message(job)
@@ -236,6 +237,7 @@ class TestingService(BaseService):
                 extra=metata
             )
 
+        # TODO: The flow of job errors, and dropping of jobs is TBD
         self._publish_message(job)
 
     def _publish_message(self, job):
@@ -277,6 +279,8 @@ class TestingService(BaseService):
         1. Create IPA testing instance and launch tests on given
            image in the cloud provider.
         3. Process and log results.
+
+        TODO: The flow of job errors, and dropping of jobs is TBD
         """
         message.ack()
 
