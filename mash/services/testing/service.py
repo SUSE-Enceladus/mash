@@ -95,13 +95,14 @@ class TestingService(BaseService):
                 extra=job._get_metadata()
             )
 
-    def _cleanup_job(self, job_id):
+    def _cleanup_job(self, job_id, status):
         """
         Job failed upstream.
 
         Delete job if not set to always and notify the publisher.
         """
         job = self.jobs[job_id]
+        job.status = status
         self.log.warning('Failed upstream.', extra=job._get_metadata())
 
         if job.utctime != 'always':
@@ -308,7 +309,7 @@ class TestingService(BaseService):
                 coalesce=True
             )
         else:
-            self._cleanup_job(job_id)
+            self._cleanup_job(job_id, status)
 
     def _validate_job(self, job_config):
         """
