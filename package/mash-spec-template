@@ -67,6 +67,9 @@ install -D -m 644 config/logger_config.yml \
 install -D -m 644 config/mash_credentials.service \
     %{buildroot}%{_unitdir}/mash_credentials.service
 
+install -D -m 644 config/mash_job_creator.service \
+    %{buildroot}%{_unitdir}/mash_job_creator.service
+
 %files
 %defattr(-,root,root,-)
 %{python3_sitelib}/*
@@ -81,5 +84,9 @@ install -D -m 644 config/mash_credentials.service \
 
 %{_bindir}/mash-credentials-service
 %{_unitdir}/mash_credentials.service
+
+%{_bindir}/mash-job-creator-service
+%{_unitdir}/mash_job_creator.service
+%config(noreplace) %{_sysconfdir}/%{name}/job_creator_config.yml
 
 %changelog

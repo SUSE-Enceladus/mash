@@ -1,0 +1,13 @@
+[Unit]
+Description=Mash Job Creator service
+After=syslog.target network.target
+Before=systemd-user-sessions.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/mash-job-creator-service
+StandardOutput=null
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
