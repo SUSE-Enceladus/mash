@@ -149,7 +149,7 @@ class TestingService(BaseService):
             }
         }
 
-        return json.dumps(data)
+        return json.dumps(data, sort_keys=True)
 
     def _handle_jobs(self, message):
         """

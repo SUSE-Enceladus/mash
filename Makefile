@@ -15,7 +15,7 @@ build: check test
 test:
 	cd test/unit && \
 	py.test --no-cov-on-fail --cov=mash \
-		--cov-report=term-missing --cov-fail-under=90 --cov-config .coveragerc
+		--cov-report=term-missing --cov-fail-under=100 --cov-config .coveragerc
 
 check:
 	flake8 --statistics -j auto --count mash
