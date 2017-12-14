@@ -71,9 +71,8 @@ class TestJobCreatorService(object):
         mock_bind_queue, mock_jobcreator_config, mock_start, mock_stop
     ):
         mock_jobcreator_config.return_value = self.config
-        self.config.get_log_file.return_value = MagicMock(
-            return_value='/var/log/mash/job_creator_service.log'
-        )
+        self.config.get_log_file.return_value = \
+            '/var/log/mash/job_creator_service.log'
 
         mock_start.side_effect = KeyboardInterrupt()
 

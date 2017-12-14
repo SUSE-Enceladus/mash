@@ -79,9 +79,8 @@ class TestIPATestingService(object):
         mock_bind_service_queue, mock_testing_config, mock_start, mock_stop
     ):
         mock_testing_config.return_value = self.config
-        self.config.get_log_file.return_value = MagicMock(
-            return_value='/var/log/mash/testing_service.log'
-        )
+        self.config.get_log_file.return_value = \
+            '/var/log/mash/testing_service.log'
 
         mock_start.side_effect = KeyboardInterrupt()
 
