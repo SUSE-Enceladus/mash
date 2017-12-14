@@ -1,6 +1,6 @@
 import logging
 
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from mash.log.handler import (
     RabbitMQHandler,

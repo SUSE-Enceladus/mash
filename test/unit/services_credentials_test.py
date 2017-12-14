@@ -1,5 +1,5 @@
 from pytest import raises
-from mock import patch
+from unittest.mock import patch
 
 from mash.mash_exceptions import MashException
 from mash.services.credentials_service import main

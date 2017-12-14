@@ -1,5 +1,5 @@
 from collections import namedtuple
-from mock import Mock
+from unittest.mock import Mock
 
 from mash.log.filter import (
     SchedulerLoggingFilter,

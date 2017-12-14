@@ -1,6 +1,6 @@
 from pytest import raises
-from mock import patch
-from mock import Mock
+from unittest.mock import patch
+from unittest.mock import Mock
 
 from mash.mash_exceptions import MashException
 from mash.services.obs_service import main

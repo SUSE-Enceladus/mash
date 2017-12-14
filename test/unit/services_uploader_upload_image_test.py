@@ -1,7 +1,7 @@
 from pytest import raises
-from mock import Mock
-from mock import call
-from mock import patch
+from unittest.mock import Mock
+from unittest.mock import call
+from unittest.mock import patch
 
 from .test_helper import (
     patch_open,

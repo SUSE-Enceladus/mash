@@ -1,5 +1,5 @@
 from pytest import raises
-from mock import Mock
+from unittest.mock import Mock
 
 from mash.services.uploader.cloud.amazon import UploadAmazon
 from mash.mash_exceptions import MashUploadException
