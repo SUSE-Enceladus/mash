@@ -68,6 +68,7 @@ class TestIPATestingService(object):
         mock_start.assert_called_once_with()
         mock_stop.assert_called_once_with()
 
+    @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'stop')
     @patch.object(TestingService, 'start')
     @patch('mash.services.testing.service.TestingConfig')
@@ -76,12 +77,12 @@ class TestIPATestingService(object):
     @patch.object(TestingService, 'consume_queue')
     def test_testing_post_init_exceptions(
         self, mock_consume_queue, mock_handle_jobs,
-        mock_bind_service_queue, mock_testing_config, mock_start, mock_stop
+        mock_bind_service_queue, mock_testing_config, mock_start, mock_stop,
+        mock_set_logfile
     ):
         mock_testing_config.return_value = self.config
-        self.config.get_log_file.return_value = MagicMock(
-            return_value='/var/log/mash/testing_service.log'
-        )
+        self.config.get_log_file.return_value = \
+            '/var/log/mash/testing_service.log'
 
         mock_start.side_effect = KeyboardInterrupt()
 
