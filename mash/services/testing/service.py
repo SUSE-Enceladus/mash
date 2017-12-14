@@ -77,12 +77,12 @@ class TestingService(BaseService):
 
         Job description is validated and converted to dict from json.
         """
-        if job.job_id not in self.jobs:
-            self.jobs[job.job_id] = job
+        if job.id not in self.jobs:
+            self.jobs[job.id] = job
 
             self.consume_queue(
                 self._process_message,
-                self.bind_listener_queue(job.job_id)
+                self.bind_listener_queue(job.id)
             )
 
             self.log.info(
@@ -143,7 +143,7 @@ class TestingService(BaseService):
         """
         data = {
             'testing_result': {
-                'job_id': job.job_id,
+                'id': job.id,
                 'status': job.status,
                 'image_id': job.image_id
             }
@@ -159,7 +159,7 @@ class TestingService(BaseService):
         {
             "testing_job_add": {
                 "account": "account",
-                "job_id": "1",
+                "id": "1",
                 "provider": "EC2",
                 "tests": "test_stuff",
                 "utctime": "now"
@@ -253,7 +253,7 @@ class TestingService(BaseService):
         Publish status message to provided service exchange.
         """
         exchange = 'publisher'
-        key = 'listener_{0}'.format(job.job_id)
+        key = 'listener_{0}'.format(job.id)
         message = self._get_status_message(job)
 
         try:
@@ -278,7 +278,7 @@ class TestingService(BaseService):
 
         {
             "uploader_result": {
-                "job_id": "1",
+                "id": "1",
                 "image_id": "ami-2c40774c",
                 "status": 0
             }
@@ -295,7 +295,7 @@ class TestingService(BaseService):
         job_id = None
         try:
             job = json.loads(message.body)['uploader_result']
-            job_id = job['job_id']
+            job_id = job['id']
             image_id = job['image_id']
             status = job['status']
         except Exception:
@@ -305,7 +305,7 @@ class TestingService(BaseService):
             status = EXCEPTION
 
         if not job_id:
-            self.log.error('No job_id in uploader result file.')
+            self.log.error('No id in uploader result file.')
         elif not self.jobs.get(job_id):
             self.log.error(
                 'Invalid job from uploader with id: {0}.'.format(job_id)

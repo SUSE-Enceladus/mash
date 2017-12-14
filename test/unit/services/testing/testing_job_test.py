@@ -10,7 +10,7 @@ class TestTestingJob(object):
     def setup(self):
         self.job_config = {
             'distro': 'SLES',
-            'job_id': '1',
+            'id': '1',
             'provider': 'EC2',
             'tests': 'test_stuff',
             'utctime': 'now'
@@ -19,7 +19,7 @@ class TestTestingJob(object):
     def test_valid_job(self):
         job = TestingJob(**self.job_config)
 
-        assert job.job_id == '1'
+        assert job.id == '1'
         assert job.provider == 'EC2'
         assert job.tests == ['test_stuff']
         assert job.utctime == 'now'

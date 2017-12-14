@@ -37,7 +37,7 @@ class EC2TestingJob(TestingJob):
 
     def __init__(self,
                  distro,
-                 job_id,
+                 id,
                  provider,
                  tests,
                  utctime,
@@ -52,7 +52,7 @@ class EC2TestingJob(TestingJob):
                  ssh_user=None):
         super(EC2TestingJob, self).__init__(
             distro,
-            job_id,
+            id,
             provider,
             tests,
             utctime,
@@ -76,7 +76,7 @@ class EC2TestingJob(TestingJob):
             'iat': datetime.utcnow(),
             'sub': 'testing.get_credentials',
             'service': 'testing',
-            'job_id': self.job_id,
+            'job_id': self.id,
             'credentials': {
                 'csp': self.provider,
                 'account': self.account

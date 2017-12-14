@@ -35,9 +35,9 @@ class TestIPATestingService(object):
         self.testing.service_exchange = 'testing'
 
         self.error_message = '{"testing_result": ' \
-            '{"image_id": "image123", "job_id": "1", "status": 1}}'
+            '{"id": "1", "image_id": "image123", "status": 1}}'
         self.status_message = '{"testing_result": ' \
-            '{"image_id": "image123", "job_id": "1", "status": 0}}'
+            '{"id": "1", "image_id": "image123", "status": 0}}'
 
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'stop')
@@ -104,7 +104,7 @@ class TestIPATestingService(object):
         mock_process_message
     ):
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job._get_metadata.return_value = {'job_id': '1'}
 
         self.testing._add_job(job)
@@ -121,7 +121,7 @@ class TestIPATestingService(object):
 
     def test_testing_add_job_exists(self):
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job._get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = Mock()
@@ -137,7 +137,7 @@ class TestIPATestingService(object):
         self, mock_delete_listener_queue
     ):
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job._get_metadata.return_value = {'job_id': '1'}
 
         scheduler = Mock()
@@ -159,7 +159,7 @@ class TestIPATestingService(object):
     @patch.object(TestingService, '_publish_message')
     def test_testing_cleanup_job(self, mock_publish_message, mock_delete_job):
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job.status = 0
         job.image_id = 'image123'
         job.utctime = 'now'
@@ -193,15 +193,15 @@ class TestIPATestingService(object):
 
     @patch.object(TestingService, '_validate_job')
     def test_testing_handle_jobs_add(self, mock_validate_job):
-        self.message.body = '{"testing_job_add": {"job_id": "1"}}'
+        self.message.body = '{"testing_job_add": {"id": "1"}}'
         self.testing._handle_jobs(self.message)
 
         self.message.ack.assert_called_once_with()
-        mock_validate_job.assert_called_once_with({'job_id': '1'})
+        mock_validate_job.assert_called_once_with({'id': '1'})
 
     @patch.object(TestingService, '_notify_invalid_config')
     def test_testing_handle_jobs_invalid(self, mock_notify):
-        self.message.body = '{"testing_job_update": {"job_id": "1"}}'
+        self.message.body = '{"testing_job_update": {"id": "1"}}'
 
         self.testing._handle_jobs(self.message)
 
@@ -226,7 +226,7 @@ class TestIPATestingService(object):
 
     def test_testing_get_status_message(self):
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job.status = 0
         job.image_id = 'image123'
 
@@ -288,7 +288,7 @@ class TestIPATestingService(object):
         event.exception = None
 
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job.utctime = 'now'
         job.status = 0
         job.iteration_count = 1
@@ -346,7 +346,7 @@ class TestIPATestingService(object):
         event.exception = None
 
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job.image_id = 'image123'
         job.status = 1
         job.utctime = 'always'
@@ -372,7 +372,7 @@ class TestIPATestingService(object):
     @patch.object(TestingService, '_publish')
     def test_testing_publish_message(self, mock_publish, mock_bind_queue):
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job.status = 0
         job.image_id = 'image123'
 
@@ -391,7 +391,7 @@ class TestIPATestingService(object):
     ):
         job = Mock()
         job.image_id = 'image123'
-        job.job_id = '1'
+        job.id = '1'
         job.status = 1
         job._get_metadata.return_value = {'job_id': '1'}
 
@@ -427,7 +427,7 @@ class TestIPATestingService(object):
         self.testing.scheduler = scheduler
 
         self.message.body = \
-            '{"uploader_result": {"job_id": "1", ' \
+            '{"uploader_result": {"id": "1", ' \
             '"image_id": "image123", "status": 0}}'
 
         self.testing._test_image(self.message)
@@ -449,19 +449,19 @@ class TestIPATestingService(object):
         job.utctime = 'always'
         self.testing.jobs['1'] = job
 
-        self.message.body = '{"uploader_result": {"job_id": "1"}}'
+        self.message.body = '{"uploader_result": {"id": "1"}}'
         self.testing._test_image(self.message)
 
         self.message.ack.assert_called_once_with()
         self.testing.log.error.assert_called_once_with(
             'Invalid uploader result file: '
-            '{"uploader_result": {"job_id": "1"}}'
+            '{"uploader_result": {"id": "1"}}'
         )
         mock_cleanup_job.assert_called_once_with('1', 2)
 
     def test_testing_test_image_job_none(self):
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job.utctime = 'always'
         self.testing.jobs['1'] = job
 
@@ -472,24 +472,24 @@ class TestIPATestingService(object):
         self.testing.log.error.assert_has_calls(
             [
                 call('Invalid uploader result file: '),
-                call('No job_id in uploader result file.')
+                call('No id in uploader result file.')
             ]
         )
 
     def test_testing_test_image_job_invalid(self):
         job = Mock()
-        job.job_id = '1'
+        job.id = '1'
         job.utctime = 'always'
         self.testing.jobs['1'] = job
 
-        self.message.body = '{"uploader_result": {"job_id": "2"}}'
+        self.message.body = '{"uploader_result": {"id": "2"}}'
         self.testing._test_image(self.message)
 
         self.message.ack.assert_called_once_with()
         self.testing.log.error.assert_has_calls(
             [
                 call('Invalid uploader result file: '
-                     '{"uploader_result": {"job_id": "2"}}'),
+                     '{"uploader_result": {"id": "2"}}'),
                 call('Invalid job from uploader with id: 2.')
             ]
         )
@@ -499,7 +499,7 @@ class TestIPATestingService(object):
         job = {
             'account': 'account',
             'distro': 'SLES',
-            'job_id': '1',
+            'id': '1',
             'provider': 'EC2',
             'tests': 'test_stuff',
             'utctime': 'now'
@@ -510,7 +510,7 @@ class TestIPATestingService(object):
     def test_testing_validate_invalid_job(self):
         job = {
             'account': 'account',
-            'job_id': '1',
+            'id': '1',
             'provider': 'Fake',
             'tests': 'test_stuff',
             'utctime': 'now'
@@ -524,7 +524,7 @@ class TestIPATestingService(object):
     def test_testing_validate_no_provider(self):
         job = {
             'account': 'account',
-            'job_id': '1',
+            'id': '1',
             'tests': 'test_stuff',
             'utctime': 'now'
         }
@@ -538,7 +538,7 @@ class TestIPATestingService(object):
     def test_testing_validate_exception(self, mock_ec2_job):
         job = {
             'account': 'account',
-            'job_id': '1',
+            'id': '1',
             'provider': 'EC2',
             'tests': 'test_stuff',
             'utctime': 'now'
