@@ -35,9 +35,9 @@ class TestIPATestingService(object):
         self.testing.service_exchange = 'testing'
 
         self.error_message = '{"testing_result": ' \
-            '{"job_id": "1", "status": 1, "image_id": "image123"}}'
+            '{"image_id": "image123", "job_id": "1", "status": 1}}'
         self.status_message = '{"testing_result": ' \
-            '{"job_id": "1", "status": 0, "image_id": "image123"}}'
+            '{"image_id": "image123", "job_id": "1", "status": 0}}'
 
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'stop')
@@ -79,8 +79,9 @@ class TestIPATestingService(object):
         mock_bind_service_queue, mock_testing_config, mock_start, mock_stop
     ):
         mock_testing_config.return_value = self.config
-        self.config.get_log_file.return_value = \
-            '/var/log/mash/testing_service.log'
+        self.config.get_log_file.return_value = MagicMock(
+            return_value='/var/log/mash/testing_service.log'
+        )
 
         mock_start.side_effect = KeyboardInterrupt()
 
