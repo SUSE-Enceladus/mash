@@ -1,6 +1,6 @@
 from pytest import raises
-from mock import patch
-from mock import Mock
+from unittest.mock import patch
+from unittest.mock import Mock
 
 from mash.services.uploader.cloud import Upload
 from mash.mash_exceptions import MashUploadSetupException

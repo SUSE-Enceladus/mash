@@ -10,7 +10,6 @@
 # python unit testing framework
 pytest
 pytest-cov
-mock
 coverage
 
 # Python style guide checker

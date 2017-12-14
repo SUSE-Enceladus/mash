@@ -1,4 +1,4 @@
-from mock import Mock
+from unittest.mock import Mock
 from pytest import raises
 
 from mash.services.uploader.cloud.base import UploadBase

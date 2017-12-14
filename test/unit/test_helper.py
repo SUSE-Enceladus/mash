@@ -1,6 +1,6 @@
 import sys
 from collections import namedtuple
-from mock import (
+from unittest.mock import (
     MagicMock,
     patch
 )

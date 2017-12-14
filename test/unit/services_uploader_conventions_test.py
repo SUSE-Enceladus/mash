@@ -1,5 +1,5 @@
 from pytest import raises
-from mock import patch
+from unittest.mock import patch
 
 from mash.services.uploader.conventions import Conventions
 from mash.mash_exceptions import MashConventionsException

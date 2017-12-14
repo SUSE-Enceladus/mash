@@ -1,5 +1,5 @@
-from mock import patch
-from mock import Mock
+from unittest.mock import patch
+from unittest.mock import Mock
 
 from mash.services.base_service import BaseService
 from mash.services.credentials.service import CredentialsService

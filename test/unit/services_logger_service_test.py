@@ -4,7 +4,7 @@ import sys
 
 from amqpstorm import AMQPError
 
-from mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 from pytest import raises
 
 from mash.mash_exceptions import MashLoggerException
