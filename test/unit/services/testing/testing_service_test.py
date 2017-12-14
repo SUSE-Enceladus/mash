@@ -1,5 +1,3 @@
-import json
-
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
@@ -230,13 +228,8 @@ class TestIPATestingService(object):
         job.status = 0
         job.image_id = 'image123'
 
-        msg = self.testing._get_status_message(job)
-        data = json.loads(msg)
-        assert 'testing_result' in data
-        result = data['testing_result']
-        assert 'job_id' in result and result['job_id'] == job.job_id
-        assert 'status' in result and result['status'] == job.status
-        assert 'image_id' in result and result['image_id'] == job.image_id
+        data = self.testing._get_status_message(job)
+        assert data == self.status_message
 
     def test_testing_log_job_message(self):
         self.testing._log_job_message('Test message', {'job_id': '1'})
@@ -383,7 +376,11 @@ class TestIPATestingService(object):
 
         self.testing._publish_message(job)
         mock_bind_queue.assert_called_once_with('publisher', 'listener_1')
-        mock_publish.assert_called_once()
+        mock_publish.assert_called_once_with(
+            'publisher',
+            'listener_1',
+            self.status_message
+        )
 
     @patch.object(TestingService, '_bind_queue')
     @patch.object(TestingService, '_publish')
@@ -400,7 +397,10 @@ class TestIPATestingService(object):
         self.testing._publish_message(job)
 
         mock_bind_queue.assert_called_once_with('publisher', 'listener_1')
-        self.testing.log.warning.assert_called_once()
+        self.testing.log.warning.assert_called_once_with(
+            'Message not received: {0}'.format(self.error_message),
+            extra={'job_id': '1'}
+        )
 
     def test_testing_run_test(self):
         job = Mock()
