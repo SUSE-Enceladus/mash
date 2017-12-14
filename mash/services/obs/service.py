@@ -57,6 +57,8 @@ class OBSImageBuildResultService(BaseService):
             with open(jobs_done_dir + retired_job_file, 'rb') as retired:
                 try:
                     job_worker = pickle.load(retired)
+                    job_worker.set_log_handler(self._send_job_response)
+                    job_worker.set_result_handler(self._send_listen_response)
                     self.jobs[job_worker.job_id] = job_worker
                 except Exception as e:
                     self.log.error(

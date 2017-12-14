@@ -18,6 +18,8 @@ class TestOBSImageBuildResultService(object):
     @patch('mash.services.obs.service.pickle.load')
     @patch.object(OBSImageBuildResultService, '_start_job')
     @patch.object(OBSImageBuildResultService, '_control_in')
+    @patch.object(OBSImageBuildResultService, '_send_job_response')
+    @patch.object(OBSImageBuildResultService, '_send_listen_response')
     @patch.object(BaseService, '__init__')
     @patch('os.listdir')
     @patch('logging.getLogger')
@@ -25,10 +27,13 @@ class TestOBSImageBuildResultService(object):
     @patch_open
     def setup(
         self, mock_open, mock_register, mock_log, mock_listdir,
-        mock_BaseService, mock_control_in, mock_start_job,
+        mock_BaseService, mock_send_listen_response, mock_send_job_response,
+        mock_control_in, mock_start_job,
         mock_pickle_load, mock_mkpath, mock_set_logfile,
         mock_OBSConfig
     ):
+        job_worker = Mock()
+        mock_pickle_load.return_value = job_worker
         config = Mock()
         config.get_log_file.return_value = 'logfile'
         mock_OBSConfig.return_value = config
@@ -58,6 +63,12 @@ class TestOBSImageBuildResultService(object):
             '/var/tmp/mash/obs_jobs//job'
         )
         mock_pickle_load.assert_called_once_with(context.file_mock)
+        job_worker.set_log_handler.assert_called_once_with(
+            mock_send_job_response
+        )
+        job_worker.set_result_handler.assert_called_once_with(
+            mock_send_listen_response
+        )
         self.obs_result.consume_queue.assert_called_once_with(
             mock_control_in,
             self.obs_result.bind_service_queue.return_value
