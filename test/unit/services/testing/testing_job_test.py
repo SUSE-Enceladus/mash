@@ -83,7 +83,7 @@ class TestTestingJob(object):
         mock_open_connection.assert_called_once_with('localhost')
         channel.basic.publish.assert_called_once_with(
             'eyJzb21lIjoicGF5bG9hZCJ9',
-            'credentials.request',
+            'request',
             exchange='credentials'
         )
         channel.queue.delete.assert_called_once_with(
