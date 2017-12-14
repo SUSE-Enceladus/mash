@@ -12,3 +12,4 @@ APScheduler
 python-dateutil
 amqpstorm
 ec2uploadimg
+python3-ipa
