@@ -60,6 +60,7 @@ class TestJobCreatorService(object):
         mock_start.assert_called_once_with()
         mock_stop.assert_called_once_with()
 
+    @patch.object(JobCreatorService, 'set_logfile')
     @patch.object(JobCreatorService, 'stop')
     @patch.object(JobCreatorService, 'start')
     @patch('mash.services.jobcreator.service.JobCreatorConfig')
@@ -68,7 +69,8 @@ class TestJobCreatorService(object):
     @patch.object(JobCreatorService, 'consume_queue')
     def test_job_creator_post_init_exceptions(
         self, mock_consume_queue, mock_process_message,
-        mock_bind_queue, mock_jobcreator_config, mock_start, mock_stop
+        mock_bind_queue, mock_jobcreator_config, mock_start, mock_stop,
+        mock_set_logfile
     ):
         mock_jobcreator_config.return_value = self.config
         self.config.get_log_file.return_value = \
