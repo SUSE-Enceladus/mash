@@ -260,14 +260,14 @@ class TestIPATestingService(object):
         )
 
     @patch.object(TestingService, '_test_image')
-    def test_testing_proccess_message_listener_event(self, mock_test_image):
+    def test_testing_process_message_listener_event(self, mock_test_image):
         self.method['routing_key'] = 'listener_1'
         self.testing._process_message(self.message)
 
         mock_test_image.assert_called_once_with(self.message)
 
     @patch.object(TestingService, '_handle_jobs')
-    def test_testing_proccess_message_service_event(self, mock_handle_jobs):
+    def test_testing_process_message_service_event(self, mock_handle_jobs):
         self.method['routing_key'] = 'service_event'
         self.testing._process_message(self.message)
 
