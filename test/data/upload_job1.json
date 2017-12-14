@@ -1,0 +1,12 @@
+{
+    "uploadjob": {
+        "cloud_image_description": "My Image",
+        "cloud_image_name": "ms_image",
+        "ec2": {
+            "launch_ami": "ami-bc5b48d0",
+            "region": "eu-central-1"
+        },
+        "id": "123",
+        "utctime": "now"
+    }
+}

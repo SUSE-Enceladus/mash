@@ -1,0 +1,9 @@
+{
+    "uploadjob": {
+        "cloud_image_description": "a",
+        "cloud_image_name": "b",
+        "ec2": {},
+        "id": "123",
+        "utctime": "always"
+    }
+}
