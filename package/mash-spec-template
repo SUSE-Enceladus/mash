@@ -37,6 +37,7 @@ Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil
 # Note: Activate this requirement as soon as we have the package
 # Requires:       python3-ec2uploadimg
+# Requires:       python3-ipa
 BuildArch:      noarch
 
 %description
@@ -71,6 +72,9 @@ install -D -m 644 config/mash_credentials.service \
 install -D -m 644 config/mash_job_creator.service \
     %{buildroot}%{_unitdir}/mash_job_creator.service
 
+install -D -m 644 config/testing_config.yml \
+    %{buildroot}%{_sysconfdir}/%{name}/testing_config.yml
+
 %files
 %defattr(-,root,root,-)
 %{python3_sitelib}/*
@@ -89,5 +93,9 @@ install -D -m 644 config/mash_job_creator.service \
 %{_bindir}/mash-job-creator-service
 %{_unitdir}/mash_job_creator.service
 %config(noreplace) %{_sysconfdir}/%{name}/job_creator_config.yml
+
+%{_bindir}/mash-testing-service
+%{_unitdir}/mash_testing.service
+%config(noreplace) %{_sysconfdir}/%{name}/testing_config.yml
 
 %changelog
