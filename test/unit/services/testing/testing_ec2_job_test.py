@@ -12,7 +12,7 @@ class TestEC2TestingJob(object):
         self.job_config = {
             'account': 'account',
             'distro': 'SLES',
-            'job_id': '1',
+            'id': '1',
             'provider': 'EC2',
             'tests': 'test_stuff',
             'utctime': 'now'

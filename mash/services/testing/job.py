@@ -34,7 +34,7 @@ class TestingJob(object):
 
     def __init__(self,
                  distro,
-                 job_id,
+                 id,
                  provider,
                  tests,
                  utctime,
@@ -43,13 +43,13 @@ class TestingJob(object):
                  region=None):
         self.channel = None
         self.connection = None
-        self.credential_queue = 'credentials.testing.{0}'.format(job_id)
+        self.credential_queue = 'credentials.testing.{0}'.format(id)
         self.desc = desc
         self.distro = self.validate_distro(distro)
         self.image_id = None
         self.instance_type = instance_type
         self.iteration_count = 0
-        self.job_id = job_id
+        self.id = id
         self.log_callback = None
         self.provider = self.validate_provider(provider)
         self.region = region
@@ -129,7 +129,7 @@ class TestingJob(object):
         """
         Return dictionary of metadata based on job.
         """
-        return {'job_id': self.job_id}
+        return {'job_id': self.id}
 
     def _open_connection(self, host):
         """
