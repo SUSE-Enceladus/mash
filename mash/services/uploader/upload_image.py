@@ -126,26 +126,19 @@ class UploadImage(object):
         :param bool oneshot: pickle object instance after upload
         """
         while True:
-            # send obs service listen request
-            self._set_listen_request_for_obs_image()
             # wait for background thread to provide required information
+            self.iteration_count += 1
             self._log_callback(
                 'Waiting for image and credentials data'
             )
+            # send obs service listen request
+            self._set_listen_request_for_obs_image()
             while True:
                 if self.consuming_timeout_reached:
                     self._log_callback(
                         'Waiting for image and credentials timed out'
                     )
                     return
-                if self.system_image_file:
-                    self._log_callback(
-                        'Got image file: {0}'.format(self.system_image_file)
-                    )
-                if self.credentials_token:
-                    self._log_callback(
-                        'Got credentials data'
-                    )
                 if self.system_image_file and self.credentials_token:
                     break
                 else:
@@ -156,7 +149,6 @@ class UploadImage(object):
             # changed but with the same credentials as before
             delay_time_sec = 30
             if self.image_file_uploaded != self.system_image_file:
-                self.iteration_count += 1
                 self._log_callback(
                     'Uploading image to {0}: {1}'.format(
                         self.csp_name, self.system_image_file
@@ -327,8 +319,14 @@ class UploadImage(object):
         service_data = JsonFormat.json_loads(message.body)
         if 'image_source' in service_data:
             self.system_image_file = service_data['image_source'][0]
+            self._log_callback(
+                'Got image file: {0}'.format(self.system_image_file)
+            )
         if 'credentials' in service_data:
             self.credentials_token = service_data['credentials']
+            self._log_callback(
+                'Got credentials data'
+            )
 
     def _consuming_timeout(self):
         self.consuming_timeout_reached = True

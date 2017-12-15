@@ -68,8 +68,6 @@ class TestUploadImage(object):
         self.upload_image.upload()
         assert mock_log_callback.call_args_list == [
             call('Waiting for image and credentials data'),
-            call('Got image file: image_file'),
-            call('Got credentials data'),
             call('Uploading image to ec2: image_file'),
             call('error')
         ]
