@@ -232,16 +232,16 @@ class TestingService(BaseService):
                 ),
                 extra=metata
             )
-        elif job.status:
+        elif job.status == 0:
+            self.log.info(
+                'Pass[{0}]: Testing successful.'.format(job.iteration_count),
+                extra=metata
+            )
+        else:
             self.log.error(
                 'Pass[{0}]: Error occurred testing image with IPA.'.format(
                     job.iteration_count
                 ),
-                extra=metata
-            )
-        else:
-            self.log.info(
-                'Pass[{0}]: Testing successful.'.format(job.iteration_count),
                 extra=metata
             )
 
