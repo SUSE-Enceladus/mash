@@ -82,7 +82,7 @@ class EC2TestingJob(TestingJob):
                 'account': self.account
             }
         }
-        return jwt.encode(request, 'mash.services.testing', algorithm='HS256')
+        return jwt.encode(request, 'mash', algorithm='HS256')
 
     def _process_credentials(self, credentials):
         """
@@ -92,7 +92,7 @@ class EC2TestingJob(TestingJob):
         try:
             payload = jwt.decode(
                 credentials,
-                'mash.services.testing',
+                'mash',
                 algorithm='HS256'
             )
         except ExpiredSignatureError:
