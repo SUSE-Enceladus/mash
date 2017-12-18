@@ -43,6 +43,7 @@ class EC2TestingJob(TestingJob):
                  utctime,
                  account=None,
                  access_key_id=None,
+                 config_file=None,
                  desc=None,
                  instance_type=None,
                  region=None,
@@ -56,6 +57,7 @@ class EC2TestingJob(TestingJob):
             provider,
             tests,
             utctime,
+            config_file=config_file,
             desc=desc,
             instance_type=instance_type,
             region=region
