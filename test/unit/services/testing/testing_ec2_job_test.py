@@ -24,7 +24,7 @@ class TestEC2TestingJob(object):
 
         decoded = jwt.decode(
             request,
-            'mash.services.testing',
+            'mash',
             algorithm='HS256'
         )
 
