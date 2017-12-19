@@ -404,21 +404,22 @@ class TestingService(BaseService):
         job = None
         try:
             provider = job_config['provider']
-            assert provider in ('EC2',)
-
-            if provider == 'EC2':
-                job = EC2TestingJob(**job_config)
-        except AssertionError:
-            self.log.exception(
-                'Provider {0} is not supported for testing.'.format(provider)
-            )
         except KeyError:
             self.log.exception(
                 'No provider: Provider must be in job config.'
             )
-        except Exception as e:
+            return None
+
+        if provider == 'EC2':
+            try:
+                job = EC2TestingJob(**job_config)
+            except Exception as e:
+                self.log.exception(
+                    'Invalid job configuration: {0}'.format(e)
+                )
+        else:
             self.log.exception(
-                'Invalid job configuration: {0}'.format(e)
+                'Provider {0} is not supported.'.format(provider)
             )
 
         if job:

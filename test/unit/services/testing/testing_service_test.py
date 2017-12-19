@@ -597,7 +597,7 @@ class TestIPATestingService(object):
 
         self.testing._validate_job(job)
         self.testing.log.exception.assert_called_once_with(
-            'Provider Fake is not supported for testing.'
+            'Provider Fake is not supported.'
         )
 
     def test_testing_validate_no_provider(self):
