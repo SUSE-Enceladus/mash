@@ -192,7 +192,7 @@ class TestIPATestingService(object):
         job._get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = job
-        self.testing._cleanup_job('1', 1)
+        self.testing._cleanup_job(job, 1)
 
         self.testing.log.warning.assert_called_once_with(
             'Failed upstream.',
@@ -495,8 +495,8 @@ class TestIPATestingService(object):
 
         self.testing._test_image(self.message)
 
-        self.message.ack.assert_called_once_with()
         assert self.testing.jobs['1'].image_id == 'image123'
+        assert self.testing.jobs['1'].listener_msg == self.message
         scheduler.add_job.assert_called_once_with(
             mock_run_test,
             args=('1',),
@@ -507,20 +507,18 @@ class TestIPATestingService(object):
         )
 
     @patch.object(TestingService, '_cleanup_job')
-    def test_testing_test_image_invalid(self, mock_cleanup_job):
+    def test_testing_test_image_failed(self, mock_cleanup_job):
         job = Mock()
         job.utctime = 'always'
         self.testing.jobs['1'] = job
 
-        self.message.body = '{"uploader_result": {"id": "1"}}'
+        self.message.body = \
+            '{"uploader_result": {"id": "1", ' \
+            '"image_id": "image123", "status": 1}}'
         self.testing._test_image(self.message)
 
+        mock_cleanup_job.assert_called_once_with(job, 1)
         self.message.ack.assert_called_once_with()
-        self.testing.log.error.assert_called_once_with(
-            'Invalid uploader result file: '
-            '{"uploader_result": {"id": "1"}}'
-        )
-        mock_cleanup_job.assert_called_once_with('1', 2)
 
     def test_testing_test_image_job_none(self):
         job = Mock()
@@ -549,13 +547,25 @@ class TestIPATestingService(object):
         self.testing._test_image(self.message)
 
         self.message.ack.assert_called_once_with()
-        self.testing.log.error.assert_has_calls(
-            [
-                call('Invalid uploader result file: '
-                     '{"uploader_result": {"id": "2"}}'),
-                call('Invalid job from uploader with id: 2.')
-            ]
+        self.testing.log.error.assert_called_once_with(
+            'Invalid job from uploader with id: 2.'
         )
+
+    @patch.object(TestingService, '_cleanup_job')
+    def test_testing_test_image_no_image_id(self, mock_cleanup_job):
+        job = Mock()
+        job.id = '1'
+        job.utctime = 'always'
+        self.testing.jobs['1'] = job
+
+        self.message.body = '{"uploader_result": {"id": "1"}}'
+        self.testing._test_image(self.message)
+
+        self.testing.log.error.assert_called_once_with(
+            'No image id in uploader result file.'
+        )
+        self.message.ack.assert_called_once_with()
+        mock_cleanup_job.assert_called_once_with(job, 2)
 
     def test_testing_validate_job(self):
         job_config = {
