@@ -68,7 +68,7 @@ class RabbitMQHandler(SocketHandler):
             if hasattr(record, attr):
                 data[attr] = getattr(record, attr)
 
-        return json.dumps(data)
+        return json.dumps(data, sort_keys=True)
 
 
 class RabbitMQSocket(object):
