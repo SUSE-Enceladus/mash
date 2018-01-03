@@ -230,20 +230,22 @@ class TestingJob(object):
 
     def validate_tests(self, tests):
         """
-        Valid the tests attr is a comma separated list of tests
-        with at least one test.
+        Validate the tests attr is a comma separated list of tests.
+
+        There must be at least one test provided.
         """
         try:
             tests = [test for test in filter(None, tests.split(','))]
-            assert len(tests)
-        except AssertionError:
-            raise MashTestingException(
-                'Must provide at least one test.'
-            )
         except Exception:
             raise MashTestingException(
                 'Invalid tests format, must be a comma seperated list.'
             )
+
+        if len(tests) < 1:
+            raise MashTestingException(
+                'Must provide at least one test.'
+            )
+
         return tests
 
     def validate_timestamp(self, utctime):
