@@ -23,7 +23,21 @@ class Defaults(object):
     Default values
     """
     @classmethod
+    def get_jobs_dir(self):
+        jobs_dir = '/var/tmp/mash/uploader_jobs/'
+        distutils.dir_util.mkpath(jobs_dir)
+        return jobs_dir
+
+    @classmethod
     def get_jobs_done_dir(self):
         jobs_done_dir = '/var/tmp/mash/uploader_jobs_done/'
         distutils.dir_util.mkpath(jobs_done_dir)
         return jobs_done_dir
+
+    @classmethod
+    def get_config(self):
+        return '/etc/mash/uploader_config.yml'
+
+    @classmethod
+    def get_log_file(self):
+        return '/tmp/uploader_service.log'

@@ -47,9 +47,9 @@ class UploadAmazon(UploadBase):
             'vpc_subnet_id': '',
             'ssh_key_private_key_file': None,
             'security_group_ids': '',
-            'sriov_type': None,
+            'sriov_type': 'simple',
             'access_key': None,
-            'ena_support': False,
+            'ena_support': True,
             'backing_store': 'ssd',
             'running_id': None,
             'secret_key': None
