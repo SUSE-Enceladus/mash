@@ -40,7 +40,7 @@ class TestingConfig(BaseConfig):
         Return job config backup dir:
 
         testing:
-          jobs_dir: /var/tmp/mash/testing_jobs/
+          jobs_dir: /var/lib/mash/testing_jobs/
 
         If no configuration exists the jobs dir from the
         Defaults class is returned.

@@ -17,8 +17,8 @@ class TestTestingConfig(object):
     @patch('mash.services.testing.defaults.os.makedirs')
     def test_get_jobs_dir(self, mock_makedirs):
         assert self.empty_config.get_jobs_dir() == \
-            '/var/tmp/mash/testing_jobs/'
+            '/var/lib/mash/testing_jobs/'
         mock_makedirs.assert_called_once_with(
-            '/var/tmp/mash/testing_jobs/',
+            '/var/lib/mash/testing_jobs/',
             exist_ok=True
         )
