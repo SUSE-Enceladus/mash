@@ -11,8 +11,12 @@ channel = connection.channel()
 # order to do something we need to wait for the obs service
 # to get its part of job 0815 done
 
-listen_to_queue = 'obs.listener_0815'
+listen_to_queue = 'obs.listener_event'
 channel.queue.declare(queue=listen_to_queue, durable=True)
+
+channel.queue.bind(
+    exchange='obs', queue=listen_to_queue, routing_key='0815'
+)
 
 print('waiting for obs service...')
 

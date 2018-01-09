@@ -7,8 +7,12 @@ connection = Connection(
 
 channel = connection.channel()
 
-listen_to_queue = 'credentials.ec2_4711'
+listen_to_queue = 'credentials.ec2'
 channel.queue.declare(queue=listen_to_queue, durable=True)
+
+channel.queue.bind(
+    exchange='credentials', queue=listen_to_queue, routing_key='4711'
+)
 
 print('waiting for credentials service...')
 
