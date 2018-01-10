@@ -16,34 +16,26 @@ class TestUploadImageService(object):
     @patch('mash.services.uploader.service.UploaderConfig')
     @patch('mash.services.base_service.BaseService.set_logfile')
     @patch('mash.services.uploader.service.mkpath')
-    @patch('mash.services.uploader.service.pickle.load')
     @patch('mash.services.uploader.service.BackgroundScheduler')
     @patch.object(UploadImageService, '_schedule_job')
-    @patch.object(UploadImageService, '_control_in')
-    @patch.object(UploadImageService, '_send_job_response')
-    @patch.object(UploadImageService, '_send_listen_response')
+    @patch.object(UploadImageService, '_process_message')
     @patch.object(BaseService, '__init__')
     @patch('os.listdir')
     @patch('logging.getLogger')
     @patch('atexit.register')
-    @patch_open
     def setup(
-        self, mock_open, mock_register, mock_log, mock_listdir,
-        mock_BaseService, mock_send_listen_response, mock_send_job_response,
-        mock_control_in, mock_schedule_job, mock_BackgroundScheduler,
-        mock_pickle_load, mock_mkpath, mock_set_logfile,
+        self, mock_register, mock_log, mock_listdir,
+        mock_BaseService, mock_process_message, mock_schedule_job,
+        mock_BackgroundScheduler,
+        mock_mkpath, mock_set_logfile,
         mock_UploaderConfig
     ):
         scheduler = Mock()
         mock_BackgroundScheduler.return_value = scheduler
-        upload_image = Mock()
-        mock_pickle_load.return_value = upload_image
         config = Mock()
         config.get_log_file.return_value = 'logfile'
         mock_UploaderConfig.return_value = config
         self.log = Mock()
-        context = context_manager()
-        mock_open.return_value = context.context_manager_mock
         mock_listdir.return_value = ['job']
         mock_BaseService.return_value = None
 
@@ -60,16 +52,6 @@ class TestUploadImageService(object):
         mock_set_logfile.assert_called_once_with('logfile')
 
         mock_mkpath.assert_called_once_with('/var/tmp/mash/uploader_jobs/')
-        mock_open.assert_called_once_with(
-            '/var/tmp/mash/uploader_jobs_done/job', 'rb'
-        )
-        mock_pickle_load.assert_called_once_with(context.file_mock)
-        upload_image.set_log_handler.assert_called_once_with(
-            mock_send_job_response
-        )
-        upload_image.set_result_handler.assert_called_once_with(
-            mock_send_listen_response
-        )
 
         mock_BackgroundScheduler.assert_called_once_with(timezone=utc)
         scheduler.start.assert_called_once_with()
@@ -79,8 +61,7 @@ class TestUploadImageService(object):
         )
 
         self.uploader.consume_queue.assert_called_once_with(
-            mock_control_in,
-            self.uploader.bind_service_queue.return_value
+            mock_process_message
         )
         self.uploader.channel.start_consuming.assert_called_once_with()
 
@@ -88,14 +69,6 @@ class TestUploadImageService(object):
         self.uploader.post_init()
         self.uploader.channel.stop_consuming.assert_called_once_with()
         self.uploader.close_connection.assert_called_once_with()
-        self.uploader.channel.reset_mock()
-
-        mock_pickle_load.side_effect = Exception('error')
-        self.uploader.post_init()
-        self.log.error.assert_called_once_with(
-            'Could not reload job: error'
-        )
-        self.log.reset_mock()
 
     def test_send_job_response(self):
         self.uploader._send_job_response('815', {})
@@ -103,22 +76,22 @@ class TestUploadImageService(object):
             {}, extra={'job_id': '815'}
         )
 
-    @patch.object(BaseService, 'bind_listener_queue')
-    @patch.object(BaseService, 'publish_listener_message')
-    @patch.object(UploadImageService, '_send_control_response')
-    def test_send_listen_response(
-        self, mock_send_control_response,
-        mock_publish_listener_message, mock_bind_listener_queue
+    @patch.object(BaseService, 'publish_job_result')
+    @patch.object(UploadImageService, '_delete_job')
+    def test_send_job_result_for_testing(
+        self, mock_delete_job, mock_publish_job_result
     ):
-        self.uploader.clients['815'] = Mock()
-        self.uploader._send_listen_response('815', {})
-        mock_bind_listener_queue.assert_called_once_with('815')
-        mock_publish_listener_message.assert_called_once_with('815', '{}')
-        assert '815' not in self.uploader.clients
-        self.uploader.clients['815'] = Mock()
-        mock_bind_listener_queue.side_effect = Exception
-        self.uploader._send_listen_response('815', {})
-        assert '815' in self.uploader.clients
+        self.uploader.jobs['815'] = {
+            'nonstop': False,
+            'system_image_file': 'image'
+        }
+        self.uploader._send_job_result_for_testing('815', {})
+        mock_publish_job_result.assert_called_once_with(
+            'testing', '815', '{}'
+        )
+        mock_delete_job.assert_called_once_with('815')
+        assert self.uploader.jobs['815']['system_image_file_uploaded'] == \
+            'image'
 
     def test_send_control_response_local(self):
         result = {
@@ -142,20 +115,30 @@ class TestUploadImageService(object):
             extra={}
         )
 
-    @patch.object(UploadImageService, '_delete_job')
-    @patch.object(UploadImageService, '_add_job')
-    @patch.object(UploadImageService, '_add_to_listener')
     @patch.object(UploadImageService, '_send_control_response')
-    def test_control_in(
-        self, mock_send_control_response, mock_add_to_listener,
-        mock_add_job, mock_delete_job
+    def test_process_message_for_service_data(self, mock_send_control_response):
+        message = Mock()
+        message.method = {'routing_key': '123'}
+        message.body = '{"image_source": ["image"], "job_status": "success"}'
+        self.uploader._process_message(message)
+        assert self.uploader.jobs['123']['system_image_file'] == 'image'
+        message.body = '{"credentials": "token"}'
+        self.uploader._process_message(message)
+        assert self.uploader.jobs['123']['credentials_token'] == 'token'
+        assert self.uploader.jobs['123']['ready'] is True
+
+    @patch.object(UploadImageService, '_add_job')
+    @patch.object(UploadImageService, '_send_control_response')
+    def test_process_message_for_job_documents(
+        self, mock_send_control_response, mock_add_job
     ):
         message = Mock()
+        message.method = {'routing_key': 'job_document'}
         message.body = '{"uploadjob": {"id": "123", ' + \
             '"utctime": "now", "cloud_image_name": "name", ' + \
             '"cloud_image_description": "description", ' + \
             '"ec2": {"launch_ami": "ami-bc5b48d0", "region": "eu-central-1"}}}'
-        self.uploader._control_in(message)
+        self.uploader._process_message(message)
         message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with(
             {
@@ -171,21 +154,11 @@ class TestUploadImageService(object):
                 }
             }
         )
-        message.body = '{"uploadjob_listen": "4711"}'
-        self.uploader._control_in(message)
-        mock_add_to_listener.assert_called_once_with(
-            '4711'
-        )
-        message.body = '{"uploadjob_delete": "4711"}'
-        self.uploader._control_in(message)
-        mock_delete_job.assert_called_once_with(
-            '4711'
-        )
         mock_send_control_response.reset_mock()
         message.body = '{"unknown_command": "4711"}'
-        self.uploader._control_in(message)
+        self.uploader._process_message(message)
         message.body = 'foo'
-        self.uploader._control_in(message)
+        self.uploader._process_message(message)
         assert mock_send_control_response.call_args_list == [
             call(
                 {
@@ -204,18 +177,6 @@ class TestUploadImageService(object):
                 }
             )
         ]
-
-    def test_add_to_listener(self):
-        assert self.uploader._add_to_listener('815') == {
-            'message': 'Job does not exist, can not add to listen pipeline',
-            'ok': False
-        }
-        job = Mock()
-        self.uploader.jobs = {'815': job}
-        assert self.uploader._add_to_listener('815') == {
-            'message': 'Job now in listen pipeline', 'ok': True
-        }
-        job.call_result_handler.assert_called_once_with()
 
     @patch.object(UploadImageService, '_validate_job_description')
     @patch.object(UploadImageService, '_schedule_job')
@@ -265,16 +226,13 @@ class TestUploadImageService(object):
         }
         upload_image = Mock()
         upload_image.job_file = 'job_file'
-        self.uploader.clients = {'815': None}
-        self.uploader.jobs = {'815': upload_image}
+        self.uploader.jobs = {'815': {'uploader': upload_image}}
         assert self.uploader._delete_job('815') == {
             'message': 'Job Deleted', 'ok': True
         }
         mock_os_remove.assert_called_once_with('job_file')
-        upload_image.stop.assert_called_once_with()
-        assert '815' not in self.uploader.clients
         assert '815' not in self.uploader.jobs
-        self.uploader.jobs = {'815': upload_image}
+        self.uploader.jobs = {'815': {'uploader': upload_image}}
         mock_os_remove.side_effect = Exception('remove_error')
         assert self.uploader._delete_job('815') == {
             'message': 'Job deletion failed: remove_error', 'ok': False
@@ -394,12 +352,22 @@ class TestUploadImageService(object):
 
     @patch('mash.services.uploader.service.UploadImage')
     @patch.object(UploadImageService, '_send_job_response')
-    @patch.object(UploadImageService, '_send_listen_response')
+    @patch.object(UploadImageService, '_wait_until_ready')
+    @patch.object(UploadImageService, '_image_already_uploaded')
+    @patch.object(UploadImageService, '_send_job_result_for_testing')
+    @patch('mash.services.uploader.service.time.sleep')
     def test_start_job(
-        self, mock_send_listen_response, mock_send_job_response,
-        mock_UploadImage
+        self, mock_sleep, mock_send_job_result_for_testing,
+        mock_image_already_uploaded, mock_wait_until_ready,
+        mock_send_job_response, mock_UploadImage
     ):
         upload_image = Mock()
+        uploader = self.uploader
+
+        def done_after_one_iteration(self):
+            uploader.jobs['123']['ready'] = False
+
+        mock_image_already_uploaded.return_value = False
         mock_UploadImage.return_value = upload_image
         job = {
             'id': '123',
@@ -408,26 +376,69 @@ class TestUploadImageService(object):
             'utctime': 'now|always',
             'ec2': {}
         }
-        self.uploader._start_job('job_file', job, True)
+        uploader.jobs['123'] = {
+            'ready': True,
+            'credentials_token': 'token',
+            'system_image_file': 'image'
+        }
+        uploader._start_job('job_file', job, False)
+
+        mock_wait_until_ready.assert_called_once_with('123')
+        mock_send_job_response.assert_called_once_with(
+            '123', 'Waiting for image and credentials data'
+        )
         mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', 'ec2', 'b', 'a',
-            service_lookup_timeout_sec=None,
+            '123', 'job_file', False, 'ec2', 'token', 'b', 'a',
             custom_uploader_args={}
         )
         upload_image.set_log_handler.assert_called_once_with(
             mock_send_job_response
         )
         upload_image.set_result_handler.assert_called_once_with(
-            mock_send_listen_response
+            mock_send_job_result_for_testing
         )
-        upload_image.upload.assert_called_once_with(oneshot=False)
+        upload_image.set_image_file.assert_called_once_with('image')
+        upload_image.upload.assert_called_once_with()
 
-        upload_image.reset_mock()
         mock_UploadImage.reset_mock()
-        self.uploader._start_job('job_file', job, False)
+        mock_send_job_response.reset_mock()
+        mock_sleep.side_effect = done_after_one_iteration
+        uploader._start_job('job_file', job, True)
         mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', 'ec2', 'b', 'a',
-            service_lookup_timeout_sec=10,
+            '123', 'job_file', True, 'ec2', 'token', 'b', 'a',
             custom_uploader_args={}
         )
-        upload_image.upload.assert_called_once_with(oneshot=True)
+        assert mock_send_job_response.call_args_list == [
+            call('123', 'Waiting for image and credentials data'),
+            call('123', 'Waiting 30sec before next try...')
+        ]
+        mock_sleep.assert_called_once_with(30)
+
+    def test_get_csp_name(self):
+        assert self.uploader._get_csp_name({'ec2': None}) == 'ec2'
+
+    @patch('mash.services.uploader.service.time.sleep')
+    def test_wait_until_ready(self, mock_sleep):
+        uploader = self.uploader
+        uploader.jobs = {'123': {}}
+
+        def done_after_one_iteration(self):
+            uploader.jobs['123']['ready'] = True
+
+        mock_sleep.side_effect = done_after_one_iteration
+        uploader._wait_until_ready('123')
+        mock_sleep.assert_called_once_with(1)
+
+    @patch.object(UploadImageService, '_send_job_response')
+    def test_image_already_uploaded(self, mock_send_job_response):
+        self.uploader.jobs = {'123': {}}
+        assert self.uploader._image_already_uploaded('123') is False
+        self.uploader.jobs['123']['system_image_file_uploaded'] = 'image'
+        assert self.uploader._image_already_uploaded('123') is False
+        self.uploader.jobs['123']['system_image_file'] = 'image2'
+        assert self.uploader._image_already_uploaded('123') is False
+        self.uploader.jobs['123']['system_image_file'] = 'image'
+        assert self.uploader._image_already_uploaded('123') is True
+        mock_send_job_response.assert_called_once_with(
+            '123', 'Image already uploaded'
+        )

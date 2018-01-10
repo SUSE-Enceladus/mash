@@ -17,7 +17,7 @@
 #
 import atexit
 import os
-import pickle
+import time
 import dateutil.parser
 from distutils.dir_util import mkpath
 from tempfile import NamedTemporaryFile
@@ -55,24 +55,6 @@ class UploadImageService(BaseService):
         # to a queue for a potentially listening client
         self.clients = {}
 
-        # read and reload done jobs
-        jobs_done_dir = Defaults.get_jobs_done_dir()
-        for retired_job_file in os.listdir(jobs_done_dir):
-            with open(jobs_done_dir + retired_job_file, 'rb') as retired:
-                try:
-                    upload_image = pickle.load(retired)
-                    upload_image.set_log_handler(
-                        self._send_job_response
-                    )
-                    upload_image.set_result_handler(
-                        self._send_listen_response
-                    )
-                    self.jobs[upload_image.job_id] = upload_image
-                except Exception as e:
-                    self.log.error(
-                        'Could not reload {0}: {1}'.format(retired_job_file, e)
-                    )
-
         # start job scheduler
         self.scheduler = BackgroundScheduler(timezone=utc)
         self.scheduler.start()
@@ -83,12 +65,11 @@ class UploadImageService(BaseService):
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
-        self.consume_queue(
-            self._control_in, self.bind_service_queue()
-        )
+        self.consume_queue(self._process_message)
+
         try:
             self.channel.start_consuming()
-        except Exception:
+        except Exception as e:
             if self.channel and self.channel.is_open:
                 self.channel.stop_consuming()
                 self.close_connection()
@@ -96,21 +77,14 @@ class UploadImageService(BaseService):
     def _send_job_response(self, job_id, status_message):
         self.log.info(status_message, extra={'job_id': job_id})
 
-    def _send_listen_response(self, job_id, trigger_info):
-        if job_id in self.clients:
-            try:
-                self.bind_listener_queue(job_id)
-                self.publish_listener_message(
-                    job_id, JsonFormat.json_message(trigger_info)
-                )
-                del self.clients[job_id]
-                self.log.info(
-                    'Job deleted from listen pipeline',
-                    extra={'job_id': job_id}
-                )
-            except Exception:
-                # failed to publish, don't dequeue
-                pass
+    def _send_job_result_for_testing(self, job_id, trigger_info):
+        self.jobs[job_id]['system_image_file_uploaded'] = \
+            self.jobs[job_id]['system_image_file']
+        self.publish_job_result(
+            'testing', job_id, JsonFormat.json_message(trigger_info)
+        )
+        if not self.jobs[job_id]['nonstop']:
+            self._delete_job(job_id)
 
     def _send_control_response(self, result, job_id=None):
         message = result['message']
@@ -124,20 +98,8 @@ class UploadImageService(BaseService):
         else:
             self.log.error(message, extra=job_metadata)
 
-    def _control_in(self, message):
-        """
-        On message sent by client
-
-        The message is interpreted as json data and allows for:
-
-        1. add new job
-        2. add job to listener
-        3. delete job
-        """
+    def _process_message(self, message):
         message.ack()
-        job_data = {}
-        job_id = None
-
         try:
             job_data = JsonFormat.json_loads(format(message.body))
         except Exception as e:
@@ -149,6 +111,16 @@ class UploadImageService(BaseService):
                     )
                 }
             )
+        if message.method['routing_key'] == 'job_document':
+            self._handle_jobs(job_data)
+        else:
+            self._handle_service_data(message, job_data)
+
+    def _handle_jobs(self, job_data):
+        """
+        handle uploader job document
+        """
+        job_id = None
         if 'uploadjob' in job_data:
             job_id = job_data['uploadjob'].get('id', None)
             self.log.info(
@@ -156,20 +128,6 @@ class UploadImageService(BaseService):
                 extra={'job_id': job_id}
             )
             result = self._add_job(job_data)
-        elif 'uploadjob_listen' in job_data and job_data['uploadjob_listen']:
-            job_id = job_data['uploadjob_listen']
-            self.log.info(
-                'Setting Job to listen pipeline',
-                extra={'job_id': job_id}
-            )
-            result = self._add_to_listener(job_id)
-        elif 'uploadjob_delete' in job_data and job_data['uploadjob_delete']:
-            job_id = job_data['uploadjob_delete']
-            self.log.info(
-                'Deleting Job'.format(job_id),
-                extra={'job_id': job_id}
-            )
-            result = self._delete_job(job_id)
         else:
             result = {
                 'ok': False,
@@ -178,28 +136,24 @@ class UploadImageService(BaseService):
         if result:
             self._send_control_response(result, job_id)
 
-    def _add_to_listener(self, job_id):
-        """
-        Add job to listener queue
-
-        listen job example:
-        {
-            "uploadjob_listen": "123"
-        }
-        """
+    def _handle_service_data(self, message, service_data):
+        job_id = message.method['routing_key']
         if job_id not in self.jobs:
-            return {
-                'ok': False,
-                'message': 'Job does not exist, can not add to listen pipeline'
-            }
-        self.clients[job_id] = {
-            'job': self.jobs[job_id]
-        }
-        self.jobs[job_id].call_result_handler()
-        return {
-            'ok': True,
-            'message': 'Job now in listen pipeline'
-        }
+            self.jobs[job_id] = {}
+        if 'image_source' in service_data:
+            system_image_file = service_data['image_source'][0]
+            self.jobs[job_id]['system_image_file'] = system_image_file
+            self._send_job_response(
+                job_id, 'Got image file: {0}'.format(system_image_file)
+            )
+        if 'credentials' in service_data:
+            self.jobs[job_id]['credentials_token'] = service_data['credentials']
+            self._send_job_response(
+                job_id, 'Got credentials data'
+            )
+        if 'system_image_file' in self.jobs[job_id] and \
+           'credentials_token' in self.jobs[job_id]:
+            self.jobs[job_id]['ready'] = True
 
     def _add_job(self, data):
         """
@@ -247,7 +201,7 @@ class UploadImageService(BaseService):
                 'message': 'Job does not exist, can not delete it'
             }
         else:
-            upload_image = self.jobs[job_id]
+            upload_image = self.jobs[job_id]['uploader']
             # delete job file
             try:
                 os.remove(upload_image.job_file)
@@ -258,12 +212,7 @@ class UploadImageService(BaseService):
                 }
             else:
                 # delete upload image job instance
-                self.jobs[job_id].stop()
                 del self.jobs[job_id]
-
-                # delete reference in listener queue if present
-                if job_id in self.clients:
-                    del self.clients[job_id]
 
                 return {
                     'ok': True,
@@ -321,27 +270,76 @@ class UploadImageService(BaseService):
             'message': 'OK'
         }
 
+    def _get_csp_name(self, job_data):
+        if 'ec2' in job_data:
+            return 'ec2'
+
+    def _init_job(self, job_data):
+        # init empty job hash if not yet done
+        job_id = job_data['id']
+        if job_id not in self.jobs:
+            self.jobs[job_id] = {}
+        # get us the time when to start this job
+        time = job_data['utctime']
+        nonstop = False
+        if time == 'now':
+            time = None
+        elif time == 'always':
+            time = None
+            nonstop = True
+        else:
+            time = dateutil.parser.parse(job_data['utctime']).isoformat()
+        self.jobs[job_id]['nonstop'] = nonstop
+        # bind on the credentials queue for this csp
+        if 'ec2' in job_data:
+            csp = 'ec2'
+            self.bind_credentials_queue(job_id, csp)
+            self.consume_credentials_queue(
+                self._process_message, csp
+            )
+        return {
+            'time': time,
+            'nonstop': nonstop
+        }
+
     def _schedule_job(self, job_file):
         with open(job_file) as job_description:
             job = JsonFormat.json_load(job_description)['uploadjob']
-            time = job['utctime']
-            nonstop = False
-            if time == 'now':
-                time = None
-            elif time == 'always':
-                time = None
-                nonstop = True
-            else:
-                time = dateutil.parser.parse(job['utctime']).isoformat()
-            if time:
-                self.scheduler.add_job(
-                    self._start_job, 'date', args=[job_file, job, nonstop],
-                    run_date=time, timezone='utc'
-                )
-            else:
-                self.scheduler.add_job(
-                    self._start_job, args=[job_file, job, nonstop]
-                )
+
+        startup = self._init_job(job)
+
+        if startup['time']:
+            self.scheduler.add_job(
+                self._start_job, 'date',
+                args=[job_file, job, startup['nonstop']],
+                run_date=startup['time'],
+                timezone='utc'
+            )
+        else:
+            self.scheduler.add_job(
+                self._start_job,
+                args=[job_file, job, startup['nonstop']]
+            )
+
+    def _wait_until_ready(self, job_id):
+        while True:
+            if job_id in self.jobs and 'ready' in self.jobs[job_id]:
+                break
+            time.sleep(1)
+
+    def _image_already_uploaded(self, job_id):
+        if 'system_image_file_uploaded' not in self.jobs[job_id]:
+            return False
+        if 'system_image_file' not in self.jobs[job_id]:
+            return False
+        image_file = self.jobs[job_id]['system_image_file']
+        image_file_uploaded = self.jobs[job_id]['system_image_file_uploaded']
+        if image_file != image_file_uploaded:
+            return False
+        self._send_job_response(
+            job_id, 'Image already uploaded'
+        )
+        return True
 
     def _start_job(self, job_file, job, nonstop):
         job_id = job['id']
@@ -350,32 +348,42 @@ class UploadImageService(BaseService):
         if 'ec2' in job:
             csp_name = 'ec2'
             csp_upload_args = job[csp_name]
-        if nonstop:
-            # always upload does not expect connected services to
-            # provide information e.g the obs image to be available
-            # at job start
-            lookup_timeout_sec = None
-        else:
-            # now or timeboxed upload expects connected services to
-            # provide the obs image and all other required data to be
-            # available at job start (+10sec)
-            lookup_timeout_sec = 10
 
-        upload_image = UploadImage(
-            job_id, job_file, csp_name,
-            job['cloud_image_name'], job['cloud_image_description'],
-            custom_uploader_args=csp_upload_args,
-            service_lookup_timeout_sec=lookup_timeout_sec
+        self._send_job_response(
+            job_id, 'Waiting for image and credentials data'
         )
-        self.jobs[job_id] = upload_image
 
+        self._wait_until_ready(job_id)
+
+        # upload to the cloud. For nonstop uploads the upload is
+        # repeated after a delay and only if the image file has
+        # changed but with the same access credentials
+        delay_time_sec = 30
+        upload_image = UploadImage(
+            job_id, job_file, nonstop, csp_name,
+            self.jobs[job_id]['credentials_token'],
+            job['cloud_image_name'], job['cloud_image_description'],
+            custom_uploader_args=csp_upload_args
+        )
+        self.jobs[job_id]['uploader'] = upload_image
         upload_image.set_log_handler(
             self._send_job_response
         )
         upload_image.set_result_handler(
-            self._send_listen_response
+            self._send_job_result_for_testing
         )
-        if nonstop:
-            upload_image.upload(oneshot=False)
-        else:
-            upload_image.upload(oneshot=True)
+        while self.jobs[job_id]['ready']:
+            if not self._image_already_uploaded(job_id):
+                upload_image.set_image_file(
+                    self.jobs[job_id]['system_image_file']
+                )
+                upload_image.upload()
+            if nonstop:
+                self._send_job_response(
+                    job_id, 'Waiting {0}sec before next try...'.format(
+                        delay_time_sec
+                    )
+                )
+                time.sleep(delay_time_sec)
+            else:
+                break

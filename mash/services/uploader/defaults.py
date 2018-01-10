@@ -29,12 +29,6 @@ class Defaults(object):
         return jobs_dir
 
     @classmethod
-    def get_jobs_done_dir(self):
-        jobs_done_dir = '/var/tmp/mash/uploader_jobs_done/'
-        distutils.dir_util.mkpath(jobs_done_dir)
-        return jobs_done_dir
-
-    @classmethod
     def get_config(self):
         return '/etc/mash/uploader_config.yml'
 

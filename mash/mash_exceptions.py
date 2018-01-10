@@ -104,12 +104,6 @@ class MashUploadSetupException(MashException):
     """
 
 
-class MashJobRetireException(MashException):
-    """
-    Exception raised if the pickle dump of an OBSImageBuildResult failed
-    """
-
-
 class MashLoggerException(MashException):
     """
     Base class to handle all logger service exceptions.

@@ -52,8 +52,7 @@ class TestingService(BaseService):
 
         # Bind and consume job_events from jobcreator
         self.consume_queue(
-            self._process_message,
-            self.bind_service_queue()
+            self._process_message
         )
 
         self.scheduler = BackgroundScheduler()
@@ -79,11 +78,6 @@ class TestingService(BaseService):
         """
         if job.id not in self.jobs:
             self.jobs[job.id] = job
-
-            self.consume_queue(
-                self._process_message,
-                self.bind_listener_queue(job.id)
-            )
 
             self.log.info(
                 'Job queued, awaiting uploader result.',
@@ -129,7 +123,6 @@ class TestingService(BaseService):
             )
 
             del self.jobs[job_id]
-            self.delete_listener_queue(job_id)
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
@@ -204,7 +197,7 @@ class TestingService(BaseService):
 
         Send message to proper method based on routing_key.
         """
-        if message.method['routing_key'] == 'service_event':
+        if message.method['routing_key'] == 'job_document':
             self._handle_jobs(message)
         else:
             self._test_image(message)
