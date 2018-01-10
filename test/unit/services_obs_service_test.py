@@ -14,12 +14,12 @@ from mash.services.base_service import BaseService
 class TestOBSImageBuildResultService(object):
     @patch('mash.services.obs.service.OBSConfig')
     @patch('mash.services.base_service.BaseService.set_logfile')
-    @patch('mash.services.obs.service.mkpath')
     @patch('mash.services.obs.service.pickle.load')
     @patch.object(OBSImageBuildResultService, '_start_job')
     @patch.object(OBSImageBuildResultService, '_control_in')
     @patch.object(OBSImageBuildResultService, '_send_job_response')
     @patch.object(OBSImageBuildResultService, '_send_listen_response')
+    @patch.object(OBSImageBuildResultService, 'restart_jobs')
     @patch.object(BaseService, '__init__')
     @patch('os.listdir')
     @patch('logging.getLogger')
@@ -27,9 +27,9 @@ class TestOBSImageBuildResultService(object):
     @patch_open
     def setup(
         self, mock_open, mock_register, mock_log, mock_listdir,
-        mock_BaseService, mock_send_listen_response, mock_send_job_response,
-        mock_control_in, mock_start_job,
-        mock_pickle_load, mock_mkpath, mock_set_logfile,
+        mock_BaseService, mock_restart_jobs, mock_send_listen_response,
+        mock_send_job_response, mock_control_in, mock_start_job,
+        mock_pickle_load, mock_set_logfile,
         mock_OBSConfig
     ):
         job_worker = Mock()
@@ -54,13 +54,10 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.post_init()
 
         mock_set_logfile.assert_called_once_with('logfile')
+        mock_restart_jobs.assert_called_once_with(self.obs_result._start_job)
 
-        mock_mkpath.assert_called_once_with('/var/tmp/mash/obs_jobs/')
         mock_open.assert_called_once_with(
             '/var/tmp/mash/obs_jobs_done/job', 'rb'
-        )
-        mock_start_job.assert_called_once_with(
-            '/var/tmp/mash/obs_jobs//job'
         )
         mock_pickle_load.assert_called_once_with(context.file_mock)
         job_worker.set_log_handler.assert_called_once_with(
@@ -205,13 +202,13 @@ class TestOBSImageBuildResultService(object):
         }
         job.call_result_handler.assert_called_once_with()
 
+    @patch.object(OBSImageBuildResultService, 'persist_job_config')
     @patch.object(OBSImageBuildResultService, '_validate_job_description')
     @patch.object(OBSImageBuildResultService, '_start_job')
-    @patch('mash.services.obs.service.NamedTemporaryFile')
     @patch_open
     def test_add_job(
-        self, mock_open, mock_NamedTemporaryFile,
-        mock_start_job, mock_validate_job_description
+        self, mock_open, mock_start_job, mock_validate_job_description,
+        mock_persist_job_config
     ):
         job_data = {
             "obsjob": {
@@ -225,11 +222,6 @@ class TestOBSImageBuildResultService(object):
                 ]
             }
         }
-        tempfile = Mock()
-        tempfile.name = 'tempfile'
-        mock_NamedTemporaryFile.return_value = tempfile
-        context = context_manager()
-        mock_open.return_value = context.context_manager_mock
         job_info = {
             'ok': False
         }
@@ -240,8 +232,9 @@ class TestOBSImageBuildResultService(object):
         }
         mock_validate_job_description.return_value = job_info
         self.obs_result._add_job(job_data)
-        assert context.file_mock.write.called
-        mock_start_job.assert_called_once_with('tempfile')
+
+        mock_persist_job_config.assert_called_once_with(job_data['obsjob'])
+        mock_start_job.assert_called_once_with(job_data['obsjob'])
         assert mock_validate_job_description.call_args_list == [
             call(job_data), call(job_data)
         ]
@@ -315,7 +308,18 @@ class TestOBSImageBuildResultService(object):
         mock_OBSImageBuildResult.return_value = job_worker
         self.obs_result._send_job_response = Mock()
         self.obs_result._send_listen_response = Mock()
-        self.obs_result._start_job('../data/job1.json')
+        data = {
+            "id": "123",
+            "job_file": "tempfile",
+            "project": "Virtualization:Appliances:Images:Testing_x86",
+            "image": "test-image-oem",
+            "utctime": "now",
+            "conditions": [
+              {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
+              {"image": "1.42.1"}
+            ]
+        }
+        self.obs_result._start_job(data)
         job_worker.set_log_handler.assert_called_once_with(
             self.obs_result._send_job_response
         )
@@ -330,7 +334,14 @@ class TestOBSImageBuildResultService(object):
     def test_start_job_without_conditions(self, mock_OBSImageBuildResult):
         job_worker = Mock()
         mock_OBSImageBuildResult.return_value = job_worker
-        self.obs_result._start_job('../data/job2.json')
+        data = {
+            "id": "123",
+            "job_file": "tempfile",
+            "project": "Virtualization:Appliances:Images:Testing_x86",
+            "image": "test-image-oem",
+            "utctime": "always"
+        }
+        self.obs_result._start_job(data)
         job_worker.start_watchdog.assert_called_once_with(
             isotime=None, nonstop=True
         )
@@ -339,7 +350,14 @@ class TestOBSImageBuildResultService(object):
     def test_start_job_at_utctime(self, mock_OBSImageBuildResult):
         job_worker = Mock()
         mock_OBSImageBuildResult.return_value = job_worker
-        self.obs_result._start_job('../data/job3.json')
+        data = {
+            "id": "123",
+            "job_file": "tempfile",
+            "project": "Virtualization:Appliances:Images:Testing_x86",
+            "image": "test-image-oem",
+            "utctime": "Wed Oct 11 17:50:26 UTC 2017"
+        }
+        self.obs_result._start_job(data)
         job_worker.start_watchdog.assert_called_once_with(
             isotime='2017-10-11T17:50:26+00:00', nonstop=False
         )

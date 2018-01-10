@@ -15,13 +15,12 @@ from mash.services.base_service import BaseService
 class TestUploadImageService(object):
     @patch('mash.services.uploader.service.UploaderConfig')
     @patch('mash.services.base_service.BaseService.set_logfile')
-    @patch('mash.services.uploader.service.mkpath')
     @patch('mash.services.uploader.service.pickle.load')
     @patch('mash.services.uploader.service.BackgroundScheduler')
-    @patch.object(UploadImageService, '_schedule_job')
     @patch.object(UploadImageService, '_control_in')
     @patch.object(UploadImageService, '_send_job_response')
     @patch.object(UploadImageService, '_send_listen_response')
+    @patch.object(UploadImageService, 'restart_jobs')
     @patch.object(BaseService, '__init__')
     @patch('os.listdir')
     @patch('logging.getLogger')
@@ -29,9 +28,9 @@ class TestUploadImageService(object):
     @patch_open
     def setup(
         self, mock_open, mock_register, mock_log, mock_listdir,
-        mock_BaseService, mock_send_listen_response, mock_send_job_response,
-        mock_control_in, mock_schedule_job, mock_BackgroundScheduler,
-        mock_pickle_load, mock_mkpath, mock_set_logfile,
+        mock_BaseService, mock_restart_jobs, mock_send_listen_response,
+        mock_send_job_response, mock_control_in,
+        mock_BackgroundScheduler, mock_pickle_load, mock_set_logfile,
         mock_UploaderConfig
     ):
         scheduler = Mock()
@@ -59,7 +58,6 @@ class TestUploadImageService(object):
 
         mock_set_logfile.assert_called_once_with('logfile')
 
-        mock_mkpath.assert_called_once_with('/var/tmp/mash/uploader_jobs/')
         mock_open.assert_called_once_with(
             '/var/tmp/mash/uploader_jobs_done/job', 'rb'
         )
@@ -73,10 +71,7 @@ class TestUploadImageService(object):
 
         mock_BackgroundScheduler.assert_called_once_with(timezone=utc)
         scheduler.start.assert_called_once_with()
-
-        mock_schedule_job.assert_called_once_with(
-            '/var/tmp/mash/uploader_jobs//job'
-        )
+        mock_restart_jobs.assert_called_once_with(self.uploader._schedule_job)
 
         self.uploader.consume_queue.assert_called_once_with(
             mock_control_in,
@@ -217,13 +212,14 @@ class TestUploadImageService(object):
         }
         job.call_result_handler.assert_called_once_with()
 
+    @patch.object(UploadImageService, 'persist_job_config')
     @patch.object(UploadImageService, '_validate_job_description')
     @patch.object(UploadImageService, '_schedule_job')
-    @patch('mash.services.uploader.service.NamedTemporaryFile')
     @patch_open
     def test_add_job(
-        self, mock_open, mock_NamedTemporaryFile,
-        mock_schedule_job, mock_validate_job_description
+        self, mock_open,
+        mock_schedule_job, mock_validate_job_description,
+        mock_persist_job_config
     ):
         job_data = {
             'uploadjob': {
@@ -237,11 +233,6 @@ class TestUploadImageService(object):
                 }
             }
         }
-        tempfile = Mock()
-        tempfile.name = 'tempfile'
-        mock_NamedTemporaryFile.return_value = tempfile
-        context = context_manager()
-        mock_open.return_value = context.context_manager_mock
         job_info = {
             'ok': False
         }
@@ -252,11 +243,11 @@ class TestUploadImageService(object):
         }
         mock_validate_job_description.return_value = job_info
         self.uploader._add_job(job_data)
-        assert context.file_mock.write.called
-        mock_schedule_job.assert_called_once_with('tempfile')
+        mock_schedule_job.assert_called_once_with(job_data['uploadjob'])
         assert mock_validate_job_description.call_args_list == [
             call(job_data), call(job_data)
         ]
+        mock_persist_job_config.assert_called_once_with(job_data['uploadjob'])
 
     @patch('os.remove')
     def test_delete_job(self, mock_os_remove):
@@ -343,10 +334,19 @@ class TestUploadImageService(object):
 
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job_now(self, mock_start_job):
-        self.uploader._schedule_job('../data/upload_job1.json')
+        data = {
+            "cloud_image_description": "My Image",
+            "cloud_image_name": "ms_image",
+            "ec2": {
+                "launch_ami": "ami-bc5b48d0",
+                "region": "eu-central-1"
+            },
+            "id": "123",
+            "utctime": "now"
+        }
+        self.uploader._schedule_job(data)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, args=[
-                '../data/upload_job1.json',
                 {
                     'id': '123',
                     'cloud_image_name': 'ms_image',
@@ -362,10 +362,16 @@ class TestUploadImageService(object):
 
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job_always(self, mock_start_job):
-        self.uploader._schedule_job('../data/upload_job2.json')
+        data = {
+            "cloud_image_description": "a",
+            "cloud_image_name": "b",
+            "ec2": {},
+            "id": "123",
+            "utctime": "always"
+        }
+        self.uploader._schedule_job(data)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, args=[
-                '../data/upload_job2.json',
                 {
                     'id': '123',
                     'cloud_image_name': 'b',
@@ -378,10 +384,16 @@ class TestUploadImageService(object):
 
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job_at_time(self, mock_start_job):
-        self.uploader._schedule_job('../data/upload_job3.json')
+        data = {
+            "cloud_image_description": "a",
+            "cloud_image_name": "b",
+            "ec2": {},
+            "id": "123",
+            "utctime": "Wed Oct 11 17:50:26 UTC 2017"
+        }
+        self.uploader._schedule_job(data)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, 'date', timezone='utc', args=[
-                '../data/upload_job3.json',
                 {
                     'id': '123',
                     'cloud_image_name': 'b',
@@ -405,10 +417,11 @@ class TestUploadImageService(object):
             'id': '123',
             'cloud_image_name': 'b',
             'cloud_image_description': 'a',
+            'job_file': 'job_file',
             'utctime': 'now|always',
             'ec2': {}
         }
-        self.uploader._start_job('job_file', job, True)
+        self.uploader._start_job(job, True)
         mock_UploadImage.assert_called_once_with(
             '123', 'job_file', 'ec2', 'b', 'a',
             service_lookup_timeout_sec=None,
@@ -424,7 +437,7 @@ class TestUploadImageService(object):
 
         upload_image.reset_mock()
         mock_UploadImage.reset_mock()
-        self.uploader._start_job('job_file', job, False)
+        self.uploader._start_job(job, False)
         mock_UploadImage.assert_called_once_with(
             '123', 'job_file', 'ec2', 'b', 'a',
             service_lookup_timeout_sec=10,

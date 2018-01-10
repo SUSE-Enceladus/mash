@@ -1,5 +1,3 @@
-import io
-
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
@@ -46,7 +44,7 @@ class TestIPATestingService(object):
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'stop')
     @patch.object(TestingService, 'start')
-    @patch.object(TestingService, '_restart_jobs')
+    @patch.object(TestingService, 'restart_jobs')
     @patch('mash.services.testing.service.TestingConfig')
     @patch.object(TestingService, 'bind_service_queue')
     @patch.object(TestingService, '_process_message')
@@ -76,7 +74,7 @@ class TestIPATestingService(object):
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'stop')
     @patch.object(TestingService, 'start')
-    @patch.object(TestingService, '_restart_jobs')
+    @patch.object(TestingService, 'restart_jobs')
     @patch('mash.services.testing.service.TestingConfig')
     @patch.object(TestingService, 'bind_service_queue')
     @patch.object(TestingService, '_handle_jobs')
@@ -103,7 +101,7 @@ class TestIPATestingService(object):
         mock_stop.assert_called_once_with()
 
     @patch.object(TestingService, '_validate_job')
-    @patch.object(TestingService, '_persist_job_config')
+    @patch.object(TestingService, 'persist_job_config')
     @patch.object(TestingService, '_process_message')
     @patch.object(TestingService, 'consume_queue')
     @patch.object(TestingService, 'bind_listener_queue')
@@ -116,14 +114,14 @@ class TestIPATestingService(object):
         job._get_metadata.return_value = {'job_id': '1'}
 
         mock_validate_job.return_value = job
-        mock_persist_config.return_value = 'config_file.json'
+        mock_persist_config.return_value = 'job_file.json'
 
         self.testing._add_job({'id': '1'})
 
         # Dict is mutable, mock compares the final value of Dict
         # not the initial value that was passed in.
         mock_validate_job.assert_called_once_with(
-            {'id': '1', 'config_file': 'config_file.json'}
+            {'id': '1', 'job_file': 'job_file.json'}
         )
         self.testing.log.info.assert_called_once_with(
             'Job queued, awaiting uploader result.',
@@ -285,24 +283,6 @@ class TestIPATestingService(object):
             'Message not received: {0}'.format('invalid')
         )
 
-    @patch('mash.services.testing.service.NamedTemporaryFile')
-    def test_testing_persist_job_config(self, mock_temp_file):
-        self.testing.jobs_dir = 'tmp-dir'
-
-        tmp_file = Mock()
-        tmp_file.name = 'tmp-dir/job-test.json'
-        mock_temp_file.return_value = tmp_file
-
-        with patch(open_name, create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.testing._persist_job_config({'id': '1'})
-            file_handle = mock_open.return_value.__enter__.return_value
-            # Dict is mutable, mock compares the final value of Dict
-            # not the initial value that was passed in.
-            file_handle.write.assert_called_with(
-                u'{"config_file": "tmp-dir/job-test.json", "id": "1"}'
-            )
-
     @patch.object(TestingService, '_test_image')
     def test_testing_process_message_listener_event(self, mock_test_image):
         self.method['routing_key'] = 'listener_1'
@@ -447,25 +427,6 @@ class TestIPATestingService(object):
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}
         )
-
-    @patch.object(TestingService, '_add_job')
-    @patch('mash.services.testing.service.json.load')
-    @patch('mash.services.testing.service.os.listdir')
-    def test_testing_restart_jobs(
-        self, mock_os_listdir, mock_json_load, mock_add_job
-    ):
-        self.testing.jobs_dir = 'tmp-dir'
-        mock_os_listdir.return_value = ['job-123.json']
-        mock_json_load.return_value = {'id': '1'}
-
-        with patch(open_name, create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.testing._restart_jobs()
-
-            file_handle = mock_open.return_value.__enter__.return_value
-            file_handle.read.call_count == 1
-
-        mock_add_job.assert_called_once_with({'id': '1'})
 
     def test_testing_run_test(self):
         job = Mock()

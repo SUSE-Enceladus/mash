@@ -19,8 +19,6 @@ import atexit
 import os
 import pickle
 import dateutil.parser
-from distutils.dir_util import mkpath
-from tempfile import NamedTemporaryFile
 
 # project
 from mash.services.base_service import BaseService
@@ -44,9 +42,6 @@ class OBSImageBuildResultService(BaseService):
 
         # setup service data directories
         self.download_directory = config.get_download_directory()
-        self.job_directory = Defaults.get_jobs_dir()
-
-        mkpath(self.job_directory)
 
         self.jobs = {}
         self.clients = {}
@@ -66,8 +61,7 @@ class OBSImageBuildResultService(BaseService):
                     )
 
         # read and launch open jobs
-        for job_file in os.listdir(self.job_directory):
-            self._start_job(os.sep.join([self.job_directory, job_file]))
+        self.restart_jobs(self._start_job)
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
@@ -210,13 +204,9 @@ class OBSImageBuildResultService(BaseService):
         if not job_info['ok']:
             return job_info
         else:
-            job_file = NamedTemporaryFile(
-                prefix='job-', suffix='.json',
-                dir=self.job_directory, delete=False
-            )
-            with open(job_file.name, 'w') as job_description:
-                job_description.write(JsonFormat.json_message(data))
-            return self._start_job(job_file.name)
+            data = data['obsjob']
+            data['job_file'] = self.persist_job_config(data)
+            return self._start_job(data)
 
     def _delete_job(self, job_id):
         """
@@ -304,36 +294,35 @@ class OBSImageBuildResultService(BaseService):
             'message': 'OK'
         }
 
-    def _start_job(self, job_file):
-        with open(job_file) as job_description:
-            job = JsonFormat.json_load(job_description)['obsjob']
-            if 'conditions' not in job:
-                job['conditions'] = None
+    def _start_job(self, job_description):
+        job = job_description
+        if 'conditions' not in job:
+            job['conditions'] = None
 
-            job_id = job['id']
-            time = job['utctime']
-            nonstop = False
-            if time == 'now':
-                time = None
-            elif time == 'always':
-                time = None
-                nonstop = True
-            else:
-                time = dateutil.parser.parse(job['utctime']).isoformat()
+        job_id = job['id']
+        time = job['utctime']
+        nonstop = False
+        if time == 'now':
+            time = None
+        elif time == 'always':
+            time = None
+            nonstop = True
+        else:
+            time = dateutil.parser.parse(job['utctime']).isoformat()
 
-            job_worker = OBSImageBuildResult(
-                job_id=job_id, job_file=job_file,
-                project=job['project'], package=job['image'],
-                conditions=job['conditions'],
-                download_directory=self.download_directory
-            )
-            job_worker.set_log_handler(self._send_job_response)
-            job_worker.set_result_handler(self._send_listen_response)
-            job_worker.start_watchdog(
-                nonstop=nonstop, isotime=time
-            )
-            self.jobs[job_id] = job_worker
-            return {
-                'ok': True,
-                'message': 'Job started'
-            }
+        job_worker = OBSImageBuildResult(
+            job_id=job_id, job_file=job['job_file'],
+            project=job['project'], package=job['image'],
+            conditions=job['conditions'],
+            download_directory=self.download_directory
+        )
+        job_worker.set_log_handler(self._send_job_response)
+        job_worker.set_result_handler(self._send_listen_response)
+        job_worker.start_watchdog(
+            nonstop=nonstop, isotime=time
+        )
+        self.jobs[job_id] = job_worker
+        return {
+            'ok': True,
+            'message': 'Job started'
+        }
