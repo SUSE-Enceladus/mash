@@ -35,6 +35,22 @@ class TestingConfig(BaseConfig):
     def __init__(self, config_file=Defaults.get_config()):
         super(TestingConfig, self).__init__(config_file)
 
+    def get_jobs_dir(self):
+        """
+        Return job config backup dir:
+
+        testing:
+          jobs_dir: /var/lib/mash/testing_jobs/
+
+        If no configuration exists the jobs dir from the
+        Defaults class is returned.
+        :rtype: string
+        """
+        jobs_dir = self._get_attribute(
+            element='testing', attribute='jobs_dir'
+        )
+        return jobs_dir if jobs_dir else Defaults.get_jobs_dir()
+
     def get_log_file(self):
         """
         Return log file name:
