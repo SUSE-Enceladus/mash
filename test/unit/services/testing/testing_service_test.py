@@ -209,17 +209,9 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
 
-    @patch.object(TestingService, '_delete_job')
-    def test_testing_handle_jobs_delete(self, mock_delete_job):
-        self.message.body = '{"testing_job_delete": "1"}'
-        self.testing._handle_jobs(self.message)
-
-        self.message.ack.assert_called_once_with()
-        mock_delete_job.assert_called_once_with('1')
-
     @patch.object(TestingService, '_add_job')
     def test_testing_handle_jobs_add(self, mock_add_job):
-        self.message.body = '{"testing_job_add": {"id": "1"}}'
+        self.message.body = '{"testing_job": {"id": "1"}}'
         self.testing._handle_jobs(self.message)
 
         self.message.ack.assert_called_once_with()
@@ -233,8 +225,8 @@ class TestIPATestingService(object):
 
         self.message.ack.assert_called_once_with()
         self.testing.log.error.assert_called_once_with(
-            'Invalid testing job: Desc must contain either'
-            'testing_job_add or testing_job_delete key.'
+            'Invalid testing job: Desc must contain '
+            'testing_job key.'
         )
         mock_notify.assert_called_once_with(self.message.body)
 
