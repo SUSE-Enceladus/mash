@@ -1,0 +1,13 @@
+{
+    "obs_job": {
+        "account": "account",
+        "id": "123",
+        "image": "test_image_oem",
+        "project": "Virtualization:Appliances:Images:Testing_x86",
+        "utctime": "now|always|timestring_utc_timezone",
+        "conditions": [
+            {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
+            {"image": "1.42.1"}
+        ]
+    }
+}

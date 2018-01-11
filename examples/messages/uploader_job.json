@@ -1,0 +1,10 @@
+{
+    "uploader_job": {
+        "account": "account",
+        "id": "123",
+        "image_description": "ami-12345",
+        "provider": "EC2",
+        "source_region": "eu-central-1",
+        "status": 0
+    }
+}

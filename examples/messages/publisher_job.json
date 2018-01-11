@@ -1,0 +1,12 @@
+{
+    "pubisher_job": {
+        "account": "account",
+        "allow_copy": "",
+        "id": "123",
+        "provider": "EC2",
+        "regions": "us-east-1,us-east-2|None",
+        "share_with": "all|None|comma_sep_account_numbers",
+        "status": 0,
+        "utctime": "now|always|timestring_utc_timezone",
+    }
+}
