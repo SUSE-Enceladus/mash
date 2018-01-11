@@ -17,11 +17,15 @@
 #
 
 import asyncio
-import concurrent.futures
 import boto3
+import concurrent.futures
+import requests
 
 from concurrent.futures import FIRST_EXCEPTION
 from mash.mash_exceptions import MashPublisherException
+
+endpoint_url = 'https://raw.githubusercontent.com' \
+    '/boto/botocore/develop/botocore/data/endpoints.json'
 
 
 async def replicate(
@@ -149,15 +153,23 @@ def get_session(access_key_id, secret_access_key, region_name=None):
     )
 
 
-def get_regions(access_key_id, secret_access_key, region_name):
+def get_partition_from_account(access_key_id, secret_access_key, region_name):
     """
-    Return list of regions given the account partition.
+    Get account partition from caller identity Arn.
+
+    Values: aws, aws-us-gov, asw-cn
     """
     session = get_session(access_key_id, secret_access_key, region_name)
     client = get_client_from_session(session, 'sts')
+    return client.get_caller_identity()['Arn'].split(':')[1]
 
-    partition = client.get_caller_identity()['Arn'].split(':')[1]
-    return session.get_available_regions(
-        'ec2',
-        partition_name=partition,
-    )
+
+def get_regions(partition='aws', endpoint='ec2'):
+    """
+    Return list of regions given the account partition and endpoint.
+    """
+    response = requests.get(endpoint_url).json()
+
+    for part in response['partitions']:
+        if part['partition'] == partition:
+            return list(part['services'][endpoint]['endpoints'].keys())
