@@ -95,14 +95,11 @@ class TestingService(BaseService):
                 'Job queued, awaiting uploader result.',
                 extra=job._get_metadata()
             )
-<<<<<<< HEAD
             self._bind_queue(
                 self.service_exchange, job.id, self.listener_queue
             )
-=======
         elif not job:
             pass
->>>>>>> master
         else:
             self.log.warning(
                 'Job already queued.',
