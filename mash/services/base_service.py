@@ -22,8 +22,6 @@ import os
 
 from amqpstorm import Connection
 
-from tempfile import NamedTemporaryFile
-
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
@@ -60,8 +58,11 @@ class BaseService(object):
         self.service_exchange = service_exchange
         self.service_key = 'service_event'
 
-        # setup service data directories
-        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        # setup service data directory
+        self.job_directory = os.makedirs(
+            Defaults.get_job_directory(self.service_exchange),
+            exist_ok=True
+        )
 
         self._open_connection()
         self._declare_direct_exchange(self.service_exchange)
@@ -192,15 +193,14 @@ class BaseService(object):
         return self.channel.queue.declare(queue=queue, durable=True)
 
     def persist_job_config(self, config):
-        job_file = NamedTemporaryFile(
-            prefix='job-', suffix='.json', dir=self.job_directory, delete=False
+        config['job_file'] = '{0}job-{1}.json'.format(
+            self.job_directory, config['id']
         )
-        config['job_file'] = job_file.name
 
-        with open(job_file.name, 'w') as config_file:
+        with open(config['job_file'], 'w') as config_file:
             config_file.write(json.dumps(config, sort_keys=True))
 
-        return job_file.name
+        return config['job_file']
 
     def restart_jobs(self, callback):
         """

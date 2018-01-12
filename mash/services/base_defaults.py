@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,8 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import os
-
 
 class Defaults(object):
     """
@@ -26,6 +24,4 @@ class Defaults(object):
 
     @classmethod
     def get_job_directory(self, service_name):
-        job_directory = '/var/lib/mash/{0}_jobs/'.format(service_name)
-        os.makedirs(job_directory, exist_ok=True)
-        return job_directory
+        return '/var/lib/mash/{0}_jobs/'.format(service_name)

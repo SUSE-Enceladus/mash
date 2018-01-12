@@ -17,9 +17,10 @@ open_name = "builtins.open"
 
 
 class TestBaseService(object):
+    @patch('mash.services.base_service.os.makedirs')
     @patch.object(Defaults, 'get_job_directory')
     @patch('mash.services.base_service.Connection')
-    def setup(self, mock_connection, mock_get_job_directory):
+    def setup(self, mock_connection, mock_get_job_directory, mock_makedirs):
         mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
         self.connection = Mock()
         self.channel = Mock()
@@ -36,6 +37,9 @@ class TestBaseService(object):
         mock_connection.return_value = self.connection
         self.service = BaseService('localhost', 'obs')
         mock_get_job_directory.assert_called_once_with('obs')
+        mock_makedirs.assert_called_once_with(
+            '/var/lib/mash/obs_jobs/', exist_ok=True
+        )
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
@@ -119,13 +123,8 @@ class TestBaseService(object):
         self.connection.close.assert_called_once_with()
         self.channel.close.assert_called_once_with()
 
-    @patch('mash.services.base_service.NamedTemporaryFile')
-    def test_persist_job_config(self, mock_temp_file):
-        self.service.job_directory = 'tmp-dir'
-
-        tmp_file = Mock()
-        tmp_file.name = 'tmp-dir/job-test.json'
-        mock_temp_file.return_value = tmp_file
+    def test_persist_job_config(self):
+        self.service.job_directory = 'tmp-dir/'
 
         with patch(open_name, create=True) as mock_open:
             mock_open.return_value = MagicMock(spec=io.IOBase)
@@ -134,7 +133,7 @@ class TestBaseService(object):
             # Dict is mutable, mock compares the final value of Dict
             # not the initial value that was passed in.
             file_handle.write.assert_called_with(
-                u'{"id": "1", "job_file": "tmp-dir/job-test.json"}'
+                u'{"id": "1", "job_file": "tmp-dir/job-1.json"}'
             )
 
     @patch('mash.services.base_service.json.load')
