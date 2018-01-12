@@ -28,7 +28,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from tempfile import NamedTemporaryFile
 
 from mash.services.base_service import BaseService
-from mash.services.status_levels import EXCEPTION
+from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.config import TestingConfig
 from mash.services.testing.ec2_job import EC2TestingJob
 
@@ -177,7 +177,7 @@ class TestingService(BaseService):
         Build and return json message with completion status
         to post to service exchange.
         """
-        if job.status == 0:
+        if job.status == SUCCESS:
             data = {
                 'testing_result': {
                     'id': job.id,
@@ -287,7 +287,7 @@ class TestingService(BaseService):
                 ),
                 extra=metata
             )
-        elif job.status == 0:
+        elif job.status == SUCCESS:
             self.log.info(
                 'Pass[{0}]: Testing successful.'.format(job.iteration_count),
                 extra=metata
@@ -300,7 +300,7 @@ class TestingService(BaseService):
                 extra=metata
             )
 
-        if job.utctime != 'always' or job.status == 0:
+        if job.utctime != 'always' or job.status == SUCCESS:
             self._publish_message(job)
         job.listener_msg.ack()
 
@@ -419,7 +419,7 @@ class TestingService(BaseService):
                 'Invalid testing service job with id: {0}.'.format(job_id)
             )
             return None
-        elif status != 0:
+        elif status != SUCCESS:
             self._cleanup_job(job, status)
             return None
         else:
