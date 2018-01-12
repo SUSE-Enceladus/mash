@@ -51,9 +51,14 @@ class BaseService(object):
 
         self.host = host
         self.service_exchange = service_exchange
+        self.listener_queue = 'listener'
+        self.service_queue = 'service'
+        self.job_document_key = 'job_document'
 
         self._open_connection()
-        self._bind_queue(self.service_exchange, 'job_document', 'service')
+        self._bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
+        )
 
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
@@ -97,19 +102,11 @@ class BaseService(object):
                 'Log setup failed: {0}'.format(e)
             )
 
-    def publish_job(self, message):
-        self._publish(
-            self.service_exchange, 'job_document', message
-        )
-
     def publish_job_result(self, exchange, job_id, message):
-        queue_name = 'service'
-        self._bind_queue(exchange, job_id, queue_name)
+        self._bind_queue(exchange, job_id, self.listener_queue)
         self._publish(exchange, job_id, message)
-        self._unbind_queue(exchange, job_id, queue_name)
 
-    def consume_queue(self, callback):
-        queue_name = 'service'
+    def consume_queue(self, callback, queue_name):
         queue = self._get_queue_name(self.service_exchange, queue_name)
         self.channel.basic.consume(
             callback=callback, queue=queue
@@ -119,7 +116,6 @@ class BaseService(object):
         exchange = 'credentials'
         self._bind_queue(exchange, job_id, csp)
         self._publish(exchange, job_id, message)
-        self._unbind_queue(exchange, job_id, csp)
 
     def consume_credentials_queue(self, callback, csp):
         queue_name = csp
@@ -135,6 +131,8 @@ class BaseService(object):
         if self.channel and self.channel.is_open:
             self.channel.stop_consuming()
             self.channel.close()
+
+        if self.connection and self.connection.is_open:
             self.connection.close()
 
     def _get_queue_name(self, exchange, name):

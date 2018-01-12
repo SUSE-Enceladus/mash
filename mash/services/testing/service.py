@@ -50,10 +50,9 @@ class TestingService(BaseService):
 
         self.jobs = {}
 
-        # Bind and consume job_events from jobcreator
-        self.consume_queue(
-            self._process_message
-        )
+        # Consume job documents
+        self.consume_queue(self._process_message, self.service_queue)
+        self.consume_queue(self._process_message, self.listener_queue)
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
@@ -82,6 +81,9 @@ class TestingService(BaseService):
             self.log.info(
                 'Job queued, awaiting uploader result.',
                 extra=job._get_metadata()
+            )
+            self._bind_queue(
+                self.service_exchange, job.id, self.listener_queue
             )
         else:
             self.log.warning(
@@ -123,6 +125,9 @@ class TestingService(BaseService):
             )
 
             del self.jobs[job_id]
+            self._unbind_queue(
+                self.service_exchange, job_id, self.listener_queue
+            )
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
@@ -245,13 +250,9 @@ class TestingService(BaseService):
         """
         Publish status message to provided service exchange.
         """
-        exchange = 'publisher'
-        key = 'listener_{0}'.format(job.id)
         message = self._get_status_message(job)
-
         try:
-            self._bind_queue(exchange, key)
-            self._publish(exchange, key, message)
+            self.publish_job_result('publisher', job.id, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
@@ -365,5 +366,4 @@ class TestingService(BaseService):
         Stop consuming queues and close rabbitmq connections.
         """
         self.scheduler.shutdown()
-        self.channel.stop_consuming()
         self.close_connection()

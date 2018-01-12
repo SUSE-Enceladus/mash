@@ -57,15 +57,6 @@ class TestBaseService(object):
             self.service.set_logfile('/some/log')
 
     @patch('mash.services.base_service.Connection')
-    def test_publish_job(self, mock_connection):
-        mock_connection.return_value = self.connection
-        self.service.publish_job('message')
-        self.channel.basic.publish.assert_called_once_with(
-            body='message', exchange='obs', mandatory=True,
-            properties=self.msg_properties, routing_key='job_document'
-        )
-
-    @patch('mash.services.base_service.Connection')
     def test_publish_job_result(self, mock_connection):
         mock_connection.return_value = self.connection
         self.service.publish_job_result('exchange', 'job_id', 'message')
