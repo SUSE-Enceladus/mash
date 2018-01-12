@@ -38,10 +38,12 @@ class TestingJob(object):
                  provider,
                  tests,
                  utctime,
+                 config_file=None,
                  desc=None,
                  instance_type=None,
                  region=None):
         self.channel = None
+        self.config_file = config_file
         self.connection = None
         self.credential_queue = 'credentials.testing.{0}'.format(id)
         self.desc = desc
