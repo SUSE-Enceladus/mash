@@ -70,9 +70,6 @@ class TestBaseService(object):
             body='message', exchange='exchange', mandatory=True,
             properties=self.msg_properties, routing_key='job_id'
         )
-        self.channel.queue.unbind.assert_called_once_with(
-            exchange='exchange', routing_key='job_id', queue='exchange.service'
-        )
 
     @patch('mash.services.base_service.Connection')
     def test_publish_credentials_result(self, mock_connection):
@@ -88,10 +85,6 @@ class TestBaseService(object):
         self.channel.basic.publish.assert_called_once_with(
             body='message', exchange='credentials', mandatory=True,
             properties=self.msg_properties, routing_key='job_id'
-        )
-        self.channel.queue.unbind.assert_called_once_with(
-            exchange='credentials', routing_key='job_id',
-            queue='credentials.csp'
         )
 
     def test_consume_queue(self):

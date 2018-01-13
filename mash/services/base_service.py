@@ -101,7 +101,6 @@ class BaseService(object):
         queue_name = 'service'
         self._bind_queue(exchange, job_id, queue_name)
         self._publish(exchange, job_id, message)
-        self._unbind_queue(exchange, job_id, queue_name)
 
     def consume_queue(self, callback):
         queue_name = 'service'
@@ -114,7 +113,6 @@ class BaseService(object):
         exchange = 'credentials'
         self._bind_queue(exchange, job_id, csp)
         self._publish(exchange, job_id, message)
-        self._unbind_queue(exchange, job_id, csp)
 
     def consume_credentials_queue(self, callback, csp):
         queue_name = csp
@@ -170,12 +168,6 @@ class BaseService(object):
             exchange=exchange, queue=queue, routing_key=routing_key
         )
         return queue
-
-    def _unbind_queue(self, exchange, routing_key, name):
-        queue = self._get_queue_name(exchange, name)
-        self.channel.queue.unbind(
-            exchange=exchange, queue=queue, routing_key=routing_key
-        )
 
     def _declare_direct_exchange(self, exchange):
         self.channel.exchange.declare(
