@@ -97,11 +97,6 @@ class BaseService(object):
                 'Log setup failed: {0}'.format(e)
             )
 
-    def publish_job(self, message):
-        self._publish(
-            self.service_exchange, 'job_document', message
-        )
-
     def publish_job_result(self, exchange, job_id, message):
         queue_name = 'service'
         self._bind_queue(exchange, job_id, queue_name)
