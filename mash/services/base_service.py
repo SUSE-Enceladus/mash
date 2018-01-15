@@ -51,7 +51,6 @@ class BaseService(object):
 
         self.host = host
         self.service_exchange = service_exchange
-        self.listener_queue = 'listener'
         self.service_queue = 'service'
         self.job_document_key = 'job_document'
 
@@ -103,7 +102,7 @@ class BaseService(object):
             )
 
     def publish_job_result(self, exchange, job_id, message):
-        self._bind_queue(exchange, job_id, self.listener_queue)
+        self._bind_queue(exchange, job_id, self.service_queue)
         self._publish(exchange, job_id, message)
 
     def consume_queue(self, callback, queue_name):

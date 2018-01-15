@@ -56,7 +56,6 @@ class TestingService(BaseService):
 
         # Consume job documents
         self.consume_queue(self._process_message, self.service_queue)
-        self.consume_queue(self._process_message, self.listener_queue)
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
@@ -96,7 +95,7 @@ class TestingService(BaseService):
                 extra=job._get_metadata()
             )
             self._bind_queue(
-                self.service_exchange, job.id, self.listener_queue
+                self.service_exchange, job.id, self.service_queue
             )
         elif not job:
             pass
@@ -140,7 +139,7 @@ class TestingService(BaseService):
 
             del self.jobs[job_id]
             self._unbind_queue(
-                self.service_exchange, job_id, self.listener_queue
+                self.service_exchange, job_id, self.service_queue
             )
             self._remove_job_config(job.config_file)
         else:

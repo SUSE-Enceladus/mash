@@ -48,7 +48,6 @@ class TestUploadImageService(object):
         self.uploader.close_connection = Mock()
 
         self.uploader.service_exchange = 'uploader'
-        self.uploader.listener_queue = 'listener'
         self.uploader.service_queue = 'service'
         self.uploader.job_document_key = 'job_document'
 
@@ -65,10 +64,9 @@ class TestUploadImageService(object):
             '/var/tmp/mash/uploader_jobs//job'
         )
 
-        self.uploader.consume_queue.assert_has_calls([
-            call(mock_process_message, 'service'),
-            call(mock_process_message, 'listener'),
-        ])
+        self.uploader.consume_queue.assert_called_once_with(
+            mock_process_message, 'service'
+        )
         self.uploader.channel.start_consuming.assert_called_once_with()
 
         self.uploader.channel.start_consuming.side_effect = Exception
@@ -358,7 +356,7 @@ class TestUploadImageService(object):
         )
         mock_bind_queue.assert_has_calls([
             call('credentials', '123', 'ec2'),
-            call('uploader', '123', 'listener'),
+            call('uploader', '123', 'service'),
         ])
 
     @patch('mash.services.uploader.service.UploadImage')

@@ -66,7 +66,6 @@ class UploadImageService(BaseService):
         # consume on service queue
         atexit.register(lambda: os._exit(0))
         self.consume_queue(self._process_message, self.service_queue)
-        self.consume_queue(self._process_message, self.listener_queue)
 
         try:
             self.channel.start_consuming()
@@ -215,7 +214,7 @@ class UploadImageService(BaseService):
                 # delete upload image job instance
                 del self.jobs[job_id]
                 self._unbind_queue(
-                    self.service_exchange, job_id, self.listener_queue
+                    self.service_exchange, job_id, self.service_queue
                 )
 
                 return {
@@ -312,7 +311,7 @@ class UploadImageService(BaseService):
 
         startup = self._init_job(job)
         self._bind_queue(
-            self.service_exchange, job['id'], self.listener_queue
+            self.service_exchange, job['id'], self.service_queue
         )
 
         if startup['time']:
