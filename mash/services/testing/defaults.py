@@ -16,8 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import os
-
 
 class Defaults(object):
     """
@@ -27,12 +25,6 @@ class Defaults(object):
     @classmethod
     def get_config(self):
         return '/etc/mash/testing_config.yml'
-
-    @classmethod
-    def get_jobs_dir(self):
-        jobs_dir = '/var/lib/mash/testing_jobs/'
-        os.makedirs(jobs_dir, exist_ok=True)
-        return jobs_dir
 
     @classmethod
     def get_log_file(self):

@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+import json
 import logging
+import os
 
 from amqpstorm import Connection
 
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
+from mash.services.base_defaults import Defaults
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
     MashLogSetupException
@@ -53,6 +57,12 @@ class BaseService(object):
         self.host = host
         self.service_exchange = service_exchange
         self.service_key = 'service_event'
+
+        # setup service data directory
+        self.job_directory = os.makedirs(
+            Defaults.get_job_directory(self.service_exchange),
+            exist_ok=True
+        )
 
         self._open_connection()
         self._declare_direct_exchange(self.service_exchange)
@@ -181,3 +191,26 @@ class BaseService(object):
 
     def _declare_queue(self, queue):
         return self.channel.queue.declare(queue=queue, durable=True)
+
+    def persist_job_config(self, config):
+        config['job_file'] = '{0}job-{1}.json'.format(
+            self.job_directory, config['id']
+        )
+
+        with open(config['job_file'], 'w') as config_file:
+            config_file.write(json.dumps(config, sort_keys=True))
+
+        return config['job_file']
+
+    def restart_jobs(self, callback):
+        """
+        Restart jobs from config files.
+
+        Recover from service failure with existing jobs.
+        """
+        for job_file in os.listdir(self.job_directory):
+            with open(os.path.join(self.job_directory, job_file), 'r') \
+                    as conf_file:
+                job_config = json.load(conf_file)
+
+            callback(job_config)

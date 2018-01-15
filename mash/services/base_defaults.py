@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -15,27 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import distutils
 
 
 class Defaults(object):
     """
     Default values
     """
-    @classmethod
-    def get_jobs_done_dir(self):
-        jobs_done_dir = '/var/tmp/mash/obs_jobs_done/'
-        distutils.dir_util.mkpath(jobs_done_dir)
-        return jobs_done_dir
 
     @classmethod
-    def get_config(self):
-        return '/etc/mash/obs_config.yml'
-
-    @classmethod
-    def get_log_file(self):
-        return '/tmp/obs_service.log'
-
-    @classmethod
-    def get_download_dir(self):
-        return '/tmp'
+    def get_job_directory(self, service_name):
+        return '/var/lib/mash/{0}_jobs/'.format(service_name)

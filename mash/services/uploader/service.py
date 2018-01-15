@@ -19,8 +19,6 @@ import atexit
 import os
 import pickle
 import dateutil.parser
-from distutils.dir_util import mkpath
-from tempfile import NamedTemporaryFile
 from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -42,11 +40,6 @@ class UploadImageService(BaseService):
 
         # setup service log file
         self.set_logfile(config.get_log_file())
-
-        # setup service data directories
-        self.job_directory = Defaults.get_jobs_dir()
-
-        mkpath(self.job_directory)
 
         # upload image instances
         self.jobs = {}
@@ -78,8 +71,7 @@ class UploadImageService(BaseService):
         self.scheduler.start()
 
         # read and launch open jobs
-        for job_file in os.listdir(self.job_directory):
-            self._schedule_job(os.sep.join([self.job_directory, job_file]))
+        self.restart_jobs(self._schedule_job)
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
@@ -224,13 +216,9 @@ class UploadImageService(BaseService):
         if not job_info['ok']:
             return job_info
         else:
-            job_file = NamedTemporaryFile(
-                prefix='job-', suffix='.json',
-                dir=self.job_directory, delete=False
-            )
-            with open(job_file.name, 'w') as job_description:
-                job_description.write(JsonFormat.json_message(data))
-            return self._schedule_job(job_file.name)
+            data = data['uploadjob']
+            data['job_file'] = self.persist_job_config(data)
+            return self._schedule_job(data)
 
     def _delete_job(self, job_id):
         """
@@ -321,29 +309,28 @@ class UploadImageService(BaseService):
             'message': 'OK'
         }
 
-    def _schedule_job(self, job_file):
-        with open(job_file) as job_description:
-            job = JsonFormat.json_load(job_description)['uploadjob']
-            time = job['utctime']
-            nonstop = False
-            if time == 'now':
-                time = None
-            elif time == 'always':
-                time = None
-                nonstop = True
-            else:
-                time = dateutil.parser.parse(job['utctime']).isoformat()
-            if time:
-                self.scheduler.add_job(
-                    self._start_job, 'date', args=[job_file, job, nonstop],
-                    run_date=time, timezone='utc'
-                )
-            else:
-                self.scheduler.add_job(
-                    self._start_job, args=[job_file, job, nonstop]
-                )
+    def _schedule_job(self, job_description):
+        job = job_description
+        time = job['utctime']
+        nonstop = False
+        if time == 'now':
+            time = None
+        elif time == 'always':
+            time = None
+            nonstop = True
+        else:
+            time = dateutil.parser.parse(job['utctime']).isoformat()
+        if time:
+            self.scheduler.add_job(
+                self._start_job, 'date', args=[job, nonstop],
+                run_date=time, timezone='utc'
+            )
+        else:
+            self.scheduler.add_job(
+                self._start_job, args=[job, nonstop]
+            )
 
-    def _start_job(self, job_file, job, nonstop):
+    def _start_job(self, job, nonstop):
         job_id = job['id']
         csp_name = None
         csp_upload_args = None
@@ -362,7 +349,7 @@ class UploadImageService(BaseService):
             lookup_timeout_sec = 10
 
         upload_image = UploadImage(
-            job_id, job_file, csp_name,
+            job_id, job['job_file'], csp_name,
             job['cloud_image_name'], job['cloud_image_description'],
             custom_uploader_args=csp_upload_args,
             service_lookup_timeout_sec=lookup_timeout_sec
