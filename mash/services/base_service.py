@@ -59,9 +59,9 @@ class BaseService(object):
         self.job_document_key = 'job_document'
 
         # setup service data directory
-        self.job_directory = os.makedirs(
-            Defaults.get_job_directory(self.service_exchange),
-            exist_ok=True
+        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        os.makedirs(
+            self.job_directory, exist_ok=True
         )
 
         self._open_connection()
@@ -115,7 +115,9 @@ class BaseService(object):
         self._bind_queue(exchange, job_id, self.service_queue)
         self._publish(exchange, job_id, message)
 
-    def consume_queue(self, callback, queue_name):
+    def consume_queue(self, callback, queue_name=None):
+        if not queue_name:
+            queue_name = self.service_queue
         queue = self._get_queue_name(self.service_exchange, queue_name)
         self.channel.basic.consume(
             callback=callback, queue=queue
