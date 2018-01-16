@@ -135,9 +135,6 @@ class TestingService(BaseService):
             )
 
             del self.jobs[job_id]
-            self._unbind_queue(
-                self.service_exchange, job_id, self.service_queue
-            )
             self._remove_job_config(job.config_file)
         else:
             self.log.warning(

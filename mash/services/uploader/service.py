@@ -24,7 +24,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 # project
 from mash.services.base_service import BaseService
-from mash.services.uploader.defaults import Defaults
 from mash.services.uploader.upload_image import UploadImage
 from mash.services.uploader.config import UploaderConfig
 from mash.utils.json_format import JsonFormat
@@ -201,10 +200,6 @@ class UploadImageService(BaseService):
             else:
                 # delete upload image job instance
                 del self.jobs[job_id]
-                self._unbind_queue(
-                    self.service_exchange, job_id, self.service_queue
-                )
-
                 return {
                     'ok': True,
                     'message': 'Job Deleted'
