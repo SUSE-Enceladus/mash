@@ -111,7 +111,7 @@ class LoggerService(BaseService):
                 self.channel.start_consuming()
                 if not self.channel.consumer_tags:
                     break
-            except AMQPError as error:
+            except AMQPError:
                 self._open_connection()
 
     def stop(self):

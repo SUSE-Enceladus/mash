@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+import json
 import logging
+import os
 
 from amqpstorm import Connection
 
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
+from mash.services.base_defaults import Defaults
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
     MashLogSetupException
@@ -40,7 +44,6 @@ class BaseService(object):
     * :attr:`service_exchange`
       Name of service exchange
     """
-
     def __init__(self, host, service_exchange):
         self.channel = None
         self.connection = None
@@ -52,10 +55,19 @@ class BaseService(object):
 
         self.host = host
         self.service_exchange = service_exchange
-        self.service_key = 'service_event'
+        self.service_queue = 'service'
+        self.job_document_key = 'job_document'
+
+        # setup service data directory
+        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        os.makedirs(
+            self.job_directory, exist_ok=True
+        )
 
         self._open_connection()
-        self._declare_direct_exchange(self.service_exchange)
+        self._bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
+        )
 
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
@@ -99,38 +111,46 @@ class BaseService(object):
                 'Log setup failed: {0}'.format(e)
             )
 
-    def publish_service_message(self, message):
-        return self._publish(
-            self.service_exchange, self.service_key, message
-        )
+    def publish_job_result(self, exchange, job_id, message):
+        self._bind_queue(exchange, job_id, self.service_queue)
+        self._publish(exchange, job_id, message)
 
-    def publish_listener_message(self, identifier, message):
-        return self._publish(
-            self.service_exchange, 'listener_{0}'.format(identifier), message
-        )
-
-    def bind_service_queue(self):
-        return self._bind_queue(
-            self.service_exchange, self.service_key
-        )
-
-    def bind_listener_queue(self, identifier):
-        return self._bind_queue(
-            self.service_exchange, 'listener_{0}'.format(identifier)
-        )
-
-    def delete_listener_queue(self, identifier):
-        self.channel.queue.delete(
-            queue='{0}.listener_{1}'.format(self.service_exchange, identifier)
-        )
-
-    def consume_queue(self, callback, queue):
+    def consume_queue(self, callback, queue_name=None):
+        if not queue_name:
+            queue_name = self.service_queue
+        queue = self._get_queue_name(self.service_exchange, queue_name)
         self.channel.basic.consume(
             callback=callback, queue=queue
         )
 
+    def publish_credentials_result(self, job_id, csp, message):
+        exchange = 'credentials'
+        self._bind_queue(exchange, job_id, csp)
+        self._publish(exchange, job_id, message)
+
+    def consume_credentials_queue(self, callback, csp):
+        queue_name = csp
+        queue = self._get_queue_name('credentials', queue_name)
+        self.channel.basic.consume(
+            callback=callback, queue=queue
+        )
+
+    def bind_credentials_queue(self, job_id, csp):
+        self._bind_queue('credentials', job_id, csp)
+
+    def close_connection(self):
+        if self.channel and self.channel.is_open:
+            self.channel.stop_consuming()
+            self.channel.close()
+
+        if self.connection and self.connection.is_open:
+            self.connection.close()
+
+    def _get_queue_name(self, exchange, name):
+        return '{0}.{1}'.format(exchange, name)
+
     def _publish(self, exchange, routing_key, message):
-        return self.channel.basic.publish(
+        self.channel.basic.publish(
             body=message,
             routing_key=routing_key,
             exchange=exchange,
@@ -156,21 +176,12 @@ class BaseService(object):
             self.channel = self.connection.channel()
             self.channel.confirm_deliveries()
 
-    def close_connection(self):
-        if self.channel and self.channel.is_open:
-            self.channel.close()
-
-        if self.connection and self.connection.is_open:
-            self.connection.close()
-
-    def _bind_queue(self, exchange, routing_key):
+    def _bind_queue(self, exchange, routing_key, name):
         self._declare_direct_exchange(exchange)
-        queue = '{0}.{1}'.format(exchange, routing_key)
+        queue = self._get_queue_name(exchange, name)
         self._declare_queue(queue)
         self.channel.queue.bind(
-            exchange=exchange,
-            queue=queue,
-            routing_key=routing_key
+            exchange=exchange, queue=queue, routing_key=routing_key
         )
         return queue
 
@@ -181,3 +192,31 @@ class BaseService(object):
 
     def _declare_queue(self, queue):
         return self.channel.queue.declare(queue=queue, durable=True)
+
+    def persist_job_config(self, config):
+        config['job_file'] = '{0}job-{1}.json'.format(
+            self.job_directory, config['id']
+        )
+
+        with open(config['job_file'], 'w') as config_file:
+            config_file.write(json.dumps(config, sort_keys=True))
+
+        return config['job_file']
+
+    def restart_jobs(self, callback):
+        """
+        Restart jobs from config files.
+
+        Recover from service failure with existing jobs.
+        """
+        for job_file in os.listdir(self.job_directory):
+            with open(os.path.join(self.job_directory, job_file), 'r') \
+                    as conf_file:
+                job_config = json.load(conf_file)
+
+            callback(job_config)
+
+    def unbind_queue(self, queue, exchange, routing_key):
+        self.channel.queue.unbind(
+            queue=queue, exchange=exchange, routing_key=routing_key
+        )

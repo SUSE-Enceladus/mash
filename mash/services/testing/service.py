@@ -25,8 +25,6 @@ from apscheduler import events
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from tempfile import NamedTemporaryFile
-
 from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.config import TestingConfig
@@ -50,15 +48,11 @@ class TestingService(BaseService):
         """
         self.config = TestingConfig()
         self.set_logfile(self.config.get_log_file())
-        self.jobs_dir = self.config.get_jobs_dir()
 
         self.jobs = {}
 
-        # Bind and consume job_events from jobcreator
-        self.consume_queue(
-            self._process_message,
-            self.bind_service_queue()
-        )
+        # Consume job documents
+        self.consume_queue(self._process_message, self.service_queue)
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
@@ -66,7 +60,7 @@ class TestingService(BaseService):
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
         )
 
-        self._restart_jobs()
+        self.restart_jobs(self._add_job)
 
         try:
             self.start()
@@ -164,7 +158,9 @@ class TestingService(BaseService):
             )
 
             del self.jobs[job_id]
-            self.delete_listener_queue(job_id)
+            self.unbind_queue(
+                self.service_queue, self.service_exchange, job_id
+            )
             self._remove_job_config(job.config_file)
         else:
             self.log.warning(
@@ -242,24 +238,13 @@ class TestingService(BaseService):
         except AMQPError:
             self.log.warning('Message not received: {0}'.format(message))
 
-    def _persist_job_config(self, config):
-        job_file = NamedTemporaryFile(
-            prefix='job-', suffix='.json', dir=self.jobs_dir, delete=False
-        )
-        config['config_file'] = job_file.name
-
-        with open(job_file.name, 'w') as config_file:
-            config_file.write(json.dumps(config, sort_keys=True))
-
-        return job_file.name
-
     def _process_message(self, message):
         """
         Channel callback, handles incoming messages in queues.
 
         Send message to proper method based on routing_key.
         """
-        if message.method['routing_key'] == 'service_event':
+        if message.method['routing_key'] == 'job_document':
             self._handle_jobs(message)
         else:
             self._test_image(message)
@@ -308,13 +293,9 @@ class TestingService(BaseService):
         """
         Publish status message to provided service exchange.
         """
-        exchange = 'publisher'
-        key = 'listener_{0}'.format(job.id)
         message = self._get_status_message(job)
-
         try:
-            self._bind_queue(exchange, key)
-            self._publish(exchange, key, message)
+            self.publish_job_result('publisher', job.id, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
@@ -329,18 +310,6 @@ class TestingService(BaseService):
             os.remove(config_file)
         except Exception:
             pass
-
-    def _restart_jobs(self):
-        """
-        Restart jobs from config files.
-
-        Recover from service failure with existing jobs.
-        """
-        for job_file in os.listdir(self.jobs_dir):
-            with open(os.path.join(self.jobs_dir, job_file), 'r') as conf_file:
-                job_config = json.load(conf_file)
-
-            self._add_job(job_config)
 
     def _run_test(self, job_id):
         """
@@ -456,5 +425,4 @@ class TestingService(BaseService):
         Stop consuming queues and close rabbitmq connections.
         """
         self.scheduler.shutdown()
-        self.channel.stop_consuming()
         self.close_connection()

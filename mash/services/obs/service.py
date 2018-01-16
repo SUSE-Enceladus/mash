@@ -17,14 +17,10 @@
 #
 import atexit
 import os
-import pickle
 import dateutil.parser
-from distutils.dir_util import mkpath
-from tempfile import NamedTemporaryFile
 
 # project
 from mash.services.base_service import BaseService
-from mash.services.obs.defaults import Defaults
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.services.obs.config import OBSConfig
 from mash.utils.json_format import JsonFormat
@@ -44,36 +40,15 @@ class OBSImageBuildResultService(BaseService):
 
         # setup service data directories
         self.download_directory = config.get_download_directory()
-        self.job_directory = Defaults.get_jobs_dir()
-
-        mkpath(self.job_directory)
 
         self.jobs = {}
-        self.clients = {}
-
-        # read and reload done jobs
-        jobs_done_dir = Defaults.get_jobs_done_dir()
-        for retired_job_file in os.listdir(jobs_done_dir):
-            with open(jobs_done_dir + retired_job_file, 'rb') as retired:
-                try:
-                    job_worker = pickle.load(retired)
-                    job_worker.set_log_handler(self._send_job_response)
-                    job_worker.set_result_handler(self._send_listen_response)
-                    self.jobs[job_worker.job_id] = job_worker
-                except Exception as e:
-                    self.log.error(
-                        'Could not reload {0}: {1}'.format(retired_job_file, e)
-                    )
 
         # read and launch open jobs
-        for job_file in os.listdir(self.job_directory):
-            self._start_job(os.sep.join([self.job_directory, job_file]))
+        self.restart_jobs(self._start_job)
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
-        self.consume_queue(
-            self._control_in, self.bind_service_queue()
-        )
+        self.consume_queue(self._process_message)
         try:
             self.channel.start_consuming()
         except Exception:
@@ -84,21 +59,12 @@ class OBSImageBuildResultService(BaseService):
     def _send_job_response(self, job_id, status_message):
         self.log.info(status_message, extra={'job_id': job_id})
 
-    def _send_listen_response(self, job_id, trigger_info):
-        if job_id in self.clients:
-            try:
-                self.bind_listener_queue(job_id)
-                self.publish_listener_message(
-                    job_id, JsonFormat.json_message(trigger_info)
-                )
-                del self.clients[job_id]
-                self.log.info(
-                    'Job deleted from listen pipeline',
-                    extra={'job_id': job_id}
-                )
-            except Exception:
-                # failed to publish, don't dequeue
-                pass
+    def _send_job_result_for_uploader(self, job_id, trigger_info):
+        self.publish_job_result(
+            'uploader', job_id, JsonFormat.json_message(trigger_info)
+        )
+        if not self.jobs[job_id].job_nonstop:
+            self._delete_job(job_id)
 
     def _send_control_response(self, result, job_id=None):
         message = result['message']
@@ -112,22 +78,10 @@ class OBSImageBuildResultService(BaseService):
         else:
             self.log.error(message, extra=job_metadata)
 
-    def _control_in(self, message):
-        """
-        On message sent by client
-
-        The message is interpreted as json data and allows for:
-
-        1. add new job
-        2. add job to listener
-        3. delete job
-        """
+    def _process_message(self, message):
         message.ack()
-        message_data = {}
-        job_id = None
-
         try:
-            message_data = JsonFormat.json_loads(message.body)
+            job_data = JsonFormat.json_loads(format(message.body))
         except Exception as e:
             return self._send_control_response(
                 {
@@ -137,22 +91,23 @@ class OBSImageBuildResultService(BaseService):
                     )
                 }
             )
-        if 'obsjob' in message_data:
-            job_id = message_data['obsjob'].get('id', None)
+        if message.method['routing_key'] == 'job_document':
+            self._handle_jobs(job_data)
+
+    def _handle_jobs(self, job_data):
+        """
+        handle obs job document
+        """
+        job_id = None
+        if 'obsjob' in job_data:
+            job_id = job_data['obsjob'].get('id', None)
             self.log.info(
-                JsonFormat.json_message(message_data),
+                JsonFormat.json_message(job_data),
                 extra={'job_id': job_id}
             )
-            result = self._add_job(message_data)
-        elif 'obsjob_listen' in message_data:
-            job_id = message_data['obsjob_listen']
-            self.log.info(
-                'Setting Job to listen pipeline',
-                extra={'job_id': job_id}
-            )
-            result = self._add_to_listener(job_id)
-        elif 'obsjob_delete' in message_data and message_data['obsjob_delete']:
-            job_id = message_data['obsjob_delete']
+            result = self._add_job(job_data)
+        elif 'obsjob_delete' in job_data and job_data['obsjob_delete']:
+            job_id = job_data['obsjob_delete']
             self.log.info(
                 'Deleting Job'.format(job_id),
                 extra={'job_id': job_id}
@@ -161,32 +116,9 @@ class OBSImageBuildResultService(BaseService):
         else:
             result = {
                 'ok': False,
-                'message': 'No idea what to do with: {0}'.format(message_data)
+                'message': 'No idea what to do with: {0}'.format(job_data)
             }
         self._send_control_response(result, job_id)
-
-    def _add_to_listener(self, job_id):
-        """
-        Add job to listener queue
-
-        listen job example:
-        {
-            "obsjob_listen": "123"
-        }
-        """
-        if job_id not in self.jobs:
-            return {
-                'ok': False,
-                'message': 'Job does not exist, can not add to listen pipeline'
-            }
-        self.clients[job_id] = {
-            'job': self.jobs[job_id]
-        }
-        self.jobs[job_id].call_result_handler()
-        return {
-            'ok': True,
-            'message': 'Job now in listen pipeline'
-        }
 
     def _add_job(self, data):
         """
@@ -210,13 +142,9 @@ class OBSImageBuildResultService(BaseService):
         if not job_info['ok']:
             return job_info
         else:
-            job_file = NamedTemporaryFile(
-                prefix='job-', suffix='.json',
-                dir=self.job_directory, delete=False
-            )
-            with open(job_file.name, 'w') as job_description:
-                job_description.write(JsonFormat.json_message(data))
-            return self._start_job(job_file.name)
+            data = data['obsjob']
+            data['job_file'] = self.persist_job_config(data)
+            return self._start_job(data)
 
     def _delete_job(self, job_id):
         """
@@ -249,10 +177,6 @@ class OBSImageBuildResultService(BaseService):
 
                 # delete obs job instance
                 del self.jobs[job_id]
-
-                # delete reference in listener queue if present
-                if job_id in self.clients:
-                    del self.clients[job_id]
 
                 return {
                     'ok': True,
@@ -304,36 +228,34 @@ class OBSImageBuildResultService(BaseService):
             'message': 'OK'
         }
 
-    def _start_job(self, job_file):
-        with open(job_file) as job_description:
-            job = JsonFormat.json_load(job_description)['obsjob']
-            if 'conditions' not in job:
-                job['conditions'] = None
+    def _start_job(self, job):
+        if 'conditions' not in job:
+            job['conditions'] = None
 
-            job_id = job['id']
-            time = job['utctime']
-            nonstop = False
-            if time == 'now':
-                time = None
-            elif time == 'always':
-                time = None
-                nonstop = True
-            else:
-                time = dateutil.parser.parse(job['utctime']).isoformat()
+        job_id = job['id']
+        time = job['utctime']
+        nonstop = False
+        if time == 'now':
+            time = None
+        elif time == 'always':
+            time = None
+            nonstop = True
+        else:
+            time = dateutil.parser.parse(job['utctime']).isoformat()
 
-            job_worker = OBSImageBuildResult(
-                job_id=job_id, job_file=job_file,
-                project=job['project'], package=job['image'],
-                conditions=job['conditions'],
-                download_directory=self.download_directory
-            )
-            job_worker.set_log_handler(self._send_job_response)
-            job_worker.set_result_handler(self._send_listen_response)
-            job_worker.start_watchdog(
-                nonstop=nonstop, isotime=time
-            )
-            self.jobs[job_id] = job_worker
-            return {
-                'ok': True,
-                'message': 'Job started'
-            }
+        job_worker = OBSImageBuildResult(
+            job_id=job_id, job_file=job['job_file'],
+            project=job['project'], package=job['image'],
+            conditions=job['conditions'],
+            download_directory=self.download_directory
+        )
+        job_worker.set_log_handler(self._send_job_response)
+        job_worker.set_result_handler(self._send_job_result_for_uploader)
+        job_worker.start_watchdog(
+            nonstop=nonstop, isotime=time
+        )
+        self.jobs[job_id] = job_worker
+        return {
+            'ok': True,
+            'message': 'Job started'
+        }

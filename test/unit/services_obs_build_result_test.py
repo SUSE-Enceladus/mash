@@ -8,11 +8,6 @@ from collections import namedtuple
 import dateutil.parser
 import subprocess
 
-from .test_helper import (
-    patch_open,
-    context_manager
-)
-
 from apscheduler.events import (
     EVENT_JOB_MAX_INSTANCES,
     EVENT_JOB_SUBMITTED
@@ -23,18 +18,15 @@ from mash.mash_exceptions import (
     MashOBSLookupException,
     MashImageDownloadException,
     MashVersionExpressionException,
-    MashJobRetireException,
     MashException
 )
 
 
 class TestOBSImageBuildResult(object):
-    @patch('distutils.dir_util.mkpath')
-    def setup(self, mock_mkpath):
+    def setup(self):
         self.obs_result = OBSImageBuildResult(
             '815', 'job_file', 'obs_project', 'obs_package'
         )
-        mock_mkpath.assert_called_once_with('/var/tmp/mash/obs_jobs_done/')
 
     def test_initial_image_status(self):
         self.obs_result.conditions = [{'status': None}]
@@ -45,7 +37,7 @@ class TestOBSImageBuildResult(object):
             'packages_checksum': 'unknown',
             'version': 'unknown',
             'conditions': [{'status': None}],
-            'image_source': 'unknown'
+            'image_source': ['unknown']
         }
 
     def test_set_log_handler(self):
@@ -74,10 +66,10 @@ class TestOBSImageBuildResult(object):
     def test_result_callback(self):
         self.obs_result.result_callback = Mock()
         self.obs_result.image_status['job_status'] = 'success'
-        self.obs_result.image_status['image_source'] = 'data'
+        self.obs_result.image_status['image_source'] = ['image', 'sum']
         self.obs_result._result_callback()
         self.obs_result.result_callback.assert_called_once_with(
-            '815', {'image_source': 'data'}
+            '815', {'image_source': ['image', 'sum'], 'job_status': 'success'}
         )
 
     @patch('mash.services.obs.build_result.BackgroundScheduler')
@@ -214,7 +206,6 @@ class TestOBSImageBuildResult(object):
     @patch.object(OBSImageBuildResult, '_result_callback')
     def test_job_skipped_event(self, mock_result_callback):
         self.obs_result._job_skipped_event(Mock())
-        mock_result_callback.assert_called_once_with()
 
     @patch.object(OBSImageBuildResult, '_setup_lock')
     def test_lock(self, mock_setup_lock):
@@ -275,24 +266,6 @@ class TestOBSImageBuildResult(object):
         )
         self.obs_result.osc_results_process.communicate.assert_called_once_with()
 
-    @patch('mash.services.obs.build_result.pickle.dump')
-    @patch('os.remove')
-    @patch_open
-    def test_retire_job(self, mock_open, mock_os_remove, mock_pickle_dump):
-        context = context_manager()
-        mock_open.return_value = context.context_manager_mock
-        self.obs_result._retire_job()
-        mock_os_remove.assert_called_once_with('job_file')
-        mock_open.assert_called_once_with(
-            '/var/tmp/mash/obs_jobs_done//815.pickle', 'wb'
-        )
-
-    @patch('os.remove')
-    def test_retire_job_job_file_removal_error(self, mock_os_remove):
-        mock_os_remove.side_effect = Exception
-        with raises(MashJobRetireException):
-            self.obs_result._retire_job()
-
     def test_image_conditions_complied(self):
         self.obs_result.image_status['version'] = 'unknown'
         assert self.obs_result._image_conditions_complied() is False
@@ -309,10 +282,9 @@ class TestOBSImageBuildResult(object):
     @patch.object(OBSImageBuildResult, '_lookup_package')
     @patch.object(OBSImageBuildResult, '_image_conditions_complied')
     @patch.object(OBSImageBuildResult, '_wait_for_new_image')
-    @patch.object(OBSImageBuildResult, '_retire_job')
     @patch.object(OBSImageBuildResult, 'get_image')
     def test_update_image_status(
-        self, mock_get_image, mock_retire_job, mock_wait_for_new_image,
+        self, mock_get_image, mock_wait_for_new_image,
         mock_image_conditions_complied, mock_lookup_package,
         mock_lookup_image_packages_metadata,
         mock_result_callback, mock_log_callback, mock_unlock, mock_lock
@@ -340,7 +312,6 @@ class TestOBSImageBuildResult(object):
         mock_image_conditions_complied.return_value = True
         self.obs_result._update_image_status()
         mock_lock.assert_called_once_with()
-        mock_retire_job.assert_called_once_with()
         mock_unlock.assert_called_once_with()
         mock_result_callback.assert_called_once_with()
         assert self.obs_result.image_status == {
