@@ -215,3 +215,8 @@ class BaseService(object):
                 job_config = json.load(conf_file)
 
             callback(job_config)
+
+    def unbind_queue(self, queue, exchange, routing_key):
+        self.channel.queue.unbind(
+            queue=queue, exchange=exchange, routing_key=routing_key
+        )

@@ -152,7 +152,8 @@ class TestIPATestingService(object):
         self.testing._add_job({'id': '1'})
         mock_validate_job.assert_called_once_with({'id': '1'})
 
-    def test_testing_delete_job(self):
+    @patch.object(TestingService, 'unbind_queue')
+    def test_testing_delete_job(self, mock_unbind_queue):
         job = Mock()
         job.id = '1'
         job._get_metadata.return_value = {'job_id': '1'}
@@ -169,6 +170,9 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
         scheduler.remove_job.assert_called_once_with('1')
+        mock_unbind_queue.assert_called_once_with(
+            'service', 'testing', '1'
+        )
 
     @patch.object(TestingService, '_delete_job')
     @patch.object(TestingService, '_publish_message')

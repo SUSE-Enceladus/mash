@@ -143,3 +143,11 @@ class TestBaseService(object):
             file_handle.read.call_count == 1
 
         mock_callback.assert_called_once_with({'id': '1'})
+
+    def test_unbind_queue(self):
+        self.service.unbind_queue(
+            'service', 'testing', '1'
+        )
+        self.service.channel.queue.unbind.assert_called_once_with(
+            queue='service', exchange='testing', routing_key='1'
+        )
