@@ -16,7 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import os
-import pickle
 import re
 import logging
 import hashlib
@@ -41,7 +40,6 @@ from mash.mash_exceptions import (
     MashOBSLookupException,
     MashImageDownloadException,
     MashVersionExpressionException,
-    MashJobRetireException,
     MashException
 )
 
@@ -95,7 +93,6 @@ class OBSImageBuildResult(object):
         self.job_id = job_id
         self.job_file = job_file
         self.download_directory = download_directory
-        self.jobs_done_dir = Defaults.get_jobs_done_dir()
         self.api_url = api_url
         self.repository = repository
         self.arch = arch
@@ -222,10 +219,11 @@ class OBSImageBuildResult(object):
 
     def _result_callback(self):
         job_status = self.image_status['job_status']
-        if self.result_callback and job_status == 'success':
+        if self.result_callback:
             self.result_callback(
                 self.job_id, {
-                    'image_source': self.image_status['image_source']
+                    'image_source': self.image_status['image_source'],
+                    'job_status': job_status
                 }
             )
 
@@ -240,7 +238,7 @@ class OBSImageBuildResult(object):
         image_status = {
             'name': self.package,
             'job_status': 'prepared',
-            'image_source': 'unknown',
+            'image_source': ['unknown'],
             'packages_checksum': 'unknown',
             'version': 'unknown',
             'conditions': []
@@ -260,9 +258,8 @@ class OBSImageBuildResult(object):
     def _job_skipped_event(self, event):
         # Job is still active while the next _update_image_status
         # event was scheduled. In this case we just skip the event
-        # call the result callback and keep the active job waiting
-        # for an obs change
-        self._result_callback()
+        # and keep the active job waiting for an obs change
+        pass
 
     def _lock(self):
         return self._setup_lock(command='lock')
@@ -312,33 +309,6 @@ class OBSImageBuildResult(object):
         )
         self.osc_results_process.communicate()
 
-    def _retire_job(self):
-        try:
-            # delete what we can't pickle from self.__dict__
-            job_backup = self.job
-            scheduler_backup = self.scheduler
-            log_callback_backup = self.log_callback
-            result_callback_backup = self.result_callback
-            retired_job = os.sep.join(
-                [self.jobs_done_dir, self.job_id + '.pickle']
-            )
-            os.remove(self.job_file)
-            self.job_file = retired_job
-            with open(retired_job, 'wb') as retired:
-                self.job = None
-                self.scheduler = None
-                self.log_callback = None
-                self.result_callback = None
-                pickle.dump(self, retired)
-            self.log_callback = log_callback_backup
-            self.result_callback = result_callback_backup
-            self.job = job_backup
-            self.scheduler = scheduler_backup
-        except Exception as e:
-            raise MashJobRetireException(
-                'Retire Job failed with: {0}'.format(e)
-            )
-
     def _image_conditions_complied(self):
         if self.image_status['version'] == 'unknown':
             # if no image build was found, conditions no matter
@@ -358,6 +328,7 @@ class OBSImageBuildResult(object):
             self.iteration_count += 1
             if self._lock() is False:
                 self.image_status['job_status'] = 'failed'
+                self._result_callback()
                 return
             self._log_callback('Job running')
             packages = self._lookup_image_packages_metadata()
@@ -402,7 +373,6 @@ class OBSImageBuildResult(object):
                 self._wait_for_new_image()
             else:
                 self._log_callback('Job done')
-                self._retire_job()
                 self._result_callback()
         except MashException as e:
             self._unlock()

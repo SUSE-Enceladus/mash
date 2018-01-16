@@ -10,21 +10,20 @@ class TestCredentialsService(object):
     def setup(self, mock_BaseService):
         mock_BaseService.return_value = None
         self.service = CredentialsService()
+        self.service.msg_properties = Mock()
         self.service.service_exchange = 'credentials'
         self.service.channel = Mock()
         self.service.channel.is_open = True
         self.service.close_connection = Mock()
         self.service.consume_queue = Mock()
-        self.service.bind_service_queue = Mock()
-        self.service._bind_queue = Mock()
-        self.service._publish = Mock()
+        self.service.publish_credentials_result = Mock()
         self.service.log = Mock()
 
-    @patch.object(CredentialsService, '_control_in')
-    def test_post_init(self, mock_control_in):
+    @patch.object(CredentialsService, '_process_message')
+    def test_post_init(self, mock_process_message):
         self.service.post_init()
         self.service.consume_queue.assert_called_once_with(
-            mock_control_in, self.service.bind_service_queue.return_value
+            mock_process_message
         )
         self.service.channel.start_consuming.assert_called_once_with()
         self.service.channel.start_consuming.side_effect = Exception
@@ -56,13 +55,16 @@ class TestCredentialsService(object):
 
     @patch.object(CredentialsService, '_create_credentials')
     @patch.object(CredentialsService, '_send_control_response')
-    def test_control_in(
+    def test_process_message(
         self, mock_send_control_response, mock_create_credentials
     ):
         message = Mock()
+        message.method = {
+            'routing_key': 'job_document'
+        }
         message.body = '{"credentials": ' + \
             '{"id": "123", "csp": "ec2", "payload": {"foo": "bar"}}}'
-        self.service._control_in(message)
+        self.service._process_message(message)
         message.ack.assert_called_once_with()
         mock_create_credentials.assert_called_once_with(
             {
@@ -74,7 +76,7 @@ class TestCredentialsService(object):
             }
         )
         message.body = 'foo'
-        self.service._control_in(message)
+        self.service._process_message(message)
         mock_send_control_response.assert_called_once_with(
             {
                 'message':
@@ -85,7 +87,7 @@ class TestCredentialsService(object):
         )
         mock_send_control_response.reset_mock()
         message.body = '{"foo": "bar"}'
-        self.service._control_in(message)
+        self.service._process_message(message)
         mock_send_control_response.assert_called_once_with(
             {
                 'message': "No idea what to do with: {'foo': 'bar'}",
@@ -116,11 +118,8 @@ class TestCredentialsService(object):
                 'message': 'Credentials token created'
             }, '123'
         )
-        self.service._bind_queue.assert_called_once_with(
-            'credentials', 'ec2_123'
-        )
-        self.service._publish.assert_called_once_with(
-            'credentials', 'ec2_123', '{\n    "credentials": "token"\n}'
+        self.service.publish_credentials_result.assert_called_once_with(
+            '123', 'ec2', '{\n    "credentials": "token"\n}'
         )
         mock_send_control_response.reset_mock()
         self.service._create_credentials({})

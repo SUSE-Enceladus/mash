@@ -35,12 +35,10 @@ class CredentialsService(BaseService):
     """
     def post_init(self):
         # consume on service queue
-        self.consume_queue(
-            self._control_in, self.bind_service_queue()
-        )
+        self.consume_queue(self._process_message)
         try:
             self.channel.start_consuming()
-        except Exception:
+        except Exception as e:
             if self.channel and self.channel.is_open:
                 self.channel.stop_consuming()
                 self.close_connection()
@@ -57,18 +55,10 @@ class CredentialsService(BaseService):
         else:
             self.log.error(message, extra=job_metadata)
 
-    def _control_in(self, message):
-        """
-        On message sent by client
-
-        The message is interpreted as json data and allows for:
-
-        1. add new credentials payload
-        """
+    def _process_message(self, message):
         message.ack()
-        message_data = {}
         try:
-            message_data = JsonFormat.json_loads(format(message.body))
+            job_data = JsonFormat.json_loads(format(message.body))
         except Exception as e:
             return self._send_control_response(
                 {
@@ -78,14 +68,21 @@ class CredentialsService(BaseService):
                     )
                 }
             )
-        if 'credentials' in message_data:
-            self._create_credentials(message_data)
+        if message.method['routing_key'] == 'job_document':
+            self._handle_jobs(job_data)
+
+    def _handle_jobs(self, job_data):
+        """
+        handle credentials job
+        """
+        if 'credentials' in job_data:
+            self._create_credentials(job_data)
         else:
             self._send_control_response(
                 {
                     'ok': False,
                     'message': 'No idea what to do with: {0}'.format(
-                        message_data
+                        job_data
                     )
                 }
             )
@@ -98,7 +95,7 @@ class CredentialsService(BaseService):
         credentials description example:
         {
           "credentials": {
-              "id": "123"
+              "id": "123",
               "csp": "ec2",
               "payload": {
                   ...credentials data
@@ -122,12 +119,9 @@ class CredentialsService(BaseService):
             token = jwt.encode(
                 payload, 'secret', algorithm='HS256'
             )
-            queue_name = '{0}_{1}'.format(csp, job_id)
-            self._bind_queue(self.service_exchange, queue_name)
-            self._publish(
-                self.service_exchange, queue_name, JsonFormat.json_message(
-                    {'credentials': token.decode()}
-                )
+            self.publish_credentials_result(
+                job_id, csp,
+                JsonFormat.json_message({'credentials': token.decode()})
             )
             result = {
                 'ok': True,

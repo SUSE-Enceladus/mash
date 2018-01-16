@@ -35,6 +35,8 @@ class TestIPATestingService(object):
         self.testing.jobs = {}
         self.testing.log = Mock()
         self.testing.service_exchange = 'testing'
+        self.testing.service_queue = 'service'
+        self.testing.job_document_key = 'job_document'
 
         self.error_message = '{"testing_result": ' \
             '{"id": "1", "image_id": "image123", "status": 1}}'
@@ -46,12 +48,11 @@ class TestIPATestingService(object):
     @patch.object(TestingService, 'start')
     @patch.object(TestingService, 'restart_jobs')
     @patch('mash.services.testing.service.TestingConfig')
-    @patch.object(TestingService, 'bind_service_queue')
     @patch.object(TestingService, '_process_message')
     @patch.object(TestingService, 'consume_queue')
     def test_testing_post_init(
         self, mock_consume_queue, mock_process_message,
-        mock_bind_service_queue, mock_testing_config, mock_restart_jobs,
+        mock_testing_config, mock_restart_jobs,
         mock_start, mock_stop, mock_set_logfile
     ):
         mock_testing_config.return_value = self.config
@@ -65,9 +66,8 @@ class TestIPATestingService(object):
             '/var/log/mash/testing_service.log'
         )
         mock_consume_queue.assert_called_once_with(
-            mock_process_message, mock_bind_service_queue.return_value
+            mock_process_message, 'service'
         )
-        mock_bind_service_queue.assert_called_once_with()
         mock_start.assert_called_once_with()
         mock_stop.assert_called_once_with()
 
@@ -76,12 +76,11 @@ class TestIPATestingService(object):
     @patch.object(TestingService, 'start')
     @patch.object(TestingService, 'restart_jobs')
     @patch('mash.services.testing.service.TestingConfig')
-    @patch.object(TestingService, 'bind_service_queue')
     @patch.object(TestingService, '_handle_jobs')
     @patch.object(TestingService, 'consume_queue')
     def test_testing_post_init_exceptions(
         self, mock_consume_queue, mock_handle_jobs,
-        mock_bind_service_queue, mock_testing_config, mock_restart_jobs,
+        mock_testing_config, mock_restart_jobs,
         mock_start, mock_stop, mock_set_logfile
     ):
         mock_testing_config.return_value = self.config
@@ -103,10 +102,9 @@ class TestIPATestingService(object):
     @patch.object(TestingService, '_validate_job')
     @patch.object(TestingService, 'persist_job_config')
     @patch.object(TestingService, '_process_message')
-    @patch.object(TestingService, 'consume_queue')
-    @patch.object(TestingService, 'bind_listener_queue')
+    @patch.object(TestingService, '_bind_queue')
     def test_testing_add_job(
-        self, mock_bind_listener_queue, mock_consume_queue,
+        self, mock_bind_queue,
         mock_process_message, mock_persist_config, mock_validate_job
     ):
         job = Mock()
@@ -127,11 +125,9 @@ class TestIPATestingService(object):
             'Job queued, awaiting uploader result.',
             extra={'job_id': '1'}
         )
-
-        mock_consume_queue.assert_called_once_with(
-            mock_process_message, mock_bind_listener_queue.return_value
+        mock_bind_queue.assert_called_once_with(
+            'testing', '1', 'service'
         )
-        mock_bind_listener_queue.assert_called_once_with('1')
 
     @patch.object(TestingService, '_validate_job')
     def test_testing_add_job_exists(self, mock_validate_job):
@@ -156,10 +152,8 @@ class TestIPATestingService(object):
         self.testing._add_job({'id': '1'})
         mock_validate_job.assert_called_once_with({'id': '1'})
 
-    @patch.object(TestingService, 'delete_listener_queue')
-    def test_testing_delete_job(
-        self, mock_delete_listener_queue
-    ):
+    @patch.object(TestingService, 'unbind_queue')
+    def test_testing_delete_job(self, mock_unbind_queue):
         job = Mock()
         job.id = '1'
         job._get_metadata.return_value = {'job_id': '1'}
@@ -175,9 +169,10 @@ class TestIPATestingService(object):
             'Deleting job.',
             extra={'job_id': '1'}
         )
-
-        mock_delete_listener_queue.assert_called_once_with('1')
         scheduler.remove_job.assert_called_once_with('1')
+        mock_unbind_queue.assert_called_once_with(
+            'service', 'testing', '1'
+        )
 
     @patch.object(TestingService, '_delete_job')
     @patch.object(TestingService, '_publish_message')
@@ -291,8 +286,8 @@ class TestIPATestingService(object):
         mock_test_image.assert_called_once_with(self.message)
 
     @patch.object(TestingService, '_handle_jobs')
-    def test_testing_process_message_service_event(self, mock_handle_jobs):
-        self.method['routing_key'] = 'service_event'
+    def test_testing_process_message_job_document(self, mock_handle_jobs):
+        self.method['routing_key'] = 'job_document'
         self.testing._process_message(self.message)
 
         mock_handle_jobs.assert_called_once_with(self.message)
@@ -327,11 +322,9 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
         mock_get_status_message.assert_called_once_with(job)
-        mock_bind_queue.assert_called_once_with('publisher', 'listener_1')
+        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
         mock_publish.assert_called_once_with(
-            'publisher',
-            'listener_1',
-            self.status_message
+            'publisher', '1', self.status_message
         )
 
     @patch.object(TestingService, '_publish_message')
@@ -385,11 +378,9 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
         mock_get_status_message.assert_called_once_with(job)
-        mock_bind_queue.assert_called_once_with('publisher', 'listener_1')
+        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
         mock_publish.assert_called_once_with(
-            'publisher',
-            'listener_1',
-            self.error_message
+            'publisher', '1', self.error_message
         )
 
     @patch.object(TestingService, '_bind_queue')
@@ -401,11 +392,9 @@ class TestIPATestingService(object):
         job.image_id = 'image123'
 
         self.testing._publish_message(job)
-        mock_bind_queue.assert_called_once_with('publisher', 'listener_1')
+        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
         mock_publish.assert_called_once_with(
-            'publisher',
-            'listener_1',
-            self.status_message
+            'publisher', '1', self.status_message
         )
 
     @patch.object(TestingService, '_bind_queue')
@@ -422,7 +411,7 @@ class TestIPATestingService(object):
         mock_publish.side_effect = AMQPError('Broken')
         self.testing._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('publisher', 'listener_1')
+        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
         self.testing.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}
@@ -617,9 +606,7 @@ class TestIPATestingService(object):
     def test_testing_stop(self, mock_close_connection):
         scheduler = Mock()
         self.testing.scheduler = scheduler
-        self.testing.channel = self.channel
 
         self.testing.stop()
         scheduler.shutdown.assert_called_once_with()
-        self.channel.stop_consuming.assert_called_once_with()
         mock_close_connection.assert_called_once_with()

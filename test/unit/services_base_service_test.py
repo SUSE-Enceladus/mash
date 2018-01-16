@@ -69,51 +69,42 @@ class TestBaseService(object):
             self.service.set_logfile('/some/log')
 
     @patch('mash.services.base_service.Connection')
-    def test_publish_service_message(self, mock_connection):
+    def test_publish_job_result(self, mock_connection):
         mock_connection.return_value = self.connection
-        self.service.publish_service_message('message')
+        self.service.publish_job_result('exchange', 'job_id', 'message')
+        self.channel.queue.declare.assert_called_once_with(
+            queue='exchange.service', durable=True
+        )
+        self.channel.queue.bind.assert_called_once_with(
+            exchange='exchange', routing_key='job_id',
+            queue='exchange.service'
+        )
         self.channel.basic.publish.assert_called_once_with(
-            body='message', exchange='obs', mandatory=True,
-            properties=self.msg_properties, routing_key='service_event'
+            body='message', exchange='exchange', mandatory=True,
+            properties=self.msg_properties, routing_key='job_id'
         )
 
     @patch('mash.services.base_service.Connection')
-    def test_publish_listener_message(self, mock_connection):
+    def test_publish_credentials_result(self, mock_connection):
         mock_connection.return_value = self.connection
-        self.service.publish_listener_message('id', 'message')
+        self.service.publish_credentials_result('job_id', 'csp', 'message')
+        self.channel.queue.declare.assert_called_once_with(
+            queue='credentials.csp', durable=True
+        )
+        self.channel.queue.bind.assert_called_once_with(
+            exchange='credentials', routing_key='job_id',
+            queue='credentials.csp'
+        )
         self.channel.basic.publish.assert_called_once_with(
-            body='message', exchange='obs', mandatory=True,
-            properties=self.msg_properties, routing_key='listener_id'
-        )
-
-    def test_bind_service_queue(self):
-        assert self.service.bind_service_queue() == 'obs.service_event'
-        self.channel.exchange.declare.assert_called_once_with(
-            durable=True, exchange='obs', exchange_type='direct'
-        )
-        self.channel.queue.bind.assert_called_once_with(
-            exchange='obs',
-            queue='obs.service_event',
-            routing_key='service_event'
-        )
-
-    def test_bind_listener_queue(self):
-        self.service.bind_listener_queue('id')
-        self.channel.queue.bind.assert_called_once_with(
-            exchange='obs', queue='obs.listener_id', routing_key='listener_id'
-        )
-
-    def test_delete_listener_queue(self):
-        self.service.delete_listener_queue('id')
-        self.channel.queue.delete.assert_called_once_with(
-            queue='obs.listener_id'
+            body='message', exchange='credentials', mandatory=True,
+            properties=self.msg_properties, routing_key='job_id'
         )
 
     def test_consume_queue(self):
         callback = Mock()
-        self.service.consume_queue(callback, 'queue')
+        self.service.consume_queue(callback)
         self.channel.basic.consume.assert_called_once_with(
-            callback=callback, queue='queue'
+            callback=callback, queue='obs.service'
         )
 
     def test_close_connection(self):
@@ -152,3 +143,11 @@ class TestBaseService(object):
             file_handle.read.call_count == 1
 
         mock_callback.assert_called_once_with({'id': '1'})
+
+    def test_unbind_queue(self):
+        self.service.unbind_queue(
+            'service', 'testing', '1'
+        )
+        self.service.channel.queue.unbind.assert_called_once_with(
+            queue='service', exchange='testing', routing_key='1'
+        )

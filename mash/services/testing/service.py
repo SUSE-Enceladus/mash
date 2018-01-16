@@ -51,11 +51,8 @@ class TestingService(BaseService):
 
         self.jobs = {}
 
-        # Bind and consume job_events from jobcreator
-        self.consume_queue(
-            self._process_message,
-            self.bind_service_queue()
-        )
+        # Consume job documents
+        self.consume_queue(self._process_message, self.service_queue)
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
@@ -90,14 +87,12 @@ class TestingService(BaseService):
 
             self.jobs[job.id] = job
 
-            self.consume_queue(
-                self._process_message,
-                self.bind_listener_queue(job.id)
-            )
-
             self.log.info(
                 'Job queued, awaiting uploader result.',
                 extra=job._get_metadata()
+            )
+            self._bind_queue(
+                self.service_exchange, job.id, self.service_queue
             )
         elif not job:
             pass
@@ -140,7 +135,9 @@ class TestingService(BaseService):
             )
 
             del self.jobs[job_id]
-            self.delete_listener_queue(job_id)
+            self.unbind_queue(
+                self.service_queue, self.service_exchange, job_id
+            )
             self._remove_job_config(job.config_file)
         else:
             self.log.warning(
@@ -237,7 +234,7 @@ class TestingService(BaseService):
 
         Send message to proper method based on routing_key.
         """
-        if message.method['routing_key'] == 'service_event':
+        if message.method['routing_key'] == 'job_document':
             self._handle_jobs(message)
         else:
             self._test_image(message)
@@ -286,13 +283,9 @@ class TestingService(BaseService):
         """
         Publish status message to provided service exchange.
         """
-        exchange = 'publisher'
-        key = 'listener_{0}'.format(job.id)
         message = self._get_status_message(job)
-
         try:
-            self._bind_queue(exchange, key)
-            self._publish(exchange, key, message)
+            self.publish_job_result('publisher', job.id, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
@@ -423,5 +416,4 @@ class TestingService(BaseService):
         Stop consuming queues and close rabbitmq connections.
         """
         self.scheduler.shutdown()
-        self.channel.stop_consuming()
         self.close_connection()
