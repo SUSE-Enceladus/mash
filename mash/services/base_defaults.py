@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -23,9 +23,5 @@ class Defaults(object):
     """
 
     @classmethod
-    def get_config(self):
-        return '/etc/mash/uploader_config.yml'
-
-    @classmethod
-    def get_log_file(self):
-        return '/tmp/uploader_service.log'
+    def get_job_directory(self, service_name):
+        return '/var/lib/mash/{0}_jobs/'.format(service_name)

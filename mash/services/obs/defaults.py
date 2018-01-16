@@ -15,18 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import distutils
 
 
 class Defaults(object):
     """
     Default values
     """
-    @classmethod
-    def get_jobs_dir(self):
-        jobs_dir = '/var/tmp/mash/obs_jobs/'
-        distutils.dir_util.mkpath(jobs_dir)
-        return jobs_dir
 
     @classmethod
     def get_config(self):

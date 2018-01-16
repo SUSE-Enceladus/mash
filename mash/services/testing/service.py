@@ -17,6 +17,7 @@
 #
 
 import json
+import os
 
 from amqpstorm import AMQPError
 
@@ -50,16 +51,16 @@ class TestingService(BaseService):
 
         self.jobs = {}
 
-        # Bind and consume job_events from jobcreator
-        self.consume_queue(
-            self._process_message
-        )
+        # Consume job documents
+        self.consume_queue(self._process_message, self.service_queue)
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
             self._process_test_result,
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
         )
+
+        self.restart_jobs(self._add_job)
 
         try:
             self.start()
@@ -70,38 +71,49 @@ class TestingService(BaseService):
         finally:
             self.stop()
 
-    def _add_job(self, job):
+    def _add_job(self, job_config):
         """
         Add job to jobs dict and bind new listener queue to uploader exchange.
 
         Job description is validated and converted to dict from json.
         """
-        if job.id not in self.jobs:
+        job = self._validate_job(job_config)
+        if job and job.id not in self.jobs:
+            if 'job_file' not in job_config:
+                job_config['job_file'] = self.persist_job_config(
+                    job_config
+                )
+                job.config_file = job_config['job_file']
+
             self.jobs[job.id] = job
 
             self.log.info(
                 'Job queued, awaiting uploader result.',
                 extra=job._get_metadata()
             )
+            self._bind_queue(
+                self.service_exchange, job.id, self.service_queue
+            )
+        elif not job:
+            pass
         else:
             self.log.warning(
                 'Job already queued.',
                 extra=job._get_metadata()
             )
 
-    def _cleanup_job(self, job_id, status):
+    def _cleanup_job(self, job, status):
         """
         Job failed upstream.
 
         Delete job if not set to always and notify the publisher.
         """
-        job = self.jobs[job_id]
         job.status = status
         self.log.warning('Failed upstream.', extra=job._get_metadata())
 
         # TODO: The flow of job errors, and dropping of jobs is TBD
         if job.utctime != 'always':
-            self._delete_job(job_id)
+            self._delete_job(job.id)
         self._publish_message(job)
 
     def _delete_job(self, job_id):
@@ -123,6 +135,10 @@ class TestingService(BaseService):
             )
 
             del self.jobs[job_id]
+            self._unbind_queue(
+                self.service_exchange, job_id, self.service_queue
+            )
+            self._remove_job_config(job.config_file)
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
@@ -159,8 +175,6 @@ class TestingService(BaseService):
             }
         }
         """
-        message.ack()
-
         try:
             job_desc = json.loads(message.body)
         except ValueError as e:
@@ -168,7 +182,7 @@ class TestingService(BaseService):
             self._notify_invalid_config(message.body)
         else:
             if 'testing_job_add' in job_desc:
-                self._validate_job(job_desc['testing_job_add'])
+                self._add_job(job_desc['testing_job_add'])
             elif 'testing_job_delete' in job_desc and \
                     job_desc['testing_job_delete']:
                 self._delete_job(job_desc['testing_job_delete'])
@@ -178,6 +192,8 @@ class TestingService(BaseService):
                     'testing_job_add or testing_job_delete key.'
                 )
                 self._notify_invalid_config(message.body)
+
+        message.ack()
 
     def _log_job_message(self, msg, metadata):
         """
@@ -190,6 +206,27 @@ class TestingService(BaseService):
             self._publish('jobcreator', 'invalid_config', message)
         except AMQPError:
             self.log.warning('Message not received: {0}'.format(message))
+
+    def _process_listener_msg(self, message):
+        """
+        Process listener message from uploader.
+
+        Load message from json and assert contains uploader_result key.
+        Attempt to get image_id, job_id and status.
+        """
+        job = {}
+        try:
+            job = json.loads(message).get('uploader_result')
+        except Exception:
+            self.log.error(
+                'Invalid uploader result file: {0}'.format(message)
+            )
+
+        image_id = job.get('image_id')
+        job_id = job.get('id')
+        status = job.get('status', EXCEPTION)
+
+        return image_id, job_id, status
 
     def _process_message(self, message):
         """
@@ -240,23 +277,29 @@ class TestingService(BaseService):
 
         # TODO: The flow of job errors, and dropping of jobs is TBD
         self._publish_message(job)
+        job.listener_msg.ack()
 
     def _publish_message(self, job):
         """
         Publish status message to provided service exchange.
         """
-        exchange = 'publisher'
-        key = 'listener_{0}'.format(job.id)
         message = self._get_status_message(job)
-
         try:
-            self._bind_queue(exchange, key)
-            self._publish(exchange, key, message)
+            self.publish_job_result('publisher', job.id, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
                 extra=job._get_metadata()
             )
+
+    def _remove_job_config(self, config_file):
+        """
+        Remove job config file from disk if it exists.
+        """
+        try:
+            os.remove(config_file)
+        except Exception:
+            pass
 
     def _run_test(self, job_id):
         """
@@ -278,33 +321,30 @@ class TestingService(BaseService):
         }
 
         1. Create IPA testing instance and launch tests on given
-           image in the cloud provider.
-        3. Process and log results.
+           image in the cloud provider if status is 0 and a valid
+           uploader result json is provided.
+        2. If status is not 0 and job exists then cleanup job.
 
         TODO: The flow of job errors, and dropping of jobs is TBD
         """
-        message.ack()
-
-        job_id = None
-        try:
-            job = json.loads(message.body)['uploader_result']
-            job_id = job['id']
-            image_id = job['image_id']
-            status = job['status']
-        except Exception:
-            self.log.error(
-                'Invalid uploader result file: {0}'.format(message.body)
-            )
-            status = EXCEPTION
+        image_id, job_id, status = self._process_listener_msg(message.body)
 
         if not job_id:
             self.log.error('No id in uploader result file.')
-        elif not self.jobs.get(job_id):
+            message.ack()
+            return
+
+        job = self.jobs.get(job_id)
+        if not job:
             self.log.error(
                 'Invalid job from uploader with id: {0}.'.format(job_id)
             )
+        elif not image_id:
+            self.log.error('No image id in uploader result file.')
+            status = EXCEPTION
         elif status == 0:
-            self.jobs[job_id].image_id = image_id
+            job.image_id = image_id
+            job.listener_msg = message
             self.scheduler.add_job(
                 self._run_test,
                 args=(job_id,),
@@ -313,35 +353,46 @@ class TestingService(BaseService):
                 misfire_grace_time=None,
                 coalesce=True
             )
-        else:
-            self._cleanup_job(job_id, status)
+            # Don't ack successful message. And only cleanup on
+            # error. Message is ack'ed when the testing has finished.
+            return
+
+        if job:
+            self._cleanup_job(job, status)
+        message.ack()
 
     def _validate_job(self, job_config):
         """
         Validate the job has the required attributes.
+
+        Create and return an instance of the job class based
+        on provider.
         """
+        job = None
         try:
             provider = job_config['provider']
-            assert provider in ('EC2',)
-
-            if provider == 'EC2':
-                job = EC2TestingJob(**job_config)
-
-            job.set_log_callback(self._log_job_message)
-        except AssertionError:
-            self.log.exception(
-                'Provider {0} is not supported for testing.'.format(provider)
-            )
         except KeyError:
             self.log.exception(
                 'No provider: Provider must be in job config.'
             )
-        except Exception as e:
-            self.log.exception(
-                'Invalid job configuration: {0}'.format(e)
-            )
+            return None
+
+        if provider == 'EC2':
+            try:
+                job = EC2TestingJob(**job_config)
+            except Exception as e:
+                self.log.exception(
+                    'Invalid job configuration: {0}'.format(e)
+                )
         else:
-            self._add_job(job)
+            self.log.exception(
+                'Provider {0} is not supported.'.format(provider)
+            )
+
+        if job:
+            job.set_log_callback(self._log_job_message)
+
+        return job
 
     def start(self):
         """
@@ -365,5 +416,4 @@ class TestingService(BaseService):
         Stop consuming queues and close rabbitmq connections.
         """
         self.scheduler.shutdown()
-        self.channel.stop_consuming()
         self.close_connection()
