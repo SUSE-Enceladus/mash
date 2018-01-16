@@ -216,6 +216,11 @@ class BaseService(object):
 
             callback(job_config)
 
+    def bind_listener_queue(self, routing_key):
+        self._bind_queue(
+            self.service_exchange, routing_key, self.service_queue
+        )
+
     def unbind_queue(self, queue, exchange, routing_key):
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key

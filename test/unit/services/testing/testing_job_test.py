@@ -164,6 +164,13 @@ class TestTestingJob(object):
         with raises(NotImplementedError):
             job._run_tests()
 
+    def test_set_log_callback(self):
+        job = TestingJob(**self.job_config)
+        callback = Mock()
+        job.set_log_callback(callback)
+
+        assert job.log_callback == callback
+
     @patch.object(TestingJob, '_get_credentials')
     @patch.object(TestingJob, '_run_tests')
     def test_test_image(self, mock_run_tests, mock_get_creds):

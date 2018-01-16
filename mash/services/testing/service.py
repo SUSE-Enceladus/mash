@@ -125,15 +125,13 @@ class TestingService(BaseService):
             job.set_log_callback(self._log_job_message)
 
             if 'config_file' not in job_config:
-                job_config['config_file'] = self._persist_job_config(
+                job_config['config_file'] = self.persist_job_config(
                     job_config
                 )
                 job.config_file = job_config['config_file']
 
-            self.consume_queue(
-                self._process_message,
-                self.bind_listener_queue(job.id)
-            )
+            self.bind_listener_queue(job.id)
+            self.consume_queue(self._process_message)
             self.log.info(
                 'Job queued, awaiting uploader result.',
                 extra=job._get_metadata()
