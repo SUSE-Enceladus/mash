@@ -19,8 +19,6 @@ import atexit
 import os
 import time
 import dateutil.parser
-from distutils.dir_util import mkpath
-from tempfile import NamedTemporaryFile
 from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -43,11 +41,6 @@ class UploadImageService(BaseService):
         # setup service log file
         self.set_logfile(config.get_log_file())
 
-        # setup service data directories
-        self.job_directory = Defaults.get_jobs_dir()
-
-        mkpath(self.job_directory)
-
         # upload image instances
         self.jobs = {}
 
@@ -60,8 +53,7 @@ class UploadImageService(BaseService):
         self.scheduler.start()
 
         # read and launch open jobs
-        for job_file in os.listdir(self.job_directory):
-            self._schedule_job(os.sep.join([self.job_directory, job_file]))
+        self.restart_jobs(self._schedule_job)
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
@@ -178,13 +170,9 @@ class UploadImageService(BaseService):
         if not job_info['ok']:
             return job_info
         else:
-            job_file = NamedTemporaryFile(
-                prefix='job-', suffix='.json',
-                dir=self.job_directory, delete=False
-            )
-            with open(job_file.name, 'w') as job_description:
-                job_description.write(JsonFormat.json_message(data))
-            return self._schedule_job(job_file.name)
+            data = data['uploadjob']
+            data['job_file'] = self.persist_job_config(data)
+            return self._schedule_job(data)
 
     def _delete_job(self, job_id):
         """
@@ -305,10 +293,7 @@ class UploadImageService(BaseService):
             'nonstop': nonstop
         }
 
-    def _schedule_job(self, job_file):
-        with open(job_file) as job_description:
-            job = JsonFormat.json_load(job_description)['uploadjob']
-
+    def _schedule_job(self, job):
         startup = self._init_job(job)
         self._bind_queue(
             self.service_exchange, job['id'], self.service_queue
@@ -317,14 +302,14 @@ class UploadImageService(BaseService):
         if startup['time']:
             self.scheduler.add_job(
                 self._start_job, 'date',
-                args=[job_file, job, startup['nonstop']],
+                args=[job, startup['nonstop']],
                 run_date=startup['time'],
                 timezone='utc'
             )
         else:
             self.scheduler.add_job(
                 self._start_job,
-                args=[job_file, job, startup['nonstop']]
+                args=[job, startup['nonstop']]
             )
 
     def _wait_until_ready(self, job_id):
@@ -347,7 +332,7 @@ class UploadImageService(BaseService):
         )
         return True
 
-    def _start_job(self, job_file, job, nonstop):
+    def _start_job(self, job, nonstop):
         job_id = job['id']
         csp_name = None
         csp_upload_args = None
@@ -366,7 +351,7 @@ class UploadImageService(BaseService):
         # changed but with the same access credentials
         delay_time_sec = 30
         upload_image = UploadImage(
-            job_id, job_file, nonstop, csp_name,
+            job_id, job['job_file'], nonstop, csp_name,
             self.jobs[job_id]['credentials_token'],
             job['cloud_image_name'], job['cloud_image_description'],
             custom_uploader_args=csp_upload_args

@@ -1,19 +1,27 @@
+import io
+
 from unittest.mock import patch
 from unittest.mock import call
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 from pytest import raises
 
 from mash.services.base_service import BaseService
+from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
     MashLogSetupException
 )
 
+open_name = "builtins.open"
+
 
 class TestBaseService(object):
+    @patch('mash.services.base_service.os.makedirs')
+    @patch.object(Defaults, 'get_job_directory')
     @patch('mash.services.base_service.Connection')
-    def setup(self, mock_connection):
+    def setup(self, mock_connection, mock_get_job_directory, mock_makedirs):
+        mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
         self.connection = Mock()
         self.channel = Mock()
         self.msg_properties = {
@@ -28,6 +36,10 @@ class TestBaseService(object):
         self.connection.is_closed = True
         mock_connection.return_value = self.connection
         self.service = BaseService('localhost', 'obs')
+        mock_get_job_directory.assert_called_once_with('obs')
+        mock_makedirs.assert_called_once_with(
+            '/var/lib/mash/obs_jobs/', exist_ok=True
+        )
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
@@ -101,3 +113,33 @@ class TestBaseService(object):
         self.service.close_connection()
         self.connection.close.assert_called_once_with()
         self.channel.close.assert_called_once_with()
+
+    def test_persist_job_config(self):
+        self.service.job_directory = 'tmp-dir/'
+
+        with patch(open_name, create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            self.service.persist_job_config({'id': '1'})
+            file_handle = mock_open.return_value.__enter__.return_value
+            # Dict is mutable, mock compares the final value of Dict
+            # not the initial value that was passed in.
+            file_handle.write.assert_called_with(
+                u'{"id": "1", "job_file": "tmp-dir/job-1.json"}'
+            )
+
+    @patch('mash.services.base_service.json.load')
+    @patch('mash.services.base_service.os.listdir')
+    def test_restart_jobs(self, mock_os_listdir, mock_json_load):
+        self.service.job_directory = 'tmp-dir'
+        mock_os_listdir.return_value = ['job-123.json']
+        mock_json_load.return_value = {'id': '1'}
+
+        with patch(open_name, create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            mock_callback = Mock()
+            self.service.restart_jobs(mock_callback)
+
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.read.call_count == 1
+
+        mock_callback.assert_called_once_with({'id': '1'})

@@ -25,8 +25,6 @@ from apscheduler import events
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from tempfile import NamedTemporaryFile
-
 from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION
 from mash.services.testing.config import TestingConfig
@@ -50,7 +48,6 @@ class TestingService(BaseService):
         """
         self.config = TestingConfig()
         self.set_logfile(self.config.get_log_file())
-        self.jobs_dir = self.config.get_jobs_dir()
 
         self.jobs = {}
 
@@ -63,7 +60,7 @@ class TestingService(BaseService):
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
         )
 
-        self._restart_jobs()
+        self.restart_jobs(self._add_job)
 
         try:
             self.start()
@@ -82,11 +79,11 @@ class TestingService(BaseService):
         """
         job = self._validate_job(job_config)
         if job and job.id not in self.jobs:
-            if 'config_file' not in job_config:
-                job_config['config_file'] = self._persist_job_config(
+            if 'job_file' not in job_config:
+                job_config['job_file'] = self.persist_job_config(
                     job_config
                 )
-                job.config_file = job_config['config_file']
+                job.config_file = job_config['job_file']
 
             self.jobs[job.id] = job
 
@@ -210,17 +207,6 @@ class TestingService(BaseService):
         except AMQPError:
             self.log.warning('Message not received: {0}'.format(message))
 
-    def _persist_job_config(self, config):
-        job_file = NamedTemporaryFile(
-            prefix='job-', suffix='.json', dir=self.jobs_dir, delete=False
-        )
-        config['config_file'] = job_file.name
-
-        with open(job_file.name, 'w') as config_file:
-            config_file.write(json.dumps(config, sort_keys=True))
-
-        return job_file.name
-
     def _process_listener_msg(self, message):
         """
         Process listener message from uploader.
@@ -314,18 +300,6 @@ class TestingService(BaseService):
             os.remove(config_file)
         except Exception:
             pass
-
-    def _restart_jobs(self):
-        """
-        Restart jobs from config files.
-
-        Recover from service failure with existing jobs.
-        """
-        for job_file in os.listdir(self.jobs_dir):
-            with open(os.path.join(self.jobs_dir, job_file), 'r') as conf_file:
-                job_config = json.load(conf_file)
-
-            self._add_job(job_config)
 
     def _run_test(self, job_id):
         """
