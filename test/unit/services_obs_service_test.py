@@ -263,8 +263,8 @@ class TestOBSImageBuildResultService(object):
             "image": "test-image-oem",
             "utctime": "now",
             "conditions": [
-              {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
-              {"image": "1.42.1"}
+                {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
+                {"image": "1.42.1"}
             ]
         }
         self.obs_result._start_job(data)
