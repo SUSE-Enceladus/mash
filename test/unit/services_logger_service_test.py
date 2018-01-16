@@ -44,17 +44,18 @@ class TestLoggerService(object):
         )
 
         self.logger = LoggerService()
+        self.logger.service_exchange = 'logger'
         self.logger.channel = self.channel
 
     @patch.object(LoggerService, 'stop')
     @patch.object(LoggerService, 'start')
     @patch.object(LoggerConfig, '__init__')
-    @patch.object(LoggerService, '_bind_logger_queue')
+    @patch.object(LoggerService, '_bind_queue')
     @patch.object(LoggerService, '_process_log')
     @patch.object(LoggerService, 'consume_queue')
     def test_logger_post_init(
         self, mock_consume_queue, mock_process_log,
-        mock_bind_logger_queue, mock_logger_config, mock_start, mock_stop
+        mock_bind_queue, mock_logger_config, mock_start, mock_stop
     ):
         mock_logger_config.return_value = None
 
@@ -62,10 +63,10 @@ class TestLoggerService(object):
         self.logger.post_init()
 
         mock_consume_queue.assert_called_once_with(
-            mock_process_log, mock_bind_logger_queue.return_value
+            mock_process_log, 'logging'
         )
-        mock_bind_logger_queue.assert_called_once_with(
-            queue_name='mash.logger', route='mash.logger'
+        mock_bind_queue.assert_called_once_with(
+            'logger', 'mash.logger', 'logging'
         )
         mock_start.assert_called_once_with()
         mock_stop.assert_called_once_with()
@@ -84,26 +85,6 @@ class TestLoggerService(object):
             self.logger.post_init()
 
         assert 'Unable to connect.' == str(e.value)
-
-    @patch.object(LoggerService, '_declare_direct_exchange')
-    @patch.object(LoggerService, '_declare_queue')
-    def test_logger_bind_logger_queue(
-        self, mock_declare_queue, mock_declare_direct_exchange
-    ):
-        self.logger.channel = Mock()
-        self.logger.service_exchange = 'logger'
-
-        assert self.logger._bind_logger_queue(
-            queue_name='mash.logger', route='mash.logger'
-        ) == 'mash.logger'
-
-        mock_declare_direct_exchange.assert_called_once_with('logger')
-        mock_declare_queue.assert_called_once_with('mash.logger')
-        self.logger.channel.queue.bind.assert_called_once_with(
-            exchange='logger',
-            queue='mash.logger',
-            routing_key='mash.logger'
-        )
 
     def test_logger_process_invalid_log(self):
         self.message.body = ''
