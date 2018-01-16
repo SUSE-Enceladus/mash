@@ -1,1 +1,1 @@
-{"uploader_result": {"id": "%s", "image_id": "ami-12586f72", "status": %s}}
+{"uploader_result": {"id": "%s", "image_id": "ami-12586f72", "image_name": "My image", "source_region": "us-east-1", "status": %s}}
