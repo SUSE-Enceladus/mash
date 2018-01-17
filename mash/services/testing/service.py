@@ -91,7 +91,7 @@ class TestingService(BaseService):
                 'Job queued, awaiting uploader result.',
                 extra=job._get_metadata()
             )
-            self._bind_queue(
+            self.bind_queue(
                 self.service_exchange, job.id, self.service_queue
             )
         elif not job:

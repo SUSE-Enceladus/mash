@@ -38,7 +38,7 @@ class JobCreatorService(BaseService):
 
         self.consume_queue(
             self._process_message,
-            self._bind_queue(self.service_exchange, 'invalid_config')
+            self.bind_queue(self.service_exchange, 'invalid_config')
         )
 
         try:

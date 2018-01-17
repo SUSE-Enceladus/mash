@@ -41,7 +41,7 @@ class LoggerService(BaseService):
         """
         self.config = LoggerConfig()
 
-        self._bind_queue(self.service_exchange, 'mash.logger', 'logging')
+        self.bind_queue(self.service_exchange, 'mash.logger', 'logging')
         self.consume_queue(self._process_log, 'logging')
 
         try:
