@@ -65,9 +65,7 @@ class TestIPATestingService(object):
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/testing_service.log'
         )
-        mock_consume_queue.assert_called_once_with(
-            mock_process_message, 'service'
-        )
+        mock_consume_queue.assert_called_once_with(mock_process_message)
         mock_start.assert_called_once_with()
         mock_stop.assert_called_once_with()
 
@@ -131,10 +129,9 @@ class TestIPATestingService(object):
         )
 
     @patch.object(TestingService, 'bind_listener_queue')
-    @patch.object(TestingService, 'consume_queue')
     @patch.object(TestingService, 'persist_job_config')
     def test_testing_create_job(
-        self, mock_persist_config, mock_consume_queue, mock_bind_listener_queue
+        self, mock_persist_config, mock_bind_listener_queue
     ):
         mock_persist_config.return_value = 'temp-config.json'
 
@@ -153,9 +150,6 @@ class TestIPATestingService(object):
         )
         assert job.config_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
-        mock_consume_queue.assert_called_once_with(
-            self.testing._process_message
-        )
         self.testing.log.info.assert_called_once_with(
             'Job queued, awaiting uploader result.',
             extra={'job_id': '1'}

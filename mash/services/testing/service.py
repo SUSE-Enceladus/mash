@@ -52,7 +52,7 @@ class TestingService(BaseService):
         self.jobs = {}
 
         # Consume job documents
-        self.consume_queue(self._process_message, self.service_queue)
+        self.consume_queue(self._process_message)
 
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
@@ -131,7 +131,6 @@ class TestingService(BaseService):
                 job.config_file = job_config['config_file']
 
             self.bind_listener_queue(job.id)
-            self.consume_queue(self._process_message)
             self.log.info(
                 'Job queued, awaiting uploader result.',
                 extra=job._get_metadata()
