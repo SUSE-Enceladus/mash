@@ -35,7 +35,7 @@ class TestJobCreatorService(object):
     @patch.object(JobCreatorService, 'stop')
     @patch.object(JobCreatorService, 'start')
     @patch('mash.services.jobcreator.service.JobCreatorConfig')
-    @patch.object(JobCreatorService, '_bind_queue')
+    @patch.object(JobCreatorService, 'bind_queue')
     @patch.object(JobCreatorService, '_process_message')
     @patch.object(JobCreatorService, 'consume_queue')
     def test_job_creator_post_init(
@@ -64,7 +64,7 @@ class TestJobCreatorService(object):
     @patch.object(JobCreatorService, 'stop')
     @patch.object(JobCreatorService, 'start')
     @patch('mash.services.jobcreator.service.JobCreatorConfig')
-    @patch.object(JobCreatorService, '_bind_queue')
+    @patch.object(JobCreatorService, 'bind_queue')
     @patch.object(JobCreatorService, '_process_message')
     @patch.object(JobCreatorService, 'consume_queue')
     def test_job_creator_post_init_exceptions(

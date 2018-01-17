@@ -290,7 +290,7 @@ class UploadImageService(BaseService):
 
     def _schedule_job(self, job):
         startup = self._init_job(job)
-        self._bind_queue(
+        self.bind_queue(
             self.service_exchange, job['id'], self.service_queue
         )
 

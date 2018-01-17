@@ -316,7 +316,7 @@ class TestIPATestingService(object):
     @patch.object(TestingService, '_delete_job')
     @patch.object(TestingService, '_publish')
     @patch.object(TestingService, '_get_status_message')
-    @patch.object(TestingService, '_bind_queue')
+    @patch.object(TestingService, 'bind_queue')
     def test_testing_process_test_result(
         self, mock_bind_queue, mock_get_status_message,
         mock_publish, mock_delete_job
@@ -405,7 +405,7 @@ class TestIPATestingService(object):
             'publisher', '1', self.error_message
         )
 
-    @patch.object(TestingService, '_bind_queue')
+    @patch.object(TestingService, 'bind_queue')
     @patch.object(TestingService, '_publish')
     def test_testing_publish_message(self, mock_publish, mock_bind_queue):
         job = Mock()
@@ -419,7 +419,7 @@ class TestIPATestingService(object):
             'publisher', '1', self.status_message
         )
 
-    @patch.object(TestingService, '_bind_queue')
+    @patch.object(TestingService, 'bind_queue')
     @patch.object(TestingService, '_publish')
     def test_testing_publish_message_exception(
         self, mock_publish, mock_bind_queue

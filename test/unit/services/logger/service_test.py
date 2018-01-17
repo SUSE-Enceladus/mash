@@ -50,7 +50,7 @@ class TestLoggerService(object):
     @patch.object(LoggerService, 'stop')
     @patch.object(LoggerService, 'start')
     @patch.object(LoggerConfig, '__init__')
-    @patch.object(LoggerService, '_bind_queue')
+    @patch.object(LoggerService, 'bind_queue')
     @patch.object(LoggerService, '_process_log')
     @patch.object(LoggerService, 'consume_queue')
     def test_logger_post_init(

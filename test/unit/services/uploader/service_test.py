@@ -3,7 +3,7 @@ from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import Mock
 
-from .test_helper import (
+from test.unit.test_helper import (
     patch_open
 )
 
@@ -341,7 +341,7 @@ class TestUploadImageService(object):
             ]
         )
 
-    @patch.object(UploadImageService, '_bind_queue')
+    @patch.object(UploadImageService, 'bind_queue')
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job_at_time(self, mock_start_job, mock_bind_queue):
         data = {

@@ -1,5 +1,5 @@
 from pytest import raises
-from .test_helper import patch_open
+from test.unit.test_helper import patch_open
 
 from mash.mash_exceptions import MashConfigException
 from mash.services.uploader.config import UploaderConfig

@@ -2,7 +2,7 @@ from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import Mock
 
-from .test_helper import (
+from test.unit.test_helper import (
     patch_open
 )
 

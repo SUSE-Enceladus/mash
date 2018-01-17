@@ -65,7 +65,7 @@ class BaseService(object):
         )
 
         self._open_connection()
-        self._bind_queue(
+        self.bind_queue(
             self.service_exchange, self.job_document_key, self.service_queue
         )
 
@@ -112,7 +112,7 @@ class BaseService(object):
             )
 
     def publish_job_result(self, exchange, job_id, message):
-        self._bind_queue(exchange, job_id, self.service_queue)
+        self.bind_queue(exchange, job_id, self.service_queue)
         self._publish(exchange, job_id, message)
 
     def consume_queue(self, callback, queue_name=None):
@@ -125,7 +125,7 @@ class BaseService(object):
 
     def publish_credentials_result(self, job_id, csp, message):
         exchange = 'credentials'
-        self._bind_queue(exchange, job_id, csp)
+        self.bind_queue(exchange, job_id, csp)
         self._publish(exchange, job_id, message)
 
     def consume_credentials_queue(self, callback, csp):
@@ -136,7 +136,7 @@ class BaseService(object):
         )
 
     def bind_credentials_queue(self, job_id, csp):
-        self._bind_queue('credentials', job_id, csp)
+        self.bind_queue('credentials', job_id, csp)
 
     def close_connection(self):
         if self.channel and self.channel.is_open:
@@ -176,7 +176,7 @@ class BaseService(object):
             self.channel = self.connection.channel()
             self.channel.confirm_deliveries()
 
-    def _bind_queue(self, exchange, routing_key, name):
+    def bind_queue(self, exchange, routing_key, name):
         self._declare_direct_exchange(exchange)
         queue = self._get_queue_name(exchange, name)
         self._declare_queue(queue)
