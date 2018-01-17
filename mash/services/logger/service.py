@@ -41,11 +41,9 @@ class LoggerService(BaseService):
         """
         self.config = LoggerConfig()
 
-        self.consume_queue(
-            self._process_log, self._bind_logger_queue(
-                queue_name='mash.logger', route='mash.logger'
-            )
-        )
+        self._bind_queue(self.service_exchange, 'mash.logger', 'logging')
+        self.consume_queue(self._process_log, 'logging')
+
         try:
             self.start()
         except KeyboardInterrupt:
@@ -54,20 +52,6 @@ class LoggerService(BaseService):
             raise
         finally:
             self.stop()
-
-    def _bind_logger_queue(self, queue_name, route):
-        """
-        Declare logger exchange and bind queue with routing
-        key for logs.
-        """
-        self._declare_direct_exchange(self.service_exchange)
-        self._declare_queue(queue_name)
-        self.channel.queue.bind(
-            exchange=self.service_exchange,
-            queue=queue_name,
-            routing_key=route
-        )
-        return queue_name
 
     def _process_log(self, message):
         """
