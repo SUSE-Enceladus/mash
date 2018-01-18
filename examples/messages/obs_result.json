@@ -2,6 +2,6 @@
     "obs_result": {
         "id": "123",
         "image_file": "image_123.vhd",
-        "status": 0
+        "status": "success"
     }
 }

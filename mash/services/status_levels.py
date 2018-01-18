@@ -1,5 +1,6 @@
-SUCCESS = 0
-ERROR = 1
-EXCEPTION = 2
-OVERDUE = 3
-UNKOWN = None
+SUCCESS = 'success'
+ERROR = 'error'
+EXCEPTION = 'exception'
+OVERDUE = 'overdue'
+DELETE = 'delete'
+UNKOWN = 'unkown'

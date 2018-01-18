@@ -4,6 +4,6 @@
         "image_id": "ami-12345",
         "image_name": "image_123",
         "source_region": "eu-central-1",
-        "status": 0
+        "status": "success"
     }
 }

@@ -2,6 +2,6 @@
     "pubisher_result": {
         "id": "123",
         "image_name": "image_123",
-        "status": 0,
+        "status": "success",
     }
 }
