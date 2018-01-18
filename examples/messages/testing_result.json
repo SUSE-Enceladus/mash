@@ -1,0 +1,9 @@
+{
+    "testing_result": {
+        "id": "123",
+        "image_id": "ami-12345",
+        "image_name": "image_123",
+        "source_region": "eu-central-1",
+        "status": "success"
+    }
+}
