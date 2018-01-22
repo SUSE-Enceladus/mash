@@ -122,7 +122,7 @@ class TestingJob(object):
 
         self._process_credentials(credentials)
 
-    def _get_metadata(self):
+    def get_metadata(self):
         """
         Return dictionary of metadata based on job.
         """
@@ -186,7 +186,7 @@ class TestingJob(object):
                     self.iteration_count,
                     message
                 ),
-                self._get_metadata()
+                self.get_metadata()
             )
 
     def set_log_callback(self, callback):

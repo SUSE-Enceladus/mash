@@ -101,7 +101,7 @@ class TestIPATestingService(object):
     def test_testing_add_job(self, mock_create_job):
         job = Mock()
         job.id = '1'
-        job._get_metadata.return_value = {'job_id': '1', 'provider': 'EC2'}
+        job.get_metadata.return_value = {'job_id': '1', 'provider': 'EC2'}
 
         self.testing._add_job({'id': '1', 'provider': 'EC2'})
 
@@ -112,7 +112,7 @@ class TestIPATestingService(object):
     def test_testing_add_job_exists(self):
         job = Mock()
         job.id = '1'
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = Mock()
         self.testing._add_job({'id': '1', 'provider': 'EC2'})
@@ -137,7 +137,7 @@ class TestIPATestingService(object):
 
         job = Mock()
         job.id = '1'
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         job_class = Mock()
         job_class.return_value = job
@@ -169,7 +169,7 @@ class TestIPATestingService(object):
     def test_testing_delete_job(self, mock_unbind_queue):
         job = Mock()
         job.id = '1'
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         scheduler = Mock()
         scheduler.remove_job.side_effect = JobLookupError('1')
@@ -195,7 +195,7 @@ class TestIPATestingService(object):
         job.status = 0
         job.image_id = 'image123'
         job.utctime = 'now'
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = job
         self.testing._cleanup_job(job, 1)
@@ -332,7 +332,7 @@ class TestIPATestingService(object):
         job.utctime = 'now'
         job.status = 0
         job.iteration_count = 1
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = job
         self.testing._process_test_result(event)
@@ -357,7 +357,7 @@ class TestIPATestingService(object):
         job.utctime = 'always'
         job.status = 2
         job.iteration_count = 1
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         message = Mock()
         job.listener_msg = message
@@ -390,7 +390,7 @@ class TestIPATestingService(object):
         job.status = 1
         job.utctime = 'now'
         job.iteration_count = 1
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = job
         self.testing._process_test_result(event)
@@ -428,7 +428,7 @@ class TestIPATestingService(object):
         job.image_id = 'image123'
         job.id = '1'
         job.status = 1
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         mock_publish.side_effect = AMQPError('Broken')
         self.testing._publish_message(job)

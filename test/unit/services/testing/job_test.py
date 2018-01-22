@@ -109,9 +109,9 @@ class TestTestingJob(object):
 
         assert 'Credentials message not received by RabbitMQ.' == str(e.value)
 
-    def test_job_get_metadata(self):
+    def test_jobget_metadata(self):
         job = TestingJob(**self.job_config)
-        metadata = job._get_metadata()
+        metadata = job.get_metadata()
         assert metadata == {'job_id': '1'}
 
     @patch('mash.services.testing.job.Connection')
