@@ -515,7 +515,7 @@ class TestIPATestingService(object):
             'No image id in uploader result file.'
         )
         self.message.ack.assert_called_once_with()
-        mock_cleanup_job.assert_called_once_with(job, 2)
+        mock_cleanup_job.assert_called_once_with(job, 'exception')
 
     def test_testing_validate_job(self):
         job_config = {
