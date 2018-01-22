@@ -571,7 +571,7 @@ class TestIPATestingService(object):
 
         assert result is None
         self.testing.log.error.assert_called_once_with(
-            'id is required in testing in uploader result.'
+            'id is required in uploader result.'
         )
 
     def test_testing_validate_listener_msg_no_source_region(self):

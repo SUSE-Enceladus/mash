@@ -376,7 +376,7 @@ class TestingService(BaseService):
         status = listener_msg.get('status')
 
         if not job_id:
-            self.log.error('id is required in testing in uploader result.')
+            self.log.error('id is required in uploader result.')
             return None
 
         job = self.jobs.get(job_id)
