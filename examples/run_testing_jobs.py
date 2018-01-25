@@ -15,7 +15,7 @@ class Test(object):
         'delivery_mode': 2
     }
 
-    def __init__(self, service, count=1, status=0):
+    def __init__(self, service, count=1, status='"success"'):
         count += 1
         self.service = service
 
@@ -76,14 +76,14 @@ class Test(object):
             exchange=self.service, exchange_type='direct', durable=True
         )
 
-        service_queue = '{0}.service_event'.format(self.service)
+        service_queue = '{0}.service'.format(self.service)
         self.channel.queue.declare(
             queue=service_queue, durable=True
         )
         self.channel.queue.bind(
             exchange=self.service,
             queue=service_queue,
-            routing_key='service_event'
+            routing_key='job_document'
         )
 
         template_file = os.path.join(
@@ -102,14 +102,14 @@ class Test(object):
             # Send service event message
             self.channel.basic.publish(
                 service_template % num,
-                'service_event',
+                'job_document',
                 self.service,
                 properties=self.msg_properties,
                 mandatory=True
             )
 
-            listener_queue = '{0}.listener_{1}'.format(self.service, num)
-            listener_key = 'listener_{0}'.format(num)
+            listener_queue = '{0}.listener'.format(self.service)
+            listener_key = '{0}'.format(num)
             self.channel.queue.declare(
                 queue=listener_queue,
                 durable=True
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         help='Number of jobs to run.'
     )
     parser.add_argument(
-        '--status', type=int, default=0,
+        '--status', type=str, default='"success"',
         help='Status of incoming listener events.'
     )
 
