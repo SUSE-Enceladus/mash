@@ -1,9 +1,30 @@
+# example testing job
+
+"""Illustrate job_document received from job creator service"""
+
 import argparse
 import json
 import jwt
 import os
 
 from amqpstorm import Connection
+from textwrap import dedent
+
+testing_job = dedent("""\
+  {
+    "testingjob":
+      {
+        "id": "0815",
+        "utctime": "now",
+        "framework": "ec2",
+        "test_regions":
+          {
+            "us-east-1": "rjschwei",
+            "cn-north-1": "cn-rjschwei"
+          }
+        "tests": ['sles-basic', 'openqa-glibc']
+       }
+  }""")
 
 
 class Test(object):

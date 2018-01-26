@@ -1,5 +1,34 @@
-# example obs jobs
+# example uploader jobs
+
+"""Illustrate job_document received from job creator service"""
+
 from amqpstorm import Connection
+from textwrap import dedent
+
+uploader_job = dedent("""\
+  {
+    "uploadjob":
+      {
+        "id": "0815",
+        "utctime": "now",
+        "cloud_image_name": "ms_image-{DS}-x86_64",
+        "cloud_image_description": "My Image",
+        "framework": "ec2",
+        "target_regions":
+          {
+            "us-east-1":
+              {                 
+                "helper_ami": "ami-bc5b48d0",
+                "account": "rjschwei"
+              },
+             "cn-north-1":
+               {                 
+                "helper_ami": "ami-bc5b4853",
+                "account": "cn-rjschwei"
+              }
+           }
+         }
+  }'""")
 
 connection = Connection(
     'localhost', 'guest', 'guest', kwargs={'heartbeat': 600}
@@ -23,7 +52,7 @@ channel.basic.publish(
 )
 
 channel.basic.publish(
-    exchange='uploader', routing_key='job_document', mandatory=True, body='{"uploadjob": {"id": "0815", "utctime": "now", "cloud_image_name": "ms_image", "cloud_image_description": "My Image", "ec2": {"launch_ami": "ami-bc5b48d0", "region": "eu-central-1"}}}'
+    exchange='uploader', routing_key='job_document', mandatory=True, body=uploader_job
 )
 
 if channel.is_open:
