@@ -19,5 +19,6 @@ uploader_job = dedent("""\
             "cn-north-1": "cn-rjschwei"
             "cn-northwest-1": "cn-rjschwei"
           }
+        "share_with": ["all"]
        }
   }""")
