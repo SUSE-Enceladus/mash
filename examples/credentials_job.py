@@ -1,5 +1,20 @@
 # example credentials job
+
+"""Illustrate job_document received from job creator service"""
+
 from amqpstorm import Connection
+from textwrap import dedent
+
+credentials_job = dedent("""\
+  {
+    "credentials_job":
+      {
+        "id": "0815",
+        "framework": "ec2",
+        "framework_accounts": ["rjschwei", "cn-rjschwei"],
+        "requesting_user": "rjschwei"
+      }
+  }""")
 
 connection = Connection(
     'localhost', 'guest', 'guest', kwargs={'heartbeat': 600}
