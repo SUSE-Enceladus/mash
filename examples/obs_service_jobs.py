@@ -7,7 +7,7 @@ from textwrap import dedent
 
 now_job = dedent("""\
   {
-    "obsjob": {
+    "obs_job": {
                 "id": "0815",
                 "project": "Virtualization:Appliances:Images:Testing_x86",
                 "image": "test-image-iso",
@@ -17,7 +17,7 @@ now_job = dedent("""\
 
 always_job = dedent("""\
   {
-    "obsjob": {
+    "obs_job": {
                 "id": "4711",
                 "project": "Virtualization:Appliances:Images:Testing_x86",
                 "image": "test-image-docker",
@@ -27,7 +27,7 @@ always_job = dedent("""\
 
 delete_job = dedent("""\
   {
-    "obsjob_delete": "0815"
+    "obs_job_delete": "0815"
   }""")
 
 connection = Connection(

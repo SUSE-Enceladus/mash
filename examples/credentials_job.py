@@ -7,7 +7,7 @@ from textwrap import dedent
 
 credentials_job = dedent("""\
   {
-    "credentialsjob":
+    "credentials_job":
       {
         "id": "0815",
         "framework": "ec2",
