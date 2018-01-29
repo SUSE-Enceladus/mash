@@ -39,9 +39,10 @@ class TestIPATestingService(object):
         self.testing.service_queue = 'service'
         self.testing.job_document_key = 'job_document'
 
-        self.error_message = '{"testing_result": {"id": "1", "status": 1}}'
+        self.error_message = '{"testing_result": ' \
+            '{"id": "1", "status": "error"}}'
         self.status_message = '{"testing_result": ' \
-            '{"id": "1", "image_id": "image123", "status": 0}}'
+            '{"id": "1", "image_id": "image123", "status": "success"}}'
 
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'stop')
@@ -192,7 +193,7 @@ class TestIPATestingService(object):
     def test_testing_cleanup_job(self, mock_publish_message, mock_delete_job):
         job = Mock()
         job.id = '1'
-        job.status = 0
+        job.status = "success"
         job.image_id = 'image123'
         job.utctime = 'now'
         job.get_metadata.return_value = {'job_id': '1'}
@@ -267,7 +268,7 @@ class TestIPATestingService(object):
     def test_testing_get_status_message(self):
         job = Mock()
         job.id = '1'
-        job.status = 0
+        job.status = "success"
         job.image_id = 'image123'
 
         data = self.testing._get_status_message(job)
@@ -330,7 +331,7 @@ class TestIPATestingService(object):
         job = Mock()
         job.id = '1'
         job.utctime = 'now'
-        job.status = 0
+        job.status = "success"
         job.iteration_count = 1
         job.get_metadata.return_value = {'job_id': '1'}
 
@@ -355,7 +356,7 @@ class TestIPATestingService(object):
 
         job = Mock()
         job.utctime = 'always'
-        job.status = 2
+        job.status = "exception"
         job.iteration_count = 1
         job.get_metadata.return_value = {'job_id': '1'}
 
@@ -387,7 +388,7 @@ class TestIPATestingService(object):
         job = Mock()
         job.id = '1'
         job.image_id = 'image123'
-        job.status = 1
+        job.status = "error"
         job.utctime = 'now'
         job.iteration_count = 1
         job.get_metadata.return_value = {'job_id': '1'}
@@ -410,7 +411,7 @@ class TestIPATestingService(object):
     def test_testing_publish_message(self, mock_publish, mock_bind_queue):
         job = Mock()
         job.id = '1'
-        job.status = 0
+        job.status = "success"
         job.image_id = 'image123'
 
         self.testing._publish_message(job)
@@ -427,7 +428,7 @@ class TestIPATestingService(object):
         job = Mock()
         job.image_id = 'image123'
         job.id = '1'
-        job.status = 1
+        job.status = "error"
         job.get_metadata.return_value = {'job_id': '1'}
 
         mock_publish.side_effect = AMQPError('Broken')
@@ -469,7 +470,7 @@ class TestIPATestingService(object):
 
         self.message.body = \
             '{"uploader_result": {"id": "1", ' \
-            '"image_id": "image123", "status": 0}}'
+            '"image_id": "image123", "status": "success"}}'
 
         self.testing._test_image(self.message)
 
@@ -526,7 +527,7 @@ class TestIPATestingService(object):
         self.message.body = \
             '{"uploader_result": {"id": "1", ' \
             '"image_id": "image123", "image_name": "My image", ' \
-            '"source_region": "us-east-2", "status": 0}}'
+            '"source_region": "us-east-2", "status": "success"}}'
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result == job
@@ -542,10 +543,10 @@ class TestIPATestingService(object):
 
         self.message.body = \
             '{"uploader_result": {"id": "1", ' \
-            '"image_id": "image123", "status": 1}}'
+            '"image_id": "image123", "status": "error"}}'
         self.testing._validate_listener_msg(self.message.body)
 
-        mock_cleanup_job.assert_called_once_with(job, 1)
+        mock_cleanup_job.assert_called_once_with(job, 'error')
 
     def test_testing_validate_listener_msg_invalid(self):
         self.message.body = ''
@@ -581,8 +582,8 @@ class TestIPATestingService(object):
         self.testing.jobs['1'] = job
 
         self.message.body = \
-            '{"uploader_result": {"id": "1", ' \
-            '"image_id": "image123", "image_name": "My image", "status": 0}}'
+            '{"uploader_result": {"id": "1", "image_id": "image123", ' \
+            '"image_name": "My image", "status": "success"}}'
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result is None

@@ -56,6 +56,7 @@ class BaseService(object):
         self.host = host
         self.service_exchange = service_exchange
         self.service_queue = 'service'
+        self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
 
         # setup service data directory
@@ -119,6 +120,7 @@ class BaseService(object):
         if not queue_name:
             queue_name = self.service_queue
         queue = self._get_queue_name(self.service_exchange, queue_name)
+        self._declare_queue(queue)
         self.channel.basic.consume(
             callback=callback, queue=queue
         )
@@ -218,7 +220,7 @@ class BaseService(object):
 
     def bind_listener_queue(self, routing_key):
         self.bind_queue(
-            self.service_exchange, routing_key, self.service_queue
+            self.service_exchange, routing_key, self.listener_queue
         )
 
     def unbind_queue(self, queue, exchange, routing_key):
