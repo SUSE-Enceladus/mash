@@ -1,11 +1,16 @@
 {
     "pubisher_job": {
-        "account": "account",
         "allow_copy": "",
         "id": "123",
         "provider": "EC2",
-        "regions": "us-east-1,us-east-2|None",
         "share_with": "all|None|comma_sep_account_numbers",
         "utctime": "now|always|timestring_utc_timezone",
+        "source_regions": {
+            "us-east-1": "rjschwei",
+            "us-east-2": "rjschwei",
+            "eu-west-3": "rjschwei",
+            "cn-north-1": "cn-rjschwei",
+            "cn-northwest-1": "cn-rjschwei"
+        }
     }
 }

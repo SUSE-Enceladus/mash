@@ -1,9 +1,18 @@
 {
     "uploader_job": {
-        "account": "account",
         "id": "123",
+        "image_name": "ms_image-{DS}-x86_64",
         "image_description": "ami-12345",
         "provider": "EC2",
-        "source_region": "eu-central-1",
+        "source_regions": {
+            "us-east-1": {
+                "helper_image": "ami-bc5b48d0",
+                "account": "rjschwei"
+            },
+            "cn-north-1": {
+                "helper_image": "ami-bc5b4853",
+                "account": "cn-rjschwei"
+            }
+        }
     }
 }
