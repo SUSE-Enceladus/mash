@@ -1,4 +1,7 @@
 # example obs jobs
+import json
+import os
+
 from amqpstorm import Connection
 
 connection = Connection(
@@ -9,18 +12,16 @@ channel = connection.channel()
 
 channel.queue.declare(queue='obs.service', durable=True)
 
+messages = ['obs_job_delete.json', 'obs_now_job.json', 'obs_always_job.json']
+for message in messages:
+    job_file = os.path.join('messages', message)
+    with open(job_file, 'r') as job_document:
+        obs_message = json.loads(job_document.read().strip())
 
-channel.basic.publish(
-    exchange='obs', routing_key='job_document', mandatory=True, body='{"obsjob_delete": "0815"}'
-)
-
-channel.basic.publish(
-    exchange='obs', routing_key='job_document', mandatory=True, body='{"obsjob":{"id": "0815","project": "Virtualization:Appliances:Images:Testing_x86","image": "test-image-iso","utctime": "now"}}'
-)
-
-channel.basic.publish(
-    exchange='obs', routing_key='job_document', mandatory=True, body='{"obsjob":{"id": "4711","project": "Virtualization:Appliances:Images:Testing_x86","image": "test-image-docker","utctime": "always"}}'
-)
+    channel.basic.publish(
+        exchange='obs', routing_key='job_document', mandatory=True,
+        body=obs_message
+    )
 
 if channel.is_open:
     channel.close()
