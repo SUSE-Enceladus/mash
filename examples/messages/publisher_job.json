@@ -3,14 +3,17 @@
         "allow_copy": "",
         "id": "123",
         "provider": "EC2",
-        "share_with": "all|None|comma_sep_account_numbers",
-        "utctime": "now|always|timestring_utc_timezone",
-        "source_regions": {
-            "us-east-1": "rjschwei",
-            "us-east-2": "rjschwei",
-            "eu-west-3": "rjschwei",
-            "cn-north-1": "cn-rjschwei",
-            "cn-northwest-1": "cn-rjschwei"
-        }
+        "share_with": "none",
+        "utctime": "now",
+        "publish_regions": [
+            {
+                "account": "test-aws",
+                "target_regions": ["us-east-1", "us-east-2", "eu-west-3"]
+            },
+            {
+                "account": "test-aws-cn",
+                "target_regions": ["cn-north-1", "cn-northwest-1"]
+            }
+        ]
     }
 }

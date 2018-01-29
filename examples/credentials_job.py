@@ -1,4 +1,7 @@
 # example credentials job
+import json
+import os
+
 from amqpstorm import Connection
 
 connection = Connection(
@@ -9,8 +12,13 @@ channel = connection.channel()
 
 channel.queue.declare(queue='credentials.service', durable=True)
 
+job_file = os.path.join('messages', 'credentials_job.json')
+with open(job_file, 'r') as job_document:
+    credentials_message = json.loads(job_document.read().strip())
+
 channel.basic.publish(
-    exchange='credentials', routing_key='job_document', mandatory=True, body='{"credentials": {"id": "4711", "csp": "ec2", "payload": {"ssh_key_pair_name": "xxx", "ssh_key_private_key_file": "xxx", "access_key": "xxx", "secret_key": "xxx"}}}'
+    exchange='credentials', routing_key='job_document', mandatory=True,
+    body=credentials_message
 )
 
 if channel.is_open:
