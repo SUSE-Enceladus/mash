@@ -144,6 +144,13 @@ class TestBaseService(object):
 
         mock_callback.assert_called_once_with({'id': '1'})
 
+    @patch.object(BaseService, 'bind_queue')
+    def test_bind_listener_queue(self, mock_bind_queue):
+        self.service.bind_listener_queue('1')
+        mock_bind_queue.assert_called_once_with(
+            'obs', '1', 'listener'
+        )
+
     def test_unbind_queue(self):
         self.service.unbind_queue(
             'service', 'testing', '1'
