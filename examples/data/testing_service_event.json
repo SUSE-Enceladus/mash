@@ -1,1 +1,10 @@
-{"testing_job": {"account": "smarlow", "distro": "SLES", "id": "%s", "provider": "EC2", "tests": "test_stuff", "utctime": "now"}}
+{
+  "testing_job": {
+    "account": "smarlow",
+    "distro": "SLES",
+    "id": "%s",
+    "provider": "EC2",
+    "tests": "test_stuff",
+    "utctime": "now"
+  }
+}
