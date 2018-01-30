@@ -3,7 +3,7 @@
         "allow_copy": "",
         "id": "123",
         "provider": "EC2",
-        "share_with": "none",
+        "share_with": "None",
         "utctime": "now",
         "publish_regions": [
             {
