@@ -1,9 +1,12 @@
 {
     "testing_job": {
-        "account": "account",
         "id": "123",
         "provider": "EC2",
         "tests": "test_stuff",
-        "utctime": "now|always|timestring_utc_timezone",
+        "utctime": "now",
+        "test_regions": {
+            "us-east-1": "test-aws",
+            "cn-north-1": "test-aws-cn"
+        }
     }
 }
