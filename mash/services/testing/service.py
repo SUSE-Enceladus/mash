@@ -166,7 +166,7 @@ class TestingService(BaseService):
 
         job_config example:
         {
-            "testing_job_add": {
+            "testing_job": {
                 "account": "account",
                 "id": "1",
                 "provider": "EC2",
@@ -181,15 +181,12 @@ class TestingService(BaseService):
             self.log.error('Invalid job config file: {}.'.format(e))
             self._notify_invalid_config(message.body)
         else:
-            if 'testing_job_add' in job_desc:
-                self._add_job(job_desc['testing_job_add'])
-            elif 'testing_job_delete' in job_desc and \
-                    job_desc['testing_job_delete']:
-                self._delete_job(job_desc['testing_job_delete'])
+            if 'testing_job' in job_desc:
+                self._add_job(job_desc['testing_job'])
             else:
                 self.log.error(
-                    'Invalid testing job: Desc must contain either'
-                    'testing_job_add or testing_job_delete key.'
+                    'Invalid testing job: Desc must contain '
+                    'testing_job key.'
                 )
                 self._notify_invalid_config(message.body)
 
