@@ -109,9 +109,9 @@ class TestTestingJob(object):
 
         assert 'Credentials message not received by RabbitMQ.' == str(e.value)
 
-    def test_job_get_metadata(self):
+    def test_jobget_metadata(self):
         job = TestingJob(**self.job_config)
-        metadata = job._get_metadata()
+        metadata = job.get_metadata()
         assert metadata == {'job_id': '1'}
 
     @patch('mash.services.testing.job.Connection')
@@ -163,6 +163,13 @@ class TestTestingJob(object):
         job = TestingJob(**self.job_config)
         with raises(NotImplementedError):
             job._run_tests()
+
+    def test_set_log_callback(self):
+        job = TestingJob(**self.job_config)
+        callback = Mock()
+        job.set_log_callback(callback)
+
+        assert job.log_callback == callback
 
     @patch.object(TestingJob, '_get_credentials')
     @patch.object(TestingJob, '_run_tests')

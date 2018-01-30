@@ -1,11 +1,12 @@
 from pytest import raises
-from unittest.mock import call, MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from amqpstorm import AMQPError
 from apscheduler.jobstores.base import JobLookupError
 
 from mash.services.base_service import BaseService
 from mash.services.testing.service import TestingService
+from mash.services.testing.ec2_job import EC2TestingJob
 
 open_name = "builtins.open"
 
@@ -39,9 +40,9 @@ class TestIPATestingService(object):
         self.testing.job_document_key = 'job_document'
 
         self.error_message = '{"testing_result": ' \
-            '{"id": "1", "image_id": "image123", "status": 1}}'
+            '{"id": "1", "status": "error"}}'
         self.status_message = '{"testing_result": ' \
-            '{"id": "1", "image_id": "image123", "status": 0}}'
+            '{"id": "1", "image_id": "image123", "status": "success"}}'
 
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'stop')
@@ -65,9 +66,7 @@ class TestIPATestingService(object):
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/testing_service.log'
         )
-        mock_consume_queue.assert_called_once_with(
-            mock_process_message, 'service'
-        )
+        mock_consume_queue.assert_called_once_with(mock_process_message)
         mock_start.assert_called_once_with()
         mock_stop.assert_called_once_with()
 
@@ -99,64 +98,79 @@ class TestIPATestingService(object):
 
         mock_stop.assert_called_once_with()
 
-    @patch.object(TestingService, '_validate_job')
-    @patch.object(TestingService, 'persist_job_config')
-    @patch.object(TestingService, '_process_message')
-    @patch.object(TestingService, 'bind_queue')
-    def test_testing_add_job(
-        self, mock_bind_queue,
-        mock_process_message, mock_persist_config, mock_validate_job
-    ):
+    @patch.object(TestingService, '_create_job')
+    def test_testing_add_job(self, mock_create_job):
         job = Mock()
         job.id = '1'
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1', 'provider': 'EC2'}
 
-        mock_validate_job.return_value = job
-        mock_persist_config.return_value = 'job_file.json'
+        self.testing._add_job({'id': '1', 'provider': 'EC2'})
 
-        self.testing._add_job({'id': '1'})
-
-        # Dict is mutable, mock compares the final value of Dict
-        # not the initial value that was passed in.
-        mock_validate_job.assert_called_once_with(
-            {'id': '1', 'job_file': 'job_file.json'}
-        )
-        self.testing.log.info.assert_called_once_with(
-            'Job queued, awaiting uploader result.',
-            extra={'job_id': '1'}
-        )
-        mock_bind_queue.assert_called_once_with(
-            'testing', '1', 'service'
+        mock_create_job.assert_called_once_with(
+            EC2TestingJob, {'id': '1', 'provider': 'EC2'}
         )
 
-    @patch.object(TestingService, '_validate_job')
-    def test_testing_add_job_exists(self, mock_validate_job):
+    def test_testing_add_job_exists(self):
         job = Mock()
         job.id = '1'
-        job._get_metadata.return_value = {'job_id': '1'}
-        mock_validate_job.return_value = job
+        job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = Mock()
-        self.testing._add_job({'id': '1'})
+        self.testing._add_job({'id': '1', 'provider': 'EC2'})
 
-        mock_validate_job.assert_called_once_with({'id': '1'})
         self.testing.log.warning.assert_called_once_with(
             'Job already queued.',
             extra={'job_id': '1'}
         )
 
-    @patch.object(TestingService, '_validate_job')
-    def test_testing_add_job_invalid(self, mock_validate_job):
-        mock_validate_job.return_value = None
+    def test_testing_add_job_invalid(self):
+        self.testing._add_job({'id': '1', 'provider': 'fake'})
+        self.testing.log.exception.assert_called_once_with(
+            'Provider fake is not supported.'
+        )
 
-        self.testing._add_job({'id': '1'})
-        mock_validate_job.assert_called_once_with({'id': '1'})
+    @patch.object(TestingService, 'bind_listener_queue')
+    @patch.object(TestingService, 'persist_job_config')
+    def test_testing_create_job(
+        self, mock_persist_config, mock_bind_listener_queue
+    ):
+        mock_persist_config.return_value = 'temp-config.json'
+
+        job = Mock()
+        job.id = '1'
+        job.get_metadata.return_value = {'job_id': '1'}
+
+        job_class = Mock()
+        job_class.return_value = job
+        job_config = {'id': '1', 'provider': 'EC2'}
+        self.testing._create_job(job_class, job_config)
+
+        job_class.assert_called_once_with(id='1', provider='EC2')
+        job.set_log_callback.assert_called_once_with(
+            self.testing._log_job_message
+        )
+        assert job.config_file == 'temp-config.json'
+        mock_bind_listener_queue.assert_called_once_with('1')
+        self.testing.log.info.assert_called_once_with(
+            'Job queued, awaiting uploader result.',
+            extra={'job_id': '1'}
+        )
+
+    def test_testing_create_job_exception(self):
+        job_class = Mock()
+        job_class.side_effect = Exception('Cannot create job.')
+        job_config = {'id': '1', 'provider': 'EC2'}
+
+        self.testing._create_job(job_class, job_config)
+        self.testing.log.exception.assert_called_once_with(
+            'Invalid job configuration: Cannot create job.'
+        )
 
     @patch.object(TestingService, 'unbind_queue')
     def test_testing_delete_job(self, mock_unbind_queue):
         job = Mock()
         job.id = '1'
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         scheduler = Mock()
         scheduler.remove_job.side_effect = JobLookupError('1')
@@ -179,10 +193,10 @@ class TestIPATestingService(object):
     def test_testing_cleanup_job(self, mock_publish_message, mock_delete_job):
         job = Mock()
         job.id = '1'
-        job.status = 0
+        job.status = "success"
         job.image_id = 'image123'
         job.utctime = 'now'
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = job
         self.testing._cleanup_job(job, 1)
@@ -202,19 +216,15 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
 
-    @patch.object(TestingService, '_delete_job')
-    def test_testing_handle_jobs_delete(self, mock_delete_job):
-        self.message.body = '{"testing_job_delete": "1"}'
-        self.testing._handle_jobs(self.message)
-
-        self.message.ack.assert_called_once_with()
-        mock_delete_job.assert_called_once_with('1')
-
+    @patch.object(TestingService, '_validate_job')
     @patch.object(TestingService, '_add_job')
-    def test_testing_handle_jobs_add(self, mock_add_job):
-        self.message.body = '{"testing_job_add": {"id": "1"}}'
+    def test_testing_handle_jobs_add(
+        self, mock_add_job, mock_validate_job
+    ):
+        self.message.body = '{"testing_job": {"id": "1"}}'
         self.testing._handle_jobs(self.message)
 
+        mock_validate_job.assert_called_once_with({'id': '1'})
         self.message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with({'id': '1'})
 
@@ -226,8 +236,8 @@ class TestIPATestingService(object):
 
         self.message.ack.assert_called_once_with()
         self.testing.log.error.assert_called_once_with(
-            'Invalid testing job: Desc must contain either'
-            'testing_job_add or testing_job_delete key.'
+            'Invalid testing job: Desc must contain '
+            'testing_job key.'
         )
         mock_notify.assert_called_once_with(self.message.body)
 
@@ -243,10 +253,22 @@ class TestIPATestingService(object):
         )
         mock_notify.assert_called_once_with(self.message.body)
 
+    @patch.object(TestingService, '_validate_job')
+    @patch.object(TestingService, '_notify_invalid_config')
+    def test_testing_handle_jobs_fail_validation(
+        self, mock_notify, mock_validate_job
+    ):
+        mock_validate_job.return_value = False
+        self.message.body = '{"testing_job": {"id": "1"}}'
+        self.testing._handle_jobs(self.message)
+
+        self.message.ack.assert_called_once_with()
+        mock_notify.assert_called_once_with(self.message.body)
+
     def test_testing_get_status_message(self):
         job = Mock()
         job.id = '1'
-        job.status = 0
+        job.status = "success"
         job.image_id = 'image123'
 
         data = self.testing._get_status_message(job)
@@ -309,9 +331,9 @@ class TestIPATestingService(object):
         job = Mock()
         job.id = '1'
         job.utctime = 'now'
-        job.status = 0
+        job.status = "success"
         job.iteration_count = 1
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = job
         self.testing._process_test_result(event)
@@ -327,19 +349,19 @@ class TestIPATestingService(object):
             'publisher', '1', self.status_message
         )
 
-    @patch.object(TestingService, '_publish_message')
-    def test_testing_process_test_result_exception(
-        self, mock_publish_message
-    ):
+    def test_testing_process_test_result_exception(self):
         event = Mock()
         event.job_id = '1'
         event.exception = 'Broken!'
 
         job = Mock()
         job.utctime = 'always'
-        job.status = 2
+        job.status = "exception"
         job.iteration_count = 1
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
+
+        message = Mock()
+        job.listener_msg = message
 
         self.testing.jobs['1'] = job
         self.testing._process_test_result(event)
@@ -348,13 +370,14 @@ class TestIPATestingService(object):
             'Pass[1]: Exception testing image: Broken!',
             extra={'job_id': '1'}
         )
-        mock_publish_message.assert_called_once_with(job)
+        message.ack.assert_called_once_with()
 
-    @patch.object(TestingService, '_publish')
+    @patch.object(TestingService, '_delete_job')
+    @patch.object(TestingService, 'publish_job_result')
     @patch.object(TestingService, '_get_status_message')
-    @patch.object(TestingService, 'bind_queue')
     def test_testing_process_test_result_fail(
-        self, mock_bind_queue, mock_get_status_message, mock_publish
+        self, mock_get_status_message,
+        mock_publish, mock_delete_job
     ):
         mock_get_status_message.return_value = self.error_message
 
@@ -365,20 +388,20 @@ class TestIPATestingService(object):
         job = Mock()
         job.id = '1'
         job.image_id = 'image123'
-        job.status = 1
-        job.utctime = 'always'
+        job.status = "error"
+        job.utctime = 'now'
         job.iteration_count = 1
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = job
         self.testing._process_test_result(event)
 
+        mock_delete_job.assert_called_once_with('1')
         self.testing.log.error.assert_called_once_with(
             'Pass[1]: Error occurred testing image with IPA.',
             extra={'job_id': '1'}
         )
         mock_get_status_message.assert_called_once_with(job)
-        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
         mock_publish.assert_called_once_with(
             'publisher', '1', self.error_message
         )
@@ -388,7 +411,7 @@ class TestIPATestingService(object):
     def test_testing_publish_message(self, mock_publish, mock_bind_queue):
         job = Mock()
         job.id = '1'
-        job.status = 0
+        job.status = "success"
         job.image_id = 'image123'
 
         self.testing._publish_message(job)
@@ -405,8 +428,8 @@ class TestIPATestingService(object):
         job = Mock()
         job.image_id = 'image123'
         job.id = '1'
-        job.status = 1
-        job._get_metadata.return_value = {'job_id': '1'}
+        job.status = "error"
+        job.get_metadata.return_value = {'job_id': '1'}
 
         mock_publish.side_effect = AMQPError('Broken')
         self.testing._publish_message(job)
@@ -430,23 +453,27 @@ class TestIPATestingService(object):
         self.testing._run_test('1')
         job.test_image.assert_called_once_with(host='localhost')
 
+    @patch.object(TestingService, '_validate_listener_msg')
     @patch.object(TestingService, '_run_test')
-    def test_testing_test_image(self, mock_run_test):
+    def test_testing_test_image(
+        self, mock_run_test, mock_validate_listener_msg
+    ):
         job = Mock()
+        job.id = '1'
         job.utctime = 'always'
         self.testing.jobs['1'] = job
+
+        mock_validate_listener_msg.return_value = job
 
         scheduler = Mock()
         self.testing.scheduler = scheduler
 
         self.message.body = \
             '{"uploader_result": {"id": "1", ' \
-            '"image_id": "image123", "status": 0}}'
+            '"image_id": "image123", "status": "success"}}'
 
         self.testing._test_image(self.message)
 
-        assert self.testing.jobs['1'].image_id == 'image123'
-        assert self.testing.jobs['1'].listener_msg == self.message
         scheduler.add_job.assert_called_once_with(
             mock_run_test,
             args=('1',),
@@ -456,66 +483,14 @@ class TestIPATestingService(object):
             coalesce=True
         )
 
-    @patch.object(TestingService, '_cleanup_job')
-    def test_testing_test_image_failed(self, mock_cleanup_job):
-        job = Mock()
-        job.utctime = 'always'
-        self.testing.jobs['1'] = job
-
-        self.message.body = \
-            '{"uploader_result": {"id": "1", ' \
-            '"image_id": "image123", "status": 1}}'
-        self.testing._test_image(self.message)
-
-        mock_cleanup_job.assert_called_once_with(job, 1)
-        self.message.ack.assert_called_once_with()
-
-    def test_testing_test_image_job_none(self):
-        job = Mock()
-        job.id = '1'
-        job.utctime = 'always'
-        self.testing.jobs['1'] = job
-
-        self.message.body = ''
-        self.testing._test_image(self.message)
-
-        self.message.ack.assert_called_once_with()
-        self.testing.log.error.assert_has_calls(
-            [
-                call('Invalid uploader result file: '),
-                call('No id in uploader result file.')
-            ]
-        )
-
-    def test_testing_test_image_job_invalid(self):
-        job = Mock()
-        job.id = '1'
-        job.utctime = 'always'
-        self.testing.jobs['1'] = job
-
-        self.message.body = '{"uploader_result": {"id": "2"}}'
-        self.testing._test_image(self.message)
-
-        self.message.ack.assert_called_once_with()
-        self.testing.log.error.assert_called_once_with(
-            'Invalid job from uploader with id: 2.'
-        )
-
-    @patch.object(TestingService, '_cleanup_job')
-    def test_testing_test_image_no_image_id(self, mock_cleanup_job):
-        job = Mock()
-        job.id = '1'
-        job.utctime = 'always'
-        self.testing.jobs['1'] = job
+    @patch.object(TestingService, '_validate_listener_msg')
+    def test_testing_test_image_no_job(self, mock_validate_listener_msg):
+        mock_validate_listener_msg.return_value = None
 
         self.message.body = '{"uploader_result": {"id": "1"}}'
         self.testing._test_image(self.message)
 
-        self.testing.log.error.assert_called_once_with(
-            'No image id in uploader result file.'
-        )
         self.message.ack.assert_called_once_with()
-        mock_cleanup_job.assert_called_once_with(job, 'exception')
 
     def test_testing_validate_job(self):
         job_config = {
@@ -527,28 +502,8 @@ class TestIPATestingService(object):
             'utctime': 'now'
         }
 
-        job = self.testing._validate_job(job_config)
-
-        assert job.account == 'account'
-        assert job.distro == 'SLES'
-        assert job.id == '1'
-        assert job.provider == 'EC2'
-        assert job.tests == ['test_stuff']
-        assert job.utctime == 'now'
-
-    def test_testing_validate_invalid_job(self):
-        job = {
-            'account': 'account',
-            'id': '1',
-            'provider': 'Fake',
-            'tests': 'test_stuff',
-            'utctime': 'now'
-        }
-
-        self.testing._validate_job(job)
-        self.testing.log.exception.assert_called_once_with(
-            'Provider Fake is not supported.'
-        )
+        result = self.testing._validate_job(job_config)
+        assert result
 
     def test_testing_validate_no_provider(self):
         job = {
@@ -559,24 +514,81 @@ class TestIPATestingService(object):
         }
 
         self.testing._validate_job(job)
-        self.testing.log.exception.assert_called_once_with(
-            'No provider: Provider must be in job config.'
+        self.testing.log.error.assert_called_once_with(
+            'provider is required in testing job config.'
         )
 
-    @patch('mash.services.testing.service.EC2TestingJob')
-    def test_testing_validate_exception(self, mock_ec2_job):
-        job = {
-            'account': 'account',
-            'id': '1',
-            'provider': 'EC2',
-            'tests': 'test_stuff',
-            'utctime': 'now'
-        }
+    def test_testing_validate_listener_msg(self):
+        job = Mock()
+        job.id = '1'
+        job.utctime = 'always'
+        self.testing.jobs['1'] = job
 
-        mock_ec2_job.side_effect = Exception('Broken!')
-        self.testing._validate_job(job)
-        self.testing.log.exception.assert_called_once_with(
-            'Invalid job configuration: Broken!'
+        self.message.body = \
+            '{"uploader_result": {"id": "1", ' \
+            '"image_id": "image123", "image_name": "My image", ' \
+            '"source_region": "us-east-2", "status": "success"}}'
+        result = self.testing._validate_listener_msg(self.message.body)
+
+        assert result == job
+        assert job.image_id == 'image123'
+        assert job.image_name == 'My image'
+        assert job.source_region == 'us-east-2'
+
+    @patch.object(TestingService, '_cleanup_job')
+    def test_testing_validate_listener_msg_failed(self, mock_cleanup_job):
+        job = Mock()
+        job.utctime = 'always'
+        self.testing.jobs['1'] = job
+
+        self.message.body = \
+            '{"uploader_result": {"id": "1", ' \
+            '"image_id": "image123", "status": "error"}}'
+        self.testing._validate_listener_msg(self.message.body)
+
+        mock_cleanup_job.assert_called_once_with(job, 'error')
+
+    def test_testing_validate_listener_msg_invalid(self):
+        self.message.body = ''
+        result = self.testing._validate_listener_msg(self.message.body)
+
+        assert result is None
+        self.testing.log.error.assert_called_once_with(
+            'Invalid uploader result file: '
+        )
+
+    def test_testing_validate_listener_msg_job_invalid(self):
+        self.message.body = '{"uploader_result": {"id": "2"}}'
+        result = self.testing._validate_listener_msg(self.message.body)
+
+        assert result is None
+        self.testing.log.error.assert_called_once_with(
+            'Invalid testing service job with id: 2.'
+        )
+
+    def test_testing_validate_listener_msg_no_id(self):
+        self.message.body = '{"uploader_result": {"provider": "EC2"}}'
+        result = self.testing._validate_listener_msg(self.message.body)
+
+        assert result is None
+        self.testing.log.error.assert_called_once_with(
+            'id is required in uploader result.'
+        )
+
+    def test_testing_validate_listener_msg_no_source_region(self):
+        job = Mock()
+        job.id = '1'
+        job.utctime = 'always'
+        self.testing.jobs['1'] = job
+
+        self.message.body = \
+            '{"uploader_result": {"id": "1", "image_id": "image123", ' \
+            '"image_name": "My image", "status": "success"}}'
+        result = self.testing._validate_listener_msg(self.message.body)
+
+        assert result is None
+        self.testing.log.error.assert_called_once_with(
+            'source_region is required in uploader result.'
         )
 
     def test_testing_start(self):

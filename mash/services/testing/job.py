@@ -32,23 +32,18 @@ class TestingJob(object):
     """
     __test__ = False
 
-    def __init__(self,
-                 distro,
-                 id,
-                 provider,
-                 tests,
-                 utctime,
-                 config_file=None,
-                 desc=None,
-                 instance_type=None,
-                 region=None):
+    def __init__(
+        self, distro, id, provider, tests, utctime,
+        config_file=None, desc=None, image_id=None,
+        instance_type=None, region=None
+    ):
         self.channel = None
         self.config_file = config_file
         self.connection = None
         self.credential_queue = 'credentials.testing.{0}'.format(id)
         self.desc = desc
         self.distro = self.validate_distro(distro)
-        self.image_id = None
+        self.image_id = image_id
         self.instance_type = instance_type
         self.iteration_count = 0
         self.id = id
@@ -127,7 +122,7 @@ class TestingJob(object):
 
         self._process_credentials(credentials)
 
-    def _get_metadata(self):
+    def get_metadata(self):
         """
         Return dictionary of metadata based on job.
         """
@@ -191,7 +186,7 @@ class TestingJob(object):
                     self.iteration_count,
                     message
                 ),
-                self._get_metadata()
+                self.get_metadata()
             )
 
     def set_log_callback(self, callback):
