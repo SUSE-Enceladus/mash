@@ -89,7 +89,7 @@ class TestingService(BaseService):
 
             self.log.info(
                 'Job queued, awaiting uploader result.',
-                extra=job._get_metadata()
+                extra=job.get_metadata()
             )
             self.bind_queue(
                 self.service_exchange, job.id, self.service_queue
@@ -99,7 +99,7 @@ class TestingService(BaseService):
         else:
             self.log.warning(
                 'Job already queued.',
-                extra=job._get_metadata()
+                extra=job.get_metadata()
             )
 
     def _cleanup_job(self, job, status):
@@ -109,7 +109,7 @@ class TestingService(BaseService):
         Delete job if not set to always and notify the publisher.
         """
         job.status = status
-        self.log.warning('Failed upstream.', extra=job._get_metadata())
+        self.log.warning('Failed upstream.', extra=job.get_metadata())
 
         # TODO: The flow of job errors, and dropping of jobs is TBD
         if job.utctime != 'always':
@@ -131,7 +131,7 @@ class TestingService(BaseService):
             job = self.jobs[job_id]
             self.log.info(
                 'Deleting job.',
-                extra=job._get_metadata()
+                extra=job.get_metadata()
             )
 
             del self.jobs[job_id]
@@ -245,7 +245,7 @@ class TestingService(BaseService):
         """
         job_id = event.job_id
         job = self.jobs[job_id]
-        metata = job._get_metadata()
+        metata = job.get_metadata()
 
         if job.utctime != 'always':
             self._delete_job(job_id)
@@ -286,7 +286,7 @@ class TestingService(BaseService):
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
-                extra=job._get_metadata()
+                extra=job.get_metadata()
             )
 
     def _remove_job_config(self, config_file):
