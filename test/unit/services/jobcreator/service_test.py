@@ -49,7 +49,7 @@ class TestJobCreatorService(object):
 
         self.jobcreator.post_init()
 
-        self.config.get_log_file.assert_called_once_with()
+        self.config.get_log_file.assert_called_once_with('jobcreator')
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/job_creator_service.log'
         )

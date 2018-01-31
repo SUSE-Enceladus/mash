@@ -1,3 +1,0 @@
-obs:
-  logfile: /var/log/mash_obs_service.log
-  download_directory: /var/tmp/mash/images

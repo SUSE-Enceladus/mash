@@ -18,9 +18,7 @@
 
 import os
 
-from mash.mash_exceptions import MashLoggerException
 from mash.services.base_config import BaseConfig
-from mash.services.logger.defaults import Defaults
 
 
 class LoggerConfig(BaseConfig):
@@ -33,43 +31,16 @@ class LoggerConfig(BaseConfig):
     formatted file containing information to control the behavior
     of the logger service.
     """
-    def __init__(self, config_file=Defaults.get_config()):
+    def __init__(self, config_file=None):
         super(LoggerConfig, self).__init__(config_file)
 
-    def get_log_dir(self):
+    def get_job_log_file(self, job_id):
         """
-        Return log directory:
-
-        logger:
-          log_dir: /var/log/mash/
-
-        if no configuration exists the log directory from
-        constants is returned
-
-        :rtype: string
-        """
-        log_dir = self._get_attribute(
-            element='logger', attribute='log_dir'
-        )
-        log_dir = log_dir or Defaults.get_log_dir()
-
-        if not os.path.exists(log_dir):
-            try:
-                os.makedirs(log_dir)
-            except Exception as e:
-                raise MashLoggerException(
-                    'Could not make logging directory: {}'.format(e)
-                )
-
-        return log_dir
-
-    def get_log_file(self, file_name):
-        """
-        Return log file given the file_name:
+        Return log file given the job_id.
 
         :rtype: string
         """
         log_file = os.path.join(
-            self.get_log_dir(), ''.join([file_name, '.log'])
+            self.get_log_directory(), ''.join(['job_', job_id, '.log'])
         )
         return os.path.expanduser(os.path.normpath(log_file))

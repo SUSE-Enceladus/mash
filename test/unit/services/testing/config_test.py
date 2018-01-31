@@ -9,5 +9,5 @@ class TestTestingConfig(object):
         assert self.empty_config.config_data
 
     def test_get_log_file(self):
-        assert self.empty_config.get_log_file() == \
+        assert self.empty_config.get_log_file('testing') == \
             '/var/log/mash/testing_service.log'

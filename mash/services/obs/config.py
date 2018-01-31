@@ -30,26 +30,8 @@ class OBSConfig(BaseConfig):
     formatted file containing information to control the behavior
     of the obs service.
     """
-    def __init__(self, config_file=Defaults.get_config()):
+    def __init__(self, config_file=None):
         super(OBSConfig, self).__init__(config_file)
-
-    def get_log_file(self):
-        """
-        Return log file name:
-
-        obs:
-          logfile: /tmp/obs_service.log
-
-        if no configuration exists the log file name from
-        the Defaults class is returned
-
-        :rtype: string
-        """
-        logfile = self._get_attribute(
-            element='obs', attribute='logfile'
-        )
-        return logfile if logfile else \
-            Defaults.get_log_file()
 
     def get_download_directory(self):
         """
@@ -64,7 +46,7 @@ class OBSConfig(BaseConfig):
         :rtype: string
         """
         download_directory = self._get_attribute(
-            element='obs', attribute='download_directory'
+            attribute='download_directory', element='obs'
         )
         return download_directory if download_directory else \
             Defaults.get_download_dir()

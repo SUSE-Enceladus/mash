@@ -47,7 +47,7 @@ class TestingService(BaseService):
         Setup config and bind to jobcreator queue to receive jobs.
         """
         self.config = TestingConfig()
-        self.set_logfile(self.config.get_log_file())
+        self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.jobs = {}
 

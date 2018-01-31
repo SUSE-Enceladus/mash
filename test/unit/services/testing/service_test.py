@@ -61,7 +61,7 @@ class TestIPATestingService(object):
 
         self.testing.post_init()
 
-        self.config.get_log_file.assert_called_once_with()
+        self.config.get_log_file.assert_called_once_with('testing')
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/testing_service.log'
         )

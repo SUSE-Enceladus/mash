@@ -17,7 +17,6 @@
 #
 
 from mash.services.base_config import BaseConfig
-from mash.services.jobcreator.defaults import Defaults
 
 
 class JobCreatorConfig(BaseConfig):
@@ -31,20 +30,5 @@ class JobCreatorConfig(BaseConfig):
     of the job creator service.
     """
 
-    def __init__(self, config_file=Defaults.get_config()):
+    def __init__(self, config_file=None):
         super(JobCreatorConfig, self).__init__(config_file)
-
-    def get_log_file(self):
-        """
-        Return log file name:
-        jobcreator:
-          logfile: /var/log/mash/job_creator_service.log
-
-        If no configuration exists the log file name from the
-        Defaults class is returned
-        :rtype: string
-        """
-        logfile = self._get_attribute(
-            element='jobcreator', attribute='logfile'
-        )
-        return logfile if logfile else Defaults.get_log_file()

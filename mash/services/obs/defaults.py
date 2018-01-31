@@ -23,13 +23,5 @@ class Defaults(object):
     """
 
     @classmethod
-    def get_config(self):
-        return '/etc/mash/obs_config.yml'
-
-    @classmethod
-    def get_log_file(self):
-        return '/tmp/obs_service.log'
-
-    @classmethod
     def get_download_dir(self):
         return '/tmp'

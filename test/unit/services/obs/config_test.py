@@ -17,8 +17,10 @@ class TestOBSConfig(object):
             OBSConfig('../data/obs_config.yml')
 
     def test_get_log_file(self):
-        assert self.config.get_log_file() == '/tmp/foo.log'
-        assert self.config_defaults.get_log_file() == '/tmp/obs_service.log'
+        assert self.config.get_log_file('obs') == \
+            '/var/log/mash/obs_service.log'
+        assert self.config_defaults.get_log_file('obs') == \
+            '/var/log/mash/obs_service.log'
 
     def test_get_download_directory(self):
         assert self.config.get_download_directory() == '/images'

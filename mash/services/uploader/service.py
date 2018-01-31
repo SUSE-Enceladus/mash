@@ -38,7 +38,7 @@ class UploadImageService(BaseService):
         config = UploaderConfig()
 
         # setup service log file
-        self.set_logfile(config.get_log_file())
+        self.set_logfile(config.get_log_file(self.service_exchange))
 
         # upload image instances
         self.jobs = {}

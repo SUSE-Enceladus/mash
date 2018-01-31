@@ -11,5 +11,5 @@ class TestJobCreatorConfig(object):
         assert self.empty_config.config_data
 
     def test_job_creator_get_log_file(self):
-        assert self.empty_config.get_log_file() == \
-            '/var/log/mash/job_creator_service.log'
+        assert self.empty_config.get_log_file('jobcreator') == \
+            '/var/log/mash/jobcreator_service.log'
