@@ -33,10 +33,12 @@ class TestingJob(object):
     __test__ = False
 
     def __init__(
-        self, distro, id, provider, tests, utctime, config_file=None,
-        desc=None, instance_type=None, region=None
+        self, id, provider, tests, utctime, cloud_image_name=None,
+        config_file=None, distro=None, desc=None, instance_type=None,
+        source_regions=None, test_regions=None
     ):
         self.channel = None
+        self.cloud_image_name = cloud_image_name
         self.config_file = config_file
         self.connection = None
         self.credential_queue = 'credentials.testing.{0}'.format(id)
@@ -48,9 +50,10 @@ class TestingJob(object):
         self.id = id
         self.log_callback = None
         self.provider = self.validate_provider(provider)
-        self.region = region
         self.results = None
+        self.source_regions = source_regions
         self.status = UNKOWN
+        self.test_regions = test_regions
         self.tests = self.validate_tests(tests)
         self.utctime = self.validate_timestamp(utctime)
 

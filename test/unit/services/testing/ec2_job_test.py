@@ -10,12 +10,11 @@ from mash.services.testing.ec2_job import EC2TestingJob
 class TestEC2TestingJob(object):
     def setup(self):
         self.job_config = {
-            'account': 'account',
-            'distro': 'SLES',
             'id': '1',
             'provider': 'EC2',
             'tests': 'test_stuff',
-            'utctime': 'now'
+            'utctime': 'now',
+            'source_regions': {'us-east-2': 'test-account'}
         }
 
     def test_get_credential_request(self):
@@ -30,7 +29,7 @@ class TestEC2TestingJob(object):
 
         assert 'credentials' in decoded
         assert decoded['credentials']['csp'] == 'EC2'
-        assert decoded['credentials']['account'] == 'account'
+        assert decoded['credentials']['account'] == None
 
     @patch('mash.services.testing.ec2_job.jwt')
     def test_process_credentials(self, mock_jwt):
@@ -113,13 +112,13 @@ class TestEC2TestingJob(object):
         mock_test_image.assert_called_once_with(
             'EC2',
             access_key_id=job.access_key_id,
-            account='account',
+            account=None,
             desc=job.desc,
             distro='SLES',
             image_id='image123',
             instance_type=job.instance_type,
             log_level=30,
-            region=job.region,
+            region=job.source_regions,
             secret_access_key=job.secret_access_key,
             ssh_key_name=job.ssh_key_name,
             ssh_private_key=job.ssh_private_key,

@@ -36,14 +36,17 @@ class EC2TestingJob(TestingJob):
     __test__ = False
 
     def __init__(
-        self, distro, id, provider, tests, utctime, account=None,
-        access_key_id=None, config_file=None, desc=None, instance_type=None,
-        region=None, secret_access_key=None, ssh_key_name=None,
-        ssh_private_key=None, ssh_user=None
+        self, id, provider, tests, utctime, account=None,
+        access_key_id=None, cloud_image_name=None, config_file=None, desc=None,
+        distro='SLES', instance_type=None, secret_access_key=None,
+        source_regions=None, ssh_key_name=None, ssh_private_key=None,
+        ssh_user=None, test_regions=None
     ):
         super(EC2TestingJob, self).__init__(
-            distro, id, provider, tests, utctime, config_file=config_file,
-            desc=desc, instance_type=instance_type, region=region
+            id, provider, tests, utctime,
+            cloud_image_name=cloud_image_name, config_file=config_file,
+            desc=desc, distro=distro, instance_type=instance_type,
+            source_regions=source_regions, test_regions=test_regions
         )
         self.access_key_id = access_key_id
         self.account = account
@@ -104,6 +107,7 @@ class EC2TestingJob(TestingJob):
         """
         Tests image with IPA and update status and results.
         """
+        # TODO: Update to use source_regions dictionary to test all.
         self.status, self.results = test_image(
             self.provider,
             access_key_id=self.access_key_id,
@@ -113,7 +117,7 @@ class EC2TestingJob(TestingJob):
             image_id=self.image_id,
             instance_type=self.instance_type,
             log_level=logging.WARNING,
-            region=self.region,
+            region=self.source_regions,
             secret_access_key=self.secret_access_key,
             ssh_key_name=self.ssh_key_name,
             ssh_private_key=self.ssh_private_key,
