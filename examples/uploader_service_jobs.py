@@ -1,4 +1,7 @@
 # example obs jobs
+import json
+import os
+
 from amqpstorm import Connection
 
 connection = Connection(
@@ -11,20 +14,21 @@ channel.queue.declare(queue='uploader.service', durable=True)
 channel.queue.declare(queue='obs.service', durable=True)
 channel.queue.declare(queue='credentials.service', durable=True)
 
-channel.basic.publish(
-    exchange='obs', routing_key='job_document', mandatory=True, body='{"obsjob_delete": "0815"}'
-)
-channel.basic.publish(
-    exchange='obs', routing_key='job_document', mandatory=True, body='{"obsjob":{"id": "0815","project": "Virtualization:Appliances:Images:Testing_x86","image": "test-image-iso","utctime": "now"}}'
-)
+messages = [
+    ('obs', 'obs_job_delete.json'),
+    ('obs', 'obs_now_job.json'),
+    ('credentials', 'credentials_job.json'),
+    ('uploader', 'uploader_job.json')
+]
+for exchange, message in messages:
+    job_file = os.path.join('messages', message)
+    with open(job_file, 'r') as job_document:
+        obs_message = json.loads(job_document.read().strip())
 
-channel.basic.publish(
-    exchange='credentials', routing_key='job_document', mandatory=True, body='{"credentials": {"id": "0815", "csp": "ec2", "payload": {"ssh_key_pair_name": "xxx", "ssh_key_private_key_file": "xxx", "access_key": "xxx", "secret_key": "xxx"}}}'
-)
-
-channel.basic.publish(
-    exchange='uploader', routing_key='job_document', mandatory=True, body='{"uploadjob": {"id": "0815", "utctime": "now", "cloud_image_name": "ms_image", "cloud_image_description": "My Image", "ec2": {"launch_ami": "ami-bc5b48d0", "region": "eu-central-1"}}}'
-)
+    channel.basic.publish(
+        exchange=exchange, routing_key='job_document', mandatory=True,
+        body=obs_message
+    )
 
 if channel.is_open:
     channel.close()
