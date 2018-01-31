@@ -1,7 +1,7 @@
 {
     "replication_result": {
         "id": "123",
-        "image_name": "image_123",
+        "cloud_image_name": "image_123",
         "source_regions": {
             "us-east-2": "ami-bc5b48d0",
             "us-west-2": "ami-bc5b48d0",
