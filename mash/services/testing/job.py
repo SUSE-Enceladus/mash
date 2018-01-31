@@ -32,16 +32,10 @@ class TestingJob(object):
     """
     __test__ = False
 
-    def __init__(self,
-                 distro,
-                 id,
-                 provider,
-                 tests,
-                 utctime,
-                 config_file=None,
-                 desc=None,
-                 instance_type=None,
-                 region=None):
+    def __init__(
+        self, distro, id, provider, tests, utctime, config_file=None,
+        desc=None, instance_type=None, region=None
+    ):
         self.channel = None
         self.config_file = config_file
         self.connection = None

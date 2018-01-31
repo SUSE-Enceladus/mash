@@ -35,32 +35,15 @@ class EC2TestingJob(TestingJob):
     """
     __test__ = False
 
-    def __init__(self,
-                 distro,
-                 id,
-                 provider,
-                 tests,
-                 utctime,
-                 account=None,
-                 access_key_id=None,
-                 config_file=None,
-                 desc=None,
-                 instance_type=None,
-                 region=None,
-                 secret_access_key=None,
-                 ssh_key_name=None,
-                 ssh_private_key=None,
-                 ssh_user=None):
+    def __init__(
+        self, distro, id, provider, tests, utctime, account=None,
+        access_key_id=None, config_file=None, desc=None, instance_type=None,
+        region=None, secret_access_key=None, ssh_key_name=None,
+        ssh_private_key=None, ssh_user=None
+    ):
         super(EC2TestingJob, self).__init__(
-            distro,
-            id,
-            provider,
-            tests,
-            utctime,
-            config_file=config_file,
-            desc=desc,
-            instance_type=instance_type,
-            region=region
+            distro, id, provider, tests, utctime, config_file=config_file,
+            desc=desc, instance_type=instance_type, region=region
         )
         self.access_key_id = access_key_id
         self.account = account
