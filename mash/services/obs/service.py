@@ -36,7 +36,7 @@ class OBSImageBuildResultService(BaseService):
         config = OBSConfig()
 
         # setup service log file
-        self.set_logfile(config.get_log_file())
+        self.set_logfile(config.get_log_file(self.service_exchange))
 
         # setup service data directories
         self.download_directory = config.get_download_directory()
