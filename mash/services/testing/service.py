@@ -350,7 +350,7 @@ class TestingService(BaseService):
         """
         Validate the job has the required attributes.
         """
-        required = ['id', 'provider', 'tests', 'utctime', 'test_regions']
+        required = ['id', 'provider', 'tests', 'utctime']
         for attr in required:
             if attr not in job_config:
                 self.log.error(
