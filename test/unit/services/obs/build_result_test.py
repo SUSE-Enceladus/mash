@@ -69,7 +69,9 @@ class TestOBSImageBuildResult(object):
         self.obs_result.image_status['image_source'] = ['image', 'sum']
         self.obs_result._result_callback()
         self.obs_result.result_callback.assert_called_once_with(
-            '815', {'image_source': ['image', 'sum'], 'job_status': 'success'}
+            '815', {
+                'id': '815', 'image_file': ['image', 'sum'], 'status': 'success'
+            }
         )
 
     @patch('mash.services.obs.build_result.BackgroundScheduler')
