@@ -106,8 +106,8 @@ class OBSImageBuildResultService(BaseService):
                 extra={'job_id': job_id}
             )
             result = self._add_job(job_data)
-        elif 'obsjob_delete' in job_data and job_data['obsjob_delete']:
-            job_id = job_data['obsjob_delete']
+        elif 'obs_job_delete' in job_data and job_data['obs_job_delete']:
+            job_id = job_data['obs_job_delete']
             self.log.info(
                 'Deleting Job'.format(job_id),
                 extra={'job_id': job_id}
@@ -152,7 +152,7 @@ class OBSImageBuildResultService(BaseService):
 
         delete job description example:
         {
-            "obsjob_delete": "123"
+            "obs_job_delete": "123"
         }
         """
         if job_id not in self.jobs:
