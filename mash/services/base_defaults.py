@@ -23,5 +23,13 @@ class Defaults(object):
     """
 
     @classmethod
+    def get_config(self):
+        return '/etc/mash/mash_config.yaml'
+
+    @classmethod
     def get_job_directory(self, service_name):
         return '/var/lib/mash/{0}_jobs/'.format(service_name)
+
+    @classmethod
+    def get_log_directory(self):
+        return '/var/log/mash/'

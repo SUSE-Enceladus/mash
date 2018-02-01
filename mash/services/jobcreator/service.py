@@ -34,7 +34,7 @@ class JobCreatorService(BaseService):
         Initialize job creator service class.
         """
         self.config = JobCreatorConfig()
-        self.set_logfile(self.config.get_log_file())
+        self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.consume_queue(
             self._process_message,

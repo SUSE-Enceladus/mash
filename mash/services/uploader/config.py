@@ -17,7 +17,6 @@
 #
 
 from mash.services.base_config import BaseConfig
-from mash.services.uploader.defaults import Defaults
 
 
 class UploaderConfig(BaseConfig):
@@ -30,23 +29,5 @@ class UploaderConfig(BaseConfig):
     formatted file containing information to control the behavior
     of the uploader service.
     """
-    def __init__(self, config_file=Defaults.get_config()):
+    def __init__(self, config_file=None):
         super(UploaderConfig, self).__init__(config_file)
-
-    def get_log_file(self):
-        """
-        Return log file name:
-
-        uploader:
-          logfile: /tmp/uploader_service.log
-
-        if no configuration exists the log file name from
-        the Defaults class is returned
-
-        :rtype: string
-        """
-        logfile = self._get_attribute(
-            element='uploader', attribute='logfile'
-        )
-        return logfile if logfile else \
-            Defaults.get_log_file()

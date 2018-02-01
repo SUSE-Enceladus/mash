@@ -40,6 +40,7 @@ class LoggerService(BaseService):
         method to process log.
         """
         self.config = LoggerConfig()
+        self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.bind_queue(self.service_exchange, 'mash.logger', 'logging')
         self.consume_queue(self._process_log, 'logging')
@@ -72,7 +73,7 @@ class LoggerService(BaseService):
 
         if 'job_id' in data:
             file_name = data.get('job_id')
-            log_file = self.config.get_log_file(file_name)
+            log_file = self.config.get_job_log_file(file_name)
 
             try:
                 with open(log_file, 'a') as job_log:

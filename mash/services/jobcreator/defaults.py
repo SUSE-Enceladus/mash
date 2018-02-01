@@ -21,11 +21,3 @@ class Defaults(object):
     """
     Default values
     """
-
-    @classmethod
-    def get_config(self):
-        return '/etc/mash/job_creator_config.yml'
-
-    @classmethod
-    def get_log_file(self):
-        return '/var/log/mash/job_creator_service.log'

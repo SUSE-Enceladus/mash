@@ -9,7 +9,6 @@ from pytest import raises
 
 from mash.mash_exceptions import MashLoggerException
 from mash.services.base_service import BaseService
-from mash.services.logger.config import LoggerConfig
 from mash.services.logger.service import LoggerService
 
 open_name = "__builtin__.open" if sys.version_info.major < 3 \
@@ -47,21 +46,29 @@ class TestLoggerService(object):
         self.logger.service_exchange = 'logger'
         self.logger.channel = self.channel
 
+    @patch.object(LoggerService, 'set_logfile')
     @patch.object(LoggerService, 'stop')
     @patch.object(LoggerService, 'start')
-    @patch.object(LoggerConfig, '__init__')
+    @patch('mash.services.logger.service.LoggerConfig')
     @patch.object(LoggerService, 'bind_queue')
     @patch.object(LoggerService, '_process_log')
     @patch.object(LoggerService, 'consume_queue')
     def test_logger_post_init(
         self, mock_consume_queue, mock_process_log,
-        mock_bind_queue, mock_logger_config, mock_start, mock_stop
+        mock_bind_queue, mock_logger_config, mock_start, mock_stop,
+        mock_set_logfile
     ):
-        mock_logger_config.return_value = None
+        config = Mock()
+        config.get_log_file.return_value = '/var/log/mash/logger_service.log'
+        mock_logger_config.return_value = config
 
         # Test normal run
         self.logger.post_init()
 
+        config.get_log_file.assert_called_once_with('logger')
+        mock_set_logfile.assert_called_once_with(
+            '/var/log/mash/logger_service.log'
+        )
         mock_consume_queue.assert_called_once_with(
             mock_process_log, 'logging'
         )

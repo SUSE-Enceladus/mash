@@ -17,34 +17,18 @@
 #
 
 from mash.services.base_config import BaseConfig
-from mash.services.testing.defaults import Defaults
 
 
 class TestingConfig(BaseConfig):
     """
-    Implements reading of testing service configuration file:
+    Implements reading of the mash configuration file:
 
-    * /etc/mash/testing_config.yml
+    * /etc/mash/mash_config.yaml
 
-    The mash configuration file for the testing service is a yaml
-    formatted file containing information to control the behavior
-    of the testing service.
+    The mash configuration file is a yaml formatted file containing
+    information to control the behavior of the mash services.
     """
     __test__ = False
 
-    def __init__(self, config_file=Defaults.get_config()):
+    def __init__(self, config_file=None):
         super(TestingConfig, self).__init__(config_file)
-
-    def get_log_file(self):
-        """
-        Return log file name:
-        testing:
-          logfile: /var/log/mash/testing_service.log
-        If no configuration exists the log file name from the
-        Defaults class is returned
-        :rtype: string
-        """
-        logfile = self._get_attribute(
-            element='testing', attribute='logfile'
-        )
-        return logfile if logfile else Defaults.get_log_file()

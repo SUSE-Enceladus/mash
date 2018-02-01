@@ -19,8 +19,3 @@ class TestUploaderConfig(object):
         mock_open.side_effect = Exception
         with raises(MashConfigException):
             UploaderConfig('../data/uploader_config.yml')
-
-    def test_get_log_file(self):
-        assert self.config.get_log_file() == '/tmp/foo.log'
-        assert self.config_defaults.get_log_file() == \
-            '/tmp/uploader_service.log'
