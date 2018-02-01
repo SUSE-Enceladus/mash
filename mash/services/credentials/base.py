@@ -23,13 +23,14 @@ class CredentialsBase(object):
     Base class credentials interface class
     """
     def __init__(self, custom_args=None):
-        self.custom_args = custom_args
-        self.post_init()
+        self.custom_args = custom_args or {}
+        self.post_init(**custom_args)
 
     def post_init(self):
         self.credentials = {}
 
     def set_credentials(self, secret_token):
+        """Deprecated"""
         self.credentials.update(
             jwt.decode(secret_token, 'secret', algorithms=['HS256'])
         )

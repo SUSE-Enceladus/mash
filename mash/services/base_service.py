@@ -17,16 +17,21 @@
 #
 
 import json
+import jwt
 import logging
 import os
 
 from amqpstorm import Connection
+from datetime import datetime, timedelta
+from jwt import ExpiredSignatureError, InvalidTokenError
 
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
+from mash.services.credentials.amazon import CredentialsAmazon
 from mash.mash_exceptions import (
+    MashCredentialsException,
     MashRabbitConnectionException,
     MashLogSetupException
 )
@@ -68,6 +73,16 @@ class BaseService(object):
         self._open_connection()
         self.bind_queue(
             self.service_exchange, self.job_document_key, self.service_queue
+        )
+
+        # Credentials
+        self.credentials_queue = 'credentials'
+        self.credentials_key = 'credentials_response'
+
+        self.jwt_algorithm = 'HS256'
+
+        self.bind_queue(
+            self.service_exchange, self.credentials_key, self.credentials_queue
         )
 
         logging.basicConfig()
@@ -126,11 +141,13 @@ class BaseService(object):
         )
 
     def publish_credentials_result(self, job_id, csp, message):
+        """Deprecated"""
         exchange = 'credentials'
         self.bind_queue(exchange, job_id, csp)
         self._publish(exchange, job_id, message)
 
     def consume_credentials_queue(self, callback, csp):
+        """Deprecated"""
         queue_name = csp
         queue = self._get_queue_name('credentials', queue_name)
         self.channel.basic.consume(
@@ -138,7 +155,61 @@ class BaseService(object):
         )
 
     def bind_credentials_queue(self, job_id, csp):
+        """Deprecated"""
         self.bind_queue('credentials', job_id, csp)
+
+    def get_credential_request(self, job_id):
+        """
+        Return jwt encoded credentials request message.
+        """
+        request = {
+            'exp': datetime.utcnow() + timedelta(minutes=5),  # Expiration time
+            'iat': datetime.utcnow(),  # Issued at time
+            'sub': 'credentials_request',  # Subject
+            'iss': self.service_exchange,  # Issuer
+            'aud': 'credentials',  # audience
+            'job_id': job_id,
+        }
+        return jwt.encode(request, self.secret, algorithm=self.jwt_algorithm)
+
+    def decode_credentials(self, message, provider):
+        """
+        Decode jwt credential response message.
+        """
+        try:
+            payload = jwt.decode(
+                message, self.secret, algorithm=self.jwt_algorithm
+            )
+        except ExpiredSignatureError:
+            raise MashCredentialsException(
+                'Token has expired, cannot retrieve credentials.'
+            )
+        except InvalidTokenError as error:
+            raise MashCredentialsException(
+                'Invalid token, cannot retrieve credentials: {0}'.format(error)
+            )
+
+        try:
+            credentials = payload['credentials']
+        except KeyError:
+            raise MashCredentialsException(
+                'Credentials not found in token.'
+            )
+
+        if provider == 'ec2':
+            provider_class = CredentialsAmazon
+
+        accounts = {}
+        for name, credential in credentials.items():
+            accounts[name] = provider_class(custom_args=credential)
+
+        return accounts
+
+    def publish_credentials_request(self, job_id):
+        self._publish(
+            'credentials', 'credentials_request',
+            self.get_credential_request(job_id)
+        )
 
     def close_connection(self):
         if self.channel and self.channel.is_open:
