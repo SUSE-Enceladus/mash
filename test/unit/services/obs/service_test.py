@@ -122,7 +122,7 @@ class TestOBSImageBuildResultService(object):
                 }
             }
         )
-        message.body = '{"obsjob_delete": "4711"}'
+        message.body = '{"obs_job_delete": "4711"}'
         self.obs_result._process_message(message)
         mock_delete_job.assert_called_once_with(
             '4711'
