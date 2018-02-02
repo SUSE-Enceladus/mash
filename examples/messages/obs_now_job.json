@@ -1,6 +1,6 @@
 {
     "obs_job": {
-        "id": "0815",
+        "id": "123",
         "image": "test-image-iso",
         "project": "Virtualization:Appliances:Images:Testing_x86",
         "utctime": "now"
