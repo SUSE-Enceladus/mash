@@ -49,6 +49,19 @@ class BaseConfig(object):
             else:
                 return self.config_data.get(attribute)
 
+    def get_jwt_secret(self):
+        """
+        Return JWT secret token from MASH config file.
+
+        Raise exception if secret not in config file.
+        """
+        secret = self._get_attribute(attribute='jwt_secret')
+
+        if not secret:
+            raise MashConfigException('jwt_secret must be in config file.')
+
+        return secret
+
     def get_log_directory(self):
         log_dir = self._get_attribute(attribute='log_dir')
         return log_dir or Defaults.get_log_directory()
