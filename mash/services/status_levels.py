@@ -1,6 +1,6 @@
 SUCCESS = 'success'
-ERROR = 'error'
+FAILED = 'failed'
 EXCEPTION = 'exception'
 OVERDUE = 'overdue'
 DELETE = 'delete'
-UNKOWN = 'unkown'
+UNKOWN = None
