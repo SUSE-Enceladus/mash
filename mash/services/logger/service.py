@@ -18,8 +18,6 @@
 
 import json
 
-from amqpstorm import AMQPError
-
 from mash.mash_exceptions import MashLoggerException
 from mash.services.logger.config import LoggerConfig
 from mash.services.base_service import BaseService
@@ -43,16 +41,7 @@ class LoggerService(BaseService):
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.bind_queue(self.service_exchange, 'mash.logger', 'logging')
-        self.consume_queue(self._process_log, 'logging')
-
-        try:
-            self.start()
-        except KeyboardInterrupt:
-            pass
-        except Exception:
-            raise
-        finally:
-            self.stop()
+        self.start()
 
     def _process_log(self, message):
         """
@@ -91,13 +80,15 @@ class LoggerService(BaseService):
         """
         Start logger service.
         """
-        while True:
-            try:
-                self.channel.start_consuming()
-                if not self.channel.consumer_tags:
-                    break
-            except AMQPError:
-                self._open_connection()
+        self.consume_queue(self._process_log, 'logging')
+        try:
+            self.channel.start_consuming()
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            raise
+        finally:
+            self.stop()
 
     def stop(self):
         """
