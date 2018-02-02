@@ -51,9 +51,6 @@ class TestingService(BaseService):
 
         self.jobs = {}
 
-        # Consume job documents
-        self.consume_queue(self._process_message)
-
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
             self._process_test_result,
@@ -61,15 +58,7 @@ class TestingService(BaseService):
         )
 
         self.restart_jobs(self._add_job)
-
-        try:
-            self.start()
-        except KeyboardInterrupt:
-            pass
-        except Exception:
-            raise
-        finally:
-            self.stop()
+        self.start()
 
     def _add_job(self, job_config):
         """
@@ -407,15 +396,16 @@ class TestingService(BaseService):
         Start testing service.
         """
         self.scheduler.start()
+        self.consume_queue(self._process_message)
 
-        while True:
-            try:
-                self.channel.start_consuming()
-                if not self.channel.consumer_tags:
-                    break
-            except AMQPError as error:
-                self.log.warning(str(error))
-                self._open_connection()
+        try:
+            self.channel.start_consuming()
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            raise
+        finally:
+            self.stop()
 
     def stop(self):
         """
@@ -424,4 +414,5 @@ class TestingService(BaseService):
         Stop consuming queues and close rabbitmq connections.
         """
         self.scheduler.shutdown()
+        self.channel.stop_consuming()
         self.close_connection()

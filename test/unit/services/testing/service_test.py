@@ -47,16 +47,14 @@ class TestIPATestingService(object):
             '"status": "success"}}'
 
     @patch.object(TestingService, 'set_logfile')
-    @patch.object(TestingService, 'stop')
     @patch.object(TestingService, 'start')
     @patch.object(TestingService, 'restart_jobs')
     @patch('mash.services.testing.service.TestingConfig')
     @patch.object(TestingService, '_process_message')
-    @patch.object(TestingService, 'consume_queue')
     def test_testing_post_init(
-        self, mock_consume_queue, mock_process_message,
+        self, mock_process_message,
         mock_testing_config, mock_restart_jobs,
-        mock_start, mock_stop, mock_set_logfile
+        mock_start, mock_set_logfile
     ):
         mock_testing_config.return_value = self.config
         self.config.get_log_file.return_value = \
@@ -68,37 +66,7 @@ class TestIPATestingService(object):
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/testing_service.log'
         )
-        mock_consume_queue.assert_called_once_with(mock_process_message)
         mock_start.assert_called_once_with()
-        mock_stop.assert_called_once_with()
-
-    @patch.object(TestingService, 'set_logfile')
-    @patch.object(TestingService, 'stop')
-    @patch.object(TestingService, 'start')
-    @patch.object(TestingService, 'restart_jobs')
-    @patch('mash.services.testing.service.TestingConfig')
-    @patch.object(TestingService, '_handle_jobs')
-    @patch.object(TestingService, 'consume_queue')
-    def test_testing_post_init_exceptions(
-        self, mock_consume_queue, mock_handle_jobs,
-        mock_testing_config, mock_restart_jobs,
-        mock_start, mock_stop, mock_set_logfile
-    ):
-        mock_testing_config.return_value = self.config
-        self.config.get_log_file.return_value = \
-            '/var/log/mash/testing_service.log'
-
-        mock_start.side_effect = KeyboardInterrupt()
-
-        self.testing.post_init()
-
-        mock_stop.assert_called_once_with()
-        mock_start.side_effect = Exception()
-        mock_stop.reset_mock()
-        with raises(Exception):
-            self.testing.post_init()
-
-        mock_stop.assert_called_once_with()
 
     @patch.object(TestingService, '_create_job')
     def test_testing_add_job(self, mock_create_job):
@@ -595,34 +563,49 @@ class TestIPATestingService(object):
             'source_regions is required in uploader result.'
         )
 
-    def test_testing_start(self):
+    @patch.object(TestingService, 'consume_queue')
+    @patch.object(TestingService, 'stop')
+    def test_testing_start(self, mock_stop, mock_consume_queue):
         scheduler = Mock()
         self.testing.scheduler = scheduler
-
-        self.channel.consumer_tags = []
         self.testing.channel = self.channel
 
         self.testing.start()
         scheduler.start.assert_called_once_with()
         self.channel.start_consuming.assert_called_once_with()
+        mock_consume_queue.assert_called_once_with(
+            self.testing._process_message
+        )
+        mock_stop.assert_called_once_with()
 
-    @patch.object(TestingService, '_open_connection')
-    def test_testing_start_exception(self, mock_open_connection):
+    @patch.object(TestingService, 'consume_queue')
+    @patch.object(TestingService, 'stop')
+    def test_testing_start_exception(self, mock_stop, mock_consume_queue):
         scheduler = Mock()
         self.testing.scheduler = scheduler
-        self.channel.start_consuming.side_effect = [AMQPError('Broken!'), None]
-        self.channel.consumer_tags = []
         self.testing.channel = self.channel
 
+        self.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.testing.start()
-        self.testing.log.warning.assert_called_once_with('Broken!')
-        mock_open_connection.assert_called_once_with()
+
+        mock_stop.assert_called_once_with()
+        mock_stop.reset_mock()
+        self.channel.start_consuming.side_effect = Exception(
+            'Cannot start scheduler.'
+        )
+
+        with raises(Exception) as error:
+            self.testing.start()
+
+        assert 'Cannot start scheduler.' == str(error.value)
 
     @patch.object(TestingService, 'close_connection')
     def test_testing_stop(self, mock_close_connection):
         scheduler = Mock()
         self.testing.scheduler = scheduler
+        self.testing.channel = self.channel
 
         self.testing.stop()
         scheduler.shutdown.assert_called_once_with()
         mock_close_connection.assert_called_once_with()
+        self.channel.stop_consuming.assert_called_once_with()
