@@ -1,4 +1,5 @@
 import io
+import jwt
 
 from unittest.mock import patch
 from unittest.mock import call
@@ -9,6 +10,7 @@ from mash.services.base_service import BaseService
 from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
+    MashCredentialsException,
     MashRabbitConnectionException,
     MashLogSetupException
 )
@@ -157,4 +159,84 @@ class TestBaseService(object):
         )
         self.service.channel.queue.unbind.assert_called_once_with(
             queue='service', exchange='testing', routing_key='1'
+        )
+
+    def test_get_credentials_request(self):
+        self.service.jwt_algorithm = 'HS256'
+        self.service.secret = 'super.secret'
+        self.service_exchange = 'obs'
+        token = self.service.get_credential_request('1')
+
+        payload = jwt.decode(
+            token, 'super.secret', algorithm='HS256',
+            issuer='obs', audience='credentials'
+        )
+
+        assert payload['id'] == '1'
+        assert payload['sub'] == 'credentials_request'
+
+    @patch('mash.services.base_service.jwt')
+    def test_decode_credentials(self, mock_jwt):
+        self.service.jwt_algorithm = 'HS256'
+        self.service.secret = 'super.secret'
+        self.service_exchange = 'obs'
+
+        message = Mock()
+        mock_jwt.decode.return_value = {
+            "credentials": {
+                "test-aws": {
+                    "access_key_id": "123456",
+                    "secret_access_key": "654321",
+                    "ssh_key_name": "key-123",
+                    "ssh_private_key": "key123"
+                },
+                "test-aws-cn": {
+                    "access_key_id": "654321",
+                    "secret_access_key": "123456",
+                    "ssh_key_name": "key-321",
+                    "ssh_private_key": "key321"
+                }
+            }
+        }
+
+        accounts = self.service.decode_credentials(message, 'ec2')
+
+        mock_jwt.decode.assert_called_once_with(
+            message, 'super.secret', algorithm='HS256',
+            issuer='credentials', audience='obs'
+        )
+
+        assert len(accounts) == 2
+
+        # Invalid payload
+        mock_jwt.decode.return_value = {}
+
+        msg = 'Credentials not found in payload.'
+        with raises(MashCredentialsException) as e:
+            self.service.decode_credentials(message, 'ec2')
+        assert msg == str(e.value)
+        # Invalid payload
+
+        # Credential exception
+        mock_jwt.decode.side_effect = Exception('Token is broken!')
+
+        msg = 'Invalid credentials response token: Token is broken!'
+        with raises(MashCredentialsException) as e:
+            self.service.decode_credentials(message, 'ec2')
+        assert msg == str(e.value)
+        # Credential exception
+
+    @patch.object(BaseService, 'get_credential_request')
+    @patch.object(BaseService, '_publish')
+    def test_publish_credentials_request(
+        self, mock_publish, mock_get_credential_request
+    ):
+        token = Mock()
+        mock_get_credential_request.return_value = token
+
+        self.service.service_exchange = 'obs'
+        self.service.publish_credentials_request('1')
+
+        mock_publish.assert_called_once_with(
+            'credentials', 'request.obs', token
         )
