@@ -168,7 +168,7 @@ class BaseService(object):
             'sub': 'credentials_request',  # Subject
             'iss': self.service_exchange,  # Issuer
             'aud': 'credentials',  # audience
-            'job_id': job_id,
+            'id': job_id,
         }
         return jwt.encode(request, self.secret, algorithm=self.jwt_algorithm)
 
@@ -178,22 +178,19 @@ class BaseService(object):
         """
         try:
             payload = jwt.decode(
-                message, self.secret, algorithm=self.jwt_algorithm
+                message, self.secret, algorithm=self.jwt_algorithm,
+                issuer='credentials', audience=self.service_exchange
             )
-        except ExpiredSignatureError:
+        except Exception as error:
             raise MashCredentialsException(
-                'Token has expired, cannot retrieve credentials.'
-            )
-        except InvalidTokenError as error:
-            raise MashCredentialsException(
-                'Invalid token, cannot retrieve credentials: {0}'.format(error)
+                'Invalid credentials response token: {0}'.format(error)
             )
 
         try:
             credentials = payload['credentials']
         except KeyError:
             raise MashCredentialsException(
-                'Credentials not found in token.'
+                'Credentials not found in payload.'
             )
 
         if provider == 'ec2':
@@ -207,7 +204,7 @@ class BaseService(object):
 
     def publish_credentials_request(self, job_id):
         self._publish(
-            'credentials', 'credentials_request',
+            'credentials', 'request.{0}'.format(self.service_exchange),
             self.get_credential_request(job_id)
         )
 
