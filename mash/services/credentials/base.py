@@ -23,7 +23,7 @@ class CredentialsBase(object):
     Base class credentials interface class
     """
     def __init__(self, custom_args=None):
-        self.custom_args = custom_args or {}
+        custom_args = custom_args or {}
         self.post_init(**custom_args)
 
     def post_init(self):
