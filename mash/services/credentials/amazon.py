@@ -23,13 +23,15 @@ class CredentialsAmazon(CredentialsBase):
     """
     Implements credentials handling for Amazon
     """
-    def post_init(self):
+    def post_init(
+        self, access_key_id, secret_access_key, ssh_key_name, ssh_private_key
+    ):
         """
         Initialize secret information we need to access Amazon EC2
         """
         self.credentials = {
-            'ssh_key_pair_name': None,
-            'ssh_key_private_key_file': None,
-            'access_key': None,
-            'secret_key': None
+            'access_key_id': access_key_id,
+            'secret_access_key': secret_access_key,
+            'ssh_key_name': ssh_key_name,
+            'ssh_private_key': ssh_private_key
         }
