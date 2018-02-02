@@ -283,6 +283,7 @@ class TestingService(BaseService):
                 extra=metata
             )
 
+        # Don't send failure messages for always jobs.
         if job.utctime != 'always' or job.status == SUCCESS:
             self._publish_message(job)
         job.listener_msg.ack()
