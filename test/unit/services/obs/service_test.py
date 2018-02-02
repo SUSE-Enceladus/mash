@@ -108,14 +108,14 @@ class TestOBSImageBuildResultService(object):
     ):
         message = Mock()
         message.method = {'routing_key': 'job_document'}
-        message.body = '{"obsjob":{"id": "4711","project": ' + \
+        message.body = '{"obs_job":{"id": "4711","project": ' + \
             '"Virtualization:Appliances:Images:Testing_x86","image": ' + \
             '"test-image-docker","utctime": "always"}}'
         self.obs_result._process_message(message)
         message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with(
             {
-                'obsjob': {
+                'obs_job': {
                     'project': 'Virtualization:Appliances:Images:Testing_x86',
                     'image': 'test-image-docker',
                     'id': '4711',
@@ -162,7 +162,7 @@ class TestOBSImageBuildResultService(object):
         mock_persist_job_config
     ):
         job_data = {
-            "obsjob": {
+            "obs_job": {
                 "id": "123",
                 "project": "Virtualization:Appliances:Images:Testing_x86",
                 "image": "test-image-oem",
@@ -184,8 +184,8 @@ class TestOBSImageBuildResultService(object):
         mock_validate_job_description.return_value = job_info
         self.obs_result._add_job(job_data)
 
-        mock_persist_job_config.assert_called_once_with(job_data['obsjob'])
-        mock_start_job.assert_called_once_with(job_data['obsjob'])
+        mock_persist_job_config.assert_called_once_with(job_data['obs_job'])
+        mock_start_job.assert_called_once_with(job_data['obs_job'])
         assert mock_validate_job_description.call_args_list == [
             call(job_data), call(job_data)
         ]
@@ -215,26 +215,26 @@ class TestOBSImageBuildResultService(object):
         mock_dateutil_parse.side_effect = Exception('mytime')
         job_data = {}
         assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Invalid job: no obsjob', 'ok': False
+            'message': 'Invalid job: no obs_job', 'ok': False
         }
-        job_data = {"obsjob": {}}
+        job_data = {"obs_job": {}}
         assert self.obs_result._validate_job_description(job_data) == {
             'message': 'Invalid job: no job id', 'ok': False
         }
-        job_data = {"obsjob": {"id": "123"}}
+        job_data = {"obs_job": {"id": "123"}}
         assert self.obs_result._validate_job_description(job_data) == {
             'message': 'Invalid job: no image name', 'ok': False
         }
-        job_data = {"obsjob": {"id": "123", "image": "foo"}}
+        job_data = {"obs_job": {"id": "123", "image": "foo"}}
         assert self.obs_result._validate_job_description(job_data) == {
             'message': 'Invalid job: no project name', 'ok': False
         }
-        job_data = {"obsjob": {"id": "123", "image": "foo", "project": "foo"}}
+        job_data = {"obs_job": {"id": "123", "image": "foo", "project": "foo"}}
         assert self.obs_result._validate_job_description(job_data) == {
             'message': 'Invalid job: no time given', 'ok': False
         }
         job_data = {
-            "obsjob": {
+            "obs_job": {
                 "id": "123", "image": "foo",
                 "project": "foo", "utctime": "mytime"
             }

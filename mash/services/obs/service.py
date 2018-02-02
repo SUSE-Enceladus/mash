@@ -99,8 +99,8 @@ class OBSImageBuildResultService(BaseService):
         handle obs job document
         """
         job_id = None
-        if 'obsjob' in job_data:
-            job_id = job_data['obsjob'].get('id', None)
+        if 'obs_job' in job_data:
+            job_id = job_data['obs_job'].get('id', None)
             self.log.info(
                 JsonFormat.json_message(job_data),
                 extra={'job_id': job_id}
@@ -126,7 +126,7 @@ class OBSImageBuildResultService(BaseService):
 
         job description example:
         {
-          "obsjob": {
+          "obs_job": {
               "id": "123",
               "project": "Virtualization:Appliances:Images:Testing_x86",
               "image": "test-image-oem",
@@ -142,7 +142,7 @@ class OBSImageBuildResultService(BaseService):
         if not job_info['ok']:
             return job_info
         else:
-            data = data['obsjob']
+            data = data['obs_job']
             data['job_file'] = self.persist_job_config(data)
             return self._start_job(data)
 
@@ -184,12 +184,12 @@ class OBSImageBuildResultService(BaseService):
                 }
 
     def _validate_job_description(self, job_data):
-        if 'obsjob' not in job_data:
+        if 'obs_job' not in job_data:
             return {
                 'ok': False,
-                'message': 'Invalid job: no obsjob'
+                'message': 'Invalid job: no obs_job'
             }
-        job = job_data['obsjob']
+        job = job_data['obs_job']
         if 'id' not in job:
             return {
                 'ok': False,
