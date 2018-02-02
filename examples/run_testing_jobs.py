@@ -47,8 +47,8 @@ class Test(object):
 
     def consume_credentials(self):
         exchange = 'credentials'
-        key = 'credentials_request'
-        queue = '{0}.{1}'.format(exchange, key)
+        key = 'request.{0}'.format(self.service)
+        queue = '{0}.listener'.format(exchange)
 
         self.channel.exchange.declare(
             exchange=exchange, exchange_type='direct', durable=True
@@ -140,7 +140,7 @@ class Test(object):
             'enter-a-secret',
             algorithm='HS256',
             audience='credentials',
-            issuer=self.service
+            issuer=message.method['routing_key'].split('.')[1]
         )
 
         template_file = os.path.join(
