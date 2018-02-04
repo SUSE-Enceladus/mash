@@ -57,7 +57,7 @@ class TestUploadAmazon(object):
 
     def test_upload(self):
         self.uploader.ec2.create_image.return_value = 'ami_id'
-        assert self.uploader.upload() == ['ami_id', 'us-east-1']
+        assert self.uploader.upload() == ('ami_id', 'us-east-1')
         self.uploader.ec2.set_region.assert_called_once_with('us-east-1')
         self.uploader.ec2.create_image.assert_called_once_with('file')
         self.uploader.ec2.create_image.side_effect = Exception
