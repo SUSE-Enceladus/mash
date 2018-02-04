@@ -68,7 +68,7 @@ class UploadImageService(BaseService):
     def _send_job_response(self, job_id, status_message):
         self.log.info(status_message, extra={'job_id': job_id})
 
-    def _send_job_result_for_testing(
+    def _send_job_result(
         self, job_id, last_upload_region, trigger_info
     ):
         if self.jobs[job_id]['uploader_result']['status'] != 'failed':
@@ -401,7 +401,7 @@ class UploadImageService(BaseService):
             self._send_job_response
         )
         upload_image.set_result_handler(
-            self._send_job_result_for_testing
+            self._send_job_result
         )
         while self.jobs[job_id]['ready']:
             if not self._image_already_uploading(job_id, upload_image):

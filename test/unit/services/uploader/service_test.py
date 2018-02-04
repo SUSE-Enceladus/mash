@@ -75,7 +75,7 @@ class TestUploadImageService(object):
 
     @patch.object(BaseService, 'publish_job_result')
     @patch.object(UploadImageService, '_delete_job')
-    def test_send_job_result_for_testing(
+    def test_send_job_result(
         self, mock_delete_job, mock_publish_job_result
     ):
         self.uploader.jobs['815'] = {
@@ -90,7 +90,7 @@ class TestUploadImageService(object):
             'upload_region': 'region',
             'cloud_image_id': 'image_id'
         }
-        self.uploader._send_job_result_for_testing('815', True, trigger_info)
+        self.uploader._send_job_result('815', True, trigger_info)
         mock_publish_job_result.assert_called_once_with(
             'testing', '815', JsonFormat.json_message(
                 self.uploader.jobs['815']['uploader_result']
@@ -378,12 +378,12 @@ class TestUploadImageService(object):
     @patch('mash.services.uploader.service.UploadImage')
     @patch.object(UploadImageService, '_send_job_response')
     @patch.object(UploadImageService, '_image_already_uploading')
-    @patch.object(UploadImageService, '_send_job_result_for_testing')
+    @patch.object(UploadImageService, '_send_job_result')
     @patch.object(UploadImageService, '_wait_until_ready')
     @patch('mash.services.uploader.service.time.sleep')
     def test_start_job(
         self, mock_sleep, mock_wait_until_ready,
-        mock_send_job_result_for_testing, mock_image_already_uploading,
+        mock_send_job_result, mock_image_already_uploading,
         mock_send_job_response, mock_UploadImage
     ):
         upload_image = Mock()
@@ -427,7 +427,7 @@ class TestUploadImageService(object):
             mock_send_job_response
         )
         upload_image.set_result_handler.assert_called_once_with(
-            mock_send_job_result_for_testing
+            mock_send_job_result
         )
         upload_image.set_image_file.assert_called_once_with('image')
         upload_image.upload.assert_called_once_with()
