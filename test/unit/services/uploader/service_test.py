@@ -142,7 +142,7 @@ class TestUploadImageService(object):
         message.body = '{"uploader_job": {"id": "123", ' + \
             '"utctime": "now", "cloud_image_name": "name", ' + \
             '"image_description": "description", ' + \
-            '"provider": "EC2", ' +\
+            '"provider": "ec2", ' +\
             '"target_regions": {"eu-central-1": { ' +\
             '"helper_image": "ami-bc5b48d0", "account": "test-aws"}}}}'
         self.uploader._process_message(message)
@@ -154,7 +154,7 @@ class TestUploadImageService(object):
                     'utctime': 'now',
                     'cloud_image_name': 'name',
                     'image_description': 'description',
-                    'provider': 'EC2',
+                    'provider': 'ec2',
                     'target_regions': {
                         'eu-central-1': {
                             'helper_image': 'ami-bc5b48d0',
@@ -202,7 +202,7 @@ class TestUploadImageService(object):
                 "id": "123",
                 "cloud_image_name": "name",
                 "image_description": "description",
-                "provider": "EC2",
+                "provider": "ec2",
                 "target_regions": {
                     "eu-central-1": {
                         "helper_image": "ami-bc5b48d0",
@@ -287,6 +287,17 @@ class TestUploadImageService(object):
             }
         }
         assert self.uploader._validate_job_description(job_data) == {
+            'message': 'Invalid job: EC2 provider not supported', 'ok': False
+        }
+        job_data = {
+            "uploader_job": {
+                "id": "123",
+                "cloud_image_name": "foo",
+                "image_description": "bar",
+                "provider": "ec2"
+            }
+        }
+        assert self.uploader._validate_job_description(job_data) == {
             'message': 'Invalid job: no target regions record', 'ok': False
         }
         job_data = {
@@ -294,7 +305,7 @@ class TestUploadImageService(object):
                 "id": "123",
                 "cloud_image_name": "foo",
                 "image_description": "bar",
-                "provider": "EC2",
+                "provider": "ec2",
                 "target_regions": {
                     "us-east-1": {
                         "helper_image": "ami-bc5b48d0",
@@ -311,7 +322,7 @@ class TestUploadImageService(object):
                 "id": "123",
                 "cloud_image_name": "foo",
                 "image_description": "bar",
-                "provider": "EC2",
+                "provider": "ec2",
                 "target_regions": {
                     "us-east-1": {
                         "helper_image": "ami-bc5b48d0",
@@ -342,7 +353,7 @@ class TestUploadImageService(object):
             'image_description': 'a',
             'job_file': 'job_file',
             'utctime': 'Wed Oct 11 17:50:26 UTC 2017',
-            'provider': 'EC2',
+            'provider': 'ec2',
             'target_regions': {
                 'us-east-1': {
                     'helper_image': 'ami-bc5b48d0',
@@ -400,7 +411,7 @@ class TestUploadImageService(object):
             'image_description': 'a',
             'job_file': 'job_file',
             'utctime': 'now',
-            'provider': 'EC2',
+            'provider': 'ec2',
             'target_regions': {
                 'us-east-1': {
                     'helper_image': 'ami-bc5b48d0',

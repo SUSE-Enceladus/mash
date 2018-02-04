@@ -27,6 +27,7 @@ from mash.services.base_service import BaseService
 from mash.services.uploader.upload_image import UploadImage
 from mash.services.uploader.config import UploaderConfig
 from mash.utils.json_format import JsonFormat
+from mash.csp import CSP
 
 
 class UploadImageService(BaseService):
@@ -171,7 +172,7 @@ class UploadImageService(BaseService):
             "utctime": "now|always|timestring_utc_timezone",
             "cloud_image_name": "name",
             "image_description": "description",
-            "provider": "EC2",
+            "provider": "ec2",
             "target_regions": {
                 "us-east-1": {
                     "helper_image": "ami-bc5b48d0",
@@ -219,7 +220,7 @@ class UploadImageService(BaseService):
                 }
 
     def _validate_job_description(self, job_data):
-        # validate job description. Currently only Amazon EC2 is supported
+        # validate job description. Currently only Amazon ec2 is supported
         if 'uploader_job' not in job_data:
             return {
                 'ok': False,
@@ -251,6 +252,13 @@ class UploadImageService(BaseService):
                 'ok': False,
                 'message': 'Invalid job: no cloud provider'
             }
+        if job['provider'] != CSP.ec2:
+            return {
+                'ok': False,
+                'message': 'Invalid job: {0} provider not supported'.format(
+                    job['provider']
+                )
+            }
         if 'target_regions' not in job:
             return {
                 'ok': False,
@@ -277,7 +285,7 @@ class UploadImageService(BaseService):
     def _get_uploader_arguments_per_region(self, job_data):
         uploader_args = []
         for region in job_data['target_regions']:
-            if job_data['provider'] == 'EC2':
+            if job_data['provider'] == CSP.ec2:
                 # turn region metadata into EC2ImageUploader compatible format
                 uploader_args.append(
                     {
