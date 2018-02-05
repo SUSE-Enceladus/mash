@@ -47,15 +47,13 @@ class TestLoggerService(object):
         self.logger.channel = self.channel
 
     @patch.object(LoggerService, 'set_logfile')
-    @patch.object(LoggerService, 'stop')
     @patch.object(LoggerService, 'start')
     @patch('mash.services.logger.service.LoggerConfig')
     @patch.object(LoggerService, 'bind_queue')
     @patch.object(LoggerService, '_process_log')
-    @patch.object(LoggerService, 'consume_queue')
     def test_logger_post_init(
-        self, mock_consume_queue, mock_process_log,
-        mock_bind_queue, mock_logger_config, mock_start, mock_stop,
+        self, mock_process_log,
+        mock_bind_queue, mock_logger_config, mock_start,
         mock_set_logfile
     ):
         config = Mock()
@@ -69,29 +67,10 @@ class TestLoggerService(object):
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/logger_service.log'
         )
-        mock_consume_queue.assert_called_once_with(
-            mock_process_log, 'logging'
-        )
         mock_bind_queue.assert_called_once_with(
             'logger', 'mash.logger', 'logging'
         )
         mock_start.assert_called_once_with()
-        mock_stop.assert_called_once_with()
-
-        # Test keyboard interrupt
-        mock_start.side_effect = KeyboardInterrupt
-        mock_stop.reset_mock()
-
-        self.logger.post_init()
-        mock_stop.assert_called_once_with()
-
-        # Test unandled exception
-        mock_start.side_effect = Exception('Unable to connect.')
-
-        with raises(Exception) as e:
-            self.logger.post_init()
-
-        assert 'Unable to connect.' == str(e.value)
 
     def test_logger_process_invalid_log(self):
         self.message.body = ''
@@ -129,21 +108,37 @@ class TestLoggerService(object):
             with raises(MashLoggerException):
                 self.logger._process_log(self.message)
 
-    def test_logger_start(self):
-        self.channel.consumer_tags = []
+    @patch.object(LoggerService, 'consume_queue')
+    @patch.object(LoggerService, 'stop')
+    def test_logger_start(self, mock_stop, mock_consume_queue):
         self.logger.channel = self.channel
-
         self.logger.start()
         self.channel.start_consuming.assert_called_once_with()
+        mock_consume_queue.assert_called_once_with(
+            self.logger._process_log, 'logging'
+        )
+        mock_stop.assert_called_once_with()
 
-    @patch.object(LoggerService, '_open_connection')
-    def test_logger_start_exception(self, mock_open_connection):
-        self.channel.start_consuming.side_effect = [AMQPError('Broken!'), None]
-        self.channel.consumer_tags = []
+    @patch.object(LoggerService, 'consume_queue')
+    @patch.object(LoggerService, 'stop')
+    def test_logger_start_exception(self, mock_stop, mock_consume_queue):
+        scheduler = Mock()
+        self.logger.scheduler = scheduler
         self.logger.channel = self.channel
 
+        self.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.logger.start()
-        mock_open_connection.assert_called_once_with()
+
+        mock_stop.assert_called_once_with()
+        mock_stop.reset_mock()
+        self.channel.start_consuming.side_effect = Exception(
+            'Cannot start scheduler.'
+        )
+
+        with raises(Exception) as error:
+            self.logger.start()
+
+        assert 'Cannot start scheduler.' == str(error.value)
 
     @patch.object(LoggerService, 'close_connection')
     def test_logger_stop(self, mock_close_connection):
