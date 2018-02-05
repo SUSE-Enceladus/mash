@@ -11,6 +11,7 @@ class TestUploadImage(object):
         self.upload_image = UploadImage(
             '123', 'job_file', False, 'ec2',
             'token', 'cloud_image_name', 'cloud_image_description',
+            last_upload_region=False,
             custom_uploader_args={'cloud-specific-param': 'foo'}
         )
         self.upload_image.set_image_file('image_file')
@@ -22,6 +23,7 @@ class TestUploadImage(object):
         self, mock_result_callback, mock_log_callback, mock_Upload
     ):
         uploader = Mock()
+        uploader.upload.return_value = ['region', 'image_id']
         mock_Upload.return_value = uploader
         self.upload_image.upload()
         mock_Upload.assert_called_once_with(
@@ -29,6 +31,10 @@ class TestUploadImage(object):
             'token', {'cloud-specific-param': 'foo'}, None
         )
         uploader.upload.assert_called_once_with()
+        assert mock_log_callback.call_args_list == [
+            call('Uploading image to ec2: image_file'),
+            call('Uploaded image has ID: image_id')
+        ]
         mock_result_callback.assert_called_once_with()
 
         mock_log_callback.reset_mock()
@@ -67,13 +73,22 @@ class TestUploadImage(object):
         self.upload_image.cloud_image_id = 'id'
         self.upload_image._result_callback()
         self.upload_image.result_callback.assert_called_once_with(
-            '123',
-            {'cloud_image_id': 'id', 'csp_name': 'ec2', 'job_status': 'success'}
+            '123', False, {
+                'cloud_image_id': 'id',
+                'upload_region': None,
+                'csp_name': 'ec2',
+                'job_status': 'success'
+            }
         )
         self.upload_image.result_callback.reset_mock()
         self.upload_image.cloud_image_id = None
+        self.upload_image.upload_region = 'eu-central-1'
         self.upload_image._result_callback()
         self.upload_image.result_callback.assert_called_once_with(
-            '123',
-            {'cloud_image_id': None, 'csp_name': 'ec2', 'job_status': 'failed'}
+            '123', False, {
+                'cloud_image_id': None,
+                'upload_region': 'eu-central-1',
+                'csp_name': 'ec2',
+                'job_status': 'failed'
+            }
         )

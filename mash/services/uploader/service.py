@@ -27,6 +27,7 @@ from mash.services.base_service import BaseService
 from mash.services.uploader.upload_image import UploadImage
 from mash.services.uploader.config import UploaderConfig
 from mash.utils.json_format import JsonFormat
+from mash.csp import CSP
 
 
 class UploadImageService(BaseService):
@@ -60,7 +61,7 @@ class UploadImageService(BaseService):
 
         try:
             self.channel.start_consuming()
-        except Exception as e:
+        except Exception:
             if self.channel and self.channel.is_open:
                 self.channel.stop_consuming()
                 self.close_connection()
@@ -68,14 +69,23 @@ class UploadImageService(BaseService):
     def _send_job_response(self, job_id, status_message):
         self.log.info(status_message, extra={'job_id': job_id})
 
-    def _send_job_result_for_testing(self, job_id, trigger_info):
-        self.jobs[job_id]['system_image_file_uploaded'] = \
-            self.jobs[job_id]['system_image_file']
-        self.publish_job_result(
-            'testing', job_id, JsonFormat.json_message(trigger_info)
-        )
-        if not self.jobs[job_id]['nonstop']:
-            self._delete_job(job_id)
+    def _send_job_result(
+        self, job_id, last_upload_region, trigger_info
+    ):
+        if self.jobs[job_id]['uploader_result']['status'] != 'failed':
+            self.jobs[job_id]['uploader_result']['status'] = \
+                trigger_info['job_status']
+        region = trigger_info['upload_region']
+        self.jobs[job_id]['uploader_result']['source_regions'][region] = \
+            trigger_info['cloud_image_id']
+        if last_upload_region:
+            self.publish_job_result(
+                'testing', job_id, JsonFormat.json_message(
+                    self.jobs[job_id]['uploader_result']
+                )
+            )
+            if not self.jobs[job_id]['nonstop']:
+                self._delete_job(job_id)
 
     def _send_control_response(self, result, job_id=None):
         message = result['message']
@@ -112,8 +122,8 @@ class UploadImageService(BaseService):
         handle uploader job document
         """
         job_id = None
-        if 'uploadjob' in job_data:
-            job_id = job_data['uploadjob'].get('id', None)
+        if 'uploader_job' in job_data:
+            job_id = job_data['uploader_job'].get('id', None)
             self.log.info(
                 JsonFormat.json_message(job_data),
                 extra={'job_id': job_id}
@@ -131,13 +141,17 @@ class UploadImageService(BaseService):
         job_id = message.method['routing_key']
         if job_id not in self.jobs:
             self.jobs[job_id] = {}
-        if 'image_source' in service_data:
-            system_image_file = service_data['image_source'][0]
+        if 'image_file' in service_data:
+            system_image_file = service_data['image_file'][0]
             self.jobs[job_id]['system_image_file'] = system_image_file
             self._send_job_response(
                 job_id, 'Got image file: {0}'.format(system_image_file)
             )
         if 'credentials' in service_data:
+            # NOTE: The response from the credentials service is still
+            # work in progress and will change. The current assumption
+            # is that service_data['credentials'] contains all information
+            # to upload to all target_regions of this job document
             self.jobs[job_id]['credentials_token'] = service_data['credentials']
             self._send_job_response(
                 job_id, 'Got credentials data'
@@ -153,14 +167,17 @@ class UploadImageService(BaseService):
         job description example:
 
         {
-          "uploadjob": {
+          "uploader_job": {
             "id": "123",
             "utctime": "now|always|timestring_utc_timezone",
             "cloud_image_name": "name",
-            "cloud_image_description": "description",
-            "ec2": {
-                "launch_ami": "ami-bc5b48d0",
-                "region": "eu-central-1"
+            "image_description": "description",
+            "provider": "ec2",
+            "target_regions": {
+                "us-east-1": {
+                    "helper_image": "ami-bc5b48d0",
+                    "account": "test-aws"
+                }
             }
           }
         }
@@ -169,18 +186,13 @@ class UploadImageService(BaseService):
         if not job_info['ok']:
             return job_info
         else:
-            data = data['uploadjob']
+            data = data['uploader_job']
             data['job_file'] = self.persist_job_config(data)
             return self._schedule_job(data)
 
     def _delete_job(self, job_id):
         """
         Delete job description and stop image upload job
-
-        delete job description example:
-        {
-            "uploadjob_delete": "123"
-        }
         """
         if job_id not in self.jobs:
             return {
@@ -188,7 +200,7 @@ class UploadImageService(BaseService):
                 'message': 'Job does not exist, can not delete it'
             }
         else:
-            upload_image = self.jobs[job_id]['uploader']
+            upload_image = self.jobs[job_id]['uploader'][0]
             # delete job file
             try:
                 os.remove(upload_image.job_file)
@@ -198,7 +210,9 @@ class UploadImageService(BaseService):
                     'message': 'Job deletion failed: {0}'.format(e)
                 }
             else:
-                # delete upload image job instance
+                # delete upload image job instances
+                for upload_image in self.jobs[job_id]['uploader']:
+                    del upload_image
                 del self.jobs[job_id]
                 return {
                     'ok': True,
@@ -206,13 +220,13 @@ class UploadImageService(BaseService):
                 }
 
     def _validate_job_description(self, job_data):
-        # validate job description. Currently only Amazon EC2 is supported
-        if 'uploadjob' not in job_data:
+        # validate job description. Currently only Amazon ec2 is supported
+        if 'uploader_job' not in job_data:
             return {
                 'ok': False,
-                'message': 'Invalid job: no uploadjob'
+                'message': 'Invalid job: no uploader_job'
             }
-        job = job_data['uploadjob']
+        job = job_data['uploader_job']
         if 'id' not in job:
             return {
                 'ok': False,
@@ -228,15 +242,27 @@ class UploadImageService(BaseService):
                 'ok': False,
                 'message': 'Invalid job: no cloud image name'
             }
-        if 'cloud_image_description' not in job:
+        if 'image_description' not in job:
             return {
                 'ok': False,
                 'message': 'Invalid job: no cloud image description'
             }
-        if 'ec2' not in job:
+        if 'provider' not in job:
             return {
                 'ok': False,
-                'message': 'Invalid job: no EC2 parameter record'
+                'message': 'Invalid job: no cloud provider'
+            }
+        if job['provider'] != CSP.ec2:
+            return {
+                'ok': False,
+                'message': 'Invalid job: {0} provider not supported'.format(
+                    job['provider']
+                )
+            }
+        if 'target_regions' not in job:
+            return {
+                'ok': False,
+                'message': 'Invalid job: no target regions record'
             }
         if 'utctime' not in job:
             return {
@@ -256,13 +282,24 @@ class UploadImageService(BaseService):
             'message': 'OK'
         }
 
-    def _get_csp_name(self, job_data):
-        if 'ec2' in job_data:
-            return 'ec2'
+    def _get_uploader_arguments_per_region(self, job_data):
+        uploader_args = []
+        for region in job_data['target_regions']:
+            if job_data['provider'] == CSP.ec2:
+                # turn region metadata into EC2ImageUploader compatible format
+                uploader_args.append(
+                    {
+                        'launch_ami':
+                            job_data['target_regions'][region]['helper_image'],
+                        'region': region
+                    }
+                )
+        return uploader_args
 
     def _init_job(self, job_data):
         # init empty job hash if not yet done
         job_id = job_data['id']
+        csp = job_data['provider']
         if job_id not in self.jobs:
             self.jobs[job_id] = {}
         # get us the time when to start this job
@@ -275,10 +312,27 @@ class UploadImageService(BaseService):
             nonstop = True
         else:
             time = dateutil.parser.parse(job_data['utctime']).isoformat()
+        # init the job result dictionary
+        self.jobs[job_id]['uploader_result'] = {
+            'id': job_id,
+            'cloud_image_name': job_data['cloud_image_name'],
+            'source_regions': {},
+            'status': None
+        }
         self.jobs[job_id]['nonstop'] = nonstop
-        # bind on the credentials queue for this csp
-        if 'ec2' in job_data:
-            csp = 'ec2'
+        self.jobs[job_id]['uploader'] = []
+        # bind on the service queue for this job
+        self.bind_queue(
+            self.service_exchange, job_id, self.service_queue
+        )
+        # NOTE: If the credentials service is finished, any service
+        # which needs credentials has to send a request to the credentials
+        # service. The sending of this request is still missing here
+        # and needs to be added once the credentials service is done.
+        # At the moment the stub credentials service just provides us
+        # the information without an extra request. Thus binding the
+        # queue is currently enough.
+        if csp:
             self.bind_credentials_queue(job_id, csp)
             self.consume_credentials_queue(
                 self._process_message, csp
@@ -290,22 +344,24 @@ class UploadImageService(BaseService):
 
     def _schedule_job(self, job):
         startup = self._init_job(job)
-        self.bind_queue(
-            self.service_exchange, job['id'], self.service_queue
-        )
-
-        if startup['time']:
-            self.scheduler.add_job(
-                self._start_job, 'date',
-                args=[job, startup['nonstop']],
-                run_date=startup['time'],
-                timezone='utc'
-            )
-        else:
-            self.scheduler.add_job(
-                self._start_job,
-                args=[job, startup['nonstop']]
-            )
+        region_list = self._get_uploader_arguments_per_region(job)
+        for index, uploader_args in enumerate(region_list):
+            last_upload_region = False
+            if index == len(region_list) - 1:
+                last_upload_region = True
+            job_args = [
+                job, startup['nonstop'], uploader_args, last_upload_region
+            ]
+            if startup['time']:
+                self.scheduler.add_job(
+                    self._start_job, 'date', args=job_args,
+                    run_date=startup['time'],
+                    timezone='utc'
+                )
+            else:
+                self.scheduler.add_job(
+                    self._start_job, args=job_args
+                )
 
     def _wait_until_ready(self, job_id):
         while True:
@@ -313,53 +369,50 @@ class UploadImageService(BaseService):
                 break
             time.sleep(1)
 
-    def _image_already_uploaded(self, job_id):
-        if 'system_image_file_uploaded' not in self.jobs[job_id]:
-            return False
+    def _image_already_uploading(self, job_id, uploader):
         if 'system_image_file' not in self.jobs[job_id]:
             return False
-        image_file = self.jobs[job_id]['system_image_file']
-        image_file_uploaded = self.jobs[job_id]['system_image_file_uploaded']
-        if image_file != image_file_uploaded:
+        system_image_file = self.jobs[job_id]['system_image_file']
+        if uploader.system_image_file != system_image_file:
             return False
-        self._send_job_response(
-            job_id, 'Image already uploaded'
-        )
         return True
 
-    def _start_job(self, job, nonstop):
+    def _start_job(self, job, nonstop, uploader_args, last_upload_region):
         job_id = job['id']
-        csp_name = None
-        csp_upload_args = None
-        if 'ec2' in job:
-            csp_name = 'ec2'
-            csp_upload_args = job[csp_name]
+        delay_time_sec = 30
+        csp_name = job['provider']
 
         self._send_job_response(
-            job_id, 'Waiting for image and credentials data'
+            job_id, 'Region [{0}]: Waiting for image/credentials data'.format(
+                uploader_args['region']
+            )
         )
-
         self._wait_until_ready(job_id)
 
-        # upload to the cloud. For nonstop uploads the upload is
-        # repeated after a delay and only if the image file has
-        # changed but with the same access credentials
-        delay_time_sec = 30
+        # NOTE: As we have not finished the credentials service the
+        # current assumption is that the credentials_token contains
+        # credentials valid for all regions we upload to. This is
+        # surely not correct and will be changed. Once the credentials
+        # information is region specific the construction of the
+        # UploadImage instance must make sure to take this into
+        # account
         upload_image = UploadImage(
             job_id, job['job_file'], nonstop, csp_name,
             self.jobs[job_id]['credentials_token'],
-            job['cloud_image_name'], job['cloud_image_description'],
-            custom_uploader_args=csp_upload_args
+            job['cloud_image_name'],
+            job['image_description'],
+            last_upload_region,
+            uploader_args
         )
-        self.jobs[job_id]['uploader'] = upload_image
+        self.jobs[job_id]['uploader'].append(upload_image)
         upload_image.set_log_handler(
             self._send_job_response
         )
         upload_image.set_result_handler(
-            self._send_job_result_for_testing
+            self._send_job_result
         )
         while self.jobs[job_id]['ready']:
-            if not self._image_already_uploaded(job_id):
+            if not self._image_already_uploading(job_id, upload_image):
                 upload_image.set_image_file(
                     self.jobs[job_id]['system_image_file']
                 )

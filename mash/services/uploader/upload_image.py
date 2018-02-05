@@ -56,7 +56,7 @@ class UploadImage(object):
     """
     def __init__(
         self, job_id, job_file, nonstop, csp_name, credentials_token,
-        cloud_image_name, cloud_image_description,
+        cloud_image_name, cloud_image_description, last_upload_region,
         custom_uploader_args=None, custom_credentials_args=None
     ):
         self.job_id = job_id
@@ -68,6 +68,7 @@ class UploadImage(object):
         self.cloud_image_description = cloud_image_description
         self.custom_uploader_args = custom_uploader_args
         self.custom_credentials_args = custom_credentials_args
+        self.last_upload_region = last_upload_region
 
         self.credentials_token = credentials_token
 
@@ -75,6 +76,7 @@ class UploadImage(object):
         self.result_callback = None
         self.log_callback = None
         self.cloud_image_id = None
+        self.upload_region = None
         self.iteration_count = 0
         self.uploader = None
 
@@ -106,7 +108,8 @@ class UploadImage(object):
                 self.custom_credentials_args
             )
             try:
-                self.cloud_image_id = self.uploader.upload()
+                (self.upload_region, self.cloud_image_id) = \
+                    self.uploader.upload()
                 self._log_callback(
                     'Uploaded image has ID: {0}'.format(self.cloud_image_id)
                 )
@@ -114,7 +117,6 @@ class UploadImage(object):
                 self._log_callback(format(e))
 
             self._result_callback()
-            return self.cloud_image_id
 
     def set_log_handler(self, function):
         self.log_callback = function
@@ -132,9 +134,10 @@ class UploadImage(object):
             else:
                 job_status = 'failed'
             self.result_callback(
-                self.job_id, {
+                self.job_id, self.last_upload_region, {
                     'csp_name': self.csp_name,
                     'cloud_image_id': self.cloud_image_id,
+                    'upload_region': self.upload_region,
                     'job_status': job_status
                 }
             )
