@@ -8,6 +8,10 @@ class TestBaseConfig(object):
         self.empty_config = BaseConfig('../data/empty_mash_config.yaml')
         self.config = BaseConfig('../data/mash_config.yaml')
 
+    def test_get_jwt_algorithm(self):
+        algorithm = self.empty_config.get_jwt_algorithm()
+        assert algorithm == 'HS256'
+
     def test_get_jwt_secret(self):
         secret = self.config.get_jwt_secret()
         assert secret == 'abc123'

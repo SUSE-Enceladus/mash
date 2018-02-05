@@ -31,5 +31,9 @@ class Defaults(object):
         return '/var/lib/mash/{0}_jobs/'.format(service_name)
 
     @classmethod
+    def get_jwt_algorithm(self):
+        return 'HS256'
+
+    @classmethod
     def get_log_directory(self):
         return '/var/log/mash/'

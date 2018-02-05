@@ -47,6 +47,7 @@ class TestUploadImageService(object):
         self.uploader.service_exchange = 'uploader'
         self.uploader.service_queue = 'service'
         self.uploader.job_document_key = 'job_document'
+        self.uploader.credentials_queue = 'credentials'
 
         self.uploader.post_init()
 
@@ -303,6 +304,7 @@ class TestUploadImageService(object):
             "id": "123",
             "utctime": "now"
         }
+        self.uploader.config = Mock()
         self.uploader._schedule_job(data)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, args=[
@@ -328,6 +330,7 @@ class TestUploadImageService(object):
             "id": "123",
             "utctime": "always"
         }
+        self.uploader.config = Mock()
         self.uploader._schedule_job(data)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, args=[
@@ -352,6 +355,7 @@ class TestUploadImageService(object):
             "job_file": "job_file",
             "utctime": "Wed Oct 11 17:50:26 UTC 2017"
         }
+        self.uploader.config = Mock()
         self.uploader._schedule_job(data)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, 'date', timezone='utc', args=[

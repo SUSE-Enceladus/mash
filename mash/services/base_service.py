@@ -79,8 +79,6 @@ class BaseService(object):
         self.credentials_queue = 'credentials'
         self.credentials_key = 'credentials_response'
 
-        self.jwt_algorithm = 'HS256'
-
         self.bind_queue(
             self.service_exchange, self.credentials_key, self.credentials_queue
         )
@@ -146,13 +144,22 @@ class BaseService(object):
         self.bind_queue(exchange, job_id, csp)
         self._publish(exchange, job_id, message)
 
-    def consume_credentials_queue(self, callback, csp):
-        """Deprecated"""
-        queue_name = csp
-        queue = self._get_queue_name('credentials', queue_name)
-        self.channel.basic.consume(
-            callback=callback, queue=queue
+    def consume_credentials_queue(self, callback):
+        """
+        Setup credentials attributes from configuration.
+
+        Then consume credentials response queue to receive credentials
+        tokens for jobs.
+        """
+        # Required by all services that need credentials.
+        # Config is not available until post init.
+        self.jwt_secret = self.config.get_jwt_secret()
+        self.jwt_algorithm = self.config.get_jwt_algorithm()
+
+        queue = self._get_queue_name(
+            self.service_exchange, self.credentials_queue
         )
+        self.channel.basic.consume(callback=callback, queue=queue)
 
     def bind_credentials_queue(self, job_id, csp):
         """Deprecated"""
@@ -170,7 +177,9 @@ class BaseService(object):
             'aud': 'credentials',  # audience
             'job_id': job_id,
         }
-        return jwt.encode(request, self.secret, algorithm=self.jwt_algorithm)
+        return jwt.encode(
+            request, self.jwt_secret, algorithm=self.jwt_algorithm
+        )
 
     def decode_credentials(self, message, provider):
         """
@@ -178,7 +187,7 @@ class BaseService(object):
         """
         try:
             payload = jwt.decode(
-                message, self.secret, algorithm=self.jwt_algorithm
+                message, self.jwt_secret, algorithm=self.jwt_algorithm
             )
         except ExpiredSignatureError:
             raise MashCredentialsException(
