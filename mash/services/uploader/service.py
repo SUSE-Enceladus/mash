@@ -299,7 +299,7 @@ class UploadImageService(BaseService):
     def _init_job(self, job_data):
         # init empty job hash if not yet done
         job_id = job_data['id']
-        csp = job_data['provider'].lower()
+        csp = job_data['provider']
         if job_id not in self.jobs:
             self.jobs[job_id] = {}
         # get us the time when to start this job
@@ -380,7 +380,7 @@ class UploadImageService(BaseService):
     def _start_job(self, job, nonstop, uploader_args, last_upload_region):
         job_id = job['id']
         delay_time_sec = 30
-        csp_name = job['provider'].lower()
+        csp_name = job['provider']
 
         self._send_job_response(
             job_id, 'Region [{0}]: Waiting for image/credentials data'.format(
