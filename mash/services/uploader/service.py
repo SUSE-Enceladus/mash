@@ -333,7 +333,7 @@ class UploadImageService(BaseService):
         # the information without an extra request. Thus binding the
         # queue is currently enough.
         if csp:
-            self.bind_credentials_queue(job_id, csp)
+            self.bind_credentials_queue()
             self.consume_credentials_queue(self._process_message)
         return {
             'time': time,

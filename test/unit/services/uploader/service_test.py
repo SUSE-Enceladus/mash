@@ -49,6 +49,7 @@ class TestUploadImageService(object):
         self.uploader.service_queue = 'service'
         self.uploader.job_document_key = 'job_document'
         self.uploader.credentials_queue = 'credentials'
+        self.uploader.credentials_response_key = 'response'
 
         self.uploader.post_init()
 
@@ -387,7 +388,7 @@ class TestUploadImageService(object):
         )
         assert mock_bind_queue.call_args_list == [
             call('uploader', '123', 'service'),
-            call('credentials', '123', 'ec2')
+            call('uploader', 'response', 'credentials')
         ]
 
     @patch('mash.services.uploader.service.UploadImage')
