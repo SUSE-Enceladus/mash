@@ -48,6 +48,7 @@ class TestUploadImageService(object):
         self.uploader.service_exchange = 'uploader'
         self.uploader.service_queue = 'service'
         self.uploader.job_document_key = 'job_document'
+        self.uploader.credentials_queue = 'credentials'
 
         self.uploader.post_init()
 
@@ -121,7 +122,9 @@ class TestUploadImageService(object):
         )
 
     @patch.object(UploadImageService, '_send_control_response')
-    def test_process_message_for_service_data(self, mock_send_control_response):
+    def test_process_message_for_service_data(
+        self, mock_send_control_response
+    ):
         message = Mock()
         message.method = {'routing_key': '123'}
         message.body = '{"image_file": ["image", "sum"], "status": "success"}'
@@ -361,6 +364,7 @@ class TestUploadImageService(object):
                 }
             }
         }
+        self.uploader.config = Mock()
         uploader_args = self.uploader._get_uploader_arguments_per_region(job)
         self.uploader._schedule_job(job)
         self.uploader.scheduler.add_job.assert_called_once_with(
