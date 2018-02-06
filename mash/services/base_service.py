@@ -28,7 +28,7 @@ from datetime import datetime, timedelta
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
-from mash.services.credentials.amazon import CredentialsAmazon
+from mash.services.credentials import Credentials
 from mash.mash_exceptions import (
     MashCredentialsException,
     MashRabbitConnectionException,
@@ -201,12 +201,10 @@ class BaseService(object):
                 'Credentials not found in payload.'
             )
 
-        if provider == 'ec2':
-            provider_class = CredentialsAmazon
-
         accounts = {}
         for name, credential in credentials.items():
-            accounts[name] = provider_class(custom_args=credential)
+            cred_instance = Credentials(provider)
+            accounts[name] = cred_instance.set_credentials(**credential)
 
         return accounts
 

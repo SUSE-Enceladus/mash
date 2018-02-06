@@ -9,6 +9,6 @@ class TestCredentials(object):
     @patch('mash.services.credentials.CredentialsAmazon')
     def test_credentials_amazon(self, mock_CredentialsAmazon):
         Credentials('ec2')
-        mock_CredentialsAmazon.assert_called_once_with(None)
+        mock_CredentialsAmazon.assert_called_once_with()
         with raises(MashCredentialsException):
             Credentials('foo')

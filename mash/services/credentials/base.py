@@ -15,25 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import jwt
 
 
 class CredentialsBase(object):
     """
     Base class credentials interface class
     """
-    def __init__(self, custom_args=None):
-        custom_args = custom_args or {}
-        self.post_init(**custom_args)
+    def __init__(self):
+        self.post_init()
 
     def post_init(self):
-        self.credentials = {}
+        """
+        Post initialization method
 
-    def set_credentials(self, secret_token):
-        """Deprecated"""
-        self.credentials.update(
-            jwt.decode(secret_token, 'secret', algorithms=['HS256'])
-        )
+        Implementation in specialized service class
+        """
+        pass
 
-    def get_credentials(self):
-        return self.credentials
+    def set_credentials(self):
+        """
+        Update the credentials attrs.
+        """
+        pass

@@ -31,9 +31,9 @@ class Credentials(object):
     * :attr:`csp_name`
         cloud service provider name
     """
-    def __new__(self, csp_name, custom_args=None):
+    def __new__(self, csp_name):
         if csp_name == CSP.ec2:
-            return CredentialsAmazon(custom_args)
+            return CredentialsAmazon()
         else:
             raise MashCredentialsException(
                 'Support for {csp} Cloud Service not implemented'.format(

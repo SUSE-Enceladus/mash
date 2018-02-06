@@ -163,7 +163,7 @@ class TestBaseService(object):
 
     def test_get_credentials_request(self):
         self.service.jwt_algorithm = 'HS256'
-        self.service.secret = 'super.secret'
+        self.service.jwt_secret = 'super.secret'
         self.service_exchange = 'obs'
         token = self.service.get_credential_request('1')
 
@@ -178,7 +178,7 @@ class TestBaseService(object):
     @patch('mash.services.base_service.jwt')
     def test_decode_credentials(self, mock_jwt):
         self.service.jwt_algorithm = 'HS256'
-        self.service.secret = 'super.secret'
+        self.service.jwt_secret = 'super.secret'
         self.service_exchange = 'obs'
 
         message = Mock()
