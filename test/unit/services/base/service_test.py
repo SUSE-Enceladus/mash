@@ -199,30 +199,21 @@ class TestBaseService(object):
             }
         }
 
-        accounts = self.service.decode_credentials(message, 'ec2')
+        payload = self.service.decode_credentials(message)
 
         mock_jwt.decode.assert_called_once_with(
             message, 'super.secret', algorithm='HS256',
             issuer='credentials', audience='obs'
         )
 
-        assert len(accounts) == 2
-
-        # Invalid payload
-        mock_jwt.decode.return_value = {}
-
-        msg = 'Credentials not found in payload.'
-        with raises(MashCredentialsException) as e:
-            self.service.decode_credentials(message, 'ec2')
-        assert msg == str(e.value)
-        # Invalid payload
+        assert len(payload['credentials'].keys()) == 2
 
         # Credential exception
         mock_jwt.decode.side_effect = Exception('Token is broken!')
 
         msg = 'Invalid credentials response token: Token is broken!'
         with raises(MashCredentialsException) as e:
-            self.service.decode_credentials(message, 'ec2')
+            self.service.decode_credentials(message)
         assert msg == str(e.value)
         # Credential exception
 
