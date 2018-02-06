@@ -49,6 +49,15 @@ class BaseConfig(object):
             else:
                 return self.config_data.get(attribute)
 
+    def get_jwt_algorithm(self):
+        """
+        Return JWT algorithm from MASH config file.
+
+        algorithm is used for decoding JWT tokens.
+        """
+        algorithm = self._get_attribute(attribute='jwt_algorithm')
+        return algorithm or Defaults.get_jwt_algorithm()
+
     def get_jwt_secret(self):
         """
         Return JWT secret token from MASH config file.

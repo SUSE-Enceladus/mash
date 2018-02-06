@@ -1,3 +1,4 @@
+jwt_algorithm: HS256
 jwt_secret: enter-a-secret
 log_dir: /var/log/mash/
 obs:
