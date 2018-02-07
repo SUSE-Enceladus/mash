@@ -13,7 +13,7 @@ class TestEC2TestingJob(object):
             'account': 'account',
             'distro': 'SLES',
             'id': '1',
-            'provider': 'EC2',
+            'provider': 'ec2',
             'tests': 'test_stuff',
             'utctime': 'now'
         }
@@ -29,7 +29,7 @@ class TestEC2TestingJob(object):
         )
 
         assert 'credentials' in decoded
-        assert decoded['credentials']['csp'] == 'EC2'
+        assert decoded['credentials']['csp'] == 'ec2'
         assert decoded['credentials']['account'] == 'account'
 
     @patch('mash.services.testing.ec2_job.jwt')
@@ -111,7 +111,7 @@ class TestEC2TestingJob(object):
         job._run_tests()
 
         mock_test_image.assert_called_once_with(
-            'EC2',
+            'ec2',
             access_key_id=job.access_key_id,
             account='account',
             desc=job.desc,
