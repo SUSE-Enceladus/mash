@@ -32,7 +32,7 @@ Requires:       rabbitmq-server
 Requires:       python3-PyYAML
 Requires:       python3-PyJWT
 # Note: Activate this requirement as soon as we have the package
-# Requires:       python3-amqpstorm
+Requires:       python3-amqpstorm >= 2.4.0
 Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil
 # Note: Activate this requirement as soon as we have the package
