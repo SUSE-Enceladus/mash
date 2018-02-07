@@ -71,12 +71,12 @@ class TestIPATestingService(object):
     def test_testing_add_job(self, mock_create_job):
         job = Mock()
         job.id = '1'
-        job.get_metadata.return_value = {'job_id': '1', 'provider': 'EC2'}
+        job.get_metadata.return_value = {'job_id': '1', 'provider': 'ec2'}
 
-        self.testing._add_job({'id': '1', 'provider': 'EC2'})
+        self.testing._add_job({'id': '1', 'provider': 'ec2'})
 
         mock_create_job.assert_called_once_with(
-            EC2TestingJob, {'id': '1', 'provider': 'EC2'}
+            EC2TestingJob, {'id': '1', 'provider': 'ec2'}
         )
 
     def test_testing_add_job_exists(self):
@@ -85,7 +85,7 @@ class TestIPATestingService(object):
         job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = Mock()
-        self.testing._add_job({'id': '1', 'provider': 'EC2'})
+        self.testing._add_job({'id': '1', 'provider': 'ec2'})
 
         self.testing.log.warning.assert_called_once_with(
             'Job already queued.',
@@ -111,10 +111,10 @@ class TestIPATestingService(object):
 
         job_class = Mock()
         job_class.return_value = job
-        job_config = {'id': '1', 'provider': 'EC2'}
+        job_config = {'id': '1', 'provider': 'ec2'}
         self.testing._create_job(job_class, job_config)
 
-        job_class.assert_called_once_with(id='1', provider='EC2')
+        job_class.assert_called_once_with(id='1', provider='ec2')
         job.set_log_callback.assert_called_once_with(
             self.testing._log_job_message
         )
@@ -128,7 +128,7 @@ class TestIPATestingService(object):
     def test_testing_create_job_exception(self):
         job_class = Mock()
         job_class.side_effect = Exception('Cannot create job.')
-        job_config = {'id': '1', 'provider': 'EC2'}
+        job_config = {'id': '1', 'provider': 'ec2'}
 
         self.testing._create_job(job_class, job_config)
         self.testing.log.exception.assert_called_once_with(
@@ -400,7 +400,7 @@ class TestIPATestingService(object):
 
     def test_testing_run_test(self):
         job = Mock()
-        job.provider = 'EC2'
+        job.provider = 'ec2'
         job.account = 'test_account'
         job.distro = 'SLES'
         job.image_id = 'image123'
@@ -453,7 +453,7 @@ class TestIPATestingService(object):
     def test_testing_validate_job(self):
         job_config = {
             'id': '1',
-            'provider': 'EC2',
+            'provider': 'ec2',
             'tests': 'test_stuff',
             'utctime': 'now',
             'test_regions': {'us-east-2': 'test-account'}
@@ -524,7 +524,7 @@ class TestIPATestingService(object):
         )
 
     def test_testing_validate_listener_msg_no_id(self):
-        self.message.body = '{"uploader_result": {"provider": "EC2"}}'
+        self.message.body = '{"uploader_result": {"provider": "ec2"}}'
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result is None

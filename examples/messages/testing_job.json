@@ -1,7 +1,7 @@
 {
     "testing_job": {
         "id": "123",
-        "provider": "EC2",
+        "provider": "ec2",
         "tests": "test_stuff",
         "utctime": "now",
         "test_regions": {

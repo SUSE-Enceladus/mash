@@ -74,7 +74,7 @@ class TestingService(BaseService):
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == 'EC2':
+        elif provider == 'ec2':
             self._create_job(EC2TestingJob, job_config)
         else:
             self.log.exception(
@@ -187,7 +187,7 @@ class TestingService(BaseService):
             "testing_job": {
                 "account": "account",
                 "id": "1",
-                "provider": "EC2",
+                "provider": "ec2",
                 "tests": "test_stuff",
                 "utctime": "now"
             }
