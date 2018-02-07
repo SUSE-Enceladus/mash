@@ -68,6 +68,7 @@ class CredentialsService(BaseService):
         """
         Bind routing keys for all valid credential service requests.
         """
+        # TODO: Move list of services to config.
         for service in (
             'uploader', 'testing', 'replication', 'publisher', 'pint'
         ):
