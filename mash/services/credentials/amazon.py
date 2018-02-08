@@ -21,17 +21,24 @@ from mash.services.credentials.base import CredentialsBase
 
 class CredentialsAmazon(CredentialsBase):
     """
-    Implements credentials handling for Amazon
+    Implements credentials handling for Amazon.
     """
-    def post_init(
-        self, access_key_id, secret_access_key, ssh_key_name, ssh_private_key
-    ):
+    def post_init(self):
         """
         Initialize secret information we need to access Amazon EC2
         """
-        self.credentials = {
-            'access_key_id': access_key_id,
-            'secret_access_key': secret_access_key,
-            'ssh_key_name': ssh_key_name,
-            'ssh_private_key': ssh_private_key
-        }
+        self.access_key_id = None
+        self.secret_access_key = None
+        self.ssh_key_name = None
+        self.ssh_private_key = None
+
+    def set_credentials(
+        self, access_key_id, secret_access_key, ssh_key_name, ssh_private_key
+    ):
+        """
+        Initialize secret information we need to access Amazon EC2.
+        """
+        self.access_key_id = access_key_id
+        self.secret_access_key = secret_access_key
+        self.ssh_key_name = ssh_key_name
+        self.ssh_private_key = ssh_private_key
