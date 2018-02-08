@@ -59,6 +59,9 @@ class UploadImageService(BaseService):
         atexit.register(lambda: os._exit(0))
         self.consume_queue(self._process_message, self.service_queue)
 
+        self.bind_credentials_queue()
+        self.consume_credentials_queue(self._process_message)
+
         try:
             self.channel.start_consuming()
         except Exception:
@@ -101,6 +104,12 @@ class UploadImageService(BaseService):
 
     def _process_message(self, message):
         message.ack()
+        routing_key = message.method['routing_key']
+
+        if routing_key == self.credentials_response_key:
+            self._handle_credential_response(message)
+            return
+
         try:
             job_data = JsonFormat.json_loads(format(message.body))
         except Exception as e:
@@ -112,10 +121,24 @@ class UploadImageService(BaseService):
                     )
                 }
             )
-        if message.method['routing_key'] == 'job_document':
+
+        if routing_key == self.job_document_key:
             self._handle_jobs(job_data)
         else:
-            self._handle_service_data(message, job_data)
+            self._handle_service_data(job_data)
+
+    def _handle_credential_response(self, message):
+        """
+        Handle credential JWT token response.
+        """
+        payload = self.decode_credentials(message)
+        job = self.jobs[payload['id']]
+
+        job['credentials_token'] = payload['credentials']
+        self._send_job_response(
+            job['id'], 'Got credentials data'
+        )
+        job['ready'] = True
 
     def _handle_jobs(self, job_data):
         """
@@ -137,8 +160,8 @@ class UploadImageService(BaseService):
         if result:
             self._send_control_response(result, job_id)
 
-    def _handle_service_data(self, message, service_data):
-        job_id = message.method['routing_key']
+    def _handle_service_data(self, service_data):
+        job_id = service_data['id']
         if job_id not in self.jobs:
             self.jobs[job_id] = {}
         if 'image_file' in service_data:
@@ -147,18 +170,7 @@ class UploadImageService(BaseService):
             self._send_job_response(
                 job_id, 'Got image file: {0}'.format(system_image_file)
             )
-        if 'credentials' in service_data:
-            # NOTE: The response from the credentials service is still
-            # work in progress and will change. The current assumption
-            # is that service_data['credentials'] contains all information
-            # to upload to all target_regions of this job document
-            self.jobs[job_id]['credentials_token'] = service_data['credentials']
-            self._send_job_response(
-                job_id, 'Got credentials data'
-            )
-        if 'system_image_file' in self.jobs[job_id] and \
-           'credentials_token' in self.jobs[job_id]:
-            self.jobs[job_id]['ready'] = True
+        self.publish_credentials_request(job_id)
 
     def _add_job(self, data):
         """
@@ -325,16 +337,6 @@ class UploadImageService(BaseService):
         self.bind_queue(
             self.service_exchange, job_id, self.service_queue
         )
-        # NOTE: If the credentials service is finished, any service
-        # which needs credentials has to send a request to the credentials
-        # service. The sending of this request is still missing here
-        # and needs to be added once the credentials service is done.
-        # At the moment the stub credentials service just provides us
-        # the information without an extra request. Thus binding the
-        # queue is currently enough.
-        if csp:
-            self.bind_credentials_queue()
-            self.consume_credentials_queue(self._process_message)
         return {
             'time': time,
             'nonstop': nonstop

@@ -28,7 +28,6 @@ from datetime import datetime, timedelta
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
-from mash.services.credentials import Credentials
 from mash.mash_exceptions import (
     MashCredentialsException,
     MashRabbitConnectionException,
@@ -185,7 +184,7 @@ class BaseService(object):
             request, self.jwt_secret, algorithm=self.jwt_algorithm
         )
 
-    def decode_credentials(self, message, provider):
+    def decode_credentials(self, message):
         """
         Decode jwt credential response message.
         """
@@ -199,19 +198,7 @@ class BaseService(object):
                 'Invalid credentials response token: {0}'.format(error)
             )
 
-        try:
-            credentials = payload['credentials']
-        except KeyError:
-            raise MashCredentialsException(
-                'Credentials not found in payload.'
-            )
-
-        accounts = {}
-        for name, credential in credentials.items():
-            cred_instance = Credentials(provider)
-            accounts[name] = cred_instance.set_credentials(**credential)
-
-        return accounts
+        return payload
 
     def publish_credentials_request(self, job_id):
         self._publish(
