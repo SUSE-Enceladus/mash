@@ -31,43 +31,44 @@ class EC2TestingJob(TestingJob):
     __test__ = False
 
     def __init__(
-        self, id, provider, tests, utctime, config_file=None, desc=None,
-        distro=None, instance_type=None
+        self, id, provider, test_regions, tests, utctime, config_file=None,
+        desc=None, distro=None, instance_type=None
     ):
         super(EC2TestingJob, self).__init__(
-            id, provider, tests, utctime, config_file=config_file,
-            desc=desc, distro=distro, instance_type=instance_type
+            id, provider, test_regions, tests, utctime,
+            config_file=config_file, desc=desc, distro=distro,
+            instance_type=instance_type
         )
 
     def _run_tests(self):
         """
         Tests image with IPA and update status and results.
         """
-        self.status, self.results = test_image(
+        self.status, results = test_image(
             self.provider,
-            access_key_id=self.access_key_id,
+            access_key_id=None,
             desc=self.desc,
             distro=self.distro,
-            image_id=self.image_id,
+            image_id=None,
             instance_type=self.instance_type,
             log_level=logging.WARNING,
-            region=self.region,
-            secret_access_key=self.secret_access_key,
-            ssh_key_name=self.ssh_key_name,
-            ssh_private_key=self.ssh_private_key,
-            ssh_user=self.ssh_user,
+            region=None,
+            secret_access_key=None,
+            ssh_key_name=None,
+            ssh_private_key=None,
+            ssh_user=None,
             tests=self.tests
         )
 
-        if self.results and self.results.get('info'):
-            if self.results['info'].get('log_file'):
+        if results and results.get('info'):
+            if results['info'].get('log_file'):
                 self.send_log(
-                    'Log file: {0}'.format(self.results['info']['log_file'])
+                    'Log file: {0}'.format(results['info']['log_file'])
                 )
 
-            if self.results['info'].get('results_file'):
+            if results['info'].get('results_file'):
                 self.send_log(
                     'Results file: {0}'.format(
-                        self.results['info']['results_file']
+                        results['info']['results_file']
                     )
                 )

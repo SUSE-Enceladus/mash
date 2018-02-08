@@ -30,9 +30,10 @@ class TestingJob(object):
     __test__ = False
 
     def __init__(
-        self, id, provider, tests, utctime, config_file=None,
-        desc=None, distro=None, instance_type=None, test_regions=None
+        self, id, provider, test_regions, tests, utctime, config_file=None,
+        desc=None, distro=None, instance_type=None
     ):
+        self.cloud_image_name = None
         self.config_file = config_file
         self.desc = desc
         self.distro = self.validate_distro(distro)
@@ -80,8 +81,6 @@ class TestingJob(object):
         """
         self.iteration_count += 1
         self.send_log('Running IPA tests against image.')
-
-        self._get_credentials(host)
         self._run_tests()
 
     def validate_distro(self, distro):
