@@ -51,6 +51,8 @@ class TestingService(BaseService):
 
         self.jobs = {}
 
+        self.bind_credentials_queue()
+
         self.scheduler = BackgroundScheduler()
         self.scheduler.add_listener(
             self._process_test_result,
@@ -178,6 +180,18 @@ class TestingService(BaseService):
 
         return json.dumps(data, sort_keys=True)
 
+    def _handle_credentials_response(self, message):
+        """
+        Process credentials response JWT tokens.
+        """
+        payload = self.decode_credentials(message)
+        job = self.jobs.get(payload['id'])
+
+        job.credentials = payload['credentials']
+        self._schedule_job(job.id)
+
+        message.ack()
+
     def _handle_jobs(self, message):
         """
         Callback for events from jobcreator.
@@ -185,11 +199,14 @@ class TestingService(BaseService):
         job_config example:
         {
             "testing_job": {
-                "account": "account",
-                "id": "1",
+                "id": "123",
                 "provider": "ec2",
                 "tests": "test_stuff",
-                "utctime": "now"
+                "utctime": "now",
+                "test_regions": {
+                    "us-east-1": "test-aws",
+                    "cn-north-1": "test-aws-cn"
+                }
             }
         }
         """
@@ -212,6 +229,38 @@ class TestingService(BaseService):
                 self._notify_invalid_config(message.body)
 
         message.ack()
+
+    def _handle_listener_message(self, message):
+        """
+        Callback for image testing.
+
+        {
+            "uploader_result": {
+                "id": "123",
+                "cloud_image_name": "image_123",
+                "source_regions": {
+                    "us-east-1": "ami-bc5b48d0",
+                    "cn-north-1": "ami-bc5b4853"
+                },
+                "status": "success"
+            }
+        }
+
+        Create IPA testing instance and launch tests on given
+        image in the cloud provider.
+        """
+        job = self._validate_listener_msg(message.body)
+
+        if job:
+            job.listener_msg = message
+
+            if job.credentials:
+                # Always jobs will have credentials after first iteration
+                self._schedule_job(job.id)
+            else:
+                self.publish_credentials_request(job.id)
+        else:
+            message.ack()
 
     def _log_job_message(self, msg, metadata):
         """
@@ -295,35 +344,18 @@ class TestingService(BaseService):
         job = self.jobs[job_id]
         job.test_image(host=self.host)
 
-    def _test_image(self, message):
+    def _schedule_job(self, job_id):
         """
-        Callback for image testing.
-
-        {
-            "uploader_result": {
-                "id": "1",
-                "image_id": "ami-2c40774c",
-                "status": 0
-            }
-        }
-
-        Create IPA testing instance and launch tests on given
-        image in the cloud provider.
+        Schedule new job in background scheduler for job based on id.
         """
-        job = self._validate_listener_msg(message.body)
-
-        if job:
-            job.listener_msg = message
-            self.scheduler.add_job(
-                self._run_test,
-                args=(job.id,),
-                id=job.id,
-                max_instances=1,
-                misfire_grace_time=None,
-                coalesce=True
-            )
-        else:
-            message.ack()
+        self.scheduler.add_job(
+            self._run_test,
+            args=(job_id,),
+            id=job_id,
+            max_instances=1,
+            misfire_grace_time=None,
+            coalesce=True
+        )
 
     def _validate_job(self, job_config):
         """
@@ -369,14 +401,21 @@ class TestingService(BaseService):
             self._cleanup_job(job, status)
             return None
         else:
-            for attr in ['cloud_image_name', 'source_regions']:
-                if attr not in listener_msg:
+            if 'cloud_image_name' not in listener_msg:
                     self.log.error(
-                        '{0} is required in uploader result.'.format(attr)
+                        'cloud_image_name is required in uploader result.'
                     )
                     return None
-                else:
-                    setattr(job, attr, listener_msg[attr])
+            else:
+                job.cloud_image_name = listener_msg['cloud_image_name']
+
+            if 'source_regions' not in listener_msg:
+                    self.log.error(
+                        'source_regions is required in uploader result.'
+                    )
+                    return None
+            else:
+                job.update_test_regions(listener_msg['source_regions'])
 
         return job
 
@@ -387,8 +426,9 @@ class TestingService(BaseService):
         self.scheduler.start()
         self.consume_queue(self._handle_jobs)
         self.consume_queue(
-            self._test_image, queue_name=self.listener_queue
+            self._handle_listener_message, queue_name=self.listener_queue
         )
+        self.consume_credentials_queue(self._handle_credentials_response)
 
         try:
             self.channel.start_consuming()

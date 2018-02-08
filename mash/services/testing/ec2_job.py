@@ -16,11 +16,9 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import logging
+from threading import Thread
 
-from ipa.ipa_controller import test_image
-
-from mash.mash_exceptions import MashTestingException
+from mash.services.testing.ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
 
 
@@ -32,43 +30,50 @@ class EC2TestingJob(TestingJob):
 
     def __init__(
         self, id, provider, test_regions, tests, utctime, config_file=None,
-        desc=None, distro=None, instance_type=None
+        credentials=None, desc=None, distro=None, instance_type=None
     ):
         super(EC2TestingJob, self).__init__(
             id, provider, test_regions, tests, utctime,
-            config_file=config_file, desc=desc, distro=distro,
-            instance_type=instance_type
+            config_file=config_file,
+            desc=desc, distro=distro, instance_type=instance_type
         )
 
     def _run_tests(self):
         """
         Tests image with IPA and update status and results.
         """
-        self.status, results = test_image(
-            self.provider,
-            access_key_id=None,
-            desc=self.desc,
-            distro=self.distro,
-            image_id=None,
-            instance_type=self.instance_type,
-            log_level=logging.WARNING,
-            region=None,
-            secret_access_key=None,
-            ssh_key_name=None,
-            ssh_private_key=None,
-            ssh_user=None,
-            tests=self.tests
-        )
+        results = {}
+        jobs = []
+        for region, info in self.test_regions.items():
+            creds = self.credentials[info['account']]
+            process = Thread(
+                name=region, target=ipa_test, args=(results,), kwargs={
+                    'provider': self.provider,
+                    'access_key_id': creds['access_key_id'],
+                    'desc': self.desc,
+                    'distro': self.distro,
+                    'image_id': info['image_id'],
+                    'instance_type': self.instance_type,
+                    'region': region,
+                    'secret_access_key': creds['secret_access_key'],
+                    'ssh_key_name': creds['ssh_key_name'],
+                    'ssh_private_key': creds['ssh_private_key'],
+                    'ssh_user': creds['ssh_user'],
+                    'tests': self.tests
+                }
+            )
+            process.start()
+            jobs.append(process)
 
-        if results and results.get('info'):
-            if results['info'].get('log_file'):
-                self.send_log(
-                    'Log file: {0}'.format(results['info']['log_file'])
-                )
+        for job in jobs:
+            job.join()
 
-            if results['info'].get('results_file'):
+        self.status = "success"
+        for region, result in results.items():
+            if result['status'] != 0:
                 self.send_log(
-                    'Results file: {0}'.format(
-                        results['info']['results_file']
-                    )
+                    'Image tests failed in region: {0}.'.format(region)
                 )
+                if result.get('msg'):
+                    self.send_log(result.get['msg'])
+                self.status = "failed"

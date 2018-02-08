@@ -35,6 +35,7 @@ class TestingJob(object):
     ):
         self.cloud_image_name = None
         self.config_file = config_file
+        self.credentials = None
         self.desc = desc
         self.distro = self.validate_distro(distro)
         self.instance_type = instance_type
@@ -43,7 +44,7 @@ class TestingJob(object):
         self.log_callback = None
         self.provider = self.validate_provider(provider)
         self.status = UNKOWN
-        self.test_regions = test_regions
+        self.test_regions = self.validate_test_regions(test_regions)
         self.tests = self.validate_tests(tests)
         self.utctime = self.validate_timestamp(utctime)
 
@@ -82,6 +83,13 @@ class TestingJob(object):
         self.iteration_count += 1
         self.send_log('Running IPA tests against image.')
         self._run_tests()
+
+    def update_test_regions(self, source_regions):
+        """
+        Update test_regions dictionary with data from listener message.
+        """
+        for region, image_id in source_regions.items():
+            self.test_regions[region]['image_id'] = image_id
 
     def validate_distro(self, distro):
         """
@@ -124,6 +132,18 @@ class TestingJob(object):
             )
 
         return tests
+
+    def validate_test_regions(self, test_regions):
+        value = {}
+        for region, account in test_regions.items():
+            if region and account:
+                value['region'] = {'account': account}
+            else:
+                raise MashTestingException(
+                    'Invalid test_regions format. '
+                    'Must be a dict format of {region:account}.'
+                )
+        return value
 
     def validate_timestamp(self, utctime):
         """
