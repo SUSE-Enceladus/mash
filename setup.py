@@ -24,7 +24,7 @@ config = {
         'PyJWT',
         'python-dateutil',
         'APScheduler>=3.3.1',
-        'amqpstorm',
+        'amqpstorm>=2.4.0',
         'python3-ipa'
     ],
     'packages': ['mash'],

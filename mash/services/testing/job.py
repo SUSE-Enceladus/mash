@@ -218,7 +218,7 @@ class TestingJob(object):
         """
         Validate the provider is supported for testing.
         """
-        if provider not in ('EC2', 'Azure', 'GCE'):
+        if provider not in ('ec2',):
             raise MashTestingException(
                 'Provider: {0} not supported.'.format(provider)
             )

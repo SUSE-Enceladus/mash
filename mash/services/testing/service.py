@@ -74,7 +74,7 @@ class TestingService(BaseService):
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == 'EC2':
+        elif provider == 'ec2':
             self._create_job(EC2TestingJob, job_config)
         else:
             self.log.exception(
@@ -145,7 +145,7 @@ class TestingService(BaseService):
 
             del self.jobs[job_id]
             self.unbind_queue(
-                self.service_queue, self.service_exchange, job_id
+                self.listener_queue, self.service_exchange, job_id
             )
             self._remove_job_config(job.config_file)
         else:
@@ -187,7 +187,7 @@ class TestingService(BaseService):
             "testing_job": {
                 "account": "account",
                 "id": "1",
-                "provider": "EC2",
+                "provider": "ec2",
                 "tests": "test_stuff",
                 "utctime": "now"
             }
@@ -224,17 +224,6 @@ class TestingService(BaseService):
             self._publish('jobcreator', 'invalid_config', message)
         except AMQPError:
             self.log.warning('Message not received: {0}'.format(message))
-
-    def _process_message(self, message):
-        """
-        Channel callback, handles incoming messages in queues.
-
-        Send message to proper method based on routing_key.
-        """
-        if message.method['routing_key'] == 'job_document':
-            self._handle_jobs(message)
-        else:
-            self._test_image(message)
 
     def _process_test_result(self, event):
         """
@@ -396,7 +385,10 @@ class TestingService(BaseService):
         Start testing service.
         """
         self.scheduler.start()
-        self.consume_queue(self._process_message)
+        self.consume_queue(self._handle_jobs)
+        self.consume_queue(
+            self._test_image, queue_name=self.listener_queue
+        )
 
         try:
             self.channel.start_consuming()

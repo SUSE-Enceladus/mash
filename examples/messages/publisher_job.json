@@ -2,7 +2,7 @@
     "pubisher_job": {
         "allow_copy": "",
         "id": "123",
-        "provider": "EC2",
+        "provider": "ec2",
         "share_with": "None",
         "utctime": "now",
         "publish_regions": [

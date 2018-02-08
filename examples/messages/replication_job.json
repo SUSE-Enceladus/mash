@@ -2,7 +2,7 @@
     "replication_job": {
         "id": "123",
         "image_description": "My Image",
-        "provider": "EC2",
+        "provider": "ec2",
         "utctime": "now",
         "source_regions": {
             "us-east-1": {

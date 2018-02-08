@@ -11,7 +11,7 @@ class TestTestingJob(object):
         self.job_config = {
             'distro': 'SLES',
             'id': '1',
-            'provider': 'EC2',
+            'provider': 'ec2',
             'tests': 'test_stuff',
             'utctime': 'now'
         }
@@ -20,7 +20,7 @@ class TestTestingJob(object):
         job = TestingJob(**self.job_config)
 
         assert job.id == '1'
-        assert job.provider == 'EC2'
+        assert job.provider == 'ec2'
         assert job.tests == ['test_stuff']
         assert job.utctime == 'now'
 
