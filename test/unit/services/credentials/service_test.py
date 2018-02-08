@@ -370,6 +370,30 @@ class TestCredentialsService(object):
         assert credentials['test-aws']['ssh_key_name'] is None
         assert credentials['test-aws']['ssh_private_key'] is None
 
+    def test_retrieve_testing_credentials(self):
+        # TODO: Remove when credentials storage implemented.
+        self.service.jobs = {
+            '1': {
+                'id': '1',
+                'provider': 'ec2',
+                'provider_accounts': ['test-aws'],
+                'requesting_user': 'user1',
+                'last_service': 'pint',
+                'test_credentials': {
+                    'access_key_id': '123456',
+                    'secret_access_key': '654321',
+                    'ssh_key_name': 'my-key',
+                    'ssh_private_key': 'my-key.pem'
+                }
+            }
+        }
+        credentials = self.service._retrieve_credentials('1')
+
+        assert credentials['test-aws']['access_key_id'] == '123456'
+        assert credentials['test-aws']['secret_access_key'] == '654321'
+        assert credentials['test-aws']['ssh_key_name'] == 'my-key'
+        assert credentials['test-aws']['ssh_private_key'] == 'my-key.pem'
+
     @patch.object(CredentialsService, 'consume_credentials_queue')
     @patch.object(CredentialsService, 'consume_queue')
     @patch.object(CredentialsService, 'stop')
