@@ -148,16 +148,27 @@ class UploadImageService(BaseService):
                 job_id, 'Got image file: {0}'.format(system_image_file)
             )
         if 'credentials' in service_data:
-            # NOTE: The response from the credentials service is still
-            # work in progress and will change. The current assumption
-            # is that service_data['credentials'] contains all information
-            # to upload to all target_regions of this job document
-            self.jobs[job_id]['credentials_token'] = service_data['credentials']
+            # Example response from the credentials service for ec2:
+            # {
+            #     "test-aws": {
+            #         "access_key_id": "123456",
+            #         "secret_access_key": "654321",
+            #         "ssh_key_name": "key-123",
+            #         "ssh_private_key": "key123"
+            #     },
+            #     "test-aws-cn": {
+            #         "access_key_id": "654321",
+            #         "secret_access_key": "123456",
+            #         "ssh_key_name": "key-321",
+            #         "ssh_private_key": "key321"
+            #     }
+            # }
+            self.jobs[job_id]['credentials'] = service_data['credentials']
             self._send_job_response(
                 job_id, 'Got credentials data'
             )
         if 'system_image_file' in self.jobs[job_id] and \
-           'credentials_token' in self.jobs[job_id]:
+           'credentials' in self.jobs[job_id]:
             self.jobs[job_id]['ready'] = True
 
     def _add_job(self, data):
@@ -291,6 +302,8 @@ class UploadImageService(BaseService):
                     {
                         'launch_ami':
                             job_data['target_regions'][region]['helper_image'],
+                        'account':
+                            job_data['target_regions'][region]['account'],
                         'region': region
                     }
                 )
@@ -325,16 +338,15 @@ class UploadImageService(BaseService):
         self.bind_queue(
             self.service_exchange, job_id, self.service_queue
         )
-        # NOTE: If the credentials service is finished, any service
-        # which needs credentials has to send a request to the credentials
-        # service. The sending of this request is still missing here
-        # and needs to be added once the credentials service is done.
-        # At the moment the stub credentials service just provides us
-        # the information without an extra request. Thus binding the
-        # queue is currently enough.
+        # NOTE: The credentials service in its final version expects
+        # a request to create credentials. The sending of this request
+        # is still missing here. Instead the old code which just reads
+        # from a credentials queue from the stub credentials service
+        # is still in use.
         if csp:
             self.bind_credentials_queue(job_id, csp)
             self.consume_credentials_queue(self._process_message)
+        #
         return {
             'time': time,
             'nonstop': nonstop
@@ -387,16 +399,9 @@ class UploadImageService(BaseService):
         )
         self._wait_until_ready(job_id)
 
-        # NOTE: As we have not finished the credentials service the
-        # current assumption is that the credentials_token contains
-        # credentials valid for all regions we upload to. This is
-        # surely not correct and will be changed. Once the credentials
-        # information is region specific the construction of the
-        # UploadImage instance must make sure to take this into
-        # account
         upload_image = UploadImage(
             job_id, job['job_file'], nonstop, csp_name,
-            self.jobs[job_id]['credentials_token'],
+            self.jobs[job_id]['credentials'][uploader_args['account']],
             job['cloud_image_name'],
             job['image_description'],
             last_upload_region,
