@@ -24,7 +24,7 @@ class UploadBase(object):
     Attributes
 
     * :attr:`credentials`
-        instance of MashCredentials
+        cloud access information
 
     * :attr:`system_image_file`
         path to the compressed system image to upload

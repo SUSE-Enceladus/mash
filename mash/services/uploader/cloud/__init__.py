@@ -18,7 +18,6 @@
 # project
 from mash.services.uploader.cloud.amazon import UploadAmazon
 from mash.services.uploader.conventions import Conventions
-from mash.services.credentials import Credentials
 from mash.csp import CSP
 
 from mash.mash_exceptions import MashUploadSetupException
@@ -42,25 +41,19 @@ class Upload(object):
     * :attr:`cloud_image_description`
         description of the image in the public cloud
 
-    * :attr:`credentials_token`
-        encrypted access information
+    * :attr:`credentials`
+        cloud access information
 
     * :attr:`custom_uploader_args`
         custom argument hash for uploader, cloud specific
-
-    * :attr:`custom_credentials_args`
-        custom argument hash for credentials, cloud specific
     """
     def __new__(
         self, csp_name, system_image_file,
-        cloud_image_name, cloud_image_description, credentials_token,
-        custom_uploader_args=None, custom_credentials_args=None
+        cloud_image_name, cloud_image_description, credentials,
+        custom_uploader_args=None
     ):
         conventions = Conventions(csp_name)
         conventions.is_valid_name(cloud_image_name)
-
-        credentials = Credentials(csp_name, custom_credentials_args)
-        credentials.set_credentials(credentials_token)
 
         if csp_name == CSP.ec2:
             return UploadAmazon(
