@@ -21,7 +21,7 @@ import jwt
 import logging
 import os
 
-from amqpstorm import Connection
+from amqpstorm import AMQPError, Connection
 from datetime import datetime, timedelta
 
 # project
@@ -209,6 +209,15 @@ class BaseService(object):
             accounts[name] = provider_class(custom_args=credential)
 
         return accounts
+
+    def notify_invalid_config(self, message):
+        """
+        Notify job creator an invalid job config message has been received.
+        """
+        try:
+            self._publish('jobcreator', 'invalid_config', message)
+        except AMQPError:
+            self.log.warning('Message not received: {0}'.format(message))
 
     def publish_credentials_request(self, job_id):
         self._publish(

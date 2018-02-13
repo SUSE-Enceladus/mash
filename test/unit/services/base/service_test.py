@@ -1,6 +1,7 @@
 import io
 import jwt
 
+from amqpstorm import AMQPError
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import MagicMock, Mock
@@ -225,6 +226,24 @@ class TestBaseService(object):
             self.service.decode_credentials(message, 'ec2')
         assert msg == str(e.value)
         # Credential exception
+
+    @patch.object(BaseService, '_publish')
+    def test_notify_invalid_config(self, mock_publish):
+        self.service.notify_invalid_config('invalid')
+        mock_publish.assert_called_once_with(
+            'jobcreator',
+            'invalid_config',
+            'invalid'
+        )
+
+    @patch.object(BaseService, '_publish')
+    def test_notify_invalid_config_exception(self, mock_publish):
+        mock_publish.side_effect = AMQPError('Broken')
+        self.service.notify_invalid_config('invalid')
+
+        self.service.log.warning.assert_called_once_with(
+            'Message not received: {0}'.format('invalid')
+        )
 
     @patch.object(BaseService, 'get_credential_request')
     @patch.object(BaseService, '_publish')
