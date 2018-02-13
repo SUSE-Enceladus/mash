@@ -122,14 +122,17 @@ class TestUploadImageService(object):
         )
 
     @patch.object(UploadImageService, '_send_control_response')
+    @patch.object(BaseService, 'decode_credentials')
     def test_process_message_for_service_data(
-        self, mock_send_control_response
+        self, mock_decode_credentials, mock_send_control_response
     ):
+        mock_decode_credentials.return_value = {}
         message = Mock()
         message.method = {'routing_key': '123'}
         message.body = '{"image_file": ["image", "sum"], "status": "success"}'
         self.uploader._process_message(message)
         assert self.uploader.jobs['123']['system_image_file'] == 'image'
+        self.uploader.jobs['123']['provider'] = 'ec2'
         message.body = '{"credentials": {}}'
         self.uploader._process_message(message)
         assert self.uploader.jobs['123']['credentials'] == {}

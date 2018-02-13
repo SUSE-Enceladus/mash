@@ -147,8 +147,9 @@ class UploadImageService(BaseService):
             self._send_job_response(
                 job_id, 'Got image file: {0}'.format(system_image_file)
             )
-        if 'credentials' in service_data:
+        if 'credentials' in service_data and 'provider' in self.jobs[job_id]:
             # Example response from the credentials service for ec2:
+            # response is encoded
             # {
             #     "test-aws": {
             #         "access_key_id": "123456",
@@ -163,7 +164,9 @@ class UploadImageService(BaseService):
             #         "ssh_private_key": "key321"
             #     }
             # }
-            self.jobs[job_id]['credentials'] = service_data['credentials']
+            self.jobs[job_id]['credentials'] = self.decode_credentials(
+                service_data['credentials'], self.jobs[job_id]['provider']
+            )
             self._send_job_response(
                 job_id, 'Got credentials data'
             )
@@ -314,7 +317,9 @@ class UploadImageService(BaseService):
         job_id = job_data['id']
         csp = job_data['provider']
         if job_id not in self.jobs:
-            self.jobs[job_id] = {}
+            self.jobs[job_id] = {
+                'provider': csp
+            }
         # get us the time when to start this job
         time = job_data['utctime']
         nonstop = False
