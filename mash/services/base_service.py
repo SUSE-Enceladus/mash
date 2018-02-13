@@ -312,3 +312,12 @@ class BaseService(object):
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key
         )
+
+    def unbind_listener_queue(self, routing_key):
+        """
+        Unbind job_id/routing_key from listener queue on exchange.
+        """
+        self.unbind_queue(
+            queue=self.listener_queue, exchange=self.service_exchange,
+            routing_key=routing_key
+        )
