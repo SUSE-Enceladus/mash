@@ -85,3 +85,12 @@ class BaseConfig(object):
         return '{dir}{service}_service.log'.format(
             dir=log_dir, service=service
         )
+
+    def get_service_list(self, credentials_required=False):
+        """
+        Return a list of all services.
+
+        If credentials_required is True return only services that require
+        credentials to execute.
+        """
+        return Defaults.get_service_list(credentials_required)

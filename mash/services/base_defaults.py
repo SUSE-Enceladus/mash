@@ -37,3 +37,14 @@ class Defaults(object):
     @classmethod
     def get_log_directory(self):
         return '/var/log/mash/'
+
+    @classmethod
+    def get_service_list(self, credentials_required=False):
+        services = set([
+            'obs', 'uploader', 'testing', 'replication', 'publisher',
+            'deprecation', 'pint'
+        ])
+        if credentials_required:
+            services -= set(['obs'])
+
+        return services
