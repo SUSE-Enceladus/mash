@@ -18,6 +18,7 @@
 
 from threading import Thread
 
+from mash.services.status_levels import FAILED, SUCCESS
 from mash.services.testing.ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
 
@@ -68,12 +69,12 @@ class EC2TestingJob(TestingJob):
         for job in jobs:
             job.join()
 
-        self.status = "success"
+        self.status = SUCCESS
         for region, result in results.items():
-            if result['status'] != 0:
+            if result['status'] != SUCCESS:
                 self.send_log(
                     'Image tests failed in region: {0}.'.format(region)
                 )
                 if result.get('msg'):
                     self.send_log(result.get['msg'])
-                self.status = "failed"
+                self.status = FAILED

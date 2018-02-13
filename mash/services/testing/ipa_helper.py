@@ -21,7 +21,7 @@ import threading
 
 from ipa.ipa_controller import test_image
 
-from mash.services.status_levels import EXCEPTION
+from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
 
 
 def ipa_test(
@@ -49,4 +49,5 @@ def ipa_test(
     except Exception as error:
         results[name] = {'status': EXCEPTION, 'msg': error}
     else:
+        status = SUCCESS if status == 0 else FAILED
         results[name] = {'status': status}
