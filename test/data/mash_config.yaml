@@ -1,1 +1,11 @@
 jwt_secret: abc123
+services:
+  - obs
+  - uploader
+  - testing
+  - replication
+  - publisher
+  - deprecation
+  - pint
+non_cred_services:
+  - obs

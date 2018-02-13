@@ -1,5 +1,15 @@
 jwt_algorithm: HS256
 jwt_secret: enter-a-secret
 log_dir: /var/log/mash/
+services:
+  - obs
+  - uploader
+  - testing
+  - replication
+  - publisher
+  - deprecation
+  - pint
+non_cred_services:
+  - obs
 obs:
   download_directory: /var/tmp/mash/images
