@@ -30,11 +30,11 @@ class TestingJob(object):
     __test__ = False
 
     def __init__(
-        self, id, provider, test_regions, tests, utctime, config_file=None,
+        self, id, provider, test_regions, tests, utctime, job_file=None,
         desc=None, distro=None, instance_type=None
     ):
         self.cloud_image_name = None
-        self.config_file = config_file
+        self.job_file = job_file
         self.credentials = None
         self.desc = desc
         self.distro = self.validate_distro(distro)

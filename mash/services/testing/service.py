@@ -115,11 +115,11 @@ class TestingService(BaseService):
             self.jobs[job.id] = job
             job.set_log_callback(self._log_job_message)
 
-            if 'config_file' not in job_config:
-                job_config['config_file'] = self.persist_job_config(
+            if 'job_file' not in job_config:
+                job_config['job_file'] = self.persist_job_config(
                     job_config
                 )
-                job.config_file = job_config['config_file']
+                job.config_file = job_config['job_file']
 
             self.bind_listener_queue(job.id)
             self.log.info(
@@ -223,7 +223,7 @@ class TestingService(BaseService):
                     self._add_job(job_desc['testing_job'])
             else:
                 self.log.error(
-                    'Invalid testing job: Desc must contain '
+                    'Invalid testing job: Job config must contain '
                     'testing_job key.'
                 )
                 self._notify_invalid_config(message.body)

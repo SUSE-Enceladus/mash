@@ -30,14 +30,14 @@ class EC2TestingJob(TestingJob):
     __test__ = False
 
     def __init__(
-        self, id, provider, test_regions, tests, utctime, config_file=None,
+        self, id, provider, test_regions, tests, utctime, job_file=None,
         credentials=None, desc=None, distro=None, instance_type=None,
         ssh_user='ec2-user'
     ):
         super(EC2TestingJob, self).__init__(
             id, provider, test_regions, tests, utctime,
-            config_file=config_file,
-            desc=desc, distro=distro, instance_type=instance_type
+            job_file=job_file, desc=desc, distro=distro,
+            instance_type=instance_type
         )
         self.ssh_user = ssh_user
 

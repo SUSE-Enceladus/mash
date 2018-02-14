@@ -226,7 +226,7 @@ class TestIPATestingService(object):
 
         self.message.ack.assert_called_once_with()
         self.testing.log.error.assert_called_once_with(
-            'Invalid testing job: Desc must contain '
+            'Invalid testing job: Job config must contain '
             'testing_job key.'
         )
         mock_notify.assert_called_once_with(self.message.body)
