@@ -19,12 +19,12 @@
 import boto3
 
 
-def get_client(endpoint, access_key_id, secret_access_key, region_name):
+def get_client(service_name, access_key_id, secret_access_key, region_name):
     """
     Return client session given credentials and region_name.
     """
     return boto3.client(
-        endpoint,
+        service_name=service_name,
         aws_access_key_id=access_key_id,
         aws_secret_access_key=secret_access_key,
         region_name=region_name,

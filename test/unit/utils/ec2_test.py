@@ -29,7 +29,7 @@ def test_get_client(mock_boto3):
 
     assert client == result
     mock_boto3.client.assert_called_once_with(
-        'ec2',
+        service_name='ec2',
         aws_access_key_id='123456',
         aws_secret_access_key='abc123',
         region_name='us-east-1',
