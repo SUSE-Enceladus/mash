@@ -164,6 +164,14 @@ class EC2ReplicationJob(ReplicationJob):
             self.source_regions[region]['image_id'] = image_id
 
     def validate_source_regions(self, source_regions):
+        """
+        Validate source_regions attribute is correct format.
+
+        Must be a dictionary mapping regions to accounts and target_regions
+        list.
+
+        {'us-east-1': {'account': 'test-aws', 'target_regions': ['us-east-2']}}
+        """
         for region, reg_info in source_regions.items():
             if not reg_info.get('account'):
                 raise MashReplicationException(
