@@ -37,3 +37,14 @@ class Defaults(object):
     @classmethod
     def get_log_directory(self):
         return '/var/log/mash/'
+
+    @classmethod
+    def get_service_names(self):
+        return [
+            'obs', 'uploader', 'testing', 'replication', 'publisher',
+            'deprecation', 'pint'
+        ]
+
+    @classmethod
+    def get_non_credential_service_names(self):
+        return ['obs']
