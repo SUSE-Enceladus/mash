@@ -135,12 +135,6 @@ class BaseService(object):
             callback=callback, queue=queue
         )
 
-    def publish_credentials_result(self, job_id, csp, message):
-        """Deprecated"""
-        exchange = 'credentials'
-        self.bind_queue(exchange, job_id, csp)
-        self._publish(exchange, job_id, message)
-
     def consume_credentials_queue(self, callback, queue_name=None):
         """
         Setup credentials attributes from configuration.

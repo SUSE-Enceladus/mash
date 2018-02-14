@@ -87,22 +87,6 @@ class TestBaseService(object):
             properties=self.msg_properties, routing_key='job_id'
         )
 
-    @patch('mash.services.base_service.Connection')
-    def test_publish_credentials_result(self, mock_connection):
-        mock_connection.return_value = self.connection
-        self.service.publish_credentials_result('job_id', 'csp', 'message')
-        self.channel.queue.declare.assert_called_once_with(
-            queue='credentials.csp', durable=True
-        )
-        self.channel.queue.bind.assert_called_once_with(
-            exchange='credentials', routing_key='job_id',
-            queue='credentials.csp'
-        )
-        self.channel.basic.publish.assert_called_once_with(
-            body='message', exchange='credentials', mandatory=True,
-            properties=self.msg_properties, routing_key='job_id'
-        )
-
     def test_consume_queue(self):
         callback = Mock()
         self.service.consume_queue(callback)
