@@ -13,6 +13,8 @@ from mash.utils.json_format import JsonFormat
 
 
 class TestUploadImageService(object):
+    @patch.object(BaseService, 'bind_credentials_queue')
+    @patch.object(BaseService, 'consume_credentials_queue')
     @patch('mash.services.uploader.service.UploaderConfig')
     @patch('mash.services.base_service.BaseService.set_logfile')
     @patch('mash.services.uploader.service.BackgroundScheduler')
@@ -26,7 +28,7 @@ class TestUploadImageService(object):
         self, mock_register, mock_log, mock_listdir,
         mock_BaseService, mock_restart_jobs, mock_process_message,
         mock_BackgroundScheduler, mock_set_logfile,
-        mock_UploaderConfig
+        mock_UploaderConfig, mock_consume_creds_queue, mock_bind_creds_queue
     ):
         scheduler = Mock()
         mock_BackgroundScheduler.return_value = scheduler
@@ -49,6 +51,7 @@ class TestUploadImageService(object):
         self.uploader.service_queue = 'service'
         self.uploader.job_document_key = 'job_document'
         self.uploader.credentials_queue = 'credentials'
+        self.uploader.credentials_response_key = 'response'
 
         self.uploader.post_init()
 
@@ -352,7 +355,9 @@ class TestUploadImageService(object):
 
     @patch.object(UploadImageService, 'bind_queue')
     @patch.object(UploadImageService, '_start_job')
-    def test_schedule_job(self, mock_start_job, mock_bind_queue):
+    def test_schedule_job(
+        self, mock_start_job, mock_bind_queue
+    ):
         job = {
             'id': '123',
             'cloud_image_name': 'b',
@@ -389,8 +394,7 @@ class TestUploadImageService(object):
             mock_start_job, args=[job, False, uploader_args[0], True]
         )
         assert mock_bind_queue.call_args_list == [
-            call('uploader', '123', 'service'),
-            call('credentials', '123', 'ec2')
+            call('uploader', '123', 'service')
         ]
 
     @patch('mash.services.uploader.service.UploadImage')

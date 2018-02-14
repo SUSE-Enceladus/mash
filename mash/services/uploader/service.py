@@ -59,6 +59,10 @@ class UploadImageService(BaseService):
         atexit.register(lambda: os._exit(0))
         self.consume_queue(self._process_message, self.service_queue)
 
+        # Consume credentials response queue
+        self.bind_credentials_queue()
+        self.consume_credentials_queue(self._process_message)
+
         try:
             self.channel.start_consuming()
         except Exception:
@@ -165,8 +169,8 @@ class UploadImageService(BaseService):
             #     }
             # }
             self.jobs[job_id]['credentials'] = self.decode_credentials(
-                service_data['credentials'], self.jobs[job_id]['provider']
-            )
+                service_data  # TODO: Should be raw message.body
+            )['credentials']
             self._send_job_response(
                 job_id, 'Got credentials data'
             )
@@ -348,10 +352,7 @@ class UploadImageService(BaseService):
         # is still missing here. Instead the old code which just reads
         # from a credentials queue from the stub credentials service
         # is still in use.
-        if csp:
-            self.bind_credentials_queue(job_id, csp)
-            self.consume_credentials_queue(self._process_message)
-        #
+
         return {
             'time': time,
             'nonstop': nonstop
