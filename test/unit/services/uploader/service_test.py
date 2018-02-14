@@ -129,7 +129,7 @@ class TestUploadImageService(object):
     def test_process_message_for_service_data(
         self, mock_decode_credentials, mock_send_control_response
     ):
-        mock_decode_credentials.return_value = {}
+        mock_decode_credentials.return_value = {"credentials": {}}
         message = Mock()
         message.method = {'routing_key': '123'}
         message.body = '{"image_file": ["image", "sum"], "status": "success"}'
