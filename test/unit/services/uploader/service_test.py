@@ -135,7 +135,6 @@ class TestUploadImageService(object):
         message.body = '{"image_file": ["image", "sum"], "status": "success"}'
         self.uploader._process_message(message)
         assert self.uploader.jobs['123']['system_image_file'] == 'image'
-        self.uploader.jobs['123']['provider'] = 'ec2'
         message.body = '{"credentials": {}}'
         self.uploader._process_message(message)
         assert self.uploader.jobs['123']['credentials'] == {}
@@ -353,10 +352,10 @@ class TestUploadImageService(object):
             'message': 'Job already exists', 'ok': False
         }
 
-    @patch.object(UploadImageService, 'bind_queue')
+    @patch.object(UploadImageService, 'publish_credentials_request')
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job(
-        self, mock_start_job, mock_bind_queue
+        self, mock_start_job, mock_publish_credentials_request
     ):
         job = {
             'id': '123',
@@ -387,15 +386,15 @@ class TestUploadImageService(object):
             mock_start_job, args=[job, True, uploader_args[0], True]
         )
         self.uploader.scheduler.add_job.reset_mock()
-        mock_bind_queue.reset_mock()
+        mock_publish_credentials_request.reset_mock()
         job['utctime'] = 'now'
         self.uploader._schedule_job(job)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, args=[job, False, uploader_args[0], True]
         )
-        assert mock_bind_queue.call_args_list == [
-            call('uploader', '123', 'service')
-        ]
+        mock_publish_credentials_request.assert_called_once_with(
+            '123'
+        )
 
     @patch('mash.services.uploader.service.UploadImage')
     @patch.object(UploadImageService, '_send_job_response')

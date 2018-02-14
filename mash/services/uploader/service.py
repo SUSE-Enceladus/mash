@@ -151,7 +151,7 @@ class UploadImageService(BaseService):
             self._send_job_response(
                 job_id, 'Got image file: {0}'.format(system_image_file)
             )
-        if 'credentials' in service_data and 'provider' in self.jobs[job_id]:
+        if 'credentials' in service_data:
             # Example response from the credentials service for ec2:
             # response is encoded
             # {
@@ -319,11 +319,8 @@ class UploadImageService(BaseService):
     def _init_job(self, job_data):
         # init empty job hash if not yet done
         job_id = job_data['id']
-        csp = job_data['provider']
         if job_id not in self.jobs:
-            self.jobs[job_id] = {
-                'provider': csp
-            }
+            self.jobs[job_id] = {}
         # get us the time when to start this job
         time = job_data['utctime']
         nonstop = False
@@ -343,16 +340,8 @@ class UploadImageService(BaseService):
         }
         self.jobs[job_id]['nonstop'] = nonstop
         self.jobs[job_id]['uploader'] = []
-        # bind on the service queue for this job
-        self.bind_queue(
-            self.service_exchange, job_id, self.service_queue
-        )
-        # NOTE: The credentials service in its final version expects
-        # a request to create credentials. The sending of this request
-        # is still missing here. Instead the old code which just reads
-        # from a credentials queue from the stub credentials service
-        # is still in use.
-
+        # send request for credentials
+        self.publish_credentials_request(job_id)
         return {
             'time': time,
             'nonstop': nonstop
