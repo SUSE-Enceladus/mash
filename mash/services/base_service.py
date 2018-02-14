@@ -159,11 +159,7 @@ class BaseService(object):
         queue = self._get_queue_name(self.service_exchange, queue_name)
         self.channel.basic.consume(callback=callback, queue=queue)
 
-    def bind_credentials_queue(self, job_id, csp):
-        """Deprecated"""
-        self.bind_queue('credentials', job_id, csp)
-
-    def bind_creds_queue(self):
+    def bind_credentials_queue(self):
         """
         Bind the response key to the credentials queue.
         """

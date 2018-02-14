@@ -60,7 +60,7 @@ class UploadImageService(BaseService):
         self.consume_queue(self._process_message, self.service_queue)
 
         # Consume credentials response queue
-        self.bind_creds_queue()
+        self.bind_credentials_queue()
         self.consume_credentials_queue(self._process_message)
 
         try:
@@ -352,7 +352,6 @@ class UploadImageService(BaseService):
         # is still missing here. Instead the old code which just reads
         # from a credentials queue from the stub credentials service
         # is still in use.
-        self.publish_credentials_request(job_id)
 
         return {
             'time': time,
