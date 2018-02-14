@@ -16,35 +16,18 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.services.base_config import BaseConfig
 
-class Defaults(object):
+
+class ReplicationConfig(BaseConfig):
     """
-    Default values
+    Implements reading of the mash configuration file:
+
+    * /etc/mash/mash_config.yaml
+
+    The mash configuration file is a yaml formatted file containing
+    information to control the behavior of the mash services.
     """
 
-    @classmethod
-    def get_config(self):
-        return '/etc/mash/mash_config.yaml'
-
-    @classmethod
-    def get_job_directory(self, service_name):
-        return '/var/lib/mash/{0}_jobs/'.format(service_name)
-
-    @classmethod
-    def get_jwt_algorithm(self):
-        return 'HS256'
-
-    @classmethod
-    def get_log_directory(self):
-        return '/var/log/mash/'
-
-    @classmethod
-    def get_service_names(self):
-        return [
-            'obs', 'uploader', 'testing', 'replication', 'publisher',
-            'deprecation', 'pint'
-        ]
-
-    @classmethod
-    def get_non_credential_service_names(self):
-        return ['obs']
+    def __init__(self, config_file=None):
+        super(ReplicationConfig, self).__init__(config_file)

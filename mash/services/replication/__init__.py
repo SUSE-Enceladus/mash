@@ -15,36 +15,3 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-
-
-class Defaults(object):
-    """
-    Default values
-    """
-
-    @classmethod
-    def get_config(self):
-        return '/etc/mash/mash_config.yaml'
-
-    @classmethod
-    def get_job_directory(self, service_name):
-        return '/var/lib/mash/{0}_jobs/'.format(service_name)
-
-    @classmethod
-    def get_jwt_algorithm(self):
-        return 'HS256'
-
-    @classmethod
-    def get_log_directory(self):
-        return '/var/log/mash/'
-
-    @classmethod
-    def get_service_names(self):
-        return [
-            'obs', 'uploader', 'testing', 'replication', 'publisher',
-            'deprecation', 'pint'
-        ]
-
-    @classmethod
-    def get_non_credential_service_names(self):
-        return ['obs']

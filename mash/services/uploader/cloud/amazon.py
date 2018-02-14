@@ -55,7 +55,7 @@ class UploadAmazon(UploadBase):
             'secret_key': None
         }
         self.ec2_upload_parameters.update(
-            self.credentials.get_credentials()
+            self.credentials
         )
         if self.custom_args:
             if 'region' in self.custom_args:

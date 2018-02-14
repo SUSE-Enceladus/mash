@@ -1,6 +1,7 @@
 import io
 import jwt
 
+from amqpstorm import AMQPError
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import MagicMock, Mock
@@ -161,6 +162,12 @@ class TestBaseService(object):
             queue='service', exchange='testing', routing_key='1'
         )
 
+    def test_unbind_listener_queue(self):
+        self.service.unbind_listener_queue('1')
+        self.service.channel.queue.unbind.assert_called_once_with(
+            queue='listener', exchange='obs', routing_key='1'
+        )
+
     def test_get_credentials_request(self):
         self.service.jwt_algorithm = 'HS256'
         self.service.jwt_secret = 'super.secret'
@@ -199,32 +206,41 @@ class TestBaseService(object):
             }
         }
 
-        accounts = self.service.decode_credentials(message, 'ec2')
+        payload = self.service.decode_credentials(message)
 
         mock_jwt.decode.assert_called_once_with(
             message, 'super.secret', algorithm='HS256',
             issuer='credentials', audience='obs'
         )
 
-        assert len(accounts) == 2
-
-        # Invalid payload
-        mock_jwt.decode.return_value = {}
-
-        msg = 'Credentials not found in payload.'
-        with raises(MashCredentialsException) as e:
-            self.service.decode_credentials(message, 'ec2')
-        assert msg == str(e.value)
-        # Invalid payload
+        assert len(payload['credentials'].keys()) == 2
 
         # Credential exception
         mock_jwt.decode.side_effect = Exception('Token is broken!')
 
         msg = 'Invalid credentials response token: Token is broken!'
         with raises(MashCredentialsException) as e:
-            self.service.decode_credentials(message, 'ec2')
+            self.service.decode_credentials(message)
         assert msg == str(e.value)
         # Credential exception
+
+    @patch.object(BaseService, '_publish')
+    def test_notify_invalid_config(self, mock_publish):
+        self.service.notify_invalid_config('invalid')
+        mock_publish.assert_called_once_with(
+            'jobcreator',
+            'invalid_config',
+            'invalid'
+        )
+
+    @patch.object(BaseService, '_publish')
+    def test_notify_invalid_config_exception(self, mock_publish):
+        mock_publish.side_effect = AMQPError('Broken')
+        self.service.notify_invalid_config('invalid')
+
+        self.service.log.warning.assert_called_once_with(
+            'Message not received: {0}'.format('invalid')
+        )
 
     @patch.object(BaseService, 'get_credential_request')
     @patch.object(BaseService, '_publish')

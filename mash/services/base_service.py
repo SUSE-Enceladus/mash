@@ -21,14 +21,13 @@ import jwt
 import logging
 import os
 
-from amqpstorm import Connection
+from amqpstorm import AMQPError, Connection
 from datetime import datetime, timedelta
 
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
-from mash.services.credentials.amazon import CredentialsAmazon
 from mash.mash_exceptions import (
     MashCredentialsException,
     MashRabbitConnectionException,
@@ -76,10 +75,9 @@ class BaseService(object):
 
         # Credentials
         self.credentials_queue = 'credentials'
-        self.credentials_key = 'credentials_response'
-
-        self.bind_queue(
-            self.service_exchange, self.credentials_key, self.credentials_queue
+        self.credentials_response_key = 'response'
+        self.credentials_request_key = 'request.{0}'.format(
+            self.service_exchange
         )
 
         logging.basicConfig()
@@ -143,26 +141,32 @@ class BaseService(object):
         self.bind_queue(exchange, job_id, csp)
         self._publish(exchange, job_id, message)
 
-    def consume_credentials_queue(self, callback):
+    def consume_credentials_queue(self, callback, queue_name=None):
         """
         Setup credentials attributes from configuration.
 
         Then consume credentials response queue to receive credentials
         tokens for jobs.
         """
+        if not queue_name:
+            queue_name = self.credentials_queue
+
         # Required by all services that need credentials.
         # Config is not available until post init.
         self.jwt_secret = self.config.get_jwt_secret()
         self.jwt_algorithm = self.config.get_jwt_algorithm()
 
-        queue = self._get_queue_name(
-            self.service_exchange, self.credentials_queue
-        )
+        queue = self._get_queue_name(self.service_exchange, queue_name)
         self.channel.basic.consume(callback=callback, queue=queue)
 
-    def bind_credentials_queue(self, job_id, csp):
-        """Deprecated"""
-        self.bind_queue('credentials', job_id, csp)
+    def bind_credentials_queue(self):
+        """
+        Bind the response key to the credentials queue.
+        """
+        self.bind_queue(
+            self.service_exchange, self.credentials_response_key,
+            self.credentials_queue
+        )
 
     def get_credential_request(self, job_id):
         """
@@ -180,7 +184,7 @@ class BaseService(object):
             request, self.jwt_secret, algorithm=self.jwt_algorithm
         )
 
-    def decode_credentials(self, message, provider):
+    def decode_credentials(self, message):
         """
         Decode jwt credential response message.
         """
@@ -194,25 +198,20 @@ class BaseService(object):
                 'Invalid credentials response token: {0}'.format(error)
             )
 
+        return payload
+
+    def notify_invalid_config(self, message):
+        """
+        Notify job creator an invalid job config message has been received.
+        """
         try:
-            credentials = payload['credentials']
-        except KeyError:
-            raise MashCredentialsException(
-                'Credentials not found in payload.'
-            )
-
-        if provider == 'ec2':
-            provider_class = CredentialsAmazon
-
-        accounts = {}
-        for name, credential in credentials.items():
-            accounts[name] = provider_class(custom_args=credential)
-
-        return accounts
+            self._publish('jobcreator', 'invalid_config', message)
+        except AMQPError:
+            self.log.warning('Message not received: {0}'.format(message))
 
     def publish_credentials_request(self, job_id):
         self._publish(
-            'credentials', 'request.{0}'.format(self.service_exchange),
+            'credentials', self.credentials_request_key,
             self.get_credential_request(job_id)
         )
 
@@ -302,4 +301,13 @@ class BaseService(object):
     def unbind_queue(self, queue, exchange, routing_key):
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key
+        )
+
+    def unbind_listener_queue(self, routing_key):
+        """
+        Unbind job_id/routing_key from listener queue on exchange.
+        """
+        self.unbind_queue(
+            queue=self.listener_queue, exchange=self.service_exchange,
+            routing_key=routing_key
         )

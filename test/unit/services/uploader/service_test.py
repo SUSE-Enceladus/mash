@@ -13,6 +13,8 @@ from mash.utils.json_format import JsonFormat
 
 
 class TestUploadImageService(object):
+    @patch.object(BaseService, 'bind_credentials_queue')
+    @patch.object(BaseService, 'consume_credentials_queue')
     @patch('mash.services.uploader.service.UploaderConfig')
     @patch('mash.services.base_service.BaseService.set_logfile')
     @patch('mash.services.uploader.service.BackgroundScheduler')
@@ -26,7 +28,7 @@ class TestUploadImageService(object):
         self, mock_register, mock_log, mock_listdir,
         mock_BaseService, mock_restart_jobs, mock_process_message,
         mock_BackgroundScheduler, mock_set_logfile,
-        mock_UploaderConfig
+        mock_UploaderConfig, mock_consume_creds_queue, mock_bind_creds_queue
     ):
         scheduler = Mock()
         mock_BackgroundScheduler.return_value = scheduler
@@ -49,6 +51,7 @@ class TestUploadImageService(object):
         self.uploader.service_queue = 'service'
         self.uploader.job_document_key = 'job_document'
         self.uploader.credentials_queue = 'credentials'
+        self.uploader.credentials_response_key = 'response'
 
         self.uploader.post_init()
 
@@ -122,17 +125,20 @@ class TestUploadImageService(object):
         )
 
     @patch.object(UploadImageService, '_send_control_response')
+    @patch.object(BaseService, 'decode_credentials')
     def test_process_message_for_service_data(
-        self, mock_send_control_response
+        self, mock_decode_credentials, mock_send_control_response
     ):
+        mock_decode_credentials.return_value = {"credentials": {}}
         message = Mock()
         message.method = {'routing_key': '123'}
         message.body = '{"image_file": ["image", "sum"], "status": "success"}'
         self.uploader._process_message(message)
         assert self.uploader.jobs['123']['system_image_file'] == 'image'
-        message.body = '{"credentials": "token"}'
+        self.uploader.jobs['123']['provider'] = 'ec2'
+        message.body = '{"credentials": {}}'
         self.uploader._process_message(message)
-        assert self.uploader.jobs['123']['credentials_token'] == 'token'
+        assert self.uploader.jobs['123']['credentials'] == {}
         assert self.uploader.jobs['123']['ready'] is True
 
     @patch.object(UploadImageService, '_add_job')
@@ -349,7 +355,9 @@ class TestUploadImageService(object):
 
     @patch.object(UploadImageService, 'bind_queue')
     @patch.object(UploadImageService, '_start_job')
-    def test_schedule_job(self, mock_start_job, mock_bind_queue):
+    def test_schedule_job(
+        self, mock_start_job, mock_bind_queue
+    ):
         job = {
             'id': '123',
             'cloud_image_name': 'b',
@@ -386,8 +394,7 @@ class TestUploadImageService(object):
             mock_start_job, args=[job, False, uploader_args[0], True]
         )
         assert mock_bind_queue.call_args_list == [
-            call('uploader', '123', 'service'),
-            call('credentials', '123', 'ec2')
+            call('uploader', '123', 'service')
         ]
 
     @patch('mash.services.uploader.service.UploadImage')
@@ -426,7 +433,7 @@ class TestUploadImageService(object):
         uploader.jobs['123'] = {
             'ready': True,
             'uploader': [],
-            'credentials_token': 'token',
+            'credentials': {'test-aws': {}},
             'system_image_file': 'image'
         }
         uploader_args = uploader._get_uploader_arguments_per_region(job)
@@ -435,8 +442,11 @@ class TestUploadImageService(object):
         mock_wait_until_ready.assert_called_once_with('123')
 
         mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', False, 'ec2', 'token', 'b', 'a',
-            False, {'launch_ami': 'ami-bc5b48d0', 'region': 'us-east-1'}
+            '123', 'job_file', False, 'ec2', {}, 'b', 'a',
+            False, {
+                'launch_ami': 'ami-bc5b48d0', 'region': 'us-east-1',
+                'account': 'test-aws'
+            }
         )
         upload_image.set_log_handler.assert_called_once_with(
             mock_send_job_response
@@ -453,8 +463,11 @@ class TestUploadImageService(object):
         mock_sleep.side_effect = done_after_one_iteration
         uploader._start_job(job, True, uploader_args[0], False)
         mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', True, 'ec2', 'token', 'b', 'a',
-            False, {'launch_ami': 'ami-bc5b48d0', 'region': 'us-east-1'}
+            '123', 'job_file', True, 'ec2', {}, 'b', 'a',
+            False, {
+                'launch_ami': 'ami-bc5b48d0', 'region': 'us-east-1',
+                'account': 'test-aws'
+            }
         )
         assert mock_send_job_response.call_args_list == [
             call(

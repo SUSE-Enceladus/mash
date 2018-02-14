@@ -22,3 +22,13 @@ class TestBaseConfig(object):
             self.empty_config.get_jwt_secret()
 
         assert msg == str(error.value)
+
+    def test_get_services_names(self):
+        expected = {
+            'publisher', 'pint', 'testing', 'replication',
+            'uploader', 'deprecation'
+        }
+        services = self.empty_config.get_service_names(
+            credentials_required=True
+        )
+        assert not (expected - services)
