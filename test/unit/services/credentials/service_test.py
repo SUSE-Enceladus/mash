@@ -313,12 +313,12 @@ class TestCredentialsService(object):
         job = {'id': '1', 'last_service': 'pint'}
         self.service.jobs = {'1': job}
 
-        mock_get_cred_response.return_value = 'response'
+        mock_get_cred_response.return_value = b'response'
 
         self.service._send_credential_response({'id': '1', 'iss': 'pint'})
         mock_get_cred_response.assert_called_once_with('1', 'pint')
         mock_publish_credentials_response.assert_called_once_with(
-            'response', 'pint'
+            '{"jwt_token": "response"}', 'pint'
         )
         mock_delete_job.assert_called_once_with('1')
 
