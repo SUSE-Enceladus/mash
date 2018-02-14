@@ -48,17 +48,25 @@ class TestingJob(object):
         self.tests = self.validate_tests(tests)
         self.utctime = self.validate_timestamp(utctime)
 
+    def _run_tests(self):
+        """
+        Tests image with IPA and update status and results.
+        """
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
     def get_metadata(self):
         """
         Return dictionary of metadata based on job.
         """
         return {'job_id': self.id}
 
-    def _run_tests(self):
+    def get_source_regions(self):
         """
-        Tests image with IPA and update status and results.
+        Return a dictionary mapping source regions to image id's.
         """
-        raise NotImplementedError(NOT_IMPLEMENTED)
+        return {
+            reg: info['image_id'] for reg, info in self.test_regions.items()
+        }
 
     def send_log(self, message):
         if self.log_callback:
@@ -137,7 +145,7 @@ class TestingJob(object):
         value = {}
         for region, account in test_regions.items():
             if region and account:
-                value['region'] = {'account': account}
+                value[region] = {'account': account}
             else:
                 raise MashTestingException(
                     'Invalid test_regions format. '

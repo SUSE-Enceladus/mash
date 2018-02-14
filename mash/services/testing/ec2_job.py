@@ -31,13 +31,15 @@ class EC2TestingJob(TestingJob):
 
     def __init__(
         self, id, provider, test_regions, tests, utctime, config_file=None,
-        credentials=None, desc=None, distro=None, instance_type=None
+        credentials=None, desc=None, distro=None, instance_type=None,
+        ssh_user='ec2-user'
     ):
         super(EC2TestingJob, self).__init__(
             id, provider, test_regions, tests, utctime,
             config_file=config_file,
             desc=desc, distro=distro, instance_type=instance_type
         )
+        self.ssh_user = ssh_user
 
     def _run_tests(self):
         """
@@ -59,7 +61,7 @@ class EC2TestingJob(TestingJob):
                     'secret_access_key': creds['secret_access_key'],
                     'ssh_key_name': creds['ssh_key_name'],
                     'ssh_private_key': creds['ssh_private_key'],
-                    'ssh_user': creds['ssh_user'],
+                    'ssh_user': self.ssh_user,
                     'tests': self.tests
                 }
             )
@@ -76,5 +78,5 @@ class EC2TestingJob(TestingJob):
                     'Image tests failed in region: {0}.'.format(region)
                 )
                 if result.get('msg'):
-                    self.send_log(result.get['msg'])
+                    self.send_log(result['msg'])
                 self.status = FAILED

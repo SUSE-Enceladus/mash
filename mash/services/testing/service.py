@@ -166,7 +166,7 @@ class TestingService(BaseService):
                 'testing_result': {
                     'id': job.id,
                     'cloud_image_name': job.cloud_image_name,
-                    'source_regions': job.source_regions,
+                    'source_regions': job.get_source_regions(),
                     'status': job.status,
                 }
             }
@@ -184,7 +184,7 @@ class TestingService(BaseService):
         """
         Process credentials response JWT tokens.
         """
-        payload = self.decode_credentials(message)
+        payload = self.decode_credentials(message.body)
         job = self.jobs.get(payload['id'])
 
         job.credentials = payload['credentials']

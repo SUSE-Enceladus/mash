@@ -47,7 +47,7 @@ def ipa_test(
             tests=tests
         )
     except Exception as error:
-        results[name] = {'status': EXCEPTION, 'msg': error}
+        results[name] = {'status': EXCEPTION, 'msg': str(error)}
     else:
         status = SUCCESS if status == 0 else FAILED
         results[name] = {'status': status}

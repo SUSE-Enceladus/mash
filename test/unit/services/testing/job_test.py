@@ -28,6 +28,13 @@ class TestTestingJob(object):
         metadata = job.get_metadata()
         assert metadata == {'job_id': '1'}
 
+    def test_job_get_source_regions(self):
+        job = TestingJob(**self.job_config)
+        job.update_test_regions({'us-east-1': 'ami-123'})
+        source_regions = job.get_source_regions()
+
+        assert source_regions == {'us-east-1': 'ami-123'}
+
     def test_run_tests(self):
         job = TestingJob(**self.job_config)
         with raises(NotImplementedError):
@@ -77,6 +84,15 @@ class TestTestingJob(object):
 
         self.job_config['tests'] = ['test_stuff']
         msg = 'Invalid tests format, must be a comma seperated list.'
+        with raises(MashTestingException) as e:
+            TestingJob(**self.job_config)
+
+        assert str(e.value) == msg
+
+    def test_invalid_test_regions(self):
+        self.job_config['test_regions'] = {'us-east-1': None}
+        msg = 'Invalid test_regions format. ' \
+            'Must be a dict format of {region:account}.'
         with raises(MashTestingException) as e:
             TestingJob(**self.job_config)
 
