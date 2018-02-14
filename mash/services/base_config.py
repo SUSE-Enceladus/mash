@@ -85,3 +85,21 @@ class BaseConfig(object):
         return '{dir}{service}_service.log'.format(
             dir=log_dir, service=service
         )
+
+    def get_service_names(self, credentials_required=False):
+        """
+        Return a list of all service names.
+
+        If credentials_required is True return only services that require
+        credentials to execute.
+        """
+        services = self._get_attribute(attribute='services') or \
+            Defaults.get_service_names()
+
+        if credentials_required:
+            non_cred_services = self._get_attribute(
+                attribute='non_cred_services'
+            ) or Defaults.get_non_credential_service_names()
+            services = set(services) - set(non_cred_services)
+
+        return services

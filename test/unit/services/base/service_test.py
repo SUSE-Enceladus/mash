@@ -1,6 +1,7 @@
 import io
 import jwt
 
+from amqpstorm import AMQPError
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import MagicMock, Mock
@@ -161,6 +162,12 @@ class TestBaseService(object):
             queue='service', exchange='testing', routing_key='1'
         )
 
+    def test_unbind_listener_queue(self):
+        self.service.unbind_listener_queue('1')
+        self.service.channel.queue.unbind.assert_called_once_with(
+            queue='listener', exchange='obs', routing_key='1'
+        )
+
     def test_get_credentials_request(self):
         self.service.jwt_algorithm = 'HS256'
         self.service.jwt_secret = 'super.secret'
@@ -216,6 +223,24 @@ class TestBaseService(object):
             self.service.decode_credentials(message)
         assert msg == str(e.value)
         # Credential exception
+
+    @patch.object(BaseService, '_publish')
+    def test_notify_invalid_config(self, mock_publish):
+        self.service.notify_invalid_config('invalid')
+        mock_publish.assert_called_once_with(
+            'jobcreator',
+            'invalid_config',
+            'invalid'
+        )
+
+    @patch.object(BaseService, '_publish')
+    def test_notify_invalid_config_exception(self, mock_publish):
+        mock_publish.side_effect = AMQPError('Broken')
+        self.service.notify_invalid_config('invalid')
+
+        self.service.log.warning.assert_called_once_with(
+            'Message not received: {0}'.format('invalid')
+        )
 
     @patch.object(BaseService, 'get_credential_request')
     @patch.object(BaseService, '_publish')

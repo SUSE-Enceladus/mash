@@ -9,21 +9,16 @@ from mash.mash_exceptions import MashUploadSetupException
 class TestUpload(object):
     @patch('mash.services.uploader.cloud.UploadAmazon')
     @patch('mash.services.uploader.cloud.Conventions')
-    @patch('mash.services.uploader.cloud.Credentials')
     def test_upload_amazon(
-        self, mock_Credentials, mock_Conventions, mock_UploadAmazon
+        self, mock_Conventions, mock_UploadAmazon
     ):
         conventions = Mock()
-        credentials = Mock()
+        credentials = {}
         mock_Conventions.return_value = conventions
-        mock_Credentials.return_value = credentials
-        Upload('ec2', 'file', 'name', 'description', 'credentials_token')
+        Upload('ec2', 'file', 'name', 'description', credentials)
         conventions.is_valid_name.assert_called_once_with('name')
-        credentials.set_credentials.assert_called_once_with(
-            'credentials_token'
-        )
         mock_UploadAmazon.assert_called_once_with(
-            mock_Credentials.return_value, 'file', 'name', 'description', None
+            credentials, 'file', 'name', 'description', None
         )
         with raises(MashUploadSetupException):
-            Upload('foo', 'file', 'name', 'description', 'credentials_token')
+            Upload('foo', 'file', 'name', 'description', credentials)

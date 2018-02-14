@@ -12,7 +12,7 @@ class TestUploadAmazon(object):
         self.ec2 = Mock()
         mash.services.uploader.cloud.amazon.EC2ImageUploader = self.ec2
         self.credentials = Mock()
-        self.credentials.get_credentials.return_value = {
+        self.credentials = {
             'ssh_key_pair_name': 'name',
             'ssh_key_private_key_file': '/some/path/to/private/key',
             'access_key': 'access-key',

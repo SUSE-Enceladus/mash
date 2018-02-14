@@ -21,7 +21,7 @@ import jwt
 import logging
 import os
 
-from amqpstorm import Connection
+from amqpstorm import AMQPError, Connection
 from datetime import datetime, timedelta
 
 # project
@@ -204,6 +204,15 @@ class BaseService(object):
 
         return payload
 
+    def notify_invalid_config(self, message):
+        """
+        Notify job creator an invalid job config message has been received.
+        """
+        try:
+            self._publish('jobcreator', 'invalid_config', message)
+        except AMQPError:
+            self.log.warning('Message not received: {0}'.format(message))
+
     def publish_credentials_request(self, job_id):
         self._publish(
             'credentials', self.credentials_request_key,
@@ -296,4 +305,13 @@ class BaseService(object):
     def unbind_queue(self, queue, exchange, routing_key):
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key
+        )
+
+    def unbind_listener_queue(self, routing_key):
+        """
+        Unbind job_id/routing_key from listener queue on exchange.
+        """
+        self.unbind_queue(
+            queue=self.listener_queue, exchange=self.service_exchange,
+            routing_key=routing_key
         )
