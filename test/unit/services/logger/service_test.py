@@ -2,8 +2,6 @@ import io
 import json
 import sys
 
-from amqpstorm import AMQPError
-
 from unittest.mock import MagicMock, Mock, patch
 from pytest import raises
 

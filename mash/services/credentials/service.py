@@ -161,9 +161,11 @@ class CredentialsService(BaseService):
         """
         try:
             issuer = message.method['routing_key'].split('.')[1]
+            request_msg = json.loads(message.body)
             payload = jwt.decode(
-                message.body, self.jwt_secret, algorithm=self.jwt_algorithm,
-                issuer=issuer, audience=self.service_exchange
+                request_msg['jwt_token'], self.jwt_secret,
+                algorithm=self.jwt_algorithm, issuer=issuer,
+                audience=self.service_exchange
             )
         except Exception as error:
             self._send_control_response(
@@ -270,9 +272,8 @@ class CredentialsService(BaseService):
             credentials_response = self._get_credentials_response(
                 payload['id'], payload['iss']
             )
-            self._publish_credentials_response(
-                credentials_response, payload['iss']
-            )
+            message = json.dumps({'jwt_token': credentials_response.decode()})
+            self._publish_credentials_response(message, payload['iss'])
 
             if job['last_service'] == payload['iss']:
                 self._delete_job(job['id'])

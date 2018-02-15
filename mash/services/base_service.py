@@ -135,12 +135,6 @@ class BaseService(object):
             callback=callback, queue=queue
         )
 
-    def publish_credentials_result(self, job_id, csp, message):
-        """Deprecated"""
-        exchange = 'credentials'
-        self.bind_queue(exchange, job_id, csp)
-        self._publish(exchange, job_id, message)
-
     def consume_credentials_queue(self, callback, queue_name=None):
         """
         Setup credentials attributes from configuration.
@@ -180,9 +174,11 @@ class BaseService(object):
             'aud': 'credentials',  # audience
             'id': job_id,
         }
-        return jwt.encode(
+        token = jwt.encode(
             request, self.jwt_secret, algorithm=self.jwt_algorithm
         )
+        message = json.dumps({'jwt_token': token.decode()})
+        return message
 
     def decode_credentials(self, message):
         """
