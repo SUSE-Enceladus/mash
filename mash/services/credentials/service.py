@@ -272,9 +272,8 @@ class CredentialsService(BaseService):
             credentials_response = self._get_credentials_response(
                 payload['id'], payload['iss']
             )
-            self._publish_credentials_response(
-                credentials_response, payload['iss']
-            )
+            message = json.dumps({'jwt_token': credentials_response.decode()})
+            self._publish_credentials_response(message, payload['iss'])
 
             if job['last_service'] == payload['iss']:
                 self._delete_job(job['id'])

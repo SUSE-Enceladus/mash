@@ -135,7 +135,7 @@ class TestUploadImageService(object):
         message.body = '{"image_file": ["image", "sum"], "status": "success"}'
         self.uploader._process_message(message)
         assert self.uploader.jobs['123']['system_image_file'] == 'image'
-        message.body = '{"credentials": {}}'
+        message.body = '{"jwt_token": {}}'
         self.uploader._process_message(message)
         assert self.uploader.jobs['123']['credentials'] == {}
         assert self.uploader.jobs['123']['ready'] is True

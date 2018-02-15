@@ -151,7 +151,7 @@ class UploadImageService(BaseService):
             self._send_job_response(
                 job_id, 'Got image file: {0}'.format(system_image_file)
             )
-        if 'credentials' in service_data:
+        if 'jwt_token' in service_data:
             # Example response from the credentials service for ec2:
             # response is encoded
             # {
