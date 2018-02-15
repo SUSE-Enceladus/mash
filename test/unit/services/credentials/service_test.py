@@ -186,7 +186,7 @@ class TestCredentialsService(object):
     ):
         message = MagicMock()
         message.method['routing_key'] = 'request.testing'
-        message.body = 'test'
+        message.body = '{"jwt_token": "test"}'
 
         self.service.jwt_secret = 'secret'
         self.service.jwt_algorithm = 'HS256'
@@ -205,7 +205,7 @@ class TestCredentialsService(object):
     ):
         message = MagicMock()
         message.method = {'routing_key': 'request.testing'}
-        message.body = 'test'
+        message.body = '{"jwt_token": "test"}'
 
         self.service.jwt_secret = 'secret'
         self.service.jwt_algorithm = 'HS256'
