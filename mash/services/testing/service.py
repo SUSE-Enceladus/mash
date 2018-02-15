@@ -184,7 +184,8 @@ class TestingService(BaseService):
         """
         Process credentials response JWT tokens.
         """
-        payload = self.decode_credentials(message.body)
+        token = json.loads(message.body)
+        payload = self.decode_credentials(token['jwt_token'])
         job = self.jobs.get(payload['id'])
 
         job.credentials = payload['credentials']

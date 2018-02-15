@@ -32,7 +32,7 @@ def ipa_test(
     name = threading.current_thread().getName()
     try:
         status, result = test_image(
-            provider,
+            provider.upper(),  # TODO remove uppercase when IPA update released
             access_key_id=access_key_id,
             desc=desc,
             distro=distro,
