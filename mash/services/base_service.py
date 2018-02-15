@@ -174,9 +174,11 @@ class BaseService(object):
             'aud': 'credentials',  # audience
             'id': job_id,
         }
-        return jwt.encode(
+        token = jwt.encode(
             request, self.jwt_secret, algorithm=self.jwt_algorithm
         )
+        message = json.dumps({'jwt_token': token.decode()})
+        return message
 
     def decode_credentials(self, message):
         """

@@ -1,4 +1,5 @@
 import io
+import json
 import jwt
 
 from amqpstorm import AMQPError
@@ -156,8 +157,9 @@ class TestBaseService(object):
         self.service.jwt_algorithm = 'HS256'
         self.service.jwt_secret = 'super.secret'
         self.service_exchange = 'obs'
-        token = self.service.get_credential_request('1')
+        message = self.service.get_credential_request('1')
 
+        token = json.loads(message)['jwt_token']
         payload = jwt.decode(
             token, 'super.secret', algorithm='HS256',
             issuer='obs', audience='credentials'

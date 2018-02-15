@@ -161,9 +161,11 @@ class CredentialsService(BaseService):
         """
         try:
             issuer = message.method['routing_key'].split('.')[1]
+            request_msg = json.loads(message.body)
             payload = jwt.decode(
-                message.body, self.jwt_secret, algorithm=self.jwt_algorithm,
-                issuer=issuer, audience=self.service_exchange
+                request_msg['jwt_token'], self.jwt_secret,
+                algorithm=self.jwt_algorithm, issuer=issuer,
+                audience=self.service_exchange
             )
         except Exception as error:
             self._send_control_response(
