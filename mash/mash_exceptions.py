@@ -126,3 +126,9 @@ class MashReplicationException(MashException):
     """
     Base exception for replication service.
     """
+
+
+class MashPublisherException(MashException):
+    """
+    Base exception for publisher service.
+    """
