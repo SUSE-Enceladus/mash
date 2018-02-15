@@ -1,6 +1,5 @@
 import argparse
 import json
-import jwt
 import os
 
 from amqpstorm import Connection
@@ -24,46 +23,22 @@ class Test(object):
         prev_index = services.index(self.service) - 1
         self.prev_service = services[prev_index] if prev_index > -1 else None
 
-        self.connect()
-        self.consume_credentials()
-
         try:
+            self.connect()
             self.send_jobs(count, status)
-            self.channel.start_consuming()
-        except KeyboardInterrupt:
-            self.channel.stop_consuming()
+        except Exception:
+            raise
+        finally:
             self.close_connection()
 
     def connect(self):
         self.connection = Connection(
-            'localhost',
-            'guest',
-            'guest',
+            'localhost', 'guest', 'guest',
             kwargs={'heartbeat': 600}
         )
 
         self.channel = self.connection.channel()
         self.channel.confirm_deliveries()
-
-    def consume_credentials(self):
-        exchange = 'credentials'
-        key = 'request.{0}'.format(self.service)
-        queue = '{0}.listener'.format(exchange)
-
-        self.channel.exchange.declare(
-            exchange=exchange, exchange_type='direct', durable=True
-        )
-        self.channel.queue.declare(
-            queue=queue, durable=True
-        )
-        self.channel.queue.bind(
-            exchange=exchange,
-            queue=queue,
-            routing_key=key
-        )
-        self.channel.basic.consume(
-            callback=self.send_credentials, queue=queue
-        )
 
     def close_connection(self):
         self.channel.close()
@@ -84,13 +59,22 @@ class Test(object):
             routing_key='job_document'
         )
 
+        # Service job
         template_file = os.path.join(
             'messages', '{0}_job.json'.format(self.service)
         )
         with open(template_file, 'r') as service_json:
             service_template = json.load(service_json)
 
+        # credentials job
+        template_file = os.path.join(
+            'messages', '{0}_job.json'.format('credentials')
+        )
+        with open(template_file, 'r') as service_json:
+            credentials_template = json.load(service_json)
+
         if self.prev_service:
+            # listener message
             template_file = os.path.join(
                 'messages', '{0}_result.json'.format(self.prev_service)
             )
@@ -98,8 +82,9 @@ class Test(object):
                 listener_template = json.load(service_json)
 
         for num in range(1, count):
-            service_template['id'] = count
-            # Send service event message
+            msg_key = '{}_job'.format(self.service)
+            service_template[msg_key]['id'] = str(num)
+            # Send service event job
             self.channel.basic.publish(
                 json.dumps(service_template),
                 'job_document',
@@ -120,9 +105,21 @@ class Test(object):
                 routing_key=listener_key
             )
 
+            credentials_template['credentials_job']['id'] = str(num)
+
+            # Send credentials job
+            self.channel.basic.publish(
+                json.dumps(credentials_template),
+                'job_document',
+                'credentials',
+                properties=self.msg_properties,
+                mandatory=True
+            )
+
             if self.prev_service:
-                listener_template['id'] = count
-                listener_template['status'] = status
+                msg_key = '{}_result'.format(self.prev_service)
+                listener_template[msg_key]['id'] = str(num)
+                listener_template[msg_key]['status'] = status
                 # Send listener message
                 self.channel.basic.publish(
                     json.dumps(listener_template),
@@ -131,51 +128,6 @@ class Test(object):
                     properties=self.msg_properties,
                     mandatory=True
                 )
-
-    def send_credentials(self, message):
-        # Process creds message and get service + id
-        message.ack()
-        payload = jwt.decode(
-            message.body,
-            'enter-a-secret',
-            algorithm='HS256',
-            audience='credentials',
-            issuer=message.method['routing_key'].split('.')[1]
-        )
-
-        template_file = os.path.join(
-            'messages', 'credentials_response.json'
-        )
-        with open(template_file, 'r') as creds_json:
-            creds = json.load(creds_json)
-
-        # For testing passing None for creds values uses default from config.
-        for key, val in creds['credentials'].items():
-            for key, val in val.items():
-                val = None
-
-        creds['iss'] = payload['aud']
-        creds['aud'] = payload['iss']
-        creds['id'] = payload['id']
-
-        self.creds_message = jwt.encode(
-            creds, 'enter-a-secret', algorithm='HS256'
-        )
-
-        queue = '{0}.credentials'.format(payload['iss'])
-        self.channel.queue.declare(queue=queue, durable=True)
-        self.channel.queue.bind(
-            exchange=payload['iss'],
-            queue=queue,
-            routing_key='credentials_response'
-        )
-        # Send listener message
-        self.channel.basic.publish(
-            self.creds_message,
-            'credentials_response',
-            payload['iss'],
-            properties=self.msg_properties
-        )
 
 
 if __name__ == '__main__':
@@ -189,7 +141,7 @@ if __name__ == '__main__':
         help='Number of jobs to run.'
     )
     parser.add_argument(
-        '--status', type=str, default='"success"',
+        '--status', type=str, default='success',
         help='Status of incoming listener events.'
     )
 
