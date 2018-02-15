@@ -17,9 +17,6 @@
 #
 
 import dateutil.parser
-import time
-
-from amqpstorm import AMQPError, Connection
 
 from mash.mash_exceptions import MashTestingException
 from mash.services.status_levels import UNKOWN
@@ -33,121 +30,23 @@ class TestingJob(object):
     __test__ = False
 
     def __init__(
-        self, distro, id, provider, tests, utctime, config_file=None,
-        desc=None, instance_type=None, region=None
+        self, id, provider, test_regions, tests, utctime, job_file=None,
+        desc=None, distro=None, instance_type=None
     ):
-        self.channel = None
-        self.config_file = config_file
-        self.connection = None
-        self.credential_queue = 'credentials.testing.{0}'.format(id)
+        self.cloud_image_name = None
+        self.job_file = job_file
+        self.credentials = None
         self.desc = desc
         self.distro = self.validate_distro(distro)
-        self.image_id = None
         self.instance_type = instance_type
         self.iteration_count = 0
         self.id = id
         self.log_callback = None
         self.provider = self.validate_provider(provider)
-        self.region = region
-        self.results = None
         self.status = UNKOWN
+        self.test_regions = self.validate_test_regions(test_regions)
         self.tests = self.validate_tests(tests)
         self.utctime = self.validate_timestamp(utctime)
-
-    def _bind_credential_queue(self):
-        """
-        Declare and bind listener queue to retrieve credentials.
-
-        Credentials service will respond to credentials request by publishing
-        a JWT to the queue.
-        """
-        self.channel.queue.declare(queue=self.credential_queue, durable=True)
-        self.channel.queue.bind(
-            queue=self.credential_queue,
-            exchange='testing',
-            routing_key=self.credential_queue
-        )
-
-    def _close_connection(self):
-        """
-        Close connection and channel.
-        """
-        if self.channel and self.channel.is_open:
-            self.channel.close()
-
-        if self.connection and self.connection.is_open:
-            self.connection.close()
-
-    def _get_credential_request(self):
-        """
-        Return json dictionary with credentials request message.
-        """
-        raise NotImplementedError(NOT_IMPLEMENTED)
-
-    def _get_credentials(self, host):
-        """
-        Setup rabbitmq channel and queues to collect credentials.
-
-        Published a credential request to credential service. Awaits
-        response on queue with credentials JWT.
-        """
-        self._open_connection(host)
-        self._bind_credential_queue()
-
-        exchange = 'credentials'
-        key = 'request'
-        queue = '{0}.{1}'.format(exchange, key)
-        try:
-            self.channel.queue.declare(queue=queue, durable=True)
-            self.channel.queue.bind(
-                exchange=exchange,
-                queue=queue,
-                routing_key=key
-            )
-            self.channel.basic.publish(
-                self._get_credential_request(),
-                key,
-                exchange=exchange
-            )
-        except AMQPError:
-            raise MashTestingException(
-                'Credentials message not received by RabbitMQ.'
-            )
-
-        credentials = self._wait_for_credentials()
-
-        self.channel.queue.delete(queue=self.credential_queue)
-        self._close_connection()
-
-        self._process_credentials(credentials)
-
-    def get_metadata(self):
-        """
-        Return dictionary of metadata based on job.
-        """
-        return {'job_id': self.id}
-
-    def _open_connection(self, host):
-        """
-        Open rabbitmq connection and channel.
-        """
-        self.connection = Connection(
-            host,
-            'guest',
-            'guest',
-            kwargs={'heartbeat': 600}
-        )
-
-        self.channel = self.connection.channel()
-        self.channel.confirm_deliveries()
-
-    def _process_credentials(self, credentials):
-        """
-        Verify credential request successful and update self.
-
-        Update instance attrs with credentials.
-        """
-        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def _run_tests(self):
         """
@@ -155,28 +54,19 @@ class TestingJob(object):
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def _wait_for_credentials(self):
+    def get_metadata(self):
         """
-        Waits in a while loop for message with credentials to be received.
+        Return dictionary of metadata based on job.
         """
-        timeout = 6
-        message = None
+        return {'job_id': self.id}
 
-        while not message and timeout:
-            message = self.channel.basic.get(
-                queue=self.credential_queue
-            )
-
-            if message:
-                message.ack()
-                return message.body
-
-            time.sleep(10)
-            timeout -= 1
-
-        raise MashTestingException(
-            'Credentials message not received from credential service.'
-        )
+    def get_source_regions(self):
+        """
+        Return a dictionary mapping source regions to image id's.
+        """
+        return {
+            reg: info['image_id'] for reg, info in self.test_regions.items()
+        }
 
     def send_log(self, message):
         if self.log_callback:
@@ -200,15 +90,22 @@ class TestingJob(object):
         """
         self.iteration_count += 1
         self.send_log('Running IPA tests against image.')
-
-        self._get_credentials(host)
         self._run_tests()
+
+    def update_test_regions(self, source_regions):
+        """
+        Update test_regions dictionary with data from listener message.
+        """
+        for region, image_id in source_regions.items():
+            self.test_regions[region]['image_id'] = image_id
 
     def validate_distro(self, distro):
         """
         Validate the distro is supported for testing.
         """
-        if distro not in ('openSUSE_Leap', 'SLES'):
+        if not distro:
+            distro = 'SLES'
+        elif distro not in ('openSUSE_Leap', 'SLES'):
             raise MashTestingException(
                 'Distro: {0} not supported.'.format(distro)
             )
@@ -243,6 +140,18 @@ class TestingJob(object):
             )
 
         return tests
+
+    def validate_test_regions(self, test_regions):
+        value = {}
+        for region, account in test_regions.items():
+            if region and account:
+                value[region] = {'account': account}
+            else:
+                raise MashTestingException(
+                    'Invalid test_regions format. '
+                    'Must be a dict format of {region:account}.'
+                )
+        return value
 
     def validate_timestamp(self, utctime):
         """
