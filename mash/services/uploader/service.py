@@ -169,8 +169,8 @@ class UploadImageService(BaseService):
             #     }
             # }
             self.jobs[job_id]['credentials'] = self.decode_credentials(
-                service_data  # TODO: Should be raw message.body
-            )['credentials']
+                service_data['jwt_token']
+            )
             self._send_job_response(
                 job_id, 'Got credentials data'
             )

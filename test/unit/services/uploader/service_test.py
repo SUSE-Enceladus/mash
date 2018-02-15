@@ -129,7 +129,6 @@ class TestUploadImageService(object):
     def test_process_message_for_service_data(
         self, mock_decode_credentials, mock_send_control_response
     ):
-        mock_decode_credentials.return_value = {"credentials": {}}
         message = Mock()
         message.method = {'routing_key': '123'}
         message.body = '{"image_file": ["image", "sum"], "status": "success"}'
@@ -137,7 +136,8 @@ class TestUploadImageService(object):
         assert self.uploader.jobs['123']['system_image_file'] == 'image'
         message.body = '{"jwt_token": {}}'
         self.uploader._process_message(message)
-        assert self.uploader.jobs['123']['credentials'] == {}
+        assert self.uploader.jobs['123']['credentials'] == \
+            mock_decode_credentials.return_value
         assert self.uploader.jobs['123']['ready'] is True
 
     @patch.object(UploadImageService, '_add_job')
