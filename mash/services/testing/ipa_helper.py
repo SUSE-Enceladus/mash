@@ -30,6 +30,8 @@ def ipa_test(
     ssh_key_name=None, ssh_private_key=None, ssh_user=None, tests=None
 ):
     name = threading.current_thread().getName()
+    # TODO determine if we want to handle key-pair issues manually or
+    # automagically with temp key files.
     try:
         status, result = test_image(
             provider.upper(),  # TODO remove uppercase when IPA update released
