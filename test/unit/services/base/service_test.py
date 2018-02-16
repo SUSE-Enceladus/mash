@@ -95,6 +95,29 @@ class TestBaseService(object):
             callback=callback, queue='obs.service'
         )
 
+    def test_consume_credentials_queue(self):
+        callback = Mock()
+        config = Mock()
+        config.get_jwt_secret.return_value = 'a-secret'
+        config.get_jwt_algorithm.return_value = 'HS256'
+        self.service.config = config
+
+        self.service.consume_credentials_queue(callback)
+        self.channel.basic.consume.assert_called_once_with(
+            callback=callback, queue='obs.credentials'
+        )
+
+        assert self.service.jwt_secret == 'a-secret'
+        assert self.service.jwt_algorithm == 'HS256'
+
+    @patch.object(BaseService, 'bind_queue')
+    def test_bind_credentials_queue(self, mock_bind_queue):
+        self.service.bind_credentials_queue()
+
+        mock_bind_queue.assert_called_once_with(
+            'obs', 'response', 'credentials'
+        )
+
     def test_close_connection(self):
         self.connection.close.return_value = None
         self.channel.close.return_value = None
