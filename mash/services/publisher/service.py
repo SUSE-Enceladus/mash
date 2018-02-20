@@ -1,5 +1,4 @@
-
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
