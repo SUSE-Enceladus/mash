@@ -31,12 +31,12 @@ class EC2TestingJob(TestingJob):
 
     def __init__(
         self, id, provider, test_regions, tests, utctime, job_file=None,
-        credentials=None, desc=None, distro=None, instance_type=None,
+        credentials=None, description=None, distro=None, instance_type=None,
         ssh_user='ec2-user'
     ):
         super(EC2TestingJob, self).__init__(
             id, provider, test_regions, tests, utctime,
-            job_file=job_file, desc=desc, distro=distro,
+            job_file=job_file, description=description, distro=distro,
             instance_type=instance_type
         )
         self.ssh_user = ssh_user
@@ -53,7 +53,7 @@ class EC2TestingJob(TestingJob):
                 name=region, target=ipa_test, args=(results,), kwargs={
                     'provider': self.provider,
                     'access_key_id': creds['access_key_id'],
-                    'desc': self.desc,
+                    'description': self.description,
                     'distro': self.distro,
                     'image_id': info['image_id'],
                     'instance_type': self.instance_type,

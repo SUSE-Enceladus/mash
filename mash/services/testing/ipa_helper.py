@@ -25,7 +25,7 @@ from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
 
 
 def ipa_test(
-    results, provider=None, access_key_id=None, desc=None, distro=None,
+    results, provider=None, access_key_id=None, description=None, distro=None,
     image_id=None, instance_type=None, region=None, secret_access_key=None,
     ssh_key_name=None, ssh_private_key=None, ssh_user=None, tests=None
 ):
@@ -36,7 +36,7 @@ def ipa_test(
         status, result = test_image(
             provider.upper(),  # TODO remove uppercase when IPA update released
             access_key_id=access_key_id,
-            desc=desc,
+            desc=description,
             distro=distro,
             image_id=image_id,
             instance_type=instance_type,
