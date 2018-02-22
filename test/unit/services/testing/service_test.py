@@ -44,16 +44,17 @@ class TestIPATestingService(object):
             '{"id": "1", "status": "error"}}'
         self.status_message = '{"testing_result": ' \
             '{"cloud_image_name": "image123", "id": "1", ' \
-            '"source_regions": {"us-east-2": "test-account"}, ' \
+            '"source_regions": {"us-east-2": "ami-123456"}, ' \
             '"status": "success"}}'
 
+    @patch.object(TestingService, 'bind_credentials_queue')
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'start')
     @patch.object(TestingService, 'restart_jobs')
     @patch('mash.services.testing.service.TestingConfig')
     def test_testing_post_init(
         self, mock_testing_config, mock_restart_jobs,
-        mock_start, mock_set_logfile
+        mock_start, mock_set_logfile, mock_bind_creds_queue
     ):
         mock_testing_config.return_value = self.config
         self.config.get_log_file.return_value = \
@@ -65,6 +66,8 @@ class TestIPATestingService(object):
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/testing_service.log'
         )
+        mock_bind_creds_queue.assert_called_once_with()
+        mock_restart_jobs.assert_called_once_with(self.testing._add_job)
         mock_start.assert_called_once_with()
 
     @patch.object(TestingService, '_create_job')
@@ -185,6 +188,25 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
 
+    @patch.object(TestingService, '_schedule_job')
+    @patch.object(TestingService, 'decode_credentials')
+    def test_publisher_handle_credentials_response(
+        self, mock_decode_credentials, mock_schedule_job
+    ):
+        job = Mock()
+        job.id = '1'
+        job.utctime = 'always'
+        self.testing.jobs['1'] = job
+
+        message = Mock()
+        message.body = '{"jwt_token": "response"}'
+
+        mock_decode_credentials.return_value = {'id': '1', 'credentials': {}}
+        self.testing._handle_credentials_response(message)
+
+        mock_schedule_job.assert_called_once_with('1')
+        message.ack.assert_called_once_with()
+
     @patch.object(TestingService, '_validate_job')
     @patch.object(TestingService, '_add_job')
     def test_testing_handle_jobs_add(
@@ -205,7 +227,7 @@ class TestIPATestingService(object):
 
         self.message.ack.assert_called_once_with()
         self.testing.log.error.assert_called_once_with(
-            'Invalid testing job: Desc must contain '
+            'Invalid testing job: Job config must contain '
             'testing_job key.'
         )
         mock_notify.assert_called_once_with(self.message.body)
@@ -239,7 +261,8 @@ class TestIPATestingService(object):
         job.id = '1'
         job.status = "success"
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-2': 'test-account'}
+        job.test_regions = {'us-east-2': {'account': 'test-aws'}}
+        job.get_source_regions.return_value = {'us-east-2': 'ami-123456'}
 
         data = self.testing._get_status_message(job)
         assert data == self.status_message
@@ -344,7 +367,7 @@ class TestIPATestingService(object):
         job = Mock()
         job.id = '1'
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-2': 'test-account'}
+        job.test_regions = {'us-east-2': {'account': 'test-aws'}}
         job.status = "error"
         job.utctime = 'now'
         job.iteration_count = 1
@@ -370,7 +393,8 @@ class TestIPATestingService(object):
         job.id = '1'
         job.status = "success"
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-2': 'test-account'}
+        job.test_regions = {'us-east-2': {'account': 'test-aws'}}
+        job.get_source_regions.return_value = {'us-east-2': 'ami-123456'}
 
         self.testing._publish_message(job)
         mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
@@ -411,14 +435,31 @@ class TestIPATestingService(object):
         self.testing._run_test('1')
         job.test_image.assert_called_once_with(host='localhost')
 
+    def test_testing_schedule_job(self):
+        scheduler = Mock()
+        self.testing.scheduler = scheduler
+
+        self.testing._schedule_job('1')
+
+        self.testing.scheduler.add_job.assert_called_once_with(
+            self.testing._run_test,
+            args=('1',),
+            id='1',
+            max_instances=1,
+            misfire_grace_time=None,
+            coalesce=True
+        )
+
+    @patch.object(TestingService, 'publish_credentials_request')
     @patch.object(TestingService, '_validate_listener_msg')
     @patch.object(TestingService, '_run_test')
-    def test_testing_test_image(
-        self, mock_run_test, mock_validate_listener_msg
+    def test_testing_handle_listener_message(
+        self, mock_run_test, mock_validate_listener_msg, mock_pub_cred_request
     ):
         job = Mock()
         job.id = '1'
         job.utctime = 'always'
+        job.credentials = None
         self.testing.jobs['1'] = job
 
         mock_validate_listener_msg.return_value = job
@@ -430,23 +471,45 @@ class TestIPATestingService(object):
             '{"uploader_result": {"id": "1", ' \
             '"image_id": "image123", "status": "success"}}'
 
-        self.testing._test_image(self.message)
+        self.testing._handle_listener_message(self.message)
 
-        scheduler.add_job.assert_called_once_with(
-            mock_run_test,
-            args=('1',),
-            id='1',
-            max_instances=1,
-            misfire_grace_time=None,
-            coalesce=True
-        )
+        assert self.testing.jobs['1'].listener_msg == self.message
+        mock_pub_cred_request.assert_called_once_with('1')
+
+    @patch.object(TestingService, '_schedule_job')
+    @patch.object(TestingService, '_validate_listener_msg')
+    @patch.object(TestingService, '_run_test')
+    def test_testing_handle_listener_message_creds(
+        self, mock_run_test, mock_validate_listener_msg, mock_schedule_job
+    ):
+        job = Mock()
+        job.id = '1'
+        job.utctime = 'always'
+        job.credentials = {'credentials': 'info'}
+        self.testing.jobs['1'] = job
+
+        mock_validate_listener_msg.return_value = job
+
+        scheduler = Mock()
+        self.testing.scheduler = scheduler
+
+        self.message.body = \
+            '{"uploader_result": {"id": "1", ' \
+            '"image_id": "image123", "status": "success"}}'
+
+        self.testing._handle_listener_message(self.message)
+
+        assert self.testing.jobs['1'].listener_msg == self.message
+        mock_schedule_job.assert_called_once_with('1')
 
     @patch.object(TestingService, '_validate_listener_msg')
-    def test_testing_test_image_no_job(self, mock_validate_listener_msg):
+    def test_testing_handle_listener_message_no_job(
+        self, mock_validate_listener_msg
+    ):
         mock_validate_listener_msg.return_value = None
 
         self.message.body = '{"uploader_result": {"id": "1"}}'
-        self.testing._test_image(self.message)
+        self.testing._handle_listener_message(self.message)
 
         self.message.ack.assert_called_once_with()
 
@@ -479,18 +542,21 @@ class TestIPATestingService(object):
         job = Mock()
         job.id = '1'
         job.utctime = 'always'
+        job.test_regions = {'us-east-1': {'account': 'test-aws'}}
         self.testing.jobs['1'] = job
 
         self.message.body = \
             '{"uploader_result": {"id": "1", ' \
             '"cloud_image_name": "My image", ' \
-            '"source_regions": {"us-east-2":"test-account"}, ' \
+            '"source_regions": {"us-east-1": "ami-123456"}, ' \
             '"status": "success"}}'
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result == job
         assert job.cloud_image_name == 'My image'
-        assert job.source_regions == {'us-east-2': 'test-account'}
+        job.update_test_regions.assert_called_once_with(
+            {'us-east-1': 'ami-123456'}
+        )
 
     @patch.object(TestingService, '_cleanup_job')
     def test_testing_validate_listener_msg_failed(self, mock_cleanup_job):
@@ -548,9 +614,27 @@ class TestIPATestingService(object):
             'source_regions is required in uploader result.'
         )
 
+    def test_testing_validate_listener_msg_no_image_name(self):
+        job = Mock()
+        job.id = '1'
+        job.utctime = 'always'
+        self.testing.jobs['1'] = job
+
+        self.message.body = \
+            '{"uploader_result": {"id": "1", "status": "success"}}'
+        result = self.testing._validate_listener_msg(self.message.body)
+
+        assert result is None
+        self.testing.log.error.assert_called_once_with(
+            'cloud_image_name is required in uploader result.'
+        )
+
+    @patch.object(TestingService, 'consume_credentials_queue')
     @patch.object(TestingService, 'consume_queue')
     @patch.object(TestingService, 'stop')
-    def test_testing_start(self, mock_stop, mock_consume_queue):
+    def test_testing_start(
+        self, mock_stop, mock_consume_queue, mock_consume_credentials_queue
+    ):
         scheduler = Mock()
         self.testing.scheduler = scheduler
         self.testing.channel = self.channel
@@ -561,15 +645,21 @@ class TestIPATestingService(object):
         mock_consume_queue.assert_has_calls([
             call(self.testing._handle_jobs),
             call(
-                self.testing._test_image,
+                self.testing._handle_listener_message,
                 queue_name='listener'
             )
         ])
+        mock_consume_credentials_queue.assert_called_once_with(
+            self.testing._handle_credentials_response
+        )
         mock_stop.assert_called_once_with()
 
+    @patch.object(TestingService, 'consume_credentials_queue')
     @patch.object(TestingService, 'consume_queue')
     @patch.object(TestingService, 'stop')
-    def test_testing_start_exception(self, mock_stop, mock_consume_queue):
+    def test_testing_start_exception(
+        self, mock_stop, mock_consume_queue, mock_consume_credentials_queue
+    ):
         scheduler = Mock()
         self.testing.scheduler = scheduler
         self.testing.channel = self.channel
