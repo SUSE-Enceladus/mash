@@ -16,16 +16,10 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import jwt
-import logging
+from threading import Thread
 
-from datetime import datetime, timedelta
-
-from ipa.ipa_controller import test_image
-
-from jwt import ExpiredSignatureError, InvalidTokenError
-
-from mash.mash_exceptions import MashTestingException
+from mash.services.status_levels import FAILED, SUCCESS
+from mash.services.testing.ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
 
 
@@ -36,100 +30,53 @@ class EC2TestingJob(TestingJob):
     __test__ = False
 
     def __init__(
-        self, distro, id, provider, tests, utctime, account=None,
-        access_key_id=None, config_file=None, desc=None, instance_type=None,
-        region=None, secret_access_key=None, ssh_key_name=None,
-        ssh_private_key=None, ssh_user=None
+        self, id, provider, test_regions, tests, utctime, job_file=None,
+        credentials=None, description=None, distro=None, instance_type=None,
+        ssh_user='ec2-user'
     ):
         super(EC2TestingJob, self).__init__(
-            distro, id, provider, tests, utctime, config_file=config_file,
-            desc=desc, instance_type=instance_type, region=region
+            id, provider, test_regions, tests, utctime,
+            job_file=job_file, description=description, distro=distro,
+            instance_type=instance_type
         )
-        self.access_key_id = access_key_id
-        self.account = account
-        self.secret_access_key = secret_access_key
-        self.ssh_key_name = ssh_key_name
-        self.ssh_private_key = ssh_private_key
         self.ssh_user = ssh_user
-
-    def _get_credential_request(self):
-        """
-        Return json dictionary with credentials request message.
-        """
-        request = {
-            'exp': datetime.utcnow() + timedelta(minutes=5),
-            'iat': datetime.utcnow(),
-            'sub': 'testing.get_credentials',
-            'service': 'testing',
-            'job_id': self.id,
-            'credentials': {
-                'csp': self.provider,
-                'account': self.account
-            }
-        }
-        return jwt.encode(request, 'mash', algorithm='HS256')
-
-    def _process_credentials(self, credentials):
-        """
-        Verify credential request successful and update self.
-        Update instance attrs with credentials.
-        """
-        try:
-            payload = jwt.decode(
-                credentials,
-                'mash',
-                algorithm='HS256'
-            )
-        except ExpiredSignatureError:
-            raise MashTestingException(
-                'Token has expired, cannot retrieve credentials.'
-            )
-        except InvalidTokenError as error:
-            raise MashTestingException(
-                'Invalid token, cannot retrieve credentials: {0}'.format(error)
-            )
-
-        try:
-            creds = payload['credentials']
-            self.secret_access_key = creds['secret_access_key']
-            self.access_key_id = creds['access_key_id']
-            self.ssh_key_name = creds['ssh_key_name']
-            self.ssh_private_key = creds['ssh_private_key']
-        except KeyError:
-            raise MashTestingException(
-                'Credentials not found in token.'
-            )
 
     def _run_tests(self):
         """
         Tests image with IPA and update status and results.
         """
-        self.status, self.results = test_image(
-            self.provider,
-            access_key_id=self.access_key_id,
-            account=self.account,
-            desc=self.desc,
-            distro=self.distro,
-            image_id=self.image_id,
-            instance_type=self.instance_type,
-            log_level=logging.WARNING,
-            region=self.region,
-            secret_access_key=self.secret_access_key,
-            ssh_key_name=self.ssh_key_name,
-            ssh_private_key=self.ssh_private_key,
-            ssh_user=self.ssh_user,
-            tests=self.tests
-        )
+        results = {}
+        jobs = []
+        for region, info in self.test_regions.items():
+            creds = self.credentials[info['account']]
+            process = Thread(
+                name=region, target=ipa_test, args=(results,), kwargs={
+                    'provider': self.provider,
+                    'access_key_id': creds['access_key_id'],
+                    'description': self.description,
+                    'distro': self.distro,
+                    'image_id': info['image_id'],
+                    'instance_type': self.instance_type,
+                    'region': region,
+                    'secret_access_key': creds['secret_access_key'],
+                    'ssh_key_name': creds['ssh_key_name'],
+                    'ssh_private_key': creds['ssh_private_key'],
+                    'ssh_user': self.ssh_user,
+                    'tests': self.tests
+                }
+            )
+            process.start()
+            jobs.append(process)
 
-        if self.results and self.results.get('info'):
-            if self.results['info'].get('log_file'):
-                self.send_log(
-                    'Log file: {0}'.format(self.results['info']['log_file'])
-                )
+        for job in jobs:
+            job.join()
 
-            if self.results['info'].get('results_file'):
+        self.status = SUCCESS
+        for region, result in results.items():
+            if result['status'] != SUCCESS:
                 self.send_log(
-                    'Results file: {0}'.format(
-                        self.results['info']['results_file']
-                    )
+                    'Image tests failed in region: {0}.'.format(region)
                 )
+                if result.get('msg'):
+                    self.send_log(result['msg'])
+                self.status = FAILED
