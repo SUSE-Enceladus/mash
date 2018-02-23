@@ -20,7 +20,7 @@ import dateutil.parser
 
 from mash.mash_exceptions import MashPublisherException
 from mash.services.status_levels import UNKOWN
-from mash.services.testing.constants import NOT_IMPLEMENTED
+from mash.services.publisher.constants import NOT_IMPLEMENTED
 
 
 class PublisherJob(object):
