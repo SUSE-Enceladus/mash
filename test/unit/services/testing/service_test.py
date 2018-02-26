@@ -284,24 +284,6 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
 
-    @patch.object(TestingService, '_publish')
-    def test_testing_notify(self, mock_publish):
-        self.testing.notify_invalid_config('invalid')
-        mock_publish.assert_called_once_with(
-            'jobcreator',
-            'invalid_config',
-            'invalid'
-        )
-
-    @patch.object(TestingService, '_publish')
-    def test_testing_notify_exception(self, mock_publish):
-        mock_publish.side_effect = AMQPError('Broken')
-        self.testing.notify_invalid_config('invalid')
-
-        self.testing.log.warning.assert_called_once_with(
-            'Message not received: {0}'.format('invalid')
-        )
-
     @patch.object(TestingService, '_delete_job')
     @patch.object(TestingService, '_publish')
     @patch.object(TestingService, '_get_status_message')
