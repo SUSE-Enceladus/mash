@@ -275,6 +275,15 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
 
+        self.testing._log_job_message(
+            'Test error message', {'job_id': '1'}, success=False
+        )
+
+        self.testing.log.error.assert_called_once_with(
+            'Test error message',
+            extra={'job_id': '1'}
+        )
+
     @patch.object(TestingService, '_publish')
     def test_testing_notify(self, mock_publish):
         self.testing._notify_invalid_config('invalid')
