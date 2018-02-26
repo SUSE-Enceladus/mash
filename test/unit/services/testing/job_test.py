@@ -55,7 +55,8 @@ class TestTestingJob(object):
 
         job.log_callback.assert_called_once_with(
             'Pass[1]: Running IPA tests against image.',
-            {'job_id': '1'}
+            {'job_id': '1'},
+            True
         )
 
     def test_invalid_distro(self):

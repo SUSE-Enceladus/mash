@@ -2,6 +2,7 @@ from pytest import raises
 from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashReplicationException
+from mash.services.status_levels import FAILED
 from mash.services.credentials.amazon import CredentialsAmazon
 from mash.services.replication.ec2_job import EC2ReplicationJob
 from mash.services.replication.job import ReplicationJob
@@ -137,8 +138,11 @@ class TestEC2ReplicationJob(object):
             Filters=[{'Name': 'state', 'Values': ['available']}]
         )
 
+    @patch.object(ReplicationJob, 'send_log')
     @patch('mash.services.replication.ec2_job.get_client')
-    def test_replicate_wait_on_image_exception(self, mock_get_client):
+    def test_replicate_wait_on_image_exception(
+        self, mock_get_client, mock_send_log
+    ):
         client = Mock()
         client.get_waiter.side_effect = Exception('Error copying image!')
         mock_get_client.return_value = client
@@ -147,12 +151,14 @@ class TestEC2ReplicationJob(object):
         credential.access_key_id = '123456'
         credential.secret_access_key = '654321'
 
-        msg = 'There was an error replicating image to us-east-2. ' \
-            'Error copying image!'
-        with raises(MashReplicationException) as e:
-            self.job._wait_on_image(credential, 'awi-54321', 'us-east-2')
+        self.job._wait_on_image(credential, 'awi-54321', 'us-east-2')
 
-        assert msg == str(e.value)
+        mock_send_log.assert_called_once_with(
+            'There was an error replicating image to us-east-2. '
+            'Error copying image!',
+            False
+        )
+        assert self.job.status == FAILED
 
     def test_replicate_get_source_regions_result(self):
         self.job.source_region_results = {

@@ -263,11 +263,14 @@ class TestingService(BaseService):
         else:
             message.ack()
 
-    def _log_job_message(self, msg, metadata):
+    def _log_job_message(self, msg, metadata, success=True):
         """
         Callback for job instance to log given message.
         """
-        self.log.info(msg, extra=metadata)
+        if success:
+            self.log.info(msg, extra=metadata)
+        else:
+            self.log.error(msg, extra=metadata)
 
     def _process_test_result(self, event):
         """

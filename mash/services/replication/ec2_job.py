@@ -22,7 +22,7 @@ from collections import defaultdict
 
 from mash.mash_exceptions import MashReplicationException
 from mash.services.replication.job import ReplicationJob
-from mash.services.status_levels import SUCCESS
+from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.ec2 import get_client
 
 
@@ -51,7 +51,9 @@ class EC2ReplicationJob(ReplicationJob):
         """
         Replicate image to all target regions in each source region.
         """
+        self.status = SUCCESS
         self.source_region_results = defaultdict(dict)
+
         for source_region, reg_info in self.source_regions.items():
             credential = self.credentials[reg_info['account']]
 
@@ -68,7 +70,8 @@ class EC2ReplicationJob(ReplicationJob):
                     self._replicate_to_region(
                         credential, reg_info['image_id'],
                         source_region, target_region
-                    )
+                    )  # noqa: E123 Suppress erroneous flake8 warning.
+
                 # Save account along with results to prevent searching dict
                 # twice to find associated credentials on each waiter.
                 self.source_region_results[target_region]['account'] = \
@@ -82,8 +85,6 @@ class EC2ReplicationJob(ReplicationJob):
             self._wait_on_image(
                 credential, reg_info['image_id'], target_region
             )
-
-        self.status = SUCCESS
 
     def _replicate_to_region(
         self, credential, image_id, source_region, target_region
@@ -128,12 +129,13 @@ class EC2ReplicationJob(ReplicationJob):
                 Filters=[{'Name': 'state', 'Values': ['available']}],
             )
         except Exception as e:
-            raise MashReplicationException(
+            # Log all errors instead of exiting on first exception.
+            self.send_log(
                 'There was an error replicating image to {0}. {1}'
-                .format(
-                    region, e
-                )
+                .format(region, e),
+                False
             )
+            self.status = FAILED
 
     def get_source_regions_result(self):
         """

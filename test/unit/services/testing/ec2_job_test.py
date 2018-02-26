@@ -60,6 +60,6 @@ class TestEC2TestingJob(object):
         mock_test_image.side_effect = Exception('Tests broken!')
         job._run_tests()
         mock_send_log.assert_has_calls(
-            [call('Image tests failed in region: us-east-1.'),
-             call('Tests broken!')]
+            [call('Image tests failed in region: us-east-1.', success=False),
+             call('Tests broken!', success=False)]
         )

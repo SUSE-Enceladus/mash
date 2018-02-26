@@ -75,8 +75,9 @@ class EC2TestingJob(TestingJob):
         for region, result in results.items():
             if result['status'] != SUCCESS:
                 self.send_log(
-                    'Image tests failed in region: {0}.'.format(region)
+                    'Image tests failed in region: {0}.'.format(region),
+                    success=False
                 )
                 if result.get('msg'):
-                    self.send_log(result['msg'])
+                    self.send_log(result['msg'], success=False)
                 self.status = FAILED

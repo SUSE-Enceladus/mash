@@ -68,7 +68,7 @@ class TestingJob(object):
             reg: info['image_id'] for reg, info in self.test_regions.items()
         }
 
-    def send_log(self, message):
+    def send_log(self, message, success=True):
         """
         Send a log message to the log callback function.
         """
@@ -78,7 +78,8 @@ class TestingJob(object):
                     self.iteration_count,
                     message
                 ),
-                self.get_metadata()
+                self.get_metadata(),
+                success
             )
 
     def set_log_callback(self, callback):
