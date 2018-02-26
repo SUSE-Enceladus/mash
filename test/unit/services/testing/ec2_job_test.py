@@ -43,6 +43,7 @@ class TestEC2TestingJob(object):
         mock_test_image.assert_called_once_with(
             'EC2',
             access_key_id=None,
+            cleanup=True,
             desc=job.description,
             distro='SLES',
             image_id='ami-123',

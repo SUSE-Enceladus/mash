@@ -36,6 +36,7 @@ def ipa_test(
         status, result = test_image(
             provider.upper(),  # TODO remove uppercase when IPA update released
             access_key_id=access_key_id,
+            cleanup=True,
             desc=description,
             distro=distro,
             image_id=image_id,
