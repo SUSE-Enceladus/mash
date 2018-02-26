@@ -215,11 +215,11 @@ class TestingService(BaseService):
             job_desc = json.loads(message.body)
         except ValueError as e:
             self.log.error('Invalid job config file: {}.'.format(e))
-            self._notify_invalid_config(message.body)
+            self.notify_invalid_config(message.body)
         else:
             if 'testing_job' in job_desc:
                 if not self._validate_job(job_desc['testing_job']):
-                    self._notify_invalid_config(message.body)
+                    self.notify_invalid_config(message.body)
                 else:
                     self._add_job(job_desc['testing_job'])
             else:
@@ -227,7 +227,7 @@ class TestingService(BaseService):
                     'Invalid testing job: Job config must contain '
                     'testing_job key.'
                 )
-                self._notify_invalid_config(message.body)
+                self.notify_invalid_config(message.body)
 
         message.ack()
 
@@ -268,12 +268,6 @@ class TestingService(BaseService):
         Callback for job instance to log given message.
         """
         self.log.info(msg, extra=metadata)
-
-    def _notify_invalid_config(self, message):
-        try:
-            self._publish('jobcreator', 'invalid_config', message)
-        except AMQPError:
-            self.log.warning('Message not received: {0}'.format(message))
 
     def _process_test_result(self, event):
         """

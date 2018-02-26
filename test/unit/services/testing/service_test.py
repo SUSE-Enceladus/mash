@@ -219,7 +219,7 @@ class TestIPATestingService(object):
         self.message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with({'id': '1'})
 
-    @patch.object(TestingService, '_notify_invalid_config')
+    @patch.object(TestingService, 'notify_invalid_config')
     def test_testing_handle_jobs_invalid(self, mock_notify):
         self.message.body = '{"testing_job_update": {"id": "1"}}'
 
@@ -232,7 +232,7 @@ class TestIPATestingService(object):
         )
         mock_notify.assert_called_once_with(self.message.body)
 
-    @patch.object(TestingService, '_notify_invalid_config')
+    @patch.object(TestingService, 'notify_invalid_config')
     def test_testing_handle_jobs_format(self, mock_notify):
         self.message.body = 'Invalid format.'
         self.testing._handle_jobs(self.message)
@@ -245,7 +245,7 @@ class TestIPATestingService(object):
         mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(TestingService, '_validate_job')
-    @patch.object(TestingService, '_notify_invalid_config')
+    @patch.object(TestingService, 'notify_invalid_config')
     def test_testing_handle_jobs_fail_validation(
         self, mock_notify, mock_validate_job
     ):
@@ -273,24 +273,6 @@ class TestIPATestingService(object):
         self.testing.log.info.assert_called_once_with(
             'Test message',
             extra={'job_id': '1'}
-        )
-
-    @patch.object(TestingService, '_publish')
-    def test_testing_notify(self, mock_publish):
-        self.testing._notify_invalid_config('invalid')
-        mock_publish.assert_called_once_with(
-            'jobcreator',
-            'invalid_config',
-            'invalid'
-        )
-
-    @patch.object(TestingService, '_publish')
-    def test_testing_notify_exception(self, mock_publish):
-        mock_publish.side_effect = AMQPError('Broken')
-        self.testing._notify_invalid_config('invalid')
-
-        self.testing.log.warning.assert_called_once_with(
-            'Message not received: {0}'.format('invalid')
         )
 
     @patch.object(TestingService, '_delete_job')
