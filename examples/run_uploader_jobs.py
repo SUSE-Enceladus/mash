@@ -15,6 +15,7 @@ channel.queue.declare(queue='obs.service', durable=True)
 channel.queue.declare(queue='credentials.service', durable=True)
 
 messages = [
+    ('credentials', 'credentials_job.json'),
     ('obs', 'obs_job_delete.json'),
     ('obs', 'obs_now_job.json'),
     ('uploader', 'uploader_job.json')
