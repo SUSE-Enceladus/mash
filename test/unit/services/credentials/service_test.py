@@ -44,6 +44,9 @@ class TestCredentialsService(object):
         self.service.post_init()
 
         self.config.get_log_file.assert_called_once_with('credentials')
+        self.config.get_service_names.assert_called_once_with(
+            credentials_required=True
+        )
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/credentials_service.log'
         )
@@ -81,11 +84,17 @@ class TestCredentialsService(object):
 
     @patch.object(CredentialsService, 'bind_queue')
     def test_credentials_bind_credential_request_keys(self, mock_bind_queue):
+        self.service.services = [
+            'replication', 'deprecation', 'uploader',
+            'testing', 'publisher', 'pint'
+        ]
         self.service._bind_credential_request_keys()
+
         mock_bind_queue.assert_has_calls([
+            call('credentials', 'request.replication', 'request'),
+            call('credentials', 'request.deprecation', 'request'),
             call('credentials', 'request.uploader', 'request'),
             call('credentials', 'request.testing', 'request'),
-            call('credentials', 'request.replication', 'request'),
             call('credentials', 'request.publisher', 'request'),
             call('credentials', 'request.pint', 'request')
         ])

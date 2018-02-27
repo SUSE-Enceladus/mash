@@ -33,7 +33,11 @@ class CredentialsService(BaseService):
     """
     def post_init(self):
         self.config = CredentialsConfig()
+
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+        self.services = self.config.get_service_names(
+            credentials_required=True
+        )
 
         self.jobs = {}
 
@@ -68,10 +72,7 @@ class CredentialsService(BaseService):
         """
         Bind routing keys for all valid credential service requests.
         """
-        # TODO: Move list of services to config.
-        for service in (
-            'uploader', 'testing', 'replication', 'publisher', 'pint'
-        ):
+        for service in self.services:
             self.bind_queue(
                 self.service_exchange, 'request.{0}'.format(service), 'request'
             )
