@@ -319,7 +319,7 @@ class TestCredentialsService(object):
         self, mock_publish_credentials_response, mock_get_cred_response,
         mock_delete_job
     ):
-        job = {'id': '1', 'last_service': 'pint'}
+        job = {'id': '1', 'last_service': 'pint', 'utctime': 'now'}
         self.service.jobs = {'1': job}
 
         mock_get_cred_response.return_value = b'response'
