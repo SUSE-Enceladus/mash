@@ -36,10 +36,10 @@ class UploadImageService(BaseService):
     """
     def post_init(self):
         # read config file
-        config = UploaderConfig()
+        self.config = UploaderConfig()
 
         # setup service log file
-        self.set_logfile(config.get_log_file(self.service_exchange))
+        self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         # upload image instances
         self.jobs = {}
@@ -52,16 +52,16 @@ class UploadImageService(BaseService):
         self.scheduler = BackgroundScheduler(timezone=utc)
         self.scheduler.start()
 
+        # Consume credentials response queue
+        self.bind_credentials_queue()
+        self.consume_credentials_queue(self._process_message)
+
         # read and launch open jobs
         self.restart_jobs(self._schedule_job)
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
         self.consume_queue(self._process_message, self.service_queue)
-
-        # Consume credentials response queue
-        self.bind_credentials_queue()
-        self.consume_credentials_queue(self._process_message)
 
         try:
             self.channel.start_consuming()
