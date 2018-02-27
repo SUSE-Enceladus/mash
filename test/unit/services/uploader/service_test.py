@@ -130,14 +130,14 @@ class TestUploadImageService(object):
         self, mock_decode_credentials, mock_send_control_response
     ):
         message = Mock()
-        message.method = {'routing_key': '123'}
-        message.body = '{"image_file": ["image", "sum"], "status": "success"}'
+        message.body = '{"obs_result": {"id": "123", ' + \
+            '"image_file": ["image", "sum"], "status": "success"}}'
         self.uploader._process_message(message)
         assert self.uploader.jobs['123']['system_image_file'] == 'image'
         message.body = '{"jwt_token": {}}'
+        mock_decode_credentials.return_value = {'id': '123', 'credentials': {}}
         self.uploader._process_message(message)
-        assert self.uploader.jobs['123']['credentials'] == \
-            mock_decode_credentials.return_value
+        assert self.uploader.jobs['123']['credentials'] == {}
         assert self.uploader.jobs['123']['ready'] is True
 
     @patch.object(UploadImageService, '_add_job')
@@ -146,7 +146,6 @@ class TestUploadImageService(object):
         self, mock_send_control_response, mock_add_job
     ):
         message = Mock()
-        message.method = {'routing_key': 'job_document'}
         message.body = '{"uploader_job": {"id": "123", ' + \
             '"utctime": "now", "cloud_image_name": "name", ' + \
             '"image_description": "description", ' + \
@@ -183,8 +182,7 @@ class TestUploadImageService(object):
                     'message':
                         "No idea what to do with: {'unknown_command': '4711'}",
                     'ok': False
-                },
-                None
+                }
             ),
             call(
                 {

@@ -116,64 +116,61 @@ class UploadImageService(BaseService):
                     )
                 }
             )
-        if message.method['routing_key'] == 'job_document':
+        if 'uploader_job' in job_data:
             self._handle_jobs(job_data)
+        elif 'jwt_token' in job_data:
+            self._handle_credentials(job_data)
+        elif 'obs_result' in job_data:
+            self._handle_obs_image(job_data)
         else:
-            self._handle_service_data(message, job_data)
+            self._send_control_response(
+                {
+                    'ok': False,
+                    'message': 'No idea what to do with: {0}'.format(job_data)
+                }
+            )
 
     def _handle_jobs(self, job_data):
         """
         handle uploader job document
         """
-        job_id = None
-        if 'uploader_job' in job_data:
-            job_id = job_data['uploader_job'].get('id', None)
-            self.log.info(
-                JsonFormat.json_message(job_data),
-                extra={'job_id': job_id}
-            )
-            result = self._add_job(job_data)
-        else:
-            result = {
-                'ok': False,
-                'message': 'No idea what to do with: {0}'.format(job_data)
-            }
+        job_id = job_data['uploader_job'].get('id', None)
+        self.log.info(
+            JsonFormat.json_message(job_data),
+            extra={'job_id': job_id}
+        )
+        result = self._add_job(job_data)
         if result:
             self._send_control_response(result, job_id)
 
-    def _handle_service_data(self, message, service_data):
-        job_id = message.method['routing_key']
-        if job_id not in self.jobs:
-            self.jobs[job_id] = {}
-        if 'image_file' in service_data:
-            system_image_file = service_data['image_file'][0]
+    def _handle_obs_image(self, job_data):
+        obs_result = job_data['obs_result']
+        if 'id' in obs_result and 'image_file' in obs_result:
+            job_id = obs_result['id']
+            self._set_job(job_id)
+            system_image_file = obs_result['image_file'][0]
             self.jobs[job_id]['system_image_file'] = system_image_file
             self._send_job_response(
                 job_id, 'Got image file: {0}'.format(system_image_file)
             )
-        if 'jwt_token' in service_data:
-            # Example response from the credentials service for ec2:
-            # response is encoded
-            # {
-            #     "test-aws": {
-            #         "access_key_id": "123456",
-            #         "secret_access_key": "654321",
-            #         "ssh_key_name": "key-123",
-            #         "ssh_private_key": "key123"
-            #     },
-            #     "test-aws-cn": {
-            #         "access_key_id": "654321",
-            #         "secret_access_key": "123456",
-            #         "ssh_key_name": "key-321",
-            #         "ssh_private_key": "key321"
-            #     }
-            # }
-            self.jobs[job_id]['credentials'] = self.decode_credentials(
-                service_data['jwt_token']
-            )
+            self._check_ready(job_id)
+
+    def _handle_credentials(self, job_data):
+        credentials = self.decode_credentials(job_data['jwt_token'])
+        if 'id' in credentials:
+            job_id = credentials['id']
+            self._set_job(job_id)
+            self.jobs[job_id]['credentials'] = credentials['credentials']
             self._send_job_response(
                 job_id, 'Got credentials data'
             )
+            self._check_ready(job_id)
+
+    def _set_job(self, job_id):
+        if job_id not in self.jobs:
+            self.jobs[job_id] = {}
+
+    def _check_ready(self, job_id):
         if 'system_image_file' in self.jobs[job_id] and \
            'credentials' in self.jobs[job_id]:
             self.jobs[job_id]['ready'] = True
