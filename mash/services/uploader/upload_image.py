@@ -48,16 +48,11 @@ class UploadImage(object):
     * :attr:`custom_uploader_args`
         dictionary of parameters for the used upload tool
         specific to the selected cloud and uploader class
-
-    * :attr:`custom_credentials_args`
-        dictionary of parameters for the instance handling
-        credentials. specific to the selected cloud and
-        credentials class
     """
     def __init__(
         self, job_id, job_file, nonstop, csp_name, credentials_token,
         cloud_image_name, cloud_image_description, last_upload_region,
-        custom_uploader_args=None, custom_credentials_args=None
+        custom_uploader_args=None
     ):
         self.job_id = job_id
         self.job_file = job_file
@@ -67,7 +62,6 @@ class UploadImage(object):
         self.cloud_image_name = cloud_image_name
         self.cloud_image_description = cloud_image_description
         self.custom_uploader_args = custom_uploader_args
-        self.custom_credentials_args = custom_credentials_args
         self.last_upload_region = last_upload_region
 
         self.credentials_token = credentials_token
@@ -96,16 +90,16 @@ class UploadImage(object):
         if self.system_image_file:
             self.iteration_count += 1
             self._log_callback(
-                'Uploading image to {0}: {1}'.format(
-                    self.csp_name, self.system_image_file
+                'Uploading image to {0}: {1}:{2}'.format(
+                    self.csp_name, self.system_image_file,
+                    self.custom_uploader_args
                 )
             )
             self.uploader = Upload(
                 self.csp_name, self.system_image_file,
                 self.cloud_image_name, self.cloud_image_description,
                 self.credentials_token,
-                self.custom_uploader_args,
-                self.custom_credentials_args
+                self.custom_uploader_args
             )
             try:
                 (self.upload_region, self.cloud_image_id) = \
