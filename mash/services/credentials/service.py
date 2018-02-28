@@ -276,7 +276,8 @@ class CredentialsService(BaseService):
             message = json.dumps({'jwt_token': credentials_response.decode()})
             self._publish_credentials_response(message, payload['iss'])
 
-            if job['last_service'] == payload['iss']:
+            if job['utctime'] != 'always' and \
+                    job['last_service'] == payload['iss']:
                 self._delete_job(job['id'])
         else:
             self._send_control_response(
