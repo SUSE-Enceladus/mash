@@ -13,10 +13,7 @@ build: check test
 
 .PHONY: test
 test:
-	cd test/unit && \
-	py.test --no-cov-on-fail --cov=mash \
-		--cov-report=term-missing --cov-fail-under=100 --cov-config .coveragerc
+	tox -e unit_py3
 
 check:
-	flake8 --statistics -j auto --count mash
-	flake8 --statistics -j auto --count test/unit
+	tox -e check
