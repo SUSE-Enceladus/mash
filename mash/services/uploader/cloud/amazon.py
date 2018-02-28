@@ -54,13 +54,23 @@ class UploadAmazon(UploadBase):
             'running_id': None,
             'secret_key': None
         }
-        self.ec2_upload_parameters.update(
-            self.credentials
-        )
+
+        self.ec2_upload_parameters['access_key'] = \
+            self.credentials['access_key_id']
+        self.ec2_upload_parameters['secret_key'] = \
+            self.credentials['secret_access_key']
+        self.ec2_upload_parameters['ssh_key_pair_name'] = \
+            self.credentials['ssh_key_name']
+        self.ec2_upload_parameters['ssh_key_private_key_file'] = \
+            self.credentials['ssh_private_key']
+
         if self.custom_args:
             if 'region' in self.custom_args:
                 self.region = self.custom_args['region']
                 del self.custom_args['region']
+
+            if 'account' in self.custom_args:
+                del self.custom_args['account']
 
             self.ec2_upload_parameters.update(self.custom_args)
 
