@@ -8,11 +8,12 @@ from mash.services.uploader.upload_image import UploadImage
 class TestUploadImage(object):
     @patch('distutils.dir_util.mkpath')
     def setup(self, mock_mkpath):
+        self.custom_uploader_args = {'cloud-specific-param': 'foo'}
         self.upload_image = UploadImage(
             '123', 'job_file', False, 'ec2',
             'token', 'cloud_image_name', 'cloud_image_description',
             last_upload_region=False,
-            custom_uploader_args={'cloud-specific-param': 'foo'}
+            custom_uploader_args=self.custom_uploader_args
         )
         self.upload_image.set_image_file('image_file')
 
@@ -28,11 +29,15 @@ class TestUploadImage(object):
         self.upload_image.upload()
         mock_Upload.assert_called_once_with(
             'ec2', 'image_file', 'cloud_image_name', 'cloud_image_description',
-            'token', {'cloud-specific-param': 'foo'}, None
+            'token', {'cloud-specific-param': 'foo'}
         )
         uploader.upload.assert_called_once_with()
         assert mock_log_callback.call_args_list == [
-            call('Uploading image to ec2: image_file'),
+            call(
+                'Uploading image to ec2: image_file:{0}'.format(
+                    self.custom_uploader_args
+                )
+            ),
             call('Uploaded image has ID: image_id')
         ]
         mock_result_callback.assert_called_once_with()
@@ -41,7 +46,11 @@ class TestUploadImage(object):
         uploader.upload.side_effect = Exception('error')
         self.upload_image.upload()
         assert mock_log_callback.call_args_list == [
-            call('Uploading image to ec2: image_file'),
+            call(
+                'Uploading image to ec2: image_file:{0}'.format(
+                    self.custom_uploader_args
+                )
+            ),
             call('error')
         ]
 

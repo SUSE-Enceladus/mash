@@ -19,7 +19,6 @@ import jwt
 import json
 import os
 
-from amqpstorm import AMQPError
 from datetime import datetime, timedelta
 
 # project
@@ -33,7 +32,11 @@ class CredentialsService(BaseService):
     """
     def post_init(self):
         self.config = CredentialsConfig()
+
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+        self.services = self.config.get_service_names(
+            credentials_required=True
+        )
 
         self.jobs = {}
 
@@ -68,10 +71,7 @@ class CredentialsService(BaseService):
         """
         Bind routing keys for all valid credential service requests.
         """
-        # TODO: Move list of services to config.
-        for service in (
-            'uploader', 'testing', 'replication', 'publisher', 'pint'
-        ):
+        for service in self.services:
             self.bind_queue(
                 self.service_exchange, 'request.{0}'.format(service), 'request'
             )
@@ -134,10 +134,10 @@ class CredentialsService(BaseService):
             self._send_control_response(
                 'Invalid job config file: {0}.'.format(error), success=False
             )
-            self._notify_invalid_job(message.body)
+            self.notify_invalid_config(message.body)
         else:
             if not self._validate_job_doc(job_document):
-                self._notify_invalid_job(message.body)
+                self.notify_invalid_config(message.body)
             elif 'credentials_job_delete' in job_document:
                 self._delete_job(job_document['credentials_job_delete'])
             else:
@@ -178,17 +178,6 @@ class CredentialsService(BaseService):
             self._send_credential_response(payload)
 
         message.ack()
-
-    def _notify_invalid_job(self, message):
-        """
-        Notify JobCreator if an invalid job document has been received.
-        """
-        try:
-            self._publish('jobcreator', 'invalid_job', message)
-        except AMQPError:
-            self._send_control_response(
-                'Message not received: {0}'.format(message), success=False
-            )
 
     def _publish_credentials_response(self, credentials_response, issuer):
         """
@@ -275,7 +264,8 @@ class CredentialsService(BaseService):
             message = json.dumps({'jwt_token': credentials_response.decode()})
             self._publish_credentials_response(message, payload['iss'])
 
-            if job['last_service'] == payload['iss']:
+            if job['utctime'] != 'always' and \
+                    job['last_service'] == payload['iss']:
                 self._delete_job(job['id'])
         else:
             self._send_control_response(

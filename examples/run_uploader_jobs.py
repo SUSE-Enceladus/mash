@@ -15,16 +15,11 @@ channel.queue.declare(queue='obs.service', durable=True)
 channel.queue.declare(queue='credentials.service', durable=True)
 
 messages = [
+    ('credentials', 'credentials_job.json'),
     ('obs', 'obs_job_delete.json'),
     ('obs', 'obs_now_job.json'),
     ('uploader', 'uploader_job.json')
 ]
-
-# keep this until the credentials service has been rewritten
-# stub credentials service data still needed for testing
-channel.basic.publish(
-    exchange='credentials', routing_key='job_document', mandatory=True, body='{"credentials": {"id": "123", "csp": "ec2", "payload": {"ssh_key_pair_name": "xxx", "ssh_key_private_key_file": "xxx", "access_key": "xxx", "secret_key": "xxx"}}}'
-)
 
 for exchange, message in messages:
     job_file = os.path.join('messages', message)

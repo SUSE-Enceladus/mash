@@ -70,7 +70,10 @@ class TestOBSImageBuildResult(object):
         self.obs_result._result_callback()
         self.obs_result.result_callback.assert_called_once_with(
             '815', {
-                'id': '815', 'image_file': ['image', 'sum'], 'status': 'success'
+                'obs_result': {
+                    'id': '815',
+                    'image_file': ['image', 'sum'], 'status': 'success'
+                }
             }
         )
 

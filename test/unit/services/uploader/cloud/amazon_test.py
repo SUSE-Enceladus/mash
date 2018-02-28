@@ -13,17 +13,18 @@ class TestUploadAmazon(object):
         mash.services.uploader.cloud.amazon.EC2ImageUploader = self.ec2
         self.credentials = Mock()
         self.credentials = {
-            'ssh_key_pair_name': 'name',
-            'ssh_key_private_key_file': '/some/path/to/private/key',
-            'access_key': 'access-key',
-            'secret_key': 'secret-access-key'
+            'ssh_key_name': 'name',
+            'ssh_private_key': '/some/path/to/private/key',
+            'access_key_id': 'access-key',
+            'secret_access_key': 'secret-access-key'
         }
         custom_args = {
             'image_arch': 'x86_64',
             'launch_ami': 'ami-bc5b48d0',
             'sriov_type': 'simple',
             'ena_support': True,
-            'region': 'us-east-1'
+            'region': 'us-east-1',
+            'account': 'mash-account'
         }
         self.uploader = UploadAmazon(
             self.credentials, 'file', 'name', 'description', custom_args

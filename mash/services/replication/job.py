@@ -58,14 +58,15 @@ class ReplicationJob(object):
         self.iteration_count += 1
         self._replicate()
 
-    def send_log(self, message):
+    def send_log(self, message, success=True):
         if self.log_callback:
             self.log_callback(
                 'Pass[{0}]: {1}'.format(
                     self.iteration_count,
                     message
                 ),
-                self.get_metadata()
+                self.get_metadata(),
+                success
             )
 
     def set_log_callback(self, callback):

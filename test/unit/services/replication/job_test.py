@@ -41,7 +41,8 @@ class TestReplicationJob(object):
 
         callback.assert_called_once_with(
             'Pass[0]: Starting replicate.',
-            {'job_id': '1'}
+            {'job_id': '1'},
+            True
         )
 
     def test_set_log_callback(self):

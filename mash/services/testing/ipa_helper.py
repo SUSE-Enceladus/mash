@@ -20,8 +20,10 @@ import logging
 import threading
 
 from ipa.ipa_controller import test_image
+from ipa.ipa_utils import generate_public_ssh_key
 
 from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
+from mash.utils.ec2 import get_client
 
 
 def ipa_test(
@@ -30,12 +32,21 @@ def ipa_test(
     ssh_key_name=None, ssh_private_key=None, ssh_user=None, tests=None
 ):
     name = threading.current_thread().getName()
-    # TODO determine if we want to handle key-pair issues manually or
-    # automagically with temp key files.
     try:
+        client = get_client('ec2', access_key_id, secret_access_key, region)
+        try:
+            client.describe_key_pairs(KeyNames=[ssh_key_name])
+        except Exception:
+            # If key pair does not exist create it in the region.
+            pub_key = generate_public_ssh_key(ssh_private_key)
+            client.import_key_pair(
+                KeyName=ssh_key_name, PublicKeyMaterial=pub_key
+            )
+
         status, result = test_image(
             provider.upper(),  # TODO remove uppercase when IPA update released
             access_key_id=access_key_id,
+            cleanup=True,
             desc=description,
             distro=distro,
             image_id=image_id,

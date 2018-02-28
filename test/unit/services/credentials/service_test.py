@@ -1,6 +1,5 @@
 import jwt
 
-from amqpstorm import AMQPError
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
@@ -44,6 +43,9 @@ class TestCredentialsService(object):
         self.service.post_init()
 
         self.config.get_log_file.assert_called_once_with('credentials')
+        self.config.get_service_names.assert_called_once_with(
+            credentials_required=True
+        )
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/credentials_service.log'
         )
@@ -81,11 +83,17 @@ class TestCredentialsService(object):
 
     @patch.object(CredentialsService, 'bind_queue')
     def test_credentials_bind_credential_request_keys(self, mock_bind_queue):
+        self.service.services = [
+            'replication', 'deprecation', 'uploader',
+            'testing', 'publisher', 'pint'
+        ]
         self.service._bind_credential_request_keys()
+
         mock_bind_queue.assert_has_calls([
+            call('credentials', 'request.replication', 'request'),
+            call('credentials', 'request.deprecation', 'request'),
             call('credentials', 'request.uploader', 'request'),
             call('credentials', 'request.testing', 'request'),
-            call('credentials', 'request.replication', 'request'),
             call('credentials', 'request.publisher', 'request'),
             call('credentials', 'request.pint', 'request')
         ])
@@ -133,7 +141,7 @@ class TestCredentialsService(object):
         mock_add_job.assert_called_once_with({'id': '1'})
 
     @patch.object(CredentialsService, '_send_control_response')
-    @patch.object(CredentialsService, '_notify_invalid_job')
+    @patch.object(CredentialsService, 'notify_invalid_config')
     def test_credentials_handle_job_docs_format(
         self, mock_notify, mock_send_control_response
     ):
@@ -149,7 +157,7 @@ class TestCredentialsService(object):
         mock_notify.assert_called_once_with(message.body)
 
     @patch.object(CredentialsService, '_validate_job_doc')
-    @patch.object(CredentialsService, '_notify_invalid_job')
+    @patch.object(CredentialsService, 'notify_invalid_config')
     def test_credentials_handle_jobs_fail_validation(
         self, mock_notify, mock_validate_job
     ):
@@ -219,25 +227,6 @@ class TestCredentialsService(object):
             'Invalid token!', success=False
         )
         message.ack.assert_called_once_with()
-
-    @patch.object(CredentialsService, '_publish')
-    def test_credentials_notify(self, mock_publish):
-        self.service._notify_invalid_job('invalid')
-        mock_publish.assert_called_once_with(
-            'jobcreator', 'invalid_job', 'invalid'
-        )
-
-    @patch.object(CredentialsService, '_send_control_response')
-    @patch.object(CredentialsService, '_publish')
-    def test_credentials_notify_exception(
-        self, mock_publish, mock_send_control_response
-    ):
-        mock_publish.side_effect = AMQPError('Broken')
-        self.service._notify_invalid_job('invalid')
-
-        mock_send_control_response.assert_called_once_with(
-            'Message not received: invalid', success=False
-        )
 
     def test_validate_delete_job_doc(self):
         assert self.service._validate_job_doc({'credentials_job_delete': '1'})
@@ -310,7 +299,7 @@ class TestCredentialsService(object):
         self, mock_publish_credentials_response, mock_get_cred_response,
         mock_delete_job
     ):
-        job = {'id': '1', 'last_service': 'pint'}
+        job = {'id': '1', 'last_service': 'pint', 'utctime': 'now'}
         self.service.jobs = {'1': job}
 
         mock_get_cred_response.return_value = b'response'

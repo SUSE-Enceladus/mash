@@ -222,9 +222,11 @@ class OBSImageBuildResult(object):
         if self.result_callback:
             self.result_callback(
                 self.job_id, {
-                    'id': self.job_id,
-                    'image_file': self.image_status['image_source'],
-                    'status': job_status
+                    'obs_result': {
+                        'id': self.job_id,
+                        'image_file': self.image_status['image_source'],
+                        'status': job_status
+                    }
                 }
             )
 

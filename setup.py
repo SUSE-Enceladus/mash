@@ -26,6 +26,7 @@ config = {
         'APScheduler>=3.3.1',
         'amqpstorm>=2.4.0',
         'ec2publishimg',
+        'ec2uploadimg',
         'python3-ipa'
     ],
     'packages': ['mash'],
