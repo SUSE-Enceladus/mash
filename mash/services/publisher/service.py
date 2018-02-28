@@ -74,7 +74,7 @@ class PublisherService(BaseService):
         else:
             self.log.exception(
                 'Provider {0} is not supported.'.format(provider)
-                )
+            )
 
     def _cleanup_job(self, job, status):
         """
