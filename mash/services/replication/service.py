@@ -43,7 +43,7 @@ class ReplicationService(BaseService):
         Initialize replication service class.
         """
         self.config = ReplicationConfig()
-        self.set_logfile(self.config.get_log_file())
+        self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.jobs = {}
 
