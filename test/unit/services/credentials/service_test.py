@@ -1,6 +1,5 @@
 import jwt
 
-from amqpstorm import AMQPError
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
