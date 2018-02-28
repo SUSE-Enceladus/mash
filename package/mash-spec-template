@@ -29,15 +29,15 @@ BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 Requires:       osc
 Requires:       rabbitmq-server
+Requires:       python3-boto3
 Requires:       python3-PyYAML
 Requires:       python3-PyJWT
-# Note: Activate this requirement as soon as we have the package
 Requires:       python3-amqpstorm >= 2.4.0
 Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil
-# Note: Activate this requirement as soon as we have the package
-# Requires:       python3-ec2uploadimg
-# Requires:       python3-ipa
+Requires:       python3-ec2publishimg
+Requires:       python3-ec2uploadimg
+Requires:       python3-ipa
 BuildArch:      noarch
 
 %description

@@ -20,6 +20,7 @@ config = {
     'version': __VERSION__,
     'install_requires': [
         'setuptools>=5.4',
+        'boto3',
         'PyYAML',
         'PyJWT',
         'python-dateutil',
