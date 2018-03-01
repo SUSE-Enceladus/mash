@@ -17,11 +17,12 @@
 #
 
 from mash.services.base_config import BaseConfig
+from mash.services.credentials.defaults import Defaults
 
 
 class CredentialsConfig(BaseConfig):
     """
-    Implements reading of the mash configuration file:
+    Implements reading of the mash configuration file.
 
     * /etc/mash/mash_config.yaml
 
@@ -31,3 +32,21 @@ class CredentialsConfig(BaseConfig):
 
     def __init__(self, config_file=None):
         super(CredentialsConfig, self).__init__(config_file)
+
+    def get_credentials_dir(self):
+        """
+        Return directory path for credentials directory.
+
+        credentials:
+          credentials_directory: /var/lib/mash/credentials
+
+        If no configuration exists the credentials dir path from
+        the Defaults class is returned.
+
+        :rtype: string
+        """
+        credentials_directory = self._get_attribute(
+            attribute='credentials_directory', element='credentials'
+        )
+        return credentials_directory if credentials_directory else \
+            Defaults.get_credentials_dir()
