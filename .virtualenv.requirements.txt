@@ -6,6 +6,7 @@
 # $ pip install -r .virtualenv.requirements.txt
 
 setuptools
+boto3
 PyYAML
 PyJWT
 APScheduler
