@@ -54,23 +54,17 @@ python3 setup.build.py build
 %install
 python3 setup.build.py install --prefix=%{_prefix} --root=%{buildroot}
 
+install -D -m 644 config/mash_config.yaml \
+    %{buildroot}%{_sysconfdir}/%{name}/mash_config.yaml
+
 install -D -m 644 config/mash_obs.service \
     %{buildroot}%{_unitdir}/mash_obs.service
-
-install -D -m 644 config/obs_config.yml \
-    %{buildroot}%{_sysconfdir}/%{name}/obs_config.yml
 
 install -D -m 644 config/mash_uploader.service \
     %{buildroot}%{_unitdir}/mash_uploader.service
 
-install -D -m 644 config/uploader_config.yml \
-    %{buildroot}%{_sysconfdir}/%{name}/uploader_config.yml
-
 install -D -m 644 config/mash_logger.service \
     %{buildroot}%{_unitdir}/mash_logger.service
-
-install -D -m 644 config/logger_config.yml \
-    %{buildroot}%{_sysconfdir}/%{name}/logger_config.yml
 
 install -D -m 644 config/mash_credentials.service \
     %{buildroot}%{_unitdir}/mash_credentials.service
@@ -78,34 +72,37 @@ install -D -m 644 config/mash_credentials.service \
 install -D -m 644 config/mash_job_creator.service \
     %{buildroot}%{_unitdir}/mash_job_creator.service
 
-install -D -m 644 config/testing_config.yml \
-    %{buildroot}%{_sysconfdir}/%{name}/testing_config.yml
+install -D -m 644 config/mash_testing.service \
+    %{buildroot}%{_unitdir}/mash_testing.service
+
+install -D -m 644 config/mash_replication.service \
+    %{buildroot}%{_unitdir}/mash_replication.service
 
 %files
 %defattr(-,root,root,-)
 %{python3_sitelib}/*
 %dir %{_sysconfdir}/%{name}
+%config(noreplace) %{_sysconfdir}/%{name}/mash_config.yaml
+
 %{_bindir}/mash-obs-service
 %{_unitdir}/mash_obs.service
-%config(noreplace) %{_sysconfdir}/%{name}/obs_config.yml
 
 %{_bindir}/mash-uploader-service
 %{_unitdir}/mash_uploader.service
-%config(noreplace) %{_sysconfdir}/%{name}/uploader_config.yml
 
 %{_bindir}/mash-logger-service
 %{_unitdir}/mash_logger.service
-%config(noreplace) %{_sysconfdir}/%{name}/logger_config.yml
 
 %{_bindir}/mash-credentials-service
 %{_unitdir}/mash_credentials.service
 
 %{_bindir}/mash-job-creator-service
 %{_unitdir}/mash_job_creator.service
-%config(noreplace) %{_sysconfdir}/%{name}/job_creator_config.yml
 
 %{_bindir}/mash-testing-service
 %{_unitdir}/mash_testing.service
-%config(noreplace) %{_sysconfdir}/%{name}/testing_config.yml
+
+%{_bindir}/mash-replication-service
+%{_unitdir}/mash_replication.service
 
 %changelog

@@ -37,7 +37,8 @@ config = {
             'mash-credentials-service=mash.services.credentials_service:main',
             'mash-job-creator-service=mash.services.job_creator_service:main',
             'mash-testing-service=mash.services.testing_service:main',
-            'mash-uploader-service=mash.services.uploader_service:main'
+            'mash-uploader-service=mash.services.uploader_service:main',
+            'mash-replication-service=mash.services.replication_service:main',
         ]
     },
     'include_package_data': True,
