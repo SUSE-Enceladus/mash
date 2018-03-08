@@ -30,8 +30,8 @@ class TestingJob(object):
     __test__ = False
 
     def __init__(
-        self, id, provider, test_regions, tests, utctime, job_file=None,
-        description=None, distro=None, instance_type=None
+        self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
+        job_file=None, description=None, distro=None, instance_type=None
     ):
         self.cloud_image_name = None
         self.job_file = job_file
@@ -44,6 +44,7 @@ class TestingJob(object):
         self.log_callback = None
         self.provider = self.validate_provider(provider)
         self.status = UNKOWN
+        self.ssh_private_key_file = ssh_private_key_file
         self.test_regions = self.validate_test_regions(test_regions)
         self.tests = self.validate_tests(tests)
         self.utctime = self.validate_timestamp(utctime)

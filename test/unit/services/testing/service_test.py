@@ -39,6 +39,7 @@ class TestIPATestingService(object):
         self.testing.service_queue = 'service'
         self.testing.job_document_key = 'job_document'
         self.testing.listener_queue = 'listener'
+        self.testing.ssh_private_key_file = 'private_ssh_key.file'
 
         self.error_message = '{"testing_result": ' \
             '{"id": "1", "status": "error"}}'
@@ -117,7 +118,9 @@ class TestIPATestingService(object):
         job_config = {'id': '1', 'provider': 'ec2'}
         self.testing._create_job(job_class, job_config)
 
-        job_class.assert_called_once_with(id='1', provider='ec2')
+        job_class.assert_called_once_with(
+            id='1', provider='ec2', ssh_private_key_file='private_ssh_key.file'
+        )
         job.set_log_callback.assert_called_once_with(
             self.testing._log_job_message
         )
