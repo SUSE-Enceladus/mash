@@ -190,7 +190,7 @@ class TestIPATestingService(object):
 
     @patch.object(TestingService, '_schedule_job')
     @patch.object(TestingService, 'decode_credentials')
-    def test_publisher_handle_credentials_response(
+    def test_testing_handle_credentials_response(
         self, mock_decode_credentials, mock_schedule_job
     ):
         job = Mock()
@@ -314,9 +314,9 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
         mock_get_status_message.assert_called_once_with(job)
-        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
+        mock_bind_queue.assert_called_once_with('replication', '1', 'service')
         mock_publish.assert_called_once_with(
-            'publisher', '1', self.status_message
+            'replication', '1', self.status_message
         )
 
     def test_testing_process_test_result_exception(self):
@@ -374,7 +374,7 @@ class TestIPATestingService(object):
         )
         mock_get_status_message.assert_called_once_with(job)
         mock_publish.assert_called_once_with(
-            'publisher', '1', self.error_message
+            'replication', '1', self.error_message
         )
 
     @patch.object(TestingService, 'bind_queue')
@@ -388,9 +388,9 @@ class TestIPATestingService(object):
         job.get_source_regions.return_value = {'us-east-2': 'ami-123456'}
 
         self.testing._publish_message(job)
-        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
+        mock_bind_queue.assert_called_once_with('replication', '1', 'service')
         mock_publish.assert_called_once_with(
-            'publisher', '1', self.status_message
+            'replication', '1', self.status_message
         )
 
     @patch.object(TestingService, 'bind_queue')
@@ -407,7 +407,7 @@ class TestIPATestingService(object):
         mock_publish.side_effect = AMQPError('Broken')
         self.testing._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
+        mock_bind_queue.assert_called_once_with('replication', '1', 'service')
         self.testing.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}
