@@ -276,6 +276,15 @@ class BaseService(object):
 
         return config['job_file']
 
+    def remove_file(self, config_file):
+        """
+        Remove file from disk if it exists.
+        """
+        try:
+            os.remove(config_file)
+        except Exception:
+            pass
+
     def restart_jobs(self, callback):
         """
         Restart jobs from config files.
