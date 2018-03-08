@@ -119,7 +119,7 @@ class TestIPATestingService(object):
 
         job_class.assert_called_once_with(id='1', provider='ec2')
         job.set_log_callback.assert_called_once_with(
-            self.testing._log_job_message
+            self.testing.log_job_message
         )
         assert job.config_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
@@ -266,23 +266,6 @@ class TestIPATestingService(object):
 
         data = self.testing._get_status_message(job)
         assert data == self.status_message
-
-    def test_testing_log_job_message(self):
-        self.testing._log_job_message('Test message', {'job_id': '1'})
-
-        self.testing.log.info.assert_called_once_with(
-            'Test message',
-            extra={'job_id': '1'}
-        )
-
-        self.testing._log_job_message(
-            'Test error message', {'job_id': '1'}, success=False
-        )
-
-        self.testing.log.error.assert_called_once_with(
-            'Test error message',
-            extra={'job_id': '1'}
-        )
 
     @patch.object(TestingService, '_delete_job')
     @patch.object(TestingService, '_publish')
