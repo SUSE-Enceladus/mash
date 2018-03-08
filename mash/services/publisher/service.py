@@ -80,7 +80,7 @@ class PublisherService(BaseService):
         """
         Job failed upstream.
 
-        Delete job and notify the pint service.
+        Delete job and notify the deprecation service.
         """
         job.status = status
         self.log.warning('Failed upstream.', extra=job.get_metadata())
@@ -320,12 +320,12 @@ class PublisherService(BaseService):
 
     def _publish_message(self, job):
         """
-        Publish status message to pint service.
+        Publish status message to deprecation service.
         """
         message = self._get_status_message(job)
 
         try:
-            self.publish_job_result('pint', job.id, message)
+            self.publish_job_result('deprecation', job.id, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),

@@ -489,7 +489,7 @@ class TestPublisherService(object):
 
         self.publisher._publish_message(job)
         mock_publish.assert_called_once_with(
-            'pint',
+            'deprecation',
             '1',
             self.status_message
         )
@@ -507,7 +507,7 @@ class TestPublisherService(object):
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
         self.publisher._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('pint', '1', 'service')
+        mock_bind_queue.assert_called_once_with('deprecation', '1', 'service')
         self.publisher.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}
