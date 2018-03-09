@@ -17,7 +17,6 @@
 #
 
 import json
-import os
 
 from amqpstorm import AMQPError
 
