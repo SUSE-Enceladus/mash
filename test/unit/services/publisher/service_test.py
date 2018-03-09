@@ -36,7 +36,9 @@ class TestPublisherService(object):
         self.error_message = '{"publisher_result": ' \
             '{"id": "1", "status": "error"}}'
         self.status_message = '{"publisher_result": ' \
-            '{"id": "1", "image_name": "image123", "status": "success"}}'
+            '{"cloud_image_name": "image123", "id": "1", ' \
+            '"source_regions": {"us-east-1": "ami-12345"}, ' \
+            '"status": "success"}}'
 
         self.publisher = PublisherService()
         self.publisher.jobs = {}
@@ -214,7 +216,8 @@ class TestPublisherService(object):
         job = Mock()
         job.id = '1'
         job.status = 'success'
-        job.image_name = 'image123'
+        job.cloud_image_name = 'image123'
+        job.source_regions = {'us-east-1': 'ami-12345'}
 
         data = self.publisher._get_status_message(job)
         assert data == self.status_message
@@ -485,7 +488,8 @@ class TestPublisherService(object):
         job = Mock()
         job.id = '1'
         job.status = 'success'
-        job.image_name = 'image123'
+        job.cloud_image_name = 'image123'
+        job.source_regions = {'us-east-1': 'ami-12345'}
 
         self.publisher._publish_message(job)
         mock_publish.assert_called_once_with(

@@ -55,7 +55,7 @@ class PublisherJob(object):
 
     def publish_image(self, host):
         """
-        Get credentials and publish image.
+        Update iteration_count and publish image.
         """
         self.iteration_count += 1
         self._publish()
@@ -94,11 +94,12 @@ class PublisherJob(object):
         """
         Validate the publish regions dict has required keys.
         """
-        for account, target_regions in publish_regions.items():
-            if not (account and target_regions):
+        for region_info in publish_regions:
+            if not (region_info['account'] and region_info['target_regions']):
                 raise MashPublisherException(
                     'Invalid publish_regions format. '
-                    'Must be a dict of {account:target_regions}.'
+                    'Must be a list of dictionaries with account and '
+                    'target_regions keys.'
                 )
 
         return publish_regions
