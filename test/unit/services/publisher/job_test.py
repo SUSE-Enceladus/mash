@@ -63,7 +63,7 @@ class TestPublisherJob(object):
     def test_publish_image(self, mock_publish):
         job = PublisherJob(**self.job_config)
         job.log_callback = Mock()
-        job.publish_image('localhost')
+        job.publish_image()
 
         mock_publish.assert_called_once_with()
 

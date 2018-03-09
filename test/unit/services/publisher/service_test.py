@@ -481,7 +481,7 @@ class TestPublisherService(object):
         self.publisher.host = 'localhost'
 
         self.publisher._publish_image('1')
-        job.publish_image.assert_called_once_with(host='localhost')
+        job.publish_image.assert_called_once_with()
 
     @patch.object(PublisherService, 'publish_job_result')
     def test_publisher_publish_message(self, mock_publish):

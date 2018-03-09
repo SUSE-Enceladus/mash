@@ -325,7 +325,7 @@ class PublisherService(BaseService):
         Publish image for job that matches job_id
         """
         job = self.jobs[job_id]
-        job.publish_image(host=self.host)
+        job.publish_image()
 
     def _publish_message(self, job):
         """

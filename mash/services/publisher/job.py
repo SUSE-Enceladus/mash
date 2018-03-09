@@ -53,7 +53,7 @@ class PublisherJob(object):
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def publish_image(self, host):
+    def publish_image(self):
         """
         Update iteration_count and publish image.
         """
