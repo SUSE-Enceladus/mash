@@ -32,9 +32,8 @@ class EC2ReplicationJob(ReplicationJob):
     """
 
     def __init__(
-        self, id, provider, utctime, image_description=None,
-        cloud_image_name=None, job_file=None, source_regions=None,
-        ssh_user='ec2-user'
+        self, id, image_description, provider, utctime, replication_regions,
+        cloud_image_name=None, job_file=None
     ):
         super(EC2ReplicationJob, self).__init__(
             id, provider, utctime, job_file=job_file
@@ -44,8 +43,10 @@ class EC2ReplicationJob(ReplicationJob):
         self.cloud_image_name = cloud_image_name
         self.job_file = job_file
         self.source_region_results = None
-        self.source_regions = self.validate_source_regions(source_regions)
-        self.ssh_user = ssh_user
+        self.source_regions = None
+        self.replication_regions = self.validate_replication_regions(
+            replication_regions
+        )
 
     def _replicate(self):
         """
@@ -54,7 +55,7 @@ class EC2ReplicationJob(ReplicationJob):
         self.status = SUCCESS
         self.source_region_results = defaultdict(dict)
 
-        for source_region, reg_info in self.source_regions.items():
+        for source_region, reg_info in self.replication_regions.items():
             credential = self.credentials[reg_info['account']]
 
             self.send_log(
@@ -68,7 +69,7 @@ class EC2ReplicationJob(ReplicationJob):
                 # Replicate image to all target regions for each source region
                 self.source_region_results[target_region]['image_id'] = \
                     self._replicate_to_region(
-                        credential, reg_info['image_id'],
+                        credential, self.source_regions[source_region],
                         source_region, target_region
                     )  # noqa: E123 Suppress erroneous flake8 warning.
 
@@ -93,8 +94,8 @@ class EC2ReplicationJob(ReplicationJob):
         Replicate image to the target region from the source region.
         """
         client = get_client(
-            'ec2', credential.access_key_id,
-            credential.secret_access_key, target_region
+            'ec2', credential['access_key_id'],
+            credential['secret_access_key'], target_region
         )
         if not self.image_exists(client, self.cloud_image_name):
             try:
@@ -118,8 +119,8 @@ class EC2ReplicationJob(ReplicationJob):
         Wait on image to finish replicating in the given region.
         """
         client = get_client(
-            'ec2', credential.access_key_id,
-            credential.secret_access_key, region
+            'ec2', credential['access_key_id'],
+            credential['secret_access_key'], region
         )
 
         try:
@@ -156,25 +157,16 @@ class EC2ReplicationJob(ReplicationJob):
                 return True
         return False
 
-    def update_source_regions(self, source_regions):
+    def validate_replication_regions(self, replication_regions):
         """
-        Update source regions dictionary from listener message.
-
-        Add image ids for the regions.
-        """
-        for region, image_id in source_regions.items():
-            self.source_regions[region]['image_id'] = image_id
-
-    def validate_source_regions(self, source_regions):
-        """
-        Validate source_regions attribute is correct format.
+        Validate replication_regions attribute is correct format.
 
         Must be a dictionary mapping regions to accounts and target_regions
         list.
 
         {'us-east-1': {'account': 'test-aws', 'target_regions': ['us-east-2']}}
         """
-        for region, reg_info in source_regions.items():
+        for region, reg_info in replication_regions.items():
             if not reg_info.get('account'):
                 raise MashReplicationException(
                     'Source region {0} missing account name.'.format(region)
@@ -183,4 +175,4 @@ class EC2ReplicationJob(ReplicationJob):
                 raise MashReplicationException(
                     'Source region {0} missing target regions.'.format(region)
                 )
-        return source_regions
+        return replication_regions

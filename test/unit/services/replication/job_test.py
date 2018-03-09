@@ -57,7 +57,7 @@ class TestReplicationJob(object):
     def test_replicate_image(self, mock_replicate):
         job = ReplicationJob(**self.job_config)
         job.log_callback = Mock()
-        job.replicate_image('localhost')
+        job.replicate_image()
 
         mock_replicate.assert_called_once_with()
 

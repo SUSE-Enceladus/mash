@@ -30,7 +30,6 @@ class ReplicationJob(object):
     """
 
     def __init__(self, id, provider, utctime, job_file=None):
-        self.image_id = None
         self.iteration_count = 0
         self.id = id
         self.job_file = job_file
@@ -51,9 +50,9 @@ class ReplicationJob(object):
         """
         return {'job_id': self.id}
 
-    def replicate_image(self, host):
+    def replicate_image(self):
         """
-        Get credentials and replicate image.
+        Replicate image.
         """
         self.iteration_count += 1
         self._replicate()
