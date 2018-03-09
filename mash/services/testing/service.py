@@ -166,7 +166,7 @@ class TestingService(BaseService):
                 'testing_result': {
                     'id': job.id,
                     'cloud_image_name': job.cloud_image_name,
-                    'source_regions': job.get_source_regions(),
+                    'source_regions': job.source_regions,
                     'status': job.status,
                 }
             }
@@ -340,7 +340,7 @@ class TestingService(BaseService):
         Test image with IPA based on job id.
         """
         job = self.jobs[job_id]
-        job.test_image(host=self.host)
+        job.test_image()
 
     def _schedule_job(self, job_id):
         """
@@ -413,7 +413,7 @@ class TestingService(BaseService):
                     )
                     return None
             else:
-                job.update_test_regions(listener_msg['source_regions'])
+                job.source_regions = listener_msg['source_regions']
 
         return job
 
