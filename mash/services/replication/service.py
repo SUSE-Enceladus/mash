@@ -107,7 +107,7 @@ class ReplicationService(BaseService):
             )
         else:
             self.jobs[job.id] = job
-            job.set_log_callback(self._log_job_message)
+            job.set_log_callback(self.log_job_message)
 
             if 'job_file' not in job_config:
                 job_config['job_file'] = self.persist_job_config(
@@ -251,15 +251,6 @@ class ReplicationService(BaseService):
                 self.notify_invalid_config(message.body)
 
         message.ack()
-
-    def _log_job_message(self, msg, metadata, success=True):
-        """
-        Callback for job instance to log given message.
-        """
-        if success:
-            self.log.info(msg, extra=metadata)
-        else:
-            self.log.warning(msg, extra=metadata)
 
     def _process_replication_result(self, event):
         """

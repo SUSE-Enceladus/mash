@@ -113,7 +113,7 @@ class TestingService(BaseService):
             )
         else:
             self.jobs[job.id] = job
-            job.set_log_callback(self._log_job_message)
+            job.set_log_callback(self.log_job_message)
 
             if 'job_file' not in job_config:
                 job_config['job_file'] = self.persist_job_config(
@@ -262,15 +262,6 @@ class TestingService(BaseService):
                 self.publish_credentials_request(job.id)
         else:
             message.ack()
-
-    def _log_job_message(self, msg, metadata, success=True):
-        """
-        Callback for job instance to log given message.
-        """
-        if success:
-            self.log.info(msg, extra=metadata)
-        else:
-            self.log.error(msg, extra=metadata)
 
     def _process_test_result(self, event):
         """
