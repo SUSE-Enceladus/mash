@@ -10,7 +10,12 @@ class TestPublisherJob(object):
         self.job_config = {
             'id': '1',
             'provider': 'ec2',
-            'publish_regions': {'test-aws': ['us-east-2']},
+            'publish_regions': [
+                {
+                    'account': 'test-aws',
+                    'target_regions': ['us-east-2']
+                }
+            ],
             'utctime': 'now'
         }
 
@@ -58,7 +63,7 @@ class TestPublisherJob(object):
     def test_publish_image(self, mock_publish):
         job = PublisherJob(**self.job_config)
         job.log_callback = Mock()
-        job.publish_image('localhost')
+        job.publish_image()
 
         mock_publish.assert_called_once_with()
 
@@ -72,8 +77,12 @@ class TestPublisherJob(object):
 
     def test_invalid_publish_regions(self):
         msg = 'Invalid publish_regions format. ' \
-            'Must be a dict of {account:target_regions}.'
-        self.job_config['publish_regions'] = {'test-aws': None}
+            'Must be a list of dictionaries with account' \
+            ' and target_regions keys.'
+        self.job_config['publish_regions'] = [{
+            'account': 'test-aws',
+            'target_regions': None
+        }]
         with raises(MashPublisherException) as e:
             PublisherJob(**self.job_config)
 

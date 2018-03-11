@@ -12,7 +12,12 @@ class TestEC2PublisherJob(object):
             'allow_copy': False,
             'id': '1',
             'provider': 'ec2',
-            'publish_regions': {'test-aws': ['us-east-2']},
+            'publish_regions': [
+                {
+                    'account': 'test-aws',
+                    'target_regions': ['us-east-2']
+                }
+            ],
             'share_with': 'all',
             'utctime': 'now'
         }
@@ -56,7 +61,7 @@ class TestEC2PublisherJob(object):
 
         self.job.source_regions = {'us-east-2': 'ami-123456'}
 
-        msg = 'An error publishing image ami-123456 to us-east-2.' \
+        msg = 'An error publishing image ami-123456 in us-east-2.' \
             ' Failed to publish.'
         with raises(MashPublisherException) as e:
             self.job._publish()
