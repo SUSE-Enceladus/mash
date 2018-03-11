@@ -1,0 +1,18 @@
+{
+    "deprecation_job": {
+        "id": "123",
+        "provider": "ec2",
+        "utctime": "now",
+        "old_cloud_image_name": "old_image_123",
+        "deprecation_regions": [
+            {
+              "account": "test-aws",
+              "target_regions": ["us-east-1", "us-east-2", "eu-west-3"]
+            },
+            {
+              "account": "test-aws-cn",
+              "target_regions": ["cn-north-1", "cn-northwest-1"]
+            }
+        ]
+    }
+}
