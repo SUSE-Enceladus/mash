@@ -39,6 +39,10 @@ class Defaults(object):
         return '/var/log/mash/'
 
     @classmethod
+    def get_private_key_file(self):
+        return '/etc/mash/creds_key'
+
+    @classmethod
     def get_service_names(self):
         return [
             'obs', 'uploader', 'testing', 'replication', 'publisher',

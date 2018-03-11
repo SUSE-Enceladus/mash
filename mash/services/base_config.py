@@ -72,6 +72,11 @@ class BaseConfig(object):
         return secret
 
     def get_log_directory(self):
+        """
+        Return log directory path based on log_dir attribute.
+
+        :rtype: string
+        """
         log_dir = self._get_attribute(attribute='log_dir')
         return log_dir or Defaults.get_log_directory()
 
@@ -85,6 +90,15 @@ class BaseConfig(object):
         return '{dir}{service}_service.log'.format(
             dir=log_dir, service=service
         )
+
+    def get_private_key_file(self):
+        """
+        Return the path to the private key file.
+
+        :rtype: string
+        """
+        private_key_file = self._get_attribute(attribute='private_key_file')
+        return private_key_file or Defaults.get_private_key_file()
 
     def get_service_names(self, credentials_required=False):
         """
