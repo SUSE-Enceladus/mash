@@ -12,5 +12,7 @@ services:
   - pint
 non_cred_services:
   - obs
+credentials:
+  credentials_directory: /var/lib/mash/credentials/
 obs:
   download_directory: /var/tmp/mash/images
