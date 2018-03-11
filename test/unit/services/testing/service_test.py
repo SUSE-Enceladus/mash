@@ -262,7 +262,7 @@ class TestIPATestingService(object):
         job.status = "success"
         job.cloud_image_name = 'image123'
         job.test_regions = {'us-east-2': {'account': 'test-aws'}}
-        job.get_source_regions.return_value = {'us-east-2': 'ami-123456'}
+        job.source_regions = {'us-east-2': 'ami-123456'}
 
         data = self.testing._get_status_message(job)
         assert data == self.status_message
@@ -368,7 +368,7 @@ class TestIPATestingService(object):
         job.status = "success"
         job.cloud_image_name = 'image123'
         job.test_regions = {'us-east-2': {'account': 'test-aws'}}
-        job.get_source_regions.return_value = {'us-east-2': 'ami-123456'}
+        job.source_regions = {'us-east-2': 'ami-123456'}
 
         self.testing._publish_message(job)
         mock_bind_queue.assert_called_once_with('replication', '1', 'service')
@@ -404,10 +404,9 @@ class TestIPATestingService(object):
         job.image_id = 'image123'
         job.tests = 'test1,test2'
         self.testing.jobs['1'] = job
-        self.testing.host = 'localhost'
 
         self.testing._run_test('1')
-        job.test_image.assert_called_once_with(host='localhost')
+        job.test_image.assert_called_once_with()
 
     def test_testing_schedule_job(self):
         scheduler = Mock()
@@ -528,9 +527,7 @@ class TestIPATestingService(object):
 
         assert result == job
         assert job.cloud_image_name == 'My image'
-        job.update_test_regions.assert_called_once_with(
-            {'us-east-1': 'ami-123456'}
-        )
+        assert job.source_regions == {'us-east-1': 'ami-123456'}
 
     @patch.object(TestingService, '_cleanup_job')
     def test_testing_validate_listener_msg_failed(self, mock_cleanup_job):

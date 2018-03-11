@@ -28,13 +28,6 @@ class TestTestingJob(object):
         metadata = job.get_metadata()
         assert metadata == {'job_id': '1'}
 
-    def test_job_get_source_regions(self):
-        job = TestingJob(**self.job_config)
-        job.update_test_regions({'us-east-1': 'ami-123'})
-        source_regions = job.get_source_regions()
-
-        assert source_regions == {'us-east-1': 'ami-123'}
-
     def test_run_tests(self):
         job = TestingJob(**self.job_config)
         with raises(NotImplementedError):
@@ -51,7 +44,7 @@ class TestTestingJob(object):
     def test_test_image(self, mock_run_tests):
         job = TestingJob(**self.job_config)
         job.log_callback = Mock()
-        job.test_image('localhost')
+        job.test_image()
 
         job.log_callback.assert_called_once_with(
             'Pass[1]: Running IPA tests against image.',

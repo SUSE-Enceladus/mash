@@ -48,7 +48,7 @@ class TestEC2TestingJob(object):
                 'ssh_private_key': 'my-key.file'
             }
         }
-        job.update_test_regions({'us-east-1': 'ami-123'})
+        job.source_regions = {'us-east-1': 'ami-123'}
         job._run_tests()
 
         client.describe_key_pairs.assert_called_once_with(
