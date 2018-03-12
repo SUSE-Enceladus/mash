@@ -48,6 +48,7 @@ class TestingService(BaseService):
         """
         self.config = TestingConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+        self.ssh_private_key_file = self.config.get_ssh_private_key_file()
 
         self.jobs = {}
 
@@ -105,6 +106,7 @@ class TestingService(BaseService):
         3. Store config file if not stored already.
         4. Bind to job listener queue.
         """
+        job_config['ssh_private_key_file'] = self.ssh_private_key_file
         try:
             job = job_class(**job_config)
         except Exception as e:

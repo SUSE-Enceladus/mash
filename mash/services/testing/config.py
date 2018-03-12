@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.mash_exceptions import MashConfigException
 from mash.services.base_config import BaseConfig
 
 
@@ -32,3 +33,21 @@ class TestingConfig(BaseConfig):
 
     def __init__(self, config_file=None):
         super(TestingConfig, self).__init__(config_file)
+
+    def get_ssh_private_key_file(self):
+        """
+        Return the path to the ssh private key file.
+
+        :rtype: string
+        """
+        private_key_file = self._get_attribute(
+            attribute='ssh_private_key_file', element='testing'
+        )
+
+        if not private_key_file:
+            raise MashConfigException(
+                'ssh_private_key_file is required in configuration file for '
+                'testing service.'
+            )
+
+        return private_key_file

@@ -9,3 +9,5 @@ services:
   - pint
 non_cred_services:
   - obs
+testing:
+  ssh_private_key_file: /etc/mash/testing_key
