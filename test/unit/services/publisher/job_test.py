@@ -90,7 +90,7 @@ class TestPublisherJob(object):
 
     def test_invalid_timestamp(self):
         self.job_config['utctime'] = 'never'
-        msg = 'Invalid utctime format: Unknown string format'
+        msg = 'Invalid utctime format: never.'
         with raises(MashPublisherException) as e:
             PublisherJob(**self.job_config)
 

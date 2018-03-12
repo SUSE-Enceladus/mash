@@ -157,6 +157,6 @@ class TestingJob(object):
                 utctime = dateutil.parser.parse(utctime)
             except Exception as e:
                 raise MashTestingException(
-                    'Invalid utctime format: {0}'.format(e)
+                    'Invalid utctime format: {0}.'.format(utctime)
                 )
         return utctime
