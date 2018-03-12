@@ -5,9 +5,17 @@
         "provider": "ec2",
         "share_with": "None",
         "utctime": "now",
-        "publish_regions": {
-            "test-aws": ["us-east-1", "us-east-2", "eu-west-3"],
-            "test-aws-cn": ["cn-north-1", "cn-northwest-1"]
-        }
+        "publish_regions": [
+            {
+                "account": "test-aws",
+                "target_regions": [
+                    "us-east-1", "us-east-2", "eu-west-3"
+                ],
+            },
+            {
+                "account": "test-aws-cn",
+                "target_regions": ["cn-north-1", "cn-northwest-1"]
+            }
+        ]
     }
 }

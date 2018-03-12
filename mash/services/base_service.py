@@ -266,6 +266,15 @@ class BaseService(object):
     def _declare_queue(self, queue):
         return self.channel.queue.declare(queue=queue, durable=True)
 
+    def log_job_message(self, msg, metadata, success=True):
+        """
+        Callback for job instance to log given message.
+        """
+        if success:
+            self.log.info(msg, extra=metadata)
+        else:
+            self.log.error(msg, extra=metadata)
+
     def persist_job_config(self, config):
         config['job_file'] = '{0}job-{1}.json'.format(
             self.job_directory, config['id']

@@ -23,32 +23,5 @@ class Defaults(object):
     """
 
     @classmethod
-    def get_config(self):
-        return '/etc/mash/mash_config.yaml'
-
-    @classmethod
-    def get_job_directory(self, service_name):
-        return '/var/lib/mash/{0}_jobs/'.format(service_name)
-
-    @classmethod
-    def get_jwt_algorithm(self):
-        return 'HS256'
-
-    @classmethod
-    def get_log_directory(self):
-        return '/var/log/mash/'
-
-    @classmethod
-    def get_private_key_file(self):
-        return '/etc/mash/creds_key'
-
-    @classmethod
-    def get_service_names(self):
-        return [
-            'obs', 'uploader', 'testing', 'replication', 'publisher',
-            'deprecation', 'pint'
-        ]
-
-    @classmethod
-    def get_non_credential_service_names(self):
-        return ['obs']
+    def get_credentials_dir(self):
+        return '/var/lib/mash/credentials/'

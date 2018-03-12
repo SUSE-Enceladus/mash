@@ -23,6 +23,9 @@ class TestBaseConfig(object):
 
         assert msg == str(error.value)
 
+    def test_get_private_key_file(self):
+        assert self.config.get_private_key_file() == '/etc/mash/creds_key'
+
     def test_get_services_names(self):
         expected = {
             'publisher', 'pint', 'testing', 'replication',
