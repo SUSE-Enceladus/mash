@@ -19,7 +19,7 @@
 Name:           mash
 Version:        %%VERSION
 Release:        0
-Url:            https://gitlab.suse.de/pub-cloud/mash
+Url:            https://github.com/SUSE/mash
 Summary:        Mash - Public Cloud Release Tool
 License:        GPL-3.0+
 Group:          System/Management
@@ -78,6 +78,9 @@ install -D -m 644 config/mash_testing.service \
 install -D -m 644 config/mash_replication.service \
     %{buildroot}%{_unitdir}/mash_replication.service
 
+install -D -m 644 config/mash_publisher.service \
+    %{buildroot}%{_unitdir}/mash_publisher.service
+
 %files
 %defattr(-,root,root,-)
 %{python3_sitelib}/*
@@ -104,5 +107,8 @@ install -D -m 644 config/mash_replication.service \
 
 %{_bindir}/mash-replication-service
 %{_unitdir}/mash_replication.service
+
+%{_bindir}/mash-publisher-service
+%{_unitdir}/mash_publisher.service
 
 %changelog
