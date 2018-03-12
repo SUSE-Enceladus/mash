@@ -350,7 +350,7 @@ class ReplicationService(BaseService):
         """
         required = [
             'id', 'image_description', 'provider',
-            'utctime', 'replication_regions'
+            'utctime', 'replication_source_regions'
         ]
         for attr in required:
             if attr not in job_config:

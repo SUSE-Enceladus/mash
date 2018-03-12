@@ -344,7 +344,7 @@ class TestReplicationService(object):
 
         self.message.body = '{"replication_job": {"id": "1", ' \
             '"image_description": "My image", "provider": "EC2", ' \
-            '"utctime": "now", "replication_regions": {"us-east-1": {' \
+            '"utctime": "now", "replication_source_regions": {"us-east-1": {' \
             '"account": "test-aws", "target_regions": ' \
             '["us-east-2", "us-west-2", "eu-west-3"]}}}}'
         self.replication._handle_service_message(self.message)
@@ -352,7 +352,8 @@ class TestReplicationService(object):
         mock_add_job.assert_called_once_with(
             {
                 'id': '1', 'image_description': 'My image',
-                'provider': 'EC2', 'utctime': 'now', 'replication_regions': {
+                'provider': 'EC2', 'utctime': 'now',
+                'replication_source_regions': {
                     'us-east-1': {
                         'account': 'test-aws', 'target_regions': [
                             "us-east-2", "us-west-2", "eu-west-3"

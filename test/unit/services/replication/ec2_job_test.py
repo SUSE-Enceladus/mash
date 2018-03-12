@@ -14,7 +14,7 @@ class TestEC2ReplicationJob(object):
             'image_description': 'My image',
             'provider': 'ec2',
             'utctime': 'now',
-            "replication_regions": {
+            "replication_source_regions": {
                 "us-east-1": {
                     "account": "test-aws",
                     "target_regions": ["us-east-2"]
@@ -172,17 +172,17 @@ class TestEC2ReplicationJob(object):
 
         assert result
 
-    def test_replicate_validate_replication_regions_exceptions(self):
+    def test_replicate_validate_replication_source_regions_exceptions(self):
         source_regions = {'us-east-2': {}}
 
         msg = 'Source region us-east-2 missing account name.'
         with raises(MashReplicationException) as error:
-            self.job.validate_replication_regions(source_regions)
+            self.job.validate_replication_source_regions(source_regions)
         assert msg == str(error.value)
 
         source_regions = {'us-east-2': {'account': 'test-aws'}}
 
         msg = 'Source region us-east-2 missing target regions.'
         with raises(MashReplicationException) as error:
-            self.job.validate_replication_regions(source_regions)
+            self.job.validate_replication_source_regions(source_regions)
         assert msg == str(error.value)

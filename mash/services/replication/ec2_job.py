@@ -32,8 +32,8 @@ class EC2ReplicationJob(ReplicationJob):
     """
 
     def __init__(
-        self, id, image_description, provider, utctime, replication_regions,
-        cloud_image_name=None, job_file=None
+        self, id, image_description, provider, utctime,
+        replication_source_regions, cloud_image_name=None, job_file=None
     ):
         super(EC2ReplicationJob, self).__init__(
             id, provider, utctime, job_file=job_file
@@ -44,9 +44,10 @@ class EC2ReplicationJob(ReplicationJob):
         self.job_file = job_file
         self.source_region_results = None
         self.source_regions = None
-        self.replication_regions = self.validate_replication_regions(
-            replication_regions
-        )
+        self.replication_source_regions = \
+            self.validate_replication_source_regions(
+                replication_source_regions
+            )
 
     def _replicate(self):
         """
@@ -55,7 +56,7 @@ class EC2ReplicationJob(ReplicationJob):
         self.status = SUCCESS
         self.source_region_results = defaultdict(dict)
 
-        for source_region, reg_info in self.replication_regions.items():
+        for source_region, reg_info in self.replication_source_regions.items():
             credential = self.credentials[reg_info['account']]
 
             self.send_log(
@@ -157,16 +158,16 @@ class EC2ReplicationJob(ReplicationJob):
                 return True
         return False
 
-    def validate_replication_regions(self, replication_regions):
+    def validate_replication_source_regions(self, replication_source_regions):
         """
-        Validate replication_regions attribute is correct format.
+        Validate replication_source_regions attribute is correct format.
 
         Must be a dictionary mapping regions to accounts and target_regions
         list.
 
         {'us-east-1': {'account': 'test-aws', 'target_regions': ['us-east-2']}}
         """
-        for region, reg_info in replication_regions.items():
+        for region, reg_info in replication_source_regions.items():
             if not reg_info.get('account'):
                 raise MashReplicationException(
                     'Source region {0} missing account name.'.format(region)
@@ -175,4 +176,4 @@ class EC2ReplicationJob(ReplicationJob):
                 raise MashReplicationException(
                     'Source region {0} missing target regions.'.format(region)
                 )
-        return replication_regions
+        return replication_source_regions
