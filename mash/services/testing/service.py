@@ -86,7 +86,7 @@ class TestingService(BaseService):
         """
         Job failed upstream.
 
-        Delete job and notify the publisher.
+        Delete job and notify the replication service.
         """
         job.status = status
         self.log.warning('Failed upstream.', extra=job.get_metadata())
@@ -318,7 +318,7 @@ class TestingService(BaseService):
         """
         message = self._get_status_message(job)
         try:
-            self.publish_job_result('publisher', job.id, message)
+            self.publish_job_result('replication', job.id, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
