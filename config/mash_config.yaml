@@ -1,6 +1,7 @@
 jwt_algorithm: HS256
 jwt_secret: enter-a-secret
 log_dir: /var/log/mash/
+private_key_file: /etc/mash/creds_key
 services:
   - obs
   - uploader
@@ -11,5 +12,7 @@ services:
   - pint
 non_cred_services:
   - obs
+credentials:
+  credentials_directory: /var/lib/mash/credentials/
 obs:
   download_directory: /var/tmp/mash/images

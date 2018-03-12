@@ -125,6 +125,23 @@ class TestBaseService(object):
         self.connection.close.assert_called_once_with()
         self.channel.close.assert_called_once_with()
 
+    def test_log_job_message(self):
+        self.service.log_job_message('Test message', {'job_id': '1'})
+
+        self.service.log.info.assert_called_once_with(
+            'Test message',
+            extra={'job_id': '1'}
+        )
+
+        self.service.log_job_message(
+            'Test error message', {'job_id': '1'}, success=False
+        )
+
+        self.service.log.error.assert_called_once_with(
+            'Test error message',
+            extra={'job_id': '1'}
+        )
+
     def test_persist_job_config(self):
         self.service.job_directory = 'tmp-dir/'
 

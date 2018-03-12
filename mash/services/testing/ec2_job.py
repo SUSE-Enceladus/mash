@@ -47,15 +47,15 @@ class EC2TestingJob(TestingJob):
         """
         results = {}
         jobs = []
-        for region, info in self.test_regions.items():
-            creds = self.credentials[info['account']]
+        for region, account in self.test_regions.items():
+            creds = self.credentials[account]
             process = Thread(
                 name=region, target=ipa_test, args=(results,), kwargs={
                     'provider': self.provider,
                     'access_key_id': creds['access_key_id'],
                     'description': self.description,
                     'distro': self.distro,
-                    'image_id': info['image_id'],
+                    'image_id': self.source_regions[region],
                     'instance_type': self.instance_type,
                     'region': region,
                     'secret_access_key': creds['secret_access_key'],

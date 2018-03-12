@@ -157,7 +157,7 @@ class TestReplicationService(object):
 
         job_class.assert_called_once_with(id='1', provider='EC2')
         job.set_log_callback.assert_called_once_with(
-            self.replication._log_job_message
+            self.replication.log_job_message
         )
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
@@ -399,21 +399,6 @@ class TestReplicationService(object):
 
         self.message.ack.assert_called_once_with()
         mock_notify.assert_called_once_with(self.message.body)
-
-    def test_replication_log_job_message(self):
-        self.replication._log_job_message('Test message.', {'job_id': '1'})
-        self.replication.log.info.assert_called_once_with(
-            'Test message.',
-            extra={'job_id': '1'}
-        )
-
-        self.replication._log_job_message(
-            'Test message.', {'job_id': '1'}, success=False
-        )
-        self.replication.log.warning.assert_called_once_with(
-            'Test message.',
-            extra={'job_id': '1'}
-        )
 
     @patch.object(ReplicationService, '_delete_job')
     @patch.object(ReplicationService, '_publish_message')

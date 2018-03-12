@@ -8,6 +8,7 @@ dist/
 *.egg-info/
 .cache
 .env2
+.pytest_cache
 test/unit/.coverage
 htmlcov/
 
