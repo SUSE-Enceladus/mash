@@ -44,6 +44,7 @@ class TestingJob(object):
         self.log_callback = None
         self.provider = self.validate_provider(provider)
         self.status = UNKOWN
+        self.source_regions = None
         self.ssh_private_key_file = ssh_private_key_file
         self.test_regions = self.validate_test_regions(test_regions)
         self.tests = self.validate_tests(tests)
@@ -60,14 +61,6 @@ class TestingJob(object):
         Return dictionary of metadata based on job.
         """
         return {'job_id': self.id}
-
-    def get_source_regions(self):
-        """
-        Return a dictionary mapping source regions to image id's.
-        """
-        return {
-            reg: info['image_id'] for reg, info in self.test_regions.items()
-        }
 
     def send_log(self, message, success=True):
         """
@@ -89,20 +82,13 @@ class TestingJob(object):
         """
         self.log_callback = callback
 
-    def test_image(self, host):
+    def test_image(self):
         """
         Get credentials and run image tests with IPA.
         """
         self.iteration_count += 1
         self.send_log('Running IPA tests against image.')
         self._run_tests()
-
-    def update_test_regions(self, source_regions):
-        """
-        Update test_regions dictionary with data from listener message.
-        """
-        for region, image_id in source_regions.items():
-            self.test_regions[region]['image_id'] = image_id
 
     def validate_distro(self, distro):
         """
@@ -155,16 +141,13 @@ class TestingJob(object):
         If format is valid return a dictionary mapping region to
         a dict with account.
         """
-        value = {}
         for region, account in test_regions.items():
-            if region and account:
-                value[region] = {'account': account}
-            else:
+            if not (region and account):
                 raise MashTestingException(
                     'Invalid test_regions format. '
                     'Must be a dict format of {region:account}.'
                 )
-        return value
+        return test_regions
 
     def validate_timestamp(self, utctime):
         """
@@ -175,6 +158,6 @@ class TestingJob(object):
                 utctime = dateutil.parser.parse(utctime)
             except Exception as e:
                 raise MashTestingException(
-                    'Invalid utctime format: {0}'.format(e)
+                    'Invalid utctime format: {0}.'.format(utctime)
                 )
         return utctime

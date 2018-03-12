@@ -38,7 +38,7 @@ class TestEC2TestingJob(object):
                 'secret_access_key': '321'
             }
         }
-        job.update_test_regions({'us-east-1': 'ami-123'})
+        job.source_regions = {'us-east-1': 'ami-123'}
         job._run_tests()
 
         mock_test_image.assert_called_once_with(
