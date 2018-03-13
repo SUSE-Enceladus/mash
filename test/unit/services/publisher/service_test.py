@@ -154,7 +154,7 @@ class TestPublisherService(object):
 
         job_class.assert_called_once_with(id='1', provider='EC2')
         job.set_log_callback.assert_called_once_with(
-            self.publisher._log_job_message
+            self.publisher.log_job_message
         )
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
@@ -378,21 +378,6 @@ class TestPublisherService(object):
 
         self.message.ack.assert_called_once_with()
         mock_notify.assert_called_once_with(self.message.body)
-
-    def test_publisher_log_job_message(self):
-        self.publisher._log_job_message('Test message.', {'job_id': '1'})
-        self.publisher.log.info.assert_called_once_with(
-            'Test message.',
-            extra={'job_id': '1'}
-        )
-
-        self.publisher._log_job_message(
-            'Test message.', {'job_id': '1'}, success=False
-        )
-        self.publisher.log.warning.assert_called_once_with(
-            'Test message.',
-            extra={'job_id': '1'}
-        )
 
     @patch.object(PublisherService, '_delete_job')
     @patch.object(PublisherService, '_publish_message')
