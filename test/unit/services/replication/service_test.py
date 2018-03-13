@@ -519,7 +519,7 @@ class TestReplicationService(object):
         )
         self.replication._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
+        mock_bind_queue.assert_called_once_with('publisher', '1', 'listener')
         self.replication.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}

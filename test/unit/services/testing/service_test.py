@@ -300,7 +300,7 @@ class TestIPATestingService(object):
             extra={'job_id': '1'}
         )
         mock_get_status_message.assert_called_once_with(job)
-        mock_bind_queue.assert_called_once_with('replication', '1', 'service')
+        mock_bind_queue.assert_called_once_with('replication', '1', 'listener')
         mock_publish.assert_called_once_with(
             'replication', '1', self.status_message
         )
@@ -374,7 +374,7 @@ class TestIPATestingService(object):
         job.source_regions = {'us-east-2': 'ami-123456'}
 
         self.testing._publish_message(job)
-        mock_bind_queue.assert_called_once_with('replication', '1', 'service')
+        mock_bind_queue.assert_called_once_with('replication', '1', 'listener')
         mock_publish.assert_called_once_with(
             'replication', '1', self.status_message
         )
@@ -393,7 +393,7 @@ class TestIPATestingService(object):
         mock_publish.side_effect = AMQPError('Broken')
         self.testing._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('replication', '1', 'service')
+        mock_bind_queue.assert_called_once_with('replication', '1', 'listener')
         self.testing.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}

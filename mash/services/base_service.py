@@ -123,7 +123,10 @@ class BaseService(object):
             )
 
     def publish_job_result(self, exchange, job_id, message):
-        self.bind_queue(exchange, job_id, self.service_queue)
+        """
+        Publish the result message to the listener queue on given exchange.
+        """
+        self.bind_queue(exchange, job_id, self.listener_queue)
         self._publish(exchange, job_id, message)
 
     def consume_queue(self, callback, queue_name=None):
