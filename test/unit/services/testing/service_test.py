@@ -124,7 +124,7 @@ class TestIPATestingService(object):
         job.set_log_callback.assert_called_once_with(
             self.testing.log_job_message
         )
-        assert job.config_file == 'temp-config.json'
+        assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
         self.testing.log.info.assert_called_once_with(
             'Job queued, awaiting uploader result.',

@@ -120,7 +120,7 @@ class TestingService(BaseService):
                 job_config['job_file'] = self.persist_job_config(
                     job_config
                 )
-                job.config_file = job_config['job_file']
+                job.job_file = job_config['job_file']
 
             self.bind_listener_queue(job.id)
             self.log.info(
@@ -150,7 +150,7 @@ class TestingService(BaseService):
             self.unbind_queue(
                 self.listener_queue, self.service_exchange, job_id
             )
-            self.remove_file(job.config_file)
+            self.remove_file(job.job_file)
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
