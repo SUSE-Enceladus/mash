@@ -17,7 +17,6 @@
 #
 import jwt
 import json
-import os
 
 from datetime import datetime, timedelta
 
@@ -88,7 +87,7 @@ class CredentialsService(BaseService):
             )
 
             del self.jobs[job_id]
-            self._remove_job_config(job['job_file'])
+            self.remove_file(job['job_file'])
         else:
             self._send_control_response(
                 'Job deletion failed, job is not queued.',
@@ -189,15 +188,6 @@ class CredentialsService(BaseService):
         self._publish(
             issuer, self.credentials_response_key, credentials_response
         )
-
-    def _remove_job_config(self, config_file):
-        """
-        Remove job config file from disk if it exists.
-        """
-        try:
-            os.remove(config_file)
-        except Exception:
-            pass
 
     def _retrieve_credentials(self, job_id):
         """
