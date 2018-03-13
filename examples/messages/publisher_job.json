@@ -10,7 +10,7 @@
                 "account": "test-aws",
                 "target_regions": [
                     "us-east-1", "us-east-2", "eu-west-3"
-                ],
+                ]
             },
             {
                 "account": "test-aws-cn",
