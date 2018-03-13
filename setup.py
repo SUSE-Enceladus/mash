@@ -40,6 +40,7 @@ config = {
             'mash-testing-service=mash.services.testing_service:main',
             'mash-uploader-service=mash.services.uploader_service:main',
             'mash-replication-service=mash.services.replication_service:main',
+            'mash-publisher-service=mash.services.publisher_service:main',
         ]
     },
     'include_package_data': True,
@@ -51,7 +52,7 @@ config = {
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.6',
         'Topic :: System :: Operating System'
     ]
 }
