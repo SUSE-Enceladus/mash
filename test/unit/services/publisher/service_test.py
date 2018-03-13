@@ -79,7 +79,7 @@ class TestPublisherService(object):
     @patch.object(PublisherService, '_create_job')
     def test_publisher_add_job(self, mock_create_job):
         job_config = {
-            'id': '1', 'provider': 'EC2', 'utctime': 'now',
+            'id': '1', 'provider': 'ec2', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
@@ -95,7 +95,7 @@ class TestPublisherService(object):
         self.publisher.jobs['1'] = job
         job_config = {
             'id': '1', 'image_desc': 'image 123',
-            'provider': 'EC2', 'utctime': 'now',
+            'provider': 'ec2', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
@@ -111,7 +111,7 @@ class TestPublisherService(object):
         }
 
         self.publisher._add_job(job_config)
-        self.publisher.log.exception.assert_called_once_with(
+        self.publisher.log.error.assert_called_once_with(
             'Provider Provider is not supported.'
         )
 

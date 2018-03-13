@@ -81,7 +81,7 @@ class TestReplicationService(object):
     @patch.object(ReplicationService, '_create_job')
     def test_replication_add_job(self, mock_create_job):
         job_config = {
-            'id': '1', 'provider': 'EC2', 'utctime': 'now',
+            'id': '1', 'provider': 'ec2', 'utctime': 'now',
         }
 
         self.replication._add_job(job_config)
@@ -97,7 +97,7 @@ class TestReplicationService(object):
         self.replication.jobs['1'] = job
         job_config = {
             'id': '1', 'image_desc': 'image 123',
-            'provider': 'EC2', 'utctime': 'now',
+            'provider': 'ec2', 'utctime': 'now',
         }
 
         self.replication._add_job(job_config)
@@ -113,7 +113,7 @@ class TestReplicationService(object):
         }
 
         self.replication._add_job(job_config)
-        self.replication.log.exception.assert_called_once_with(
+        self.replication.log.error.assert_called_once_with(
             'Provider Provider is not supported.'
         )
 

@@ -69,10 +69,10 @@ class ReplicationService(BaseService):
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == 'EC2':
+        elif provider == 'ec2':
             self._create_job(EC2ReplicationJob, job_config)
         else:
-            self.log.exception(
+            self.log.error(
                 'Provider {0} is not supported.'.format(provider)
             )
 
