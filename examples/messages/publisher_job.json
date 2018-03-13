@@ -1,5 +1,5 @@
 {
-    "pubisher_job": {
+    "publisher_job": {
         "allow_copy": "",
         "id": "123",
         "provider": "ec2",
