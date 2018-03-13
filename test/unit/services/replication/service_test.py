@@ -176,10 +176,10 @@ class TestReplicationService(object):
             'Invalid job configuration: Cannot create job.'
         )
 
-    @patch.object(ReplicationService, '_remove_job_config')
+    @patch.object(ReplicationService, 'remove_file')
     @patch.object(ReplicationService, 'unbind_queue')
     def test_replication_delete_job(
-        self, mock_unbind_queue, mock_remove_job_config
+        self, mock_unbind_queue, mock_remove_file
     ):
         self.replication.scheduler.remove_job.side_effect = JobLookupError(
             'Job finished.'
@@ -206,7 +206,7 @@ class TestReplicationService(object):
         mock_unbind_queue.assert_called_once_with(
             'listener', 'replication', '1'
         )
-        mock_remove_job_config.assert_called_once_with('job-test.json')
+        mock_remove_file.assert_called_once_with('job-test.json')
 
     def test_replication_delete_invalid_job(self):
         self.replication._delete_job('1')
@@ -524,12 +524,6 @@ class TestReplicationService(object):
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}
         )
-
-    @patch('mash.services.replication.service.os.remove')
-    def test_replication_remove_job_config(self, mock_remove):
-        mock_remove.side_effect = Exception('File not found.')
-        self.replication._remove_job_config('job-test.json')
-        mock_remove.assert_called_once_with('job-test.json')
 
     @patch.object(ReplicationService, '_replicate_image')
     def test_replication_schedule_duplicate_job(

@@ -17,7 +17,6 @@
 #
 
 import json
-import os
 
 from amqpstorm import AMQPError
 
@@ -151,7 +150,7 @@ class TestingService(BaseService):
             self.unbind_queue(
                 self.listener_queue, self.service_exchange, job_id
             )
-            self._remove_job_config(job.config_file)
+            self.remove_file(job.config_file)
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
@@ -318,15 +317,6 @@ class TestingService(BaseService):
                 'Message not received: {0}'.format(message),
                 extra=job.get_metadata()
             )
-
-    def _remove_job_config(self, config_file):
-        """
-        Remove job config file from disk if it exists.
-        """
-        try:
-            os.remove(config_file)
-        except Exception:
-            pass
 
     def _run_test(self, job_id):
         """

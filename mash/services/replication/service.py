@@ -17,7 +17,6 @@
 #
 
 import json
-import os
 
 from amqpstorm import AMQPError
 
@@ -143,7 +142,7 @@ class ReplicationService(BaseService):
             self.unbind_queue(
                 self.listener_queue, self.service_exchange, job_id
             )
-            self._remove_job_config(job.job_file)
+            self.remove_file(job.job_file)
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
@@ -314,15 +313,6 @@ class ReplicationService(BaseService):
                 'Message not received: {0}'.format(message),
                 extra=job.get_metadata()
             )
-
-    def _remove_job_config(self, job_file):
-        """
-        Remove job config file from disk if it exists.
-        """
-        try:
-            os.remove(job_file)
-        except Exception:
-            pass
 
     def _schedule_job(self, job_id):
         """
