@@ -23,7 +23,7 @@ config = {
         'boto3',
         'PyYAML',
         'PyJWT',
-        'python-dateutil',
+        'python-dateutil==2.6.*',
         'APScheduler>=3.3.1',
         'amqpstorm>=2.4.0',
         'ec2publishimg',
