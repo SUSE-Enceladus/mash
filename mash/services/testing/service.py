@@ -79,7 +79,7 @@ class TestingService(BaseService):
         elif provider == 'ec2':
             self._create_job(EC2TestingJob, job_config)
         else:
-            self.log.exception(
+            self.log.error(
                 'Provider {0} is not supported.'.format(provider)
             )
 

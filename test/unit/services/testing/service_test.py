@@ -98,7 +98,7 @@ class TestIPATestingService(object):
 
     def test_testing_add_job_invalid(self):
         self.testing._add_job({'id': '1', 'provider': 'fake'})
-        self.testing.log.exception.assert_called_once_with(
+        self.testing.log.error.assert_called_once_with(
             'Provider fake is not supported.'
         )
 
