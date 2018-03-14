@@ -130,8 +130,14 @@ class BaseService(object):
         self._publish(exchange, job_id, message)
 
     def consume_queue(self, callback, queue_name=None):
+        """
+        Declare and consume queue.
+
+        If queue_name not provided use service_queue name attr.
+        """
         if not queue_name:
             queue_name = self.service_queue
+
         queue = self._get_queue_name(self.service_exchange, queue_name)
         self._declare_queue(queue)
         self.channel.basic.consume(
@@ -209,12 +215,18 @@ class BaseService(object):
             self.log.warning('Message not received: {0}'.format(message))
 
     def publish_credentials_request(self, job_id):
+        """
+        Publish credentials request message to the credentials exchange.
+        """
         self._publish(
             'credentials', self.credentials_request_key,
             self.get_credential_request(job_id)
         )
 
     def close_connection(self):
+        """
+        If channel or connection open, stop consuming and close.
+        """
         if self.channel and self.channel.is_open:
             self.channel.stop_consuming()
             self.channel.close()
@@ -223,9 +235,17 @@ class BaseService(object):
             self.connection.close()
 
     def _get_queue_name(self, exchange, name):
+        """
+        Return formatted name based on exchange and queue name.
+
+        Example: obs.service
+        """
         return '{0}.{1}'.format(exchange, name)
 
     def _publish(self, exchange, routing_key, message):
+        """
+        Publish message to the provided exchange with the routing key.
+        """
         self.channel.basic.publish(
             body=message,
             routing_key=routing_key,
@@ -235,6 +255,12 @@ class BaseService(object):
         )
 
     def _open_connection(self):
+        """
+        Open connection or channel if currently closed or None.
+
+        Raises: MashRabbitConnectionException if connection
+                cannot be established.
+        """
         if not self.connection or self.connection.is_closed:
             try:
                 self.connection = Connection(
@@ -253,6 +279,11 @@ class BaseService(object):
             self.channel.confirm_deliveries()
 
     def bind_queue(self, exchange, routing_key, name):
+        """
+        Bind queue on exchange to the provided routing key.
+
+        All messages that match the routing key will be inserted in queue.
+        """
         self._declare_direct_exchange(exchange)
         queue = self._get_queue_name(exchange, name)
         self._declare_queue(queue)
@@ -262,11 +293,19 @@ class BaseService(object):
         return queue
 
     def _declare_direct_exchange(self, exchange):
+        """
+        Declare/create exchange and set as durable.
+
+        The exchange, queues and messages will survive a broker restart.
+        """
         self.channel.exchange.declare(
             exchange=exchange, exchange_type='direct', durable=True
         )
 
     def _declare_queue(self, queue):
+        """
+        Declare the queue and set as durable.
+        """
         return self.channel.queue.declare(queue=queue, durable=True)
 
     def log_job_message(self, msg, metadata, success=True):
@@ -279,6 +318,9 @@ class BaseService(object):
             self.log.error(msg, extra=metadata)
 
     def persist_job_config(self, config):
+        """
+        Persist the job config file to disk for recoverability.
+        """
         config['job_file'] = '{0}job-{1}.json'.format(
             self.job_directory, config['id']
         )
@@ -311,11 +353,17 @@ class BaseService(object):
             callback(job_config)
 
     def bind_listener_queue(self, routing_key):
+        """
+        Bind the provided routing_key to the services listener queue.
+        """
         self.bind_queue(
             self.service_exchange, routing_key, self.listener_queue
         )
 
     def unbind_queue(self, queue, exchange, routing_key):
+        """
+        Unbind the routing_key from the queue on given exchange.
+        """
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key
         )
