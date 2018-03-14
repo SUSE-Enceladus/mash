@@ -173,10 +173,10 @@ class TestPublisherService(object):
             'Invalid job configuration: Cannot create job.'
         )
 
-    @patch.object(PublisherService, '_remove_job_config')
+    @patch.object(PublisherService, 'remove_file')
     @patch.object(PublisherService, 'unbind_queue')
     def test_publisher_delete_job(
-        self, mock_unbind_queue, mock_remove_job_config
+        self, mock_unbind_queue, mock_remove_file
     ):
         self.publisher.scheduler.remove_job.side_effect = JobLookupError(
             'Job finished.'
@@ -202,7 +202,7 @@ class TestPublisherService(object):
         mock_unbind_queue.assert_called_once_with(
             'listener', 'publisher', '1'
         )
-        mock_remove_job_config.assert_called_once_with('job-test.json')
+        mock_remove_file.assert_called_once_with('job-test.json')
 
     def test_publisher_delete_invalid_job(self):
         self.publisher._delete_job('1')
@@ -516,12 +516,6 @@ class TestPublisherService(object):
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}
         )
-
-    @patch('mash.services.publisher.service.os.remove')
-    def test_publisher_remove_job_config(self, mock_remove):
-        mock_remove.side_effect = Exception('File not found.')
-        self.publisher._remove_job_config('job-test.json')
-        mock_remove.assert_called_once_with('job-test.json')
 
     @patch.object(PublisherService, '_publish_image')
     def test_publisher_schedule_duplicate_job(

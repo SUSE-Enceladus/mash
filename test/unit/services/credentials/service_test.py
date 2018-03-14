@@ -98,10 +98,10 @@ class TestCredentialsService(object):
             call('credentials', 'request.pint', 'request')
         ])
 
-    @patch.object(CredentialsService, '_remove_job_config')
+    @patch.object(CredentialsService, 'remove_file')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_delete_job(
-        self, mock_send_control_response, mock_remove_job_config
+        self, mock_send_control_response, mock_remove_file
     ):
         job = {'id': '1', 'provider': 'ec2', 'job_file': 'temp-config.json'}
 
@@ -111,7 +111,7 @@ class TestCredentialsService(object):
         mock_send_control_response.assert_called_once_with(
             'Deleting job.', job_id='1'
         )
-        mock_remove_job_config.assert_called_once_with('temp-config.json')
+        mock_remove_file.assert_called_once_with('temp-config.json')
 
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_delete_invalid_job(self, mock_send_control_response):
@@ -335,12 +335,6 @@ class TestCredentialsService(object):
             'message',
             extra={}
         )
-
-    @patch('mash.services.credentials.service.os')
-    def test_remove_job_config(self, mock_os):
-        mock_os.remove.side_effect = Exception('File not found.')
-        self.service._remove_job_config('fake-file.json')
-        mock_os.remove.assert_called_once_with('fake-file.json')
 
     def test_retrieve_credentials(self):
         self.service.jobs = {
