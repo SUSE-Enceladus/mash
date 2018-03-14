@@ -108,131 +108,21 @@ class BaseService(object):
         """
         pass
 
-    def set_logfile(self, logfile):
+    def _declare_direct_exchange(self, exchange):
         """
-        Allow to set a custom service log file
-        """
-        try:
-            logfile_handler = logging.FileHandler(
-                filename=logfile, encoding='utf-8'
-            )
-            self.log.addHandler(logfile_handler)
-        except Exception as e:
-            raise MashLogSetupException(
-                'Log setup failed: {0}'.format(e)
-            )
+        Declare/create exchange and set as durable.
 
-    def publish_job_result(self, exchange, job_id, message):
+        The exchange, queues and messages will survive a broker restart.
         """
-        Publish the result message to the listener queue on given exchange.
-        """
-        self.bind_queue(exchange, job_id, self.listener_queue)
-        self._publish(exchange, job_id, message)
-
-    def consume_queue(self, callback, queue_name=None):
-        """
-        Declare and consume queue.
-
-        If queue_name not provided use service_queue name attr.
-        """
-        if not queue_name:
-            queue_name = self.service_queue
-
-        queue = self._get_queue_name(self.service_exchange, queue_name)
-        self._declare_queue(queue)
-        self.channel.basic.consume(
-            callback=callback, queue=queue
+        self.channel.exchange.declare(
+            exchange=exchange, exchange_type='direct', durable=True
         )
 
-    def consume_credentials_queue(self, callback, queue_name=None):
+    def _declare_queue(self, queue):
         """
-        Setup credentials attributes from configuration.
-
-        Then consume credentials response queue to receive credentials
-        tokens for jobs.
+        Declare the queue and set as durable.
         """
-        if not queue_name:
-            queue_name = self.credentials_queue
-
-        # Required by all services that need credentials.
-        # Config is not available until post init.
-        self.jwt_secret = self.config.get_jwt_secret()
-        self.jwt_algorithm = self.config.get_jwt_algorithm()
-
-        queue = self._get_queue_name(self.service_exchange, queue_name)
-        self.channel.basic.consume(callback=callback, queue=queue)
-
-    def bind_credentials_queue(self):
-        """
-        Bind the response key to the credentials queue.
-        """
-        self.bind_queue(
-            self.service_exchange, self.credentials_response_key,
-            self.credentials_queue
-        )
-
-    def get_credential_request(self, job_id):
-        """
-        Return jwt encoded credentials request message.
-        """
-        request = {
-            'exp': datetime.utcnow() + timedelta(minutes=5),  # Expiration time
-            'iat': datetime.utcnow(),  # Issued at time
-            'sub': 'credentials_request',  # Subject
-            'iss': self.service_exchange,  # Issuer
-            'aud': 'credentials',  # audience
-            'id': job_id,
-        }
-        token = jwt.encode(
-            request, self.jwt_secret, algorithm=self.jwt_algorithm
-        )
-        message = json.dumps({'jwt_token': token.decode()})
-        return message
-
-    def decode_credentials(self, message):
-        """
-        Decode jwt credential response message.
-        """
-        try:
-            payload = jwt.decode(
-                message, self.jwt_secret, algorithm=self.jwt_algorithm,
-                issuer='credentials', audience=self.service_exchange
-            )
-        except Exception as error:
-            raise MashCredentialsException(
-                'Invalid credentials response token: {0}'.format(error)
-            )
-
-        return payload
-
-    def notify_invalid_config(self, message):
-        """
-        Notify job creator an invalid job config message has been received.
-        """
-        try:
-            self._publish('jobcreator', 'invalid_config', message)
-        except AMQPError:
-            self.log.warning('Message not received: {0}'.format(message))
-
-    def publish_credentials_request(self, job_id):
-        """
-        Publish credentials request message to the credentials exchange.
-        """
-        self._publish(
-            'credentials', self.credentials_request_key,
-            self.get_credential_request(job_id)
-        )
-
-    def close_connection(self):
-        """
-        If channel or connection open, stop consuming and close.
-        """
-        if self.channel and self.channel.is_open:
-            self.channel.stop_consuming()
-            self.channel.close()
-
-        if self.connection and self.connection.is_open:
-            self.connection.close()
+        return self.channel.queue.declare(queue=queue, durable=True)
 
     def _get_queue_name(self, exchange, name):
         """
@@ -241,18 +131,6 @@ class BaseService(object):
         Example: obs.service
         """
         return '{0}.{1}'.format(exchange, name)
-
-    def _publish(self, exchange, routing_key, message):
-        """
-        Publish message to the provided exchange with the routing key.
-        """
-        self.channel.basic.publish(
-            body=message,
-            routing_key=routing_key,
-            exchange=exchange,
-            properties=self.msg_properties,
-            mandatory=True
-        )
 
     def _open_connection(self):
         """
@@ -278,6 +156,35 @@ class BaseService(object):
             self.channel = self.connection.channel()
             self.channel.confirm_deliveries()
 
+    def _publish(self, exchange, routing_key, message):
+        """
+        Publish message to the provided exchange with the routing key.
+        """
+        self.channel.basic.publish(
+            body=message,
+            routing_key=routing_key,
+            exchange=exchange,
+            properties=self.msg_properties,
+            mandatory=True
+        )
+
+    def bind_credentials_queue(self):
+        """
+        Bind the response key to the credentials queue.
+        """
+        self.bind_queue(
+            self.service_exchange, self.credentials_response_key,
+            self.credentials_queue
+        )
+
+    def bind_listener_queue(self, routing_key):
+        """
+        Bind the provided routing_key to the services listener queue.
+        """
+        self.bind_queue(
+            self.service_exchange, routing_key, self.listener_queue
+        )
+
     def bind_queue(self, exchange, routing_key, name):
         """
         Bind queue on exchange to the provided routing key.
@@ -292,21 +199,83 @@ class BaseService(object):
         )
         return queue
 
-    def _declare_direct_exchange(self, exchange):
+    def close_connection(self):
         """
-        Declare/create exchange and set as durable.
+        If channel or connection open, stop consuming and close.
+        """
+        if self.channel and self.channel.is_open:
+            self.channel.stop_consuming()
+            self.channel.close()
 
-        The exchange, queues and messages will survive a broker restart.
+        if self.connection and self.connection.is_open:
+            self.connection.close()
+
+    def consume_credentials_queue(self, callback, queue_name=None):
         """
-        self.channel.exchange.declare(
-            exchange=exchange, exchange_type='direct', durable=True
+        Setup credentials attributes from configuration.
+
+        Then consume credentials response queue to receive credentials
+        tokens for jobs.
+        """
+        if not queue_name:
+            queue_name = self.credentials_queue
+
+        # Required by all services that need credentials.
+        # Config is not available until post init.
+        self.jwt_secret = self.config.get_jwt_secret()
+        self.jwt_algorithm = self.config.get_jwt_algorithm()
+
+        queue = self._get_queue_name(self.service_exchange, queue_name)
+        self.channel.basic.consume(callback=callback, queue=queue)
+
+    def consume_queue(self, callback, queue_name=None):
+        """
+        Declare and consume queue.
+
+        If queue_name not provided use service_queue name attr.
+        """
+        if not queue_name:
+            queue_name = self.service_queue
+
+        queue = self._get_queue_name(self.service_exchange, queue_name)
+        self._declare_queue(queue)
+        self.channel.basic.consume(
+            callback=callback, queue=queue
         )
 
-    def _declare_queue(self, queue):
+    def decode_credentials(self, message):
         """
-        Declare the queue and set as durable.
+        Decode jwt credential response message.
         """
-        return self.channel.queue.declare(queue=queue, durable=True)
+        try:
+            payload = jwt.decode(
+                message, self.jwt_secret, algorithm=self.jwt_algorithm,
+                issuer='credentials', audience=self.service_exchange
+            )
+        except Exception as error:
+            raise MashCredentialsException(
+                'Invalid credentials response token: {0}'.format(error)
+            )
+
+        return payload
+
+    def get_credential_request(self, job_id):
+        """
+        Return jwt encoded credentials request message.
+        """
+        request = {
+            'exp': datetime.utcnow() + timedelta(minutes=5),  # Expiration time
+            'iat': datetime.utcnow(),  # Issued at time
+            'sub': 'credentials_request',  # Subject
+            'iss': self.service_exchange,  # Issuer
+            'aud': 'credentials',  # audience
+            'id': job_id,
+        }
+        token = jwt.encode(
+            request, self.jwt_secret, algorithm=self.jwt_algorithm
+        )
+        message = json.dumps({'jwt_token': token.decode()})
+        return message
 
     def log_job_message(self, msg, metadata, success=True):
         """
@@ -316,6 +285,15 @@ class BaseService(object):
             self.log.info(msg, extra=metadata)
         else:
             self.log.error(msg, extra=metadata)
+
+    def notify_invalid_config(self, message):
+        """
+        Notify job creator an invalid job config message has been received.
+        """
+        try:
+            self._publish('jobcreator', 'invalid_config', message)
+        except AMQPError:
+            self.log.warning('Message not received: {0}'.format(message))
 
     def persist_job_config(self, config):
         """
@@ -329,6 +307,22 @@ class BaseService(object):
             config_file.write(json.dumps(config, sort_keys=True))
 
         return config['job_file']
+
+    def publish_credentials_request(self, job_id):
+        """
+        Publish credentials request message to the credentials exchange.
+        """
+        self._publish(
+            'credentials', self.credentials_request_key,
+            self.get_credential_request(job_id)
+        )
+
+    def publish_job_result(self, exchange, job_id, message):
+        """
+        Publish the result message to the listener queue on given exchange.
+        """
+        self.bind_queue(exchange, job_id, self.listener_queue)
+        self._publish(exchange, job_id, message)
 
     def remove_file(self, config_file):
         """
@@ -352,21 +346,19 @@ class BaseService(object):
 
             callback(job_config)
 
-    def bind_listener_queue(self, routing_key):
+    def set_logfile(self, logfile):
         """
-        Bind the provided routing_key to the services listener queue.
+        Allow to set a custom service log file
         """
-        self.bind_queue(
-            self.service_exchange, routing_key, self.listener_queue
-        )
-
-    def unbind_queue(self, queue, exchange, routing_key):
-        """
-        Unbind the routing_key from the queue on given exchange.
-        """
-        self.channel.queue.unbind(
-            queue=queue, exchange=exchange, routing_key=routing_key
-        )
+        try:
+            logfile_handler = logging.FileHandler(
+                filename=logfile, encoding='utf-8'
+            )
+            self.log.addHandler(logfile_handler)
+        except Exception as e:
+            raise MashLogSetupException(
+                'Log setup failed: {0}'.format(e)
+            )
 
     def unbind_listener_queue(self, routing_key):
         """
@@ -375,4 +367,12 @@ class BaseService(object):
         self.unbind_queue(
             queue=self.listener_queue, exchange=self.service_exchange,
             routing_key=routing_key
+        )
+
+    def unbind_queue(self, queue, exchange, routing_key):
+        """
+        Unbind the routing_key from the queue on given exchange.
+        """
+        self.channel.queue.unbind(
+            queue=queue, exchange=exchange, routing_key=routing_key
         )
