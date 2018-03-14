@@ -1,3 +1,4 @@
+import io
 import jwt
 
 from pytest import raises
@@ -20,6 +21,8 @@ class TestCredentialsService(object):
         self.service.service_queue = 'service'
         self.service.job_document_key = 'job_document'
         self.service.credentials_queue = 'credentials'
+        self.service.credentials_directory = '/var/lib/mash/credentials/'
+        self.service.encryption_key = 'testkey12345'
 
         self.service.channel = Mock()
         self.service.channel.basic_ack.return_value = None
@@ -98,6 +101,14 @@ class TestCredentialsService(object):
             call('credentials', 'request.pint', 'request')
         ])
 
+    @patch('mash.services.credentials.service.os.path')
+    def test_check_credentials_exist(self, mock_path):
+        mock_path.exists.return_value = True
+
+        assert self.service._check_credentials_exist(
+            'account1', 'ec2', 'user1'
+        )
+
     @patch.object(CredentialsService, 'remove_file')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_delete_job(
@@ -121,6 +132,18 @@ class TestCredentialsService(object):
             'Job deletion failed, job is not queued.',
             success=False, job_id='1'
         )
+
+    def test_get_encrypted_credentials(self):
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.read.return_value = 'secret_stuff'
+
+            result = self.service._get_encrypted_credentials(
+                'account1', 'ec2', 'user1'
+            )
+
+        assert result == 'secret_stuff'
 
     @patch.object(CredentialsService, '_validate_job_doc')
     @patch.object(CredentialsService, '_add_job')
@@ -228,6 +251,35 @@ class TestCredentialsService(object):
         )
         message.ack.assert_called_once_with()
 
+    @patch.object(CredentialsService, '_encrypt_credentials')
+    @patch('mash.services.credentials.service.os.makedirs')
+    @patch('mash.services.credentials.service.os.path.isdir')
+    def test_store_encrypted_credentials(
+        self, mock_isdir, mock_makedirs, mock_encrypt_creds
+    ):
+        mock_isdir.return_value = False
+        mock_encrypt_creds.return_value = 'encrypted_secrets'
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            self.service._store_encrypted_credentials(
+                'account1', 'secret_string', 'ec2', 'user1'
+            )
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.write.assert_called_once_with('encrypted_secrets')
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.write.side_effect = Exception('Cannot write file')
+
+            self.service._store_encrypted_credentials(
+                'account1', 'secret_string', 'ec2', 'user1'
+            )
+            self.service.log.error.assert_called_once_with(
+                'Unable to store credentials: Cannot write file.'
+            )
+
     def test_validate_delete_job_doc(self):
         assert self.service._validate_job_doc({'credentials_job_delete': '1'})
 
@@ -278,6 +330,14 @@ class TestCredentialsService(object):
         mock_retrieve_credentials.assert_called_once_with('1')
         assert payload['id'] == '1'
         assert payload['sub'] == 'credentials_response'
+
+    @patch('mash.services.credentials.service.Fernet')
+    def test_encrypt_credentials(self, mock_fernet):
+        fernet_key = Mock()
+        fernet_key.encrypt.return_value = b'encrypted_secret'
+        mock_fernet.return_value = fernet_key
+        result = self.service._encrypt_credentials(b'secret')
+        assert result == 'encrypted_secret'
 
     @patch.object(CredentialsService, 'bind_queue')
     @patch.object(CredentialsService, '_publish')

@@ -17,7 +17,9 @@
 #
 import jwt
 import json
+import os
 
+from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 
 # project
@@ -36,6 +38,9 @@ class CredentialsService(BaseService):
         self.services = self.config.get_service_names(
             credentials_required=True
         )
+
+        self.encryption_key = self.config.get_encryption_key()
+        self.credentials_directory = self.config.get_credentials_dir()
 
         self.jobs = {}
 
@@ -75,6 +80,15 @@ class CredentialsService(BaseService):
                 self.service_exchange, 'request.{0}'.format(service), 'request'
             )
 
+    def _check_credentials_exist(self, account, provider, user):
+        """
+        Return True if the credentials file exists.
+        """
+        path = os.path.join(
+            self.credentials_directory, user, provider, account
+        )
+        return os.path.exists(path)
+
     def _delete_job(self, job_id):
         """
         Remove job from dictionary.
@@ -95,6 +109,22 @@ class CredentialsService(BaseService):
                 job_id=job_id
             )
 
+    def _encrypt_credentials(self, credentials):
+        """
+        Encrypt credentials json string.
+
+        Returns: Encrypted and decoded string.
+        """
+        fernet_key = Fernet(self.encryption_key)
+
+        try:
+            # Ensure creds string is encoded as bytes
+            credentials = credentials.encode()
+        except Exception:
+            pass
+
+        return fernet_key.encrypt(credentials).decode()
+
     def _get_credentials_response(self, job_id, issuer):
         """
         Return jwt encoded credentials response message.
@@ -111,6 +141,18 @@ class CredentialsService(BaseService):
         return jwt.encode(
             response, self.jwt_secret, algorithm=self.jwt_algorithm
         )
+
+    def _get_encrypted_credentials(self, account, provider, user):
+        """
+        Return encrypted credentials string from file.
+        """
+        path = os.path.join(
+            self.credentials_directory, user, provider, account
+        )
+        with open(path, 'r') as credentials_file:
+            credentials = credentials_file.read()
+
+        return credentials.strip()
 
     def _handle_job_documents(self, message):
         """
@@ -261,6 +303,35 @@ class CredentialsService(BaseService):
             self._send_control_response(
                 'Credentials job {0} does not exist.'.format(payload['id']),
                 success=False
+            )
+
+    def _store_encrypted_credentials(
+        self, account, credentials, provider, user
+    ):
+        """
+        Store the provided credentials encrypted on disk.
+
+        Expected credentials as a json string.
+
+        Example: {"access_key_id": "key123", "secret_access_key": "123456"}
+
+        Path is based on the user, provider and account.
+        """
+        path = os.path.join(
+            self.credentials_directory, user, provider, account
+        )
+
+        credentials_dir = os.path.dirname(path)
+        if not os.path.isdir(credentials_dir):
+            os.makedirs(credentials_dir)
+
+        encrypted_creds = self._encrypt_credentials(credentials)
+        try:
+            with open(path, 'w') as creds_file:
+                creds_file.write(encrypted_creds)
+        except Exception as error:
+            self.log.error(
+                'Unable to store credentials: {0}.'.format(error)
             )
 
     def _validate_job_doc(self, job_document):

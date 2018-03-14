@@ -21,6 +21,7 @@ config = {
     'install_requires': [
         'setuptools>=5.4',
         'boto3',
+        'cryptography',
         'PyYAML',
         'PyJWT',
         'python-dateutil==2.6.*',
