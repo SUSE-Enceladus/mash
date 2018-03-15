@@ -120,6 +120,8 @@ class TestPublisherService(object):
     def test_publisher_cleanup_job(
         self, mock_publish_message, mock_delete_job
     ):
+        self.publisher.scheduler.remove_job.side_effect = JobLookupError('1')
+
         job = Mock()
         job.id = '1'
         job.status = 'success'
@@ -133,6 +135,7 @@ class TestPublisherService(object):
             'Failed upstream.',
             extra={'job_id': '1'}
         )
+        self.publisher.scheduler.remove_job.assert_called_once_with('1')
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
@@ -178,10 +181,6 @@ class TestPublisherService(object):
     def test_publisher_delete_job(
         self, mock_unbind_queue, mock_remove_file
     ):
-        self.publisher.scheduler.remove_job.side_effect = JobLookupError(
-            'Job finished.'
-        )
-
         job = Mock()
         job.id = '1'
         job.job_file = 'job-test.json'
@@ -192,7 +191,6 @@ class TestPublisherService(object):
 
         self.publisher._delete_job('1')
 
-        self.publisher.scheduler.remove_job.assert_called_once_with('1')
         self.publisher.log.info.assert_called_once_with(
             'Deleting job.',
             extra={'job_id': '1'}

@@ -92,6 +92,13 @@ class TestingService(BaseService):
         job.status = status
         self.log.warning('Failed upstream.', extra=job.get_metadata())
 
+        try:
+            # Remove job from scheduler if it has
+            # not started executing yet.
+            self.scheduler.remove_job(job.id)
+        except JobLookupError:
+            pass
+
         self._delete_job(job.id)
         self._publish_message(job)
 
@@ -133,13 +140,6 @@ class TestingService(BaseService):
         Remove job from dict and delete listener queue.
         """
         if job_id in self.jobs:
-            try:
-                # Remove job from scheduler if it has
-                # not started executing yet.
-                self.scheduler.remove_job(job_id)
-            except JobLookupError:
-                pass
-
             job = self.jobs[job_id]
             self.log.info(
                 'Deleting job.',
