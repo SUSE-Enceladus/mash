@@ -228,7 +228,7 @@ class TestReplicationService(object):
 
     @patch.object(ReplicationService, '_schedule_job')
     @patch.object(ReplicationService, 'decode_credentials')
-    def test_publisher_handle_credentials_response(
+    def test_replication_handle_credentials_response(
         self, mock_decode_credentials, mock_schedule_job
     ):
         job = Mock()
@@ -239,11 +239,36 @@ class TestReplicationService(object):
         message = Mock()
         message.body = '{"jwt_token": "response"}'
 
-        mock_decode_credentials.return_value = {'id': '1', 'credentials': {}}
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
         self.replication._handle_credentials_response(message)
 
         mock_schedule_job.assert_called_once_with('1')
         message.ack.assert_called_once_with()
+
+    @patch.object(ReplicationService, 'decode_credentials')
+    def test_replication_handle_credentials_response_exceptions(
+        self, mock_decode_credentials
+    ):
+        message = Mock()
+        message.body = '{"jwt_token": "response"}'
+
+        # Test job does not exist.
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
+        self.replication._handle_credentials_response(message)
+        self.replication.log.error.assert_called_once_with(
+            'Credentials recieved for invalid job with ID: 1.'
+        )
+
+        # Invalid json string
+        self.replication.log.error.reset_mock()
+        message.body = 'invalid json string'
+        self.replication._handle_credentials_response(message)
+        self.replication.log.error.assert_called_once_with(
+            'Invalid credentials response message: '
+            'Must be a json encoded message.'
+        )
+
+        assert message.ack.call_count == 2
 
     @patch.object(ReplicationService, '_replicate_image')
     def test_replication_handle_listener_message(self, mock_replicate_image):
