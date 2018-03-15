@@ -276,7 +276,7 @@ class ReplicationService(BaseService):
             )
         elif job.status == SUCCESS:
             self.log.info(
-                'Pass[{0}]: Publishing successful.'.format(
+                'Pass[{0}]: Replication successful.'.format(
                     job.iteration_count
                 ),
                 extra=metata
@@ -295,14 +295,14 @@ class ReplicationService(BaseService):
 
     def _replicate_image(self, job_id):
         """
-        Publish image for job that matches job_id
+        Replicate image for job that matches job_id.
         """
         job = self.jobs[job_id]
         job.replicate_image()
 
     def _publish_message(self, job):
         """
-        Publish status message to publish service.
+        Publish status message to publisher service.
         """
         message = self._get_status_message(job)
 

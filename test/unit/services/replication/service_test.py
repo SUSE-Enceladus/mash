@@ -425,7 +425,7 @@ class TestReplicationService(object):
 
         mock_delete_job.assert_called_once_with('1')
         self.replication.log.info.assert_called_once_with(
-            'Pass[1]: Publishing successful.',
+            'Pass[1]: Replication successful.',
             extra={'job_id': '1'}
         )
         mock_publish_message.assert_called_once_with(job)
