@@ -298,7 +298,7 @@ class ReplicationService(BaseService):
         Publish image for job that matches job_id
         """
         job = self.jobs[job_id]
-        job.replicate_image(host=self.host)
+        job.replicate_image()
 
     def _publish_message(self, job):
         """
@@ -339,7 +339,8 @@ class ReplicationService(BaseService):
         Validate the job has the required attributes.
         """
         required = [
-            'id', 'image_description', 'provider', 'utctime', 'source_regions'
+            'id', 'image_description', 'provider',
+            'utctime', 'replication_source_regions'
         ]
         for attr in required:
             if attr not in job_config:
@@ -381,18 +382,13 @@ class ReplicationService(BaseService):
             return None
         else:
             # Required args
-            for attr in ['image_id', 'image_name', 'source_region']:
+            for attr in ['cloud_image_name', 'source_regions']:
                 if attr not in listener_msg:
                     self.log.error(
                         '{0} is required in testing result.'.format(attr)
                     )
                     return None
                 else:
-                    setattr(job, attr, listener_msg[attr])
-
-            # Optional args
-            for attr in ['image_description', 'regions']:
-                if attr in listener_msg:
                     setattr(job, attr, listener_msg[attr])
 
         return job

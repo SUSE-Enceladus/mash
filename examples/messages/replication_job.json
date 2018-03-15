@@ -4,7 +4,7 @@
         "image_description": "My Image",
         "provider": "ec2",
         "utctime": "now",
-        "source_regions": {
+        "replication_source_regions": {
             "us-east-1": {
                 "account": "test-aws",
                 "target_regions": ["us-east-2", "us-west-2", "eu-west-3"]
