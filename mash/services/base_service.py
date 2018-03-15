@@ -108,35 +108,107 @@ class BaseService(object):
         """
         pass
 
-    def set_logfile(self, logfile):
+    def _declare_direct_exchange(self, exchange):
         """
-        Allow to set a custom service log file
-        """
-        try:
-            logfile_handler = logging.FileHandler(
-                filename=logfile, encoding='utf-8'
-            )
-            self.log.addHandler(logfile_handler)
-        except Exception as e:
-            raise MashLogSetupException(
-                'Log setup failed: {0}'.format(e)
-            )
+        Declare/create exchange and set as durable.
 
-    def publish_job_result(self, exchange, job_id, message):
+        The exchange, queues and messages will survive a broker restart.
         """
-        Publish the result message to the listener queue on given exchange.
-        """
-        self.bind_queue(exchange, job_id, self.listener_queue)
-        self._publish(exchange, job_id, message)
-
-    def consume_queue(self, callback, queue_name=None):
-        if not queue_name:
-            queue_name = self.service_queue
-        queue = self._get_queue_name(self.service_exchange, queue_name)
-        self._declare_queue(queue)
-        self.channel.basic.consume(
-            callback=callback, queue=queue
+        self.channel.exchange.declare(
+            exchange=exchange, exchange_type='direct', durable=True
         )
+
+    def _declare_queue(self, queue):
+        """
+        Declare the queue and set as durable.
+        """
+        return self.channel.queue.declare(queue=queue, durable=True)
+
+    def _get_queue_name(self, exchange, name):
+        """
+        Return formatted name based on exchange and queue name.
+
+        Example: obs.service
+        """
+        return '{0}.{1}'.format(exchange, name)
+
+    def _open_connection(self):
+        """
+        Open connection or channel if currently closed or None.
+
+        Raises: MashRabbitConnectionException if connection
+                cannot be established.
+        """
+        if not self.connection or self.connection.is_closed:
+            try:
+                self.connection = Connection(
+                    self.host,
+                    'guest',
+                    'guest',
+                    kwargs={'heartbeat': 600}
+                )
+            except Exception as e:
+                raise MashRabbitConnectionException(
+                    'Connection to RabbitMQ server failed: {0}'.format(e)
+                )
+
+        if not self.channel or self.channel.is_closed:
+            self.channel = self.connection.channel()
+            self.channel.confirm_deliveries()
+
+    def _publish(self, exchange, routing_key, message):
+        """
+        Publish message to the provided exchange with the routing key.
+        """
+        self.channel.basic.publish(
+            body=message,
+            routing_key=routing_key,
+            exchange=exchange,
+            properties=self.msg_properties,
+            mandatory=True
+        )
+
+    def bind_credentials_queue(self):
+        """
+        Bind the response key to the credentials queue.
+        """
+        self.bind_queue(
+            self.service_exchange, self.credentials_response_key,
+            self.credentials_queue
+        )
+
+    def bind_listener_queue(self, routing_key):
+        """
+        Bind the provided routing_key to the services listener queue.
+        """
+        self.bind_queue(
+            self.service_exchange, routing_key, self.listener_queue
+        )
+
+    def bind_queue(self, exchange, routing_key, name):
+        """
+        Bind queue on exchange to the provided routing key.
+
+        All messages that match the routing key will be inserted in queue.
+        """
+        self._declare_direct_exchange(exchange)
+        queue = self._get_queue_name(exchange, name)
+        self._declare_queue(queue)
+        self.channel.queue.bind(
+            exchange=exchange, queue=queue, routing_key=routing_key
+        )
+        return queue
+
+    def close_connection(self):
+        """
+        If channel or connection open, stop consuming and close.
+        """
+        if self.channel and self.channel.is_open:
+            self.channel.stop_consuming()
+            self.channel.close()
+
+        if self.connection and self.connection.is_open:
+            self.connection.close()
 
     def consume_credentials_queue(self, callback, queue_name=None):
         """
@@ -156,14 +228,36 @@ class BaseService(object):
         queue = self._get_queue_name(self.service_exchange, queue_name)
         self.channel.basic.consume(callback=callback, queue=queue)
 
-    def bind_credentials_queue(self):
+    def consume_queue(self, callback, queue_name=None):
         """
-        Bind the response key to the credentials queue.
+        Declare and consume queue.
+
+        If queue_name not provided use service_queue name attr.
         """
-        self.bind_queue(
-            self.service_exchange, self.credentials_response_key,
-            self.credentials_queue
+        if not queue_name:
+            queue_name = self.service_queue
+
+        queue = self._get_queue_name(self.service_exchange, queue_name)
+        self._declare_queue(queue)
+        self.channel.basic.consume(
+            callback=callback, queue=queue
         )
+
+    def decode_credentials(self, message):
+        """
+        Decode jwt credential response message.
+        """
+        try:
+            payload = jwt.decode(
+                message, self.jwt_secret, algorithm=self.jwt_algorithm,
+                issuer='credentials', audience=self.service_exchange
+            )
+        except Exception as error:
+            raise MashCredentialsException(
+                'Invalid credentials response token: {0}'.format(error)
+            )
+
+        return payload
 
     def get_credential_request(self, job_id):
         """
@@ -183,21 +277,14 @@ class BaseService(object):
         message = json.dumps({'jwt_token': token.decode()})
         return message
 
-    def decode_credentials(self, message):
+    def log_job_message(self, msg, metadata, success=True):
         """
-        Decode jwt credential response message.
+        Callback for job instance to log given message.
         """
-        try:
-            payload = jwt.decode(
-                message, self.jwt_secret, algorithm=self.jwt_algorithm,
-                issuer='credentials', audience=self.service_exchange
-            )
-        except Exception as error:
-            raise MashCredentialsException(
-                'Invalid credentials response token: {0}'.format(error)
-            )
-
-        return payload
+        if success:
+            self.log.info(msg, extra=metadata)
+        else:
+            self.log.error(msg, extra=metadata)
 
     def notify_invalid_config(self, message):
         """
@@ -208,77 +295,10 @@ class BaseService(object):
         except AMQPError:
             self.log.warning('Message not received: {0}'.format(message))
 
-    def publish_credentials_request(self, job_id):
-        self._publish(
-            'credentials', self.credentials_request_key,
-            self.get_credential_request(job_id)
-        )
-
-    def close_connection(self):
-        if self.channel and self.channel.is_open:
-            self.channel.stop_consuming()
-            self.channel.close()
-
-        if self.connection and self.connection.is_open:
-            self.connection.close()
-
-    def _get_queue_name(self, exchange, name):
-        return '{0}.{1}'.format(exchange, name)
-
-    def _publish(self, exchange, routing_key, message):
-        self.channel.basic.publish(
-            body=message,
-            routing_key=routing_key,
-            exchange=exchange,
-            properties=self.msg_properties,
-            mandatory=True
-        )
-
-    def _open_connection(self):
-        if not self.connection or self.connection.is_closed:
-            try:
-                self.connection = Connection(
-                    self.host,
-                    'guest',
-                    'guest',
-                    kwargs={'heartbeat': 600}
-                )
-            except Exception as e:
-                raise MashRabbitConnectionException(
-                    'Connection to RabbitMQ server failed: {0}'.format(e)
-                )
-
-        if not self.channel or self.channel.is_closed:
-            self.channel = self.connection.channel()
-            self.channel.confirm_deliveries()
-
-    def bind_queue(self, exchange, routing_key, name):
-        self._declare_direct_exchange(exchange)
-        queue = self._get_queue_name(exchange, name)
-        self._declare_queue(queue)
-        self.channel.queue.bind(
-            exchange=exchange, queue=queue, routing_key=routing_key
-        )
-        return queue
-
-    def _declare_direct_exchange(self, exchange):
-        self.channel.exchange.declare(
-            exchange=exchange, exchange_type='direct', durable=True
-        )
-
-    def _declare_queue(self, queue):
-        return self.channel.queue.declare(queue=queue, durable=True)
-
-    def log_job_message(self, msg, metadata, success=True):
-        """
-        Callback for job instance to log given message.
-        """
-        if success:
-            self.log.info(msg, extra=metadata)
-        else:
-            self.log.error(msg, extra=metadata)
-
     def persist_job_config(self, config):
+        """
+        Persist the job config file to disk for recoverability.
+        """
         config['job_file'] = '{0}job-{1}.json'.format(
             self.job_directory, config['id']
         )
@@ -287,6 +307,22 @@ class BaseService(object):
             config_file.write(json.dumps(config, sort_keys=True))
 
         return config['job_file']
+
+    def publish_credentials_request(self, job_id):
+        """
+        Publish credentials request message to the credentials exchange.
+        """
+        self._publish(
+            'credentials', self.credentials_request_key,
+            self.get_credential_request(job_id)
+        )
+
+    def publish_job_result(self, exchange, job_id, message):
+        """
+        Publish the result message to the listener queue on given exchange.
+        """
+        self.bind_queue(exchange, job_id, self.listener_queue)
+        self._publish(exchange, job_id, message)
 
     def remove_file(self, config_file):
         """
@@ -310,15 +346,19 @@ class BaseService(object):
 
             callback(job_config)
 
-    def bind_listener_queue(self, routing_key):
-        self.bind_queue(
-            self.service_exchange, routing_key, self.listener_queue
-        )
-
-    def unbind_queue(self, queue, exchange, routing_key):
-        self.channel.queue.unbind(
-            queue=queue, exchange=exchange, routing_key=routing_key
-        )
+    def set_logfile(self, logfile):
+        """
+        Allow to set a custom service log file
+        """
+        try:
+            logfile_handler = logging.FileHandler(
+                filename=logfile, encoding='utf-8'
+            )
+            self.log.addHandler(logfile_handler)
+        except Exception as e:
+            raise MashLogSetupException(
+                'Log setup failed: {0}'.format(e)
+            )
 
     def unbind_listener_queue(self, routing_key):
         """
@@ -327,4 +367,12 @@ class BaseService(object):
         self.unbind_queue(
             queue=self.listener_queue, exchange=self.service_exchange,
             routing_key=routing_key
+        )
+
+    def unbind_queue(self, queue, exchange, routing_key):
+        """
+        Unbind the routing_key from the queue on given exchange.
+        """
+        self.channel.queue.unbind(
+            queue=queue, exchange=exchange, routing_key=routing_key
         )
