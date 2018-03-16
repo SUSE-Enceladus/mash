@@ -4,7 +4,10 @@ import os
 
 from amqpstorm import Connection
 
-services = ('obs', 'uploader', 'testing', 'replication', 'publisher', 'pint')
+services = (
+    'obs', 'uploader', 'testing', 'replication', 'publisher',
+    'deprecation', 'pint'
+)
 
 
 class Test(object):
