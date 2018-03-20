@@ -42,7 +42,7 @@ class EC2ReplicationJob(ReplicationJob):
         self.image_description = image_description
         self.cloud_image_name = cloud_image_name
         self.job_file = job_file
-        self.source_region_results = None
+        self.source_region_results = defaultdict(dict)
         self.source_regions = None
         self.replication_source_regions = \
             self.validate_replication_source_regions(
