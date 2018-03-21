@@ -8,6 +8,6 @@
             "eu-west-2": "ami-bc5b48d0",
             "cn-northwest-1": "ami-bc5b4853"
         },
-        "status": "success",
+        "status": "success"
     }
 }
