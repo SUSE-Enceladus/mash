@@ -153,10 +153,12 @@ class TestEC2ReplicationJob(object):
                 'account': Mock()
             }
         }
+        self.job.source_regions = {'us-west-1': 'ami-12345'}
 
         result = self.job.get_source_regions_result()
 
         assert result['us-east-2'] == 'ami-54321'
+        assert result['us-west-1'] == 'ami-12345'
 
     def test_replicate_image_exists(self):
         images = {'Images': []}

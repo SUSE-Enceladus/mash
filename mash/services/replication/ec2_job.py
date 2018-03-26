@@ -43,7 +43,7 @@ class EC2ReplicationJob(ReplicationJob):
         self.cloud_image_name = cloud_image_name
         self.job_file = job_file
         self.source_region_results = defaultdict(dict)
-        self.source_regions = None
+        self.source_regions = {}
         self.replication_source_regions = \
             self.validate_replication_source_regions(
                 replication_source_regions
@@ -143,10 +143,12 @@ class EC2ReplicationJob(ReplicationJob):
         """
         Return a dictionary mapping source regions to image ids.
         """
-        return {
+        result_regions = {
             region: info['image_id'] for region, info
             in self.source_region_results.items()
         }
+        result_regions.update(self.source_regions)
+        return result_regions
 
     def image_exists(self, client, cloud_image_name):
         """
