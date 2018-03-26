@@ -27,11 +27,17 @@ class TestBaseConfig(object):
         assert self.config.get_private_key_file() == '/etc/mash/creds_key'
 
     def test_get_services_names(self):
-        expected = {
-            'publisher', 'pint', 'testing', 'replication',
-            'uploader', 'deprecation'
-        }
+        # Non credential services
+        expected = [
+            'uploader', 'testing', 'replication', 'publisher',
+            'deprecation', 'pint'
+        ]
         services = self.empty_config.get_service_names(
             credentials_required=True
         )
-        assert not (expected - services)
+        assert expected == services
+
+        # All services
+        expected = ['obs'] + expected
+        services = self.empty_config.get_service_names()
+        assert expected == services

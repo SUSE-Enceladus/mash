@@ -114,6 +114,7 @@ class BaseConfig(object):
             non_cred_services = self._get_attribute(
                 attribute='non_cred_services'
             ) or Defaults.get_non_credential_service_names()
-            services = set(services) - set(non_cred_services)
+            services = [service for service in services
+                        if service not in non_cred_services]
 
         return services
