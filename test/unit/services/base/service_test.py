@@ -214,6 +214,20 @@ class TestBaseService(object):
         assert payload['id'] == '1'
         assert payload['sub'] == 'credentials_request'
 
+    def test_get_encryption_keys_from_file(self):
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.readlines.return_value = [
+                '1234567890123456789012345678901234567890123=\n'
+            ]
+            result = self.service.get_encryption_keys_from_file(
+                'test-keys.file'
+            )
+
+        assert len(result) == 1
+        assert type(result[0]).__name__ == 'Fernet'
+
     @patch('mash.services.base_service.jwt')
     def test_decode_credentials(self, mock_jwt):
         self.service.jwt_algorithm = 'HS256'

@@ -22,7 +22,7 @@ class TestCredentialsService(object):
         self.service.job_document_key = 'job_document'
         self.service.credentials_queue = 'credentials'
         self.service.credentials_directory = '/var/lib/mash/credentials/'
-        self.service.encryption_key = 'testkey12345'
+        self.service.encryption_keys = [Mock()]
 
         self.service.channel = Mock()
         self.service.channel.basic_ack.return_value = None
@@ -30,6 +30,7 @@ class TestCredentialsService(object):
         self.service.jobs = {}
         self.service.log = Mock()
 
+    @patch.object(CredentialsService, 'get_encryption_keys_from_file')
     @patch.object(CredentialsService, 'set_logfile')
     @patch('mash.services.credentials.service.CredentialsConfig')
     @patch.object(CredentialsService, 'start')
@@ -37,7 +38,7 @@ class TestCredentialsService(object):
     @patch.object(CredentialsService, 'restart_jobs')
     def test_post_init(
         self, mock_restart_jobs, mock_bind_cred_req_keys, mock_start,
-        mock_credentials_config, mock_set_logfile
+        mock_credentials_config, mock_set_logfile, mock_get_keys_from_file
     ):
         mock_credentials_config.return_value = self.config
         self.config.get_log_file.return_value = \
@@ -331,7 +332,7 @@ class TestCredentialsService(object):
         assert payload['id'] == '1'
         assert payload['sub'] == 'credentials_response'
 
-    @patch('mash.services.credentials.service.Fernet')
+    @patch('mash.services.credentials.service.MultiFernet')
     def test_encrypt_credentials(self, mock_fernet):
         fernet_key = Mock()
         fernet_key.encrypt.return_value = b'encrypted_secret'

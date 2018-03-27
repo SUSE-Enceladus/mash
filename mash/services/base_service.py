@@ -22,6 +22,7 @@ import logging
 import os
 
 from amqpstorm import AMQPError, Connection
+from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 
 # project
@@ -276,6 +277,15 @@ class BaseService(object):
         )
         message = json.dumps({'jwt_token': token.decode()})
         return message
+
+    def get_encryption_keys_from_file(self, encryption_keys_file):
+        """
+        Returns a list of Fernet keys based on the provided keys file.
+        """
+        with open(encryption_keys_file, 'r') as keys_file:
+            keys = keys_file.readlines()
+
+        return [Fernet(key.strip()) for key in keys if key]
 
     def log_job_message(self, msg, metadata, success=True):
         """
