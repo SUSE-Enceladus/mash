@@ -17,7 +17,6 @@
 #
 
 import json
-import os
 
 from amqpstorm import AMQPError
 
@@ -69,10 +68,10 @@ class PublisherService(BaseService):
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == 'EC2':
+        elif provider == 'ec2':
             self._create_job(EC2PublisherJob, job_config)
         else:
-            self.log.exception(
+            self.log.error(
                 'Provider {0} is not supported.'.format(provider)
             )
 
@@ -106,7 +105,7 @@ class PublisherService(BaseService):
             )
         else:
             self.jobs[job.id] = job
-            job.set_log_callback(self._log_job_message)
+            job.set_log_callback(self.log_job_message)
 
             if 'job_file' not in job_config:
                 job_config['job_file'] = self.persist_job_config(
@@ -142,7 +141,7 @@ class PublisherService(BaseService):
             self.unbind_queue(
                 self.listener_queue, self.service_exchange, job_id
             )
-            self._remove_job_config(job.job_file)
+            self.remove_file(job.job_file)
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
@@ -269,15 +268,6 @@ class PublisherService(BaseService):
 
         message.ack()
 
-    def _log_job_message(self, msg, metadata, success=True):
-        """
-        Callback for job instance to log given message.
-        """
-        if success:
-            self.log.info(msg, extra=metadata)
-        else:
-            self.log.warning(msg, extra=metadata)
-
     def _process_publishing_result(self, event):
         """
         Callback when publishing background process finishes.
@@ -340,15 +330,6 @@ class PublisherService(BaseService):
                 'Message not received: {0}'.format(message),
                 extra=job.get_metadata()
             )
-
-    def _remove_job_config(self, job_file):
-        """
-        Remove job config file from disk if it exists.
-        """
-        try:
-            os.remove(job_file)
-        except Exception:
-            pass
 
     def _schedule_job(self, job_id):
         """

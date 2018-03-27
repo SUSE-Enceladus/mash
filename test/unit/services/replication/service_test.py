@@ -81,7 +81,7 @@ class TestReplicationService(object):
     @patch.object(ReplicationService, '_create_job')
     def test_replication_add_job(self, mock_create_job):
         job_config = {
-            'id': '1', 'provider': 'EC2', 'utctime': 'now',
+            'id': '1', 'provider': 'ec2', 'utctime': 'now',
         }
 
         self.replication._add_job(job_config)
@@ -97,7 +97,7 @@ class TestReplicationService(object):
         self.replication.jobs['1'] = job
         job_config = {
             'id': '1', 'image_desc': 'image 123',
-            'provider': 'EC2', 'utctime': 'now',
+            'provider': 'ec2', 'utctime': 'now',
         }
 
         self.replication._add_job(job_config)
@@ -113,7 +113,7 @@ class TestReplicationService(object):
         }
 
         self.replication._add_job(job_config)
-        self.replication.log.exception.assert_called_once_with(
+        self.replication.log.error.assert_called_once_with(
             'Provider Provider is not supported.'
         )
 
@@ -250,7 +250,7 @@ class TestReplicationService(object):
         job = Mock()
         job.id = '1'
         job.utctime = 'always'
-        job.credentials = {'test-aws': {'test': 'credetnials'}}
+        job.credentials = {'test-aws': {'test': 'credentials'}}
         self.replication.jobs['1'] = job
 
         scheduler = Mock()
@@ -258,13 +258,13 @@ class TestReplicationService(object):
 
         self.message.body = \
             '{"testing_result": {"id": "1", ' \
-            '"image_id": "image123", "image_name": "image name", ' \
-            '"image_description": "my image", "regions": "us-west-2", ' \
-            '"source_region": "us-west-1", "status": "success"}}'
+            '"cloud_image_name": "image_name", ' \
+            '"source_regions": {"us-east-1": "ami-bc5b48d0"}, ' \
+            '"status": "success"}}'
 
         self.replication._handle_listener_message(self.message)
 
-        assert self.replication.jobs['1'].image_id == 'image123'
+        assert self.replication.jobs['1'].cloud_image_name == 'image_name'
         assert self.replication.jobs['1'].listener_msg == self.message
         scheduler.add_job.assert_called_once_with(
             mock_replicate_image,
@@ -290,9 +290,9 @@ class TestReplicationService(object):
 
         self.message.body = \
             '{"testing_result": {"id": "1", ' \
-            '"image_id": "image123", "image_name": "image name", ' \
-            '"image_description": "my image", "regions": "us-west-2", ' \
-            '"source_region": "us-west-1", "status": "success"}}'
+            '"cloud_image_name": "image name", ' \
+            '"source_regions": {"us-east-1": "ami-bc5b48d0"}, ' \
+            '"status": "success"}}'
 
         self.replication._handle_listener_message(self.message)
         mock_pub_creds_req.assert_called_once_with('1')
@@ -335,7 +335,7 @@ class TestReplicationService(object):
 
         self.message.ack.assert_called_once_with()
         self.replication.log.error.assert_called_once_with(
-            'image_id is required in testing result.'
+            'cloud_image_name is required in testing result.'
         )
 
     @patch.object(ReplicationService, '_add_job')
@@ -344,7 +344,7 @@ class TestReplicationService(object):
 
         self.message.body = '{"replication_job": {"id": "1", ' \
             '"image_description": "My image", "provider": "EC2", ' \
-            '"utctime": "now", "source_regions": {"us-east-1": {' \
+            '"utctime": "now", "replication_source_regions": {"us-east-1": {' \
             '"account": "test-aws", "target_regions": ' \
             '["us-east-2", "us-west-2", "eu-west-3"]}}}}'
         self.replication._handle_service_message(self.message)
@@ -352,7 +352,8 @@ class TestReplicationService(object):
         mock_add_job.assert_called_once_with(
             {
                 'id': '1', 'image_description': 'My image',
-                'provider': 'EC2', 'utctime': 'now', 'source_regions': {
+                'provider': 'EC2', 'utctime': 'now',
+                'replication_source_regions': {
                     'us-east-1': {
                         'account': 'test-aws', 'target_regions': [
                             "us-east-2", "us-west-2", "eu-west-3"
@@ -424,7 +425,7 @@ class TestReplicationService(object):
 
         mock_delete_job.assert_called_once_with('1')
         self.replication.log.info.assert_called_once_with(
-            'Pass[1]: Publishing successful.',
+            'Pass[1]: Replication successful.',
             extra={'job_id': '1'}
         )
         mock_publish_message.assert_called_once_with(job)
@@ -485,10 +486,9 @@ class TestReplicationService(object):
     def test_replication_replicate_image(self):
         job = Mock()
         self.replication.jobs['1'] = job
-        self.replication.host = 'localhost'
 
         self.replication._replicate_image('1')
-        job.replicate_image.assert_called_once_with(host='localhost')
+        job.replicate_image.assert_called_once_with()
 
     @patch.object(ReplicationService, 'publish_job_result')
     def test_replication_publish_message(self, mock_publish):
@@ -519,7 +519,7 @@ class TestReplicationService(object):
         )
         self.replication._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('publisher', '1', 'service')
+        mock_bind_queue.assert_called_once_with('publisher', '1', 'listener')
         self.replication.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}

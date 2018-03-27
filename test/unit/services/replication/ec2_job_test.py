@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashReplicationException
 from mash.services.status_levels import FAILED
-from mash.services.credentials.amazon import CredentialsAmazon
 from mash.services.replication.ec2_job import EC2ReplicationJob
 from mash.services.replication.job import ReplicationJob
 
@@ -15,7 +14,7 @@ class TestEC2ReplicationJob(object):
             'image_description': 'My image',
             'provider': 'ec2',
             'utctime': 'now',
-            "source_regions": {
+            "replication_source_regions": {
                 "us-east-1": {
                     "account": "test-aws",
                     "target_regions": ["us-east-2"]
@@ -23,16 +22,12 @@ class TestEC2ReplicationJob(object):
             }
         }
         self.job = EC2ReplicationJob(**self.job_config)
-        self.job.update_source_regions({'us-east-1': 'ami-12345'})
 
-        args = {
-            'access_key_id': '123456',
-            'secret_access_key': '654321',
-            'ssh_key_name': 'my-key',
-            'ssh_private_key': 'my-key.pem'
-        }
         self.job.credentials = {
-            "test-aws": CredentialsAmazon(custom_args=args)
+            "test-aws": {
+                'access_key_id': '123456',
+                'secret_access_key': '654321'
+            }
         }
 
     @patch('mash.services.replication.ec2_job.time')
@@ -45,6 +40,7 @@ class TestEC2ReplicationJob(object):
     ):
         mock_replicate_to_region.return_value = 'ami-54321'
 
+        self.job.source_regions = {'us-east-1': 'ami-12345'}
         self.job._replicate()
 
         mock_send_log.assert_called_once_with(
@@ -70,14 +66,11 @@ class TestEC2ReplicationJob(object):
         mock_get_client.return_value = client
         mock_image_exists.return_value = False
 
-        credential = Mock()
-        credential.access_key_id = '123456'
-        credential.secret_access_key = '654321'
-
         self.job.cloud_image_name = 'My image'
 
         self.job._replicate_to_region(
-            credential, 'ami-12345', 'us-east-1', 'us-east-2'
+            self.job.credentials['test-aws'],
+            'ami-12345', 'us-east-1', 'us-east-2'
         )
 
         mock_get_client.assert_called_once_with(
@@ -103,15 +96,12 @@ class TestEC2ReplicationJob(object):
         mock_get_client.return_value = client
         mock_image_exists.return_value = False
 
-        credential = Mock()
-        credential.access_key_id = '123456'
-        credential.secret_access_key = '654321'
-
         msg = 'There was an error replicating image to us-east-2. ' \
             'Error copying image!'
         with raises(MashReplicationException) as e:
             self.job._replicate_to_region(
-                credential, 'ami-12345', 'us-east-1', 'us-east-2'
+                self.job.credentials['test-aws'],
+                'ami-12345', 'us-east-1', 'us-east-2'
             )
 
         assert msg == str(e.value)
@@ -123,11 +113,9 @@ class TestEC2ReplicationJob(object):
         client.get_waiter.return_value = waiter
         mock_get_client.return_value = client
 
-        credential = Mock()
-        credential.access_key_id = '123456'
-        credential.secret_access_key = '654321'
-
-        self.job._wait_on_image(credential, 'ami-54321', 'us-east-2')
+        self.job._wait_on_image(
+            self.job.credentials['test-aws'], 'ami-54321', 'us-east-2'
+        )
 
         mock_get_client.assert_called_once_with(
             'ec2', '123456', '654321', 'us-east-2'
@@ -147,11 +135,9 @@ class TestEC2ReplicationJob(object):
         client.get_waiter.side_effect = Exception('Error copying image!')
         mock_get_client.return_value = client
 
-        credential = Mock()
-        credential.access_key_id = '123456'
-        credential.secret_access_key = '654321'
-
-        self.job._wait_on_image(credential, 'awi-54321', 'us-east-2')
+        self.job._wait_on_image(
+            self.job.credentials['test-aws'], 'awi-54321', 'us-east-2'
+        )
 
         mock_send_log.assert_called_once_with(
             'There was an error replicating image to us-east-2. '
@@ -186,17 +172,17 @@ class TestEC2ReplicationJob(object):
 
         assert result
 
-    def test_replicate_validate_source_regions_exceptions(self):
+    def test_replicate_validate_replication_source_regions_exceptions(self):
         source_regions = {'us-east-2': {}}
 
         msg = 'Source region us-east-2 missing account name.'
         with raises(MashReplicationException) as error:
-            self.job.validate_source_regions(source_regions)
+            self.job.validate_replication_source_regions(source_regions)
         assert msg == str(error.value)
 
         source_regions = {'us-east-2': {'account': 'test-aws'}}
 
         msg = 'Source region us-east-2 missing target regions.'
         with raises(MashReplicationException) as error:
-            self.job.validate_source_regions(source_regions)
+            self.job.validate_replication_source_regions(source_regions)
         assert msg == str(error.value)

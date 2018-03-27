@@ -79,7 +79,7 @@ class TestPublisherService(object):
     @patch.object(PublisherService, '_create_job')
     def test_publisher_add_job(self, mock_create_job):
         job_config = {
-            'id': '1', 'provider': 'EC2', 'utctime': 'now',
+            'id': '1', 'provider': 'ec2', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
@@ -95,7 +95,7 @@ class TestPublisherService(object):
         self.publisher.jobs['1'] = job
         job_config = {
             'id': '1', 'image_desc': 'image 123',
-            'provider': 'EC2', 'utctime': 'now',
+            'provider': 'ec2', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
@@ -111,7 +111,7 @@ class TestPublisherService(object):
         }
 
         self.publisher._add_job(job_config)
-        self.publisher.log.exception.assert_called_once_with(
+        self.publisher.log.error.assert_called_once_with(
             'Provider Provider is not supported.'
         )
 
@@ -154,7 +154,7 @@ class TestPublisherService(object):
 
         job_class.assert_called_once_with(id='1', provider='EC2')
         job.set_log_callback.assert_called_once_with(
-            self.publisher._log_job_message
+            self.publisher.log_job_message
         )
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
@@ -173,10 +173,10 @@ class TestPublisherService(object):
             'Invalid job configuration: Cannot create job.'
         )
 
-    @patch.object(PublisherService, '_remove_job_config')
+    @patch.object(PublisherService, 'remove_file')
     @patch.object(PublisherService, 'unbind_queue')
     def test_publisher_delete_job(
-        self, mock_unbind_queue, mock_remove_job_config
+        self, mock_unbind_queue, mock_remove_file
     ):
         self.publisher.scheduler.remove_job.side_effect = JobLookupError(
             'Job finished.'
@@ -202,7 +202,7 @@ class TestPublisherService(object):
         mock_unbind_queue.assert_called_once_with(
             'listener', 'publisher', '1'
         )
-        mock_remove_job_config.assert_called_once_with('job-test.json')
+        mock_remove_file.assert_called_once_with('job-test.json')
 
     def test_publisher_delete_invalid_job(self):
         self.publisher._delete_job('1')
@@ -379,21 +379,6 @@ class TestPublisherService(object):
         self.message.ack.assert_called_once_with()
         mock_notify.assert_called_once_with(self.message.body)
 
-    def test_publisher_log_job_message(self):
-        self.publisher._log_job_message('Test message.', {'job_id': '1'})
-        self.publisher.log.info.assert_called_once_with(
-            'Test message.',
-            extra={'job_id': '1'}
-        )
-
-        self.publisher._log_job_message(
-            'Test message.', {'job_id': '1'}, success=False
-        )
-        self.publisher.log.warning.assert_called_once_with(
-            'Test message.',
-            extra={'job_id': '1'}
-        )
-
     @patch.object(PublisherService, '_delete_job')
     @patch.object(PublisherService, '_publish_message')
     def test_publisher_process_publishing_result(
@@ -511,17 +496,11 @@ class TestPublisherService(object):
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
         self.publisher._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('deprecation', '1', 'service')
+        mock_bind_queue.assert_called_once_with('deprecation', '1', 'listener')
         self.publisher.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}
         )
-
-    @patch('mash.services.publisher.service.os.remove')
-    def test_publisher_remove_job_config(self, mock_remove):
-        mock_remove.side_effect = Exception('File not found.')
-        self.publisher._remove_job_config('job-test.json')
-        mock_remove.assert_called_once_with('job-test.json')
 
     @patch.object(PublisherService, '_publish_image')
     def test_publisher_schedule_duplicate_job(

@@ -77,11 +77,11 @@ class TestBaseService(object):
         mock_connection.return_value = self.connection
         self.service.publish_job_result('exchange', 'job_id', 'message')
         self.channel.queue.declare.assert_called_once_with(
-            queue='exchange.service', durable=True
+            queue='exchange.listener', durable=True
         )
         self.channel.queue.bind.assert_called_once_with(
             exchange='exchange', routing_key='job_id',
-            queue='exchange.service'
+            queue='exchange.listener'
         )
         self.channel.basic.publish.assert_called_once_with(
             body='message', exchange='exchange', mandatory=True,
