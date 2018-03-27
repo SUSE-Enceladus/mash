@@ -19,7 +19,7 @@ import jwt
 import json
 import os
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import MultiFernet
 from datetime import datetime, timedelta
 
 # project
@@ -39,7 +39,11 @@ class CredentialsService(BaseService):
             credentials_required=True
         )
 
-        self.encryption_key = self.config.get_encryption_key()
+        encryption_keys_file = self.config.get_encryption_keys_file()
+        self.encryption_keys = self.get_encryption_keys_from_file(
+            encryption_keys_file
+        )
+
         self.credentials_directory = self.config.get_credentials_dir()
 
         self.jobs = {}
@@ -115,7 +119,7 @@ class CredentialsService(BaseService):
 
         Returns: Encrypted and decoded string.
         """
-        fernet_key = Fernet(self.encryption_key)
+        fernet = MultiFernet(self.encryption_keys)
 
         try:
             # Ensure creds string is encoded as bytes
@@ -123,7 +127,7 @@ class CredentialsService(BaseService):
         except Exception:
             pass
 
-        return fernet_key.encrypt(credentials).decode()
+        return fernet.encrypt(credentials).decode()
 
     def _get_credentials_response(self, job_id, issuer):
         """
