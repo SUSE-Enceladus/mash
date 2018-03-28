@@ -39,10 +39,7 @@ class CredentialsService(BaseService):
             credentials_required=True
         )
 
-        encryption_keys_file = self.config.get_encryption_keys_file()
-        self.encryption_keys = self.get_encryption_keys_from_file(
-            encryption_keys_file
-        )
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.credentials_directory = self.config.get_credentials_dir()
 
@@ -119,7 +116,10 @@ class CredentialsService(BaseService):
 
         Returns: Encrypted and decoded string.
         """
-        fernet = MultiFernet(self.encryption_keys)
+        encryption_keys = self.get_encryption_keys_from_file(
+            self.encryption_keys_file
+        )
+        fernet = MultiFernet(encryption_keys)
 
         try:
             # Ensure creds string is encoded as bytes
