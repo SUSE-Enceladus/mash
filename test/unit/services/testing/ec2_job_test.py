@@ -1,4 +1,4 @@
-from unittest.mock import call, patch
+from unittest.mock import call, MagicMock, patch
 
 from mash.services.testing.ec2_job import EC2TestingJob
 
@@ -8,17 +8,21 @@ class TestEC2TestingJob(object):
         self.job_config = {
             'id': '1',
             'provider': 'ec2',
-            'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {'us-east-1': 'test-aws'},
             'tests': 'test_stuff',
             'utctime': 'now',
         }
 
+    @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')
     @patch('mash.services.testing.ipa_helper.test_image')
     @patch.object(EC2TestingJob, 'send_log')
     def test_testing_run_test(
-        self, mock_send_log, mock_test_image
+        self, mock_send_log, mock_test_image, mock_temp_file
     ):
+        tmp_file = MagicMock()
+        tmp_file.name = '/tmp/temp.file'
+        mock_temp_file.return_value = tmp_file
+
         mock_test_image.return_value = (
             0,
             {
@@ -35,14 +39,16 @@ class TestEC2TestingJob(object):
         job.credentials = {
             'test-aws': {
                 'access_key_id': '123',
-                'secret_access_key': '321'
+                'secret_access_key': '321',
+                'ssh_key_name': 'my-key',
+                'ssh_private_key': 'private-key-123'
             }
         }
         job.source_regions = {'us-east-1': 'ami-123'}
         job._run_tests()
 
         mock_test_image.assert_called_once_with(
-            'EC2',
+            'ec2',
             cleanup=True,
             access_key_id='123',
             desc=job.description,
@@ -52,7 +58,8 @@ class TestEC2TestingJob(object):
             log_level=30,
             region='us-east-1',
             secret_access_key='321',
-            ssh_private_key='private_ssh_key.file',
+            ssh_key_name='my-key',
+            ssh_private_key='/tmp/temp.file',
             ssh_user='ec2-user',
             tests=['test_stuff']
         )

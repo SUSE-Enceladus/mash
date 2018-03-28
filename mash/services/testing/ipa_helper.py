@@ -17,7 +17,11 @@
 #
 
 import logging
+import os
 import threading
+
+from contextlib import contextmanager, suppress
+from tempfile import NamedTemporaryFile
 
 from ipa.ipa_controller import test_image
 
@@ -27,27 +31,44 @@ from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
 def ipa_test(
     results, provider=None, access_key_id=None, description=None, distro=None,
     image_id=None, instance_type=None, region=None, secret_access_key=None,
-    ssh_private_key=None, ssh_user=None, tests=None
+    ssh_key_name=None, ssh_private_key=None, ssh_user=None, tests=None
 ):
     name = threading.current_thread().getName()
     try:
-        status, result = test_image(
-            provider.upper(),  # TODO remove uppercase when IPA update released
-            access_key_id=access_key_id,
-            cleanup=True,
-            desc=description,
-            distro=distro,
-            image_id=image_id,
-            instance_type=instance_type,
-            log_level=logging.WARNING,
-            region=region,
-            secret_access_key=secret_access_key,
-            ssh_private_key=ssh_private_key,
-            ssh_user=ssh_user,
-            tests=tests
-        )
+        with temp_file(ssh_private_key) as key_file:
+            status, result = test_image(
+                provider,
+                access_key_id=access_key_id,
+                cleanup=True,
+                desc=description,
+                distro=distro,
+                image_id=image_id,
+                instance_type=instance_type,
+                log_level=logging.WARNING,
+                region=region,
+                secret_access_key=secret_access_key,
+                ssh_key_name=ssh_key_name,
+                ssh_private_key=key_file,
+                ssh_user=ssh_user,
+                tests=tests
+            )
     except Exception as error:
         results[name] = {'status': EXCEPTION, 'msg': str(error)}
     else:
         status = SUCCESS if status == 0 else FAILED
         results[name] = {'status': status}
+
+
+@contextmanager
+def temp_file(contents):
+    """
+    Create temporary file based on contents string.
+    """
+    try:
+        temporary_file = NamedTemporaryFile(delete=False, mode='w+')
+        temporary_file.write(contents)
+        temporary_file.close()
+        yield temporary_file.name
+    finally:
+        with suppress(OSError):
+            os.remove(temporary_file.name)
