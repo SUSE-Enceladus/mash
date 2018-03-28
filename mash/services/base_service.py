@@ -22,6 +22,7 @@ import logging
 import os
 
 from amqpstorm import AMQPError, Connection
+from cryptography.fernet import MultiFernet
 from datetime import datetime, timedelta
 
 # project
@@ -243,7 +244,7 @@ class BaseService(object):
             callback=callback, queue=queue
         )
 
-    def decode_credentials(self, message):
+    def decode_credentials(self, message, encryption_keys_file):
         """
         Decode jwt credential response message.
         """
@@ -257,7 +258,31 @@ class BaseService(object):
                 'Invalid credentials response token: {0}'.format(error)
             )
 
+        decrypted_credentials = {}
+        for account, credentials in payload['credentials'].items():
+            decrypted_credentials[account] = self.decrypt_credentials(
+                credentials, encryption_keys_file
+            )
+
+        payload['credentials'] = decrypted_credentials
         return payload
+
+    def decrypt_credentials(self, credentials, encryption_keys_file):
+        """
+        Decrypt credentials string and load json to dictionary.
+        """
+        encryption_keys = self.get_encryption_keys_from_file(
+            encryption_keys_file
+        )
+        fernet_key = MultiFernet(encryption_keys)
+
+        try:
+            # Ensure string is encoded as bytes before decrypting.
+            credentials = credentials.encode()
+        except Exception:
+            pass
+
+        return json.loads(fernet_key.decrypt(credentials).decode())
 
     def get_credential_request(self, job_id):
         """
