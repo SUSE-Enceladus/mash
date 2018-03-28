@@ -139,17 +139,6 @@ class EC2ReplicationJob(ReplicationJob):
             )
             self.status = FAILED
 
-    def get_source_regions_result(self):
-        """
-        Return a dictionary mapping source regions to image ids.
-        """
-        result_regions = {
-            region: info['image_id'] for region, info
-            in self.source_region_results.items()
-        }
-        result_regions.update(self.source_regions)
-        return result_regions
-
     def image_exists(self, client, cloud_image_name):
         """
         Determine if image exists given image name.

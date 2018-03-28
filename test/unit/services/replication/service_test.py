@@ -38,7 +38,6 @@ class TestReplicationService(object):
             '{"id": "1", "status": "error"}}'
         self.status_message = '{"replication_result": ' \
             '{"cloud_image_name": "image123", "id": "1", ' \
-            '"source_regions": {"us-east-1": "ami-12345"}, ' \
             '"status": "success"}}'
 
         self.replication = ReplicationService()
@@ -221,7 +220,6 @@ class TestReplicationService(object):
         job.id = '1'
         job.status = 'success'
         job.cloud_image_name = 'image123'
-        job.get_source_regions_result.return_value = {'us-east-1': 'ami-12345'}
 
         data = self.replication._get_status_message(job)
         assert data == self.status_message
@@ -496,7 +494,6 @@ class TestReplicationService(object):
         job.id = '1'
         job.status = 'success'
         job.cloud_image_name = 'image123'
-        job.get_source_regions_result.return_value = {'us-east-1': 'ami-12345'}
 
         self.replication._publish_message(job)
         mock_publish.assert_called_once_with(

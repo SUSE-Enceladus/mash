@@ -37,7 +37,6 @@ class TestPublisherService(object):
             '{"id": "1", "status": "error"}}'
         self.status_message = '{"publisher_result": ' \
             '{"cloud_image_name": "image123", "id": "1", ' \
-            '"source_regions": {"us-east-1": "ami-12345"}, ' \
             '"status": "success"}}'
 
         self.publisher = PublisherService()
@@ -217,7 +216,6 @@ class TestPublisherService(object):
         job.id = '1'
         job.status = 'success'
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-1': 'ami-12345'}
 
         data = self.publisher._get_status_message(job)
         assert data == self.status_message
@@ -255,7 +253,6 @@ class TestPublisherService(object):
         self.message.body = \
             '{"replication_result": {"id": "1", ' \
             '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123456"}, ' \
             '"status": "success"}}'
 
         self.publisher._handle_listener_message(self.message)
@@ -277,7 +274,6 @@ class TestPublisherService(object):
         self.message.body = \
             '{"replication_result": {"id": "1", ' \
             '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123456"}, ' \
             '"status": "success"}}'
 
         self.publisher._handle_listener_message(self.message)
@@ -292,9 +288,7 @@ class TestPublisherService(object):
         self.publisher.jobs['1'] = job
 
         self.message.body = \
-            '{"replication_result": {"id": "1", ' \
-            '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123"}, "status": "error"}}'
+            '{"replication_result": {"id": "1", "status": "error"}}'
         self.publisher._handle_listener_message(self.message)
 
         mock_cleanup_job.assert_called_once_with(job, 'error')
@@ -302,9 +296,7 @@ class TestPublisherService(object):
 
     def test_publisher_listener_message_job_none(self):
         self.message.body = \
-            '{"replication_result": {"id": "1", ' \
-            '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123"}, "status": "error"}}'
+            '{"replication_result": {"id": "1", "status": "error"}}'
         self.publisher._handle_listener_message(self.message)
 
         self.message.ack.assert_called_once_with()
@@ -474,7 +466,6 @@ class TestPublisherService(object):
         job.id = '1'
         job.status = 'success'
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-1': 'ami-12345'}
 
         self.publisher._publish_message(job)
         mock_publish.assert_called_once_with(

@@ -160,7 +160,6 @@ class ReplicationService(BaseService):
                 'replication_result': {
                     'id': job.id,
                     'cloud_image_name': job.cloud_image_name,
-                    'source_regions': job.get_source_regions_result(),
                     'status': job.status,
                 }
             }
@@ -381,15 +380,13 @@ class ReplicationService(BaseService):
             self._cleanup_job(job, status)
             return None
         else:
-            # Required args
-            for attr in ['cloud_image_name', 'source_regions']:
-                if attr not in listener_msg:
-                    self.log.error(
-                        '{0} is required in testing result.'.format(attr)
-                    )
-                    return None
-                else:
-                    setattr(job, attr, listener_msg[attr])
+            if 'cloud_image_name' not in listener_msg:
+                self.log.error(
+                    'cloud_image_name is required in testing result.'
+                )
+                return None
+            else:
+                job.cloud_image_name = listener_msg['cloud_image_name']
 
         return job
 

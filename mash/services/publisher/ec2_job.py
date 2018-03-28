@@ -51,6 +51,7 @@ class EC2PublisherJob(PublisherJob):
             publisher = EC2PublishImage(
                 access_key=creds['access_key_id'],
                 allow_copy=self.allow_copy,
+                image_name=self.cloud_image_name,
                 secret_key=creds['secret_access_key'],
                 verbose=False,
                 visibility=self.share_with,
@@ -58,13 +59,12 @@ class EC2PublisherJob(PublisherJob):
 
             for region in region_info['target_regions']:
                 publisher.set_region(region)
-                publisher.image_id = self.source_regions[region]
                 try:
                     publisher.publish_images()
                 except Exception as error:
                     raise MashPublisherException(
                         'An error publishing image {0} in {1}. {2}'.format(
-                            self.source_regions[region], region, error
+                            self.cloud_image_name, region, error
                         )
                     )
 
