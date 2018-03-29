@@ -95,7 +95,7 @@ class TestingJob(object):
         Validate the distro is supported for testing.
         """
         if not distro:
-            distro = 'SLES'
+            distro = 'sles'
         elif distro not in ('openSUSE_Leap', 'SLES'):
             raise MashTestingException(
                 'Distro: {0} not supported.'.format(distro)

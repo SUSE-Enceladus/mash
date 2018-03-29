@@ -17,4 +17,4 @@ credentials:
 obs:
   download_directory: /var/tmp/mash/images
 testing:
-  ssh_private_key_file: /etc/mash/testing_key
+  ssh_private_key_file: /etc/mash/key

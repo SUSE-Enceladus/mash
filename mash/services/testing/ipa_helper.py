@@ -22,17 +22,26 @@ import threading
 from ipa.ipa_controller import test_image
 
 from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
+from mash.utils.ec2 import get_client
+from mash.utils.generic import generate_name, get_key_from_file
 
 
 def ipa_test(
     results, provider=None, access_key_id=None, description=None, distro=None,
     image_id=None, instance_type=None, region=None, secret_access_key=None,
-    ssh_private_key=None, ssh_user=None, tests=None
+    ssh_private_key_file=None, ssh_user=None, tests=None
 ):
     name = threading.current_thread().getName()
+    key_name = generate_name()
+    client = get_client('ec2', access_key_id, secret_access_key, region)
     try:
+        ssh_public_key = get_key_from_file(ssh_private_key_file + '.pub')
+        client.import_key_pair(
+            KeyName=key_name, PublicKeyMaterial=ssh_public_key
+        )
+
         status, result = test_image(
-            provider.upper(),  # TODO remove uppercase when IPA update released
+            provider,
             access_key_id=access_key_id,
             cleanup=True,
             desc=description,
@@ -42,7 +51,8 @@ def ipa_test(
             log_level=logging.WARNING,
             region=region,
             secret_access_key=secret_access_key,
-            ssh_private_key=ssh_private_key,
+            ssh_key_name=key_name,
+            ssh_private_key=ssh_private_key_file,
             ssh_user=ssh_user,
             tests=tests
         )
@@ -51,3 +61,8 @@ def ipa_test(
     else:
         status = SUCCESS if status == 0 else FAILED
         results[name] = {'status': status}
+    finally:
+        try:
+            client.delete_key_pair(KeyName=key_name)
+        except Exception:
+            pass
