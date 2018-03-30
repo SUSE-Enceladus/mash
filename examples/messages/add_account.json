@@ -2,9 +2,7 @@
   "account_name": "test-aws",
   "credentials": {
     "access_key_id": "123456",
-    "secret_access_key": "654321",
-    "ssh_key_name": "key-123",
-    "ssh_private_key": "key123"
+    "secret_access_key": "654321"
   },
   "group": "group1",
   "partition": "aws",
