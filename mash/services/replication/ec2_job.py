@@ -67,17 +67,19 @@ class EC2ReplicationJob(ReplicationJob):
             )
 
             for target_region in reg_info['target_regions']:
-                # Replicate image to all target regions for each source region
-                self.source_region_results[target_region]['image_id'] = \
-                    self._replicate_to_region(
-                        credential, self.source_regions[source_region],
-                        source_region, target_region
-                    )  # noqa: E123 Suppress erroneous flake8 warning.
+                if source_region != target_region:
+                    # Replicate image to all target regions
+                    # for each source region
+                    self.source_region_results[target_region]['image_id'] = \
+                        self._replicate_to_region(
+                            credential, self.source_regions[source_region],
+                            source_region, target_region
+                        )  # noqa: E123 Suppress erroneous flake8 warning.
 
-                # Save account along with results to prevent searching dict
-                # twice to find associated credentials on each waiter.
-                self.source_region_results[target_region]['account'] = \
-                    credential
+                    # Save account along with results to prevent searching dict
+                    # twice to find associated credentials on each waiter.
+                    self.source_region_results[target_region]['account'] = \
+                        credential
 
         # Wait for images to replicate, this will take time.
         time.sleep(600)
