@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -21,3 +21,7 @@ class Defaults(object):
     """
     Default values
     """
+
+    @classmethod
+    def get_accounts_file(self):
+        return '/etc/mash/accounts.json'
