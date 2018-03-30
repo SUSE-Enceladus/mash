@@ -26,6 +26,7 @@ config = {
         'python-dateutil==2.6.*',
         'APScheduler>=3.3.1',
         'amqpstorm>=2.4.0',
+        'ec2deprecateimg',
         'ec2publishimg',
         'ec2uploadimg',
         'python3-ipa'

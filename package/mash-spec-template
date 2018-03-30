@@ -35,6 +35,7 @@ Requires:       python3-PyJWT
 Requires:       python3-amqpstorm >= 2.4.0
 Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil
+Requires:       python3-ec2deprecateimg
 Requires:       python3-ec2publishimg
 Requires:       python3-ec2uploadimg
 Requires:       python3-ipa
