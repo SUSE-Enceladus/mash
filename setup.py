@@ -21,9 +21,11 @@ config = {
     'install_requires': [
         'setuptools>=5.4',
         'boto3',
+        'jsonschema',
         'PyYAML',
         'PyJWT',
         'python-dateutil==2.6.*',
+        'strict-rfc3339',
         'APScheduler>=3.3.1',
         'amqpstorm>=2.4.0',
         'ec2deprecateimg',
