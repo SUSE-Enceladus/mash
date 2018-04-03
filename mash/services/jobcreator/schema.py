@@ -18,98 +18,118 @@
 
 
 job_message = {
-    "type": "object",
-    "properties": {
-        "provider": {"enum": ["azure", "ec2"]},
-        "provider_accounts": {
-            "type": "array",
-            "items": {"type": "string"},
-            "uniqueItems": True
+    'type': 'object',
+    'properties': {
+        'provider': {'enum': ['azure', 'ec2']},
+        'provider_accounts': {
+            'type': 'array',
+            'items': {'$ref': '#/definitions/non_empty_string'},
+            'uniqueItems': True,
+            'minItems': 1
         },
-        "requesting_user": {"type": "string"},
-        "last_service": {
-            "enum": [
+        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
+        'last_service': {
+            'enum': [
                 'obs', 'uploader', 'testing', 'replication',
                 'publisher', 'deprecation', 'pint'
             ]
         },
-        "utctime": {
-            "anyOf": [
-                {"enum": ["always", "now"]},
-                {"type": "string", "format": "date-time"}
-            ]
-        },
-        "image": {"type": "string"},
-        "cloud_image_name": {"type": "string"},
-        "old_cloud_image_name": {"type": "string"},
-        "project": {"type": "string"},
-        "conditions": {
-            "type": "array",
-            "items": {
-                "anyOf": [
-                    {"$ref": "#definitions/image_conditions"},
-                    {"$ref": "#definitions/package_conditions"}
-                ]
-            }
-        },
-        "share_with": {
-            "anyOf": [
-                {"enum": ["all", "none"]},
+        'utctime': {
+            'anyOf': [
+                {'enum': ['always', 'now']},
                 {
-                    "type": "string",
-                    "format": "regex",
-                    "pattern": "^[0-9]{12}(,[0-9]{12})*$"
+                    '$ref': '#/definitions/non_empty_string',
+                    'format': 'date-time'
                 }
             ]
         },
-        "allow_copy": {"type": "boolean"},
-        "image_description": {"type": "string"},
-        "target_regions": {
-            "type": "object",
-            "properties": {
-                "accounts": {
-                    "type": "array",
-                    "items": {"$ref": "#definitions/account"}
+        'image': {'$ref': '#/definitions/non_empty_string'},
+        'cloud_image_name': {'$ref': '#/definitions/non_empty_string'},
+        'old_cloud_image_name': {'$ref': '#/definitions/non_empty_string'},
+        'project': {'$ref': '#/definitions/non_empty_string'},
+        'conditions': {
+            'type': 'array',
+            'items': {
+                'anyOf': [
+                    {'$ref': '#definitions/image_conditions'},
+                    {'$ref': '#definitions/package_conditions'}
+                ]
+            },
+            'minItems': 1
+        },
+        'share_with': {
+            'anyOf': [
+                {'enum': ['all', 'none']},
+                {
+                    '$ref': '#/definitions/non_empty_string',
+                    'format': 'regex',
+                    'pattern': '^[0-9]{12}(,[0-9]{12})*$'
+                }
+            ]
+        },
+        'allow_copy': {'type': 'boolean'},
+        'image_description': {'$ref': '#/definitions/non_empty_string'},
+        'target_regions': {
+            'type': 'object',
+            'properties': {
+                'accounts': {
+                    'type': 'array',
+                    'items': {'$ref': '#definitions/account'}
                 },
-                "groups": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "uniqueItems": True
+                'groups': {
+                    'type': 'array',
+                    'items': {'$ref': '#/definitions/non_empty_string'},
+                    'uniqueItems': True
                 }
             }
         },
-        "tests": {
-            "type": "array",
-            "items": {"type": "string"}
+        'tests': {
+            'type': 'array',
+            'items': {'$ref': '#/definitions/non_empty_string'},
+            'minItems': 1
         }
     },
-    "additionalProperties": False,
-    "definitions": {
-        "image_conditions": {
-            "properties": {
-                "image": {"type": "string"}
-            },
-            "additionalProperties": False
-        },
-        "package_conditions": {
-            "properties": {
-                "package": {
-                    "type": "array",
-                    "items": {"type": "string"}
+    'additionalProperties': False,
+    'required': [
+        'provider', 'provider_accounts', 'requesting_user', 'last_service',
+        'utctime', 'image', 'cloud_image_name', 'old_cloud_image_name',
+        'project', 'share_with', 'allow_copy', 'image_description',
+        'target_regions', 'tests'
+    ],
+    'definitions': {
+        'account': {
+            'properties': {
+                'name': {'$ref': '#/definitions/non_empty_string'},
+                'regions': {
+                    'type': 'array',
+                    'items': {'$ref': '#/definitions/non_empty_string'},
+                    'uniqueItems': True
                 }
             },
-            "additionalProperties": False
+            'additionalProperties': False,
+            'required': ['name']
         },
-        "account": {
-            "properties": {
-                "name": {"type": "string"},
-                "regions": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "uniqueItems": True
+        'image_conditions': {
+            'properties': {
+                'image': {'$ref': '#/definitions/non_empty_string'}
+            },
+            'additionalProperties': False,
+            'required': ['image']
+        },
+        'non_empty_string': {
+            'type': 'string',
+            'minLength': 1
+        },
+        'package_conditions': {
+            'properties': {
+                'package': {
+                    'type': 'array',
+                    'items': {'$ref': '#/definitions/non_empty_string'},
+                    'minItems': 2
                 }
             },
-            "additionalProperties": False
+            'additionalProperties': False,
+            'required': ['package']
         }
     }
 }
