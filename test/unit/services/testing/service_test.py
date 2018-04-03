@@ -147,10 +147,6 @@ class TestIPATestingService(object):
         job.id = '1'
         job.get_metadata.return_value = {'job_id': '1'}
 
-        scheduler = Mock()
-        scheduler.remove_job.side_effect = JobLookupError('1')
-
-        self.testing.scheduler = scheduler
         self.testing.jobs['1'] = job
         self.testing._delete_job('1')
 
@@ -158,7 +154,6 @@ class TestIPATestingService(object):
             'Deleting job.',
             extra={'job_id': '1'}
         )
-        scheduler.remove_job.assert_called_once_with('1')
         mock_unbind_queue.assert_called_once_with(
             'listener', 'testing', '1'
         )
@@ -173,6 +168,10 @@ class TestIPATestingService(object):
         job.utctime = 'now'
         job.get_metadata.return_value = {'job_id': '1'}
 
+        scheduler = Mock()
+        scheduler.remove_job.side_effect = JobLookupError('1')
+        self.testing.scheduler = scheduler
+
         self.testing.jobs['1'] = job
         self.testing._cleanup_job(job, 1)
 
@@ -180,6 +179,7 @@ class TestIPATestingService(object):
             'Failed upstream.',
             extra={'job_id': '1'}
         )
+        scheduler.remove_job.assert_called_once_with('1')
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 

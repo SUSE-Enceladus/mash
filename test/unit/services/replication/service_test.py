@@ -122,6 +122,8 @@ class TestReplicationService(object):
     def test_replication_cleanup_job(
         self, mock_publish_message, mock_delete_job
     ):
+        self.replication.scheduler.remove_job.side_effect = JobLookupError('1')
+
         job = Mock()
         job.id = '1'
         job.status = 'success'
@@ -136,6 +138,7 @@ class TestReplicationService(object):
             'Failed upstream.',
             extra={'job_id': '1'}
         )
+        self.replication.scheduler.remove_job.assert_called_once_with('1')
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
@@ -181,10 +184,6 @@ class TestReplicationService(object):
     def test_replication_delete_job(
         self, mock_unbind_queue, mock_remove_file
     ):
-        self.replication.scheduler.remove_job.side_effect = JobLookupError(
-            'Job finished.'
-        )
-
         job = Mock()
         job.id = '1'
         job.job_file = 'job-test.json'
@@ -196,7 +195,6 @@ class TestReplicationService(object):
 
         self.replication._delete_job('1')
 
-        self.replication.scheduler.remove_job.assert_called_once_with('1')
         self.replication.log.info.assert_called_once_with(
             'Deleting job.',
             extra={'job_id': '1'}
