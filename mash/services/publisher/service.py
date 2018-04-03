@@ -159,7 +159,6 @@ class PublisherService(BaseService):
                 'publisher_result': {
                     'id': job.id,
                     'cloud_image_name': job.cloud_image_name,
-                    'source_regions': job.source_regions,
                     'status': job.status,
                 }
             }
@@ -194,13 +193,7 @@ class PublisherService(BaseService):
             "replication_result": {
                 "id": "123",
                 "cloud_image_name": "image_123",
-                "source_regions": {
-                    "us-east-2": "ami-bc5b48d0",
-                    "us-west-2": "ami-bc5b48d0",
-                    "eu-west-2": "ami-bc5b48d0",
-                    "cn-northwest-1": "ami-bc5b4853"
-                },
-                "status": "success",
+                "status": "success"
             }
         }
 
@@ -398,14 +391,13 @@ class PublisherService(BaseService):
             self._cleanup_job(job, status)
             return None
         else:
-            for attr in ['cloud_image_name', 'source_regions']:
-                if attr not in listener_msg:
-                    self.log.error(
-                        '{0} is required in replication result.'.format(attr)
-                    )
-                    return None
-                else:
-                    setattr(job, attr, listener_msg[attr])
+            if 'cloud_image_name' not in listener_msg:
+                self.log.error(
+                    'cloud_image_name is required in replication result.'
+                )
+                return None
+            else:
+                job.cloud_image_name = listener_msg['cloud_image_name']
 
         return job
 
