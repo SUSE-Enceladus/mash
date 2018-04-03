@@ -44,10 +44,7 @@ class EC2ReplicationJob(ReplicationJob):
         self.job_file = job_file
         self.source_region_results = defaultdict(dict)
         self.source_regions = None
-        self.replication_source_regions = \
-            self.validate_replication_source_regions(
-                replication_source_regions
-            )
+        self.replication_source_regions = replication_source_regions
 
     def _replicate(self):
         """
@@ -159,23 +156,3 @@ class EC2ReplicationJob(ReplicationJob):
             if cloud_image_name == image.get('Name'):
                 return True
         return False
-
-    def validate_replication_source_regions(self, replication_source_regions):
-        """
-        Validate replication_source_regions attribute is correct format.
-
-        Must be a dictionary mapping regions to accounts and target_regions
-        list.
-
-        {'us-east-1': {'account': 'test-aws', 'target_regions': ['us-east-2']}}
-        """
-        for region, reg_info in replication_source_regions.items():
-            if not reg_info.get('account'):
-                raise MashReplicationException(
-                    'Source region {0} missing account name.'.format(region)
-                )
-            if not reg_info.get('target_regions'):
-                raise MashReplicationException(
-                    'Source region {0} missing target regions.'.format(region)
-                )
-        return replication_source_regions
