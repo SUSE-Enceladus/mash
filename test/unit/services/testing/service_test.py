@@ -222,8 +222,7 @@ class TestIPATestingService(object):
         self.message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with({'id': '1'})
 
-    @patch.object(TestingService, 'notify_invalid_config')
-    def test_testing_handle_jobs_invalid(self, mock_notify):
+    def test_testing_handle_jobs_invalid(self):
         self.message.body = '{"testing_job_update": {"id": "1"}}'
 
         self.testing._handle_jobs(self.message)
@@ -233,10 +232,8 @@ class TestIPATestingService(object):
             'Invalid testing job: Job config must contain '
             'testing_job key.'
         )
-        mock_notify.assert_called_once_with(self.message.body)
 
-    @patch.object(TestingService, 'notify_invalid_config')
-    def test_testing_handle_jobs_format(self, mock_notify):
+    def test_testing_handle_jobs_format(self):
         self.message.body = 'Invalid format.'
         self.testing._handle_jobs(self.message)
 
@@ -245,19 +242,14 @@ class TestIPATestingService(object):
             'Invalid job config file: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-        mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(TestingService, '_validate_job')
-    @patch.object(TestingService, 'notify_invalid_config')
-    def test_testing_handle_jobs_fail_validation(
-        self, mock_notify, mock_validate_job
-    ):
+    def test_testing_handle_jobs_fail_validation(self, mock_validate_job):
         mock_validate_job.return_value = False
         self.message.body = '{"testing_job": {"id": "1"}}'
         self.testing._handle_jobs(self.message)
 
         self.message.ack.assert_called_once_with()
-        mock_notify.assert_called_once_with(self.message.body)
 
     def test_testing_get_status_message(self):
         job = Mock()
