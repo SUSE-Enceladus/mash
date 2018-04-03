@@ -66,17 +66,3 @@ class TestEC2PublisherJob(object):
         with raises(MashPublisherException) as e:
             self.job._publish()
         assert msg == str(e.value)
-
-    def test_validate_share_with(self):
-        share_with = self.job.validate_share_with('123456789987,321456543342')
-        assert share_with == '123456789987,321456543342'
-
-        msg = 'Share with must be "all", "none", or comma separated list' \
-              ' of 12 digit AWS account numbers.'
-        with raises(MashPublisherException) as e:
-            self.job.validate_share_with([''])
-
-        assert msg == str(e.value)
-
-        with raises(MashPublisherException) as e:
-            self.job.validate_share_with(',')

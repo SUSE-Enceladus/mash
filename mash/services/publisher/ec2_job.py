@@ -16,9 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import re
-
-from itertools import repeat
 from ec2utils.ec2publishimg import EC2PublishImage
 
 from mash.mash_exceptions import MashPublisherException
@@ -39,7 +36,7 @@ class EC2PublisherJob(PublisherJob):
             id, provider, publish_regions, utctime, job_file=job_file
         )
         self.allow_copy = allow_copy
-        self.share_with = self.validate_share_with(share_with)
+        self.share_with = share_with
 
     def _publish(self):
         """
@@ -69,31 +66,3 @@ class EC2PublisherJob(PublisherJob):
                     )
 
         self.status = SUCCESS
-
-    def validate_account_numbers(self, share_with):
-        """
-        Validate the share_with attr is a comma separated list of accounts.
-        """
-        accounts = list(filter(None, share_with.split(',')))
-        if accounts:
-            return all(map(re.match, repeat('^\d{12}$'), accounts))
-        return False
-
-    def validate_share_with(self, share_with):
-        """
-        Validate share with is all, none or a comma separated list of accounts.
-        """
-        if share_with:
-            error_msg = 'Share with must be "all", "none", or ' \
-                'comma separated list of 12 digit AWS account numbers.'
-
-            try:
-                share_with = share_with.lower()
-            except Exception:
-                raise MashPublisherException(error_msg)
-
-            if share_with not in ('all', 'none') \
-                    and not self.validate_account_numbers(share_with):
-                raise MashPublisherException(error_msg)
-
-        return share_with
