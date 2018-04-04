@@ -28,7 +28,7 @@ class Defaults(object):
 
     @classmethod
     def get_encryption_keys_file(self):
-        return '/etc/mash/encryption_keys'
+        return '/var/lib/mash/encryption_keys'
 
     @classmethod
     def get_job_directory(self, service_name):

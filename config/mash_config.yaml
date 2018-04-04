@@ -1,7 +1,7 @@
 jwt_algorithm: HS256
 jwt_secret: enter-a-secret
 log_dir: /var/log/mash/
-encryption_keys_file: /etc/mash/encryption_keys
+encryption_keys_file: /var/lib/mash/encryption_keys
 services:
   - obs
   - uploader

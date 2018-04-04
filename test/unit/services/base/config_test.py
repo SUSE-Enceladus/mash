@@ -10,7 +10,7 @@ class TestBaseConfig(object):
 
     def test_get_encryption_keys_file(self):
         enc_keys_file = self.empty_config.get_encryption_keys_file()
-        assert enc_keys_file == '/etc/mash/encryption_keys'
+        assert enc_keys_file == '/var/lib/mash/encryption_keys'
 
     def test_get_jwt_algorithm(self):
         algorithm = self.empty_config.get_jwt_algorithm()
