@@ -16,9 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import dateutil.parser
-
-from mash.mash_exceptions import MashPublisherException
 from mash.services.status_levels import UNKOWN
 from mash.services.publisher.constants import NOT_IMPLEMENTED
 
@@ -35,10 +32,10 @@ class PublisherJob(object):
         self.id = id
         self.job_file = job_file
         self.log_callback = None
-        self.provider = self.validate_provider(provider)
-        self.publish_regions = self.validate_publish_regions(publish_regions)
+        self.provider = provider
+        self.publish_regions = publish_regions
         self.status = UNKOWN
-        self.utctime = self.validate_timestamp(utctime)
+        self.utctime = utctime
 
     def get_metadata(self):
         """
@@ -78,40 +75,3 @@ class PublisherJob(object):
         Set log_callback function to callback.
         """
         self.log_callback = callback
-
-    def validate_provider(self, provider):
-        """
-        Validate the provider is supported for publisher.
-        """
-        if provider not in ('ec2',):
-            raise MashPublisherException(
-                'Provider: {0} not supported.'.format(provider)
-            )
-        return provider
-
-    def validate_publish_regions(self, publish_regions):
-        """
-        Validate the publish regions dict has required keys.
-        """
-        for region_info in publish_regions:
-            if not (region_info['account'] and region_info['target_regions']):
-                raise MashPublisherException(
-                    'Invalid publish_regions format. '
-                    'Must be a list of dictionaries with account and '
-                    'target_regions keys.'
-                )
-
-        return publish_regions
-
-    def validate_timestamp(self, utctime):
-        """
-        Validate the utctime is always, now or valid utc time format.
-        """
-        if utctime not in ('always', 'now'):
-            try:
-                utctime = dateutil.parser.parse(utctime)
-            except Exception as e:
-                raise MashPublisherException(
-                    'Invalid utctime format: {0}.'.format(utctime)
-                )
-        return utctime
