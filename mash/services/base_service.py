@@ -361,6 +361,10 @@ class BaseService(object):
         Allow to set a custom service log file
         """
         try:
+            log_dir = os.path.dirname(logfile)
+            if not os.path.isdir(log_dir):
+                os.makedirs(log_dir)
+
             logfile_handler = logging.FileHandler(
                 filename=logfile, encoding='utf-8'
             )
