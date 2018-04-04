@@ -1,0 +1,9 @@
+{
+    "pint_job": {
+        "id": "123",
+        "provider": "ec2",
+        "utctime": "now",
+        "cloud_image_name": "image_123",
+        "old_cloud_image_name": "old_image_123"
+    }
+}

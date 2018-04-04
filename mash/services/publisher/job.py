@@ -37,7 +37,6 @@ class PublisherJob(object):
         self.log_callback = None
         self.provider = self.validate_provider(provider)
         self.publish_regions = self.validate_publish_regions(publish_regions)
-        self.source_regions = None
         self.status = UNKOWN
         self.utctime = self.validate_timestamp(utctime)
 

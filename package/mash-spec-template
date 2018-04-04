@@ -82,6 +82,9 @@ install -D -m 644 config/mash_replication.service \
 install -D -m 644 config/mash_publisher.service \
     %{buildroot}%{_unitdir}/mash_publisher.service
 
+install -D -m 644 config/mash_deprecation.service \
+    %{buildroot}%{_unitdir}/mash_deprecation.service
+
 %files
 %defattr(-,root,root,-)
 %{python3_sitelib}/*
@@ -111,5 +114,8 @@ install -D -m 644 config/mash_publisher.service \
 
 %{_bindir}/mash-publisher-service
 %{_unitdir}/mash_publisher.service
+
+%{_bindir}/mash-deprecation-service
+%{_unitdir}/mash_deprecation.service
 
 %changelog

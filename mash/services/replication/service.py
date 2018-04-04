@@ -85,6 +85,13 @@ class ReplicationService(BaseService):
         job.status = status
         self.log.warning('Failed upstream.', extra=job.get_metadata())
 
+        try:
+            # Remove job from scheduler if it has
+            # not started executing yet.
+            self.scheduler.remove_job(job.id)
+        except JobLookupError:
+            pass
+
         self._delete_job(job.id)
         self._publish_message(job)
 
@@ -125,13 +132,6 @@ class ReplicationService(BaseService):
         Remove job from dict and delete listener queue.
         """
         if job_id in self.jobs:
-            try:
-                # Remove job from scheduler if it has
-                # not started executing yet.
-                self.scheduler.remove_job(job_id)
-            except JobLookupError:
-                pass
-
             job = self.jobs[job_id]
             self.log.info(
                 'Deleting job.',
@@ -160,7 +160,6 @@ class ReplicationService(BaseService):
                 'replication_result': {
                     'id': job.id,
                     'cloud_image_name': job.cloud_image_name,
-                    'source_regions': job.get_source_regions_result(),
                     'status': job.status,
                 }
             }
@@ -178,12 +177,25 @@ class ReplicationService(BaseService):
         """
         Process credentials response JWT tokens.
         """
-        token = json.loads(message.body)
-        payload = self.decode_credentials(token['jwt_token'])
-        job = self.jobs.get(payload['id'])
+        try:
+            token = json.loads(message.body)
+        except Exception:
+            self.log.error(
+                'Invalid credentials response message: '
+                'Must be a json encoded message.'
+            )
+        else:
+            job_id, credentials = self.decode_credentials(token)
+            job = self.jobs.get(job_id)
 
-        job.credentials = payload['credentials']
-        self._schedule_job(job.id)
+            if job:
+                job.credentials = credentials
+                self._schedule_job(job.id)
+            elif job_id:
+                self.log.error(
+                    'Credentials recieved for invalid job with ID:'
+                    ' {0}.'.format(job_id)
+                )
 
         message.ack()
 
@@ -381,15 +393,13 @@ class ReplicationService(BaseService):
             self._cleanup_job(job, status)
             return None
         else:
-            # Required args
-            for attr in ['cloud_image_name', 'source_regions']:
-                if attr not in listener_msg:
-                    self.log.error(
-                        '{0} is required in testing result.'.format(attr)
-                    )
-                    return None
-                else:
-                    setattr(job, attr, listener_msg[attr])
+            if 'cloud_image_name' not in listener_msg:
+                self.log.error(
+                    'cloud_image_name is required in testing result.'
+                )
+                return None
+            else:
+                job.cloud_image_name = listener_msg['cloud_image_name']
 
         return job
 
