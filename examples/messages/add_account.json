@@ -1,0 +1,11 @@
+{
+  "account_name": "test-aws",
+  "credentials": {
+    "access_key_id": "123456",
+    "secret_access_key": "654321"
+  },
+  "group": "group1",
+  "partition": "aws",
+  "provider": "ec2",
+  "requesting_user": "user1"
+}

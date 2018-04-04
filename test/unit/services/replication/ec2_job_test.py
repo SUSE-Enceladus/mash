@@ -146,18 +146,6 @@ class TestEC2ReplicationJob(object):
         )
         assert self.job.status == FAILED
 
-    def test_replicate_get_source_regions_result(self):
-        self.job.source_region_results = {
-            'us-east-2': {
-                'image_id': 'ami-54321',
-                'account': Mock()
-            }
-        }
-
-        result = self.job.get_source_regions_result()
-
-        assert result['us-east-2'] == 'ami-54321'
-
     def test_replicate_image_exists(self):
         images = {'Images': []}
         client = Mock()

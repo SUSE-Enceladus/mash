@@ -16,8 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import dateutil.parser
-
 from mash.mash_exceptions import MashTestingException
 from mash.services.status_levels import UNKOWN
 from mash.services.testing.constants import NOT_IMPLEMENTED
@@ -31,24 +29,24 @@ class TestingJob(object):
 
     def __init__(
         self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
-        job_file=None, description=None, distro=None, instance_type=None
+        job_file=None, description=None, distro='sles', instance_type=None
     ):
         self.cloud_image_name = None
         self.job_file = job_file
         self.credentials = None
         self.description = description
-        self.distro = self.validate_distro(distro)
+        self.distro = distro
         self.instance_type = instance_type
         self.iteration_count = 0
         self.id = id
         self.log_callback = None
-        self.provider = self.validate_provider(provider)
+        self.provider = provider
         self.status = UNKOWN
         self.source_regions = None
         self.ssh_private_key_file = ssh_private_key_file
         self.test_regions = self.validate_test_regions(test_regions)
-        self.tests = self.validate_tests(tests)
-        self.utctime = self.validate_timestamp(utctime)
+        self.tests = tests
+        self.utctime = utctime
 
     def _run_tests(self):
         """
@@ -90,48 +88,6 @@ class TestingJob(object):
         self.send_log('Running IPA tests against image.')
         self._run_tests()
 
-    def validate_distro(self, distro):
-        """
-        Validate the distro is supported for testing.
-        """
-        if not distro:
-            distro = 'SLES'
-        elif distro not in ('openSUSE_Leap', 'SLES'):
-            raise MashTestingException(
-                'Distro: {0} not supported.'.format(distro)
-            )
-        return distro
-
-    def validate_provider(self, provider):
-        """
-        Validate the provider is supported for testing.
-        """
-        if provider not in ('ec2',):
-            raise MashTestingException(
-                'Provider: {0} not supported.'.format(provider)
-            )
-        return provider
-
-    def validate_tests(self, tests):
-        """
-        Validate the tests attr is a comma separated list of tests.
-
-        There must be at least one test provided.
-        """
-        try:
-            tests = [test for test in filter(None, tests.split(','))]
-        except Exception:
-            raise MashTestingException(
-                'Invalid tests format, must be a comma seperated list.'
-            )
-
-        if len(tests) < 1:
-            raise MashTestingException(
-                'Must provide at least one test.'
-            )
-
-        return tests
-
     def validate_test_regions(self, test_regions):
         """
         Ensure the test regions arg is the proper format.
@@ -148,16 +104,3 @@ class TestingJob(object):
                     'Must be a dict format of {region:account}.'
                 )
         return test_regions
-
-    def validate_timestamp(self, utctime):
-        """
-        Validate the utctime is always, now or valid utc time format.
-        """
-        if utctime not in ('always', 'now'):
-            try:
-                utctime = dateutil.parser.parse(utctime)
-            except Exception as e:
-                raise MashTestingException(
-                    'Invalid utctime format: {0}.'.format(utctime)
-                )
-        return utctime

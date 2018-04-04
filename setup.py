@@ -33,6 +33,7 @@ config = {
             'mash-uploader-service=mash.services.uploader_service:main',
             'mash-replication-service=mash.services.replication_service:main',
             'mash-publisher-service=mash.services.publisher_service:main',
+            'mash-deprecation-service=mash.services.deprecation_service:main'
         ]
     },
     'include_package_data': True,
