@@ -2,7 +2,6 @@ import io
 import json
 import jwt
 
-from amqpstorm import AMQPError
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import MagicMock, Mock

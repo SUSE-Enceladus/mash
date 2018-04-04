@@ -141,9 +141,8 @@ class TestCredentialsService(object):
         mock_add_job.assert_called_once_with({'id': '1'})
 
     @patch.object(CredentialsService, '_send_control_response')
-    @patch.object(CredentialsService, 'notify_invalid_config')
     def test_credentials_handle_job_docs_format(
-        self, mock_notify, mock_send_control_response
+        self, mock_send_control_response
     ):
         message = Mock()
         message.body = 'Invalid format.'
@@ -154,20 +153,15 @@ class TestCredentialsService(object):
             'Invalid job config file: Expecting value:'
             ' line 1 column 1 (char 0).', success=False
         )
-        mock_notify.assert_called_once_with(message.body)
 
     @patch.object(CredentialsService, '_validate_job_doc')
-    @patch.object(CredentialsService, 'notify_invalid_config')
-    def test_credentials_handle_jobs_fail_validation(
-        self, mock_notify, mock_validate_job
-    ):
+    def test_credentials_handle_jobs_fail_validation(self, mock_validate_job):
         mock_validate_job.return_value = False
         message = Mock()
         message.body = '{"credentials_job": {"id": "1"}}'
         self.service._handle_job_documents(message)
 
         message.ack.assert_called_once_with()
-        mock_notify.assert_called_once_with(message.body)
 
     @patch.object(CredentialsService, '_validate_job_doc')
     @patch.object(CredentialsService, '_delete_job')
