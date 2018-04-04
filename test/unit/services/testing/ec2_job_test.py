@@ -60,7 +60,7 @@ class TestEC2TestingJob(object):
             desc=job.description,
             distro='sles',
             image_id='ami-123',
-            instance_type='t2.micro',
+            instance_type=None,
             log_level=30,
             region='us-east-1',
             secret_access_key='321',

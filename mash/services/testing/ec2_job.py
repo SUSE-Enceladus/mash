@@ -32,7 +32,7 @@ class EC2TestingJob(TestingJob):
     def __init__(
         self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
         job_file=None, credentials=None, description=None, distro=None,
-        instance_type='t2.micro', ssh_user='ec2-user'
+        instance_type=None, ssh_user='ec2-user'
     ):
         super(EC2TestingJob, self).__init__(
             id, provider, ssh_private_key_file, test_regions, tests, utctime,
