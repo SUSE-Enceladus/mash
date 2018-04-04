@@ -16,10 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import dateutil.parser
-
-from mash.csp import CSP
-from mash.mash_exceptions import MashReplicationException
 from mash.services.status_levels import UNKOWN
 from mash.services.replication.constants import NOT_IMPLEMENTED
 
@@ -34,9 +30,9 @@ class ReplicationJob(object):
         self.id = id
         self.job_file = job_file
         self.log_callback = None
-        self.provider = self.validate_provider(provider)
+        self.provider = provider
         self.status = UNKOWN
-        self.utctime = self.validate_timestamp(utctime)
+        self.utctime = utctime
 
     def _replicate(self):
         """
@@ -73,26 +69,3 @@ class ReplicationJob(object):
         Set log_callback function to callback.
         """
         self.log_callback = callback
-
-    def validate_provider(self, provider):
-        """
-        Validate the provider is supported for replication.
-        """
-        if provider not in CSP.constants:
-            raise MashReplicationException(
-                'Provider: {0} not supported.'.format(provider)
-            )
-        return provider
-
-    def validate_timestamp(self, utctime):
-        """
-        Validate the utctime is always, now or valid utc time format.
-        """
-        if utctime not in ('always', 'now'):
-            try:
-                utctime = dateutil.parser.parse(utctime)
-            except Exception as e:
-                raise MashReplicationException(
-                    'Invalid utctime format: {0}.'.format(utctime)
-                )
-        return utctime

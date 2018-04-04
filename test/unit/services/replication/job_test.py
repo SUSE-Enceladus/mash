@@ -1,7 +1,6 @@
 from pytest import raises
 from unittest.mock import Mock, patch
 
-from mash.mash_exceptions import MashReplicationException
 from mash.services.replication.job import ReplicationJob
 
 
@@ -60,19 +59,3 @@ class TestReplicationJob(object):
         job.replicate_image()
 
         mock_replicate.assert_called_once_with()
-
-    def test_invalid_provider(self):
-        self.job_config['provider'] = 'Provider'
-        msg = 'Provider: Provider not supported.'
-        with raises(MashReplicationException) as e:
-            ReplicationJob(**self.job_config)
-
-        assert str(e.value) == msg
-
-    def test_invalid_timestamp(self):
-        self.job_config['utctime'] = 'never'
-        msg = 'Invalid utctime format: never.'
-        with raises(MashReplicationException) as e:
-            ReplicationJob(**self.job_config)
-
-        assert str(e.value) == msg
