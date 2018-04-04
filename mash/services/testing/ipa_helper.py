@@ -23,7 +23,7 @@ from ipa.ipa_controller import test_image
 
 from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
 from mash.utils.ec2 import get_client
-from mash.utils.generic import generate_name, get_key_from_file
+from mash.utils.mash_utils import generate_name, get_key_from_file
 
 
 def ipa_test(

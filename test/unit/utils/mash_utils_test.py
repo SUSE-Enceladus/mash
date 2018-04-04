@@ -19,7 +19,7 @@
 import io
 
 from unittest.mock import MagicMock, patch
-from mash.utils.generic import generate_name, get_key_from_file
+from mash.utils.mash_utils import generate_name, get_key_from_file
 
 
 def test_generate_name():
