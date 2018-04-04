@@ -21,7 +21,7 @@ import jwt
 import logging
 import os
 
-from amqpstorm import AMQPError, Connection
+from amqpstorm import Connection
 from datetime import datetime, timedelta
 
 # project
@@ -285,15 +285,6 @@ class BaseService(object):
             self.log.info(msg, extra=metadata)
         else:
             self.log.error(msg, extra=metadata)
-
-    def notify_invalid_config(self, message):
-        """
-        Notify job creator an invalid job config message has been received.
-        """
-        try:
-            self._publish('jobcreator', 'invalid_config', message)
-        except AMQPError:
-            self.log.warning('Message not received: {0}'.format(message))
 
     def persist_job_config(self, config):
         """
