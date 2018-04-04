@@ -39,9 +39,7 @@ class EC2DeprecationJob(DeprecationJob):
         self.old_cloud_image_name = old_cloud_image_name
         self.cloud_image_name = None
         self.job_file = job_file
-        self.deprecation_regions = self.validate_deprecation_regions(
-            deprecation_regions
-        )
+        self.deprecation_regions = deprecation_regions
         self.source_regions = None
 
     def _deprecate(self):
@@ -77,19 +75,3 @@ class EC2DeprecationJob(DeprecationJob):
                             self.old_cloud_image_name, region, error
                         )
                     )
-
-    def validate_deprecation_regions(self, deprecation_regions):
-        """
-        Validate deprecation_regions attribute is correct format.
-
-        Must be a list of dictionaries mapping accounts and target_regions.
-
-        [{'account': 'test-aws', 'target_regions': ['us-east-2']}]
-        """
-        for region in deprecation_regions:
-            if not (region.get('account') and region.get('target_regions')):
-                raise MashDeprecationException(
-                    'deprecation_regions must be a list of dictionaries '
-                    'with account and target_regions keys.'
-                )
-        return deprecation_regions

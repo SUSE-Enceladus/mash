@@ -34,7 +34,8 @@ Requires:       python3-PyYAML
 Requires:       python3-PyJWT
 Requires:       python3-amqpstorm >= 2.4.0
 Requires:       python3-APScheduler >= 3.3.1
-Requires:       python3-python-dateutil
+Requires:       python3-python-dateutil >= 2.6.0
+Requires:       python3-python-dateutil < 2.7.0
 Requires:       python3-ec2deprecateimg
 Requires:       python3-ec2publishimg
 Requires:       python3-ec2uploadimg
@@ -50,10 +51,10 @@ cloud
 %setup -q -n mash-%{version}
 
 %build
-python3 setup.build.py build
+python3 setup.py build
 
 %install
-python3 setup.build.py install --prefix=%{_prefix} --root=%{buildroot}
+python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
 
 install -D -m 644 config/mash_config.yaml \
     %{buildroot}%{_sysconfdir}/%{name}/mash_config.yaml
@@ -81,6 +82,9 @@ install -D -m 644 config/mash_replication.service \
 
 install -D -m 644 config/mash_publisher.service \
     %{buildroot}%{_unitdir}/mash_publisher.service
+
+install -D -m 644 config/mash_deprecation.service \
+    %{buildroot}%{_unitdir}/mash_deprecation.service
 
 %files
 %defattr(-,root,root,-)
@@ -111,5 +115,8 @@ install -D -m 644 config/mash_publisher.service \
 
 %{_bindir}/mash-publisher-service
 %{_unitdir}/mash_publisher.service
+
+%{_bindir}/mash-deprecation-service
+%{_unitdir}/mash_deprecation.service
 
 %changelog

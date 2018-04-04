@@ -11,7 +11,7 @@ jsonschema
 PyYAML
 PyJWT
 APScheduler
-python-dateutil==2.6.*
+python-dateutil>=2.6.0,<2.7.0
 strict-rfc3339
 amqpstorm
 ec2deprecateimg
