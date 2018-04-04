@@ -50,10 +50,10 @@ cloud
 %setup -q -n mash-%{version}
 
 %build
-python3 setup.build.py build
+python3 setup.py build
 
 %install
-python3 setup.build.py install --prefix=%{_prefix} --root=%{buildroot}
+python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
 
 install -D -m 644 config/mash_config.yaml \
     %{buildroot}%{_sysconfdir}/%{name}/mash_config.yaml
