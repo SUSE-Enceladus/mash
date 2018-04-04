@@ -10,7 +10,7 @@ class TestEC2TestingJob(object):
             'provider': 'ec2',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {'us-east-1': 'test-aws'},
-            'tests': 'test_stuff',
+            'tests': ['test_stuff'],
             'utctime': 'now',
         }
 
@@ -46,7 +46,7 @@ class TestEC2TestingJob(object):
             cleanup=True,
             access_key_id='123',
             desc=job.description,
-            distro='SLES',
+            distro='sles',
             image_id='ami-123',
             instance_type=job.instance_type,
             log_level=30,
