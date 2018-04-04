@@ -259,19 +259,15 @@ class DeprecationService(BaseService):
             job_desc = json.loads(message.body)
         except ValueError as e:
             self.log.error('Invalid job config file: {}.'.format(e))
-            self.notify_invalid_config(message.body)
         else:
-            if 'deprecation_job' in job_desc:
-                if not self._validate_job_config(job_desc['deprecation_job']):
-                    self.notify_invalid_config(message.body)
-                else:
-                    self._add_job(job_desc['deprecation_job'])
+            if 'deprecation_job' in job_desc and \
+                    self._validate_job_config(job_desc['deprecation_job']):
+                self._add_job(job_desc['deprecation_job'])
             else:
                 self.log.error(
                     'Invalid deprecation job: Job document must contain '
                     'the deprecation_job key.'
                 )
-                self.notify_invalid_config(message.body)
 
         message.ack()
 

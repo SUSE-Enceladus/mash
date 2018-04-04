@@ -361,8 +361,7 @@ class TestDeprecationService(object):
         })
         self.message.ack.assert_called_once_with()
 
-    @patch.object(DeprecationService, 'notify_invalid_config')
-    def test_deprecation_handle_service_message_invalid(self, mock_notify):
+    def test_deprecation_handle_service_message_invalid(self):
         self.message.body = 'Invalid format.'
         self.deprecation._handle_service_message(self.message)
 
@@ -371,10 +370,8 @@ class TestDeprecationService(object):
             'Invalid job config file: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-        mock_notify.assert_called_once_with(self.message.body)
 
-    @patch.object(DeprecationService, 'notify_invalid_config')
-    def test_deprecation_handle_service_message_bad_key(self, mock_notify):
+    def test_deprecation_handle_service_message_bad_key(self):
         self.message.body = '{"deprecation_job_update": {"id": "1"}}'
 
         self.deprecation._handle_service_message(self.message)
@@ -384,19 +381,16 @@ class TestDeprecationService(object):
             'Invalid deprecation job: Job document must contain the '
             'deprecation_job key.'
         )
-        mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(DeprecationService, '_validate_job_config')
-    @patch.object(DeprecationService, 'notify_invalid_config')
     def test_deprecation_handle_service_message_fail_validation(
-        self, mock_notify, mock_validate_job
+        self, mock_validate_job
     ):
         mock_validate_job.return_value = False
         self.message.body = '{"deprecation_job": {"id": "1"}}'
         self.deprecation._handle_service_message(self.message)
 
         self.message.ack.assert_called_once_with()
-        mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(DeprecationService, '_delete_job')
     @patch.object(DeprecationService, '_publish_message')
