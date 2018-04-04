@@ -224,7 +224,7 @@ class TestReplicationService(object):
 
     @patch.object(ReplicationService, '_schedule_job')
     @patch.object(ReplicationService, 'decode_credentials')
-    def test_publisher_handle_credentials_response(
+    def test_replication_handle_credentials_response(
         self, mock_decode_credentials, mock_schedule_job
     ):
         job = Mock()
@@ -235,11 +235,36 @@ class TestReplicationService(object):
         message = Mock()
         message.body = '{"jwt_token": "response"}'
 
-        mock_decode_credentials.return_value = {'id': '1', 'credentials': {}}
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
         self.replication._handle_credentials_response(message)
 
         mock_schedule_job.assert_called_once_with('1')
         message.ack.assert_called_once_with()
+
+    @patch.object(ReplicationService, 'decode_credentials')
+    def test_replication_handle_credentials_response_exceptions(
+        self, mock_decode_credentials
+    ):
+        message = Mock()
+        message.body = '{"jwt_token": "response"}'
+
+        # Test job does not exist.
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
+        self.replication._handle_credentials_response(message)
+        self.replication.log.error.assert_called_once_with(
+            'Credentials recieved for invalid job with ID: 1.'
+        )
+
+        # Invalid json string
+        self.replication.log.error.reset_mock()
+        message.body = 'invalid json string'
+        self.replication._handle_credentials_response(message)
+        self.replication.log.error.assert_called_once_with(
+            'Invalid credentials response message: '
+            'Must be a json encoded message.'
+        )
+
+        assert message.ack.call_count == 2
 
     @patch.object(ReplicationService, '_replicate_image')
     def test_replication_handle_listener_message(self, mock_replicate_image):
@@ -360,8 +385,7 @@ class TestReplicationService(object):
         )
         self.message.ack.assert_called_once_with()
 
-    @patch.object(ReplicationService, 'notify_invalid_config')
-    def test_replication_handle_service_message_invalid(self, mock_notify):
+    def test_replication_handle_service_message_invalid(self):
         self.message.body = 'Invalid format.'
         self.replication._handle_service_message(self.message)
 
@@ -370,10 +394,8 @@ class TestReplicationService(object):
             'Invalid job config file: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-        mock_notify.assert_called_once_with(self.message.body)
 
-    @patch.object(ReplicationService, 'notify_invalid_config')
-    def test_replication_handle_service_message_bad_key(self, mock_notify):
+    def test_replication_handle_service_message_bad_key(self):
         self.message.body = '{"replication_job_update": {"id": "1"}}'
 
         self.replication._handle_service_message(self.message)
@@ -383,19 +405,16 @@ class TestReplicationService(object):
             'Invalid replication job: Job document must contain the '
             'replication_job key.'
         )
-        mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(ReplicationService, '_validate_job_config')
-    @patch.object(ReplicationService, 'notify_invalid_config')
     def test_replication_handle_service_message_fail_validation(
-        self, mock_notify, mock_validate_job
+        self, mock_validate_job
     ):
         mock_validate_job.return_value = False
         self.message.body = '{"replication_job": {"id": "1"}}'
         self.replication._handle_service_message(self.message)
 
         self.message.ack.assert_called_once_with()
-        mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(ReplicationService, '_delete_job')
     @patch.object(ReplicationService, '_publish_message')

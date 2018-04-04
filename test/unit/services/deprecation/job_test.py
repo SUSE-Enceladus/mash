@@ -1,7 +1,6 @@
 from pytest import raises
 from unittest.mock import Mock, patch
 
-from mash.mash_exceptions import MashDeprecationException
 from mash.services.deprecation.job import DeprecationJob
 
 
@@ -60,19 +59,3 @@ class TestDeprecationJob(object):
         job.deprecate_image()
 
         mock_deprecate.assert_called_once_with()
-
-    def test_invalid_provider(self):
-        self.job_config['provider'] = 'Provider'
-        msg = 'Provider: Provider not supported.'
-        with raises(MashDeprecationException) as e:
-            DeprecationJob(**self.job_config)
-
-        assert str(e.value) == msg
-
-    def test_invalid_timestamp(self):
-        self.job_config['utctime'] = 'never'
-        msg = 'Invalid utctime format: never.'
-        with raises(MashDeprecationException) as e:
-            DeprecationJob(**self.job_config)
-
-        assert str(e.value) == msg

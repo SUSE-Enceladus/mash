@@ -156,11 +156,10 @@ class UploadImageService(BaseService):
             self._check_ready(job_id)
 
     def _handle_credentials(self, job_data):
-        credentials = self.decode_credentials(job_data['jwt_token'])
-        if 'id' in credentials:
-            job_id = credentials['id']
+        job_id, credentials = self.decode_credentials(job_data)
+        if job_id:
             self._set_job(job_id)
-            self.jobs[job_id]['credentials'] = credentials['credentials']
+            self.jobs[job_id]['credentials'] = credentials
             self._send_job_response(
                 job_id, 'Got credentials data'
             )

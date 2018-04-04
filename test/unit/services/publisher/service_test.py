@@ -231,11 +231,36 @@ class TestPublisherService(object):
         message = Mock()
         message.body = '{"jwt_token": "response"}'
 
-        mock_decode_credentials.return_value = {'id': '1', 'credentials': {}}
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
         self.publisher._handle_credentials_response(message)
 
         mock_schedule_job.assert_called_once_with('1')
         message.ack.assert_called_once_with()
+
+    @patch.object(PublisherService, 'decode_credentials')
+    def test_publisher_handle_credentials_response_exceptions(
+        self, mock_decode_credentials
+    ):
+        message = Mock()
+        message.body = '{"jwt_token": "response"}'
+
+        # Test job does not exist.
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
+        self.publisher._handle_credentials_response(message)
+        self.publisher.log.error.assert_called_once_with(
+            'Credentials recieved for invalid job with ID: 1.'
+        )
+
+        # Invalid json string
+        self.publisher.log.error.reset_mock()
+        message.body = 'invalid json string'
+        self.publisher._handle_credentials_response(message)
+        self.publisher.log.error.assert_called_once_with(
+            'Invalid credentials response message: '
+            'Must be a json encoded message.'
+        )
+
+        assert message.ack.call_count == 2
 
     @patch.object(PublisherService, 'publish_credentials_request')
     @patch.object(PublisherService, '_publish_image')
@@ -332,8 +357,7 @@ class TestPublisherService(object):
         )
         self.message.ack.assert_called_once_with()
 
-    @patch.object(PublisherService, 'notify_invalid_config')
-    def test_publisher_handle_service_message_invalid(self, mock_notify):
+    def test_publisher_handle_service_message_invalid(self):
         self.message.body = 'Invalid format.'
         self.publisher._handle_service_message(self.message)
 
@@ -342,10 +366,8 @@ class TestPublisherService(object):
             'Invalid job config file: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-        mock_notify.assert_called_once_with(self.message.body)
 
-    @patch.object(PublisherService, 'notify_invalid_config')
-    def test_publisher_handle_service_message_bad_key(self, mock_notify):
+    def test_publisher_handle_service_message_bad_key(self):
         self.message.body = '{"publisher_job_update": {"id": "1"}}'
 
         self.publisher._handle_service_message(self.message)
@@ -355,19 +377,16 @@ class TestPublisherService(object):
             'Invalid publisher job: Job document must contain the '
             'publisher_job key.'
         )
-        mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(PublisherService, '_validate_job_config')
-    @patch.object(PublisherService, 'notify_invalid_config')
     def test_publisher_handle_service_message_fail_validation(
-        self, mock_notify, mock_validate_job
+        self, mock_validate_job
     ):
         mock_validate_job.return_value = False
         self.message.body = '{"publisher_job": {"id": "1"}}'
         self.publisher._handle_service_message(self.message)
 
         self.message.ack.assert_called_once_with()
-        mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(PublisherService, '_delete_job')
     @patch.object(PublisherService, '_publish_message')

@@ -177,12 +177,25 @@ class ReplicationService(BaseService):
         """
         Process credentials response JWT tokens.
         """
-        token = json.loads(message.body)
-        payload = self.decode_credentials(token['jwt_token'])
-        job = self.jobs.get(payload['id'])
+        try:
+            token = json.loads(message.body)
+        except Exception:
+            self.log.error(
+                'Invalid credentials response message: '
+                'Must be a json encoded message.'
+            )
+        else:
+            job_id, credentials = self.decode_credentials(token)
+            job = self.jobs.get(job_id)
 
-        job.credentials = payload['credentials']
-        self._schedule_job(job.id)
+            if job:
+                job.credentials = credentials
+                self._schedule_job(job.id)
+            elif job_id:
+                self.log.error(
+                    'Credentials recieved for invalid job with ID:'
+                    ' {0}.'.format(job_id)
+                )
 
         message.ack()
 
@@ -234,19 +247,15 @@ class ReplicationService(BaseService):
             job_desc = json.loads(message.body)
         except ValueError as error:
             self.log.error('Invalid job config file: {0}.'.format(error))
-            self.notify_invalid_config(message.body)
         else:
-            if 'replication_job' in job_desc:
-                if not self._validate_job_config(job_desc['replication_job']):
-                    self.notify_invalid_config(message.body)
-                else:
-                    self._add_job(job_desc['replication_job'])
+            if 'replication_job' in job_desc and \
+                    self._validate_job_config(job_desc['replication_job']):
+                self._add_job(job_desc['replication_job'])
             else:
                 self.log.error(
                     'Invalid replication job: Job document must contain '
                     'the replication_job key.'
                 )
-                self.notify_invalid_config(message.body)
 
         message.ack()
 

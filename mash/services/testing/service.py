@@ -185,12 +185,25 @@ class TestingService(BaseService):
         """
         Process credentials response JWT tokens.
         """
-        token = json.loads(message.body)
-        payload = self.decode_credentials(token['jwt_token'])
-        job = self.jobs.get(payload['id'])
+        try:
+            token = json.loads(message.body)
+        except Exception:
+            self.log.error(
+                'Invalid credentials response message: '
+                'Must be a json encoded message.'
+            )
+        else:
+            job_id, credentials = self.decode_credentials(token)
+            job = self.jobs.get(job_id)
 
-        job.credentials = payload['credentials']
-        self._schedule_job(job.id)
+            if job:
+                job.credentials = credentials
+                self._schedule_job(job.id)
+            elif job_id:
+                self.log.error(
+                    'Credentials recieved for invalid job with ID:'
+                    ' {0}.'.format(job_id)
+                )
 
         message.ack()
 
@@ -216,19 +229,15 @@ class TestingService(BaseService):
             job_desc = json.loads(message.body)
         except ValueError as e:
             self.log.error('Invalid job config file: {}.'.format(e))
-            self.notify_invalid_config(message.body)
         else:
-            if 'testing_job' in job_desc:
-                if not self._validate_job(job_desc['testing_job']):
-                    self.notify_invalid_config(message.body)
-                else:
-                    self._add_job(job_desc['testing_job'])
+            if 'testing_job' in job_desc and \
+                    self._validate_job(job_desc['testing_job']):
+                self._add_job(job_desc['testing_job'])
             else:
                 self.log.error(
                     'Invalid testing job: Job config must contain '
                     'testing_job key.'
                 )
-                self.notify_invalid_config(message.body)
 
         message.ack()
 

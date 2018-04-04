@@ -29,7 +29,6 @@ from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
 from mash.mash_exceptions import (
-    MashCredentialsException,
     MashRabbitConnectionException,
     MashLogSetupException
 )
@@ -249,15 +248,26 @@ class BaseService(object):
         """
         try:
             payload = jwt.decode(
-                message, self.jwt_secret, algorithm=self.jwt_algorithm,
-                issuer='credentials', audience=self.service_exchange
+                message['jwt_token'], self.jwt_secret,
+                algorithm=self.jwt_algorithm, issuer='credentials',
+                audience=self.service_exchange
+            )
+            job_id = payload['id']
+            credentials = payload['credentials']
+        except KeyError as error:
+            self.log.error(
+                'Invalid credentials response recieved: {0}'
+                ' key must be in credentials message.'.format(error)
             )
         except Exception as error:
-            raise MashCredentialsException(
+            self.log.error(
                 'Invalid credentials response token: {0}'.format(error)
             )
+        else:
+            return job_id, credentials
 
-        return payload
+        # If exception occurs decoding credentials return None.
+        return None, None
 
     def get_credential_request(self, job_id):
         """
