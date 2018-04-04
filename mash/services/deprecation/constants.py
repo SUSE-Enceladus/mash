@@ -16,12 +16,4 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-
-class Defaults(object):
-    """
-    Default values
-    """
-
-    @classmethod
-    def get_accounts_file(self):
-        return '/etc/mash/accounts.json'
+NOT_IMPLEMENTED = 'Implement method in child classes.'

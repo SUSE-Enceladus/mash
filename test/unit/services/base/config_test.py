@@ -8,6 +8,10 @@ class TestBaseConfig(object):
         self.empty_config = BaseConfig('../data/empty_mash_config.yaml')
         self.config = BaseConfig('../data/mash_config.yaml')
 
+    def test_get_encryption_keys_file(self):
+        enc_keys_file = self.empty_config.get_encryption_keys_file()
+        assert enc_keys_file == '/var/lib/mash/encryption_keys'
+
     def test_get_jwt_algorithm(self):
         algorithm = self.empty_config.get_jwt_algorithm()
         assert algorithm == 'HS256'
@@ -22,9 +26,6 @@ class TestBaseConfig(object):
             self.empty_config.get_jwt_secret()
 
         assert msg == str(error.value)
-
-    def test_get_private_key_file(self):
-        assert self.config.get_private_key_file() == '/etc/mash/creds_key'
 
     def test_get_services_names(self):
         expected = {

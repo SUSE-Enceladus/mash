@@ -36,12 +36,11 @@ class TestEC2PublisherJob(object):
     def test_publish(self, mock_ec2_publish_image):
         publisher = Mock()
         mock_ec2_publish_image.return_value = publisher
-
-        self.job.source_regions = {'us-east-2': 'ami-123456'}
+        self.job.cloud_image_name = 'image_name_123'
         self.job._publish()
 
         mock_ec2_publish_image.assert_called_once_with(
-            access_key='123456', allow_copy=False,
+            access_key='123456', allow_copy=False, image_name='image_name_123',
             secret_key='654321', verbose=False, visibility='all'
         )
 
@@ -59,24 +58,10 @@ class TestEC2PublisherJob(object):
         publisher.publish_images.side_effect = Exception('Failed to publish.')
         mock_ec2_publish_image.return_value = publisher
 
-        self.job.source_regions = {'us-east-2': 'ami-123456'}
+        self.job.cloud_image_name = 'image_name_123'
 
-        msg = 'An error publishing image ami-123456 in us-east-2.' \
+        msg = 'An error publishing image image_name_123 in us-east-2.' \
             ' Failed to publish.'
         with raises(MashPublisherException) as e:
             self.job._publish()
         assert msg == str(e.value)
-
-    def test_validate_share_with(self):
-        share_with = self.job.validate_share_with('123456789987,321456543342')
-        assert share_with == '123456789987,321456543342'
-
-        msg = 'Share with must be "all", "none", or comma separated list' \
-              ' of 12 digit AWS account numbers.'
-        with raises(MashPublisherException) as e:
-            self.job.validate_share_with([''])
-
-        assert msg == str(e.value)
-
-        with raises(MashPublisherException) as e:
-            self.job.validate_share_with(',')
