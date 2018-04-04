@@ -23,7 +23,7 @@ config = {
         'boto3',
         'PyYAML',
         'PyJWT',
-        'python-dateutil==2.6.*',
+        'python-dateutil>=2.6.0,<2.7.0',
         'APScheduler>=3.3.1',
         'amqpstorm>=2.4.0',
         'ec2deprecateimg',
