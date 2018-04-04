@@ -12,7 +12,6 @@ from mash.services.base_service import BaseService
 from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
-    MashCredentialsException,
     MashRabbitConnectionException,
     MashLogSetupException
 )
@@ -220,41 +219,48 @@ class TestBaseService(object):
         self.service.jwt_secret = 'super.secret'
         self.service_exchange = 'obs'
 
-        message = Mock()
+        message = {'jwt_token': 'secret_credentials'}
         mock_jwt.decode.return_value = {
+            "id": "1",
             "credentials": {
                 "test-aws": {
                     "access_key_id": "123456",
-                    "secret_access_key": "654321",
-                    "ssh_key_name": "key-123",
-                    "ssh_private_key": "key123"
+                    "secret_access_key": "654321"
                 },
                 "test-aws-cn": {
                     "access_key_id": "654321",
-                    "secret_access_key": "123456",
-                    "ssh_key_name": "key-321",
-                    "ssh_private_key": "key321"
+                    "secret_access_key": "123456"
                 }
             }
         }
 
-        payload = self.service.decode_credentials(message)
+        job_id, credentials = self.service.decode_credentials(message)
 
         mock_jwt.decode.assert_called_once_with(
-            message, 'super.secret', algorithm='HS256',
+            'secret_credentials', 'super.secret', algorithm='HS256',
             issuer='credentials', audience='obs'
         )
 
-        assert len(payload['credentials'].keys()) == 2
+        assert len(credentials.keys()) == 2
+        assert job_id == '1'
+
+        # Missing credentials key
+        mock_jwt.decode.return_value = {"id": "1"}
+
+        job_id, credentials = self.service.decode_credentials(message)
+        self.service.log.error.assert_called_once_with(
+            "Invalid credentials response recieved: 'credentials'"
+            " key must be in credentials message."
+        )
 
         # Credential exception
+        self.service.log.error.reset_mock()
         mock_jwt.decode.side_effect = Exception('Token is broken!')
 
-        msg = 'Invalid credentials response token: Token is broken!'
-        with raises(MashCredentialsException) as e:
-            self.service.decode_credentials(message)
-        assert msg == str(e.value)
-        # Credential exception
+        job_id, credentials = self.service.decode_credentials(message)
+        self.service.log.error.assert_called_once_with(
+            'Invalid credentials response token: Token is broken!'
+        )
 
     @patch.object(BaseService, '_publish')
     def test_notify_invalid_config(self, mock_publish):

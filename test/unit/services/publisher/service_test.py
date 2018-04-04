@@ -231,11 +231,36 @@ class TestPublisherService(object):
         message = Mock()
         message.body = '{"jwt_token": "response"}'
 
-        mock_decode_credentials.return_value = {'id': '1', 'credentials': {}}
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
         self.publisher._handle_credentials_response(message)
 
         mock_schedule_job.assert_called_once_with('1')
         message.ack.assert_called_once_with()
+
+    @patch.object(PublisherService, 'decode_credentials')
+    def test_publisher_handle_credentials_response_exceptions(
+        self, mock_decode_credentials
+    ):
+        message = Mock()
+        message.body = '{"jwt_token": "response"}'
+
+        # Test job does not exist.
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
+        self.publisher._handle_credentials_response(message)
+        self.publisher.log.error.assert_called_once_with(
+            'Credentials recieved for invalid job with ID: 1.'
+        )
+
+        # Invalid json string
+        self.publisher.log.error.reset_mock()
+        message.body = 'invalid json string'
+        self.publisher._handle_credentials_response(message)
+        self.publisher.log.error.assert_called_once_with(
+            'Invalid credentials response message: '
+            'Must be a json encoded message.'
+        )
+
+        assert message.ack.call_count == 2
 
     @patch.object(PublisherService, 'publish_credentials_request')
     @patch.object(PublisherService, '_publish_image')

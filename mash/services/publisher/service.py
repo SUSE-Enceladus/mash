@@ -176,12 +176,25 @@ class PublisherService(BaseService):
         """
         Process credentials response JWT tokens.
         """
-        token = json.loads(message.body)
-        payload = self.decode_credentials(token['jwt_token'])
-        job = self.jobs.get(payload['id'])
+        try:
+            token = json.loads(message.body)
+        except Exception:
+            self.log.error(
+                'Invalid credentials response message: '
+                'Must be a json encoded message.'
+            )
+        else:
+            job_id, credentials = self.decode_credentials(token)
+            job = self.jobs.get(job_id)
 
-        job.credentials = payload['credentials']
-        self._schedule_job(job.id)
+            if job:
+                job.credentials = credentials
+                self._schedule_job(job.id)
+            elif job_id:
+                self.log.error(
+                    'Credentials recieved for invalid job with ID:'
+                    ' {0}.'.format(job_id)
+                )
 
         message.ack()
 
