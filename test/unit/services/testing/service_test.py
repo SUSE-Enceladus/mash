@@ -147,10 +147,6 @@ class TestIPATestingService(object):
         job.id = '1'
         job.get_metadata.return_value = {'job_id': '1'}
 
-        scheduler = Mock()
-        scheduler.remove_job.side_effect = JobLookupError('1')
-
-        self.testing.scheduler = scheduler
         self.testing.jobs['1'] = job
         self.testing._delete_job('1')
 
@@ -158,7 +154,6 @@ class TestIPATestingService(object):
             'Deleting job.',
             extra={'job_id': '1'}
         )
-        scheduler.remove_job.assert_called_once_with('1')
         mock_unbind_queue.assert_called_once_with(
             'listener', 'testing', '1'
         )
@@ -173,6 +168,10 @@ class TestIPATestingService(object):
         job.utctime = 'now'
         job.get_metadata.return_value = {'job_id': '1'}
 
+        scheduler = Mock()
+        scheduler.remove_job.side_effect = JobLookupError('1')
+        self.testing.scheduler = scheduler
+
         self.testing.jobs['1'] = job
         self.testing._cleanup_job(job, 1)
 
@@ -180,6 +179,7 @@ class TestIPATestingService(object):
             'Failed upstream.',
             extra={'job_id': '1'}
         )
+        scheduler.remove_job.assert_called_once_with('1')
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
@@ -204,11 +204,36 @@ class TestIPATestingService(object):
         message = Mock()
         message.body = '{"jwt_token": "response"}'
 
-        mock_decode_credentials.return_value = {'id': '1', 'credentials': {}}
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
         self.testing._handle_credentials_response(message)
 
         mock_schedule_job.assert_called_once_with('1')
         message.ack.assert_called_once_with()
+
+    @patch.object(TestingService, 'decode_credentials')
+    def test_testing_handle_credentials_response_exceptions(
+        self, mock_decode_credentials
+    ):
+        message = Mock()
+        message.body = '{"jwt_token": "response"}'
+
+        # Test job does not exist.
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
+        self.testing._handle_credentials_response(message)
+        self.testing.log.error.assert_called_once_with(
+            'Credentials recieved for invalid job with ID: 1.'
+        )
+
+        # Invalid json string
+        self.testing.log.error.reset_mock()
+        message.body = 'invalid json string'
+        self.testing._handle_credentials_response(message)
+        self.testing.log.error.assert_called_once_with(
+            'Invalid credentials response message: '
+            'Must be a json encoded message.'
+        )
+
+        assert message.ack.call_count == 2
 
     @patch.object(TestingService, '_validate_job')
     @patch.object(TestingService, '_add_job')

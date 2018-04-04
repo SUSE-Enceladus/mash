@@ -12,7 +12,7 @@ class TestTestingJob(object):
             'provider': 'ec2',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {'us-east-1': 'test-aws'},
-            'tests': 'test_stuff',
+            'tests': ['test_stuff'],
             'utctime': 'now'
         }
 
@@ -53,49 +53,10 @@ class TestTestingJob(object):
             True
         )
 
-    def test_invalid_distro(self):
-        self.job_config['distro'] = 'Fake'
-        msg = 'Distro: Fake not supported.'
-        with raises(MashTestingException) as e:
-            TestingJob(**self.job_config)
-
-        assert str(e.value) == msg
-
-    def test_invalid_provider(self):
-        self.job_config['provider'] = 'Fake'
-        msg = 'Provider: Fake not supported.'
-        with raises(MashTestingException) as e:
-            TestingJob(**self.job_config)
-
-        assert str(e.value) == msg
-
-    def test_invalid_tests(self):
-        self.job_config['tests'] = ''
-        msg = 'Must provide at least one test.'
-        with raises(MashTestingException) as e:
-            TestingJob(**self.job_config)
-
-        assert str(e.value) == msg
-
-        self.job_config['tests'] = ['test_stuff']
-        msg = 'Invalid tests format, must be a comma seperated list.'
-        with raises(MashTestingException) as e:
-            TestingJob(**self.job_config)
-
-        assert str(e.value) == msg
-
     def test_invalid_test_regions(self):
         self.job_config['test_regions'] = {'us-east-1': None}
         msg = 'Invalid test_regions format. ' \
             'Must be a dict format of {region:account}.'
-        with raises(MashTestingException) as e:
-            TestingJob(**self.job_config)
-
-        assert str(e.value) == msg
-
-    def test_invalid_timestamp(self):
-        self.job_config['utctime'] = 'never'
-        msg = 'Invalid utctime format: never.'
         with raises(MashTestingException) as e:
             TestingJob(**self.job_config)
 
