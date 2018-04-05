@@ -1,10 +1,10 @@
 from pytest import raises
 from unittest.mock import Mock, patch
 
-from mash.services.replication.job import ReplicationJob
+from mash.services.deprecation.job import DeprecationJob
 
 
-class TestReplicationJob(object):
+class TestDeprecationJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
@@ -13,33 +13,33 @@ class TestReplicationJob(object):
         }
 
     def test_valid_job(self):
-        job = ReplicationJob(**self.job_config)
+        job = DeprecationJob(**self.job_config)
 
         assert job.id == '1'
         assert job.provider == 'ec2'
         assert job.utctime == 'now'
 
     def test_job_get_metadata(self):
-        job = ReplicationJob(**self.job_config)
+        job = DeprecationJob(**self.job_config)
         metadata = job.get_metadata()
         assert metadata == {'job_id': '1'}
 
-    def test_replicate(self):
-        job = ReplicationJob(**self.job_config)
+    def test_deprecate(self):
+        job = DeprecationJob(**self.job_config)
         with raises(NotImplementedError):
-            job._replicate()
+            job._deprecate()
 
     def test_send_log(self):
         callback = Mock()
 
-        job = ReplicationJob(**self.job_config)
+        job = DeprecationJob(**self.job_config)
         job.log_callback = callback
         job.iteration_count = 0
 
-        job.send_log('Starting replicate.')
+        job.send_log('Starting deprecation.')
 
         callback.assert_called_once_with(
-            'Pass[0]: Starting replicate.',
+            'Pass[0]: Starting deprecation.',
             {'job_id': '1'},
             True
         )
@@ -47,15 +47,15 @@ class TestReplicationJob(object):
     def test_set_log_callback(self):
         test = Mock()
 
-        job = ReplicationJob(**self.job_config)
+        job = DeprecationJob(**self.job_config)
         job.set_log_callback(test.method)
 
         assert job.log_callback == test.method
 
-    @patch.object(ReplicationJob, '_replicate')
-    def test_replicate_image(self, mock_replicate):
-        job = ReplicationJob(**self.job_config)
+    @patch.object(DeprecationJob, '_deprecate')
+    def test_deprecate_image(self, mock_deprecate):
+        job = DeprecationJob(**self.job_config)
         job.log_callback = Mock()
-        job.replicate_image()
+        job.deprecate_image()
 
-        mock_replicate.assert_called_once_with()
+        mock_deprecate.assert_called_once_with()

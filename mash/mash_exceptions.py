@@ -132,3 +132,9 @@ class MashPublisherException(MashException):
     """
     Base exception for publisher service.
     """
+
+
+class MashDeprecationException(MashException):
+    """
+    Base exception for deprecation service.
+    """

@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -17,18 +17,30 @@
 #
 
 from mash.services.base_config import BaseConfig
+from mash.services.jobcreator.defaults import Defaults
 
 
 class JobCreatorConfig(BaseConfig):
     """
-    Implements reading of job creator service configuration file:
+    Implements reading of mash configuration file:
 
-    * /etc/mash/job_creator_config.yml
+    * /etc/mash/mash_config.yml
 
-    The mash configuration file for the job creator service is a yaml
-    formatted file containing information to control the behavior
-    of the job creator service.
+    The mash configuration file is a yaml formatted file containing
+    information to control the behavior of mash.
     """
 
     def __init__(self, config_file=None):
         super(JobCreatorConfig, self).__init__(config_file)
+
+    def get_accounts_file(self):
+        """
+        Return the path to the provider accounts key file.
+
+        :rtype: string
+        """
+        accounts_file = self._get_attribute(
+            attribute='accounts_file',
+            element='jobcreator'
+        )
+        return accounts_file or Defaults.get_accounts_file()

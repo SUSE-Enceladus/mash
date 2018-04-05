@@ -21,7 +21,7 @@ import jwt
 import logging
 import os
 
-from amqpstorm import AMQPError, Connection
+from amqpstorm import Connection
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 
@@ -30,7 +30,6 @@ from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
 from mash.mash_exceptions import (
-    MashCredentialsException,
     MashRabbitConnectionException,
     MashLogSetupException
 )
@@ -250,15 +249,26 @@ class BaseService(object):
         """
         try:
             payload = jwt.decode(
-                message, self.jwt_secret, algorithm=self.jwt_algorithm,
-                issuer='credentials', audience=self.service_exchange
+                message['jwt_token'], self.jwt_secret,
+                algorithm=self.jwt_algorithm, issuer='credentials',
+                audience=self.service_exchange
+            )
+            job_id = payload['id']
+            credentials = payload['credentials']
+        except KeyError as error:
+            self.log.error(
+                'Invalid credentials response recieved: {0}'
+                ' key must be in credentials message.'.format(error)
             )
         except Exception as error:
-            raise MashCredentialsException(
+            self.log.error(
                 'Invalid credentials response token: {0}'.format(error)
             )
+        else:
+            return job_id, credentials
 
-        return payload
+        # If exception occurs decoding credentials return None.
+        return None, None
 
     def get_credential_request(self, job_id):
         """
@@ -295,15 +305,6 @@ class BaseService(object):
             self.log.info(msg, extra=metadata)
         else:
             self.log.error(msg, extra=metadata)
-
-    def notify_invalid_config(self, message):
-        """
-        Notify job creator an invalid job config message has been received.
-        """
-        try:
-            self._publish('jobcreator', 'invalid_config', message)
-        except AMQPError:
-            self.log.warning('Message not received: {0}'.format(message))
 
     def persist_job_config(self, config):
         """
@@ -361,6 +362,10 @@ class BaseService(object):
         Allow to set a custom service log file
         """
         try:
+            log_dir = os.path.dirname(logfile)
+            if not os.path.isdir(log_dir):
+                os.makedirs(log_dir)
+
             logfile_handler = logging.FileHandler(
                 filename=logfile, encoding='utf-8'
             )

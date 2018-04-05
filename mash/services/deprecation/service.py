@@ -16,12 +16,21 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.services.base_service import BaseService
 
-class Defaults(object):
+
+class DeprecationService(BaseService):
     """
-    Default values
+    Implementation of deprecation service.
+
+    Deprecates the old image in the given cloud provider for new image.
+
+    * :attr:`custom_args`
     """
 
-    @classmethod
-    def get_accounts_file(self):
-        return '/etc/mash/accounts.json'
+    def post_init(self):
+        """
+        Initialize deprecation service class.
+
+        Setup config and bind to jobcreator queue to receive jobs.
+        """
