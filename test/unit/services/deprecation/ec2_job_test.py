@@ -70,12 +70,3 @@ class TestEC2DeprecationJob(object):
         with raises(MashDeprecationException) as e:
             self.job._deprecate()
         assert msg == str(e.value)
-
-    def test_validate_deprecation_regions(self):
-        regions = [{'account': 'test-aws'}]
-        with raises(MashDeprecationException) as error:
-            self.job.validate_deprecation_regions(regions)
-
-        msg = 'deprecation_regions must be a list of dictionaries with ' \
-            'account and target_regions keys.'
-        assert msg == str(error.value)

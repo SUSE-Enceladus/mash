@@ -21,7 +21,7 @@ import jwt
 import logging
 import os
 
-from amqpstorm import AMQPError, Connection
+from amqpstorm import Connection
 from datetime import datetime, timedelta
 
 # project
@@ -296,15 +296,6 @@ class BaseService(object):
         else:
             self.log.error(msg, extra=metadata)
 
-    def notify_invalid_config(self, message):
-        """
-        Notify job creator an invalid job config message has been received.
-        """
-        try:
-            self._publish('jobcreator', 'invalid_config', message)
-        except AMQPError:
-            self.log.warning('Message not received: {0}'.format(message))
-
     def persist_job_config(self, config):
         """
         Persist the job config file to disk for recoverability.
@@ -361,6 +352,10 @@ class BaseService(object):
         Allow to set a custom service log file
         """
         try:
+            log_dir = os.path.dirname(logfile)
+            if not os.path.isdir(log_dir):
+                os.makedirs(log_dir)
+
             logfile_handler = logging.FileHandler(
                 filename=logfile, encoding='utf-8'
             )

@@ -258,19 +258,15 @@ class PublisherService(BaseService):
             job_desc = json.loads(message.body)
         except ValueError as error:
             self.log.error('Invalid job config file: {0}.'.format(error))
-            self.notify_invalid_config(message.body)
         else:
-            if 'publisher_job' in job_desc:
-                if not self._validate_job_config(job_desc['publisher_job']):
-                    self.notify_invalid_config(message.body)
-                else:
-                    self._add_job(job_desc['publisher_job'])
+            if 'publisher_job' in job_desc and \
+                    self._validate_job_config(job_desc['publisher_job']):
+                self._add_job(job_desc['publisher_job'])
             else:
                 self.log.error(
                     'Invalid publisher job: Job document must contain '
                     'the publisher_job key.'
                 )
-                self.notify_invalid_config(message.body)
 
         message.ack()
 

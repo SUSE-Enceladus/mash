@@ -49,6 +49,17 @@ class BaseConfig(object):
             else:
                 return self.config_data.get(attribute)
 
+    def get_encryption_keys_file(self):
+        """
+        Return the encryption keys file path.
+
+        :rtype: string
+        """
+        encryption_keys_file = self._get_attribute(
+            attribute='encryption_keys_file'
+        )
+        return encryption_keys_file or Defaults.get_encryption_keys_file()
+
     def get_jwt_algorithm(self):
         """
         Return JWT algorithm from MASH config file.
@@ -91,15 +102,6 @@ class BaseConfig(object):
             dir=log_dir, service=service
         )
 
-    def get_private_key_file(self):
-        """
-        Return the path to the private key file.
-
-        :rtype: string
-        """
-        private_key_file = self._get_attribute(attribute='private_key_file')
-        return private_key_file or Defaults.get_private_key_file()
-
     def get_service_names(self, credentials_required=False):
         """
         Return a list of all service names.
@@ -114,6 +116,7 @@ class BaseConfig(object):
             non_cred_services = self._get_attribute(
                 attribute='non_cred_services'
             ) or Defaults.get_non_credential_service_names()
-            services = set(services) - set(non_cred_services)
+            services = [service for service in services
+                        if service not in non_cred_services]
 
         return services

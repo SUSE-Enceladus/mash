@@ -229,19 +229,15 @@ class TestingService(BaseService):
             job_desc = json.loads(message.body)
         except ValueError as e:
             self.log.error('Invalid job config file: {}.'.format(e))
-            self.notify_invalid_config(message.body)
         else:
-            if 'testing_job' in job_desc:
-                if not self._validate_job(job_desc['testing_job']):
-                    self.notify_invalid_config(message.body)
-                else:
-                    self._add_job(job_desc['testing_job'])
+            if 'testing_job' in job_desc and \
+                    self._validate_job(job_desc['testing_job']):
+                self._add_job(job_desc['testing_job'])
             else:
                 self.log.error(
                     'Invalid testing job: Job config must contain '
                     'testing_job key.'
                 )
-                self.notify_invalid_config(message.body)
 
         message.ack()
 
