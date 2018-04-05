@@ -23,9 +23,10 @@ config = {
         'boto3',
         'PyYAML',
         'PyJWT',
-        'python-dateutil==2.6.*',
+        'python-dateutil>=2.6.0,<2.7.0',
         'APScheduler>=3.3.1',
         'amqpstorm>=2.4.0',
+        'ec2deprecateimg',
         'ec2publishimg',
         'ec2uploadimg',
         'python3-ipa'
@@ -41,6 +42,7 @@ config = {
             'mash-uploader-service=mash.services.uploader_service:main',
             'mash-replication-service=mash.services.replication_service:main',
             'mash-publisher-service=mash.services.publisher_service:main',
+            'mash-deprecation-service=mash.services.deprecation_service:main'
         ]
     },
     'include_package_data': True,

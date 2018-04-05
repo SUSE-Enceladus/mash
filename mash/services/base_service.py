@@ -21,7 +21,7 @@ import jwt
 import logging
 import os
 
-from amqpstorm import AMQPError, Connection
+from amqpstorm import Connection
 from cryptography.fernet import MultiFernet
 from datetime import datetime, timedelta
 
@@ -30,7 +30,6 @@ from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
 from mash.mash_exceptions import (
-    MashCredentialsException,
     MashRabbitConnectionException,
     MashLogSetupException
 )
@@ -244,35 +243,43 @@ class BaseService(object):
             callback=callback, queue=queue
         )
 
-    def decode_credentials(self, message, encryption_keys_file):
+    def decode_credentials(self, message):
         """
         Decode jwt credential response message.
         """
+        decrypted_credentials = {}
         try:
             payload = jwt.decode(
-                message, self.jwt_secret, algorithm=self.jwt_algorithm,
-                issuer='credentials', audience=self.service_exchange
+                message['jwt_token'], self.jwt_secret,
+                algorithm=self.jwt_algorithm, issuer='credentials',
+                audience=self.service_exchange
+            )
+            job_id = payload['id']
+            for account, credentials in payload['credentials'].items():
+                decrypted_credentials[account] = self.decrypt_credentials(
+                    credentials
+                )
+        except KeyError as error:
+            self.log.error(
+                'Invalid credentials response recieved: {0}'
+                ' key must be in credentials message.'.format(error)
             )
         except Exception as error:
-            raise MashCredentialsException(
+            self.log.error(
                 'Invalid credentials response token: {0}'.format(error)
             )
+        else:
+            return job_id, decrypted_credentials
 
-        decrypted_credentials = {}
-        for account, credentials in payload['credentials'].items():
-            decrypted_credentials[account] = self.decrypt_credentials(
-                credentials, encryption_keys_file
-            )
+        # If exception occurs decoding credentials return None.
+        return None, None
 
-        payload['credentials'] = decrypted_credentials
-        return payload
-
-    def decrypt_credentials(self, credentials, encryption_keys_file):
+    def decrypt_credentials(self, credentials):
         """
         Decrypt credentials string and load json to dictionary.
         """
         encryption_keys = self.get_encryption_keys_from_file(
-            encryption_keys_file
+            self.encryption_keys_file
         )
         fernet_key = MultiFernet(encryption_keys)
 
@@ -310,15 +317,6 @@ class BaseService(object):
             self.log.info(msg, extra=metadata)
         else:
             self.log.error(msg, extra=metadata)
-
-    def notify_invalid_config(self, message):
-        """
-        Notify job creator an invalid job config message has been received.
-        """
-        try:
-            self._publish('jobcreator', 'invalid_config', message)
-        except AMQPError:
-            self.log.warning('Message not received: {0}'.format(message))
 
     def persist_job_config(self, config):
         """
@@ -376,6 +374,10 @@ class BaseService(object):
         Allow to set a custom service log file
         """
         try:
+            log_dir = os.path.dirname(logfile)
+            if not os.path.isdir(log_dir):
+                os.makedirs(log_dir)
+
             logfile_handler = logging.FileHandler(
                 filename=logfile, encoding='utf-8'
             )

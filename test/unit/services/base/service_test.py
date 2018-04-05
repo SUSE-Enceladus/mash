@@ -2,7 +2,6 @@ import io
 import json
 import jwt
 
-from amqpstorm import AMQPError
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import MagicMock, Mock
@@ -12,7 +11,6 @@ from mash.services.base_service import BaseService
 from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
-    MashCredentialsException,
     MashRabbitConnectionException,
     MashLogSetupException
 )
@@ -53,12 +51,21 @@ class TestBaseService(object):
     def test_post_init(self):
         self.service.post_init()
 
+    @patch('mash.services.base_service.os')
     @patch('logging.FileHandler')
-    def test_set_logfile(self, mock_logging_FileHandler):
+    def test_set_logfile(self, mock_logging_FileHandler, mock_os):
         logfile_handler = Mock()
         mock_logging_FileHandler.return_value = logfile_handler
 
+        mock_os.path.dirname.return_value = '/some'
+        mock_os.path.isdir.return_value = False
+
         self.service.set_logfile('/some/log')
+
+        mock_os.path.dirname.assert_called_with('/some/log')
+        mock_os.path.isdir.assert_called_with('/some')
+        mock_os.makedirs.assert_called_with('/some')
+
         mock_logging_FileHandler.assert_called_once_with(
             encoding='utf-8', filename='/some/log'
         )
@@ -66,8 +73,9 @@ class TestBaseService(object):
             [call(logfile_handler)]
         )
 
+    @patch('mash.services.base_service.os')
     @patch('logging.FileHandler')
-    def test_set_logfile_raises(self, mock_logging_FileHandler):
+    def test_set_logfile_raises(self, mock_logging_FileHandler, mock_os):
         mock_logging_FileHandler.side_effect = Exception
         with raises(MashLogSetupException):
             self.service.set_logfile('/some/log')
@@ -220,58 +228,47 @@ class TestBaseService(object):
         self.service.jwt_secret = 'super.secret'
         self.service_exchange = 'obs'
 
-        message = Mock()
+        message = {'jwt_token': 'secret_credentials'}
         mock_jwt.decode.return_value = {
+            "id": "1",
             "credentials": {
                 "test-aws": {
                     "access_key_id": "123456",
-                    "secret_access_key": "654321",
-                    "ssh_key_name": "key-123",
-                    "ssh_private_key": "key123"
+                    "secret_access_key": "654321"
                 },
                 "test-aws-cn": {
                     "access_key_id": "654321",
-                    "secret_access_key": "123456",
-                    "ssh_key_name": "key-321",
-                    "ssh_private_key": "key321"
+                    "secret_access_key": "123456"
                 }
             }
         }
 
-        payload = self.service.decode_credentials(message)
+        job_id, credentials = self.service.decode_credentials(message)
 
         mock_jwt.decode.assert_called_once_with(
-            message, 'super.secret', algorithm='HS256',
+            'secret_credentials', 'super.secret', algorithm='HS256',
             issuer='credentials', audience='obs'
         )
 
-        assert len(payload['credentials'].keys()) == 2
+        assert len(credentials.keys()) == 2
+        assert job_id == '1'
 
-        # Credential exception
-        mock_jwt.decode.side_effect = Exception('Token is broken!')
+        # Missing credentials key
+        mock_jwt.decode.return_value = {"id": "1"}
 
-        msg = 'Invalid credentials response token: Token is broken!'
-        with raises(MashCredentialsException) as e:
-            self.service.decode_credentials(message)
-        assert msg == str(e.value)
-        # Credential exception
-
-    @patch.object(BaseService, '_publish')
-    def test_notify_invalid_config(self, mock_publish):
-        self.service.notify_invalid_config('invalid')
-        mock_publish.assert_called_once_with(
-            'jobcreator',
-            'invalid_config',
-            'invalid'
+        job_id, credentials = self.service.decode_credentials(message)
+        self.service.log.error.assert_called_once_with(
+            "Invalid credentials response recieved: 'credentials'"
+            " key must be in credentials message."
         )
 
-    @patch.object(BaseService, '_publish')
-    def test_notify_invalid_config_exception(self, mock_publish):
-        mock_publish.side_effect = AMQPError('Broken')
-        self.service.notify_invalid_config('invalid')
+        # Credential exception
+        self.service.log.error.reset_mock()
+        mock_jwt.decode.side_effect = Exception('Token is broken!')
 
-        self.service.log.warning.assert_called_once_with(
-            'Message not received: {0}'.format('invalid')
+        job_id, credentials = self.service.decode_credentials(message)
+        self.service.log.error.assert_called_once_with(
+            'Invalid credentials response token: Token is broken!'
         )
 
     @patch.object(BaseService, 'get_credential_request')

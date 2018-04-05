@@ -10,8 +10,9 @@ boto3
 PyYAML
 PyJWT
 APScheduler
-python-dateutil==2.6.*
+python-dateutil>=2.6.0,<2.7.0
 amqpstorm
+ec2deprecateimg
 ec2publishimg
 ec2uploadimg
 python3-ipa

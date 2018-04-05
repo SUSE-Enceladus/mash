@@ -16,12 +16,18 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.services.base_config import BaseConfig
 
-class Defaults(object):
+
+class DeprecationConfig(BaseConfig):
     """
-    Default values
+    Implements reading of the mash configuration file:
+
+    * /etc/mash/mash_config.yaml
+
+    The mash configuration file is a yaml formatted file containing
+    information to control the behavior of the mash services.
     """
 
-    @classmethod
-    def get_accounts_file(self):
-        return '/etc/mash/accounts.json'
+    def __init__(self, config_file=None):
+        super(DeprecationConfig, self).__init__(config_file)

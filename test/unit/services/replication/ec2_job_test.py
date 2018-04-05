@@ -146,18 +146,6 @@ class TestEC2ReplicationJob(object):
         )
         assert self.job.status == FAILED
 
-    def test_replicate_get_source_regions_result(self):
-        self.job.source_region_results = {
-            'us-east-2': {
-                'image_id': 'ami-54321',
-                'account': Mock()
-            }
-        }
-
-        result = self.job.get_source_regions_result()
-
-        assert result['us-east-2'] == 'ami-54321'
-
     def test_replicate_image_exists(self):
         images = {'Images': []}
         client = Mock()
@@ -171,18 +159,3 @@ class TestEC2ReplicationJob(object):
         result = self.job.image_exists(client, 'image name')
 
         assert result
-
-    def test_replicate_validate_replication_source_regions_exceptions(self):
-        source_regions = {'us-east-2': {}}
-
-        msg = 'Source region us-east-2 missing account name.'
-        with raises(MashReplicationException) as error:
-            self.job.validate_replication_source_regions(source_regions)
-        assert msg == str(error.value)
-
-        source_regions = {'us-east-2': {'account': 'test-aws'}}
-
-        msg = 'Source region us-east-2 missing target regions.'
-        with raises(MashReplicationException) as error:
-            self.job.validate_replication_source_regions(source_regions)
-        assert msg == str(error.value)

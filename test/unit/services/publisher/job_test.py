@@ -1,7 +1,6 @@
 from pytest import raises
 from unittest.mock import Mock, patch
 
-from mash.mash_exceptions import MashPublisherException
 from mash.services.publisher.job import PublisherJob
 
 
@@ -66,32 +65,3 @@ class TestPublisherJob(object):
         job.publish_image()
 
         mock_publish.assert_called_once_with()
-
-    def test_invalid_provider(self):
-        self.job_config['provider'] = 'Provider'
-        msg = 'Provider: Provider not supported.'
-        with raises(MashPublisherException) as e:
-            PublisherJob(**self.job_config)
-
-        assert str(e.value) == msg
-
-    def test_invalid_publish_regions(self):
-        msg = 'Invalid publish_regions format. ' \
-            'Must be a list of dictionaries with account' \
-            ' and target_regions keys.'
-        self.job_config['publish_regions'] = [{
-            'account': 'test-aws',
-            'target_regions': None
-        }]
-        with raises(MashPublisherException) as e:
-            PublisherJob(**self.job_config)
-
-        assert str(e.value) == msg
-
-    def test_invalid_timestamp(self):
-        self.job_config['utctime'] = 'never'
-        msg = 'Invalid utctime format: never.'
-        with raises(MashPublisherException) as e:
-            PublisherJob(**self.job_config)
-
-        assert str(e.value) == msg

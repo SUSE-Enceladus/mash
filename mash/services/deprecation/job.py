@@ -17,25 +17,28 @@
 #
 
 from mash.services.status_levels import UNKOWN
-from mash.services.publisher.constants import NOT_IMPLEMENTED
+from mash.services.deprecation.constants import NOT_IMPLEMENTED
 
 
-class PublisherJob(object):
+class DeprecationJob(object):
     """
-    Class for an individual publisher job.
+    Class for an individual deprecation job.
     """
 
-    def __init__(self, id, provider, publish_regions, utctime, job_file=None):
-        self.cloud_image_name = None
-        self.credentials = None
+    def __init__(self, id, provider, utctime, job_file=None):
         self.iteration_count = 0
         self.id = id
         self.job_file = job_file
         self.log_callback = None
         self.provider = provider
-        self.publish_regions = publish_regions
         self.status = UNKOWN
         self.utctime = utctime
+
+    def _deprecate(self):
+        """
+        Deprecate image to all regions in each account.
+        """
+        raise NotImplementedError(NOT_IMPLEMENTED)
 
     def get_metadata(self):
         """
@@ -43,23 +46,14 @@ class PublisherJob(object):
         """
         return {'job_id': self.id}
 
-    def _publish(self):
+    def deprecate_image(self):
         """
-        Publish image and update status.
-        """
-        raise NotImplementedError(NOT_IMPLEMENTED)
-
-    def publish_image(self):
-        """
-        Update iteration_count and publish image.
+        Deprecate image.
         """
         self.iteration_count += 1
-        self._publish()
+        self._deprecate()
 
     def send_log(self, message, success=True):
-        """
-        Send message to log callback method.
-        """
         if self.log_callback:
             self.log_callback(
                 'Pass[{0}]: {1}'.format(
