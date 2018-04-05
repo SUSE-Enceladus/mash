@@ -51,12 +51,21 @@ class TestBaseService(object):
     def test_post_init(self):
         self.service.post_init()
 
+    @patch('mash.services.base_service.os')
     @patch('logging.FileHandler')
-    def test_set_logfile(self, mock_logging_FileHandler):
+    def test_set_logfile(self, mock_logging_FileHandler, mock_os):
         logfile_handler = Mock()
         mock_logging_FileHandler.return_value = logfile_handler
 
+        mock_os.path.dirname.return_value = '/some'
+        mock_os.path.isdir.return_value = False
+
         self.service.set_logfile('/some/log')
+
+        mock_os.path.dirname.assert_called_with('/some/log')
+        mock_os.path.isdir.assert_called_with('/some')
+        mock_os.makedirs.assert_called_with('/some')
+
         mock_logging_FileHandler.assert_called_once_with(
             encoding='utf-8', filename='/some/log'
         )
@@ -64,8 +73,9 @@ class TestBaseService(object):
             [call(logfile_handler)]
         )
 
+    @patch('mash.services.base_service.os')
     @patch('logging.FileHandler')
-    def test_set_logfile_raises(self, mock_logging_FileHandler):
+    def test_set_logfile_raises(self, mock_logging_FileHandler, mock_os):
         mock_logging_FileHandler.side_effect = Exception
         with raises(MashLogSetupException):
             self.service.set_logfile('/some/log')
