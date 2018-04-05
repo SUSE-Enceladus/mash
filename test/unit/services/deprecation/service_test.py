@@ -367,30 +367,9 @@ class TestDeprecationService(object):
 
         self.message.ack.assert_called_once_with()
         self.deprecation.log.error.assert_called_once_with(
-            'Invalid job config file: Expecting value:'
+            'Error adding job: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-
-    def test_deprecation_handle_service_message_bad_key(self):
-        self.message.body = '{"deprecation_job_update": {"id": "1"}}'
-
-        self.deprecation._handle_service_message(self.message)
-
-        self.message.ack.assert_called_once_with()
-        self.deprecation.log.error.assert_called_once_with(
-            'Invalid deprecation job: Job document must contain the '
-            'deprecation_job key.'
-        )
-
-    @patch.object(DeprecationService, '_validate_job_config')
-    def test_deprecation_handle_service_message_fail_validation(
-        self, mock_validate_job
-    ):
-        mock_validate_job.return_value = False
-        self.message.body = '{"deprecation_job": {"id": "1"}}'
-        self.deprecation._handle_service_message(self.message)
-
-        self.message.ack.assert_called_once_with()
 
     @patch.object(DeprecationService, '_delete_job')
     @patch.object(DeprecationService, '_publish_message')
@@ -540,13 +519,6 @@ class TestDeprecationService(object):
             max_instances=1,
             misfire_grace_time=None,
             coalesce=True
-        )
-
-    def test_deprecation_validate_invalid_job_config(self):
-        status = self.deprecation._validate_job_config('{"id": "1"}')
-        assert status is False
-        self.deprecation.log.error.assert_called_once_with(
-            'provider is required in deprecation job config.'
         )
 
     def test_deprecation_validate_invalid_listener_msg(self):

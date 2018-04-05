@@ -257,17 +257,9 @@ class DeprecationService(BaseService):
         """
         try:
             job_desc = json.loads(message.body)
+            self._add_job(job_desc['deprecation_job'])
         except ValueError as e:
-            self.log.error('Invalid job config file: {}.'.format(e))
-        else:
-            if 'deprecation_job' in job_desc and \
-                    self._validate_job_config(job_desc['deprecation_job']):
-                self._add_job(job_desc['deprecation_job'])
-            else:
-                self.log.error(
-                    'Invalid deprecation job: Job document must contain '
-                    'the deprecation_job key.'
-                )
+            self.log.error('Error adding job: {}.'.format(e))
 
         message.ack()
 
@@ -353,22 +345,6 @@ class DeprecationService(BaseService):
                 'listener messages.',
                 extra={'job_id': job_id}
             )
-
-    def _validate_job_config(self, job_config):
-        """
-        Validate the job has the required attributes.
-        """
-        required = [
-            'id', 'provider', 'old_cloud_image_name', 'utctime',
-            'deprecation_regions'
-        ]
-        for attr in required:
-            if attr not in job_config:
-                self.log.error(
-                    '{0} is required in deprecation job config.'.format(attr)
-                )
-                return False
-        return True
 
     def _validate_listener_msg(self, message):
         """
