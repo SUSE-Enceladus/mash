@@ -256,17 +256,9 @@ class PublisherService(BaseService):
         """
         try:
             job_desc = json.loads(message.body)
+            self._add_job(job_desc['publisher_job'])
         except ValueError as error:
-            self.log.error('Invalid job config file: {0}.'.format(error))
-        else:
-            if 'publisher_job' in job_desc and \
-                    self._validate_job_config(job_desc['publisher_job']):
-                self._add_job(job_desc['publisher_job'])
-            else:
-                self.log.error(
-                    'Invalid publisher job: Job document must contain '
-                    'the publisher_job key.'
-                )
+            self.log.error('Error adding job: {0}.'.format(error))
 
         message.ack()
 
@@ -352,22 +344,6 @@ class PublisherService(BaseService):
                 'listener messages.',
                 extra={'job_id': job_id}
             )
-
-    def _validate_job_config(self, job_config):
-        """
-        Validate the job has the required attributes.
-        """
-        required = [
-            'allow_copy', 'id', 'provider', 'utctime',
-            'share_with', 'publish_regions'
-        ]
-        for attr in required:
-            if attr not in job_config:
-                self.log.error(
-                    '{0} is required in publisher job config.'.format(attr)
-                )
-                return False
-        return True
 
     def _validate_listener_msg(self, message):
         """
