@@ -133,14 +133,12 @@ class CredentialsService(BaseService):
             self._send_control_response(
                 'Invalid job config file: {0}.'.format(error), success=False
             )
-            self.notify_invalid_config(message.body)
         else:
-            if not self._validate_job_doc(job_document):
-                self.notify_invalid_config(message.body)
-            elif 'credentials_job_delete' in job_document:
-                self._delete_job(job_document['credentials_job_delete'])
-            else:
-                self._add_job(job_document['credentials_job'])
+            if self._validate_job_doc(job_document):
+                if 'credentials_job_delete' in job_document:
+                    self._delete_job(job_document['credentials_job_delete'])
+                else:
+                    self._add_job(job_document['credentials_job'])
 
         message.ack()
 
