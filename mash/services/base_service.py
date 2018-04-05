@@ -22,7 +22,7 @@ import logging
 import os
 
 from amqpstorm import Connection
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, MultiFernet
 from datetime import datetime, timedelta
 
 # project
@@ -269,6 +269,25 @@ class BaseService(object):
 
         # If exception occurs decoding credentials return None.
         return None, None
+
+    def encrypt_credentials(self, credentials):
+        """
+        Encrypt credentials json string.
+
+        Returns: Encrypted and decoded string.
+        """
+        encryption_keys = self.get_encryption_keys_from_file(
+            self.encryption_keys_file
+        )
+        fernet = MultiFernet(encryption_keys)
+
+        try:
+            # Ensure creds string is encoded as bytes
+            credentials = credentials.encode()
+        except Exception:
+            pass
+
+        return fernet.encrypt(credentials).decode()
 
     def get_credential_request(self, job_id):
         """

@@ -38,6 +38,7 @@ class TestBaseService(object):
         self.connection.is_closed = True
         mock_connection.return_value = self.connection
         self.service = BaseService('localhost', 'obs')
+        self.service.encryption_keys_file = 'encryption_keys.file'
         mock_get_job_directory.assert_called_once_with('obs')
         mock_makedirs.assert_called_once_with(
             '/var/lib/mash/obs_jobs/', exist_ok=True
@@ -284,6 +285,16 @@ class TestBaseService(object):
         self.service.log.error.assert_called_once_with(
             'Invalid credentials response token: Token is broken!'
         )
+
+    @patch.object(BaseService, 'get_encryption_keys_from_file')
+    @patch('mash.services.base_service.MultiFernet')
+    def test_encrypt_credentials(self, mock_fernet, mock_get_keys_from_file):
+        mock_get_keys_from_file.return_value = [Mock()]
+        fernet_key = Mock()
+        fernet_key.encrypt.return_value = b'encrypted_secret'
+        mock_fernet.return_value = fernet_key
+        result = self.service.encrypt_credentials(b'secret')
+        assert result == 'encrypted_secret'
 
     @patch.object(BaseService, 'get_credential_request')
     @patch.object(BaseService, '_publish')

@@ -19,7 +19,6 @@ import jwt
 import json
 import os
 
-from cryptography.fernet import MultiFernet
 from datetime import datetime, timedelta
 
 # project
@@ -109,25 +108,6 @@ class CredentialsService(BaseService):
                 success=False,
                 job_id=job_id
             )
-
-    def _encrypt_credentials(self, credentials):
-        """
-        Encrypt credentials json string.
-
-        Returns: Encrypted and decoded string.
-        """
-        encryption_keys = self.get_encryption_keys_from_file(
-            self.encryption_keys_file
-        )
-        fernet = MultiFernet(encryption_keys)
-
-        try:
-            # Ensure creds string is encoded as bytes
-            credentials = credentials.encode()
-        except Exception:
-            pass
-
-        return fernet.encrypt(credentials).decode()
 
     def _get_credentials_response(self, job_id, issuer):
         """
@@ -327,7 +307,7 @@ class CredentialsService(BaseService):
         if not os.path.isdir(credentials_dir):
             os.makedirs(credentials_dir)
 
-        encrypted_creds = self._encrypt_credentials(credentials)
+        encrypted_creds = self.encrypt_credentials(credentials)
         try:
             with open(path, 'w') as creds_file:
                 creds_file.write(encrypted_creds)
