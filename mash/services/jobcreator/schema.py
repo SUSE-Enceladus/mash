@@ -23,9 +23,12 @@ job_message = {
         'provider': {'enum': ['azure', 'ec2']},
         'provider_accounts': {
             'type': 'array',
+            'items': {'$ref': '#definitions/account'}
+        },
+        'provider_groups': {
+            'type': 'array',
             'items': {'$ref': '#/definitions/non_empty_string'},
-            'uniqueItems': True,
-            'minItems': 1
+            'uniqueItems': True
         },
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
         'last_service': {
@@ -69,20 +72,8 @@ job_message = {
         },
         'allow_copy': {'type': 'boolean'},
         'image_description': {'$ref': '#/definitions/non_empty_string'},
-        'target_regions': {
-            'type': 'object',
-            'properties': {
-                'accounts': {
-                    'type': 'array',
-                    'items': {'$ref': '#definitions/account'}
-                },
-                'groups': {
-                    'type': 'array',
-                    'items': {'$ref': '#/definitions/non_empty_string'},
-                    'uniqueItems': True
-                }
-            }
-        },
+        'distro': {'$ref': '#/definitions/non_empty_string'},
+        'instance_type': {'$ref': '#/definitions/non_empty_string'},
         'tests': {
             'type': 'array',
             'items': {'$ref': '#/definitions/non_empty_string'},
@@ -91,23 +82,23 @@ job_message = {
     },
     'additionalProperties': False,
     'required': [
-        'provider', 'provider_accounts', 'requesting_user', 'last_service',
-        'utctime', 'image', 'cloud_image_name', 'old_cloud_image_name',
-        'project', 'share_with', 'allow_copy', 'image_description',
-        'target_regions', 'tests'
+        'provider', 'provider_accounts', 'provider_groups', 'requesting_user',
+        'last_service', 'utctime', 'image', 'cloud_image_name',
+        'old_cloud_image_name', 'project', 'share_with', 'allow_copy',
+        'image_description', 'tests'
     ],
     'definitions': {
         'account': {
             'properties': {
                 'name': {'$ref': '#/definitions/non_empty_string'},
-                'regions': {
+                'target_regions': {
                     'type': 'array',
                     'items': {'$ref': '#/definitions/non_empty_string'},
                     'uniqueItems': True
                 }
             },
             'additionalProperties': False,
-            'required': ['name']
+            'required': ['name', 'target_regions']
         },
         'image_conditions': {
             'properties': {
