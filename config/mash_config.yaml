@@ -2,6 +2,7 @@ jwt_algorithm: HS256
 jwt_secret: enter-a-secret
 log_dir: /var/log/mash/
 encryption_keys_file: /var/lib/mash/encryption_keys
+ssh_private_key_file: /var/lib/mash/ssh_key
 services:
   - obs
   - uploader
@@ -18,5 +19,3 @@ jobcreator:
   accounts_file: /etc/mash/accounts.json
 obs:
   download_directory: /var/tmp/mash/images
-testing:
-  ssh_private_key_file: /etc/mash/testing_key

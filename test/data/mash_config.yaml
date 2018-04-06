@@ -1,5 +1,6 @@
 jwt_secret: abc123
 encryption_keys_file: /etc/mash/encryption_keys
+ssh_private_key_file: /var/lib/mash/ssh_key
 services:
   - obs
   - uploader
@@ -10,5 +11,3 @@ services:
   - pint
 non_cred_services:
   - obs
-testing:
-  ssh_private_key_file: /etc/mash/testing_key
