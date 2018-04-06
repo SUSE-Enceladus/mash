@@ -1,8 +1,8 @@
 {
   "provider": "ec2",
-  "provider_accounts": {
-    "test-aws-gov": ["us-gov-west-1"]
-  },
+  "provider_accounts": [
+    {"name": "test-aws-gov", "target_regions": ["us-gov-west-1"]}
+  ],
   "provider_groups": ["test"],
   "requesting_user": "user1",
   "last_service": "pint",
