@@ -18,5 +18,7 @@
   "share_with": "all",
   "allow_copy": false,
   "image_description": "New Image #123",
+  "distro": "sles",
+  "instance_type": "t2.micro",
   "tests": ["test_stuff"]
 }
