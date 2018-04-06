@@ -120,3 +120,20 @@ class BaseConfig(object):
                         if service not in non_cred_services]
 
         return services
+
+    def get_ssh_private_key_file(self):
+        """
+        Return the path to the ssh private key file.
+
+        :rtype: string
+        """
+        private_key_file = self._get_attribute(
+            attribute='ssh_private_key_file'
+        )
+
+        if not private_key_file:
+            raise MashConfigException(
+                'ssh_private_key_file is required in MASH configuration file.'
+            )
+
+        return private_key_file
