@@ -10,6 +10,9 @@ from mash.version import __VERSION__
 
 python_version = platform.python_version().split('.')[0]
 
+with open('.virtualenv.requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 config = {
     'name': 'mash',
     'description': 'Public Cloud Release Tool',
@@ -18,21 +21,7 @@ config = {
     'download_url': 'https://github.com/SUSE/mash',
     'author_email': 'public-cloud-dev@susecloud.net',
     'version': __VERSION__,
-    'install_requires': [
-        'setuptools>=5.4',
-        'boto3',
-        'jsonschema',
-        'PyYAML',
-        'PyJWT',
-        'python-dateutil>=2.6.0,<2.7.0',
-        'strict-rfc3339',
-        'APScheduler>=3.3.1',
-        'amqpstorm>=2.4.0',
-        'ec2deprecateimg',
-        'ec2publishimg',
-        'ec2uploadimg',
-        'python3-ipa'
-    ],
+    'install_requires': requirements,
     'packages': ['mash'],
     'entry_points': {
         'console_scripts': [
