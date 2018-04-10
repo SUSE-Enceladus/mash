@@ -1,6 +1,8 @@
 {
     "testing_job": {
         "id": "123",
+        "distro": "sles",
+        "instance_type": "t2.micro",
         "provider": "ec2",
         "tests": ["test_stuff"],
         "utctime": "now",
