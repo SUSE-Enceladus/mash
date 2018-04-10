@@ -22,11 +22,7 @@ import logging
 import os
 
 from amqpstorm import Connection
-<<<<<<< HEAD
 from cryptography.fernet import Fernet, MultiFernet
-=======
-from cryptography.fernet import MultiFernet
->>>>>>> base-service-decrypt
 from datetime import datetime, timedelta
 
 # project
@@ -278,41 +274,41 @@ class BaseService(object):
         # If exception occurs decoding credentials return None.
         return None, None
 
-<<<<<<< HEAD
+    def decrypt_credentials(self, credentials):
+        """
+        Decrypt credentials string and load json to dictionary.
+        """
+        encryption_keys = self.get_encryption_keys_from_file(
+            self.encryption_keys_file
+        )
+        fernet_key = MultiFernet(encryption_keys)
+
+        try:
+            # Ensure string is encoded as bytes before decrypting.
+            credentials = credentials.encode()
+        except Exception:
+            pass
+
+        return json.loads(fernet_key.decrypt(credentials).decode())
+
     def encrypt_credentials(self, credentials):
         """
         Encrypt credentials json string.
 
         Returns: Encrypted and decoded string.
-=======
-    def decrypt_credentials(self, credentials):
-        """
-        Decrypt credentials string and load json to dictionary.
->>>>>>> base-service-decrypt
         """
         encryption_keys = self.get_encryption_keys_from_file(
             self.encryption_keys_file
         )
-<<<<<<< HEAD
         fernet = MultiFernet(encryption_keys)
 
         try:
             # Ensure creds string is encoded as bytes
-=======
-        fernet_key = MultiFernet(encryption_keys)
-
-        try:
-            # Ensure string is encoded as bytes before decrypting.
->>>>>>> base-service-decrypt
             credentials = credentials.encode()
         except Exception:
             pass
 
-<<<<<<< HEAD
         return fernet.encrypt(credentials).decode()
-=======
-        return json.loads(fernet_key.decrypt(credentials).decode())
->>>>>>> base-service-decrypt
 
     def get_credential_request(self, job_id):
         """
