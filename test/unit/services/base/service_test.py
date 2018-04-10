@@ -12,7 +12,8 @@ from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
-    MashLogSetupException
+    MashLogSetupException,
+    MashValidationException
 )
 
 open_name = "builtins.open"
@@ -285,3 +286,25 @@ class TestBaseService(object):
         mock_publish.assert_called_once_with(
             'credentials', 'request.obs', token
         )
+
+    def test_validate_message(self):
+        template = {
+            'type': 'object',
+            'properties': {
+                'provider': {'enum': ['azure', 'ec2']}
+            },
+            'additionalProperties': False,
+            'required': ['provider']
+        }
+        message = {'provider': 'ec2'}
+        result = self.service.validate_message(message, template)
+
+        assert result is None
+
+        message = {'provider': 'cloud_provider'}
+
+        with raises(MashValidationException) as error:
+            self.service.validate_message(message, template)
+
+        assert "'cloud_provider' is not one of ['azure', 'ec2']" \
+            in str(error.value)

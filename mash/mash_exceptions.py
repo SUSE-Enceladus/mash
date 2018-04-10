@@ -138,3 +138,9 @@ class MashDeprecationException(MashException):
     """
     Base exception for deprecation service.
     """
+
+
+class MashValidationException(MashException):
+    """
+    Exception for json message validation.
+    """
