@@ -59,7 +59,7 @@ class EC2TestingJob(TestingJob):
                     'instance_type': self.instance_type,
                     'region': region,
                     'secret_access_key': creds['secret_access_key'],
-                    'ssh_private_key': self.ssh_private_key_file,
+                    'ssh_private_key_file': self.ssh_private_key_file,
                     'ssh_user': self.ssh_user,
                     'tests': self.tests
                 }

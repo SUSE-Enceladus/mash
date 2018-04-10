@@ -42,3 +42,13 @@ class TestBaseConfig(object):
         expected = ['obs'] + expected
         services = self.empty_config.get_service_names()
         assert expected == services
+
+    def test_get_ssh_private_key_file(self):
+        assert self.config.get_ssh_private_key_file() == \
+            '/var/lib/mash/ssh_key'
+
+        with raises(MashConfigException) as error:
+            self.empty_config.get_ssh_private_key_file()
+
+        assert str(error.value) == \
+            'ssh_private_key_file is required in MASH configuration file.'
