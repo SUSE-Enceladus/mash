@@ -7,6 +7,7 @@
 
 setuptools
 boto3
+cryptography
 PyYAML
 PyJWT
 APScheduler
