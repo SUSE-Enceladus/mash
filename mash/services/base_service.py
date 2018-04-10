@@ -22,6 +22,7 @@ import logging
 import os
 
 from amqpstorm import Connection
+from cryptography.fernet import Fernet, MultiFernet
 from datetime import datetime, timedelta
 
 # project
@@ -246,6 +247,7 @@ class BaseService(object):
         """
         Decode jwt credential response message.
         """
+        decrypted_credentials = {}
         try:
             payload = jwt.decode(
                 message['jwt_token'], self.jwt_secret,
@@ -253,7 +255,10 @@ class BaseService(object):
                 audience=self.service_exchange
             )
             job_id = payload['id']
-            credentials = payload['credentials']
+            for account, credentials in payload['credentials'].items():
+                decrypted_credentials[account] = self.decrypt_credentials(
+                    credentials
+                )
         except KeyError as error:
             self.log.error(
                 'Invalid credentials response recieved: {0}'
@@ -264,10 +269,46 @@ class BaseService(object):
                 'Invalid credentials response token: {0}'.format(error)
             )
         else:
-            return job_id, credentials
+            return job_id, decrypted_credentials
 
         # If exception occurs decoding credentials return None.
         return None, None
+
+    def decrypt_credentials(self, credentials):
+        """
+        Decrypt credentials string and load json to dictionary.
+        """
+        encryption_keys = self.get_encryption_keys_from_file(
+            self.encryption_keys_file
+        )
+        fernet_key = MultiFernet(encryption_keys)
+
+        try:
+            # Ensure string is encoded as bytes before decrypting.
+            credentials = credentials.encode()
+        except Exception:
+            pass
+
+        return json.loads(fernet_key.decrypt(credentials).decode())
+
+    def encrypt_credentials(self, credentials):
+        """
+        Encrypt credentials json string.
+
+        Returns: Encrypted and decoded string.
+        """
+        encryption_keys = self.get_encryption_keys_from_file(
+            self.encryption_keys_file
+        )
+        fernet = MultiFernet(encryption_keys)
+
+        try:
+            # Ensure creds string is encoded as bytes
+            credentials = credentials.encode()
+        except Exception:
+            pass
+
+        return fernet.encrypt(credentials).decode()
 
     def get_credential_request(self, job_id):
         """
@@ -286,6 +327,15 @@ class BaseService(object):
         )
         message = json.dumps({'jwt_token': token.decode()})
         return message
+
+    def get_encryption_keys_from_file(self, encryption_keys_file):
+        """
+        Returns a list of Fernet keys based on the provided keys file.
+        """
+        with open(encryption_keys_file, 'r') as keys_file:
+            keys = keys_file.readlines()
+
+        return [Fernet(key.strip()) for key in keys if key]
 
     def log_job_message(self, msg, metadata, success=True):
         """
