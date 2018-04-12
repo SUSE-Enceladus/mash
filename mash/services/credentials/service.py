@@ -43,6 +43,9 @@ class CredentialsService(BaseService):
 
         self.jobs = {}
 
+        self.bind_queue(
+            self.service_exchange, self.add_account_key, self.listener_queue
+        )
         self._bind_credential_request_keys()
 
         self.restart_jobs(self._add_job)
@@ -143,6 +146,32 @@ class CredentialsService(BaseService):
             credentials = credentials_file.read()
 
         return credentials.strip()
+
+    def _handle_account_request(self, message):
+        """
+        Handle account add messages.
+
+        Example message:
+        {
+            "account_name": "test-aws",
+            "credentials": "encrypted_creds",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        }
+        """
+        try:
+            account_msg = json.loads(message.body)
+        except ValueError as error:
+            self._send_control_response(
+                'Invalid account request: {0}.'.format(error), success=False
+            )
+        else:
+            self._store_encrypted_credentials(
+                account_msg['account_name'], account_msg['credentials'],
+                account_msg['provider'], account_msg['requesting_user']
+            )
+
+        message.ack()
 
     def _handle_job_documents(self, message):
         """
@@ -311,10 +340,9 @@ class CredentialsService(BaseService):
         if not os.path.isdir(credentials_dir):
             os.makedirs(credentials_dir)
 
-        encrypted_creds = self.encrypt_credentials(credentials)
         try:
             with open(path, 'w') as creds_file:
-                creds_file.write(encrypted_creds)
+                creds_file.write(credentials)
         except Exception as error:
             self.log.error(
                 'Unable to store credentials: {0}.'.format(error)
@@ -354,6 +382,9 @@ class CredentialsService(BaseService):
         Start credentials service.
         """
         self.consume_queue(self._handle_job_documents)
+        self.consume_queue(
+            self._handle_account_request, queue_name=self.listener_queue
+        )
         self.consume_credentials_queue(
             self._handle_credential_request, queue_name='request'
         )

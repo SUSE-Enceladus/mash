@@ -17,8 +17,10 @@ class TestCredentialsService(object):
         self.config.config_data = None
 
         self.service = CredentialsService()
+        self.service.add_account_key = 'add_account'
         self.service.service_exchange = 'credentials'
         self.service.service_queue = 'service'
+        self.service.listener_queue = 'listener'
         self.service.job_document_key = 'job_document'
         self.service.credentials_queue = 'credentials'
         self.service.credentials_directory = '/var/lib/mash/credentials/'
@@ -144,6 +146,34 @@ class TestCredentialsService(object):
 
         assert result == 'secret_stuff'
 
+    @patch.object(CredentialsService, '_store_encrypted_credentials')
+    @patch.object(CredentialsService, '_send_control_response')
+    def test_handle_account_request(
+        self, mock_send_control_response, mock_store_encrypted_credentials
+    ):
+        message = MagicMock()
+        message.body = 'invalid'
+
+        self.service._handle_account_request(message)
+        mock_send_control_response.assert_called_once_with(
+            'Invalid account request: Expecting value: line 1 column 1 '
+            '(char 0).', success=False
+        )
+        message.ack.assert_called_once_with()
+        message.reset_mock()
+
+        message.body = '''{
+            "account_name": "test-aws",
+            "credentials": "encrypted_creds",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        }'''
+        self.service._handle_account_request(message)
+        mock_store_encrypted_credentials.assert_called_once_with(
+            'test-aws', 'encrypted_creds', 'ec2', 'user1'
+        )
+        message.ack.assert_called_once_with()
+
     @patch.object(CredentialsService, '_validate_job_doc')
     @patch.object(CredentialsService, '_add_job')
     def test_credentials_handle_job_docs_add(
@@ -251,12 +281,11 @@ class TestCredentialsService(object):
         self, mock_isdir, mock_makedirs, mock_encrypt_creds
     ):
         mock_isdir.return_value = False
-        mock_encrypt_creds.return_value = 'encrypted_secrets'
 
         with patch('builtins.open', create=True) as mock_open:
             mock_open.return_value = MagicMock(spec=io.IOBase)
             self.service._store_encrypted_credentials(
-                'account1', 'secret_string', 'ec2', 'user1'
+                'account1', 'encrypted_secrets', 'ec2', 'user1'
             )
             file_handle = mock_open.return_value.__enter__.return_value
             file_handle.write.assert_called_once_with('encrypted_secrets')
@@ -267,7 +296,7 @@ class TestCredentialsService(object):
             file_handle.write.side_effect = Exception('Cannot write file')
 
             self.service._store_encrypted_credentials(
-                'account1', 'secret_string', 'ec2', 'user1'
+                'account1', 'encrypted_secrets', 'ec2', 'user1'
             )
             self.service.log.error.assert_called_once_with(
                 'Unable to store credentials: Cannot write file.'
@@ -431,9 +460,10 @@ class TestCredentialsService(object):
         self.service.start()
 
         self.service.channel.start_consuming.assert_called_once_with()
-        mock_consume_queue.assert_called_once_with(
-            self.service._handle_job_documents
-        )
+        mock_consume_queue.has_calls([
+            call(self.service._handle_job_documents),
+            call(self.service._handle_account_request, queue_name='listener')
+        ])
         mock_consume_creds_queue.assert_called_once_with(
             self.service._handle_credential_request, queue_name='request'
         )
