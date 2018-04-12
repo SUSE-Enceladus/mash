@@ -22,7 +22,9 @@ import logging
 import os
 
 from amqpstorm import Connection
+from cryptography.fernet import Fernet, MultiFernet
 from datetime import datetime, timedelta
+from jsonschema import FormatChecker, validate
 
 # project
 from mash.log.filter import BaseServiceFilter
@@ -30,7 +32,8 @@ from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
-    MashLogSetupException
+    MashLogSetupException,
+    MashValidationException
 )
 
 
@@ -269,6 +272,25 @@ class BaseService(object):
         # If exception occurs decoding credentials return None.
         return None, None
 
+    def encrypt_credentials(self, credentials):
+        """
+        Encrypt credentials json string.
+
+        Returns: Encrypted and decoded string.
+        """
+        encryption_keys = self.get_encryption_keys_from_file(
+            self.encryption_keys_file
+        )
+        fernet = MultiFernet(encryption_keys)
+
+        try:
+            # Ensure creds string is encoded as bytes
+            credentials = credentials.encode()
+        except Exception:
+            pass
+
+        return fernet.encrypt(credentials).decode()
+
     def get_credential_request(self, job_id):
         """
         Return jwt encoded credentials request message.
@@ -286,6 +308,15 @@ class BaseService(object):
         )
         message = json.dumps({'jwt_token': token.decode()})
         return message
+
+    def get_encryption_keys_from_file(self, encryption_keys_file):
+        """
+        Returns a list of Fernet keys based on the provided keys file.
+        """
+        with open(encryption_keys_file, 'r') as keys_file:
+            keys = keys_file.readlines()
+
+        return [Fernet(key.strip()) for key in keys if key]
 
     def log_job_message(self, msg, metadata, success=True):
         """
@@ -381,3 +412,15 @@ class BaseService(object):
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key
         )
+
+    def validate_message(self, message, template):
+        """
+        Validate json message using template.
+
+        Raises: jsonschema.exceptions.ValidationError
+                If message is not valid based on the provided template.
+        """
+        try:
+            validate(message, template, format_checker=FormatChecker())
+        except Exception as error:
+            raise MashValidationException(error)
