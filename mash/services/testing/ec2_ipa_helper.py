@@ -22,8 +22,7 @@ import threading
 from ipa.ipa_controller import test_image
 
 from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
-from mash.utils.ec2 import get_client
-from mash.utils.mash_utils import generate_name, get_key_from_file
+from mash.utils.ec2 import temp_key_pair
 
 
 def ipa_test(
@@ -32,37 +31,29 @@ def ipa_test(
     ssh_private_key_file=None, ssh_user=None, tests=None
 ):
     name = threading.current_thread().getName()
-    key_name = generate_name()
-    client = get_client('ec2', access_key_id, secret_access_key, region)
+    status = 1
     try:
-        ssh_public_key = get_key_from_file(ssh_private_key_file + '.pub')
-        client.import_key_pair(
-            KeyName=key_name, PublicKeyMaterial=ssh_public_key
-        )
-
-        status, result = test_image(
-            provider,
-            access_key_id=access_key_id,
-            cleanup=True,
-            desc=description,
-            distro=distro,
-            image_id=image_id,
-            instance_type=instance_type,
-            log_level=logging.WARNING,
-            region=region,
-            secret_access_key=secret_access_key,
-            ssh_key_name=key_name,
-            ssh_private_key=ssh_private_key_file,
-            ssh_user=ssh_user,
-            tests=tests
-        )
+        with temp_key_pair(
+            access_key_id, region, secret_access_key, ssh_private_key_file
+        ) as key_name:
+            status, result = test_image(
+                provider,
+                access_key_id=access_key_id,
+                cleanup=True,
+                desc=description,
+                distro=distro,
+                image_id=image_id,
+                instance_type=instance_type,
+                log_level=logging.WARNING,
+                region=region,
+                secret_access_key=secret_access_key,
+                ssh_key_name=key_name,
+                ssh_private_key=ssh_private_key_file,
+                ssh_user=ssh_user,
+                tests=tests
+            )
     except Exception as error:
         results[name] = {'status': EXCEPTION, 'msg': str(error)}
     else:
         status = SUCCESS if status == 0 else FAILED
         results[name] = {'status': status}
-    finally:
-        try:
-            client.delete_key_pair(KeyName=key_name)
-        except Exception:
-            pass

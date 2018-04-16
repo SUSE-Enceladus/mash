@@ -14,10 +14,10 @@ class TestEC2TestingJob(object):
             'utctime': 'now',
         }
 
-    @patch('mash.services.testing.ipa_helper.generate_name')
-    @patch('mash.services.testing.ipa_helper.get_client')
-    @patch('mash.services.testing.ipa_helper.get_key_from_file')
-    @patch('mash.services.testing.ipa_helper.test_image')
+    @patch('mash.utils.ec2.generate_name')
+    @patch('mash.utils.ec2.get_client')
+    @patch('mash.utils.ec2.get_key_from_file')
+    @patch('mash.services.testing.ec2_ipa_helper.test_image')
     @patch.object(EC2TestingJob, 'send_log')
     def test_testing_run_test(
         self, mock_send_log, mock_test_image, mock_get_key_from_file,
