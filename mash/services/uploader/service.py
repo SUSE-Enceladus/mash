@@ -41,6 +41,9 @@ class UploadImageService(BaseService):
         # setup service log file
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
+        # Setup encryption keys file for credentials handling
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
+
         # upload image instances
         self.jobs = {}
 
