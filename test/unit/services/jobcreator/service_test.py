@@ -166,10 +166,16 @@ class TestJobCreatorService(object):
 
     @patch.object(JobCreatorService, '_publish')
     def test_publish_delete_job_message(self, mock_publish):
-        self.jobcreator.publish_delete_job_message('1')
-        mock_publish.assert_called_once_with(
-            'obs', 'job_document', '{"obs_job_delete": "1"}'
-        )
+        message = MagicMock()
+        message.body = '{"job_delete": "1"}'
+        self.jobcreator._handle_service_message(message)
+        mock_publish.assert_has_calls([
+            call('obs', 'job_document', '{"obs_job_delete": "1"}'),
+            call(
+                'credentials', 'job_document',
+                '{"credentials_job_delete": "1"}'
+            )
+        ])
 
     @patch.object(JobCreatorService, 'consume_queue')
     @patch.object(JobCreatorService, 'stop')

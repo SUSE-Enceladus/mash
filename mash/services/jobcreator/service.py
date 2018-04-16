@@ -142,60 +142,19 @@ class JobCreatorService(BaseService):
 
     def _handle_service_message(self, message):
         """
-        Handle new job messages.
-
-        Split params and send messages to all services to initiate job.
+        Handle new and delete job messages.
         """
         try:
             job_doc = json.loads(message.body)
-            self.validate_message(job_doc, schema.job_message)
+            if 'job_delete' in job_doc:
+                self.publish_delete_job_message(job_doc['job_delete'])
+            else:
+                self.validate_message(job_doc, schema.job_message)
+                self.proccess_new_job(job_doc)
         except Exception as error:
             self.log.error(
                 'Invalid message received: {0}.'.format(error)
             )
-        else:
-            region_info = self._get_account_info(
-                job_doc.get('provider'),
-                job_doc.get('provider_accounts'),
-                job_doc.get('provider_groups')
-            )
-
-            job_id = str(uuid.uuid4())
-            base_message = {
-                'id': job_id,
-                'utctime': job_doc.get('utctime'),
-            }
-
-            self._publish_credentials_job(base_message, job_doc)
-
-            for service in self.services:
-                if service == 'deprecation':
-                    self._publish_deprecation_job(
-                        base_message, job_doc, region_info
-                    )
-                elif service == 'obs':
-                    self._publish_obs_job(base_message, job_doc, region_info)
-                elif service == 'pint':
-                    self._publish_pint_job(base_message, job_doc, region_info)
-                elif service == 'publisher':
-                    self._publish_publisher_job(
-                        base_message, job_doc, region_info
-                    )
-                elif service == 'replication':
-                    self._publish_replication_job(
-                        base_message, job_doc, region_info
-                    )
-                elif service == 'testing':
-                    self._publish_testing_job(
-                        base_message, job_doc, region_info
-                    )
-                elif service == 'uploader':
-                    self._publish_uploader_job(
-                        base_message, job_doc, region_info
-                    )
-
-                if service == job_doc.get('last_service'):
-                    break
 
         message.ack()
 
@@ -438,9 +397,56 @@ class JobCreatorService(BaseService):
 
         self._publish('credentials', self.add_account_key, json.dumps(message))
 
+    def proccess_new_job(self, job_doc):
+        """
+        Split args and send messages to all services to initiate job.
+        """
+        region_info = self._get_account_info(
+            job_doc.get('provider'),
+            job_doc.get('provider_accounts'),
+            job_doc.get('provider_groups')
+        )
+
+        job_id = str(uuid.uuid4())
+        base_message = {
+            'id': job_id,
+            'utctime': job_doc.get('utctime'),
+        }
+
+        self._publish_credentials_job(base_message, job_doc)
+
+        for service in self.services:
+            if service == 'deprecation':
+                self._publish_deprecation_job(
+                    base_message, job_doc, region_info
+                )
+            elif service == 'obs':
+                self._publish_obs_job(base_message, job_doc, region_info)
+            elif service == 'pint':
+                self._publish_pint_job(base_message, job_doc, region_info)
+            elif service == 'publisher':
+                self._publish_publisher_job(
+                    base_message, job_doc, region_info
+                )
+            elif service == 'replication':
+                self._publish_replication_job(
+                    base_message, job_doc, region_info
+                )
+            elif service == 'testing':
+                self._publish_testing_job(
+                    base_message, job_doc, region_info
+                )
+            elif service == 'uploader':
+                self._publish_uploader_job(
+                    base_message, job_doc, region_info
+                )
+
+            if service == job_doc.get('last_service'):
+                break
+
     def publish_delete_job_message(self, job_id):
         """
-        Publish delete job message to obs service.
+        Publish delete job message to obs and credentials services.
 
         This will flush the job with the given id out of the pipeline.
         """
@@ -449,6 +455,13 @@ class JobCreatorService(BaseService):
         }
         self._publish(
             'obs', self.job_document_key, json.dumps(delete_message)
+        )
+
+        delete_message = {
+            "credentials_job_delete": job_id
+        }
+        self._publish(
+            'credentials', self.job_document_key, json.dumps(delete_message)
         )
 
     def start(self):
