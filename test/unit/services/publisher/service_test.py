@@ -363,30 +363,9 @@ class TestPublisherService(object):
 
         self.message.ack.assert_called_once_with()
         self.publisher.log.error.assert_called_once_with(
-            'Invalid job config file: Expecting value:'
+            'Error adding job: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-
-    def test_publisher_handle_service_message_bad_key(self):
-        self.message.body = '{"publisher_job_update": {"id": "1"}}'
-
-        self.publisher._handle_service_message(self.message)
-
-        self.message.ack.assert_called_once_with()
-        self.publisher.log.error.assert_called_once_with(
-            'Invalid publisher job: Job document must contain the '
-            'publisher_job key.'
-        )
-
-    @patch.object(PublisherService, '_validate_job_config')
-    def test_publisher_handle_service_message_fail_validation(
-        self, mock_validate_job
-    ):
-        mock_validate_job.return_value = False
-        self.message.body = '{"publisher_job": {"id": "1"}}'
-        self.publisher._handle_service_message(self.message)
-
-        self.message.ack.assert_called_once_with()
 
     @patch.object(PublisherService, '_delete_job')
     @patch.object(PublisherService, '_publish_message')
@@ -535,13 +514,6 @@ class TestPublisherService(object):
             max_instances=1,
             misfire_grace_time=None,
             coalesce=True
-        )
-
-    def test_publisher_validate_invalid_job_config(self):
-        status = self.publisher._validate_job_config('{"id": "1"}')
-        assert status is False
-        self.publisher.log.error.assert_called_once_with(
-            'allow_copy is required in publisher job config.'
         )
 
     def test_publisher_validate_invalid_listener_msg(self):

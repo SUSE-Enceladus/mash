@@ -122,21 +122,13 @@ class TestCredentialsService(object):
             success=False, job_id='1'
         )
 
-    @patch.object(CredentialsService, '_validate_job_doc')
     @patch.object(CredentialsService, '_add_job')
-    def test_credentials_handle_job_docs_add(
-        self, mock_add_job, mock_validate_job
-    ):
+    def test_credentials_handle_job_docs_add(self, mock_add_job):
         message = Mock()
         message.body = '{"credentials_job": {"id": "1"}}'
 
-        mock_validate_job.return_value = True
-
         self.service._handle_job_documents(message)
 
-        mock_validate_job.assert_called_once_with(
-            {'credentials_job': {'id': '1'}}
-        )
         message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with({'id': '1'})
 
@@ -150,34 +142,17 @@ class TestCredentialsService(object):
 
         message.ack.assert_called_once_with()
         mock_send_control_response.assert_called_once_with(
-            'Invalid job config file: Expecting value:'
+            'Error adding job: Expecting value:'
             ' line 1 column 1 (char 0).', success=False
         )
 
-    @patch.object(CredentialsService, '_validate_job_doc')
-    def test_credentials_handle_jobs_fail_validation(self, mock_validate_job):
-        mock_validate_job.return_value = False
-        message = Mock()
-        message.body = '{"credentials_job": {"id": "1"}}'
-        self.service._handle_job_documents(message)
-
-        message.ack.assert_called_once_with()
-
-    @patch.object(CredentialsService, '_validate_job_doc')
     @patch.object(CredentialsService, '_delete_job')
-    def test_credentials_handle_job_docs_delete(
-        self, mock_delete_job, mock_validate_job
-    ):
+    def test_credentials_handle_job_docs_delete(self, mock_delete_job):
         message = Mock()
         message.body = '{"credentials_job_delete": "1"}'
 
-        mock_validate_job.return_value = True
-
         self.service._handle_job_documents(message)
 
-        mock_validate_job.assert_called_once_with(
-            {'credentials_job_delete': '1'}
-        )
         message.ack.assert_called_once_with()
         mock_delete_job.assert_called_once_with('1')
 
@@ -221,39 +196,6 @@ class TestCredentialsService(object):
             'Invalid token!', success=False
         )
         message.ack.assert_called_once_with()
-
-    def test_validate_delete_job_doc(self):
-        assert self.service._validate_job_doc({'credentials_job_delete': '1'})
-
-    @patch.object(CredentialsService, '_send_control_response')
-    def test_validate_invalid_job_doc(self, mock_send_control_response):
-        response = self.service._validate_job_doc({'creds_job': '1'})
-        assert response is False
-        mock_send_control_response.assert_called_once_with(
-            'Invalid credentials job: Job document must contain '
-            'the credentials_job key.', success=False
-        )
-
-    @patch.object(CredentialsService, '_send_control_response')
-    def test_validate_invalid_cred_job_doc(self, mock_send_control_response):
-        response = self.service._validate_job_doc({'credentials_job': {}})
-        assert response is False
-        mock_send_control_response.assert_called_once_with(
-            'id is required in credentials job doc.',
-            success=False
-        )
-
-    def test_validate_add_job_doc(self):
-        job_doc = {
-            'credentials_job': {
-                'id': '1',
-                'provider': 'ec2',
-                'provider_accounts': ['test-aws'],
-                'requesting_user': 'user1',
-                'last_service': 'pint'
-            }
-        }
-        assert self.service._validate_job_doc(job_doc)
 
     @patch.object(CredentialsService, '_retrieve_credentials')
     def test_get_credentials_response(self, mock_retrieve_credentials):
