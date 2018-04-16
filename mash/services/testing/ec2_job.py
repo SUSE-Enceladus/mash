@@ -19,7 +19,7 @@
 from threading import Thread
 
 from mash.services.status_levels import FAILED, SUCCESS
-from mash.services.testing.ipa_helper import ipa_test
+from mash.services.testing.ec2_ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
 
 
@@ -37,7 +37,7 @@ class EC2TestingJob(TestingJob):
         super(EC2TestingJob, self).__init__(
             id, provider, ssh_private_key_file, test_regions, tests, utctime,
             job_file=job_file, description=description, distro=distro,
-            instance_type=instance_type
+            instance_type=instance_type, ssh_user=ssh_user
         )
         self.ssh_user = ssh_user
 
