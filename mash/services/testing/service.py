@@ -228,17 +228,9 @@ class TestingService(BaseService):
         """
         try:
             job_desc = json.loads(message.body)
-        except ValueError as e:
-            self.log.error('Invalid job config file: {}.'.format(e))
-        else:
-            if 'testing_job' in job_desc and \
-                    self._validate_job(job_desc['testing_job']):
-                self._add_job(job_desc['testing_job'])
-            else:
-                self.log.error(
-                    'Invalid testing job: Job config must contain '
-                    'testing_job key.'
-                )
+            self._add_job(job_desc['testing_job'])
+        except Exception as e:
+            self.log.error('Error adding job: {0}.'.format(e))
 
         message.ack()
 
@@ -347,19 +339,6 @@ class TestingService(BaseService):
             misfire_grace_time=None,
             coalesce=True
         )
-
-    def _validate_job(self, job_config):
-        """
-        Validate the job has the required attributes.
-        """
-        required = ['id', 'provider', 'tests', 'utctime', 'test_regions']
-        for attr in required:
-            if attr not in job_config:
-                self.log.error(
-                    '{0} is required in testing job config.'.format(attr)
-                )
-                return False
-        return True
 
     def _validate_listener_msg(self, message):
         """

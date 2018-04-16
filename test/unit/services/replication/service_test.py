@@ -392,30 +392,9 @@ class TestReplicationService(object):
 
         self.message.ack.assert_called_once_with()
         self.replication.log.error.assert_called_once_with(
-            'Invalid job config file: Expecting value:'
+            'Error adding job: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-
-    def test_replication_handle_service_message_bad_key(self):
-        self.message.body = '{"replication_job_update": {"id": "1"}}'
-
-        self.replication._handle_service_message(self.message)
-
-        self.message.ack.assert_called_once_with()
-        self.replication.log.error.assert_called_once_with(
-            'Invalid replication job: Job document must contain the '
-            'replication_job key.'
-        )
-
-    @patch.object(ReplicationService, '_validate_job_config')
-    def test_replication_handle_service_message_fail_validation(
-        self, mock_validate_job
-    ):
-        mock_validate_job.return_value = False
-        self.message.body = '{"replication_job": {"id": "1"}}'
-        self.replication._handle_service_message(self.message)
-
-        self.message.ack.assert_called_once_with()
 
     @patch.object(ReplicationService, '_delete_job')
     @patch.object(ReplicationService, '_publish_message')
@@ -566,13 +545,6 @@ class TestReplicationService(object):
             max_instances=1,
             misfire_grace_time=None,
             coalesce=True
-        )
-
-    def test_replication_validate_invalid_job_config(self):
-        status = self.replication._validate_job_config('{"id": "1"}')
-        assert status is False
-        self.replication.log.error.assert_called_once_with(
-            'image_description is required in replication job config.'
         )
 
     def test_replication_validate_invalid_listener_msg(self):

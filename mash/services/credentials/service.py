@@ -190,16 +190,15 @@ class CredentialsService(BaseService):
         """
         try:
             job_document = json.loads(message.body)
+
+            if 'credentials_job_delete' in job_document:
+                self._delete_job(job_document['credentials_job_delete'])
+            else:
+                self._add_job(job_document['credentials_job'])
         except ValueError as error:
             self._send_control_response(
-                'Invalid job config file: {0}.'.format(error), success=False
+                'Error adding job: {0}.'.format(error), success=False
             )
-        else:
-            if self._validate_job_doc(job_document):
-                if 'credentials_job_delete' in job_document:
-                    self._delete_job(job_document['credentials_job_delete'])
-                else:
-                    self._add_job(job_document['credentials_job'])
 
         message.ack()
 
@@ -347,35 +346,6 @@ class CredentialsService(BaseService):
             self.log.error(
                 'Unable to store credentials: {0}.'.format(error)
             )
-
-    def _validate_job_doc(self, job_document):
-        """
-        Validate the job has the required attributes.
-        """
-        if 'credentials_job_delete' in job_document:
-            return True
-
-        if 'credentials_job' not in job_document:
-            self._send_control_response(
-                'Invalid credentials job: Job document must contain '
-                'the credentials_job key.', success=False
-            )
-            return False
-
-        data = job_document['credentials_job']
-        required = [
-            'id', 'provider', 'provider_accounts',
-            'requesting_user', 'last_service'
-        ]
-
-        for attr in required:
-            if attr not in data:
-                self._send_control_response(
-                    '{0} is required in credentials job doc.'.format(attr),
-                    success=False
-                )
-                return False
-        return True
 
     def start(self):
         """
