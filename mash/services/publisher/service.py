@@ -42,6 +42,7 @@ class PublisherService(BaseService):
         """
         self.config = PublisherConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.jobs = {}
 

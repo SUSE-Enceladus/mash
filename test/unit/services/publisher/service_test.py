@@ -67,6 +67,7 @@ class TestPublisherService(object):
         self.publisher.post_init()
 
         self.config.get_log_file.assert_called_once_with('publisher')
+        self.config.get_encryption_keys_file.assert_called_once_with()
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/publisher_service.log'
         )

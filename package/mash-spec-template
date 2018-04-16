@@ -30,6 +30,7 @@ BuildRequires:  python3-setuptools
 Requires:       osc
 Requires:       rabbitmq-server
 Requires:       python3-boto3
+Requires:       python3-cryptography
 Requires:       python3-jsonschema
 Requires:       python3-PyYAML
 Requires:       python3-PyJWT

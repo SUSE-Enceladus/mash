@@ -48,6 +48,7 @@ class TestingService(BaseService):
         self.config = TestingConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.jobs = {}
 

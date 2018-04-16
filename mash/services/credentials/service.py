@@ -17,6 +17,7 @@
 #
 import jwt
 import json
+import os
 
 from datetime import datetime, timedelta
 
@@ -33,12 +34,18 @@ class CredentialsService(BaseService):
         self.config = CredentialsConfig()
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+
         self.services = self.config.get_service_names(
             credentials_required=True
         )
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
+        self.credentials_directory = self.config.get_credentials_dir()
 
         self.jobs = {}
 
+        self.bind_queue(
+            self.service_exchange, self.add_account_key, self.listener_queue
+        )
         self._bind_credential_request_keys()
 
         self.restart_jobs(self._add_job)
@@ -75,6 +82,13 @@ class CredentialsService(BaseService):
                 self.service_exchange, 'request.{0}'.format(service), 'request'
             )
 
+    def _check_credentials_exist(self, account, provider, user):
+        """
+        Return True if the credentials file exists.
+        """
+        path = self._get_credentials_file_path(account, provider, user)
+        return os.path.exists(path)
+
     def _delete_job(self, job_id):
         """
         Remove job from dictionary.
@@ -95,6 +109,17 @@ class CredentialsService(BaseService):
                 job_id=job_id
             )
 
+    def _get_credentials_file_path(self, account, provider, user):
+        """
+        Return the string path to the credentials file.
+
+        Based on user, provider and account name.
+        """
+        path = os.path.join(
+            self.credentials_directory, user, provider, account
+        )
+        return path
+
     def _get_credentials_response(self, job_id, issuer):
         """
         Return jwt encoded credentials response message.
@@ -111,6 +136,42 @@ class CredentialsService(BaseService):
         return jwt.encode(
             response, self.jwt_secret, algorithm=self.jwt_algorithm
         )
+
+    def _get_encrypted_credentials(self, account, provider, user):
+        """
+        Return encrypted credentials string from file.
+        """
+        path = self._get_credentials_file_path(account, provider, user)
+        with open(path, 'r') as credentials_file:
+            credentials = credentials_file.read()
+
+        return credentials.strip()
+
+    def _handle_account_request(self, message):
+        """
+        Handle account add messages.
+
+        Example message:
+        {
+            "account_name": "test-aws",
+            "credentials": "encrypted_creds",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        }
+        """
+        try:
+            account_msg = json.loads(message.body)
+        except ValueError as error:
+            self._send_control_response(
+                'Invalid account request: {0}.'.format(error), success=False
+            )
+        else:
+            self._store_encrypted_credentials(
+                account_msg['account_name'], account_msg['credentials'],
+                account_msg['provider'], account_msg['requesting_user']
+            )
+
+        message.ack()
 
     def _handle_job_documents(self, message):
         """
@@ -260,11 +321,40 @@ class CredentialsService(BaseService):
                 success=False
             )
 
+    def _store_encrypted_credentials(
+        self, account, credentials, provider, user
+    ):
+        """
+        Store the provided credentials encrypted on disk.
+
+        Expected credentials as a json string.
+
+        Example: {"access_key_id": "key123", "secret_access_key": "123456"}
+
+        Path is based on the user, provider and account.
+        """
+        path = self._get_credentials_file_path(account, provider, user)
+
+        credentials_dir = os.path.dirname(path)
+        if not os.path.isdir(credentials_dir):
+            os.makedirs(credentials_dir)
+
+        try:
+            with open(path, 'w') as creds_file:
+                creds_file.write(credentials)
+        except Exception as error:
+            self.log.error(
+                'Unable to store credentials: {0}.'.format(error)
+            )
+
     def start(self):
         """
         Start credentials service.
         """
         self.consume_queue(self._handle_job_documents)
+        self.consume_queue(
+            self._handle_account_request, queue_name=self.listener_queue
+        )
         self.consume_credentials_queue(
             self._handle_credential_request, queue_name='request'
         )

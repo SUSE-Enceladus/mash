@@ -68,6 +68,7 @@ class TestReplicationService(object):
         self.replication.post_init()
 
         self.config.get_log_file.assert_called_once_with('replication')
+        self.config.get_encryption_keys_file.assert_called_once_with()
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/replication_service.log'
         )
