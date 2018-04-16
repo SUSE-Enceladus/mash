@@ -1,20 +1,18 @@
 from pytest import raises
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+
+from test.unit.test_helper import (
+    patch_open, context_manager
+)
 
 from mash.services.uploader.cloud.amazon import UploadAmazon
 from mash.mash_exceptions import MashUploadException
 
-import mash
-
 
 class TestUploadAmazon(object):
     def setup(self):
-        self.ec2 = Mock()
-        mash.services.uploader.cloud.amazon.EC2ImageUploader = self.ec2
         self.credentials = Mock()
         self.credentials = {
-            'ssh_key_name': 'name',
-            'ssh_private_key': '/some/path/to/private/key',
             'access_key_id': 'access-key',
             'secret_access_key': 'secret-access-key'
         }
@@ -29,7 +27,38 @@ class TestUploadAmazon(object):
         self.uploader = UploadAmazon(
             self.credentials, 'file', 'name', 'description', custom_args
         )
-        self.ec2.assert_called_once_with(
+
+    @patch('mash.services.uploader.cloud.amazon.get_client')
+    @patch('mash.services.uploader.cloud.amazon.generate_name')
+    @patch('mash.services.uploader.cloud.amazon.NamedTemporaryFile')
+    @patch('mash.services.uploader.cloud.amazon.EC2ImageUploader')
+    @patch_open
+    def test_upload(
+        self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
+        mock_generate_name, mock_get_client
+    ):
+        open_context = context_manager()
+        mock_open.return_value = open_context.context_manager_mock
+        ec2_upload = Mock()
+        ec2_upload.create_image.return_value = 'ami_id'
+        mock_EC2ImageUploader.return_value = ec2_upload
+        tempfile = Mock()
+        tempfile.name = 'tmpfile'
+        mock_NamedTemporaryFile.return_value = tempfile
+        ec2_client = Mock()
+        # https://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.Client.create_key_pair
+        ec2_client.create_key_pair.return_value = {
+            'KeyFingerprint': 'fingerprint',
+            'KeyMaterial': 'pkey',
+            'KeyName': 'name'
+        }
+        mock_get_client.return_value = ec2_client
+        mock_generate_name.return_value = 'xxxx'
+        assert self.uploader.upload() == ('ami_id', 'us-east-1')
+        mock_get_client.assert_called_once_with(
+            'ec2', 'access-key', 'secret-access-key', 'us-east-1'
+        )
+        mock_EC2ImageUploader.assert_called_once_with(
             access_key='access-key',
             backing_store='ssd',
             bootkernel=None,
@@ -46,8 +75,8 @@ class TestUploadAmazon(object):
             secret_key='secret-access-key',
             security_group_ids='',
             sriov_type='simple',
-            ssh_key_pair_name='name',
-            ssh_key_private_key_file='/some/path/to/private/key',
+            ssh_key_pair_name='mash-xxxx',
+            ssh_key_private_key_file='tmpfile',
             ssh_timeout=300,
             use_grub2=True,
             use_private_ip=False,
@@ -55,12 +84,11 @@ class TestUploadAmazon(object):
             vpc_subnet_id='',
             wait_count=3
         )
-
-    def test_upload(self):
-        self.uploader.ec2.create_image.return_value = 'ami_id'
-        assert self.uploader.upload() == ('ami_id', 'us-east-1')
-        self.uploader.ec2.set_region.assert_called_once_with('us-east-1')
-        self.uploader.ec2.create_image.assert_called_once_with('file')
-        self.uploader.ec2.create_image.side_effect = Exception
+        open_context.file_mock.write.assert_called_once_with('pkey')
+        ec2_client.create_key_pair.assert_called_once_with(KeyName='mash-xxxx')
+        ec2_client.delete_key_pair.assert_called_once_with(KeyName='mash-xxxx')
+        ec2_upload.set_region.assert_called_once_with('us-east-1')
+        ec2_upload.create_image.assert_called_once_with('file')
+        ec2_upload.create_image.side_effect = Exception
         with raises(MashUploadException):
             self.uploader.upload()
