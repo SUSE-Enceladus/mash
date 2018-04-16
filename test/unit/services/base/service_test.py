@@ -12,7 +12,8 @@ from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
-    MashLogSetupException
+    MashLogSetupException,
+    MashValidationException
 )
 
 open_name = "builtins.open"
@@ -38,6 +39,7 @@ class TestBaseService(object):
         self.connection.is_closed = True
         mock_connection.return_value = self.connection
         self.service = BaseService('localhost', 'obs')
+        self.service.encryption_keys_file = 'encryption_keys.file'
         mock_get_job_directory.assert_called_once_with('obs')
         mock_makedirs.assert_called_once_with(
             '/var/lib/mash/obs_jobs/', exist_ok=True
@@ -222,8 +224,23 @@ class TestBaseService(object):
         assert payload['id'] == '1'
         assert payload['sub'] == 'credentials_request'
 
+    def test_get_encryption_keys_from_file(self):
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.readlines.return_value = [
+                '1234567890123456789012345678901234567890123=\n'
+            ]
+            result = self.service.get_encryption_keys_from_file(
+                'test-keys.file'
+            )
+
+        assert len(result) == 1
+        assert type(result[0]).__name__ == 'Fernet'
+
+    @patch.object(BaseService, 'decrypt_credentials')
     @patch('mash.services.base_service.jwt')
-    def test_decode_credentials(self, mock_jwt):
+    def test_decode_credentials(self, mock_jwt, mock_decrypt):
         self.service.jwt_algorithm = 'HS256'
         self.service.jwt_secret = 'super.secret'
         self.service_exchange = 'obs'
@@ -232,15 +249,13 @@ class TestBaseService(object):
         mock_jwt.decode.return_value = {
             "id": "1",
             "credentials": {
-                "test-aws": {
-                    "access_key_id": "123456",
-                    "secret_access_key": "654321"
-                },
-                "test-aws-cn": {
-                    "access_key_id": "654321",
-                    "secret_access_key": "123456"
-                }
+                "test-aws": {"encrypted_creds"},
+                "test-aws-cn": {"encrypted_creds"}
             }
+        }
+        mock_decrypt.return_value = {
+            "access_key_id": "123456",
+            "secret_access_key": "654321"
         }
 
         job_id, credentials = self.service.decode_credentials(message)
@@ -252,6 +267,8 @@ class TestBaseService(object):
 
         assert len(credentials.keys()) == 2
         assert job_id == '1'
+        assert credentials['test-aws']['access_key_id'] == '123456'
+        assert credentials['test-aws']['secret_access_key'] == '654321'
 
         # Missing credentials key
         mock_jwt.decode.return_value = {"id": "1"}
@@ -271,6 +288,27 @@ class TestBaseService(object):
             'Invalid credentials response token: Token is broken!'
         )
 
+    def test_decrypt_credentials(self):
+        self.service.encryption_keys_file = '../data/encryption_keys'
+        msg = b'gAAAAABaxoqn6i-IJAUaVXd6NkVqdJ8GKRiEDT9TgFkdS9r2U8NHyBoG' \
+            b'M2Bc4sUsTVBd1a3S7XCESxXgOdrTH5vUvj26TqkIuDTxg4lw-IIT3D84pT' \
+            b'6wX2cSEifMYIcjUzQGPXWhU4oQgrwOYIdR9p9DxTw5GPMwTQ=='
+
+        creds = self.service.decrypt_credentials(msg)
+
+        assert creds['access_key_id'] == '123456'
+        assert creds['secret_access_key'] == '654321'
+
+    @patch.object(BaseService, 'get_encryption_keys_from_file')
+    @patch('mash.services.base_service.MultiFernet')
+    def test_encrypt_credentials(self, mock_fernet, mock_get_keys_from_file):
+        mock_get_keys_from_file.return_value = [Mock()]
+        fernet_key = Mock()
+        fernet_key.encrypt.return_value = b'encrypted_secret'
+        mock_fernet.return_value = fernet_key
+        result = self.service.encrypt_credentials(b'secret')
+        assert result == 'encrypted_secret'
+
     @patch.object(BaseService, 'get_credential_request')
     @patch.object(BaseService, '_publish')
     def test_publish_credentials_request(
@@ -285,3 +323,25 @@ class TestBaseService(object):
         mock_publish.assert_called_once_with(
             'credentials', 'request.obs', token
         )
+
+    def test_validate_message(self):
+        template = {
+            'type': 'object',
+            'properties': {
+                'provider': {'enum': ['azure', 'ec2']}
+            },
+            'additionalProperties': False,
+            'required': ['provider']
+        }
+        message = {'provider': 'ec2'}
+        result = self.service.validate_message(message, template)
+
+        assert result is None
+
+        message = {'provider': 'cloud_provider'}
+
+        with raises(MashValidationException) as error:
+            self.service.validate_message(message, template)
+
+        assert "'cloud_provider' is not one of ['azure', 'ec2']" \
+            in str(error.value)

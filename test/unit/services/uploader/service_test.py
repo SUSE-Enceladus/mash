@@ -56,6 +56,7 @@ class TestUploadImageService(object):
         self.uploader.post_init()
 
         mock_set_logfile.assert_called_once_with('logfile')
+        config.get_encryption_keys_file.assert_called_once_with()
 
         mock_BackgroundScheduler.assert_called_once_with(timezone=utc)
         scheduler.start.assert_called_once_with()

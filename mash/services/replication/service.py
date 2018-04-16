@@ -43,6 +43,7 @@ class ReplicationService(BaseService):
         """
         self.config = ReplicationConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.jobs = {}
 
@@ -245,17 +246,9 @@ class ReplicationService(BaseService):
         """
         try:
             job_desc = json.loads(message.body)
+            self._add_job(job_desc['replication_job'])
         except ValueError as error:
-            self.log.error('Invalid job config file: {0}.'.format(error))
-        else:
-            if 'replication_job' in job_desc and \
-                    self._validate_job_config(job_desc['replication_job']):
-                self._add_job(job_desc['replication_job'])
-            else:
-                self.log.error(
-                    'Invalid replication job: Job document must contain '
-                    'the replication_job key.'
-                )
+            self.log.error('Error adding job: {0}.'.format(error))
 
         message.ack()
 
@@ -341,22 +334,6 @@ class ReplicationService(BaseService):
                 'listener messages.',
                 extra={'job_id': job_id}
             )
-
-    def _validate_job_config(self, job_config):
-        """
-        Validate the job has the required attributes.
-        """
-        required = [
-            'id', 'image_description', 'provider',
-            'utctime', 'replication_source_regions'
-        ]
-        for attr in required:
-            if attr not in job_config:
-                self.log.error(
-                    '{0} is required in replication job config.'.format(attr)
-                )
-                return False
-        return True
 
     def _validate_listener_msg(self, message):
         """
