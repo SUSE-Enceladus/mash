@@ -49,7 +49,7 @@ class TestAzureTestingJob(object):
             'azure',
             access_key_id=None,
             cleanup=True,
-            desc=job.description,
+            description=job.description,
             distro='sles',
             image_id='ami-123',
             instance_type=None,

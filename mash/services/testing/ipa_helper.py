@@ -59,7 +59,7 @@ def ipa_test(
             provider,
             access_key_id=access_key_id,
             cleanup=True,
-            desc=description,
+            description=description,
             distro=distro,
             image_id=image_id,
             instance_type=instance_type,
