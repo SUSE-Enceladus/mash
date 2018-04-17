@@ -23,6 +23,7 @@ import threading
 from ipa.ipa_controller import test_image
 from tempfile import NamedTemporaryFile
 
+from mash.csp import CSP
 from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
 from mash.utils.ec2 import get_client
 from mash.utils.mash_utils import generate_name, get_key_from_file
@@ -39,7 +40,7 @@ def ipa_test(
     key_name = None
 
     try:
-        if provider == 'ec2':
+        if provider == CSP.ec2:
             key_name = generate_name()
             client = get_client(
                 'ec2', access_key_id, secret_access_key, region
@@ -78,7 +79,7 @@ def ipa_test(
         results[name] = {'status': status}
     finally:
         try:
-            if provider == 'ec2':
+            if provider == CSP.ec2:
                 client.delete_key_pair(KeyName=key_name)
             else:
                 os.remove(service_account_file)
