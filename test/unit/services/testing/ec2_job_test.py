@@ -64,6 +64,7 @@ class TestEC2TestingJob(object):
             log_level=30,
             region='us-east-1',
             secret_access_key='321',
+            service_account_file=None,
             ssh_key_name='random_name',
             ssh_private_key='private_ssh_key.file',
             ssh_user='ec2-user',
