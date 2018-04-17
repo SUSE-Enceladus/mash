@@ -16,8 +16,29 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import os
 import random
+
+from contextlib import contextmanager, suppress
 from string import ascii_lowercase
+from tempfile import NamedTemporaryFile
+
+
+@contextmanager
+def temp_file(content):
+    """
+    Create a temporary file and store the provided contents.
+
+    Return the path to the file.
+    """
+    try:
+        temp_file = NamedTemporaryFile(delete=False, mode='w+')
+        temp_file.write(content)
+        temp_file.close()
+        yield temp_file.name
+    finally:
+        with suppress(OSError):
+            os.remove(temp_file.name)
 
 
 def generate_name(length=8):

@@ -6,6 +6,7 @@ from apscheduler.jobstores.base import JobLookupError
 
 from mash.services.base_service import BaseService
 from mash.services.testing.service import TestingService
+from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
 
 open_name = "builtins.open"
@@ -84,13 +85,25 @@ class TestIPATestingService(object):
             EC2TestingJob, {'id': '1', 'provider': 'ec2'}
         )
 
+    @patch.object(TestingService, '_create_job')
+    def test_testing_add_azure_job(self, mock_create_job):
+        job = Mock()
+        job.id = '1'
+        job.get_metadata.return_value = {'job_id': '1', 'provider': 'azure'}
+
+        self.testing._add_job({'id': '1', 'provider': 'azure'})
+
+        mock_create_job.assert_called_once_with(
+            AzureTestingJob, {'id': '1', 'provider': 'azure'}
+        )
+
     def test_testing_add_job_exists(self):
         job = Mock()
         job.id = '1'
         job.get_metadata.return_value = {'job_id': '1'}
 
         self.testing.jobs['1'] = Mock()
-        self.testing._add_job({'id': '1', 'provider': 'ec2'})
+        self.testing._add_job({'id': '1', 'provider': 'azure'})
 
         self.testing.log.warning.assert_called_once_with(
             'Job already queued.',
