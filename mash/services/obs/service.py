@@ -138,13 +138,9 @@ class OBSImageBuildResultService(BaseService):
           }
         }
         """
-        job_info = self._validate_job_description(data)
-        if not job_info['ok']:
-            return job_info
-        else:
-            data = data['obs_job']
-            data['job_file'] = self.persist_job_config(data)
-            return self._start_job(data)
+        data = data['obs_job']
+        data['job_file'] = self.persist_job_config(data)
+        return self._start_job(data)
 
     def _delete_job(self, job_id):
         """
@@ -182,51 +178,6 @@ class OBSImageBuildResultService(BaseService):
                     'ok': True,
                     'message': 'Job Deleted'
                 }
-
-    def _validate_job_description(self, job_data):
-        if 'obs_job' not in job_data:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no obs_job'
-            }
-        job = job_data['obs_job']
-        if 'id' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no job id'
-            }
-        if job['id'] in self.jobs:
-            return {
-                'ok': False,
-                'message': 'Job already exists'
-            }
-        if 'image' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no image name'
-            }
-        if 'project' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no project name'
-            }
-        if 'utctime' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no time given'
-            }
-        elif job['utctime'] != 'now' and job['utctime'] != 'always':
-            try:
-                dateutil.parser.parse(job['utctime']).isoformat()
-            except Exception as e:
-                return {
-                    'ok': False,
-                    'message': 'Invalid job time: {0}'.format(e)
-                }
-        return {
-            'ok': True,
-            'message': 'OK'
-        }
 
     def _start_job(self, job):
         if 'conditions' not in job:
