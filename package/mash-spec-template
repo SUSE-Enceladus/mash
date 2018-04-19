@@ -43,6 +43,7 @@ Requires:       python3-ec2deprecateimg
 Requires:       python3-ec2publishimg
 Requires:       python3-ec2uploadimg
 Requires:       python3-ipa
+Requires:       python3-ipa-tests
 BuildArch:      noarch
 
 %description
