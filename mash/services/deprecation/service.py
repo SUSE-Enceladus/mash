@@ -166,7 +166,6 @@ class DeprecationService(BaseService):
                 'deprecation_result': {
                     'id': job.id,
                     'cloud_image_name': job.cloud_image_name,
-                    'source_regions': job.source_regions,
                     'status': job.status,
                 }
             }
@@ -214,10 +213,6 @@ class DeprecationService(BaseService):
             "publisher_result": {
                 "id": "123",
                 "cloud_image_name": "image_123",
-                "source_regions": {
-                    "us-east-1": "ami-bc5b48d0",
-                    "cn-north-1": "ami-bc5b4853"
-                },
                 "status": "success"
             }
         }
@@ -384,14 +379,6 @@ class DeprecationService(BaseService):
                     return None
             else:
                 job.cloud_image_name = listener_msg['cloud_image_name']
-
-            if 'source_regions' not in listener_msg:
-                    self.log.error(
-                        'source_regions is required in publisher result.'
-                    )
-                    return None
-            else:
-                job.source_regions = listener_msg['source_regions']
 
         return job
 

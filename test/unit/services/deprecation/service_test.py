@@ -37,13 +37,11 @@ class TestDeprecationService(object):
             '{"id": "1", "status": "error"}}'
         self.status_message = '{"deprecation_result": ' \
             '{"cloud_image_name": "image123", "id": "1", ' \
-            '"source_regions": {"us-east-1": "ami-12345"}, ' \
             '"status": "success"}}'
 
         self.publisher_result = \
             '{"publisher_result": {"id": "1", ' \
             '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123456"}, ' \
             '"status": "success"}}'
         self.publisher_result_fail = \
             '{"publisher_result": {"id": "1", "status": "error"}}'
@@ -223,7 +221,6 @@ class TestDeprecationService(object):
         job.id = '1'
         job.status = 'success'
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-1': 'ami-12345'}
 
         data = self.deprecation._get_status_message(job)
         assert data == self.status_message
@@ -466,7 +463,6 @@ class TestDeprecationService(object):
         job.id = '1'
         job.status = 'success'
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-1': 'ami-12345'}
 
         self.deprecation._publish_message(job)
         mock_publish.assert_called_once_with(
@@ -544,22 +540,6 @@ class TestDeprecationService(object):
         assert result is None
         self.deprecation.log.error.assert_called_once_with(
             'id is required in publisher result.'
-        )
-
-    def test_deprecation_validate_listener_msg_no_source_regions(self):
-        job = Mock()
-        job.id = '1'
-        self.deprecation.jobs['1'] = job
-
-        self.message.body = '{"publisher_result": {' \
-            '"id": "1", "provider": "ec2", ' \
-            '"cloud_image_name": "image_name_123", ' \
-            '"status": "success"}}'
-        result = self.deprecation._validate_listener_msg(self.message.body)
-
-        assert result is None
-        self.deprecation.log.error.assert_called_once_with(
-            'source_regions is required in publisher result.'
         )
 
     @patch.object(DeprecationService, 'consume_credentials_queue')

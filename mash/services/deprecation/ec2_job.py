@@ -42,7 +42,6 @@ class EC2DeprecationJob(DeprecationJob):
         self.deprecation_regions = self.validate_deprecation_regions(
             deprecation_regions
         )
-        self.source_regions = None
 
     def _deprecate(self):
         """
