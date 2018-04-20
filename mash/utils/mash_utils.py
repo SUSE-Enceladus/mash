@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,19 +16,22 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.base_config import BaseConfig
+import random
+from string import ascii_lowercase
 
 
-class TestingConfig(BaseConfig):
+def generate_name(length=8):
     """
-    Implements reading of the mash configuration file:
-
-    * /etc/mash/mash_config.yaml
-
-    The mash configuration file is a yaml formatted file containing
-    information to control the behavior of the mash services.
+    Generate a random lowercase string of the given length: Default of 8.
     """
-    __test__ = False
+    return ''.join([random.choice(ascii_lowercase) for i in range(length)])
 
-    def __init__(self, config_file=None):
-        super(TestingConfig, self).__init__(config_file)
+
+def get_key_from_file(key_file_path):
+    """
+    Return a key as string from the given file.
+    """
+    with open(key_file_path, 'r') as key_file:
+        key = key_file.read().strip()
+
+    return key

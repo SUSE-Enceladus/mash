@@ -15,11 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+from tempfile import NamedTemporaryFile
+from collections import namedtuple
 from ec2utils.ec2uploadimg import EC2ImageUploader
 
 # project
 from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
+from mash.utils.ec2 import get_client
+from mash.utils.mash_utils import generate_name
 
 
 class UploadAmazon(UploadBase):
@@ -59,10 +63,6 @@ class UploadAmazon(UploadBase):
             self.credentials['access_key_id']
         self.ec2_upload_parameters['secret_key'] = \
             self.credentials['secret_access_key']
-        self.ec2_upload_parameters['ssh_key_pair_name'] = \
-            self.credentials['ssh_key_name']
-        self.ec2_upload_parameters['ssh_key_private_key_file'] = \
-            self.credentials['ssh_private_key']
 
         if self.custom_args:
             if 'region' in self.custom_args:
@@ -74,14 +74,36 @@ class UploadAmazon(UploadBase):
 
             self.ec2_upload_parameters.update(self.custom_args)
 
-        self.ec2 = EC2ImageUploader(
-            **self.ec2_upload_parameters
-        )
-
     def upload(self):
         try:
-            self.ec2.set_region(self.region)
-            ami_id = self.ec2.create_image(
+            ec2_client = get_client(
+                'ec2', self.credentials['access_key_id'],
+                self.credentials['secret_access_key'], self.region
+            )
+
+            # NOTE: Temporary ssh keys:
+            # The temporary creation and registration of a ssh key pair
+            # is considered a workaround implementation which should be better
+            # covered by the EC2ImageUploader code. Due to a lack of
+            # development resources in the ec2utils.ec2uploadimg project and
+            # other peoples concerns for just using a generic mash ssh key
+            # for the upload, the private _create_key_pair and _delete_key_pair
+            # methods exists and could be hopefully replaced by a better
+            # concept in the near future.
+            ssh_key_pair = self._create_key_pair(ec2_client)
+
+            self.ec2_upload_parameters['ssh_key_pair_name'] = \
+                ssh_key_pair.name
+            self.ec2_upload_parameters['ssh_key_private_key_file'] = \
+                ssh_key_pair.private_key_file.name
+
+            ec2_upload = EC2ImageUploader(
+                **self.ec2_upload_parameters
+            )
+
+            ec2_upload.set_region(self.region)
+
+            ami_id = ec2_upload.create_image(
                 self.system_image_file
             )
             return ami_id, self.region
@@ -89,3 +111,26 @@ class UploadAmazon(UploadBase):
             raise MashUploadException(
                 'Upload to Amazon EC2 failed with: {0}'.format(e)
             )
+        finally:
+            self._delete_key_pair(
+                ec2_client, ssh_key_pair
+            )
+
+    def _create_key_pair(self, ec2_client):
+        ssh_key_pair_type = namedtuple(
+            'ssh_key_pair_type', ['name', 'private_key_file']
+        )
+        private_key_file = NamedTemporaryFile()
+        key_pair_name = 'mash-{0}'.format(generate_name())
+        ssh_key = ec2_client.create_key_pair(KeyName=key_pair_name)
+        with open(private_key_file.name, 'w') as private_key:
+            private_key.write(ssh_key['KeyMaterial'])
+        return ssh_key_pair_type(
+            name=key_pair_name,
+            private_key_file=private_key_file
+        )
+
+    def _delete_key_pair(self, ec2_client, ssh_key_pair):
+        ec2_client.delete_key_pair(KeyName=ssh_key_pair.name)
+        private_key_file = ssh_key_pair.private_key_file
+        del private_key_file

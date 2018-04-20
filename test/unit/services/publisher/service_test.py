@@ -37,7 +37,6 @@ class TestPublisherService(object):
             '{"id": "1", "status": "error"}}'
         self.status_message = '{"publisher_result": ' \
             '{"cloud_image_name": "image123", "id": "1", ' \
-            '"source_regions": {"us-east-1": "ami-12345"}, ' \
             '"status": "success"}}'
 
         self.publisher = PublisherService()
@@ -68,6 +67,7 @@ class TestPublisherService(object):
         self.publisher.post_init()
 
         self.config.get_log_file.assert_called_once_with('publisher')
+        self.config.get_encryption_keys_file.assert_called_once_with()
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/publisher_service.log'
         )
@@ -120,6 +120,8 @@ class TestPublisherService(object):
     def test_publisher_cleanup_job(
         self, mock_publish_message, mock_delete_job
     ):
+        self.publisher.scheduler.remove_job.side_effect = JobLookupError('1')
+
         job = Mock()
         job.id = '1'
         job.status = 'success'
@@ -133,6 +135,7 @@ class TestPublisherService(object):
             'Failed upstream.',
             extra={'job_id': '1'}
         )
+        self.publisher.scheduler.remove_job.assert_called_once_with('1')
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
@@ -178,10 +181,6 @@ class TestPublisherService(object):
     def test_publisher_delete_job(
         self, mock_unbind_queue, mock_remove_file
     ):
-        self.publisher.scheduler.remove_job.side_effect = JobLookupError(
-            'Job finished.'
-        )
-
         job = Mock()
         job.id = '1'
         job.job_file = 'job-test.json'
@@ -192,7 +191,6 @@ class TestPublisherService(object):
 
         self.publisher._delete_job('1')
 
-        self.publisher.scheduler.remove_job.assert_called_once_with('1')
         self.publisher.log.info.assert_called_once_with(
             'Deleting job.',
             extra={'job_id': '1'}
@@ -217,7 +215,6 @@ class TestPublisherService(object):
         job.id = '1'
         job.status = 'success'
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-1': 'ami-12345'}
 
         data = self.publisher._get_status_message(job)
         assert data == self.status_message
@@ -235,11 +232,36 @@ class TestPublisherService(object):
         message = Mock()
         message.body = '{"jwt_token": "response"}'
 
-        mock_decode_credentials.return_value = {'id': '1', 'credentials': {}}
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
         self.publisher._handle_credentials_response(message)
 
         mock_schedule_job.assert_called_once_with('1')
         message.ack.assert_called_once_with()
+
+    @patch.object(PublisherService, 'decode_credentials')
+    def test_publisher_handle_credentials_response_exceptions(
+        self, mock_decode_credentials
+    ):
+        message = Mock()
+        message.body = '{"jwt_token": "response"}'
+
+        # Test job does not exist.
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
+        self.publisher._handle_credentials_response(message)
+        self.publisher.log.error.assert_called_once_with(
+            'Credentials recieved for invalid job with ID: 1.'
+        )
+
+        # Invalid json string
+        self.publisher.log.error.reset_mock()
+        message.body = 'invalid json string'
+        self.publisher._handle_credentials_response(message)
+        self.publisher.log.error.assert_called_once_with(
+            'Invalid credentials response message: '
+            'Must be a json encoded message.'
+        )
+
+        assert message.ack.call_count == 2
 
     @patch.object(PublisherService, 'publish_credentials_request')
     @patch.object(PublisherService, '_publish_image')
@@ -255,7 +277,6 @@ class TestPublisherService(object):
         self.message.body = \
             '{"replication_result": {"id": "1", ' \
             '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123456"}, ' \
             '"status": "success"}}'
 
         self.publisher._handle_listener_message(self.message)
@@ -277,7 +298,6 @@ class TestPublisherService(object):
         self.message.body = \
             '{"replication_result": {"id": "1", ' \
             '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123456"}, ' \
             '"status": "success"}}'
 
         self.publisher._handle_listener_message(self.message)
@@ -292,9 +312,7 @@ class TestPublisherService(object):
         self.publisher.jobs['1'] = job
 
         self.message.body = \
-            '{"replication_result": {"id": "1", ' \
-            '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123"}, "status": "error"}}'
+            '{"replication_result": {"id": "1", "status": "error"}}'
         self.publisher._handle_listener_message(self.message)
 
         mock_cleanup_job.assert_called_once_with(job, 'error')
@@ -302,9 +320,7 @@ class TestPublisherService(object):
 
     def test_publisher_listener_message_job_none(self):
         self.message.body = \
-            '{"replication_result": {"id": "1", ' \
-            '"cloud_image_name": "image name", ' \
-            '"source_regions": {"us-west-1": "ami-123"}, "status": "error"}}'
+            '{"replication_result": {"id": "1", "status": "error"}}'
         self.publisher._handle_listener_message(self.message)
 
         self.message.ack.assert_called_once_with()
@@ -342,42 +358,15 @@ class TestPublisherService(object):
         )
         self.message.ack.assert_called_once_with()
 
-    @patch.object(PublisherService, 'notify_invalid_config')
-    def test_publisher_handle_service_message_invalid(self, mock_notify):
+    def test_publisher_handle_service_message_invalid(self):
         self.message.body = 'Invalid format.'
         self.publisher._handle_service_message(self.message)
 
         self.message.ack.assert_called_once_with()
         self.publisher.log.error.assert_called_once_with(
-            'Invalid job config file: Expecting value:'
+            'Error adding job: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-        mock_notify.assert_called_once_with(self.message.body)
-
-    @patch.object(PublisherService, 'notify_invalid_config')
-    def test_publisher_handle_service_message_bad_key(self, mock_notify):
-        self.message.body = '{"publisher_job_update": {"id": "1"}}'
-
-        self.publisher._handle_service_message(self.message)
-
-        self.message.ack.assert_called_once_with()
-        self.publisher.log.error.assert_called_once_with(
-            'Invalid publisher job: Job document must contain the '
-            'publisher_job key.'
-        )
-        mock_notify.assert_called_once_with(self.message.body)
-
-    @patch.object(PublisherService, '_validate_job_config')
-    @patch.object(PublisherService, 'notify_invalid_config')
-    def test_publisher_handle_service_message_fail_validation(
-        self, mock_notify, mock_validate_job
-    ):
-        mock_validate_job.return_value = False
-        self.message.body = '{"publisher_job": {"id": "1"}}'
-        self.publisher._handle_service_message(self.message)
-
-        self.message.ack.assert_called_once_with()
-        mock_notify.assert_called_once_with(self.message.body)
 
     @patch.object(PublisherService, '_delete_job')
     @patch.object(PublisherService, '_publish_message')
@@ -474,7 +463,6 @@ class TestPublisherService(object):
         job.id = '1'
         job.status = 'success'
         job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-1': 'ami-12345'}
 
         self.publisher._publish_message(job)
         mock_publish.assert_called_once_with(
@@ -527,13 +515,6 @@ class TestPublisherService(object):
             max_instances=1,
             misfire_grace_time=None,
             coalesce=True
-        )
-
-    def test_publisher_validate_invalid_job_config(self):
-        status = self.publisher._validate_job_config('{"id": "1"}')
-        assert status is False
-        self.publisher.log.error.assert_called_once_with(
-            'allow_copy is required in publisher job config.'
         )
 
     def test_publisher_validate_invalid_listener_msg(self):

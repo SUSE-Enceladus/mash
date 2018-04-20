@@ -154,13 +154,9 @@ class TestOBSImageBuildResultService(object):
         ]
 
     @patch.object(OBSImageBuildResultService, 'persist_job_config')
-    @patch.object(OBSImageBuildResultService, '_validate_job_description')
     @patch.object(OBSImageBuildResultService, '_start_job')
     @patch_open
-    def test_add_job(
-        self, mock_open, mock_start_job, mock_validate_job_description,
-        mock_persist_job_config
-    ):
+    def test_add_job(self, mock_open, mock_start_job, mock_persist_job_config):
         job_data = {
             "obs_job": {
                 "id": "123",
@@ -173,22 +169,9 @@ class TestOBSImageBuildResultService(object):
                 ]
             }
         }
-        job_info = {
-            'ok': False
-        }
-        mock_validate_job_description.return_value = job_info
-        assert self.obs_result._add_job(job_data) == job_info
-        job_info = {
-            'ok': True
-        }
-        mock_validate_job_description.return_value = job_info
         self.obs_result._add_job(job_data)
-
         mock_persist_job_config.assert_called_once_with(job_data['obs_job'])
         mock_start_job.assert_called_once_with(job_data['obs_job'])
-        assert mock_validate_job_description.call_args_list == [
-            call(job_data), call(job_data)
-        ]
 
     @patch('os.remove')
     def test_delete_job(self, mock_os_remove):
@@ -208,47 +191,6 @@ class TestOBSImageBuildResultService(object):
         mock_os_remove.side_effect = Exception('remove_error')
         assert self.obs_result._delete_job('815') == {
             'message': 'Job deletion failed: remove_error', 'ok': False
-        }
-
-    @patch('mash.services.obs.service.dateutil.parser.parse')
-    def test_validate_job_description(self, mock_dateutil_parse):
-        mock_dateutil_parse.side_effect = Exception('mytime')
-        job_data = {}
-        assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Invalid job: no obs_job', 'ok': False
-        }
-        job_data = {"obs_job": {}}
-        assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Invalid job: no job id', 'ok': False
-        }
-        job_data = {"obs_job": {"id": "123"}}
-        assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Invalid job: no image name', 'ok': False
-        }
-        job_data = {"obs_job": {"id": "123", "image": "foo"}}
-        assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Invalid job: no project name', 'ok': False
-        }
-        job_data = {"obs_job": {"id": "123", "image": "foo", "project": "foo"}}
-        assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Invalid job: no time given', 'ok': False
-        }
-        job_data = {
-            "obs_job": {
-                "id": "123", "image": "foo",
-                "project": "foo", "utctime": "mytime"
-            }
-        }
-        assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Invalid job time: mytime', 'ok': False
-        }
-        mock_dateutil_parse.side_effect = None
-        assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'OK', 'ok': True
-        }
-        self.obs_result.jobs = {'123': None}
-        assert self.obs_result._validate_job_description(job_data) == {
-            'message': 'Job already exists', 'ok': False
         }
 
     @patch('mash.services.obs.service.OBSImageBuildResult')

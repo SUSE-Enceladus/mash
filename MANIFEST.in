@@ -13,3 +13,6 @@ include LICENSE
 recursive-include doc *.py *.rst
 
 global-exclude *.py[cod] __pycache__
+
+include .virtualenv.dev-requirements.txt
+include .virtualenv.requirements.txt

@@ -43,6 +43,7 @@ class ReplicationService(BaseService):
         """
         self.config = ReplicationConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.jobs = {}
 
@@ -85,6 +86,13 @@ class ReplicationService(BaseService):
         job.status = status
         self.log.warning('Failed upstream.', extra=job.get_metadata())
 
+        try:
+            # Remove job from scheduler if it has
+            # not started executing yet.
+            self.scheduler.remove_job(job.id)
+        except JobLookupError:
+            pass
+
         self._delete_job(job.id)
         self._publish_message(job)
 
@@ -125,13 +133,6 @@ class ReplicationService(BaseService):
         Remove job from dict and delete listener queue.
         """
         if job_id in self.jobs:
-            try:
-                # Remove job from scheduler if it has
-                # not started executing yet.
-                self.scheduler.remove_job(job_id)
-            except JobLookupError:
-                pass
-
             job = self.jobs[job_id]
             self.log.info(
                 'Deleting job.',
@@ -160,7 +161,6 @@ class ReplicationService(BaseService):
                 'replication_result': {
                     'id': job.id,
                     'cloud_image_name': job.cloud_image_name,
-                    'source_regions': job.get_source_regions_result(),
                     'status': job.status,
                 }
             }
@@ -178,12 +178,25 @@ class ReplicationService(BaseService):
         """
         Process credentials response JWT tokens.
         """
-        token = json.loads(message.body)
-        payload = self.decode_credentials(token['jwt_token'])
-        job = self.jobs.get(payload['id'])
+        try:
+            token = json.loads(message.body)
+        except Exception:
+            self.log.error(
+                'Invalid credentials response message: '
+                'Must be a json encoded message.'
+            )
+        else:
+            job_id, credentials = self.decode_credentials(token)
+            job = self.jobs.get(job_id)
 
-        job.credentials = payload['credentials']
-        self._schedule_job(job.id)
+            if job:
+                job.credentials = credentials
+                self._schedule_job(job.id)
+            elif job_id:
+                self.log.error(
+                    'Credentials recieved for invalid job with ID:'
+                    ' {0}.'.format(job_id)
+                )
 
         message.ack()
 
@@ -233,21 +246,9 @@ class ReplicationService(BaseService):
         """
         try:
             job_desc = json.loads(message.body)
+            self._add_job(job_desc['replication_job'])
         except ValueError as error:
-            self.log.error('Invalid job config file: {0}.'.format(error))
-            self.notify_invalid_config(message.body)
-        else:
-            if 'replication_job' in job_desc:
-                if not self._validate_job_config(job_desc['replication_job']):
-                    self.notify_invalid_config(message.body)
-                else:
-                    self._add_job(job_desc['replication_job'])
-            else:
-                self.log.error(
-                    'Invalid replication job: Job document must contain '
-                    'the replication_job key.'
-                )
-                self.notify_invalid_config(message.body)
+            self.log.error('Error adding job: {0}.'.format(error))
 
         message.ack()
 
@@ -334,22 +335,6 @@ class ReplicationService(BaseService):
                 extra={'job_id': job_id}
             )
 
-    def _validate_job_config(self, job_config):
-        """
-        Validate the job has the required attributes.
-        """
-        required = [
-            'id', 'image_description', 'provider',
-            'utctime', 'replication_source_regions'
-        ]
-        for attr in required:
-            if attr not in job_config:
-                self.log.error(
-                    '{0} is required in replication job config.'.format(attr)
-                )
-                return False
-        return True
-
     def _validate_listener_msg(self, message):
         """
         Validate the required keys are in message dictionary.
@@ -381,15 +366,13 @@ class ReplicationService(BaseService):
             self._cleanup_job(job, status)
             return None
         else:
-            # Required args
-            for attr in ['cloud_image_name', 'source_regions']:
-                if attr not in listener_msg:
-                    self.log.error(
-                        '{0} is required in testing result.'.format(attr)
-                    )
-                    return None
-                else:
-                    setattr(job, attr, listener_msg[attr])
+            if 'cloud_image_name' not in listener_msg:
+                self.log.error(
+                    'cloud_image_name is required in testing result.'
+                )
+                return None
+            else:
+                job.cloud_image_name = listener_msg['cloud_image_name']
 
         return job
 

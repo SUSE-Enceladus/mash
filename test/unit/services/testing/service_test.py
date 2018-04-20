@@ -64,6 +64,7 @@ class TestIPATestingService(object):
         self.testing.post_init()
 
         self.config.get_log_file.assert_called_once_with('testing')
+        self.config.get_encryption_keys_file.assert_called_once_with()
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/testing_service.log'
         )
@@ -147,10 +148,6 @@ class TestIPATestingService(object):
         job.id = '1'
         job.get_metadata.return_value = {'job_id': '1'}
 
-        scheduler = Mock()
-        scheduler.remove_job.side_effect = JobLookupError('1')
-
-        self.testing.scheduler = scheduler
         self.testing.jobs['1'] = job
         self.testing._delete_job('1')
 
@@ -158,7 +155,6 @@ class TestIPATestingService(object):
             'Deleting job.',
             extra={'job_id': '1'}
         )
-        scheduler.remove_job.assert_called_once_with('1')
         mock_unbind_queue.assert_called_once_with(
             'listener', 'testing', '1'
         )
@@ -173,6 +169,10 @@ class TestIPATestingService(object):
         job.utctime = 'now'
         job.get_metadata.return_value = {'job_id': '1'}
 
+        scheduler = Mock()
+        scheduler.remove_job.side_effect = JobLookupError('1')
+        self.testing.scheduler = scheduler
+
         self.testing.jobs['1'] = job
         self.testing._cleanup_job(job, 1)
 
@@ -180,6 +180,7 @@ class TestIPATestingService(object):
             'Failed upstream.',
             extra={'job_id': '1'}
         )
+        scheduler.remove_job.assert_called_once_with('1')
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
@@ -204,60 +205,54 @@ class TestIPATestingService(object):
         message = Mock()
         message.body = '{"jwt_token": "response"}'
 
-        mock_decode_credentials.return_value = {'id': '1', 'credentials': {}}
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
         self.testing._handle_credentials_response(message)
 
         mock_schedule_job.assert_called_once_with('1')
         message.ack.assert_called_once_with()
 
-    @patch.object(TestingService, '_validate_job')
-    @patch.object(TestingService, '_add_job')
-    def test_testing_handle_jobs_add(
-        self, mock_add_job, mock_validate_job
+    @patch.object(TestingService, 'decode_credentials')
+    def test_testing_handle_credentials_response_exceptions(
+        self, mock_decode_credentials
     ):
+        message = Mock()
+        message.body = '{"jwt_token": "response"}'
+
+        # Test job does not exist.
+        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
+        self.testing._handle_credentials_response(message)
+        self.testing.log.error.assert_called_once_with(
+            'Credentials recieved for invalid job with ID: 1.'
+        )
+
+        # Invalid json string
+        self.testing.log.error.reset_mock()
+        message.body = 'invalid json string'
+        self.testing._handle_credentials_response(message)
+        self.testing.log.error.assert_called_once_with(
+            'Invalid credentials response message: '
+            'Must be a json encoded message.'
+        )
+
+        assert message.ack.call_count == 2
+
+    @patch.object(TestingService, '_add_job')
+    def test_testing_handle_jobs_add(self, mock_add_job):
         self.message.body = '{"testing_job": {"id": "1"}}'
         self.testing._handle_jobs(self.message)
 
-        mock_validate_job.assert_called_once_with({'id': '1'})
         self.message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with({'id': '1'})
 
-    @patch.object(TestingService, 'notify_invalid_config')
-    def test_testing_handle_jobs_invalid(self, mock_notify):
-        self.message.body = '{"testing_job_update": {"id": "1"}}'
-
-        self.testing._handle_jobs(self.message)
-
-        self.message.ack.assert_called_once_with()
-        self.testing.log.error.assert_called_once_with(
-            'Invalid testing job: Job config must contain '
-            'testing_job key.'
-        )
-        mock_notify.assert_called_once_with(self.message.body)
-
-    @patch.object(TestingService, 'notify_invalid_config')
-    def test_testing_handle_jobs_format(self, mock_notify):
+    def test_testing_handle_jobs_format(self):
         self.message.body = 'Invalid format.'
         self.testing._handle_jobs(self.message)
 
         self.message.ack.assert_called_once_with()
         self.testing.log.error.assert_called_once_with(
-            'Invalid job config file: Expecting value:'
+            'Error adding job: Expecting value:'
             ' line 1 column 1 (char 0).'
         )
-        mock_notify.assert_called_once_with(self.message.body)
-
-    @patch.object(TestingService, '_validate_job')
-    @patch.object(TestingService, 'notify_invalid_config')
-    def test_testing_handle_jobs_fail_validation(
-        self, mock_notify, mock_validate_job
-    ):
-        mock_validate_job.return_value = False
-        self.message.body = '{"testing_job": {"id": "1"}}'
-        self.testing._handle_jobs(self.message)
-
-        self.message.ack.assert_called_once_with()
-        mock_notify.assert_called_once_with(self.message.body)
 
     def test_testing_get_status_message(self):
         job = Mock()
@@ -488,31 +483,6 @@ class TestIPATestingService(object):
         self.testing._handle_listener_message(self.message)
 
         self.message.ack.assert_called_once_with()
-
-    def test_testing_validate_job(self):
-        job_config = {
-            'id': '1',
-            'provider': 'ec2',
-            'tests': 'test_stuff',
-            'utctime': 'now',
-            'test_regions': {'us-east-2': 'test-account'}
-        }
-
-        result = self.testing._validate_job(job_config)
-        assert result
-
-    def test_testing_validate_no_provider(self):
-        job = {
-            'account': 'account',
-            'id': '1',
-            'tests': 'test_stuff',
-            'utctime': 'now'
-        }
-
-        self.testing._validate_job(job)
-        self.testing.log.error.assert_called_once_with(
-            'provider is required in testing job config.'
-        )
 
     def test_testing_validate_listener_msg(self):
         job = Mock()

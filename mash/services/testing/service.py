@@ -48,6 +48,7 @@ class TestingService(BaseService):
         self.config = TestingConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.jobs = {}
 
@@ -92,6 +93,13 @@ class TestingService(BaseService):
         job.status = status
         self.log.warning('Failed upstream.', extra=job.get_metadata())
 
+        try:
+            # Remove job from scheduler if it has
+            # not started executing yet.
+            self.scheduler.remove_job(job.id)
+        except JobLookupError:
+            pass
+
         self._delete_job(job.id)
         self._publish_message(job)
 
@@ -133,13 +141,6 @@ class TestingService(BaseService):
         Remove job from dict and delete listener queue.
         """
         if job_id in self.jobs:
-            try:
-                # Remove job from scheduler if it has
-                # not started executing yet.
-                self.scheduler.remove_job(job_id)
-            except JobLookupError:
-                pass
-
             job = self.jobs[job_id]
             self.log.info(
                 'Deleting job.',
@@ -185,12 +186,25 @@ class TestingService(BaseService):
         """
         Process credentials response JWT tokens.
         """
-        token = json.loads(message.body)
-        payload = self.decode_credentials(token['jwt_token'])
-        job = self.jobs.get(payload['id'])
+        try:
+            token = json.loads(message.body)
+        except Exception:
+            self.log.error(
+                'Invalid credentials response message: '
+                'Must be a json encoded message.'
+            )
+        else:
+            job_id, credentials = self.decode_credentials(token)
+            job = self.jobs.get(job_id)
 
-        job.credentials = payload['credentials']
-        self._schedule_job(job.id)
+            if job:
+                job.credentials = credentials
+                self._schedule_job(job.id)
+            elif job_id:
+                self.log.error(
+                    'Credentials recieved for invalid job with ID:'
+                    ' {0}.'.format(job_id)
+                )
 
         message.ack()
 
@@ -214,21 +228,9 @@ class TestingService(BaseService):
         """
         try:
             job_desc = json.loads(message.body)
-        except ValueError as e:
-            self.log.error('Invalid job config file: {}.'.format(e))
-            self.notify_invalid_config(message.body)
-        else:
-            if 'testing_job' in job_desc:
-                if not self._validate_job(job_desc['testing_job']):
-                    self.notify_invalid_config(message.body)
-                else:
-                    self._add_job(job_desc['testing_job'])
-            else:
-                self.log.error(
-                    'Invalid testing job: Job config must contain '
-                    'testing_job key.'
-                )
-                self.notify_invalid_config(message.body)
+            self._add_job(job_desc['testing_job'])
+        except Exception as e:
+            self.log.error('Error adding job: {0}.'.format(e))
 
         message.ack()
 
@@ -337,19 +339,6 @@ class TestingService(BaseService):
             misfire_grace_time=None,
             coalesce=True
         )
-
-    def _validate_job(self, job_config):
-        """
-        Validate the job has the required attributes.
-        """
-        required = ['id', 'provider', 'tests', 'utctime', 'test_regions']
-        for attr in required:
-            if attr not in job_config:
-                self.log.error(
-                    '{0} is required in testing job config.'.format(attr)
-                )
-                return False
-        return True
 
     def _validate_listener_msg(self, message):
         """
