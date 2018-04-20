@@ -98,7 +98,8 @@ class TestUploadImageService(object):
         self.uploader._send_job_result('815', True, trigger_info)
         mock_publish_job_result.assert_called_once_with(
             'testing', '815', JsonFormat.json_message(
-                self.uploader.jobs['815']['uploader_result']
+                {'uploader_result':
+                 self.uploader.jobs['815']['uploader_result']}
             )
         )
         mock_delete_job.assert_called_once_with('815')
