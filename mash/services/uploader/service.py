@@ -65,6 +65,7 @@ class UploadImageService(BaseService):
         # consume on service queue
         atexit.register(lambda: os._exit(0))
         self.consume_queue(self._process_message, self.service_queue)
+        self.consume_queue(self._process_message, self.listener_queue)
 
         try:
             self.channel.start_consuming()

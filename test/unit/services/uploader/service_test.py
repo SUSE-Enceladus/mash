@@ -47,6 +47,7 @@ class TestUploadImageService(object):
         self.uploader.channel.is_open = True
         self.uploader.close_connection = Mock()
 
+        self.uploader.listener_queue = 'listener'
         self.uploader.service_exchange = 'uploader'
         self.uploader.service_queue = 'service'
         self.uploader.job_document_key = 'job_document'
@@ -62,9 +63,10 @@ class TestUploadImageService(object):
         scheduler.start.assert_called_once_with()
         mock_restart_jobs.assert_called_once_with(self.uploader._schedule_job)
 
-        self.uploader.consume_queue.assert_called_once_with(
-            mock_process_message, 'service'
-        )
+        self.uploader.consume_queue.assert_has_calls([
+            call(mock_process_message, 'service'),
+            call(mock_process_message, 'listener')
+        ])
         self.uploader.channel.start_consuming.assert_called_once_with()
 
         self.uploader.channel.start_consuming.side_effect = Exception
