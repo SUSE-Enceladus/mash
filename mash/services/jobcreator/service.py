@@ -391,7 +391,10 @@ class JobCreatorService(BaseService):
 
             if group not in accounts[provider]['groups']:
                 accounts[provider]['groups'][group] = []
-            accounts[provider]['groups'][group].append(account_name)
+
+            if account_name not in accounts[provider]['groups'][group]:
+                # Allow for account updates, don't append multiple times.
+                accounts[provider]['groups'][group].append(account_name)
 
         self._write_accounts_to_file(accounts)
 
