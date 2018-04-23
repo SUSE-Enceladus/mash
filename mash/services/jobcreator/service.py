@@ -374,6 +374,10 @@ class JobCreatorService(BaseService):
 
         Notify credentials service of new account with encrypted credentials.
         """
+        self.log.info(
+            'Received add account message for account {0}.'.format(message['account_name'])
+        )
+
         accounts = self._get_accounts_from_file()
         provider = message['provider']
         account_name = message['account_name']
@@ -401,6 +405,10 @@ class JobCreatorService(BaseService):
         """
         Split args and send messages to all services to initiate job.
         """
+        self.log.info(
+            'Received new job: {0}'.format(json.dumps(job_doc, indent=2))
+        )
+
         region_info = self._get_account_info(
             job_doc.get('provider'),
             job_doc.get('provider_accounts'),
@@ -450,6 +458,10 @@ class JobCreatorService(BaseService):
 
         This will flush the job with the given id out of the pipeline.
         """
+        self.log.info(
+            'Deleting job with ID: {0}.'.format(job_id)
+        )
+
         delete_message = {
             "obs_job_delete": job_id
         }
