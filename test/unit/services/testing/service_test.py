@@ -128,7 +128,12 @@ class TestIPATestingService(object):
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
         self.testing.log.info.assert_called_once_with(
-            'Job queued, awaiting uploader result.',
+            'Job queued, awaiting uploader result: {'
+            '\n  "id": "1",'
+            '\n  "provider": "ec2",'
+            '\n  "ssh_private_key_file": "private_ssh_key.file",'
+            '\n  "job_file": "temp-config.json"'
+            '\n}',
             extra={'job_id': '1'}
         )
 
