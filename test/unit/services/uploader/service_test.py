@@ -47,6 +47,7 @@ class TestUploadImageService(object):
         self.uploader.channel.is_open = True
         self.uploader.close_connection = Mock()
 
+        self.uploader.listener_queue = 'listener'
         self.uploader.service_exchange = 'uploader'
         self.uploader.service_queue = 'service'
         self.uploader.job_document_key = 'job_document'
@@ -62,9 +63,10 @@ class TestUploadImageService(object):
         scheduler.start.assert_called_once_with()
         mock_restart_jobs.assert_called_once_with(self.uploader._schedule_job)
 
-        self.uploader.consume_queue.assert_called_once_with(
-            mock_process_message, 'service'
-        )
+        self.uploader.consume_queue.assert_has_calls([
+            call(mock_process_message, 'service'),
+            call(mock_process_message, 'listener')
+        ])
         self.uploader.channel.start_consuming.assert_called_once_with()
 
         self.uploader.channel.start_consuming.side_effect = Exception
@@ -98,7 +100,8 @@ class TestUploadImageService(object):
         self.uploader._send_job_result('815', True, trigger_info)
         mock_publish_job_result.assert_called_once_with(
             'testing', '815', JsonFormat.json_message(
-                self.uploader.jobs['815']['uploader_result']
+                {'uploader_result':
+                 self.uploader.jobs['815']['uploader_result']}
             )
         )
         mock_delete_job.assert_called_once_with('815')
@@ -196,13 +199,10 @@ class TestUploadImageService(object):
         ]
 
     @patch.object(UploadImageService, 'persist_job_config')
-    @patch.object(UploadImageService, '_validate_job_description')
     @patch.object(UploadImageService, '_schedule_job')
     @patch_open
     def test_add_job(
-        self, mock_open,
-        mock_schedule_job, mock_validate_job_description,
-        mock_persist_job_config
+        self, mock_open, mock_schedule_job, mock_persist_job_config
     ):
         job_data = {
             "uploader_job": {
@@ -219,20 +219,8 @@ class TestUploadImageService(object):
                 "utctime": "now"
             }
         }
-        job_info = {
-            'ok': False
-        }
-        mock_validate_job_description.return_value = job_info
-        assert self.uploader._add_job(job_data) == job_info
-        job_info = {
-            'ok': True
-        }
-        mock_validate_job_description.return_value = job_info
         self.uploader._add_job(job_data)
         mock_schedule_job.assert_called_once_with(job_data['uploader_job'])
-        assert mock_validate_job_description.call_args_list == [
-            call(job_data), call(job_data)
-        ]
         mock_persist_job_config.assert_called_once_with(
             job_data['uploader_job']
         )
@@ -254,101 +242,6 @@ class TestUploadImageService(object):
         mock_os_remove.side_effect = Exception('remove_error')
         assert self.uploader._delete_job('815') == {
             'message': 'Job deletion failed: remove_error', 'ok': False
-        }
-
-    @patch('mash.services.uploader.service.dateutil.parser.parse')
-    def test_validate_job_description(self, mock_dateutil_parse):
-        mock_dateutil_parse.side_effect = Exception('mytime')
-        job_data = {}
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job: no uploader_job', 'ok': False
-        }
-        job_data = {"uploader_job": {}}
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job: no job id', 'ok': False
-        }
-        job_data = {"uploader_job": {"id": "123"}}
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job: no cloud image name', 'ok': False
-        }
-        job_data = {"uploader_job": {"id": "123", "cloud_image_name": "foo"}}
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job: no cloud image description', 'ok': False
-        }
-        job_data = {
-            "uploader_job": {
-                "id": "123",
-                "cloud_image_name": "foo",
-                "image_description": "bar"
-            }
-        }
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job: no cloud provider', 'ok': False
-        }
-        job_data = {
-            "uploader_job": {
-                "id": "123",
-                "cloud_image_name": "foo",
-                "image_description": "bar",
-                "provider": "EC2"
-            }
-        }
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job: EC2 provider not supported', 'ok': False
-        }
-        job_data = {
-            "uploader_job": {
-                "id": "123",
-                "cloud_image_name": "foo",
-                "image_description": "bar",
-                "provider": "ec2"
-            }
-        }
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job: no target regions record', 'ok': False
-        }
-        job_data = {
-            "uploader_job": {
-                "id": "123",
-                "cloud_image_name": "foo",
-                "image_description": "bar",
-                "provider": "ec2",
-                "target_regions": {
-                    "us-east-1": {
-                        "helper_image": "ami-bc5b48d0",
-                        "account": "test-aws"
-                    }
-                }
-            }
-        }
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job: no time given', 'ok': False
-        }
-        job_data = {
-            "uploader_job": {
-                "id": "123",
-                "cloud_image_name": "foo",
-                "image_description": "bar",
-                "provider": "ec2",
-                "target_regions": {
-                    "us-east-1": {
-                        "helper_image": "ami-bc5b48d0",
-                        "account": "test-aws"
-                    }
-                },
-                "utctime": "mytime"
-            }
-        }
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Invalid job time: mytime', 'ok': False
-        }
-        mock_dateutil_parse.side_effect = None
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'OK', 'ok': True
-        }
-        self.uploader.jobs = {'123': None}
-        assert self.uploader._validate_job_description(job_data) == {
-            'message': 'Job already exists', 'ok': False
         }
 
     @patch.object(UploadImageService, 'publish_credentials_request')

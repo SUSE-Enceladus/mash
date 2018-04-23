@@ -24,7 +24,7 @@ class TestUploadImage(object):
         self, mock_result_callback, mock_log_callback, mock_Upload
     ):
         uploader = Mock()
-        uploader.upload.return_value = ['region', 'image_id']
+        uploader.upload.return_value = ('image_id', 'region')
         mock_Upload.return_value = uploader
         self.upload_image.upload()
         mock_Upload.assert_called_once_with(

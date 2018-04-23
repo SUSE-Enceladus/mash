@@ -200,13 +200,13 @@ class TestBaseService(object):
             'service', 'testing', '1'
         )
         self.service.channel.queue.unbind.assert_called_once_with(
-            queue='service', exchange='testing', routing_key='1'
+            queue='testing.service', exchange='testing', routing_key='1'
         )
 
     def test_unbind_listener_queue(self):
         self.service.unbind_listener_queue('1')
         self.service.channel.queue.unbind.assert_called_once_with(
-            queue='listener', exchange='obs', routing_key='1'
+            queue='obs.listener', exchange='obs', routing_key='1'
         )
 
     def test_get_credentials_request(self):

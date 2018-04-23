@@ -65,6 +65,7 @@ class UploadImageService(BaseService):
         # consume on service queue
         atexit.register(lambda: os._exit(0))
         self.consume_queue(self._process_message, self.service_queue)
+        self.consume_queue(self._process_message, self.listener_queue)
 
         try:
             self.channel.start_consuming()
@@ -88,7 +89,7 @@ class UploadImageService(BaseService):
         if last_upload_region:
             self.publish_job_result(
                 'testing', job_id, JsonFormat.json_message(
-                    self.jobs[job_id]['uploader_result']
+                    {'uploader_result': self.jobs[job_id]['uploader_result']}
                 )
             )
             if not self.jobs[job_id]['nonstop']:
@@ -199,13 +200,9 @@ class UploadImageService(BaseService):
           }
         }
         """
-        job_info = self._validate_job_description(data)
-        if not job_info['ok']:
-            return job_info
-        else:
-            data = data['uploader_job']
-            data['job_file'] = self.persist_job_config(data)
-            return self._schedule_job(data)
+        data = data['uploader_job']
+        data['job_file'] = self.persist_job_config(data)
+        return self._schedule_job(data)
 
     def _delete_job(self, job_id):
         """
@@ -235,69 +232,6 @@ class UploadImageService(BaseService):
                     'ok': True,
                     'message': 'Job Deleted'
                 }
-
-    def _validate_job_description(self, job_data):
-        # validate job description. Currently only Amazon ec2 is supported
-        if 'uploader_job' not in job_data:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no uploader_job'
-            }
-        job = job_data['uploader_job']
-        if 'id' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no job id'
-            }
-        if job['id'] in self.jobs:
-            return {
-                'ok': False,
-                'message': 'Job already exists'
-            }
-        if 'cloud_image_name' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no cloud image name'
-            }
-        if 'image_description' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no cloud image description'
-            }
-        if 'provider' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no cloud provider'
-            }
-        if job['provider'] != CSP.ec2:
-            return {
-                'ok': False,
-                'message': 'Invalid job: {0} provider not supported'.format(
-                    job['provider']
-                )
-            }
-        if 'target_regions' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no target regions record'
-            }
-        if 'utctime' not in job:
-            return {
-                'ok': False,
-                'message': 'Invalid job: no time given'
-            }
-        elif job['utctime'] != 'now' and job['utctime'] != 'always':
-            try:
-                dateutil.parser.parse(job['utctime']).isoformat()
-            except Exception as e:
-                return {
-                    'ok': False,
-                    'message': 'Invalid job time: {0}'.format(e)
-                }
-        return {
-            'ok': True,
-            'message': 'OK'
-        }
 
     def _get_uploader_arguments_per_region(self, job_data):
         uploader_args = []
