@@ -430,6 +430,7 @@ class BaseService(object):
         """
         Unbind the routing_key from the queue on given exchange.
         """
+        queue = self._get_queue_name(exchange, queue)
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key
         )
