@@ -70,7 +70,11 @@ class TestCredentialsService(object):
             {'id': '1', 'provider': 'ec2', 'job_file': 'temp-config.json'}
         )
         mock_send_control_response.assert_called_once_with(
-            'Job queued, awaiting credentials requests.',
+            'Job queued, awaiting credentials requests: {'
+            '\n  "id": "1",'
+            '\n  "provider": "ec2",'
+            '\n  "job_file": "temp-config.json"'
+            '\n}',
             job_id='1'
         )
 
@@ -171,6 +175,9 @@ class TestCredentialsService(object):
         self.service._handle_account_request(message)
         mock_store_encrypted_credentials.assert_called_once_with(
             'test-aws', 'encrypted_creds', 'ec2', 'user1'
+        )
+        self.service.log.info.assert_called_once_with(
+            'Storing credentials for account: test-aws, provider: ec2, user: user1.'
         )
         message.ack.assert_called_once_with()
 
@@ -322,6 +329,9 @@ class TestCredentialsService(object):
 
         self.service._send_credential_response({'id': '1', 'iss': 'pint'})
         mock_get_cred_response.assert_called_once_with('1', 'pint')
+        self.service.log.info.assert_called_once_with(
+            'Received credentials request from pint for job: 1.'
+        )
         mock_publish_credentials_response.assert_called_once_with(
             '{"jwt_token": "response"}', 'pint'
         )
