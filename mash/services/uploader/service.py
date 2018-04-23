@@ -88,7 +88,7 @@ class UploadImageService(BaseService):
         if last_upload_region:
             self.publish_job_result(
                 'testing', job_id, JsonFormat.json_message(
-                    self.jobs[job_id]['uploader_result']
+                    {'uploader_result': self.jobs[job_id]['uploader_result']}
                 )
             )
             if not self.jobs[job_id]['nonstop']:
