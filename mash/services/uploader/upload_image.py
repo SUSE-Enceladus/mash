@@ -102,7 +102,7 @@ class UploadImage(object):
                 self.custom_uploader_args
             )
             try:
-                (self.upload_region, self.cloud_image_id) = \
+                self.cloud_image_id, self.upload_region = \
                     self.uploader.upload()
                 self._log_callback(
                     'Uploaded image has ID: {0}'.format(self.cloud_image_id)
