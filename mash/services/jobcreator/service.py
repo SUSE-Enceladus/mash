@@ -150,7 +150,7 @@ class JobCreatorService(BaseService):
                 self.publish_delete_job_message(job_doc['job_delete'])
             else:
                 self.validate_message(job_doc, schema.job_message)
-                self.proccess_new_job(job_doc)
+                self.process_new_job(job_doc)
         except Exception as error:
             self.log.error(
                 'Invalid message received: {0}.'.format(error)
@@ -401,7 +401,7 @@ class JobCreatorService(BaseService):
 
         self._publish('credentials', self.add_account_key, json.dumps(message))
 
-    def proccess_new_job(self, job_doc):
+    def process_new_job(self, job_doc):
         """
         Split args and send messages to all services to initiate job.
         """
