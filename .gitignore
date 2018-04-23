@@ -21,3 +21,6 @@ Session.vim
 # temporary
 .netrwhist
 *i~
+
+### pycharm ###
+.idea/
