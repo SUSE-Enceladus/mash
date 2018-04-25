@@ -24,6 +24,7 @@ class TestCredentialsService(object):
         self.service.job_document_key = 'job_document'
         self.service.credentials_queue = 'credentials'
         self.service.credentials_directory = '/var/lib/mash/credentials/'
+        self.service.encryption_keys_file = '/var/lib/mash/encryption_keys'
 
         self.service.channel = Mock()
         self.service.channel.basic_ack.return_value = None
@@ -31,6 +32,8 @@ class TestCredentialsService(object):
         self.service.jobs = {}
         self.service.log = Mock()
 
+    @patch.object(CredentialsService, '_create_encryption_keys_file')
+    @patch('mash.services.credentials.service.os')
     @patch.object(CredentialsService, 'set_logfile')
     @patch('mash.services.credentials.service.CredentialsConfig')
     @patch.object(CredentialsService, 'start')
@@ -38,9 +41,11 @@ class TestCredentialsService(object):
     @patch.object(CredentialsService, 'restart_jobs')
     def test_post_init(
         self, mock_restart_jobs, mock_bind_cred_req_keys, mock_start,
-        mock_credentials_config, mock_set_logfile
+        mock_credentials_config, mock_set_logfile, mock_os,
+        mock_create_keys_file
     ):
         mock_credentials_config.return_value = self.config
+        mock_os.path.exists.return_value = False
         self.config.get_log_file.return_value = \
             '/var/log/mash/credentials_service.log'
 
@@ -54,6 +59,7 @@ class TestCredentialsService(object):
             '/var/log/mash/credentials_service.log'
         )
 
+        mock_create_keys_file.assert_called_once_with()
         mock_bind_cred_req_keys.assert_called_once_with()
         mock_restart_jobs.assert_called_once_with(self.service._add_job)
         mock_start.assert_called_once_with()
@@ -110,6 +116,18 @@ class TestCredentialsService(object):
             'account1', 'ec2', 'user1'
         )
 
+    @patch.object(CredentialsService, '_generate_encryption_key')
+    def test_create_encryption_keys_file(self, mock_generate_encryption_key):
+        mock_generate_encryption_key.return_value = '1234567890'
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            self.service._create_encryption_keys_file()
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.write.assert_called_with(
+                u'1234567890'
+            )
+
     @patch.object(CredentialsService, 'remove_file')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_delete_job(
@@ -133,6 +151,13 @@ class TestCredentialsService(object):
             'Job deletion failed, job is not queued.',
             success=False, job_id='1'
         )
+
+    @patch('mash.services.credentials.service.Fernet')
+    def test_generate_encryption_key(self, mock_fernet):
+        mock_fernet.generate_key.return_value = b'1234567890'
+        value = self.service._generate_encryption_key()
+
+        assert value == '1234567890'
 
     def test_get_encrypted_credentials(self):
         with patch('builtins.open', create=True) as mock_open:
