@@ -17,12 +17,14 @@
 #
 
 import json
+import os
 import random
 import uuid
 
 from mash.services.base_service import BaseService
 from mash.services.jobcreator.config import JobCreatorConfig
 from mash.services.jobcreator import schema
+from mash.services.jobcreator.accounts import accounts_template
 
 
 class JobCreatorService(BaseService):
@@ -40,6 +42,10 @@ class JobCreatorService(BaseService):
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.services = self.config.get_service_names()
         self.accounts_file = self.config.get_accounts_file()
+
+        if not os.path.exists(self.accounts_file):
+            self._write_accounts_to_file(accounts_template)
+
         self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.bind_queue(
@@ -364,7 +370,7 @@ class JobCreatorService(BaseService):
         """
         Update accounts file with new accounts dictionary.
         """
-        account_info = json.dumps(accounts)
+        account_info = json.dumps(accounts, indent=2)
         with open(self.accounts_file, 'w') as acnt_file:
             acnt_file.write(account_info)
 

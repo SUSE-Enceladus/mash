@@ -41,14 +41,17 @@ class TestJobCreatorService(object):
             'publisher', 'deprecation', 'pint'
         ]
 
+    @patch.object(JobCreatorService, '_write_accounts_to_file')
+    @patch('mash.services.jobcreator.service.os')
     @patch.object(JobCreatorService, 'bind_queue')
     @patch.object(JobCreatorService, 'set_logfile')
     @patch.object(JobCreatorService, 'start')
     @patch('mash.services.jobcreator.service.JobCreatorConfig')
     def test_job_creator_post_init(
         self, mock_jobcreator_config, mock_start, mock_set_logfile,
-        mock_bind_queue
+        mock_bind_queue, mock_os, mock_write_accounts_to_file
     ):
+        mock_os.path.exists.return_value = False
         mock_jobcreator_config.return_value = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/job_creator_service.log'
@@ -60,6 +63,7 @@ class TestJobCreatorService(object):
             '/var/log/mash/job_creator_service.log'
         )
 
+        assert mock_write_accounts_to_file.call_count == 1
         mock_bind_queue.assert_called_once_with(
             'jobcreator', 'add_account', 'listener'
         )
@@ -73,7 +77,7 @@ class TestJobCreatorService(object):
             self.jobcreator._write_accounts_to_file(accounts)
             file_handle = mock_open.return_value.__enter__.return_value
             file_handle.write.assert_called_with(
-                u'{"test": "accounts"}'
+                u'{\n  "test": "accounts"\n}'
             )
 
     @patch.object(JobCreatorService, '_write_accounts_to_file')
