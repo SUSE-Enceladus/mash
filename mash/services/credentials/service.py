@@ -249,44 +249,15 @@ class CredentialsService(BaseService):
 
     def _retrieve_credentials(self, job_id):
         """
-        Retrieve the credentials for the requested job_id.
-
-        credentials description example:
-        {
-            "test-aws": {
-                "access_key_id": "123456",
-                "secret_access_key": "654321",
-                "ssh_key_name": "my-key",
-                "ssh_private_key": "my-key.pem"
-            }
-        }
-
-        TODO: Implement method with access to DB.
+        Retrieve the encrypted credentials strings for the requested job_id.
         """
         job = self.jobs[job_id]
 
-        # For testing purposes a 'test_credentials' key can be passed
-        # in the job document to load valid testing credentials.
-        # TODO: Remove code when credential storage is implemented.
-        if job.get('test_credentials'):
-            access_key_id = job['test_credentials']['access_key_id']
-            secret_access_key = job['test_credentials']['secret_access_key']
-            ssh_key_name = job['test_credentials']['ssh_key_name']
-            ssh_private_key = job['test_credentials']['ssh_private_key']
-        else:
-            access_key_id = None
-            secret_access_key = None
-            ssh_key_name = None
-            ssh_private_key = None
-
         credentials = {}
         for account in job['provider_accounts']:
-            credentials[account] = {
-                'access_key_id': access_key_id,
-                'secret_access_key': secret_access_key,
-                'ssh_key_name': ssh_key_name,
-                'ssh_private_key': ssh_private_key
-            }
+            credentials[account] = self._get_encrypted_credentials(
+                account, job['provider'], job['requesting_user']
+            )
         return credentials
 
     def _send_control_response(self, message, success=True, job_id=None):
