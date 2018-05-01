@@ -29,9 +29,12 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
+from mash.csp import CSP
+
 from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.config import TestingConfig
+from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
 
 
@@ -85,8 +88,10 @@ class TestingService(BaseService):
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == 'ec2':
+        elif provider == CSP.ec2:
             self._create_job(EC2TestingJob, job_config)
+        elif provider == CSP.azure:
+            self._create_job(AzureTestingJob, job_config)
         else:
             self.log.error(
                 'Provider {0} is not supported.'.format(provider)

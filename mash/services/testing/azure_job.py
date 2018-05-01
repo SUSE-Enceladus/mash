@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import json
+
 from threading import Thread
 
 from mash.services.status_levels import FAILED, SUCCESS
@@ -23,18 +25,18 @@ from mash.services.testing.ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
 
 
-class EC2TestingJob(TestingJob):
+class AzureTestingJob(TestingJob):
     """
-    Class for an EC2 testing job.
+    Class for an Azure testing job.
     """
     __test__ = False
 
     def __init__(
         self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
         job_file=None, credentials=None, description=None, distro='sles',
-        instance_type=None, ssh_user='ec2-user'
+        instance_type=None, ssh_user='azureuser'
     ):
-        super(EC2TestingJob, self).__init__(
+        super(AzureTestingJob, self).__init__(
             id, provider, ssh_private_key_file, test_regions, tests, utctime,
             job_file=job_file, description=description, distro=distro,
             instance_type=instance_type, ssh_user=ssh_user
@@ -48,16 +50,16 @@ class EC2TestingJob(TestingJob):
         jobs = []
         for region, account in self.test_regions.items():
             creds = self.credentials[account]
+            service_account_credentials = json.dumps(creds)
             process = Thread(
                 name=region, target=ipa_test, args=(results,), kwargs={
                     'provider': self.provider,
-                    'access_key_id': creds['access_key_id'],
                     'description': self.description,
                     'distro': self.distro,
                     'image_id': self.source_regions[region],
                     'instance_type': self.instance_type,
                     'region': region,
-                    'secret_access_key': creds['secret_access_key'],
+                    'service_account_credentials': service_account_credentials,
                     'ssh_private_key_file': self.ssh_private_key_file,
                     'ssh_user': self.ssh_user,
                     'tests': self.tests
