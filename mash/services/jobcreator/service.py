@@ -170,7 +170,7 @@ class JobCreatorService(BaseService):
         """
         try:
             account_message = json.loads(message.body)
-            self.validate_message(account_message, schema.add_account)
+            self.validate_message(account_message, schema.add_account_ec2)
         except Exception:
             self.log.warning(
                 'Invalid message received: {0}.'.format(message.body)
