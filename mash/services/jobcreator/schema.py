@@ -17,7 +17,7 @@
 #
 
 
-add_account = {
+add_account_ec2 = {
     'type': 'object',
     'properties': {
         'account_name': {'$ref': '#/definitions/non_empty_string'},
@@ -31,7 +31,7 @@ add_account = {
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
         'partition': {'$ref': '#/definitions/non_empty_string'},
-        'provider': {'enum': ['azure', 'ec2']},
+        'provider': {'enum': ['ec2']},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,
