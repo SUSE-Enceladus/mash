@@ -16,30 +16,13 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 # project
-from mash.services.uploader.conventions.amazon import ConventionsAmazon
-from mash.services.uploader.conventions.azure import ConventionsAzure
-from mash.csp import CSP
-
-from mash.mash_exceptions import MashConventionsException
+from mash.services.uploader.conventions.base import ConventionsBase
 
 
-class Conventions(object):
+class ConventionsAzure(ConventionsBase):
     """
-    Conventions Factory
-
-    Attributes
-
-    * :attr:`csp`
-        cloud service provider name
+    Implements Conventions class for Azure
     """
-    def __new__(self, csp_name):
-        if csp_name == CSP.ec2:
-            return ConventionsAmazon()
-        if csp_name == CSP.azure:
-            return ConventionsAzure()
-        else:
-            raise MashConventionsException(
-                'Support for {csp} Cloud Service not implemented'.format(
-                    csp=csp_name
-                )
-            )
+    def is_valid_name(self, name):
+        # TODO: needs definition by public cloud Team
+        return name

@@ -247,6 +247,19 @@ class UploadImageService(BaseService):
                         'region': region
                     }
                 )
+            elif job_data['provider'] == CSP.azure:
+                # turn region metadata into AzureImageUploader compatible format
+                uploader_args.append(
+                    {
+                        'resource_group':
+                            job_data['target_regions'][region]['resource_group'],
+                        'container_name':
+                            job_data['target_regions'][region]['container_name'],
+                        'storage_account':
+                            job_data['target_regions'][region]['storage_account'],
+                        'region': region
+                    }
+                )
         return uploader_args
 
     def _init_job(self, job_data):

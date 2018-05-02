@@ -12,3 +12,10 @@ class TestConventions(object):
         mock_ConventionsAmazon.assert_called_once_with()
         with raises(MashConventionsException):
             Conventions('foo')
+
+    @patch('mash.services.uploader.conventions.ConventionsAzure')
+    def test_conventions_azure(self, mock_ConventionsAzure):
+        Conventions('azure')
+        mock_ConventionsAzure.assert_called_once_with()
+        with raises(MashConventionsException):
+            Conventions('foo')
