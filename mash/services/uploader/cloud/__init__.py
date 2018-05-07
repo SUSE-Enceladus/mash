@@ -61,7 +61,7 @@ class Upload(object):
                 credentials, system_image_file, cloud_image_name,
                 cloud_image_description, custom_uploader_args
             )
-        if csp_name == CSP.azure:
+        elif csp_name == CSP.azure:
             return UploadAzure(
                 credentials, system_image_file, cloud_image_name,
                 cloud_image_description, custom_uploader_args
