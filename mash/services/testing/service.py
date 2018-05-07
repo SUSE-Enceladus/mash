@@ -145,7 +145,9 @@ class TestingService(BaseService):
 
             self.bind_listener_queue(job.id)
             self.log.info(
-                'Job queued, awaiting uploader result.',
+                'Job queued, awaiting uploader result: {0}'.format(
+                    json.dumps(job_config, indent=2)
+                ),
                 extra=job.get_metadata()
             )
 

@@ -165,7 +165,11 @@ class TestReplicationService(object):
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
         self.replication.log.info.assert_called_once_with(
-            'Job queued, awaiting testing result.',
+            'Job queued, awaiting testing result: {'
+            '\n  "id": "1",'
+            '\n  "provider": "EC2",'
+            '\n  "job_file": "temp-config.json"'
+            '\n}',
             extra={'job_id': '1'}
         )
 
