@@ -70,7 +70,8 @@ class CredentialsService(BaseService):
                 )
 
             self._send_control_response(
-                'Job queued, awaiting credentials requests.', job_id=job_id
+                'Job queued, awaiting credentials requests: {0}'.format(json.dumps(job_document, indent=2)),
+                job_id=job_id
             )
 
     def _bind_credential_request_keys(self):
@@ -166,6 +167,11 @@ class CredentialsService(BaseService):
                 'Invalid account request: {0}.'.format(error), success=False
             )
         else:
+            self.log.info(
+                'Storing credentials for account: {0}, provider: {1}, user: {2}.'.format(
+                    account_msg['account_name'], account_msg['provider'], account_msg['requesting_user']
+                )
+            )
             self._store_encrypted_credentials(
                 account_msg['account_name'], account_msg['credentials'],
                 account_msg['provider'], account_msg['requesting_user']
@@ -274,21 +280,31 @@ class CredentialsService(BaseService):
         """
         Publish the credentials result JWT token to the issuer service.
         """
-        job = self.jobs.get(payload['id'])
+        job_id = payload['id']
+        job = self.jobs.get(job_id)
 
         if job:
+            issuer = payload['iss']
+
             credentials_response = self._get_credentials_response(
-                payload['id'], payload['iss']
+                job_id, issuer
             )
             message = json.dumps({'jwt_token': credentials_response.decode()})
-            self._publish_credentials_response(message, payload['iss'])
+
+            self.log.info(
+                'Received credentials request from {0} for job: {1}.'.format(
+                    issuer, job_id
+                )
+            )
+
+            self._publish_credentials_response(message, issuer)
 
             if job['utctime'] != 'always' and \
-                    job['last_service'] == payload['iss']:
-                self._delete_job(job['id'])
+                    job['last_service'] == issuer:
+                self._delete_job(job_id)
         else:
             self._send_control_response(
-                'Credentials job {0} does not exist.'.format(payload['id']),
+                'Credentials job {0} does not exist.'.format(job_id),
                 success=False
             )
 
