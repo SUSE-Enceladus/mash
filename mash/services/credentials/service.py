@@ -19,6 +19,7 @@ import jwt
 import json
 import os
 
+from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 
 # project
@@ -39,6 +40,10 @@ class CredentialsService(BaseService):
             credentials_required=True
         )
         self.encryption_keys_file = self.config.get_encryption_keys_file()
+
+        if not os.path.exists(self.encryption_keys_file):
+            self._create_encryption_keys_file()
+
         self.credentials_directory = self.config.get_credentials_dir()
 
         self.jobs = {}
@@ -90,6 +95,14 @@ class CredentialsService(BaseService):
         path = self._get_credentials_file_path(account, provider, user)
         return os.path.exists(path)
 
+    def _create_encryption_keys_file(self):
+        """
+        Creates the keys file and stores a new key for use in encryption.
+        """
+        key = self._generate_encryption_key()
+        with open(self.encryption_keys_file, 'w') as keys_file:
+            keys_file.write(key)
+
     def _delete_job(self, job_id):
         """
         Remove job from dictionary.
@@ -109,6 +122,12 @@ class CredentialsService(BaseService):
                 success=False,
                 job_id=job_id
             )
+
+    def _generate_encryption_key(self):
+        """
+        Generates and returns a new Fernet key for encryption.
+        """
+        return Fernet.generate_key().decode()
 
     def _get_credentials_file_path(self, account, provider, user):
         """
