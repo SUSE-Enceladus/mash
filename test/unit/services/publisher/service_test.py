@@ -1,3 +1,5 @@
+import json
+
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
@@ -162,12 +164,9 @@ class TestPublisherService(object):
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
         self.publisher.log.info.assert_called_once_with(
-            'Job queued, awaiting replication result: '
-            '{\n'
-            '  "id": "1",\n'
-            '  "provider": "EC2",\n'
-            '  "job_file": "temp-config.json"'
-            '\n}',
+            'Job queued, awaiting replication result: {0}'.format(
+                json.dumps(job_config, indent=2)
+            ),
             extra={'job_id': '1'}
         )
 

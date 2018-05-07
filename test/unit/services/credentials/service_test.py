@@ -1,5 +1,6 @@
 import io
 import jwt
+import json
 
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
@@ -75,12 +76,13 @@ class TestCredentialsService(object):
         mock_persist_job_config.assert_called_once_with(
             {'id': '1', 'provider': 'ec2', 'job_file': 'temp-config.json'}
         )
+        job_config = {
+            'id': '1', 'job_file': 'temp-config.json', 'provider': 'ec2'
+        }
         mock_send_control_response.assert_called_once_with(
-            'Job queued, awaiting credentials requests: {'
-            '\n  "id": "1",'
-            '\n  "provider": "ec2",'
-            '\n  "job_file": "temp-config.json"'
-            '\n}',
+            'Job queued, awaiting credentials requests: {0}'.format(
+                json.dumps(job_config, indent=2)
+            ),
             job_id='1'
         )
 
