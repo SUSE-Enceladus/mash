@@ -1,3 +1,5 @@
+import io
+
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
@@ -49,6 +51,8 @@ class TestIPATestingService(object):
             '"source_regions": {"us-east-2": "ami-123456"}, ' \
             '"status": "success"}}'
 
+    @patch('mash.services.testing.service.os')
+    @patch.object(TestingService, '_create_ssh_key_pair')
     @patch.object(TestingService, 'bind_credentials_queue')
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'start')
@@ -56,8 +60,10 @@ class TestIPATestingService(object):
     @patch('mash.services.testing.service.TestingConfig')
     def test_testing_post_init(
         self, mock_testing_config, mock_restart_jobs,
-        mock_start, mock_set_logfile, mock_bind_creds_queue
+        mock_start, mock_set_logfile, mock_bind_creds_queue,
+        mock_create_ssh_key_pair, mock_os
     ):
+        mock_os.path.exists.return_value = False
         mock_testing_config.return_value = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/testing_service.log'
@@ -69,6 +75,7 @@ class TestIPATestingService(object):
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/testing_service.log'
         )
+        mock_create_ssh_key_pair.assert_called_once_with()
         mock_bind_creds_queue.assert_called_once_with()
         mock_restart_jobs.assert_called_once_with(self.testing._add_job)
         mock_start.assert_called_once_with()
@@ -155,6 +162,27 @@ class TestIPATestingService(object):
         self.testing.log.exception.assert_called_once_with(
             'Invalid job configuration: Cannot create job.'
         )
+
+    @patch('mash.services.testing.service.rsa')
+    def test_create_ssh_key_pair(self, mock_rsa):
+        private_key = MagicMock()
+        public_key = MagicMock()
+
+        public_key.public_bytes.return_value = b'0987654321'
+
+        private_key.public_key.return_value = public_key
+        private_key.private_bytes.return_value = b'1234567890'
+
+        mock_rsa.generate_private_key.return_value = private_key
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            self.testing._create_ssh_key_pair()
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.write.assert_has_calls([
+                call(b'1234567890'),
+                call(b'0987654321')
+            ])
 
     @patch.object(TestingService, 'unbind_queue')
     def test_testing_delete_job(self, mock_unbind_queue):
