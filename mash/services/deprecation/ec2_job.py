@@ -40,7 +40,6 @@ class EC2DeprecationJob(DeprecationJob):
         self.cloud_image_name = None
         self.job_file = job_file
         self.deprecation_regions = deprecation_regions
-        self.source_regions = None
 
     def _deprecate(self):
         """
