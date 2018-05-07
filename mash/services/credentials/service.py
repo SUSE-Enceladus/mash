@@ -75,7 +75,9 @@ class CredentialsService(BaseService):
                 )
 
             self._send_control_response(
-                'Job queued, awaiting credentials requests: {0}'.format(json.dumps(job_document, indent=2)),
+                'Job queued, awaiting credentials requests: {0}'.format(
+                    json.dumps(job_document, indent=2, sort_keys=True)
+                ),
                 job_id=job_id
             )
 

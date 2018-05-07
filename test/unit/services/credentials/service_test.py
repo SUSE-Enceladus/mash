@@ -73,12 +73,11 @@ class TestCredentialsService(object):
         mock_persist_job_config.return_value = 'temp-config.json'
         self.service._add_job({'id': '1', 'provider': 'ec2'})
 
-        mock_persist_job_config.assert_called_once_with(
-            {'id': '1', 'provider': 'ec2', 'job_file': 'temp-config.json'}
-        )
         job_config = {
             'id': '1', 'job_file': 'temp-config.json', 'provider': 'ec2'
         }
+        mock_persist_job_config.assert_called_once_with(job_config)
+
         mock_send_control_response.assert_called_once_with(
             'Job queued, awaiting credentials requests: {0}'.format(
                 json.dumps(job_config, indent=2)
