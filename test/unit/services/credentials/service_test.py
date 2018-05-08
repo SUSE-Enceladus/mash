@@ -80,7 +80,7 @@ class TestCredentialsService(object):
 
         mock_send_control_response.assert_called_once_with(
             'Job queued, awaiting credentials requests: {0}'.format(
-                json.dumps(job_config, indent=2)
+                json.dumps(job_config, indent=2, sort_keys=True)
             ),
             job_id='1'
         )
