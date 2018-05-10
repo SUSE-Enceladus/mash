@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from amqpstorm import AMQPError
+import json
 
 from mash.services.base_service import BaseService
 from mash.services.jobcreator.config import JobCreatorConfig
@@ -36,50 +36,68 @@ class JobCreatorService(BaseService):
         self.config = JobCreatorConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
-        self.consume_queue(
-            self._process_message,
-            self.bind_queue(self.service_exchange, 'invalid_config')
+        self.bind_queue(
+            self.service_exchange, self.add_account_key, self.listener_queue
         )
 
+        self.start()
+
+    def _handle_listener_message(self, message):
+        """
+        Process add account messages.
+        """
+
+    def _handle_service_message(self, message):
+        """
+        Handle new and delete job messages.
+        """
+        job_doc = json.loads(message.body)
+
+        if 'job_delete' in job_doc:
+            self.publish_delete_job_message(job_doc['job_delete'])
+
+        message.ack()
+
+    def publish_delete_job_message(self, job_id):
+        """
+        Publish delete job message to obs and credentials services.
+
+        This will flush the job with the given id out of the pipeline.
+        """
+        self.log.info(
+            'Deleting job with ID: {0}.'.format(job_id)
+        )
+
+        delete_message = {
+            "obs_job_delete": job_id
+        }
+        self._publish(
+            'obs', self.job_document_key, json.dumps(delete_message)
+        )
+
+        delete_message = {
+            "credentials_job_delete": job_id
+        }
+        self._publish(
+            'credentials', self.job_document_key, json.dumps(delete_message)
+        )
+
+    def start(self):
+        """
+        Start job creator service.
+        """
+        self.consume_queue(self._handle_service_message)
+        self.consume_queue(
+            self._handle_listener_message, queue_name=self.listener_queue
+        )
         try:
-            self.start()
+            self.channel.start_consuming()
         except KeyboardInterrupt:
             pass
         except Exception:
             raise
         finally:
             self.stop()
-
-    def _process_message(self, message):
-        if message.method['routing_key'] == 'invalid_config':
-            self._process_invalid_config(message)
-        else:
-            message.ack()
-            self.log.warning(
-                'Received unknown message with key: {0}. Message: {1}'.format(
-                    message.method['routing_key'],
-                    message.body
-                )
-            )
-
-    def _process_invalid_config(self, message):
-        message.ack()
-
-        # Todo: process invalid config message
-        pass
-
-    def start(self):
-        """
-        Start job creator service.
-        """
-        while True:
-            try:
-                self.channel.start_consuming()
-                if not self.channel.consumer_tags:
-                    break
-            except AMQPError as error:
-                self.log.warning(str(error))
-                self._open_connection()
 
     def stop(self):
         """

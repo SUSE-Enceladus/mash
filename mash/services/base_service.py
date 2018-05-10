@@ -82,6 +82,8 @@ class BaseService(object):
             self.service_exchange
         )
 
+        self.add_account_key = 'add_account'
+
         logging.basicConfig()
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(logging.DEBUG)
