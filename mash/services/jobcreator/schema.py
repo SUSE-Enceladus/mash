@@ -44,7 +44,6 @@ add_account_ec2 = {
     }
 }
 
-
 job_message = {
     'type': 'object',
     'properties': {
