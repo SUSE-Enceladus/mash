@@ -39,6 +39,24 @@
       "us-west-2": "ami-f0091d91"
     }
   },
-  "azure": {},
+  "azure": {
+    "groups": {
+      "group1": ["azure-china", "azure"]
+    },
+    "accounts": {
+      "azure-china": {
+        "region": "China East",
+        "resource_group": "cn_res_group",
+        "container_name": "cncontainer1",
+        "storage_account": "cnstorage1"
+      },
+      "azure": {  
+        "region": "East US 2",
+        "resource_group": "res_group_2",
+        "container_name": "container2",
+        "storage_account": "storage2"
+      }
+    }
+  },
   "gce": {}
 }
