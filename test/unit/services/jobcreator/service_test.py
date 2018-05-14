@@ -1,7 +1,5 @@
 from pytest import raises
-from unittest.mock import MagicMock, Mock, patch
-
-from amqpstorm import AMQPError
+from unittest.mock import call, MagicMock, Mock, patch
 
 from mash.services.base_service import BaseService
 from mash.services.jobcreator.service import JobCreatorService
@@ -29,19 +27,18 @@ class TestJobCreatorService(object):
 
         self.jobcreator = JobCreatorService()
         self.jobcreator.log = Mock()
+        self.jobcreator.add_account_key = 'add_account'
         self.jobcreator.service_exchange = 'jobcreator'
+        self.jobcreator.listener_queue = 'listener'
+        self.jobcreator.job_document_key = 'job_document'
 
     @patch.object(JobCreatorService, 'set_logfile')
-    @patch.object(JobCreatorService, 'stop')
     @patch.object(JobCreatorService, 'start')
     @patch('mash.services.jobcreator.service.JobCreatorConfig')
     @patch.object(JobCreatorService, 'bind_queue')
-    @patch.object(JobCreatorService, '_process_message')
-    @patch.object(JobCreatorService, 'consume_queue')
     def test_job_creator_post_init(
-        self, mock_consume_queue, mock_process_message,
-        mock_bind_queue, mock_jobcreator_config, mock_start, mock_stop,
-        mock_set_logfile
+        self, mock_bind_queue, mock_jobcreator_config,
+        mock_start, mock_set_logfile
     ):
         mock_jobcreator_config.return_value = self.config
         self.config.get_log_file.return_value = \
@@ -53,84 +50,59 @@ class TestJobCreatorService(object):
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/job_creator_service.log'
         )
-        mock_consume_queue.assert_called_once_with(
-            mock_process_message, mock_bind_queue.return_value
+        mock_bind_queue.assert_called_once_with(
+            'jobcreator', 'add_account', 'listener'
         )
-        mock_bind_queue.assert_called_once_with('jobcreator', 'invalid_config')
         mock_start.assert_called_once_with()
-        mock_stop.assert_called_once_with()
 
-    @patch.object(JobCreatorService, 'set_logfile')
-    @patch.object(JobCreatorService, 'stop')
-    @patch.object(JobCreatorService, 'start')
-    @patch('mash.services.jobcreator.service.JobCreatorConfig')
-    @patch.object(JobCreatorService, 'bind_queue')
-    @patch.object(JobCreatorService, '_process_message')
+    @patch.object(JobCreatorService, '_publish')
+    def test_publish_delete_job_message(self, mock_publish):
+        message = MagicMock()
+        message.body = '{"job_delete": "1"}'
+        self.jobcreator._handle_service_message(message)
+        mock_publish.assert_has_calls([
+            call('obs', 'job_document', '{"obs_job_delete": "1"}'),
+            call(
+                'credentials', 'job_document',
+                '{"credentials_job_delete": "1"}'
+            )
+        ])
+
     @patch.object(JobCreatorService, 'consume_queue')
-    def test_job_creator_post_init_exceptions(
-        self, mock_consume_queue, mock_process_message,
-        mock_bind_queue, mock_jobcreator_config, mock_start, mock_stop,
-        mock_set_logfile
-    ):
-        mock_jobcreator_config.return_value = self.config
-        self.config.get_log_file.return_value = \
-            '/var/log/mash/job_creator_service.log'
-
-        mock_start.side_effect = KeyboardInterrupt()
-
-        self.jobcreator.post_init()
-
-        mock_stop.assert_called_once_with()
-        mock_start.side_effect = Exception()
-        mock_stop.reset_mock()
-        with raises(Exception):
-            self.jobcreator.post_init()
-
-        mock_stop.assert_called_once_with()
-
-    def test_job_creator_proccess_message_invalid(self):
-        self.method['routing_key'] = 'invalid_tag'
-        self.message.body = 'A message.'
-        self.jobcreator._process_message(self.message)
-
-        self.message.ack.assert_called_once_with()
-        self.jobcreator.log.warning.assert_called_once_with(
-            'Received unknown message with key: invalid_tag. '
-            'Message: A message.'
-        )
-
-    @patch.object(JobCreatorService, '_process_invalid_config')
-    def test_job_creator_proccess_message_invalid_config(
-        self, mock_invalid_config
-    ):
-        self.method['routing_key'] = 'invalid_config'
-        self.jobcreator._process_message(self.message)
-
-        mock_invalid_config.assert_called_once_with(self.message)
-
-    def test_job_creator_proccess_invalid_config(self):
-        self.method['routing_key'] = 'invalid_tag'
-        self.message.body = 'A message.'
-        self.jobcreator._process_invalid_config(self.message)
-
-        self.message.ack.assert_called_once_with()
-
-    def test_jobcreator_start(self):
-        self.channel.consumer_tags = []
+    @patch.object(JobCreatorService, 'stop')
+    def test_jobcreator_start(self, mock_stop, mock_consume_queue):
         self.jobcreator.channel = self.channel
 
         self.jobcreator.start()
         self.channel.start_consuming.assert_called_once_with()
 
-    @patch.object(JobCreatorService, '_open_connection')
-    def test_jobcreator_start_exception(self, mock_open_connection):
-        self.channel.start_consuming.side_effect = [AMQPError('Broken!'), None]
-        self.channel.consumer_tags = []
+        mock_consume_queue.assert_has_calls([
+            call(self.jobcreator._handle_service_message),
+            call(
+                self.jobcreator._handle_listener_message,
+                queue_name='listener'
+            )
+        ])
+        mock_stop.assert_called_once_with()
+
+    @patch.object(JobCreatorService, 'consume_queue')
+    @patch.object(JobCreatorService, 'stop')
+    def test_jobcreator_start_exception(self, mock_stop, mock_consume_queue):
+        self.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.jobcreator.channel = self.channel
 
         self.jobcreator.start()
-        self.jobcreator.log.warning.assert_called_once_with('Broken!')
-        mock_open_connection.assert_called_once_with()
+        mock_stop.assert_called_once_with()
+        mock_stop.reset_mock()
+
+        self.channel.start_consuming.side_effect = Exception(
+            'Cannot start job creator service.'
+        )
+
+        with raises(Exception) as error:
+            self.jobcreator.start()
+
+        assert 'Cannot start job creator service.' == str(error.value)
 
     @patch.object(JobCreatorService, 'close_connection')
     def test_jobcreator_stop(self, mock_close_connection):
