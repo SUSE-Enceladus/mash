@@ -45,10 +45,10 @@ add_account_ec2 = {
 }
 
 
-job_message = {
+ec2_job_message = {
     'type': 'object',
     'properties': {
-        'provider': {'enum': ['azure', 'ec2']},
+        'provider': {'enum': ['ec2']},
         'provider_accounts': {
             'type': 'array',
             'items': {'$ref': '#definitions/account'}
