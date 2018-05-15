@@ -304,7 +304,8 @@ class TestUploadImageService(object):
                 'westeurope': {
                     'resource_group': 'ms_group',
                     'container_name': 'ms1container',
-                    'storage_account': 'ms1storage'
+                    'storage_account': 'ms1storage',
+                    'account': 'test-azure'
                 }
             }
         }

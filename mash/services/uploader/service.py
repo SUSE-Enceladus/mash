@@ -257,6 +257,8 @@ class UploadImageService(BaseService):
                             job_data['target_regions'][region]['container_name'],
                         'storage_account':
                             job_data['target_regions'][region]['storage_account'],
+                        'account':
+                            job_data['target_regions'][region]['account'],
                         'region': region
                     }
                 )
