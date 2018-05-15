@@ -99,7 +99,7 @@ class EC2Job(BaseJob):
         """
         Return a list of regions based on account name.
         """
-        regions_key = self.accounts_info['accounts'][account]
+        regions_key = self.accounts_info['accounts'][account]['partition']
         return self.accounts_info['regions'][regions_key]
 
     def _get_target_regions_list(self):
