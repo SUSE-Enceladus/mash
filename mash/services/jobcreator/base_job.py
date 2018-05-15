@@ -67,7 +67,7 @@ class BaseJob(object):
         """
         Return a list of account names given the group name.
         """
-        return self.accounts_info['groups'][group]
+        return self.accounts_info['groups'][group]['accounts']
 
     def get_credentials_message(self):
         """
