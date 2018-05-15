@@ -20,6 +20,7 @@ import json
 
 from mash.services.base_service import BaseService
 from mash.services.jobcreator.config import JobCreatorConfig
+from mash.services.jobcreator import create_job
 
 
 class JobCreatorService(BaseService):
@@ -35,6 +36,10 @@ class JobCreatorService(BaseService):
         """
         self.config = JobCreatorConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+        self.services = self.config.get_service_names()
+        self.accounts_file = self.config.get_accounts_file()
+
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
@@ -42,21 +47,84 @@ class JobCreatorService(BaseService):
 
         self.start()
 
-    def _handle_listener_message(self, message):
+    def _get_accounts_from_file(self):
         """
-        Process add account messages.
+        Return a dictionary of account information from accounts json file.
         """
+        with open(self.accounts_file, 'r') as acnt_file:
+            accounts = json.load(acnt_file)
+
+        return accounts
 
     def _handle_service_message(self, message):
         """
         Handle new and delete job messages.
         """
-        job_doc = json.loads(message.body)
-
-        if 'job_delete' in job_doc:
-            self.publish_delete_job_message(job_doc['job_delete'])
+        try:
+            job_doc = json.loads(message.body)
+            if 'job_delete' in job_doc:
+                self.publish_delete_job_message(job_doc['job_delete'])
+            else:
+                self.process_new_job(job_doc)
+        except Exception as error:
+            self.log.error(
+                'Invalid message received: {0}.'.format(error)
+            )
 
         message.ack()
+
+    def _handle_listener_message(self, message):
+        """
+        Process add account messages.
+        """
+
+    def process_new_job(self, job_doc):
+        """
+        Split args and send messages to all services to initiate job.
+        """
+        accounts_info = self._get_accounts_from_file()
+        job = create_job(job_doc, accounts_info)
+
+        self.log.info(
+            'Started a new job: {0}'.format(json.dumps(job_doc, indent=2)),
+            extra={'job_id': job.id}
+        )
+
+        # Credentials job always sent for all jobs.
+        self.publish_job_doc('credentials', job.get_credentials_message())
+
+        for service in self.services:
+            if service == 'deprecation':
+                self.publish_job_doc(
+                    'deprecation', job.get_deprecation_message()
+                )
+            elif service == 'obs':
+                self.publish_job_doc(
+                    'obs', job.get_obs_message()
+                )
+            elif service == 'pint':
+                self.publish_job_doc(
+                    'pint', job.get_pint_message()
+                )
+            elif service == 'publisher':
+                self.publish_job_doc(
+                    'publisher', job.get_publisher_message()
+                )
+            elif service == 'replication':
+                self.publish_job_doc(
+                    'replication', job.get_replication_message()
+                )
+            elif service == 'testing':
+                self.publish_job_doc(
+                    'testing', job.get_testing_message()
+                )
+            elif service == 'uploader':
+                self.publish_job_doc(
+                    'uploader', job.get_uploader_message()
+                )
+
+            if service == job.last_service:
+                break
 
     def publish_delete_job_message(self, job_id):
         """
@@ -65,7 +133,8 @@ class JobCreatorService(BaseService):
         This will flush the job with the given id out of the pipeline.
         """
         self.log.info(
-            'Deleting job with ID: {0}.'.format(job_id)
+            'Deleting job with ID: {0}.'.format(job_id),
+            extra={'job_id': job_id}
         )
 
         delete_message = {
@@ -81,6 +150,12 @@ class JobCreatorService(BaseService):
         self._publish(
             'credentials', self.job_document_key, json.dumps(delete_message)
         )
+
+    def publish_job_doc(self, service, job_doc):
+        """
+        Publish the job_doc message to the given service exchange.
+        """
+        self._publish(service, self.job_document_key, job_doc)
 
     def start(self):
         """
@@ -102,6 +177,7 @@ class JobCreatorService(BaseService):
     def stop(self):
         """
         Stop job creator service.
+
         Stop consuming queues and close pika connections.
         """
         self.channel.stop_consuming()

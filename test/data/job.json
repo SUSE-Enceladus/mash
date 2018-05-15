@@ -1,0 +1,41 @@
+{
+  "provider": "ec2",
+  "provider_accounts": [
+    {
+      "name": "test-aws-gov",
+      "target_regions": [
+        "us-gov-west-1"
+      ]
+    }
+  ],
+  "provider_groups": [
+    "test"
+  ],
+  "requesting_user": "user1",
+  "last_service": "pint",
+  "utctime": "now",
+  "image": "test_image_oem",
+  "cloud_image_name": "new_image_123",
+  "old_cloud_image_name": "old_new_image_123",
+  "project": "Cloud:Tools",
+  "conditions": [
+    {
+      "package": [
+        "name",
+        "and",
+        "constraints"
+      ]
+    },
+    {
+      "image": "version"
+    }
+  ],
+  "share_with": "all",
+  "allow_copy": false,
+  "image_description": "New Image #123",
+  "distro": "sles",
+  "instance_type": "t2.micro",
+  "tests": [
+    "test_stuff"
+  ]
+}
