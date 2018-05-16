@@ -1,7 +1,10 @@
+import io
+
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
 from mash.services.base_service import BaseService
+from mash.services.jobcreator.accounts import accounts_template
 from mash.services.jobcreator.service import JobCreatorService
 
 
@@ -28,18 +31,22 @@ class TestJobCreatorService(object):
         self.jobcreator = JobCreatorService()
         self.jobcreator.log = Mock()
         self.jobcreator.add_account_key = 'add_account'
+        self.jobcreator.accounts_file = '../data/accounts.json'
         self.jobcreator.service_exchange = 'jobcreator'
         self.jobcreator.listener_queue = 'listener'
         self.jobcreator.job_document_key = 'job_document'
 
+    @patch.object(JobCreatorService, '_write_accounts_to_file')
+    @patch('mash.services.jobcreator.service.os')
     @patch.object(JobCreatorService, 'set_logfile')
     @patch.object(JobCreatorService, 'start')
     @patch('mash.services.jobcreator.service.JobCreatorConfig')
     @patch.object(JobCreatorService, 'bind_queue')
     def test_job_creator_post_init(
         self, mock_bind_queue, mock_jobcreator_config,
-        mock_start, mock_set_logfile
+        mock_start, mock_set_logfile, mock_os, mock_write_accounts_to_file
     ):
+        mock_os.path.exists.return_value = False
         mock_jobcreator_config.return_value = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/job_creator_service.log'
@@ -50,10 +57,26 @@ class TestJobCreatorService(object):
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/job_creator_service.log'
         )
+
+        mock_write_accounts_to_file.assert_called_once_with(
+            accounts_template
+        )
+
         mock_bind_queue.assert_called_once_with(
             'jobcreator', 'add_account', 'listener'
         )
         mock_start.assert_called_once_with()
+
+    def test_jobcreator_write_accounts_to_file(self):
+        accounts = {'test': 'accounts'}
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            self.jobcreator._write_accounts_to_file(accounts)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.write.assert_called_with(
+                u'{\n    "test": "accounts"\n}'
+            )
 
     @patch.object(JobCreatorService, '_publish')
     def test_publish_delete_job_message(self, mock_publish):
