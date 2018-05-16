@@ -11,11 +11,20 @@
       "aws-us-gov": ["us-gov-west-1"]
     },
     "groups": {
-      "GROUP_ONE": ["ACCOUNT_ONE", "ACCOUNT_TWO"]
+      "GROUP_ONE": {
+        "accounts": ["ACCOUNT_ONE", "ACCOUNT_TWO"],
+        "requesting_user": "user1"
+      }
     },
     "accounts": {
-      "ACCOUNT_ONE": "aws-cn",
-      "ACCOUNT_TWO": "aws"
+      "ACCOUNT_ONE": {
+        "partition": "aws-cn",
+        "requesting_user": "user2"
+      },
+      "ACCOUNT_TWO": {
+        "partition": "aws",
+        "requesting_user": "user2"
+      }
     },
     "helper_images": {
       "ap-northeast-1": "ami-383c1956",
@@ -41,18 +50,23 @@
   },
   "azure": {
     "groups": {
-      "group1": ["azure-china", "azure"]
+      "group1": {
+        "accounts": ["azure-china", "azure"],
+        "requesting_user": "user1"
+      }
     },
     "accounts": {
       "azure-china": {
         "region": "China East",
         "resource_group": "cn_res_group",
+        "requesting_user": "user1",
         "container_name": "cncontainer1",
         "storage_account": "cnstorage1"
       },
-      "azure": {  
+      "azure": {
         "region": "East US 2",
         "resource_group": "res_group_2",
+        "requesting_user": "user1",
         "container_name": "container2",
         "storage_account": "storage2"
       }
