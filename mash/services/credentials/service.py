@@ -19,6 +19,7 @@ import jwt
 import json
 import os
 
+from contextlib import suppress
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 
@@ -50,6 +51,9 @@ class CredentialsService(BaseService):
 
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
+        )
+        self.bind_queue(
+            self.service_exchange, self.delete_account_key, self.listener_queue
         )
         self._bind_credential_request_keys()
 
@@ -188,15 +192,16 @@ class CredentialsService(BaseService):
                 'Invalid account request: {0}.'.format(error), success=False
             )
         else:
-            self.log.info(
-                'Storing credentials for account: {0}, provider: {1}, user: {2}.'.format(
-                    account_msg['account_name'], account_msg['provider'], account_msg['requesting_user']
+            if message.method['routing_key'] == self.add_account_key:
+                self._store_encrypted_credentials(
+                    account_msg['account_name'], account_msg['credentials'],
+                    account_msg['provider'], account_msg['requesting_user']
                 )
-            )
-            self._store_encrypted_credentials(
-                account_msg['account_name'], account_msg['credentials'],
-                account_msg['provider'], account_msg['requesting_user']
-            )
+            elif message.method['routing_key'] == self.delete_account_key:
+                self._remove_credentials_file(
+                    account_msg['account_name'], account_msg['provider'],
+                    account_msg['requesting_user']
+                )
 
         message.ack()
 
@@ -274,6 +279,22 @@ class CredentialsService(BaseService):
             issuer, self.credentials_response_key, credentials_response
         )
 
+    def _remove_credentials_file(self, account_name, provider, user):
+        """
+        Attempt to remove the credentials file for account.
+        """
+        self.log.info(
+            'Deleting credentials for account: '
+            '{0}, provider: {1}, user: {2}.'.format(
+                account_name, provider, user
+            )
+        )
+
+        path = self._get_credentials_file_path(account_name, provider, user)
+
+        with suppress(Exception):
+            os.remove(path)
+
     def _retrieve_credentials(self, job_id):
         """
         Retrieve the encrypted credentials strings for the requested job_id.
@@ -341,6 +362,13 @@ class CredentialsService(BaseService):
 
         Path is based on the user, provider and account.
         """
+        self.log.info(
+            'Storing credentials for account: '
+            '{0}, provider: {1}, user: {2}.'.format(
+                account, provider, user
+            )
+        )
+
         path = self._get_credentials_file_path(account, provider, user)
 
         credentials_dir = os.path.dirname(path)
