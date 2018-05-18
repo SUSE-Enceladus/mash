@@ -17,9 +17,11 @@
 #
 
 import json
+import os
 
 from mash.services.base_service import BaseService
 from mash.services.jobcreator.config import JobCreatorConfig
+from mash.services.jobcreator.accounts import accounts_template
 
 
 class JobCreatorService(BaseService):
@@ -35,6 +37,10 @@ class JobCreatorService(BaseService):
         """
         self.config = JobCreatorConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+        self.accounts_file = self.config.get_accounts_file()
+
+        if not os.path.exists(self.accounts_file):
+            self._write_accounts_to_file(accounts_template)
 
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
@@ -57,6 +63,15 @@ class JobCreatorService(BaseService):
             self.publish_delete_job_message(job_doc['job_delete'])
 
         message.ack()
+
+    def _write_accounts_to_file(self, accounts):
+        """
+        Update accounts file with provided accounts dictionary.
+        """
+        account_info = json.dumps(accounts, indent=4)
+
+        with open(self.accounts_file, 'w') as account_file:
+            account_file.write(account_info)
 
     def publish_delete_job_message(self, job_id):
         """
