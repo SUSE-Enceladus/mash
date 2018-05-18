@@ -19,6 +19,7 @@ class TestCredentialsService(object):
 
         self.service = CredentialsService()
         self.service.add_account_key = 'add_account'
+        self.service.delete_account_key = 'delete_account'
         self.service.service_exchange = 'credentials'
         self.service.service_queue = 'service'
         self.service.listener_queue = 'listener'
@@ -178,11 +179,12 @@ class TestCredentialsService(object):
 
     @patch.object(CredentialsService, '_store_encrypted_credentials')
     @patch.object(CredentialsService, '_send_control_response')
-    def test_handle_account_request(
+    def test_handle_add_account(
         self, mock_send_control_response, mock_store_encrypted_credentials
     ):
         message = MagicMock()
         message.body = 'invalid'
+        message.method = {'routing_key': 'add_account'}
 
         self.service._handle_account_request(message)
         mock_send_control_response.assert_called_once_with(
@@ -202,8 +204,29 @@ class TestCredentialsService(object):
         mock_store_encrypted_credentials.assert_called_once_with(
             'test-aws', 'encrypted_creds', 'ec2', 'user1'
         )
+        message.ack.assert_called_once_with()
+
+    @patch.object(CredentialsService, '_get_credentials_file_path')
+    @patch('mash.services.credentials.service.os')
+    def test_handle_delete_account(self, mock_os, mock_get_cred_path):
+        mock_get_cred_path.return_value = \
+            '/var/lib/mash/credentials/user1/ec2/test-aws'
+
+        message = MagicMock()
+        message.body = '''{
+            "account_name": "test-aws",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        }'''
+        message.method = {'routing_key': 'delete_account'}
+
+        self.service._handle_account_request(message)
         self.service.log.info.assert_called_once_with(
-            'Storing credentials for account: test-aws, provider: ec2, user: user1.'
+            'Deleting credentials for account: '
+            'test-aws, provider: ec2, user: user1.'
+        )
+        mock_os.remove.assert_called_once_with(
+            '/var/lib/mash/credentials/user1/ec2/test-aws'
         )
         message.ack.assert_called_once_with()
 
@@ -297,6 +320,10 @@ class TestCredentialsService(object):
             )
             file_handle = mock_open.return_value.__enter__.return_value
             file_handle.write.assert_called_once_with('encrypted_secrets')
+            self.service.log.info.assert_called_once_with(
+                'Storing credentials for account: '
+                'account1, provider: ec2, user: user1.'
+            )
 
         with patch('builtins.open', create=True) as mock_open:
             mock_open.return_value = MagicMock(spec=io.IOBase)
