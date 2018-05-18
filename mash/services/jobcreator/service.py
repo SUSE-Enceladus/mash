@@ -80,7 +80,8 @@ class JobCreatorService(BaseService):
         This will flush the job with the given id out of the pipeline.
         """
         self.log.info(
-            'Deleting job with ID: {0}.'.format(job_id)
+            'Deleting job with ID: {0}.'.format(job_id),
+            extra={'job_id': job_id}
         )
 
         delete_message = {
@@ -117,6 +118,7 @@ class JobCreatorService(BaseService):
     def stop(self):
         """
         Stop job creator service.
+
         Stop consuming queues and close pika connections.
         """
         self.channel.stop_consuming()
