@@ -1,4 +1,5 @@
 import io
+import json
 
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
@@ -32,19 +33,24 @@ class TestJobCreatorService(object):
         self.jobcreator.log = Mock()
         self.jobcreator.add_account_key = 'add_account'
         self.jobcreator.accounts_file = '../data/accounts.json'
+        self.jobcreator.encryption_keys_file = '../data/encryption_keys'
         self.jobcreator.service_exchange = 'jobcreator'
         self.jobcreator.listener_queue = 'listener'
         self.jobcreator.job_document_key = 'job_document'
+        self.jobcreator.services = [
+            'obs', 'uploader', 'testing', 'replication',
+            'publisher', 'deprecation', 'pint'
+        ]
 
     @patch.object(JobCreatorService, '_write_accounts_to_file')
     @patch('mash.services.jobcreator.service.os')
+    @patch.object(JobCreatorService, 'bind_queue')
     @patch.object(JobCreatorService, 'set_logfile')
     @patch.object(JobCreatorService, 'start')
     @patch('mash.services.jobcreator.service.JobCreatorConfig')
-    @patch.object(JobCreatorService, 'bind_queue')
     def test_job_creator_post_init(
-        self, mock_bind_queue, mock_jobcreator_config,
-        mock_start, mock_set_logfile, mock_os, mock_write_accounts_to_file
+        self, mock_jobcreator_config, mock_start, mock_set_logfile,
+        mock_bind_queue, mock_os, mock_write_accounts_to_file
     ):
         mock_os.path.exists.return_value = False
         mock_jobcreator_config.return_value = self.config
@@ -77,6 +83,120 @@ class TestJobCreatorService(object):
             file_handle.write.assert_called_with(
                 u'{\n    "test": "accounts"\n}'
             )
+
+    @patch('mash.services.jobcreator.ec2_job.random')
+    @patch('mash.services.jobcreator.base_job.uuid')
+    @patch.object(JobCreatorService, '_publish')
+    def test_jobcreator_handle_service_message(
+            self, mock_publish, mock_uuid, mock_random
+    ):
+        message = MagicMock()
+
+        uuid_val = '12345678-1234-1234-1234-123456789012'
+        mock_uuid.uuid4.return_value = uuid_val
+
+        mock_random.choice.side_effect = [
+            'us-gov-west-1', 'ap-northeast-1'
+        ]
+
+        with open('../data/job.json', 'r') as accounts_file:
+            message.body = json.dumps(json.load(accounts_file))
+
+        self.jobcreator._handle_service_message(message)
+
+        mock_publish.assert_has_calls([
+            call(
+                'credentials', 'job_document',
+                '{"credentials_job": {"provider": "ec2", '
+                '"last_service": "pint", '
+                '"provider_accounts": ["test-aws-gov", "test-aws"], '
+                '"requesting_user": "user1", '
+                '"id": "12345678-1234-1234-1234-123456789012", '
+                '"utctime": "now"}}'
+            ),
+            call(
+                'obs', 'job_document',
+                '{"obs_job": {"image": "test_image_oem", '
+                '"project": "Cloud:Tools", '
+                '"id": "12345678-1234-1234-1234-123456789012", '
+                '"utctime": "now", '
+                '"conditions": [{"package": ["name", "and", "constraints"]}, '
+                '{"image": "version"}]}}'
+            ),
+            call(
+                'uploader', 'job_document',
+                '{"uploader_job": {"cloud_image_name": "new_image_123", '
+                '"provider": "ec2", "image_description": "New Image #123", '
+                '"target_regions": {"us-gov-west-1": {"account": '
+                '"test-aws-gov", "helper_image": "ami-c2b5d7e1"}, '
+                '"ap-northeast-1": {"account": "test-aws", '
+                '"helper_image": "ami-383c1956"}}, '
+                '"id": "12345678-1234-1234-1234-123456789012", '
+                '"utctime": "now"}}'
+            ),
+            call(
+                'testing', 'job_document',
+                '{"testing_job": {"provider": "ec2", "tests": ["test_stuff"], '
+                '"test_regions": {"us-gov-west-1": "test-aws-gov", '
+                '"ap-northeast-1": "test-aws"}, "distro": "sles", '
+                '"instance_type": "t2.micro", '
+                '"id": "12345678-1234-1234-1234-123456789012", '
+                '"utctime": "now"}}'
+            ),
+            call(
+                'replication', 'job_document',
+                '{"replication_job": {"image_description": "New Image #123", '
+                '"provider": "ec2", "replication_source_regions": {'
+                '"us-gov-west-1": {"account": "test-aws-gov", '
+                '"target_regions": ["us-gov-west-1"]}, "ap-northeast-1": '
+                '{"account": "test-aws", "target_regions": ["ap-northeast-1", '
+                '"ap-northeast-2"]}}, '
+                '"id": "12345678-1234-1234-1234-123456789012", '
+                '"utctime": "now"}}'
+            ),
+            call(
+                'publisher', 'job_document',
+                '{"publisher_job": {"provider": "ec2", "allow_copy": false, '
+                '"share_with": "all", "publish_regions": ['
+                '{"account": "test-aws-gov", "target_regions": '
+                '["us-gov-west-1"], "helper_image": "ami-c2b5d7e1"}, '
+                '{"account": "test-aws", "target_regions": '
+                '["ap-northeast-1", "ap-northeast-2"], "helper_image": '
+                '"ami-383c1956"}], '
+                '"id": "12345678-1234-1234-1234-123456789012", '
+                '"utctime": "now"}}'
+            ),
+            call(
+                'deprecation', 'job_document',
+                '{"deprecation_job": {"provider": "ec2", '
+                '"old_cloud_image_name": "old_new_image_123", '
+                '"deprecation_regions": [{"account": "test-aws-gov", '
+                '"target_regions": ["us-gov-west-1"], '
+                '"helper_image": "ami-c2b5d7e1"}, {"account": "test-aws", '
+                '"target_regions": ["ap-northeast-1", "ap-northeast-2"], '
+                '"helper_image": "ami-383c1956"}], '
+                '"id": "12345678-1234-1234-1234-123456789012", '
+                '"utctime": "now"}}'
+            ),
+            call(
+                'pint', 'job_document',
+                '{"pint_job": {"provider": "ec2", "cloud_image_name": '
+                '"new_image_123", "old_cloud_image_name": '
+                '"old_new_image_123", '
+                '"id": "12345678-1234-1234-1234-123456789012", '
+                '"utctime": "now"}}'
+            )
+        ])
+
+    def test_jobcreator_handle_invalid_service_message(self):
+        message = MagicMock()
+        message.body = 'invalid message'
+
+        self.jobcreator._handle_service_message(message)
+        self.jobcreator.log.error.assert_called_once_with(
+            'Invalid message received: '
+            'Expecting value: line 1 column 1 (char 0).'
+        )
 
     @patch.object(JobCreatorService, '_publish')
     def test_publish_delete_job_message(self, mock_publish):
