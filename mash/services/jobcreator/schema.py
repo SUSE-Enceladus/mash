@@ -45,6 +45,24 @@ add_account_ec2 = {
 }
 
 
+delete_account_ec2 = {
+    'type': 'object',
+    'properties': {
+        'account_name': {'$ref': '#/definitions/non_empty_string'},
+        'provider': {'enum': ['ec2']},
+        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
+    },
+    'additionalProperties': False,
+    'required': ['account_name', 'provider', 'requesting_user'],
+    'definitions': {
+        'non_empty_string': {
+            'type': 'string',
+            'minLength': 1
+        }
+    }
+}
+
+
 job_message = {
     'type': 'object',
     'properties': {
