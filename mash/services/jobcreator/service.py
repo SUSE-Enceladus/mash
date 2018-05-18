@@ -20,6 +20,7 @@ import json
 import os
 
 from mash.services.base_service import BaseService
+from mash.services.jobcreator import schema
 from mash.services.jobcreator.config import JobCreatorConfig
 from mash.services.jobcreator.accounts import accounts_template
 
@@ -42,16 +43,45 @@ class JobCreatorService(BaseService):
         if not os.path.exists(self.accounts_file):
             self._write_accounts_to_file(accounts_template)
 
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
+
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
         )
 
         self.start()
 
+    def _get_accounts_from_file(self):
+        """
+        Return a dictionary of account information from accounts json file.
+        """
+        with open(self.accounts_file, 'r') as account_file:
+            accounts = json.load(account_file)
+
+        return accounts
+
     def _handle_listener_message(self, message):
         """
         Process add account messages.
         """
+        try:
+            account_message = json.loads(message.body)
+        except Exception:
+            self.log.warning(
+                'Invalid message received: {0}.'.format(message.body)
+            )
+        else:
+            if message.method['routing_key'] == 'add_account':
+                self.add_account(account_message)
+            else:
+                self.log.warning(
+                    'Received unknown message type: {0}. Message: {1}'.format(
+                        message.method['routing_key'],
+                        message.body
+                    )
+                )
+
+        message.ack()
 
     def _handle_service_message(self, message):
         """
@@ -72,6 +102,88 @@ class JobCreatorService(BaseService):
 
         with open(self.accounts_file, 'w') as account_file:
             account_file.write(account_info)
+
+    def add_account(self, message):
+        """
+        Add new provider account to MASH.
+        Notify credentials service of new account with encrypted credentials.
+        """
+        try:
+            self.validate_message(message, schema.add_account_ec2)
+        except Exception as error:
+            self.log.info(
+                'Invalid add account message received: {0}.'.format(
+                    error
+                )
+            )
+            return
+
+        self.log.info(
+            'Received add account message for account {0}.'.format(
+                message['account_name']
+            )
+        )
+
+        accounts = self._get_accounts_from_file()
+        provider = message['provider']
+        account_name = message['account_name']
+        requesting_user = message['requesting_user']
+        account = accounts[provider]['accounts'].get(account_name)
+
+        if account and requesting_user != account['requesting_user']:
+            self.log.warning(
+                'Failed to add account for {0} with the name {1}. Account is '
+                'owned by a different user.'.format(
+                    requesting_user, account_name
+                )
+            )
+        else:
+            # Add account
+            accounts[provider]['accounts'][account_name] = {
+                'partition': message['partition'],
+                'requesting_user': requesting_user
+            }
+
+            # Add group if necessary
+            group_name = message.get('group')
+            if group_name:
+                self._add_account_to_group(
+                    accounts, account_name, group_name,
+                    provider, requesting_user
+                )
+
+            self._write_accounts_to_file(accounts)
+
+            message['credentials'] = self.encrypt_credentials(
+                json.dumps(message['credentials'])
+            )
+
+            self._publish('credentials', self.add_account_key, json.dumps(message))
+
+    def _add_account_to_group(
+            self, accounts, account_name, group_name, provider, requesting_user
+    ):
+        """
+        Add the account to the group if it is owned by the same user.
+        If the group does not exist create it with the new account.
+        """
+        if group_name in accounts[provider]['groups']:
+            group = accounts[provider]['groups'][group_name]
+            if group['requesting_user'] != requesting_user:
+                self.log.warning(
+                    'Unable to add account to group {0} for {1}. '
+                    'Group owned by a different user.'.format(
+                        group_name, requesting_user
+                    )
+                )
+            elif account_name not in group['accounts']:
+                # Allow for account updates, don't append multiple times.
+                group['accounts'].append(account_name)
+        else:
+            accounts[provider]['groups'][group_name] = {
+                'accounts': [account_name],
+                'requesting_user': requesting_user
+            }
 
     def publish_delete_job_message(self, job_id):
         """
