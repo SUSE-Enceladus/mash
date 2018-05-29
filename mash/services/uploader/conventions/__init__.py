@@ -35,7 +35,7 @@ class Conventions(object):
     def __new__(self, csp_name):
         if csp_name == CSP.ec2:
             return ConventionsAmazon()
-        if csp_name == CSP.azure:
+        elif csp_name == CSP.azure:
             return ConventionsAzure()
         else:
             raise MashConventionsException(
