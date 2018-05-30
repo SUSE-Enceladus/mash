@@ -36,30 +36,25 @@ class UploadAzure(UploadBase):
         if not self.custom_args:
             self.custom_args = {}
 
-        if 'region' in self.custom_args:
-            self.region = self.custom_args['region']
-        else:
+        self.region = self.custom_args.get('region')
+        if not self.region:
             raise MashUploadException(
                 'required Azure region name for upload not specified'
             )
 
-        if 'container_name' in self.custom_args:
-            self.container_name = self.custom_args['container_name']
-        else:
+        self.container_name = self.custom_args.get('container_name')
+        if not self.container_name:
             raise MashUploadException(
                 'required Azure container name for upload not specified'
             )
 
-        if 'storage_account' in self.custom_args:
-            self.storage_account = self.custom_args['storage_account']
-        else:
+        self.storage_account = self.custom_args.get('storage_account')
+        if not self.storage_account:
             raise MashUploadException(
                 'required Azure storage account name for upload not specified'
             )
 
-        self.resource_group = None
-        if 'resource_group' in self.custom_args:
-            self.resource_group = self.custom_args['resource_group']
+        self.resource_group = self.custom_args.get('resource_group') or None
 
         self._create_auth_file()
 
