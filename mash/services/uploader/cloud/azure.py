@@ -75,7 +75,8 @@ class UploadAzure(UploadBase):
             account_key=storage_key_list.keys[0].value
         )
         page_blob_service.create_blob_from_path(
-            self.container_name, self.cloud_image_name, self.system_image_file
+            self.container_name, self.cloud_image_name, self.system_image_file,
+            max_connections=4
         )
         compute_client = get_client_from_auth_file(
             ComputeManagementClient, auth_path=self.auth_file.name

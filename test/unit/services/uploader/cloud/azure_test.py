@@ -118,7 +118,7 @@ class TestUploadAzure(object):
             account_key='key', account_name='storage'
         )
         page_blob_service.create_blob_from_path.assert_called_once_with(
-            'container', 'name', 'file'
+            'container', 'name', 'file', max_connections=4
         )
         client.images.create_or_update.assert_called_once_with(
             'group_name', 'name', {
