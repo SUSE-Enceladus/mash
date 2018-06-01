@@ -17,12 +17,18 @@
 #
 
 import json
+import random
 
 from threading import Thread
 
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.services.testing.ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
+
+instance_types = [
+    'Standard_DS1_v2', 'Standard_B1ms', 'Standard_F1s', 'Standard_H8m',
+    'Standard_A0', 'Standard_D1_v2', 'Standard_A2m_v2'
+]
 
 
 class AzureTestingJob(TestingJob):
@@ -36,6 +42,9 @@ class AzureTestingJob(TestingJob):
         job_file=None, credentials=None, description=None, distro='sles',
         instance_type=None, ssh_user='azureuser'
     ):
+        if not instance_type:
+            instance_type = random.choice(instance_types)
+
         super(AzureTestingJob, self).__init__(
             id, provider, ssh_private_key_file, test_regions, tests, utctime,
             job_file=job_file, description=description, distro=distro,

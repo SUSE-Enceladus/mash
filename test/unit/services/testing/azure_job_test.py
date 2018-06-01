@@ -14,11 +14,12 @@ class TestAzureTestingJob(object):
             'utctime': 'now',
         }
 
+    @patch('mash.services.testing.azure_job.random')
     @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')
     @patch('mash.services.testing.ipa_helper.test_image')
     @patch.object(AzureTestingJob, 'send_log')
     def test_testing_run_azure_test(
-        self, mock_send_log, mock_test_image, mock_temp_file
+        self, mock_send_log, mock_test_image, mock_temp_file, mock_random
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -34,6 +35,7 @@ class TestAzureTestingJob(object):
                 }
             }
         )
+        mock_random.choice.return_value = 'Standard_A0'
 
         job = AzureTestingJob(**self.job_config)
         job.credentials = {
@@ -52,7 +54,7 @@ class TestAzureTestingJob(object):
             description=job.description,
             distro='sles',
             image_id='ami-123',
-            instance_type=None,
+            instance_type='Standard_A0',
             log_level=30,
             region='East US',
             secret_access_key=None,
