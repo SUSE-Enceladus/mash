@@ -38,20 +38,17 @@ class CredentialsService(BaseService):
     """
     def post_init(self):
         self.config = CredentialsConfig()
-
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.services = self.config.get_service_names(
             credentials_required=True
         )
         self.encryption_keys_file = self.config.get_encryption_keys_file()
+        self.credentials_directory = self.config.get_credentials_dir()
+        self.jobs = {}
 
         if not os.path.exists(self.encryption_keys_file):
             self._create_encryption_keys_file()
-
-        self.credentials_directory = self.config.get_credentials_dir()
-
-        self.jobs = {}
 
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
