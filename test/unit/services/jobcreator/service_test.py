@@ -42,7 +42,7 @@ class TestJobCreatorService(object):
     @patch.object(JobCreatorService, 'start')
     @patch('mash.services.jobcreator.service.JobCreatorConfig')
     @patch.object(JobCreatorService, 'bind_queue')
-    def test_job_creator_post_init(
+    def test_jobcreator_post_init(
         self, mock_bind_queue, mock_jobcreator_config,
         mock_start, mock_set_logfile, mock_os, mock_write_accounts_to_file
     ):
@@ -79,7 +79,7 @@ class TestJobCreatorService(object):
             )
 
     @patch.object(JobCreatorService, '_publish')
-    def test_publish_delete_job_message(self, mock_publish):
+    def test_jobcreator_publish_delete_job_message(self, mock_publish):
         message = MagicMock()
         message.body = '{"job_delete": "1"}'
         self.jobcreator._handle_service_message(message)
