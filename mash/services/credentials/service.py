@@ -19,6 +19,9 @@ import jwt
 import json
 import os
 
+from apscheduler import events
+from apscheduler.schedulers.background import BackgroundScheduler
+
 from contextlib import suppress
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
@@ -26,6 +29,7 @@ from datetime import datetime, timedelta
 # project
 from mash.services.base_service import BaseService
 from mash.services.credentials.config import CredentialsConfig
+from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 
 
 class CredentialsService(BaseService):
@@ -34,20 +38,17 @@ class CredentialsService(BaseService):
     """
     def post_init(self):
         self.config = CredentialsConfig()
-
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.services = self.config.get_service_names(
             credentials_required=True
         )
         self.encryption_keys_file = self.config.get_encryption_keys_file()
+        self.credentials_directory = self.config.get_credentials_dir()
+        self.jobs = {}
 
         if not os.path.exists(self.encryption_keys_file):
             self._create_encryption_keys_file()
-
-        self.credentials_directory = self.config.get_credentials_dir()
-
-        self.jobs = {}
 
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
@@ -56,6 +57,12 @@ class CredentialsService(BaseService):
             self.service_exchange, self.delete_account_key, self.listener_queue
         )
         self._bind_credential_request_keys()
+
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.add_listener(
+            self._handle_key_rotation_result,
+            events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
+        )
 
         self.restart_jobs(self._add_job)
         self.start()
@@ -268,6 +275,26 @@ class CredentialsService(BaseService):
 
         message.ack()
 
+    def _handle_key_rotation_result(self, event):
+        """
+        Callback when key rotation cron finishes.
+
+        If the rotation does not finish successfully the old key
+        is left in key file.
+
+        Once a successful rotation happens all old keys are purged.
+        """
+        if event.exception:
+            self.log.error(
+                'Key rotation did not finish successfully.'
+                ' Old key will remain in key file.'
+            )
+        else:
+            clean_old_keys(
+                self.encryption_keys_file, self._send_control_response
+            )
+            self.log.info('Key rotation finished.')
+
     def _publish_credentials_response(self, credentials_response, issuer):
         """
         Publish the encoded JWT with secrets to the calling service.
@@ -350,6 +377,25 @@ class CredentialsService(BaseService):
                 success=False
             )
 
+    def _start_rotation_job(self):
+        """
+        Schedule new key rotation cron job in background scheduler.
+
+        Job is run once a month on the first Saturday at 0000.
+        """
+        self.scheduler.add_job(
+            rotate_key,
+            'cron',
+            args=(
+                self.credentials_directory,
+                self.encryption_keys_file,
+                self._send_control_response
+            ),
+            day='1st sat,3rd sat',
+            hour='0',
+            minute='0'
+        )
+
     def _store_encrypted_credentials(
         self, account, credentials, provider, user
     ):
@@ -387,6 +433,9 @@ class CredentialsService(BaseService):
         """
         Start credentials service.
         """
+        self.scheduler.start()
+        self._start_rotation_job()
+
         self.consume_queue(self._handle_job_documents)
         self.consume_queue(
             self._handle_account_request, queue_name=self.listener_queue
@@ -410,5 +459,6 @@ class CredentialsService(BaseService):
 
         Stop consuming queues and close pika connections.
         """
+        self.scheduler.shutdown()
         self.channel.stop_consuming()
         self.close_connection()

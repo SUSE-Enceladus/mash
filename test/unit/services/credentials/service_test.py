@@ -7,6 +7,7 @@ from unittest.mock import call, MagicMock, Mock, patch
 
 from mash.services.base_service import BaseService
 from mash.services.credentials.service import CredentialsService
+from mash.services.credentials.key_rotate import rotate_key
 
 
 class TestCredentialsService(object):
@@ -305,6 +306,30 @@ class TestCredentialsService(object):
         )
         message.ack.assert_called_once_with()
 
+    @patch('mash.services.credentials.service.clean_old_keys')
+    def test_handle_key_rotation_result(self, mock_clean_old_keys):
+        # Test exception case
+        event = MagicMock()
+        event.exception = 'Broken!'
+
+        self.service._handle_key_rotation_result(event)
+        self.service.log.error.assert_called_once_with(
+            'Key rotation did not finish successfully.'
+            ' Old key will remain in key file.'
+        )
+
+        # Test success
+        event.exception = None
+
+        self.service._handle_key_rotation_result(event)
+        mock_clean_old_keys.assert_called_once_with(
+            '/var/lib/mash/encryption_keys',
+            self.service._send_control_response
+        )
+        self.service.log.info.assert_called_once_with(
+            'Key rotation finished.'
+        )
+
     @patch.object(CredentialsService, 'encrypt_credentials')
     @patch('mash.services.credentials.service.os.makedirs')
     @patch('mash.services.credentials.service.os.path.isdir')
@@ -431,14 +456,40 @@ class TestCredentialsService(object):
 
         assert credentials['test-aws'] == 'encrypted_string'
 
+    def test_credentials_start_rotation_job(self):
+        scheduler = Mock()
+        self.service.scheduler = scheduler
+
+        self.service._start_rotation_job()
+
+        self.service.scheduler.add_job.assert_called_once_with(
+            rotate_key,
+            'cron',
+            args=(
+                '/var/lib/mash/credentials/',
+                '/var/lib/mash/encryption_keys',
+                self.service._send_control_response
+            ),
+            day='1st sat,3rd sat',
+            hour='0',
+            minute='0'
+        )
+
+    @patch.object(CredentialsService, '_start_rotation_job')
     @patch.object(CredentialsService, 'consume_credentials_queue')
     @patch.object(CredentialsService, 'consume_queue')
     @patch.object(CredentialsService, 'stop')
     def test_credentials_start(
-        self, mock_stop, mock_consume_queue, mock_consume_creds_queue
+        self, mock_stop, mock_consume_queue, mock_consume_creds_queue,
+        mock_start_rotation_job
     ):
+        scheduler = Mock()
+        self.service.scheduler = scheduler
+
         self.service.start()
 
+        scheduler.start.assert_called_once_with()
+        mock_start_rotation_job.assert_called_once_with()
         self.service.channel.start_consuming.assert_called_once_with()
         mock_consume_queue.has_calls([
             call(self.service._handle_job_documents),
@@ -455,6 +506,9 @@ class TestCredentialsService(object):
     def test_credentials_start_exception(
         self, mock_stop, mock_consume_queue, mock_consume_creds_queue
     ):
+        scheduler = Mock()
+        self.service.scheduler = scheduler
+
         self.service.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.service.start()
 
@@ -471,6 +525,10 @@ class TestCredentialsService(object):
 
     @patch.object(CredentialsService, 'close_connection')
     def test_credentials_stop(self, mock_close_connection):
+        scheduler = Mock()
+        self.service.scheduler = scheduler
+
         self.service.stop()
+        scheduler.shutdown.assert_called_once_with()
         mock_close_connection.assert_called_once_with()
         self.service.channel.stop_consuming.assert_called_once_with()
