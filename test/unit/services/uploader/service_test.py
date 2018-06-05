@@ -246,7 +246,7 @@ class TestUploadImageService(object):
 
     @patch.object(UploadImageService, 'publish_credentials_request')
     @patch.object(UploadImageService, '_start_job')
-    def test_schedule_job(
+    def test_schedule_job_amazon(
         self, mock_start_job, mock_publish_credentials_request
     ):
         job = {
@@ -260,6 +260,52 @@ class TestUploadImageService(object):
                 'us-east-1': {
                     'helper_image': 'ami-bc5b48d0',
                     'account': 'test-aws'
+                }
+            }
+        }
+        self.uploader.config = Mock()
+        uploader_args = self.uploader._get_uploader_arguments_per_region(job)
+        self.uploader._schedule_job(job)
+        self.uploader.scheduler.add_job.assert_called_once_with(
+            mock_start_job, 'date', args=[job, False, uploader_args[0], True],
+            run_date='2017-10-11T17:50:26+00:00',
+            timezone='utc'
+        )
+        self.uploader.scheduler.add_job.reset_mock()
+        job['utctime'] = 'always'
+        self.uploader._schedule_job(job)
+        self.uploader.scheduler.add_job.assert_called_once_with(
+            mock_start_job, args=[job, True, uploader_args[0], True]
+        )
+        self.uploader.scheduler.add_job.reset_mock()
+        mock_publish_credentials_request.reset_mock()
+        job['utctime'] = 'now'
+        self.uploader._schedule_job(job)
+        self.uploader.scheduler.add_job.assert_called_once_with(
+            mock_start_job, args=[job, False, uploader_args[0], True]
+        )
+        mock_publish_credentials_request.assert_called_once_with(
+            '123'
+        )
+
+    @patch.object(UploadImageService, 'publish_credentials_request')
+    @patch.object(UploadImageService, '_start_job')
+    def test_schedule_job_azure(
+        self, mock_start_job, mock_publish_credentials_request
+    ):
+        job = {
+            'id': '123',
+            'cloud_image_name': 'b',
+            'image_description': 'a',
+            'job_file': 'job_file',
+            'utctime': 'Wed Oct 11 17:50:26 UTC 2017',
+            'provider': 'azure',
+            'target_regions': {
+                'westeurope': {
+                    'resource_group': 'ms_group',
+                    'container_name': 'ms1container',
+                    'storage_account': 'ms1storage',
+                    'account': 'test-azure'
                 }
             }
         }

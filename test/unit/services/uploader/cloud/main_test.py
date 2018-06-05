@@ -22,3 +22,19 @@ class TestUpload(object):
         )
         with raises(MashUploadSetupException):
             Upload('foo', 'file', 'name', 'description', credentials)
+
+    @patch('mash.services.uploader.cloud.UploadAzure')
+    @patch('mash.services.uploader.cloud.Conventions')
+    def test_upload_azure(
+        self, mock_Conventions, mock_UploadAzure
+    ):
+        conventions = Mock()
+        credentials = {}
+        mock_Conventions.return_value = conventions
+        Upload('azure', 'file', 'name', 'description', credentials)
+        conventions.is_valid_name.assert_called_once_with('name')
+        mock_UploadAzure.assert_called_once_with(
+            credentials, 'file', 'name', 'description', None
+        )
+        with raises(MashUploadSetupException):
+            Upload('foo', 'file', 'name', 'description', credentials)
