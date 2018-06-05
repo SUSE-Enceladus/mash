@@ -32,6 +32,7 @@ class TestJobCreatorService(object):
         self.jobcreator.log = Mock()
         self.jobcreator.add_account_key = 'add_account'
         self.jobcreator.accounts_file = '../data/accounts.json'
+        self.jobcreator.encryption_keys_file = '../data/encryption_keys'
         self.jobcreator.service_exchange = 'jobcreator'
         self.jobcreator.listener_queue = 'listener'
         self.jobcreator.job_document_key = 'job_document'
@@ -62,10 +63,157 @@ class TestJobCreatorService(object):
             accounts_template
         )
 
-        mock_bind_queue.assert_called_once_with(
-            'jobcreator', 'add_account', 'listener'
-        )
+        mock_bind_queue.assert_has_calls([
+            call('jobcreator', 'add_account', 'listener'),
+        ])
         mock_start.assert_called_once_with()
+
+    @patch.object(JobCreatorService, 'encrypt_credentials')
+    @patch.object(JobCreatorService, '_write_accounts_to_file')
+    @patch.object(JobCreatorService, '_publish')
+    def test_jobcreator_add_account(
+            self, mock_publish, mock_write_accounts_to_file,
+            mock_encrypt_creds
+    ):
+        mock_encrypt_creds.return_value = 'encrypted_string'
+
+        # Invalid json message
+        self.jobcreator.add_account({"invalid": "message"})
+        self.jobcreator.log.info.reset_mock()
+
+        # New account
+        self.jobcreator.add_account({
+            "account_name": "test123",
+            "credentials": {
+                "access_key_id": "123456",
+                "secret_access_key": "654321"
+            },
+            "group": "group1",
+            "partition": "aws",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        })
+
+        mock_write_accounts_to_file.call_count = 1
+        mock_encrypt_creds.assert_called_once_with(
+            '{"access_key_id": "123456", "secret_access_key": "654321"}'
+        )
+        mock_publish.assert_called_once_with(
+            'credentials', 'add_account',
+            '{"account_name": "test123", '
+            '"credentials": "encrypted_string", '
+            '"group": "group1", '
+            '"partition": "aws", '
+            '"provider": "ec2", '
+            '"requesting_user": "user1"}'
+        )
+
+        # Existing account
+        self.jobcreator.add_account({
+            "account_name": "test-aws",
+            "credentials": {
+                "access_key_id": "123456",
+                "secret_access_key": "654321"
+            },
+            "group": "group1",
+            "partition": "aws",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        })
+
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Failed to add account for user1 with the name test-aws. Account is '
+            'owned by a different user.'
+        )
+
+        self.jobcreator.log.warning.reset_mock()
+
+        # Existing group not owned by user
+        self.jobcreator.add_account({
+            "account_name": "test123",
+            "credentials": {
+                "access_key_id": "123456",
+                "secret_access_key": "654321"
+            },
+            "group": "test",
+            "partition": "aws",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        })
+
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Unable to add account to group test for user1. '
+            'Group owned by a different user.'
+        )
+
+        # Existing group owned by user
+        self.jobcreator.add_account({
+            "account_name": "test123",
+            "credentials": {
+                "access_key_id": "123456",
+                "secret_access_key": "654321"
+            },
+            "group": "test1",
+            "partition": "aws",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        })
+
+    @patch.object(JobCreatorService, 'add_account')
+    def test_jobcreator_handle_listener_message(
+            self, mock_add_account
+    ):
+        message = MagicMock()
+
+        # Test add account message
+        message.method = {'routing_key': 'add_account'}
+        message.body = '''{
+                      "account_name": "test-aws",
+                      "credentials": {
+                        "access_key_id": "123456",
+                        "secret_access_key": "654321"
+                      },
+                      "group": "group1",
+                      "partition": "aws",
+                      "provider": "ec2",
+                      "requesting_user": "user1"
+                }'''
+
+        self.jobcreator._handle_listener_message(message)
+
+        mock_add_account.assert_called_once_with({
+            "account_name": "test-aws",
+            "credentials": {
+                "access_key_id": "123456",
+                "secret_access_key": "654321"
+            },
+            "group": "group1",
+            "partition": "aws",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        })
+        message.ack.assert_called_once_with()
+        message.ack.reset_mock()
+
+        # Unknown routing key
+        message.method['routing_key'] = 'add_group'
+        self.jobcreator._handle_listener_message(message)
+
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Received unknown message type: add_group. '
+            'Message: {0}'.format(message.body)
+        )
+
+    def test_jobcreator_handle_invalid_listener_message(self):
+        message = MagicMock()
+        message.body = 'invalid message'
+
+        self.jobcreator._handle_listener_message(message)
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Invalid message received: invalid message.'
+        )
+
+        message.ack.assert_called_once_with()
 
     def test_jobcreator_write_accounts_to_file(self):
         accounts = {'test': 'accounts'}
