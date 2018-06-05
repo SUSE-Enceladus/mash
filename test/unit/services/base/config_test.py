@@ -27,6 +27,17 @@ class TestBaseConfig(object):
 
         assert msg == str(error.value)
 
+    def test_get_provider_data(self):
+        data = self.config.get_provider_data()
+        assert data['ec2']['regions']['aws-cn'] == ['cn-north-1']
+        assert data['ec2']['helper_images']['cn-north-1'] == 'ami-bcc45885'
+
+        with raises(MashConfigException) as error:
+            self.empty_config.get_provider_data()
+
+        assert str(error.value) == \
+            'Provider data must be provided in config file.'
+
     def test_get_services_names(self):
         # Services requiring credentials
         expected = [

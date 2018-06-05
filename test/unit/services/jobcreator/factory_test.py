@@ -12,7 +12,7 @@ from mash.services.jobcreator import create_job
 def test_job_creator_create_job(mock_validate):
     # invalid provider
     with raises(MashJobCreatorException) as error:
-        create_job({'provider': 'fake'}, {})
+        create_job({'provider': 'fake'}, {}, {})
 
     assert str(error.value) == \
         'Support for fake Cloud Service not implemented'
@@ -23,7 +23,7 @@ def test_job_creator_create_job(mock_validate):
 
     # invalid job doc
     with raises(MashValidationException) as error:
-        create_job({'provider': 'ec2'}, {'ec2': {}})
+        create_job({'provider': 'ec2'}, {}, {'ec2': {}})
 
     assert str(error.value) == \
         'Validation failed for provided job doc.'

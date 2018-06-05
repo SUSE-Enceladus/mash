@@ -27,7 +27,7 @@ class BaseJob(object):
     Handles incoming job requests.
     """
     def __init__(
-            self, accounts_info, provider, provider_accounts,
+            self, accounts_info, provider_data, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, old_cloud_image_name, project,
             image_description, distro, tests,
@@ -35,6 +35,7 @@ class BaseJob(object):
     ):
         self.id = str(uuid.uuid4())
         self.accounts_info = accounts_info
+        self.provider_data = provider_data
         self.provider = provider
         self.provider_accounts = provider_accounts
         self.provider_groups = provider_groups

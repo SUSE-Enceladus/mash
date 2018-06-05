@@ -27,9 +27,10 @@ from mash.services.jobcreator import schema
 from mash.services.jobcreator.ec2_job import EC2Job
 
 
-def create_job(job_doc, accounts_info):
+def create_job(job_doc, accounts_info, provider_data):
     csp_name = job_doc.get('provider')
     accounts_info = accounts_info.get(csp_name)
+    provider_data = provider_data.get(csp_name)
 
     if csp_name == CSP.ec2:
         job_class = EC2Job
@@ -46,4 +47,4 @@ def create_job(job_doc, accounts_info):
     except Exception as error:
         raise MashValidationException(error)
     else:
-        return job_class(accounts_info, **job_doc)
+        return job_class(accounts_info, provider_data, **job_doc)
