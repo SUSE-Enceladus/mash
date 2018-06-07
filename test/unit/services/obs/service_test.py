@@ -110,12 +110,14 @@ class TestOBSImageBuildResultService(object):
         message.method = {'routing_key': 'job_document'}
         message.body = '{"obs_job":{"id": "4711","project": ' + \
             '"Virtualization:Appliances:Images:Testing_x86","image": ' + \
-            '"test-image-docker","utctime": "always"}}'
+            '"test-image-docker","utctime": ' + \
+            '"always","api_url": "https://api.opensuse.org"}}'
         self.obs_result._process_message(message)
         message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with(
             {
                 'obs_job': {
+                    'api_url': 'https://api.opensuse.org',
                     'project': 'Virtualization:Appliances:Images:Testing_x86',
                     'image': 'test-image-docker',
                     'id': '4711',
@@ -160,6 +162,7 @@ class TestOBSImageBuildResultService(object):
         job_data = {
             "obs_job": {
                 "id": "123",
+                "api_url": "https://api.opensuse.org",
                 "project": "Virtualization:Appliances:Images:Testing_x86",
                 "image": "test-image-oem",
                 "utctime": "now",
@@ -202,6 +205,7 @@ class TestOBSImageBuildResultService(object):
         data = {
             "id": "123",
             "job_file": "tempfile",
+            "api_url": "https://api.opensuse.org",
             "project": "Virtualization:Appliances:Images:Testing_x86",
             "image": "test-image-oem",
             "utctime": "now",
