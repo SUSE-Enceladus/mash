@@ -21,6 +21,9 @@ class Defaults(object):
     """
     Default values
     """
+    @classmethod
+    def get_api_url(self):
+        return 'https://api.opensuse.org'
 
     @classmethod
     def get_download_dir(self):

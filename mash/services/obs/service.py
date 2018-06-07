@@ -24,6 +24,7 @@ from mash.services.base_service import BaseService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.services.obs.config import OBSConfig
 from mash.utils.json_format import JsonFormat
+from mash.services.obs.defaults import Defaults
 
 
 class OBSImageBuildResultService(BaseService):
@@ -128,6 +129,7 @@ class OBSImageBuildResultService(BaseService):
         {
           "obs_job": {
               "id": "123",
+              "api_url": "https://api.opensuse.org",
               "project": "Virtualization:Appliances:Images:Testing_x86",
               "image": "test-image-oem",
               "utctime": "now|always|timestring_utc_timezone",
@@ -198,6 +200,7 @@ class OBSImageBuildResultService(BaseService):
             job_id=job_id, job_file=job['job_file'],
             project=job['project'], package=job['image'],
             conditions=job['conditions'],
+            api_url=job.get('api_url') or Defaults.get_api_url(),
             download_directory=self.download_directory
         )
         job_worker.set_log_handler(self._send_job_response)
