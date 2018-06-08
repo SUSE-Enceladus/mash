@@ -39,6 +39,7 @@ class JobCreatorService(BaseService):
         self.config = JobCreatorConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.accounts_file = self.config.get_accounts_file()
+        self.provider_data = self.config.get_provider_data()
         self.services = self.config.get_service_names()
 
         if not os.path.exists(self.accounts_file):
@@ -97,7 +98,7 @@ class JobCreatorService(BaseService):
         Split args and send messages to all services to initiate job.
         """
         accounts_info = self._get_accounts_from_file()
-        job = create_job(job_doc, accounts_info)
+        job = create_job(job_doc, accounts_info, self.provider_data)
 
         self.log.info(
             'Started a new job: {0}'.format(json.dumps(job_doc, indent=2)),

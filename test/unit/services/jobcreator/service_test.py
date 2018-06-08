@@ -90,6 +90,21 @@ class TestJobCreatorService(object):
     def test_jobcreator_handle_service_message(
             self, mock_publish, mock_uuid, mock_random
     ):
+        self.jobcreator.provider_data = {
+            'ec2': {
+                'regions': {
+                    'aws': ['ap-northeast-1', 'ap-northeast-2'],
+                    'aws-cn': ['cn-north-1'],
+                    'aws-us-gov': ['us-gov-west-1']
+                },
+                'helper_images': {
+                    'ap-northeast-1': 'ami-383c1956',
+                    'ap-northeast-2': 'ami-249b554a',
+                    'cn-north-1': 'ami-bcc45885',
+                    'us-gov-west-1': 'ami-c2b5d7e1'
+                }
+            }
+        }
         message = MagicMock()
 
         uuid_val = '12345678-1234-1234-1234-123456789012'

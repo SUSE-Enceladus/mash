@@ -102,6 +102,19 @@ class BaseConfig(object):
             dir=log_dir, service=service
         )
 
+    def get_provider_data(self):
+        """
+        Return the provider data from config.
+        """
+        data = self._get_attribute(attribute='provider')
+
+        if not data:
+            raise MashConfigException(
+                'Provider data must be provided in config file.'
+            )
+
+        return data
+
     def get_service_names(self, credentials_required=False):
         """
         Return a list of all service names.
