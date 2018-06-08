@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+import lzma
+import shutil
+
 from tempfile import NamedTemporaryFile
 
 from azure.common.client_factory import get_client_from_auth_file
@@ -69,8 +73,14 @@ class UploadAzure(UploadBase):
             account_name=self.storage_account,
             account_key=storage_key_list.keys[0].value
         )
+
+        decompressed_name = self.system_image_file.rsplit('.', maxsplit=1)[0]
+        with lzma.LZMAFile(self.system_image_file) as compressed:
+            with open(decompressed_name, 'wb') as decompressed:
+                shutil.copyfileobj(compressed, decompressed)
+
         page_blob_service.create_blob_from_path(
-            self.container_name, self.cloud_image_name, self.system_image_file,
+            self.container_name, self.cloud_image_name, decompressed_name,
             max_connections=4
         )
         compute_client = get_client_from_auth_file(
