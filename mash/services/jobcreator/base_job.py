@@ -17,7 +17,6 @@
 #
 
 import json
-import uuid
 
 
 class BaseJob(object):
@@ -27,13 +26,13 @@ class BaseJob(object):
     Handles incoming job requests.
     """
     def __init__(
-            self, accounts_info, provider_data, provider, provider_accounts,
-            provider_groups, requesting_user, last_service, utctime, image,
-            cloud_image_name, old_cloud_image_name, project,
-            image_description, distro, tests,
-            conditions=None, instance_type=None
+        self, job_id, accounts_info, provider_data, provider,
+        provider_accounts, provider_groups, requesting_user, last_service,
+        utctime, image, cloud_image_name, old_cloud_image_name, project,
+        image_description, distro, tests,
+        conditions=None, instance_type=None
     ):
-        self.id = str(uuid.uuid4())
+        self.id = job_id
         self.accounts_info = accounts_info
         self.provider_data = provider_data
         self.provider = provider

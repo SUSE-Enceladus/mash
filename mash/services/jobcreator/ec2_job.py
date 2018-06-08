@@ -29,18 +29,18 @@ class EC2Job(BaseJob):
     Handles incoming job requests.
     """
     def __init__(
-            self, accounts_info, provider_data, provider, provider_accounts,
-            provider_groups, requesting_user, last_service, utctime, image,
-            cloud_image_name, old_cloud_image_name, project,
-            share_with, allow_copy, image_description, distro,
-            tests, conditions=None, instance_type=None
+        self, job_id, accounts_info, provider_data, provider,
+        provider_accounts, provider_groups, requesting_user, last_service,
+        utctime, image, cloud_image_name, old_cloud_image_name, project,
+        share_with, allow_copy, image_description, distro,
+        tests, conditions=None, instance_type=None
     ):
         self.share_with = share_with
         self.allow_copy = allow_copy
         self.target_account_info = {}
 
         super(EC2Job, self).__init__(
-            accounts_info, provider_data, provider, provider_accounts,
+            job_id, accounts_info, provider_data, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, old_cloud_image_name, project,
             image_description, distro, tests, conditions, instance_type

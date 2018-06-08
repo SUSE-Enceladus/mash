@@ -30,6 +30,7 @@ from datetime import datetime, timedelta
 from mash.services.base_service import BaseService
 from mash.services.credentials.config import CredentialsConfig
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
+from mash.services.jobcreator.accounts import accounts_template
 
 
 class CredentialsService(BaseService):
@@ -43,12 +44,16 @@ class CredentialsService(BaseService):
         self.services = self.config.get_service_names(
             credentials_required=True
         )
+        self.accounts_file = self.config.get_accounts_file()
         self.encryption_keys_file = self.config.get_encryption_keys_file()
         self.credentials_directory = self.config.get_credentials_dir()
         self.jobs = {}
 
         if not os.path.exists(self.encryption_keys_file):
             self._create_encryption_keys_file()
+
+        if not os.path.exists(self.accounts_file):
+            self._write_accounts_to_file(accounts_template)
 
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
@@ -108,6 +113,62 @@ class CredentialsService(BaseService):
         path = self._get_credentials_file_path(account, provider, user)
         return os.path.exists(path)
 
+    def _check_job_accounts(
+        self, provider, provider_accounts,
+        provider_groups, requesting_user
+    ):
+        """
+        Confirm all the accounts for the given user have credentials.
+        """
+        accounts = [account['name'] for account in provider_accounts]
+        for group in provider_groups:
+            accounts += self._get_accounts_in_group(group, provider)
+
+        for account in set(accounts):
+            exists = self._check_credentials_exist(
+                account, provider, requesting_user
+            )
+
+            if not exists:
+                return False
+        return True
+
+    def _confirm_job(self, job_document):
+        """
+        Check the user for a given job has access to the requested accounts.
+
+        If the user has access to all accounts respond with the accounts
+        info for the given provider.
+        """
+        job_id = job_document['id']
+        provider = job_document['provider']
+        provider_accounts = job_document['provider_accounts']
+        provider_groups = job_document['provider_groups']
+        requesting_user = job_document['requesting_user']
+
+        valid = self._check_job_accounts(
+            provider, provider_accounts, provider_groups, requesting_user
+        )
+
+        if valid:
+            job_response = {
+                'start_job': {
+                    'id': job_id,
+                    'accounts_info': self._get_accounts_from_file(provider)
+                }
+            }
+            self._publish(
+                'jobcreator', self.job_document_key, json.dumps(job_response)
+            )
+        else:
+            self._send_control_response(
+                'User does not own requested accounts.', success=False
+            )
+            job_response = {'invalid_job': job_id}
+            self._publish(
+                'jobcreator', self.job_document_key, json.dumps(job_response)
+            )
+
     def _create_encryption_keys_file(self):
         """
         Creates the keys file and stores a new key for use in encryption.
@@ -141,6 +202,22 @@ class CredentialsService(BaseService):
         Generates and returns a new Fernet key for encryption.
         """
         return Fernet.generate_key().decode()
+
+    def _get_accounts_from_file(self, provider):
+        """
+        Return a dictionary of account information from accounts json file.
+        """
+        with open(self.accounts_file, 'r') as acnt_file:
+            accounts = json.load(acnt_file)
+
+        return accounts[provider]
+
+    def _get_accounts_in_group(self, group, provider):
+        """
+        Return a list of account names given the group name.
+        """
+        accounts_info = self._get_accounts_from_file(provider)
+        return accounts_info['groups'][group]['accounts']
 
     def _get_credentials_file_path(self, account, provider, user):
         """
@@ -232,6 +309,8 @@ class CredentialsService(BaseService):
 
             if 'credentials_job_delete' in job_document:
                 self._delete_job(job_document['credentials_job_delete'])
+            elif 'credentials_job_check' in job_document:
+                self._confirm_job(job_document['credentials_job_check'])
             else:
                 self._add_job(job_document['credentials_job'])
         except ValueError as error:
@@ -428,6 +507,15 @@ class CredentialsService(BaseService):
             self.log.error(
                 'Unable to store credentials: {0}.'.format(error)
             )
+
+    def _write_accounts_to_file(self, accounts):
+        """
+        Update accounts file with provided accounts dictionary.
+        """
+        account_info = json.dumps(accounts, indent=4)
+
+        with open(self.accounts_file, 'w') as account_file:
+            account_file.write(account_info)
 
     def start(self):
         """

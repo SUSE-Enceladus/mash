@@ -16,25 +16,17 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from jsonschema import FormatChecker, validate
-
 from mash.csp import CSP
-from mash.mash_exceptions import (
-    MashJobCreatorException,
-    MashValidationException
-)
-from mash.services.jobcreator import schema
+from mash.mash_exceptions import MashJobCreatorException
 from mash.services.jobcreator.ec2_job import EC2Job
 
 
-def create_job(job_doc, accounts_info, provider_data):
+def create_job(job_id, job_doc, accounts_info, provider_data):
     csp_name = job_doc.get('provider')
-    accounts_info = accounts_info.get(csp_name)
     provider_data = provider_data.get(csp_name)
 
     if csp_name == CSP.ec2:
         job_class = EC2Job
-        message_schema = schema.ec2_job_message
     else:
         raise MashJobCreatorException(
             'Support for {csp} Cloud Service not implemented'.format(
@@ -42,9 +34,4 @@ def create_job(job_doc, accounts_info, provider_data):
             )
         )
 
-    try:
-        validate(job_doc, message_schema, format_checker=FormatChecker())
-    except Exception as error:
-        raise MashValidationException(error)
-    else:
-        return job_class(accounts_info, provider_data, **job_doc)
+    return job_class(job_id, accounts_info, provider_data, **job_doc)

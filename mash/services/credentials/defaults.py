@@ -23,5 +23,9 @@ class Defaults(object):
     """
 
     @classmethod
+    def get_accounts_file(self):
+        return '/etc/mash/accounts.json'
+
+    @classmethod
     def get_credentials_dir(self):
         return '/var/lib/mash/credentials/'
