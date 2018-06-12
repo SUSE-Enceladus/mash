@@ -6,6 +6,7 @@
 # $ pip install -r .virtualenv.requirements.txt
 
 setuptools
+idna<2.7
 boto3
 cryptography
 jsonschema
