@@ -26,6 +26,8 @@ from azure.storage.blob.pageblobservice import PageBlobService
 from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
 from mash.utils.json_format import JsonFormat
+from mash.utils.filetype import FileType
+from mash.utils.xz import XZ
 
 
 class UploadAzure(UploadBase):
@@ -69,9 +71,9 @@ class UploadAzure(UploadBase):
             account_name=self.storage_account,
             account_key=storage_key_list.keys[0].value
         )
-        page_blob_service.create_blob_from_path(
-            self.container_name, self.cloud_image_name, self.system_image_file,
-            max_connections=4
+        page_blob_service.create_blob_from_stream(
+            self.container_name, self.cloud_image_name,
+            self._open_upload_stream(), max_connections=4
         )
         compute_client = get_client_from_auth_file(
             ComputeManagementClient, auth_path=self.auth_file.name
@@ -100,3 +102,9 @@ class UploadAzure(UploadBase):
         self.auth_file = NamedTemporaryFile()
         with open(self.auth_file.name, 'w') as azure_auth:
             azure_auth.write(JsonFormat.json_message(self.credentials))
+
+    def _open_upload_stream(self):
+        system_image_file_type = FileType(self.system_image_file)
+        if system_image_file_type.is_xz():
+            return XZ.open(self.system_image_file)
+        return open(self.system_image_file, 'rb')
