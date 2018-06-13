@@ -1,0 +1,28 @@
+{
+  "provider": "azure",
+  "provider_accounts": [
+    {
+      "name": "test-azure",
+      "region": "southcentralus",
+      "resource_group": "sc_res_group",
+      "container_name": "sccontainer1",
+      "storage_account": "scstorage1"
+    }
+  ],
+  "provider_groups": ["test-azure-group"],
+  "requesting_user": "user1",
+  "last_service": "testing",
+  "utctime": "now",
+  "image": "test_image_oem",
+  "cloud_image_name": "new_image_123",
+  "old_cloud_image_name": "old_new_image_123",
+  "project": "Cloud:Tools",
+  "conditions": [
+    {"package": ["name", "and", "constraints"]},
+    {"image": "version"}
+  ],
+  "image_description": "New Image #123",
+  "distro": "sles",
+  "instance_type": "t2.micro",
+  "tests": ["test_stuff"]
+}
