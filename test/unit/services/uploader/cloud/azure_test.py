@@ -90,12 +90,18 @@ class TestUploadAzure(object):
     @patch('mash.services.uploader.cloud.azure.get_client_from_auth_file')
     @patch('mash.services.uploader.cloud.azure.PageBlobService')
     @patch('mash.services.uploader.cloud.azure.FileType')
-    @patch('mash.services.uploader.cloud.azure.XZ')
-    @patch_open
+    @patch('mash.services.uploader.cloud.azure.lzma')
+    @patch('builtins.open')
     def test_upload(
-        self, mock_open, mock_XZ, mock_FileType,
+        self, mock_open, mock_lzma, mock_FileType,
         mock_PageBlobService, mock_get_client_from_auth_file
     ):
+        lzma_handle = MagicMock()
+        lzma_handle.__enter__.return_value = lzma_handle
+        mock_lzma.LZMAFile.return_value = lzma_handle
+        open_handle = MagicMock()
+        open_handle.__enter__.return_value = open_handle
+        mock_open.return_value = open_handle
         client = MagicMock()
         mock_get_client_from_auth_file.return_value = client
         page_blob_service = Mock()
@@ -128,7 +134,8 @@ class TestUploadAzure(object):
         mock_FileType.assert_called_once_with('file')
         system_image_file_type.is_xz.assert_called_once_with()
         page_blob_service.create_blob_from_stream.assert_called_once_with(
-            'container', 'name', mock_XZ.open.return_value, max_connections=4
+            'container', 'name', mock_lzma.LZMAFile.return_value,
+            max_connections=4
         )
         client.images.create_or_update.assert_called_once_with(
             'group_name', 'name', {

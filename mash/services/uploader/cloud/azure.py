@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+import lzma
 from tempfile import NamedTemporaryFile
 
 from azure.common.client_factory import get_client_from_auth_file
@@ -27,7 +28,6 @@ from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
 from mash.utils.json_format import JsonFormat
 from mash.utils.filetype import FileType
-from mash.utils.xz import XZ
 
 
 class UploadAzure(UploadBase):
@@ -61,6 +61,9 @@ class UploadAzure(UploadBase):
         self._create_auth_file()
 
     def upload(self):
+        system_image_file_type = FileType(
+            self.system_image_file
+        )
         storage_client = get_client_from_auth_file(
             StorageManagementClient, auth_path=self.auth_file.name
         )
@@ -71,10 +74,15 @@ class UploadAzure(UploadBase):
             account_name=self.storage_account,
             account_key=storage_key_list.keys[0].value
         )
-        page_blob_service.create_blob_from_stream(
-            self.container_name, self.cloud_image_name,
-            self._open_upload_stream(), max_connections=4
-        )
+        if system_image_file_type.is_xz():
+            open_image = lzma.LZMAFile
+        else:
+            open_image = open
+        with open_image(self.system_image_file, 'rb') as image_stream:
+            page_blob_service.create_blob_from_stream(
+                self.container_name, self.cloud_image_name,
+                image_stream, max_connections=4
+            )
         compute_client = get_client_from_auth_file(
             ComputeManagementClient, auth_path=self.auth_file.name
         )
@@ -102,9 +110,3 @@ class UploadAzure(UploadBase):
         self.auth_file = NamedTemporaryFile()
         with open(self.auth_file.name, 'w') as azure_auth:
             azure_auth.write(JsonFormat.json_message(self.credentials))
-
-    def _open_upload_stream(self):
-        system_image_file_type = FileType(self.system_image_file)
-        if system_image_file_type.is_xz():
-            return XZ.open(self.system_image_file)
-        return open(self.system_image_file, 'rb')
