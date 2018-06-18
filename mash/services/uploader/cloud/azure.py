@@ -24,6 +24,7 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.storage.blob.pageblobservice import PageBlobService
 
 # project
+from mash.services.uploader.cloud.azure_page_blob import PageBlob
 from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
 from mash.utils.json_format import JsonFormat
@@ -74,15 +75,21 @@ class UploadAzure(UploadBase):
             account_name=self.storage_account,
             account_key=storage_key_list.keys[0].value
         )
+        page_blob = PageBlob(
+            page_blob_service, self.cloud_image_name,
+            self.container_name, system_image_file_type.get_size()
+        )
         if system_image_file_type.is_xz():
             open_image = lzma.LZMAFile
         else:
             open_image = open
         with open_image(self.system_image_file, 'rb') as image_stream:
-            page_blob_service.create_blob_from_stream(
-                self.container_name, self.cloud_image_name,
-                image_stream, max_connections=4
-            )
+            try:
+                while True:
+                    self.bytes_transfered = page_blob.next(image_stream)
+            except StopIteration:
+                image_stream.close()
+
         compute_client = get_client_from_auth_file(
             ComputeManagementClient, auth_path=self.auth_file.name
         )

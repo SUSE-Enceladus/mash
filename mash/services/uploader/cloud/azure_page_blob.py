@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+import os
+
 from mash.mash_exceptions import (
     MashAzurePageBlobZeroPageError,
     MashAzurePageBlobAlignmentViolation,
@@ -48,7 +50,7 @@ class PageBlob(object):
             )
         except Exception as e:
             raise MashAzurePageBlobSetupError(
-                '%s: %s' % (type(e).__name__, format(e))
+                '{0}: {1}'.format(type(e).__name__, e)
             )
 
     def next(self, data_stream, max_chunk_byte_size=None, max_attempts=5):
@@ -87,12 +89,14 @@ class PageBlob(object):
                     break
                 except Exception as e:
                     upload_errors.append(
-                        '%s: %s' % (type(e).__name__, format(e))
+                        '{0}: {1}'.format(type(e).__name__, e)
                     )
 
             if len(upload_errors) == max_attempts:
                 raise MashAzurePageBlobUpdateError(
-                    'Page update failed with: %s' % '\n'.join(upload_errors)
+                    'Page update failed with: {0}'.format(
+                        os.linesep.join(upload_errors)
+                    )
                 )
 
         self.rest_bytes -= length
@@ -107,7 +111,9 @@ class PageBlob(object):
         remainder = byte_size % 512
         if remainder != 0:
             raise MashAzurePageBlobAlignmentViolation(
-                'Uncompressed size %d is not 512 byte aligned' % byte_size
+                'Uncompressed size {0} is not 512 byte aligned'.format(
+                    byte_size
+                )
             )
 
     def __read_zero_page(self, requested_bytes):
@@ -116,5 +122,5 @@ class PageBlob(object):
                 return zero_stream.read(requested_bytes)
         except Exception as e:
             raise MashAzurePageBlobZeroPageError(
-                'Reading zero page failed with: %s' % format(e)
+                'Reading zero page failed with: {0}'.format(e)
             )

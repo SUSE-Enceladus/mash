@@ -17,6 +17,7 @@
 #
 import os
 import re
+import lzma
 import subprocess
 
 
@@ -38,9 +39,10 @@ class FileType(object):
             return True
         return False
 
-    def basename(self):
-        name = os.path.basename(self.file_name)
+    def get_size(self):
         if self.is_xz():
-            name = re.sub('\.(xz|lzma)$', '', name)
-            name = re.sub('\.(tgz|tlz)$', '.tar', name)
-        return name
+            with lzma.open(self.file_name) as lzma_stream:
+                lzma_stream.seek(0, os.SEEK_END)
+                return lzma_stream.tell()
+        else:
+            return os.path.getsize(self.file_name)

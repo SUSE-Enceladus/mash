@@ -12,6 +12,6 @@ class TestFileType:
     def test_not_xz(self):
         assert self.filetype_not_xz.is_xz() is False
 
-    def test_basename(self):
-        assert self.filetype_xz.basename() == 'blob'
-        assert self.filetype_not_xz.basename() == 'id_test'
+    def test_get_size(self):
+        assert self.filetype_xz.get_size() == 4
+        assert self.filetype_not_xz.get_size() == 1679
