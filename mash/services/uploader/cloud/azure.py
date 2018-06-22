@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+import lzma
 from tempfile import NamedTemporaryFile
 
 from azure.common.client_factory import get_client_from_auth_file
@@ -23,9 +24,11 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.storage.blob.pageblobservice import PageBlobService
 
 # project
+from mash.services.uploader.cloud.azure_page_blob import PageBlob
 from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
 from mash.utils.json_format import JsonFormat
+from mash.utils.filetype import FileType
 
 
 class UploadAzure(UploadBase):
@@ -59,6 +62,9 @@ class UploadAzure(UploadBase):
         self._create_auth_file()
 
     def upload(self):
+        system_image_file_type = FileType(
+            self.system_image_file
+        )
         storage_client = get_client_from_auth_file(
             StorageManagementClient, auth_path=self.auth_file.name
         )
@@ -69,10 +75,21 @@ class UploadAzure(UploadBase):
             account_name=self.storage_account,
             account_key=storage_key_list.keys[0].value
         )
-        page_blob_service.create_blob_from_path(
-            self.container_name, self.cloud_image_name, self.system_image_file,
-            max_connections=4
+        page_blob = PageBlob(
+            page_blob_service, self.cloud_image_name,
+            self.container_name, system_image_file_type.get_size()
         )
+        if system_image_file_type.is_xz():
+            open_image = lzma.LZMAFile
+        else:
+            open_image = open
+        with open_image(self.system_image_file, 'rb') as image_stream:
+            try:
+                while True:
+                    self.bytes_transfered = page_blob.next(image_stream)
+            except StopIteration:
+                image_stream.close()
+
         compute_client = get_client_from_auth_file(
             ComputeManagementClient, auth_path=self.auth_file.name
         )
