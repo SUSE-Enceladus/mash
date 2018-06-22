@@ -63,11 +63,11 @@ class BaseJob(object):
         """
         pass
 
-    def _get_accounts_in_group(self, group):
+    def _get_accounts_in_group(self, group, user):
         """
         Return a list of account names given the group name.
         """
-        return self.accounts_info['groups'][group]['accounts']
+        return self.accounts_info['groups'][user][group]
 
     def get_credentials_message(self):
         """

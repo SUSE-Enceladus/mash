@@ -104,19 +104,14 @@ class TestJobCreatorService(object):
 
         account_info = {
             "groups": {
-                "test": {
-                    "accounts": ["test-aws-gov", "test-aws"],
-                    "requesting_user": "user1"
+                "user1": {
+                    "test": ["test-aws-gov", "test-aws"]
                 }
             },
             "accounts": {
-                "test-aws-gov": {
-                    "partition": "aws-us-gov",
-                    "requesting_user": "user1"
-                },
-                "test-aws": {
-                    "partition": "aws",
-                    "requesting_user": "user1"
+                "user1": {
+                    "test-aws-gov": "aws-us-gov",
+                    "test-aws": "aws"
                 }
             }
         }
