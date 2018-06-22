@@ -166,5 +166,5 @@ class MashAzurePageBlobSetupError(MashException):
 
 class MashAzurePageBlobUpdateError(MashException):
     """
-    Exception raised of the page blob can not be updated
+    Exception raised if the page blob can not be updated
     """

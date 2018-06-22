@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import os
+from collections import OrderedDict
 
 from mash.mash_exceptions import (
     MashAzurePageBlobZeroPageError,
@@ -75,7 +75,7 @@ class PageBlob(object):
         length = len(data)
         page_end = self.page_start + length - 1
 
-        if not data == zero_page:
+        if data != zero_page:
             upload_errors = []
             while len(upload_errors) < max_attempts:
                 try:
@@ -94,8 +94,10 @@ class PageBlob(object):
 
             if len(upload_errors) == max_attempts:
                 raise MashAzurePageBlobUpdateError(
-                    'Page update failed with: {0}'.format(
-                        os.linesep.join(upload_errors)
+                    'Page update failed {0} times with: [{1}]'.format(
+                        max_attempts, ', '.join(
+                            list(OrderedDict.fromkeys(upload_errors))
+                        )
                     )
                 )
 

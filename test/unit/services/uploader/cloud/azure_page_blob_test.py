@@ -77,9 +77,17 @@ class TestPageBlob:
         )
 
     def test_update_page_max_retries_reached(self):
-        self.blob_service.update_page.side_effect = Exception
-        with raises(MashAzurePageBlobUpdateError):
+        messages = ['issue_a', 'issue_b', 'issue_a', 'issue_c', 'issue_b']
+
+        def side_effect(*args):
+            raise Exception(messages.pop(0))
+
+        self.blob_service.update_page.side_effect = side_effect
+        with raises(MashAzurePageBlobUpdateError) as excinfo:
             self.page_blob.next(self.data_stream)
+        assert format(excinfo.value) == \
+            'Page update failed 5 times with: [Exception: issue_a, ' + \
+            'Exception: issue_b, Exception: issue_c]'
 
     def test_update_page_retried_two_times(self):
         retries = [True, False, False]
