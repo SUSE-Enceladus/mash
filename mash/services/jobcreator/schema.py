@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import copy
+
 
 non_empty_string = {
     'type': 'string',
@@ -63,10 +65,9 @@ delete_account_ec2 = {
 }
 
 
-ec2_job_message = {
+base_job_message = {
     'type': 'object',
     'properties': {
-        'provider': {'enum': ['ec2']},
         'provider_accounts': {
             'type': 'array',
             'items': {'$ref': '#definitions/account'}
@@ -106,17 +107,6 @@ ec2_job_message = {
             },
             'minItems': 1
         },
-        'share_with': {
-            'anyOf': [
-                {'enum': ['all', 'none']},
-                {
-                    '$ref': '#/definitions/non_empty_string',
-                    'format': 'regex',
-                    'pattern': '^[0-9]{12}(,[0-9]{12})*$'
-                }
-            ]
-        },
-        'allow_copy': {'type': 'boolean'},
         'image_description': {'$ref': '#/definitions/non_empty_string'},
         'distro': {'$ref': '#/definitions/non_empty_string'},
         'instance_type': {'$ref': '#/definitions/non_empty_string'},
@@ -130,22 +120,9 @@ ec2_job_message = {
     'required': [
         'provider', 'provider_accounts', 'provider_groups', 'requesting_user',
         'last_service', 'utctime', 'image', 'cloud_image_name',
-        'old_cloud_image_name', 'project', 'share_with', 'allow_copy',
-        'image_description', 'tests'
+        'old_cloud_image_name', 'project', 'image_description', 'tests'
     ],
     'definitions': {
-        'account': {
-            'properties': {
-                'name': {'$ref': '#/definitions/non_empty_string'},
-                'target_regions': {
-                    'type': 'array',
-                    'items': {'$ref': '#/definitions/non_empty_string'},
-                    'uniqueItems': True
-                }
-            },
-            'additionalProperties': False,
-            'required': ['name', 'target_regions']
-        },
         'image_conditions': {
             'properties': {
                 'image': {'$ref': '#/definitions/non_empty_string'}
@@ -166,4 +143,46 @@ ec2_job_message = {
             'required': ['package']
         }
     }
+}
+
+ec2_job_message = copy.deepcopy(base_job_message)
+ec2_job_message['properties']['provider'] = {'enum': ['ec2']}
+ec2_job_message['properties']['share_with'] = {
+    'anyOf': [
+        {'enum': ['all', 'none']},
+        {
+            '$ref': '#/definitions/non_empty_string',
+            'format': 'regex',
+            'pattern': '^[0-9]{12}(,[0-9]{12})*$'
+        }
+    ]
+}
+ec2_job_message['properties']['allow_copy'] = {'type': 'boolean'}
+ec2_job_message['required'] += ['share_with', 'allow_copy']
+ec2_job_message['definitions']['account'] = {
+    'properties': {
+        'name': {'$ref': '#/definitions/non_empty_string'},
+        'target_regions': {
+            'type': 'array',
+            'items': {'$ref': '#/definitions/non_empty_string'},
+            'uniqueItems': True
+        }
+    },
+    'additionalProperties': False,
+    'required': ['name', 'target_regions']
+}
+
+
+azure_job_message = copy.deepcopy(base_job_message)
+azure_job_message['properties']['provider'] = {'enum': ['azure']}
+azure_job_message['definitions']['account'] = {
+    'properties': {
+        'name': {'$ref': '#/definitions/non_empty_string'},
+        'region': {'$ref': '#/definitions/non_empty_string'},
+        'resource_group': {'$ref': '#/definitions/non_empty_string'},
+        'container_name': {'$ref': '#/definitions/non_empty_string'},
+        'storage_account': {'$ref': '#/definitions/non_empty_string'}
+    },
+    'additionalProperties': False,
+    'required': ['name']
 }
