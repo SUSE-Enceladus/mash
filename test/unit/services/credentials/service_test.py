@@ -8,6 +8,7 @@ from unittest.mock import call, MagicMock, Mock, patch
 from mash.services.base_service import BaseService
 from mash.services.credentials.service import CredentialsService
 from mash.services.credentials.key_rotate import rotate_key
+from mash.services.jobcreator.accounts import accounts_template
 
 
 class TestCredentialsService(object):
@@ -27,6 +28,7 @@ class TestCredentialsService(object):
         self.service.job_document_key = 'job_document'
         self.service.credentials_queue = 'credentials'
         self.service.credentials_directory = '/var/lib/mash/credentials/'
+        self.service.accounts_file = '../data/accounts.json'
         self.service.encryption_keys_file = '/var/lib/mash/encryption_keys'
 
         self.service.channel = Mock()
@@ -35,6 +37,7 @@ class TestCredentialsService(object):
         self.service.jobs = {}
         self.service.log = Mock()
 
+    @patch.object(CredentialsService, '_write_accounts_to_file')
     @patch.object(CredentialsService, '_create_encryption_keys_file')
     @patch('mash.services.credentials.service.os')
     @patch.object(CredentialsService, 'set_logfile')
@@ -45,7 +48,7 @@ class TestCredentialsService(object):
     def test_post_init(
         self, mock_restart_jobs, mock_bind_cred_req_keys, mock_start,
         mock_credentials_config, mock_set_logfile, mock_os,
-        mock_create_keys_file
+        mock_create_keys_file, mock_write_accounts_to_file
     ):
         mock_credentials_config.return_value = self.config
         mock_os.path.exists.return_value = False
@@ -63,6 +66,9 @@ class TestCredentialsService(object):
         )
 
         mock_create_keys_file.assert_called_once_with()
+        mock_write_accounts_to_file.assert_called_once_with(
+            accounts_template
+        )
         mock_bind_cred_req_keys.assert_called_once_with()
         mock_restart_jobs.assert_called_once_with(self.service._add_job)
         mock_start.assert_called_once_with()
@@ -123,6 +129,69 @@ class TestCredentialsService(object):
             'account1', 'ec2', 'user1'
         )
 
+    @patch.object(CredentialsService, '_check_credentials_exist')
+    @patch.object(CredentialsService, '_get_accounts_in_group')
+    def test_check_job_accounts(
+        self, mock_get_accounts_in_group, mock_check_credentials_exist
+    ):
+        mock_get_accounts_in_group.return_value = ['test-aws', 'test-aws-cn']
+        mock_check_credentials_exist.return_value = True
+
+        value = self.service._check_job_accounts(
+            'ec2', [{'name': 'test-aws'}], ['test'], 'user1'
+        )
+
+        assert value
+
+        # Account does not exist for user
+        mock_check_credentials_exist.return_value = False
+        value = self.service._check_job_accounts(
+            'ec2', [{'name': 'test-aws'}], ['test'], 'user1'
+        )
+
+        assert not value
+
+    @patch.object(CredentialsService, '_get_accounts_from_file')
+    @patch.object(CredentialsService, '_check_job_accounts')
+    @patch.object(CredentialsService, '_send_control_response')
+    @patch.object(CredentialsService, '_publish')
+    def test_check_confirm_job(
+        self, mock_publish, mock_send_control_response,
+        mock_check_job_accounts, mock_get_accounts_from_file
+    ):
+        mock_check_job_accounts.return_value = True
+        mock_get_accounts_from_file.return_value = {'accounts': 'info'}
+
+        doc = {
+            'id': '123',
+            'provider': 'ec2',
+            'provider_accounts': [
+                {
+                    'name': 'test-aws-gov', 'target_regions': ['us-gov-west-1']
+                }
+            ],
+            'provider_groups': ['test'], 'requesting_user': 'user1'
+        }
+        self.service._confirm_job(doc)
+
+        mock_publish.assert_called_once_with(
+            'jobcreator', 'job_document',
+            '{"start_job": {"id": "123", "accounts_info":'
+            ' {"accounts": "info"}}}'
+        )
+
+        # Invalid accounts
+        mock_publish.reset_mock()
+        mock_check_job_accounts.return_value = False
+        self.service._confirm_job(doc)
+
+        mock_send_control_response.assert_called_once_with(
+            'User does not own requested accounts.', success=False
+        )
+        mock_publish.assert_called_once_with(
+            'jobcreator', 'job_document', '{"invalid_job": "123"}'
+        )
+
     @patch.object(CredentialsService, '_generate_encryption_key')
     def test_create_encryption_keys_file(self, mock_generate_encryption_key):
         mock_generate_encryption_key.return_value = '1234567890'
@@ -165,6 +234,25 @@ class TestCredentialsService(object):
         value = self.service._generate_encryption_key()
 
         assert value == '1234567890'
+
+    def test_get_accounts_from_file(self):
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.read.return_value = '{"ec2": {"account": "info"}}'
+            result = self.service._get_accounts_from_file('ec2')
+
+        assert result['account'] == 'info'
+
+    @patch.object(CredentialsService, '_get_accounts_from_file')
+    def test_get_accounts_in_group(self, mock_get_accounts_from_file):
+        mock_get_accounts_from_file.return_value = {
+            'groups': {
+                'test': {'accounts': ['test-1', 'test-2']}
+            }
+        }
+        accounts = self.service._get_accounts_in_group('test', 'ec2')
+        assert accounts == ['test-1', 'test-2']
 
     def test_get_encrypted_credentials(self):
         with patch('builtins.open', create=True) as mock_open:
@@ -264,6 +352,16 @@ class TestCredentialsService(object):
 
         message.ack.assert_called_once_with()
         mock_delete_job.assert_called_once_with('1')
+
+    @patch.object(CredentialsService, '_confirm_job')
+    def test_credentials_handle_job_docs_job_check(self, mock_confirm_job):
+        message = Mock()
+        message.body = '{"credentials_job_check": {"id": "1"}}'
+
+        self.service._handle_job_documents(message)
+
+        message.ack.assert_called_once_with()
+        mock_confirm_job.assert_called_once_with({'id': '1'})
 
     @patch('mash.services.credentials.service.jwt')
     @patch.object(CredentialsService, '_send_credential_response')
@@ -474,6 +572,17 @@ class TestCredentialsService(object):
             hour='0',
             minute='0'
         )
+
+    def test_credentials_write_accounts_to_file(self):
+        accounts = {'test': 'accounts'}
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            self.service._write_accounts_to_file(accounts)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.write.assert_called_with(
+                u'{\n    "test": "accounts"\n}'
+            )
 
     @patch.object(CredentialsService, '_start_rotation_job')
     @patch.object(CredentialsService, 'consume_credentials_queue')

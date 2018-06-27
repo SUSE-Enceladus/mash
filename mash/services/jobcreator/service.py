@@ -17,12 +17,19 @@
 #
 
 import json
-import os
+import uuid
 
+from jsonschema import FormatChecker, validate
+
+from mash.csp import CSP
+from mash.mash_exceptions import (
+    MashJobCreatorException,
+    MashValidationException
+)
 from mash.services.base_service import BaseService
 from mash.services.jobcreator.config import JobCreatorConfig
-from mash.services.jobcreator.accounts import accounts_template
 from mash.services.jobcreator import create_job
+from mash.services.jobcreator import schema
 
 
 class JobCreatorService(BaseService):
@@ -38,29 +45,16 @@ class JobCreatorService(BaseService):
         """
         self.config = JobCreatorConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
-        self.accounts_file = self.config.get_accounts_file()
         self.provider_data = self.config.get_provider_data()
         self.services = self.config.get_service_names()
-
-        if not os.path.exists(self.accounts_file):
-            self._write_accounts_to_file(accounts_template)
-
-        self.encryption_keys_file = self.config.get_encryption_keys_file()
 
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
         )
 
+        self.jobs = {}
+
         self.start()
-
-    def _get_accounts_from_file(self):
-        """
-        Return a dictionary of account information from accounts json file.
-        """
-        with open(self.accounts_file, 'r') as acnt_file:
-            accounts = json.load(acnt_file)
-
-        return accounts
 
     def _handle_listener_message(self, message):
         """
@@ -75,6 +69,13 @@ class JobCreatorService(BaseService):
             job_doc = json.loads(message.body)
             if 'job_delete' in job_doc:
                 self.publish_delete_job_message(job_doc['job_delete'])
+            elif 'invalid_job' in job_doc:
+                self.log.warning(
+                    'Job failed, accounts do not exist.',
+                    extra={'job_id': job_doc['invalid_job']}
+                )
+            elif 'start_job' in job_doc:
+                self.send_job(job_doc['start_job'])
             else:
                 self.process_new_job(job_doc)
         except Exception as error:
@@ -84,21 +85,85 @@ class JobCreatorService(BaseService):
 
         message.ack()
 
-    def _write_accounts_to_file(self, accounts):
-        """
-        Update accounts file with provided accounts dictionary.
-        """
-        account_info = json.dumps(accounts, indent=4)
-
-        with open(self.accounts_file, 'w') as account_file:
-            account_file.write(account_info)
-
     def process_new_job(self, job_doc):
         """
-        Split args and send messages to all services to initiate job.
+        Validate job and send account check message to credentials service.
         """
-        accounts_info = self._get_accounts_from_file()
-        job = create_job(job_doc, accounts_info, self.provider_data)
+        csp_name = job_doc.get('provider')
+
+        if csp_name == CSP.ec2:
+            message_schema = schema.ec2_job_message
+        else:
+            raise MashJobCreatorException(
+                'Support for {csp} Cloud Service not implemented.'.format(
+                    csp=csp_name
+                )
+            )
+
+        try:
+            validate(job_doc, message_schema, format_checker=FormatChecker())
+        except Exception as error:
+            raise MashValidationException(error)
+        else:
+            job_id = str(uuid.uuid4())
+            self.jobs[job_id] = job_doc
+
+            account_check_message = {
+                'credentials_job_check': {
+                    'id': job_id,
+                    'provider': job_doc['provider'],
+                    'provider_accounts': job_doc['provider_accounts'],
+                    'provider_groups': job_doc['provider_groups'],
+                    'requesting_user': job_doc['requesting_user']
+                }
+            }
+
+            self.publish_job_doc(
+                'credentials', json.dumps(account_check_message)
+            )
+
+    def publish_delete_job_message(self, job_id):
+        """
+        Publish delete job message to obs and credentials services.
+
+        This will flush the job with the given id out of the pipeline.
+        """
+        self.log.info(
+            'Deleting job with ID: {0}.'.format(job_id),
+            extra={'job_id': job_id}
+        )
+
+        delete_message = {
+            "obs_job_delete": job_id
+        }
+        self._publish(
+            'obs', self.job_document_key, json.dumps(delete_message)
+        )
+
+        delete_message = {
+            "credentials_job_delete": job_id
+        }
+        self._publish(
+            'credentials', self.job_document_key, json.dumps(delete_message)
+        )
+
+    def publish_job_doc(self, service, job_doc):
+        """
+        Publish the job_doc message to the given service exchange.
+        """
+        self._publish(service, self.job_document_key, job_doc)
+
+    def send_job(self, message):
+        """
+        Create instance of job and send to all services to initiate job.
+
+        Message from credentials service contains account info for the
+        provider.
+        """
+        job_id = message['id']
+        job_doc = self.jobs[job_id]
+        accounts_info = message['accounts_info']
+        job = create_job(job_id, job_doc, accounts_info, self.provider_data)
 
         self.log.info(
             'Started a new job: {0}'.format(json.dumps(job_doc, indent=2)),
@@ -141,36 +206,7 @@ class JobCreatorService(BaseService):
             if service == job.last_service:
                 break
 
-    def publish_delete_job_message(self, job_id):
-        """
-        Publish delete job message to obs and credentials services.
-
-        This will flush the job with the given id out of the pipeline.
-        """
-        self.log.info(
-            'Deleting job with ID: {0}.'.format(job_id),
-            extra={'job_id': job_id}
-        )
-
-        delete_message = {
-            "obs_job_delete": job_id
-        }
-        self._publish(
-            'obs', self.job_document_key, json.dumps(delete_message)
-        )
-
-        delete_message = {
-            "credentials_job_delete": job_id
-        }
-        self._publish(
-            'credentials', self.job_document_key, json.dumps(delete_message)
-        )
-
-    def publish_job_doc(self, service, job_doc):
-        """
-        Publish the job_doc message to the given service exchange.
-        """
-        self._publish(service, self.job_document_key, job_doc)
+        del self.jobs[job_id]
 
     def start(self):
         """

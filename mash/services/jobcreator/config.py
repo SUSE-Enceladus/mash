@@ -17,7 +17,6 @@
 #
 
 from mash.services.base_config import BaseConfig
-from mash.services.jobcreator.defaults import Defaults
 
 
 class JobCreatorConfig(BaseConfig):
@@ -32,15 +31,3 @@ class JobCreatorConfig(BaseConfig):
 
     def __init__(self, config_file=None):
         super(JobCreatorConfig, self).__init__(config_file)
-
-    def get_accounts_file(self):
-        """
-        Return the path to the provider accounts key file.
-
-        :rtype: string
-        """
-        accounts_file = self._get_attribute(
-            attribute='accounts_file',
-            element='jobcreator'
-        )
-        return accounts_file or Defaults.get_accounts_file()
