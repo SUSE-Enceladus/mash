@@ -30,6 +30,7 @@ from jsonschema import FormatChecker, validate
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
+from mash.services import get_configuration
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
     MashLogSetupException,
@@ -63,6 +64,11 @@ class BaseService(object):
         self.service_queue = 'service'
         self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
+
+        self.config = get_configuration(self.service_exchange)
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
+        self.jwt_secret = self.config.get_jwt_secret()
+        self.jwt_algorithm = self.config.get_jwt_algorithm()
 
         # setup service data directory
         self.job_directory = Defaults.get_job_directory(self.service_exchange)
@@ -224,11 +230,6 @@ class BaseService(object):
         """
         if not queue_name:
             queue_name = self.credentials_queue
-
-        # Required by all services that need credentials.
-        # Config is not available until post init.
-        self.jwt_secret = self.config.get_jwt_secret()
-        self.jwt_algorithm = self.config.get_jwt_algorithm()
 
         queue = self._get_queue_name(self.service_exchange, queue_name)
         self.channel.basic.consume(callback=callback, queue=queue)

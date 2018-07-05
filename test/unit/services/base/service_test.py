@@ -20,10 +20,14 @@ open_name = "builtins.open"
 
 
 class TestBaseService(object):
+    @patch('mash.services.base_service.get_configuration')
     @patch('mash.services.base_service.os.makedirs')
     @patch.object(Defaults, 'get_job_directory')
     @patch('mash.services.base_service.Connection')
-    def setup(self, mock_connection, mock_get_job_directory, mock_makedirs):
+    def setup(
+        self, mock_connection, mock_get_job_directory, mock_makedirs,
+        mock_get_configuration
+    ):
         mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
         self.connection = Mock()
         self.channel = Mock()
@@ -35,11 +39,23 @@ class TestBaseService(object):
         queue.method.queue = 'queue'
         self.channel.queue.declare.return_value = queue
         self.channel.exchange.declare.return_value = queue
+
         self.connection.channel.return_value = self.channel
         self.connection.is_closed = True
         mock_connection.return_value = self.connection
+
+        config = Mock()
+        mock_get_configuration.return_value = config
+
         self.service = BaseService('localhost', 'obs')
         self.service.encryption_keys_file = 'encryption_keys.file'
+        self.service.jwt_secret = 'a-secret'
+        self.service.jwt_algorithm = 'HS256'
+
+        mock_get_configuration.assert_called_once_with('obs')
+        config.get_encryption_keys_file.assert_called_once_with()
+        config.get_jwt_secret.assert_called_once_with()
+        config.get_jwt_algorithm.assert_called_once_with()
         mock_get_job_directory.assert_called_once_with('obs')
         mock_makedirs.assert_called_once_with(
             '/var/lib/mash/obs_jobs/', exist_ok=True
@@ -107,18 +123,11 @@ class TestBaseService(object):
 
     def test_consume_credentials_queue(self):
         callback = Mock()
-        config = Mock()
-        config.get_jwt_secret.return_value = 'a-secret'
-        config.get_jwt_algorithm.return_value = 'HS256'
-        self.service.config = config
 
         self.service.consume_credentials_queue(callback)
         self.channel.basic.consume.assert_called_once_with(
             callback=callback, queue='obs.credentials'
         )
-
-        assert self.service.jwt_secret == 'a-secret'
-        assert self.service.jwt_algorithm == 'HS256'
 
     @patch.object(BaseService, 'bind_queue')
     def test_bind_credentials_queue(self, mock_bind_queue):

@@ -58,19 +58,17 @@ class TestReplicationService(object):
     @patch.object(ReplicationService, 'restart_jobs')
     @patch.object(ReplicationService, 'set_logfile')
     @patch.object(ReplicationService, 'start')
-    @patch('mash.services.replication.service.ReplicationConfig')
     def test_replication_post_init(
-        self, mock_replication_config, mock_start,
+        self, mock_start,
         mock_set_logfile, mock_restart_jobs, mock_bind_creds_queue
     ):
-        mock_replication_config.return_value = self.config
+        self.replication.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/replication_service.log'
 
         self.replication.post_init()
 
         self.config.get_log_file.assert_called_once_with('replication')
-        self.config.get_encryption_keys_file.assert_called_once_with()
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/replication_service.log'
         )

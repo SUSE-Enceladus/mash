@@ -41,16 +41,15 @@ class TestCredentialsService(object):
     @patch.object(CredentialsService, '_create_encryption_keys_file')
     @patch('mash.services.credentials.service.os')
     @patch.object(CredentialsService, 'set_logfile')
-    @patch('mash.services.credentials.service.CredentialsConfig')
     @patch.object(CredentialsService, 'start')
     @patch.object(CredentialsService, '_bind_credential_request_keys')
     @patch.object(CredentialsService, 'restart_jobs')
     def test_post_init(
         self, mock_restart_jobs, mock_bind_cred_req_keys, mock_start,
-        mock_credentials_config, mock_set_logfile, mock_os,
-        mock_create_keys_file, mock_write_accounts_to_file
+        mock_set_logfile, mock_os, mock_create_keys_file,
+        mock_write_accounts_to_file
     ):
-        mock_credentials_config.return_value = self.config
+        self.service.config = self.config
         mock_os.path.exists.return_value = False
         self.config.get_log_file.return_value = \
             '/var/log/mash/credentials_service.log'

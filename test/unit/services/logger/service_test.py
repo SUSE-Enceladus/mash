@@ -46,17 +46,15 @@ class TestLoggerService(object):
 
     @patch.object(LoggerService, 'set_logfile')
     @patch.object(LoggerService, 'start')
-    @patch('mash.services.logger.service.LoggerConfig')
     @patch.object(LoggerService, 'bind_queue')
     @patch.object(LoggerService, '_process_log')
     def test_logger_post_init(
         self, mock_process_log,
-        mock_bind_queue, mock_logger_config, mock_start,
-        mock_set_logfile
+        mock_bind_queue, mock_start,mock_set_logfile
     ):
         config = Mock()
         config.get_log_file.return_value = '/var/log/mash/logger_service.log'
-        mock_logger_config.return_value = config
+        self.logger.config = config
 
         # Test normal run
         self.logger.post_init()

@@ -64,12 +64,11 @@ class TestDeprecationService(object):
     @patch.object(DeprecationService, 'restart_jobs')
     @patch.object(DeprecationService, 'set_logfile')
     @patch.object(DeprecationService, 'start')
-    @patch('mash.services.deprecation.service.DeprecationConfig')
     def test_deprecation_post_init(
-        self, mock_deprecation_config, mock_start,
+        self, mock_start,
         mock_set_logfile, mock_restart_jobs, mock_bind_creds
     ):
-        mock_deprecation_config.return_value = self.config
+        self.deprecation.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/deprecation_service.log'
 
