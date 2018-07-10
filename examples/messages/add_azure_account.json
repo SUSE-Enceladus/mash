@@ -1,0 +1,16 @@
+{
+  "account_name": "test-azure",
+  "container_name": "container1",
+  "credentials": {
+    "clientId": "123456",
+    "clientSecret": "654321",
+    "subscriptionId": "654321",
+    "tenantId": "654321"
+  },
+  "group": "group1",
+  "provider": "azure",
+  "region": "southcentralus",
+  "requesting_user": "user1",
+  "resource_group": "rg_123",
+  "storage_account": "sa_1"
+}
