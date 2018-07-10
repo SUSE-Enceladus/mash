@@ -58,21 +58,19 @@ class TestIPATestingService(object):
     @patch.object(TestingService, 'set_logfile')
     @patch.object(TestingService, 'start')
     @patch.object(TestingService, 'restart_jobs')
-    @patch('mash.services.testing.service.TestingConfig')
     def test_testing_post_init(
-        self, mock_testing_config, mock_restart_jobs,
+        self, mock_restart_jobs,
         mock_start, mock_set_logfile, mock_bind_creds_queue,
         mock_create_ssh_key_pair, mock_os
     ):
         mock_os.path.exists.return_value = False
-        mock_testing_config.return_value = self.config
+        self.testing.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/testing_service.log'
 
         self.testing.post_init()
 
         self.config.get_log_file.assert_called_once_with('testing')
-        self.config.get_encryption_keys_file.assert_called_once_with()
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/testing_service.log'
         )

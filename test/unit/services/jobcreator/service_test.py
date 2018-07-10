@@ -44,13 +44,12 @@ class TestJobCreatorService(object):
 
     @patch.object(JobCreatorService, 'set_logfile')
     @patch.object(JobCreatorService, 'start')
-    @patch('mash.services.jobcreator.service.JobCreatorConfig')
     @patch.object(JobCreatorService, 'bind_queue')
     def test_jobcreator_post_init(
-        self, mock_bind_queue, mock_jobcreator_config,
+        self, mock_bind_queue,
         mock_start, mock_set_logfile
     ):
-        mock_jobcreator_config.return_value = self.config
+        self.jobcreator.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/job_creator_service.log'
 

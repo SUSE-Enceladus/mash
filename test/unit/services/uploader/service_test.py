@@ -15,7 +15,6 @@ from mash.utils.json_format import JsonFormat
 class TestUploadImageService(object):
     @patch.object(BaseService, 'bind_credentials_queue')
     @patch.object(BaseService, 'consume_credentials_queue')
-    @patch('mash.services.uploader.service.UploaderConfig')
     @patch('mash.services.base_service.BaseService.set_logfile')
     @patch('mash.services.uploader.service.BackgroundScheduler')
     @patch.object(UploadImageService, '_process_message')
@@ -28,19 +27,20 @@ class TestUploadImageService(object):
         self, mock_register, mock_log, mock_listdir,
         mock_BaseService, mock_restart_jobs, mock_process_message,
         mock_BackgroundScheduler, mock_set_logfile,
-        mock_UploaderConfig, mock_consume_creds_queue, mock_bind_creds_queue
+        mock_consume_creds_queue, mock_bind_creds_queue
     ):
         scheduler = Mock()
         mock_BackgroundScheduler.return_value = scheduler
         config = Mock()
         config.get_log_file.return_value = 'logfile'
-        mock_UploaderConfig.return_value = config
+
         self.log = Mock()
         mock_listdir.return_value = ['job']
         mock_BaseService.return_value = None
 
         self.uploader = UploadImageService()
         self.uploader.log = self.log
+        self.uploader.config = config
         self.uploader.consume_queue = Mock()
         self.uploader.bind_service_queue = Mock()
         self.uploader.channel = Mock()
@@ -57,7 +57,6 @@ class TestUploadImageService(object):
         self.uploader.post_init()
 
         mock_set_logfile.assert_called_once_with('logfile')
-        config.get_encryption_keys_file.assert_called_once_with()
 
         mock_BackgroundScheduler.assert_called_once_with(timezone=utc)
         scheduler.start.assert_called_once_with()

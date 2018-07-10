@@ -27,7 +27,6 @@ from mash.mash_exceptions import (
     MashValidationException
 )
 from mash.services.base_service import BaseService
-from mash.services.jobcreator.config import JobCreatorConfig
 from mash.services.jobcreator import create_job
 from mash.services.jobcreator import schema
 
@@ -43,7 +42,6 @@ class JobCreatorService(BaseService):
         """
         Initialize job creator service class.
         """
-        self.config = JobCreatorConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.provider_data = self.config.get_provider_data()
         self.services = self.config.get_service_names()

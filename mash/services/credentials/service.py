@@ -28,7 +28,6 @@ from datetime import datetime, timedelta
 
 # project
 from mash.services.base_service import BaseService
-from mash.services.credentials.config import CredentialsConfig
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 from mash.services.jobcreator.accounts import accounts_template
 
@@ -38,14 +37,12 @@ class CredentialsService(BaseService):
     Implements CredentialsService based on web token technology
     """
     def post_init(self):
-        self.config = CredentialsConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.services = self.config.get_service_names(
             credentials_required=True
         )
         self.accounts_file = self.config.get_accounts_file()
-        self.encryption_keys_file = self.config.get_encryption_keys_file()
         self.credentials_directory = self.config.get_credentials_dir()
         self.jobs = {}
 

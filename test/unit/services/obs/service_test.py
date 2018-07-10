@@ -11,7 +11,6 @@ from mash.services.base_service import BaseService
 
 
 class TestOBSImageBuildResultService(object):
-    @patch('mash.services.obs.service.OBSConfig')
     @patch('mash.services.base_service.BaseService.set_logfile')
     @patch.object(OBSImageBuildResultService, '_process_message')
     @patch.object(OBSImageBuildResultService, '_send_job_response')
@@ -25,11 +24,10 @@ class TestOBSImageBuildResultService(object):
         self, mock_register, mock_log, mock_listdir, mock_BaseService,
         mock_restart_jobs, mock_send_job_result_for_uploader,
         mock_send_job_response, mock_process_message,
-        mock_set_logfile, mock_OBSConfig
+        mock_set_logfile
     ):
         config = Mock()
         config.get_log_file.return_value = 'logfile'
-        mock_OBSConfig.return_value = config
         self.log = Mock()
         mock_listdir.return_value = ['job']
         mock_BaseService.return_value = None
@@ -37,6 +35,7 @@ class TestOBSImageBuildResultService(object):
         self.obs_result = OBSImageBuildResultService()
 
         self.obs_result.log = self.log
+        self.obs_result.config = config
         self.obs_result.consume_queue = Mock()
         self.obs_result.bind_service_queue = Mock()
         self.obs_result.channel = Mock()

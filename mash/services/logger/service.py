@@ -37,7 +37,6 @@ class LoggerService(BaseService):
         Bind to logger exchange and consume with callback
         method to process log.
         """
-        self.config = LoggerConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.bind_queue(self.service_exchange, 'mash.logger', 'logging')

@@ -53,9 +53,7 @@ class TestingService(BaseService):
 
         Setup config and bind to jobcreator queue to receive jobs.
         """
-        self.config = TestingConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
-        self.encryption_keys_file = self.config.get_encryption_keys_file()
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
 
         if not os.path.exists(self.ssh_private_key_file):

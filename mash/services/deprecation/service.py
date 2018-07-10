@@ -26,7 +26,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION, SUCCESS
-from mash.services.deprecation.config import DeprecationConfig
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
 
 
@@ -45,7 +44,6 @@ class DeprecationService(BaseService):
 
         Setup config and bind to jobcreator queue to receive jobs.
         """
-        self.config = DeprecationConfig()
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.jobs = {}

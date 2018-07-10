@@ -33,14 +33,11 @@ class OBSImageBuildResultService(BaseService):
     service
     """
     def post_init(self):
-        # read config file
-        config = OBSConfig()
-
         # setup service log file
-        self.set_logfile(config.get_log_file(self.service_exchange))
+        self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         # setup service data directories
-        self.download_directory = config.get_download_directory()
+        self.download_directory = self.config.get_download_directory()
 
         self.jobs = {}
 

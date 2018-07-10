@@ -57,19 +57,17 @@ class TestPublisherService(object):
     @patch.object(PublisherService, 'restart_jobs')
     @patch.object(PublisherService, 'set_logfile')
     @patch.object(PublisherService, 'start')
-    @patch('mash.services.publisher.service.PublisherConfig')
     def test_publisher_post_init(
-        self, mock_publisher_config, mock_start,
+        self, mock_start,
         mock_set_logfile, mock_restart_jobs, mock_bind_creds
     ):
-        mock_publisher_config.return_value = self.config
+        self.publisher.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/publisher_service.log'
 
         self.publisher.post_init()
 
         self.config.get_log_file.assert_called_once_with('publisher')
-        self.config.get_encryption_keys_file.assert_called_once_with()
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/publisher_service.log'
         )
