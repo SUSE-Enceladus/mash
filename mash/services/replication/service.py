@@ -26,7 +26,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION, SUCCESS
-from mash.services.replication.config import ReplicationConfig
 from mash.services.replication.ec2_job import EC2ReplicationJob
 
 

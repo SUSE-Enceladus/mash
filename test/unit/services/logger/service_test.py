@@ -49,8 +49,7 @@ class TestLoggerService(object):
     @patch.object(LoggerService, 'bind_queue')
     @patch.object(LoggerService, '_process_log')
     def test_logger_post_init(
-        self, mock_process_log,
-        mock_bind_queue, mock_start,mock_set_logfile
+        self, mock_process_log, mock_bind_queue, mock_start, mock_set_logfile
     ):
         config = Mock()
         config.get_log_file.return_value = '/var/log/mash/logger_service.log'

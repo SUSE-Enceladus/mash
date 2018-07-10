@@ -22,7 +22,6 @@ import dateutil.parser
 # project
 from mash.services.base_service import BaseService
 from mash.services.obs.build_result import OBSImageBuildResult
-from mash.services.obs.config import OBSConfig
 from mash.utils.json_format import JsonFormat
 from mash.services.obs.defaults import Defaults
 

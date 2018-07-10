@@ -25,7 +25,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 # project
 from mash.services.base_service import BaseService
 from mash.services.uploader.upload_image import UploadImage
-from mash.services.uploader.config import UploaderConfig
 from mash.utils.json_format import JsonFormat
 from mash.csp import CSP
 
