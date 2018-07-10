@@ -122,7 +122,9 @@ class CredentialsService(BaseService):
         """
         accounts = [account['name'] for account in provider_accounts]
         for group in provider_groups:
-            accounts += self._get_accounts_in_group(group, provider)
+            accounts += self._get_accounts_in_group(
+                group, provider, requesting_user
+            )
 
         for account in set(accounts):
             exists = self._check_credentials_exist(
@@ -212,12 +214,12 @@ class CredentialsService(BaseService):
 
         return accounts[provider]
 
-    def _get_accounts_in_group(self, group, provider):
+    def _get_accounts_in_group(self, group, provider, user):
         """
         Return a list of account names given the group name.
         """
         accounts_info = self._get_accounts_from_file(provider)
-        return accounts_info['groups'][group]['accounts']
+        return accounts_info['groups'][user][group]
 
     def _get_credentials_file_path(self, account, provider, user):
         """

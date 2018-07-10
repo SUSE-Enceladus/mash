@@ -248,10 +248,10 @@ class TestCredentialsService(object):
     def test_get_accounts_in_group(self, mock_get_accounts_from_file):
         mock_get_accounts_from_file.return_value = {
             'groups': {
-                'test': {'accounts': ['test-1', 'test-2']}
+                'user1': {'test': ['test-1', 'test-2']}
             }
         }
-        accounts = self.service._get_accounts_in_group('test', 'ec2')
+        accounts = self.service._get_accounts_in_group('test', 'ec2', 'user1')
         assert accounts == ['test-1', 'test-2']
 
     def test_get_encrypted_credentials(self):

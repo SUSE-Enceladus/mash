@@ -75,7 +75,9 @@ class EC2Job(BaseJob):
 
         # Get all accounts from all groups
         for group in self.provider_groups:
-            group_accounts += self._get_accounts_in_group(group)
+            group_accounts += self._get_accounts_in_group(
+                group, self.requesting_user
+            )
 
         # Add accounts from groups that don't already exist
         for account in group_accounts:
@@ -85,7 +87,9 @@ class EC2Job(BaseJob):
         for account, target_regions in accounts.items():
             if not target_regions:
                 # Get default list of all available regions for account
-                target_regions = self._get_regions_for_account(account)
+                target_regions = self._get_regions_for_account(
+                    account, self.requesting_user
+                )
 
             # A random region is selected as source region.
             target = random.choice(target_regions)
@@ -95,11 +99,11 @@ class EC2Job(BaseJob):
                 'helper_image': helper_images[target]
             }
 
-    def _get_regions_for_account(self, account):
+    def _get_regions_for_account(self, account, user):
         """
         Return a list of regions based on account name.
         """
-        regions_key = self.accounts_info['accounts'][account]['partition']
+        regions_key = self.accounts_info['accounts'][user][account]
         return self.provider_data['regions'][regions_key]
 
     def _get_target_regions_list(self):

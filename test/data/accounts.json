@@ -1,23 +1,17 @@
 {
   "ec2": {
     "groups": {
-      "test": {
-        "accounts": ["test-aws-gov", "test-aws"],
-        "requesting_user": "user2"
+      "user2": {
+        "test": ["test-aws-gov", "test-aws"]
       },
-      "test1": {
-        "accounts": [],
-        "requesting_user": "user1"
+      "user1": {
+        "test1": []
       }
     },
     "accounts": {
-      "test-aws-gov": {
-        "partition": "aws-us-gov",
-        "requesting_user": "user2"
-      },
-      "test-aws": {
-        "partition": "aws",
-        "requesting_user": "user2"
+      "user2": {
+        "test-aws-gov": "aws-us-gov",
+        "test-aws": "aws"
       }
     }
   }
