@@ -138,7 +138,7 @@ class EC2Job(BaseJob):
         }
         publisher_message['publisher_job'].update(self.base_message)
 
-        return json.dumps(publisher_message)
+        return json.dumps(publisher_message, sort_keys=True)
 
     def get_publisher_regions(self):
         """

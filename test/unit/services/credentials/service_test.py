@@ -154,7 +154,7 @@ class TestCredentialsService(object):
     @patch.object(CredentialsService, '_check_job_accounts')
     @patch.object(CredentialsService, '_send_control_response')
     @patch.object(CredentialsService, '_publish')
-    def test_check_confirm_job(
+    def test_confirm_job(
         self, mock_publish, mock_send_control_response,
         mock_check_job_accounts, mock_get_accounts_from_file
     ):
@@ -175,8 +175,8 @@ class TestCredentialsService(object):
 
         mock_publish.assert_called_once_with(
             'jobcreator', 'job_document',
-            '{"start_job": {"id": "123", "accounts_info":'
-            ' {"accounts": "info"}}}'
+            '{"start_job": {"accounts_info": {"accounts": "info"}, '
+            '"id": "123"}}'
         )
 
         # Invalid accounts

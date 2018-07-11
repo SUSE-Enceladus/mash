@@ -87,7 +87,7 @@ class BaseJob(object):
         }
         credentials_message['credentials_job'].update(self.base_message)
 
-        return json.dumps(credentials_message)
+        return json.dumps(credentials_message, sort_keys=True)
 
     def get_deprecation_message(self):
         """
@@ -102,7 +102,7 @@ class BaseJob(object):
         }
         deprecation_message['deprecation_job'].update(self.base_message)
 
-        return json.dumps(deprecation_message)
+        return json.dumps(deprecation_message, sort_keys=True)
 
     def get_deprecation_regions(self):
         """
@@ -127,7 +127,7 @@ class BaseJob(object):
         if self.conditions:
             obs_message['obs_job']['conditions'] = self.conditions
 
-        return json.dumps(obs_message)
+        return json.dumps(obs_message, sort_keys=True)
 
     def get_pint_message(self):
         """
@@ -142,7 +142,7 @@ class BaseJob(object):
         }
         pint_message['pint_job'].update(self.base_message)
 
-        return json.dumps(pint_message)
+        return json.dumps(pint_message, sort_keys=True)
 
     def get_publisher_message(self):
         """
@@ -166,7 +166,7 @@ class BaseJob(object):
         }
         replication_message['replication_job'].update(self.base_message)
 
-        return json.dumps(replication_message)
+        return json.dumps(replication_message, sort_keys=True)
 
     def get_replication_source_regions(self):
         """
@@ -197,7 +197,7 @@ class BaseJob(object):
 
         testing_message['testing_job'].update(self.base_message)
 
-        return json.dumps(testing_message)
+        return json.dumps(testing_message, sort_keys=True)
 
     def get_testing_regions(self):
         """
@@ -221,7 +221,7 @@ class BaseJob(object):
         }
         uploader_message['uploader_job'].update(self.base_message)
 
-        return json.dumps(uploader_message)
+        return json.dumps(uploader_message, sort_keys=True)
 
     def get_uploader_regions(self):
         """

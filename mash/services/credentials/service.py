@@ -157,7 +157,8 @@ class CredentialsService(BaseService):
                 }
             }
             self._publish(
-                'jobcreator', self.job_document_key, json.dumps(job_response)
+                'jobcreator', self.job_document_key,
+                json.dumps(job_response, sort_keys=True)
             )
         else:
             self._send_control_response(
@@ -165,7 +166,8 @@ class CredentialsService(BaseService):
             )
             job_response = {'invalid_job': job_id}
             self._publish(
-                'jobcreator', self.job_document_key, json.dumps(job_response)
+                'jobcreator', self.job_document_key,
+                json.dumps(job_response, sort_keys=True)
             )
 
     def _create_encryption_keys_file(self):

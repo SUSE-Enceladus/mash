@@ -119,7 +119,8 @@ class JobCreatorService(BaseService):
             }
 
             self.publish_job_doc(
-                'credentials', json.dumps(account_check_message)
+                'credentials',
+                json.dumps(account_check_message, sort_keys=True)
             )
 
     def publish_delete_job_message(self, job_id):

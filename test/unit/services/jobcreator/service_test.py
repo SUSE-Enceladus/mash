@@ -123,89 +123,107 @@ class TestJobCreatorService(object):
         })
         self.jobcreator._handle_service_message(message)
 
-        mock_publish.assert_has_calls([
-            call(
-                'credentials', 'job_document',
-                '{"credentials_job": {"provider": "ec2", '
-                '"last_service": "pint", '
-                '"provider_accounts": ["test-aws-gov", "test-aws"], '
-                '"requesting_user": "user1", '
-                '"id": "12345678-1234-1234-1234-123456789012", '
-                '"utctime": "now"}}'
-            ),
-            call(
-                'obs', 'job_document',
-                '{"obs_job": {"image": "test_image_oem", '
-                '"project": "Cloud:Tools", '
-                '"id": "12345678-1234-1234-1234-123456789012", '
-                '"utctime": "now", '
-                '"conditions": [{"package": ["name", "and", "constraints"]}, '
-                '{"image": "version"}]}}'
-            ),
-            call(
-                'uploader', 'job_document',
-                '{"uploader_job": {"cloud_image_name": "new_image_123", '
-                '"provider": "ec2", "image_description": "New Image #123", '
-                '"target_regions": {"us-gov-west-1": {"account": '
-                '"test-aws-gov", "helper_image": "ami-c2b5d7e1"}, '
-                '"ap-northeast-1": {"account": "test-aws", '
-                '"helper_image": "ami-383c1956"}}, '
-                '"id": "12345678-1234-1234-1234-123456789012", '
-                '"utctime": "now"}}'
-            ),
-            call(
-                'testing', 'job_document',
-                '{"testing_job": {"provider": "ec2", "tests": ["test_stuff"], '
-                '"test_regions": {"us-gov-west-1": "test-aws-gov", '
-                '"ap-northeast-1": "test-aws"}, "distro": "sles", '
-                '"instance_type": "t2.micro", '
-                '"id": "12345678-1234-1234-1234-123456789012", '
-                '"utctime": "now"}}'
-            ),
-            call(
-                'replication', 'job_document',
-                '{"replication_job": {"image_description": "New Image #123", '
-                '"provider": "ec2", "replication_source_regions": {'
-                '"us-gov-west-1": {"account": "test-aws-gov", '
-                '"target_regions": ["us-gov-west-1"]}, "ap-northeast-1": '
-                '{"account": "test-aws", "target_regions": ["ap-northeast-1", '
-                '"ap-northeast-2"]}}, '
-                '"id": "12345678-1234-1234-1234-123456789012", '
-                '"utctime": "now"}}'
-            ),
-            call(
-                'publisher', 'job_document',
-                '{"publisher_job": {"provider": "ec2", "allow_copy": false, '
-                '"share_with": "all", "publish_regions": ['
-                '{"account": "test-aws-gov", "target_regions": '
-                '["us-gov-west-1"], "helper_image": "ami-c2b5d7e1"}, '
-                '{"account": "test-aws", "target_regions": '
-                '["ap-northeast-1", "ap-northeast-2"], "helper_image": '
-                '"ami-383c1956"}], '
-                '"id": "12345678-1234-1234-1234-123456789012", '
-                '"utctime": "now"}}'
-            ),
-            call(
-                'deprecation', 'job_document',
-                '{"deprecation_job": {"provider": "ec2", '
-                '"old_cloud_image_name": "old_new_image_123", '
-                '"deprecation_regions": [{"account": "test-aws-gov", '
-                '"target_regions": ["us-gov-west-1"], '
-                '"helper_image": "ami-c2b5d7e1"}, {"account": "test-aws", '
-                '"target_regions": ["ap-northeast-1", "ap-northeast-2"], '
-                '"helper_image": "ami-383c1956"}], '
-                '"id": "12345678-1234-1234-1234-123456789012", '
-                '"utctime": "now"}}'
-            ),
-            call(
-                'pint', 'job_document',
-                '{"pint_job": {"provider": "ec2", "cloud_image_name": '
-                '"new_image_123", "old_cloud_image_name": '
-                '"old_new_image_123", '
-                '"id": "12345678-1234-1234-1234-123456789012", '
-                '"utctime": "now"}}'
-            )
-        ])
+        assert mock_publish.mock_calls[0] == call(
+            'credentials', 'job_document',
+            '{"credentials_job": {'
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"last_service": "pint", '
+            '"provider": "ec2", '
+            '"provider_accounts": ["test-aws-gov", "test-aws"], '
+            '"requesting_user": "user1", '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[1] == call(
+            'obs', 'job_document',
+            '{"obs_job": {'
+            '"conditions": [{"package": ["name", "and", "constraints"]}, '
+            '{"image": "version"}], '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"image": "test_image_oem", '
+            '"project": "Cloud:Tools", '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[2] == call(
+            'uploader', 'job_document',
+            '{"uploader_job": {'
+            '"cloud_image_name": "new_image_123", '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"image_description": "New Image #123", '
+            '"provider": "ec2", '
+            '"target_regions": {'
+            '"ap-northeast-1": {"account": "test-aws", '
+            '"helper_image": "ami-383c1956"}, '
+            '"us-gov-west-1": {"account": '
+            '"test-aws-gov", "helper_image": "ami-c2b5d7e1"}}, '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[3] == call(
+            'testing', 'job_document',
+            '{"testing_job": {'
+            '"distro": "sles", '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"instance_type": "t2.micro", '
+            '"provider": "ec2", '
+            '"test_regions": {'
+            '"ap-northeast-1": "test-aws", '
+            '"us-gov-west-1": "test-aws-gov"}, '
+            '"tests": ["test_stuff"], '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[4] == call(
+            'replication', 'job_document',
+            '{"replication_job": {'
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"image_description": "New Image #123", '
+            '"provider": "ec2", '
+            '"replication_source_regions": {'
+            '"ap-northeast-1": {"account": "test-aws", '
+            '"target_regions": ["ap-northeast-1", '
+            '"ap-northeast-2"]}, '
+            '"us-gov-west-1": {"account": "test-aws-gov", '
+            '"target_regions": ["us-gov-west-1"]}}, '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[5] == call(
+            'publisher', 'job_document',
+            '{"publisher_job": {'
+            '"allow_copy": false, '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"provider": "ec2", '
+            '"publish_regions": ['
+            '{"account": "test-aws-gov", '
+            '"helper_image": "ami-c2b5d7e1", '
+            '"target_regions": ["us-gov-west-1"]}, '
+            '{"account": "test-aws", '
+            '"helper_image": "ami-383c1956", '
+            '"target_regions": ["ap-northeast-1", "ap-northeast-2"]}], '
+            '"share_with": "all", '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[6] == call(
+            'deprecation', 'job_document',
+            '{"deprecation_job": {'
+            '"deprecation_regions": ['
+            '{"account": "test-aws-gov", '
+            '"helper_image": "ami-c2b5d7e1", '
+            '"target_regions": ["us-gov-west-1"]}, '
+            '{"account": "test-aws", '
+            '"helper_image": "ami-383c1956", '
+            '"target_regions": ["ap-northeast-1", "ap-northeast-2"]}], '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"old_cloud_image_name": "old_new_image_123", '
+            '"provider": "ec2", '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[7] == call(
+            'pint', 'job_document',
+            '{"pint_job": {'
+            '"cloud_image_name": "new_image_123", '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"old_cloud_image_name": "old_new_image_123", '
+            '"provider": "ec2", '
+            '"utctime": "now"}}'
+        )
 
     @patch('mash.services.jobcreator.service.uuid')
     @patch.object(JobCreatorService, '_publish')
@@ -258,45 +276,53 @@ class TestJobCreatorService(object):
 
         assert mock_publish.mock_calls[0] == call(
             'credentials', 'job_document',
-            '{"credentials_job": {"provider": "azure", '
+            '{"credentials_job": {'
+            '"id": "12345678-1234-1234-1234-123456789012", '
             '"last_service": "testing", '
+            '"provider": "azure", '
             '"provider_accounts": ["test-azure", "test-azure2"], '
             '"requesting_user": "user1", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
             '"utctime": "now"}}'
         )
         assert mock_publish.mock_calls[1] == call(
             'obs', 'job_document',
-            '{"obs_job": {"image": "test_image_oem", '
-            '"project": "Cloud:Tools", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"utctime": "now", '
+            '{"obs_job": {'
             '"conditions": [{"package": ["name", "and", "constraints"]}, '
-            '{"image": "version"}]}}'
+            '{"image": "version"}], '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"image": "test_image_oem", '
+            '"project": "Cloud:Tools", '
+            '"utctime": "now"}}'
         )
         assert mock_publish.mock_calls[2] == call(
             'uploader', 'job_document',
-            '{"uploader_job": {"cloud_image_name": "new_image_123", '
-            '"provider": "azure", "image_description": "New Image #123", '
-            '"target_regions": {"southcentralus": {"account": '
-            '"test-azure", "resource_group": "sc_res_group", '
-            '"container_name": "sccontainer1", '
-            '"storage_account": "scstorage1"}, '
-            '"centralus": {"account": '
-            '"test-azure2", "resource_group": "c_res_group", '
-            '"container_name": "ccontainer1", '
-            '"storage_account": "cstorage1"}}, '
+            '{"uploader_job": {'
+            '"cloud_image_name": "new_image_123", '
             '"id": "12345678-1234-1234-1234-123456789012", '
+            '"image_description": "New Image #123", '
+            '"provider": "azure", '
+            '"target_regions": {'
+            '"centralus": {"account": "test-azure2", '
+            '"container_name": "ccontainer1", '
+            '"resource_group": "c_res_group", '
+            '"storage_account": "cstorage1"}, '
+            '"southcentralus": {"account": "test-azure", '
+            '"container_name": "sccontainer1", '
+            '"resource_group": "sc_res_group", '
+            '"storage_account": "scstorage1"}}, '
             '"utctime": "now"}}'
         )
         assert mock_publish.mock_calls[3] == call(
             'testing', 'job_document',
-            '{"testing_job": {"provider": "azure", "tests": ["test_stuff"], '
-            '"test_regions": {"southcentralus": "test-azure", '
-            '"centralus": "test-azure2"}, '
+            '{"testing_job": {'
             '"distro": "sles", '
-            '"instance_type": "t2.micro", '
             '"id": "12345678-1234-1234-1234-123456789012", '
+            '"instance_type": "t2.micro", '
+            '"provider": "azure", '
+            '"test_regions": {'
+            '"centralus": "test-azure2", '
+            '"southcentralus": "test-azure"}, '
+            '"tests": ["test_stuff"], '
             '"utctime": "now"}}'
         )
 
@@ -382,9 +408,9 @@ class TestJobCreatorService(object):
             '"id": "12345678-1234-1234-1234-123456789012", '
             '"provider": "azure", '
             '"provider_accounts": ['
-            '{"name": "test-azure", "region": "southcentralus", '
+            '{"container_name": "sccontainer1", "name": "test-azure", '
+            '"region": "southcentralus", '
             '"resource_group": "sc_res_group", '
-            '"container_name": "sccontainer1", '
             '"storage_account": "scstorage1"}], '
             '"provider_groups": ["test-azure-group"], '
             '"requesting_user": "user1"}}'
