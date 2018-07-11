@@ -125,9 +125,9 @@ class OBSImageBuildResultService(BaseService):
         {
           "obs_job": {
               "id": "123",
-              "download_root": "https://download.opensuse.org/repositories",
-              "project": "Virtualization:Appliances:Images:Testing_x86/images",
-              "image": "test-image-oem",
+              "download_root": "http://download.suse.de/ibs",
+              "project": "Devel:/PubCloud:/Stable:/Images12",
+              "image": "SLES12-Azure-BYOS",
               "utctime": "now|always|timestring_utc_timezone",
               "conditions": [
                   {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
