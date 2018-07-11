@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
 import jwt
 import json
 import os
@@ -27,7 +28,9 @@ from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
 
 # project
+from mash.csp import CSP
 from mash.services.base_service import BaseService
+from mash.services.credentials.ec2_account import EC2Account
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 from mash.services.jobcreator.accounts import accounts_template
 
@@ -204,14 +207,17 @@ class CredentialsService(BaseService):
         """
         return Fernet.generate_key().decode()
 
-    def _get_accounts_from_file(self, provider):
+    def _get_accounts_from_file(self, provider=None):
         """
         Return a dictionary of account information from accounts json file.
         """
         with open(self.accounts_file, 'r') as acnt_file:
             accounts = json.load(acnt_file)
 
-        return accounts[provider]
+        if provider:
+            return accounts[provider]
+        else:
+            return accounts
 
     def _get_accounts_in_group(self, group, provider, user):
         """
@@ -278,10 +284,7 @@ class CredentialsService(BaseService):
             )
         else:
             if message.method['routing_key'] == self.add_account_key:
-                self._store_encrypted_credentials(
-                    account_msg['account_name'], account_msg['credentials'],
-                    account_msg['provider'], account_msg['requesting_user']
-                )
+                self.add_account(account_msg)
             elif message.method['routing_key'] == self.delete_account_key:
                 self._remove_credentials_file(
                     account_msg['account_name'], account_msg['provider'],
@@ -517,6 +520,40 @@ class CredentialsService(BaseService):
 
         with open(self.accounts_file, 'w') as account_file:
             account_file.write(account_info)
+
+    def add_account(self, message):
+        """
+        Add new provider account to MASH.
+        """
+        self.log.info(
+            'Received add account message for account {0}.'.format(
+                message['account_name']
+            )
+        )
+
+        provider = message['provider']
+        account_name = message['account_name']
+        requesting_user = message['requesting_user']
+
+        if provider == CSP.ec2:
+            account = EC2Account(message)
+        else:
+            self.log.warning(
+                'Invalid provider for account: {0}.'.format(provider)
+            )
+            return
+
+        accounts = self._get_accounts_from_file()
+        account.add_account(accounts)
+        self._write_accounts_to_file(accounts)
+
+        credentials = self.encrypt_credentials(
+            json.dumps(message['credentials'])
+        )
+
+        self._store_encrypted_credentials(
+            account_name, credentials, provider, requesting_user
+        )
 
     def start(self):
         """

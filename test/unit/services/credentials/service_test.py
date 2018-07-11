@@ -243,6 +243,15 @@ class TestCredentialsService(object):
 
         assert result['account'] == 'info'
 
+        # Test get accounts with no provider
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.read.return_value = '{"ec2": {"account": "info"}}'
+            result = self.service._get_accounts_from_file()
+
+        assert result['ec2']['account'] == 'info'
+
     @patch.object(CredentialsService, '_get_accounts_from_file')
     def test_get_accounts_in_group(self, mock_get_accounts_from_file):
         mock_get_accounts_from_file.return_value = {
@@ -265,10 +274,10 @@ class TestCredentialsService(object):
 
         assert result == 'secret_stuff'
 
-    @patch.object(CredentialsService, '_store_encrypted_credentials')
+    @patch.object(CredentialsService, 'add_account')
     @patch.object(CredentialsService, '_send_control_response')
     def test_handle_add_account(
-        self, mock_send_control_response, mock_store_encrypted_credentials
+        self, mock_send_control_response, mock_add_account
     ):
         message = MagicMock()
         message.body = 'invalid'
@@ -289,8 +298,8 @@ class TestCredentialsService(object):
             "requesting_user": "user1"
         }'''
         self.service._handle_account_request(message)
-        mock_store_encrypted_credentials.assert_called_once_with(
-            'test-aws', 'encrypted_creds', 'ec2', 'user1'
+        mock_add_account.assert_called_once_with(
+            json.loads(message.body)
         )
         message.ack.assert_called_once_with()
 
@@ -582,6 +591,53 @@ class TestCredentialsService(object):
             file_handle.write.assert_called_with(
                 u'{\n    "test": "accounts"\n}'
             )
+
+    @patch.object(CredentialsService, '_store_encrypted_credentials')
+    @patch.object(CredentialsService, '_write_accounts_to_file')
+    @patch.object(CredentialsService, 'encrypt_credentials')
+    @patch.object(CredentialsService, '_get_accounts_from_file')
+    def test_credentials_add_account(
+        self, mock_get_acnts_from_file, mock_encrypt_creds,
+        mock_write_accounts_to_file, mock_store_encrypted_creds
+    ):
+        message = {
+            'account_name': 'acnt123',
+            'credentials': {'creds': 'data'},
+            'partition': 'aws',
+            'provider': 'ec2',
+            'requesting_user': 'user1',
+            'group': 'group123'
+        }
+
+        with open(self.service.accounts_file) as f:
+            accounts = json.load(f)
+        mock_get_acnts_from_file.return_value = accounts
+        mock_encrypt_creds.return_value = 'encryptedcreds'
+
+        self.service.add_account(message)
+
+        self.service._write_accounts_to_file.assert_called_once_with(accounts)
+        self.service._store_encrypted_credentials.assert_called_once_with(
+            'acnt123', 'encryptedcreds', 'ec2', 'user1'
+        )
+
+        assert accounts['ec2']['accounts']['user1']['acnt123'] == 'aws'
+        assert accounts['ec2']['groups']['user1']['group123'] == ['acnt123']
+
+    def test_credentials_add_account_invalid(self):
+        message = {
+            'account_name': 'acnt123',
+            'credentials': {'creds': 'data'},
+            'partition': 'aws',
+            'provider': 'fake',
+            'requesting_user': 'user1',
+            'group': 'group123'
+        }
+
+        self.service.add_account(message)
+        self.service.log.warning.assert_called_once_with(
+            'Invalid provider for account: fake.'
+        )
 
     @patch.object(CredentialsService, '_start_rotation_job')
     @patch.object(CredentialsService, 'consume_credentials_queue')
