@@ -91,10 +91,7 @@ class TestJobCreatorService(object):
 
         uuid_val = '12345678-1234-1234-1234-123456789012'
         mock_uuid.uuid4.return_value = uuid_val
-
-        mock_random.choice.side_effect = [
-            'us-gov-west-1', 'ap-northeast-1'
-        ]
+        mock_random.randint.return_value = 0
 
         with open('../data/job.json', 'r') as job_doc:
             job = json.load(job_doc)
@@ -123,16 +120,16 @@ class TestJobCreatorService(object):
         })
         self.jobcreator._handle_service_message(message)
 
-        assert mock_publish.mock_calls[0] == call(
-            'credentials', 'job_document',
-            '{"credentials_job": {'
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"last_service": "pint", '
-            '"provider": "ec2", '
-            '"provider_accounts": ["test-aws-gov", "test-aws"], '
-            '"requesting_user": "user1", '
-            '"utctime": "now"}}'
-        )
+        msg = mock_publish.mock_calls[0][1][2]
+        data = json.loads(msg)['credentials_job']
+        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        assert data['last_service'] == 'pint'
+        assert data['provider'] == 'ec2'
+        assert 'test-aws-gov' in data['provider_accounts']
+        assert 'test-aws' in data['provider_accounts']
+        assert data['requesting_user'] == 'user1'
+        assert data['utctime'] == 'now'
+
         assert mock_publish.mock_calls[1] == call(
             'obs', 'job_document',
             '{"obs_job": {'
@@ -143,6 +140,23 @@ class TestJobCreatorService(object):
             '"project": "Cloud:Tools", '
             '"utctime": "now"}}'
         )
+
+        msg = mock_publish.mock_calls[2][1][2]
+        data = json.loads(msg)['uploader_job']
+        assert data['cloud_image_name'] == 'new_image_123'
+        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        assert data['image_description'] == 'New Image #123'
+        assert data['provider'] == 'ec2'
+        assert data['target_regions']['ap-northeast-1']['account'] == \
+            'test-aws'
+        assert data['target_regions']['ap-northeast-1']['helper_image'] == \
+            'ami-383c1956'
+        assert data['target_regions']['us-gov-west-1']['account'] == \
+            'test-aws-gov'
+        assert data['target_regions']['us-gov-west-1']['helper_image'] == \
+            'ami-c2b5d7e1'
+        assert data['utctime'] == 'now'
+
         assert mock_publish.mock_calls[2] == call(
             'uploader', 'job_document',
             '{"uploader_job": {'
@@ -184,37 +198,41 @@ class TestJobCreatorService(object):
             '"target_regions": ["us-gov-west-1"]}}, '
             '"utctime": "now"}}'
         )
-        assert mock_publish.mock_calls[5] == call(
-            'publisher', 'job_document',
-            '{"publisher_job": {'
-            '"allow_copy": false, '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"provider": "ec2", '
-            '"publish_regions": ['
-            '{"account": "test-aws-gov", '
-            '"helper_image": "ami-c2b5d7e1", '
-            '"target_regions": ["us-gov-west-1"]}, '
-            '{"account": "test-aws", '
-            '"helper_image": "ami-383c1956", '
-            '"target_regions": ["ap-northeast-1", "ap-northeast-2"]}], '
-            '"share_with": "all", '
-            '"utctime": "now"}}'
-        )
-        assert mock_publish.mock_calls[6] == call(
-            'deprecation', 'job_document',
-            '{"deprecation_job": {'
-            '"deprecation_regions": ['
-            '{"account": "test-aws-gov", '
-            '"helper_image": "ami-c2b5d7e1", '
-            '"target_regions": ["us-gov-west-1"]}, '
-            '{"account": "test-aws", '
-            '"helper_image": "ami-383c1956", '
-            '"target_regions": ["ap-northeast-1", "ap-northeast-2"]}], '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"old_cloud_image_name": "old_new_image_123", '
-            '"provider": "ec2", '
-            '"utctime": "now"}}'
-        )
+        msg = mock_publish.mock_calls[5][1][2]
+        data = json.loads(msg)['publisher_job']
+        assert data['allow_copy'] is False
+        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        assert data['provider'] == 'ec2'
+        assert data['share_with'] == 'all'
+        assert data['utctime'] == 'now'
+
+        for region in data['publish_regions']:
+            if region['account'] == 'test-aws-gov':
+                assert region['helper_image'] == 'ami-c2b5d7e1'
+                assert 'us-gov-west-1' in region['target_regions']
+            else:
+                assert region['account'] == 'test-aws'
+                assert region['helper_image'] == 'ami-383c1956'
+                assert 'ap-northeast-1' in region['target_regions']
+                assert 'ap-northeast-2' in region['target_regions']
+
+        msg = mock_publish.mock_calls[6][1][2]
+        data = json.loads(msg)['deprecation_job']
+        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        assert data['old_cloud_image_name'] == 'old_new_image_123'
+        assert data['provider'] == 'ec2'
+        assert data['utctime'] == 'now'
+
+        for region in data['deprecation_regions']:
+            if region['account'] == 'test-aws-gov':
+                assert region['helper_image'] == 'ami-c2b5d7e1'
+                assert 'us-gov-west-1' in region['target_regions']
+            else:
+                assert region['account'] == 'test-aws'
+                assert region['helper_image'] == 'ami-383c1956'
+                assert 'ap-northeast-1' in region['target_regions']
+                assert 'ap-northeast-2' in region['target_regions']
+
         assert mock_publish.mock_calls[7] == call(
             'pint', 'job_document',
             '{"pint_job": {'
@@ -274,16 +292,16 @@ class TestJobCreatorService(object):
         })
         self.jobcreator._handle_service_message(message)
 
-        assert mock_publish.mock_calls[0] == call(
-            'credentials', 'job_document',
-            '{"credentials_job": {'
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"last_service": "testing", '
-            '"provider": "azure", '
-            '"provider_accounts": ["test-azure", "test-azure2"], '
-            '"requesting_user": "user1", '
-            '"utctime": "now"}}'
-        )
+        msg = mock_publish.mock_calls[0][1][2]
+        data = json.loads(msg)['credentials_job']
+        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        assert data['last_service'] == 'testing'
+        assert data['provider'] == 'azure'
+        assert 'test-azure' in data['provider_accounts']
+        assert 'test-azure2' in data['provider_accounts']
+        assert data['requesting_user'] == 'user1'
+        assert data['utctime'] == 'now'
+
         assert mock_publish.mock_calls[1] == call(
             'obs', 'job_document',
             '{"obs_job": {'

@@ -92,7 +92,8 @@ class EC2Job(BaseJob):
                 )
 
             # A random region is selected as source region.
-            target = random.choice(target_regions)
+            index = random.randint(0, len(target_regions) - 1)
+            target = target_regions[index]
             self.target_account_info[target] = {
                 'account': account,
                 'target_regions': target_regions,
