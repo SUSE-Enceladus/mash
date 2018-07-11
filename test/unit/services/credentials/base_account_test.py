@@ -13,8 +13,8 @@ class TestBaseAccount(object):
         self.account.add_account({'test': 'data'})
 
     def test_add_multiple_accounts(self):
-        with open('../data/accounts.json') as f:
-            accounts = json.load(f)
+        with open('../data/accounts.json') as accounts_file:
+            accounts = json.load(accounts_file)
 
         # Test user with no groups
         self.account.add_account_to_group(accounts)

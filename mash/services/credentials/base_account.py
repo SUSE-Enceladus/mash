@@ -50,7 +50,7 @@ class BaseAccount(object):
         if groups:
             group = groups.get(self.group_name)
 
-            if group is None:
+            if not group:
                 groups[self.group_name] = [self.account_name]
             elif self.account_name not in group:
                 # Allow for account updates, don't append multiple times.
