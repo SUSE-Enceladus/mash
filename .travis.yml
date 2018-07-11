@@ -4,7 +4,13 @@ branches:
   - gh-pages
 matrix:
   include:
+  - python: 3.4
+    env: TOXENV=unit_py3,check
+  - python: 3.5
+    env: TOXENV=unit_py3,check
   - python: 3.6
+    env: TOXENV=unit_py3,check
+  - python: 3.7
     env: TOXENV=unit_py3,check
 before_install:
   - sudo apt-get update -qq
