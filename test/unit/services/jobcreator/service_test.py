@@ -207,6 +207,99 @@ class TestJobCreatorService(object):
             )
         ])
 
+    @patch('mash.services.jobcreator.service.uuid')
+    @patch.object(JobCreatorService, '_publish')
+    def test_jobcreator_handle_service_message_azure(
+            self, mock_publish, mock_uuid
+    ):
+        self.jobcreator.jobs = {}
+        self.jobcreator.provider_data = {'azure': {}}
+        message = MagicMock()
+
+        uuid_val = '12345678-1234-1234-1234-123456789012'
+        mock_uuid.uuid4.return_value = uuid_val
+
+        with open('../data/azure_job.json', 'r') as job_doc:
+            job = json.load(job_doc)
+
+        self.jobcreator.jobs[uuid_val] = job
+
+        account_info = {
+            "accounts": {
+                "user1": {
+                    "test-azure": {
+                        "region": "southcentralus",
+                        "resource_group": "sc_res_group",
+                        "container_name": "sccontainer1",
+                        "storage_account": "scstorage1"
+                    },
+                    "test-azure2": {
+                        "region": "centralus",
+                        "resource_group": "c_res_group",
+                        "container_name": "ccontainer1",
+                        "storage_account": "cstorage1"
+                    }
+                }
+            },
+            "groups": {
+                "user1": {
+                    "test-azure-group": ["test-azure", "test-azure2"]
+                }
+            }
+        }
+
+        message.body = json.dumps({
+            'start_job': {
+                'id': uuid_val,
+                'accounts_info': account_info
+            }
+        })
+        self.jobcreator._handle_service_message(message)
+
+        assert mock_publish.mock_calls[0] == call(
+            'credentials', 'job_document',
+            '{"credentials_job": {"provider": "azure", '
+            '"last_service": "testing", '
+            '"provider_accounts": ["test-azure", "test-azure2"], '
+            '"requesting_user": "user1", '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[1] == call(
+            'obs', 'job_document',
+            '{"obs_job": {"image": "test_image_oem", '
+            '"project": "Cloud:Tools", '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"utctime": "now", '
+            '"conditions": [{"package": ["name", "and", "constraints"]}, '
+            '{"image": "version"}]}}'
+        )
+        assert mock_publish.mock_calls[2] == call(
+            'uploader', 'job_document',
+            '{"uploader_job": {"cloud_image_name": "new_image_123", '
+            '"provider": "azure", "image_description": "New Image #123", '
+            '"target_regions": {"southcentralus": {"account": '
+            '"test-azure", "resource_group": "sc_res_group", '
+            '"container_name": "sccontainer1", '
+            '"storage_account": "scstorage1"}, '
+            '"centralus": {"account": '
+            '"test-azure2", "resource_group": "c_res_group", '
+            '"container_name": "ccontainer1", '
+            '"storage_account": "cstorage1"}}, '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"utctime": "now"}}'
+        )
+        assert mock_publish.mock_calls[3] == call(
+            'testing', 'job_document',
+            '{"testing_job": {"provider": "azure", "tests": ["test_stuff"], '
+            '"test_regions": {"southcentralus": "test-azure", '
+            '"centralus": "test-azure2"}, '
+            '"distro": "sles", '
+            '"instance_type": "t2.micro", '
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"utctime": "now"}}'
+        )
+
     def test_jobcreator_handle_invalid_service_message(self):
         message = MagicMock()
         message.body = 'invalid message'
@@ -263,6 +356,38 @@ class TestJobCreatorService(object):
             '"provider_accounts": ['
             '{"name": "test-aws-gov", "target_regions": ["us-gov-west-1"]}], '
             '"provider_groups": ["test"], "requesting_user": "user1"}}'
+        )
+
+    @patch.object(JobCreatorService, 'publish_job_doc')
+    @patch('mash.services.jobcreator.service.uuid')
+    def test_jobcreator_process_new_azure_job(
+        self, mock_uuid, mock_publish_doc
+    ):
+        uuid_val = '12345678-1234-1234-1234-123456789012'
+        mock_uuid.uuid4.return_value = uuid_val
+        self.jobcreator.jobs = {}
+
+        with open('../data/azure_job.json', 'r') as job_doc:
+            job = json.dumps(json.load(job_doc))
+
+        message = MagicMock()
+        message.body = job
+
+        self.jobcreator._handle_service_message(message)
+
+        assert self.jobcreator.jobs[uuid_val]
+        mock_publish_doc.assert_called_once_with(
+            'credentials',
+            '{"credentials_job_check": {'
+            '"id": "12345678-1234-1234-1234-123456789012", '
+            '"provider": "azure", '
+            '"provider_accounts": ['
+            '{"name": "test-azure", "region": "southcentralus", '
+            '"resource_group": "sc_res_group", '
+            '"container_name": "sccontainer1", '
+            '"storage_account": "scstorage1"}], '
+            '"provider_groups": ["test-azure-group"], '
+            '"requesting_user": "user1"}}'
         )
 
     @patch('mash.services.jobcreator.service.validate')

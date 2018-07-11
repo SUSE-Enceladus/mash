@@ -91,6 +91,8 @@ class JobCreatorService(BaseService):
 
         if csp_name == CSP.ec2:
             message_schema = schema.ec2_job_message
+        elif csp_name == CSP.azure:
+            message_schema = schema.azure_job_message
         else:
             raise MashJobCreatorException(
                 'Support for {csp} Cloud Service not implemented.'.format(
