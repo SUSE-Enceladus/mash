@@ -29,7 +29,9 @@ from mash.services.uploader.config import UploaderConfig
     ]
 )
 def test_get_configuration(service, class_type):
-    config = get_configuration(service)
+    config = get_configuration(
+        service, config_file='../data/mash_config.yaml'
+    )
     assert type(config) == class_type
 
 

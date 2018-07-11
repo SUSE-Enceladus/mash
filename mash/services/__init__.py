@@ -28,30 +28,30 @@ from mash.services.testing.config import TestingConfig
 from mash.services.uploader.config import UploaderConfig
 
 
-def get_configuration(service):
+def get_configuration(service, config_file=None):
     """
     MASH configuration factory.
 
     Return instance of config based on service name.
     """
     if service == 'credentials':
-        return CredentialsConfig()
+        return CredentialsConfig(config_file=config_file)
     elif service == 'deprecation':
-        return DeprecationConfig()
+        return DeprecationConfig(config_file=config_file)
     elif service == 'jobcreator':
-        return JobCreatorConfig()
+        return JobCreatorConfig(config_file=config_file)
     elif service == 'logger':
-        return LoggerConfig()
+        return LoggerConfig(config_file=config_file)
     elif service == 'obs':
-        return OBSConfig()
+        return OBSConfig(config_file=config_file)
     elif service == 'publisher':
-        return PublisherConfig()
+        return PublisherConfig(config_file=config_file)
     elif service == 'replication':
-        return ReplicationConfig()
+        return ReplicationConfig(config_file=config_file)
     elif service == 'testing':
-        return TestingConfig()
+        return TestingConfig(config_file=config_file)
     elif service == 'uploader':
-        return UploaderConfig()
+        return UploaderConfig(config_file=config_file)
     else:
         raise MashConfigException(
             'No configuration available for {0} service.'.format(service)
