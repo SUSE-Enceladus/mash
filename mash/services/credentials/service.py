@@ -286,10 +286,7 @@ class CredentialsService(BaseService):
             if message.method['routing_key'] == self.add_account_key:
                 self.add_account(account_msg)
             elif message.method['routing_key'] == self.delete_account_key:
-                self._remove_credentials_file(
-                    account_msg['account_name'], account_msg['provider'],
-                    account_msg['requesting_user']
-                )
+                self.delete_account(account_msg)
 
         message.ack()
 
@@ -554,6 +551,46 @@ class CredentialsService(BaseService):
         self._store_encrypted_credentials(
             account_name, credentials, provider, requesting_user
         )
+
+    def _remove_account_from_groups(
+        self, account_name, provider, requesting_user, accounts
+    ):
+        """
+        Remove account from any groups it currently exists for user.
+        """
+        groups = accounts[provider]['groups'][requesting_user]
+
+        for group, account_names in groups.items():
+            if account_name in account_names:
+                account_names.remove(account_name)
+
+    def delete_account(self, message):
+        """
+        Delete provider account from MASH.
+        """
+        account_name = message['account_name']
+        provider = message['provider']
+        requesting_user = message['requesting_user']
+
+        self._remove_credentials_file(
+            account_name, provider, requesting_user
+        )
+
+        accounts = self._get_accounts_from_file()
+
+        try:
+            del accounts[provider]['accounts'][requesting_user][account_name]
+        except KeyError:
+            self.log.error(
+                'Account {0} does not exist for {1}.'.format(
+                    account_name, requesting_user
+                )
+            )
+        else:
+            self._remove_account_from_groups(
+                account_name, provider, requesting_user, accounts
+            )
+            self._write_accounts_to_file(accounts)
 
     def start(self):
         """

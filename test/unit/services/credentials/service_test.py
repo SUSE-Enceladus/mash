@@ -303,12 +303,8 @@ class TestCredentialsService(object):
         )
         message.ack.assert_called_once_with()
 
-    @patch.object(CredentialsService, '_get_credentials_file_path')
-    @patch('mash.services.credentials.service.os')
-    def test_handle_delete_account(self, mock_os, mock_get_cred_path):
-        mock_get_cred_path.return_value = \
-            '/var/lib/mash/credentials/user1/ec2/test-aws'
-
+    @patch.object(CredentialsService, 'delete_account')
+    def test_handle_delete_account(self, mock_delete_acnt):
         message = MagicMock()
         message.body = '''{
             "account_name": "test-aws",
@@ -318,14 +314,9 @@ class TestCredentialsService(object):
         message.method = {'routing_key': 'delete_account'}
 
         self.service._handle_account_request(message)
-        self.service.log.info.assert_called_once_with(
-            'Deleting credentials for account: '
-            'test-aws, provider: ec2, user: user1.'
+        mock_delete_acnt.asser_called_once_with(
+            json.dumps(json.loads(message.body), sort_keys=True)
         )
-        mock_os.remove.assert_called_once_with(
-            '/var/lib/mash/credentials/user1/ec2/test-aws'
-        )
-        message.ack.assert_called_once_with()
 
     @patch.object(CredentialsService, '_add_job')
     def test_credentials_handle_job_docs_add(self, mock_add_job):
@@ -637,6 +628,80 @@ class TestCredentialsService(object):
         self.service.add_account(message)
         self.service.log.warning.assert_called_once_with(
             'Invalid provider for account: fake.'
+        )
+
+    @patch.object(CredentialsService, '_get_credentials_file_path')
+    @patch('mash.services.credentials.service.os')
+    @patch.object(CredentialsService, '_write_accounts_to_file')
+    @patch.object(CredentialsService, '_get_accounts_from_file')
+    def test_credentials_delete_account(
+        self, mock_get_acnts_from_file, mock_write_accounts_to_file,
+        mock_os, mock_get_cred_path
+    ):
+        mock_get_cred_path.return_value = \
+            '/var/lib/mash/credentials/user2/ec2/test-aws'
+
+        with open(self.service.accounts_file) as f:
+            accounts = json.load(f)
+        mock_get_acnts_from_file.return_value = accounts
+
+        message = {
+            "account_name": "test-aws",
+            "provider": "ec2",
+            "requesting_user": "user2"
+        }
+
+        self.service.delete_account(message)
+
+        mock_get_acnts_from_file.assert_called_once_with()
+        self.service.log.info.assert_called_once_with(
+            'Deleting credentials for account: '
+            'test-aws, provider: ec2, user: user2.'
+        )
+        mock_os.remove.assert_called_once_with(
+            '/var/lib/mash/credentials/user2/ec2/test-aws'
+        )
+        mock_write_accounts_to_file.assert_called_once_with(
+            {
+                'ec2': {
+                    'accounts': {
+                        'user2': {
+                            'test-aws-gov': 'aws-us-gov'
+                        }
+                    },
+                    'groups': {
+                        'user1': {
+                            'test1': []
+                        },
+                        'user2': {
+                            'test': ['test-aws-gov']
+                        }
+                    }
+                }
+            }
+        )
+
+    @patch.object(CredentialsService, '_remove_credentials_file')
+    @patch.object(CredentialsService, '_get_accounts_from_file')
+    def test_credentials_delete_account_invalid(
+        self, mock_get_acnts_from_file, mock_rmv_creds_file
+    ):
+        with open(self.service.accounts_file) as f:
+            accounts = json.load(f)
+        mock_get_acnts_from_file.return_value = accounts
+
+        message = {
+            "account_name": "fake",
+            "provider": "ec2",
+            "requesting_user": "user2"
+        }
+
+        self.service.delete_account(message)
+        mock_rmv_creds_file.assert_called_once_with(
+            'fake', 'ec2', 'user2'
+        )
+        self.service.log.error.assert_called_once_with(
+            'Account fake does not exist for user2.'
         )
 
     @patch.object(CredentialsService, '_start_rotation_job')
