@@ -21,3 +21,4 @@ ec2publishimg
 ec2uploadimg
 python3-ipa
 azure
+lxml
