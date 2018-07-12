@@ -30,6 +30,7 @@ from datetime import datetime, timedelta
 # project
 from mash.csp import CSP
 from mash.services.base_service import BaseService
+from mash.services.credentials.azure_account import AzureAccount
 from mash.services.credentials.ec2_account import EC2Account
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 from mash.services.jobcreator.accounts import accounts_template
@@ -537,6 +538,8 @@ class CredentialsService(BaseService):
 
         if provider == CSP.ec2:
             account = EC2Account(message)
+        elif provider == CSP.azure:
+            account = AzureAccount(message)
         else:
             self.log.warning(
                 'Invalid provider for account: {0}.'.format(provider)

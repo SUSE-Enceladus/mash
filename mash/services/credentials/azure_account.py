@@ -19,19 +19,22 @@
 from mash.services.credentials.base_account import BaseAccount
 
 
-class EC2Account(BaseAccount):
+class AzureAccount(BaseAccount):
     """
-    EC2 provider account.
+    Azure provider account.
 
     Handles management of accounts in the json accounts file.
     """
     def __init__(self, message):
-        super(EC2Account, self).__init__(
+        super(AzureAccount, self).__init__(
             message['account_name'],
             message['provider'], message['requesting_user'],
             group_name=message.get('group')
         )
-        self.partition = message['partition']
+        self.container_name = message['container_name']
+        self.region = message['region']
+        self.resource_group = message['resource_group']
+        self.storage_account = message['storage_account']
 
     def add_account(self, accounts_file):
         """
@@ -39,13 +42,20 @@ class EC2Account(BaseAccount):
 
         Update or add group if provided.
         """
+        account_info = {
+            'container_name': self.container_name,
+            'region': self.region,
+            'resource_group': self.resource_group,
+            'storage_account': self.storage_account
+        }
+
         accounts = accounts_file[self.provider]['accounts'].get(self.requesting_user)
 
         if accounts:
-            accounts[self.account_name] = self.partition
+            accounts[self.account_name] = account_info
         else:
             accounts_file[self.provider]['accounts'][self.requesting_user] = {
-                self.account_name: self.partition
+                self.account_name: account_info
             }
 
         # Add group if necessary

@@ -6,7 +6,7 @@ from mash.services.credentials.base_account import BaseAccount
 class TestBaseAccount(object):
     def setup(self):
         self.account = BaseAccount(
-            'acnt123', 'aws', 'ec2', 'user3', group_name='group123'
+            'acnt123', 'ec2', 'user3', group_name='group123'
         )
 
     def test_add_account(self):
