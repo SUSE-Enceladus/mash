@@ -25,6 +25,39 @@ non_empty_string = {
 }
 
 
+add_account_azure = {
+    'type': 'object',
+    'properties': {
+        'account_name': {'$ref': '#/definitions/non_empty_string'},
+        'container_name': {'$ref': '#/definitions/non_empty_string'},
+        'credentials': {
+            'type': 'object',
+            'properties': {
+                'clientId': {'$ref': '#/definitions/non_empty_string'},
+                'clientSecret': {'$ref': '#/definitions/non_empty_string'},
+                'subscriptionId': {'$ref': '#/definitions/non_empty_string'},
+                'tenantId': {'$ref': '#/definitions/non_empty_string'}
+            },
+            'additionalProperties': True
+        },
+        'group': {'$ref': '#/definitions/non_empty_string'},
+        'provider': {'enum': ['azure']},
+        'region': {'$ref': '#/definitions/non_empty_string'},
+        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
+        'resource_group': {'$ref': '#/definitions/non_empty_string'},
+        'storage_account': {'$ref': '#/definitions/non_empty_string'}
+    },
+    'additionalProperties': False,
+    'required': [
+        'account_name', 'container_name', 'credentials', 'provider',
+        'requesting_user', 'resource_group', 'storage_account'
+    ],
+    'definitions': {
+        'non_empty_string': non_empty_string
+    }
+}
+
+
 add_account_ec2 = {
     'type': 'object',
     'properties': {
@@ -50,11 +83,11 @@ add_account_ec2 = {
 }
 
 
-delete_account_ec2 = {
+delete_account = {
     'type': 'object',
     'properties': {
         'account_name': {'$ref': '#/definitions/non_empty_string'},
-        'provider': {'enum': ['ec2']},
+        'provider': {'enum': ['azure', 'ec2']},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,

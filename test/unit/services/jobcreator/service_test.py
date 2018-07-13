@@ -34,6 +34,7 @@ class TestJobCreatorService(object):
         self.jobcreator = JobCreatorService()
         self.jobcreator.log = Mock()
         self.jobcreator.add_account_key = 'add_account'
+        self.jobcreator.delete_account_key = 'delete_account'
         self.jobcreator.service_exchange = 'jobcreator'
         self.jobcreator.listener_queue = 'listener'
         self.jobcreator.job_document_key = 'job_document'
@@ -60,9 +61,10 @@ class TestJobCreatorService(object):
             '/var/log/mash/job_creator_service.log'
         )
 
-        mock_bind_queue.assert_called_once_with(
-            'jobcreator', 'add_account', 'listener'
-        )
+        mock_bind_queue.assert_has_calls([
+            call('jobcreator', 'add_account', 'listener'),
+            call('jobcreator', 'delete_account', 'listener')
+        ])
         mock_start.assert_called_once_with()
 
     @patch('mash.services.jobcreator.ec2_job.random')
@@ -364,6 +366,106 @@ class TestJobCreatorService(object):
         )
 
     @patch.object(JobCreatorService, '_publish')
+    def test_jobcreator_handle_listener_message_add(
+        self, mock_publish
+    ):
+        message = MagicMock()
+
+        # Test add ec2 account message
+        message.method = {'routing_key': 'add_account'}
+        message.body = '''{
+              "account_name": "test-aws",
+              "credentials": {
+                "access_key_id": "123456",
+                "secret_access_key": "654321"
+              },
+              "group": "group1",
+              "partition": "aws",
+              "provider": "ec2",
+              "requesting_user": "user1"
+        }'''
+
+        self.jobcreator._handle_listener_message(message)
+
+        mock_publish.assert_called_once_with(
+            'credentials', 'add_account',
+            json.dumps(json.loads(message.body), sort_keys=True)
+        )
+        message.ack.assert_called_once_with()
+
+        message.ack.reset_mock()
+        mock_publish.reset_mock()
+
+        # Test add azure account message
+        message.method = {'routing_key': 'add_account'}
+        message.body = '''{
+              "account_name": "test-azure",
+              "container_name": "container1",
+              "credentials": {
+                "clientId": "123456",
+                "clientSecret": "654321",
+                "subscriptionId": "654321",
+                "tenantId": "654321"
+              },
+              "group": "group1",
+              "provider": "azure",
+              "region": "southcentralus",
+              "requesting_user": "user1",
+              "resource_group": "rg_123",
+              "storage_account": "sa_1"
+        }'''
+
+        self.jobcreator._handle_listener_message(message)
+
+        mock_publish.assert_called_once_with(
+            'credentials', 'add_account',
+            json.dumps(json.loads(message.body), sort_keys=True)
+        )
+        message.ack.assert_called_once_with()
+
+    @patch.object(JobCreatorService, '_publish')
+    def test_jobcreator_handle_listener_message_delete(
+        self, mock_publish
+    ):
+        message = MagicMock()
+        message.method = {'routing_key': 'delete_account'}
+        message.body = '''{
+            "account_name": "test-aws",
+            "provider": "ec2",
+            "requesting_user": "user2"
+        }'''
+
+        self.jobcreator._handle_listener_message(message)
+
+        mock_publish.assert_called_once_with(
+            'credentials', 'delete_account',
+            json.dumps(json.loads(message.body), sort_keys=True)
+        )
+        message.ack.assert_called_once_with()
+
+    def test_jobcreator_handle_listener_message_unkown(self):
+        message = MagicMock()
+        message.method = {'routing_key': 'add_user'}
+        message.body = '{}'
+        self.jobcreator._handle_listener_message(message)
+
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Received unknown message type: add_user. '
+            'Message: {0}'.format(message.body)
+        )
+
+    def test_jobcreator_handle_invalid_listener_message(self):
+        message = MagicMock()
+        message.body = 'invalid message'
+
+        self.jobcreator._handle_listener_message(message)
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Invalid message received: invalid message.'
+        )
+
+        message.ack.assert_called_once_with()
+
+    @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_publish_delete_job_message(self, mock_publish):
         message = MagicMock()
         message.body = '{"job_delete": "1"}'
@@ -375,6 +477,31 @@ class TestJobCreatorService(object):
                 '{"credentials_job_delete": "1"}'
             )
         ])
+
+    def test_jobcreator_add_account_invalid_provider(self):
+        message = {'provider': 'fake'}
+        self.jobcreator.add_account(message)
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Support for fake Cloud Service not implemented.'
+        )
+
+    @patch('mash.services.jobcreator.service.validate')
+    def test_jobcreator_add_account_invalid_message(self, mock_validate):
+        mock_validate.side_effect = Exception('Message missing arguments!')
+        message = {'provider': 'ec2'}
+        self.jobcreator.add_account(message)
+        self.jobcreator.log.error.assert_called_once_with(
+            'Add account message is invalid: Message missing arguments!'
+        )
+
+    @patch('mash.services.jobcreator.service.validate')
+    def test_jobcreator_delete_account_invalid_message(self, mock_validate):
+        mock_validate.side_effect = Exception('Message missing arguments!')
+        message = {'provider': 'ec2'}
+        self.jobcreator.delete_account(message)
+        self.jobcreator.log.error.assert_called_once_with(
+            'Delete account message is invalid: Message missing arguments!'
+        )
 
     @patch.object(JobCreatorService, 'publish_job_doc')
     @patch('mash.services.jobcreator.service.uuid')

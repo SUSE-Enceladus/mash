@@ -49,6 +49,9 @@ class JobCreatorService(BaseService):
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
         )
+        self.bind_queue(
+            self.service_exchange, self.delete_account_key, self.listener_queue
+        )
 
         self.jobs = {}
 
@@ -56,8 +59,28 @@ class JobCreatorService(BaseService):
 
     def _handle_listener_message(self, message):
         """
-        Process add account messages.
+        Process add and delete account messages.
         """
+        try:
+            account_message = json.loads(message.body)
+        except Exception:
+            self.log.warning(
+                'Invalid message received: {0}.'.format(message.body)
+            )
+        else:
+            if message.method['routing_key'] == 'add_account':
+                self.add_account(account_message)
+            elif message.method['routing_key'] == 'delete_account':
+                self.delete_account(account_message)
+            else:
+                self.log.warning(
+                    'Received unknown message type: {0}. Message: {1}'.format(
+                        message.method['routing_key'],
+                        message.body
+                    )
+                )
+
+        message.ack()
 
     def _handle_service_message(self, message):
         """
@@ -82,6 +105,56 @@ class JobCreatorService(BaseService):
             )
 
         message.ack()
+
+    def add_account(self, message):
+        """
+        Validate add account message and relay to credentials service.
+        """
+        csp_name = message.get('provider')
+
+        if csp_name == CSP.ec2:
+            message_schema = schema.add_account_ec2
+        elif csp_name == CSP.azure:
+            message_schema = schema.add_account_azure
+        else:
+            self.log.warning(
+                'Support for {csp} Cloud Service not implemented.'.format(
+                    csp=csp_name
+                )
+            )
+            return
+
+        try:
+            validate(message, message_schema, format_checker=FormatChecker())
+        except Exception as error:
+            self.log.error(
+                'Add account message is invalid: {0}'.format(error)
+            )
+            return
+        else:
+            self._publish(
+                'credentials', self.add_account_key,
+                json.dumps(message, sort_keys=True)
+            )
+
+    def delete_account(self, message):
+        """
+        Validate delete account message and relay to credentials service.
+        """
+        try:
+            validate(
+                message, schema.delete_account, format_checker=FormatChecker()
+            )
+        except Exception as error:
+            self.log.error(
+                'Delete account message is invalid: {0}'.format(error)
+            )
+            return
+        else:
+            self._publish(
+                'credentials', self.delete_account_key,
+                json.dumps(message, sort_keys=True)
+            )
 
     def process_new_job(self, job_doc):
         """
