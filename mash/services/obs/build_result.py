@@ -193,7 +193,9 @@ class OBSImageBuildResult(object):
         mkpath(self.download_directory)
         build_number = self._get_build_number(self.image_metadata_name)
         image_files = self.remote.fetch_files(
-            self.image_name, ['.xz', 'xz.sha256'], self.download_directory
+            self.image_name,
+            ['.xz', 'xz.sha256', '.tar.gz', '.tar.gz.sha256'],
+            self.download_directory
         )
         for image_file in image_files:
             if self._get_build_number(image_file) != build_number:
