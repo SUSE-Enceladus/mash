@@ -291,6 +291,7 @@ class TestCredentialsService(object):
         message.ack.assert_called_once_with()
         message.reset_mock()
 
+        # Add ec2 account
         message.body = '''{
             "account_name": "test-aws",
             "credentials": "encrypted_creds",
@@ -596,7 +597,7 @@ class TestCredentialsService(object):
     @patch.object(CredentialsService, '_write_accounts_to_file')
     @patch.object(CredentialsService, 'encrypt_credentials')
     @patch.object(CredentialsService, '_get_accounts_from_file')
-    def test_credentials_add_account(
+    def test_credentials_add_account_ec2(
         self, mock_get_acnts_from_file, mock_encrypt_creds,
         mock_write_accounts_to_file, mock_store_encrypted_creds
     ):
@@ -623,6 +624,43 @@ class TestCredentialsService(object):
 
         assert accounts['ec2']['accounts']['user1']['acnt123'] == 'aws'
         assert accounts['ec2']['groups']['user1']['group123'] == ['acnt123']
+
+    @patch.object(CredentialsService, '_store_encrypted_credentials')
+    @patch.object(CredentialsService, '_write_accounts_to_file')
+    @patch.object(CredentialsService, 'encrypt_credentials')
+    @patch.object(CredentialsService, '_get_accounts_from_file')
+    def test_credentials_add_account_azure(
+        self, mock_get_acnts_from_file, mock_encrypt_creds,
+        mock_write_accounts_to_file, mock_store_encrypted_creds
+    ):
+        message = {
+            "account_name": "test-azure",
+            "container_name": "container1",
+            "credentials": {"encrypted": "creds"},
+            "provider": "azure",
+            "region": "southcentralus",
+            "requesting_user": "user1",
+            "resource_group": "rg_123",
+            "storage_account": "sa_123"
+        }
+
+        with open(self.service.accounts_file) as f:
+            accounts = json.load(f)
+        mock_get_acnts_from_file.return_value = accounts
+        mock_encrypt_creds.return_value = 'encryptedcreds'
+
+        self.service.add_account(message)
+
+        self.service._write_accounts_to_file.assert_called_once_with(accounts)
+        self.service._store_encrypted_credentials.assert_called_once_with(
+            'test-azure', 'encryptedcreds', 'azure', 'user1'
+        )
+
+        account = accounts['azure']['accounts']['user1']['test-azure']
+        assert account['container_name'] == 'container1'
+        assert account['region'] == 'southcentralus'
+        assert account['resource_group'] == 'rg_123'
+        assert account['storage_account'] == 'sa_123'
 
     def test_credentials_add_account_invalid(self):
         message = {

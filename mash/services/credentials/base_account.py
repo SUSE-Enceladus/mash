@@ -22,12 +22,11 @@ class BaseAccount(object):
     Base provider account.
     """
     def __init__(
-        self, account_name, partition, provider,
+        self, account_name, provider,
         requesting_user, group_name=None
     ):
         self.account_name = account_name
         self.group_name = group_name
-        self.partition = partition
         self.provider = provider
         self.requesting_user = requesting_user
 
