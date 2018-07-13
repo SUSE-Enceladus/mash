@@ -715,6 +715,19 @@ class TestCredentialsService(object):
                             'test': ['test-aws-gov']
                         }
                     }
+                },
+                "azure": {
+                    "groups": {},
+                    "accounts": {
+                        "user1": {
+                            "test123": {
+                                "container_name": "container1",
+                                "region": "centralus",
+                                "resource_group": "rg_123",
+                                "storage_account": "sa_123"
+                            }
+                        }
+                    }
                 }
             }
         )
