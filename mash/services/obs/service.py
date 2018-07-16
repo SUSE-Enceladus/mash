@@ -48,10 +48,11 @@ class OBSImageBuildResultService(BaseService):
         self.consume_queue(self._process_message)
         try:
             self.channel.start_consuming()
-        except Exception:
+        except Exception as issue:
             if self.channel and self.channel.is_open:
                 self.channel.stop_consuming()
                 self.close_connection()
+            raise(issue)
 
     def _send_job_response(self, job_id, status_message):
         self.log.info(status_message, extra={'job_id': job_id})
@@ -194,7 +195,7 @@ class OBSImageBuildResultService(BaseService):
 
         job_worker = OBSImageBuildResult(
             job_id=job_id, job_file=job['job_file'],
-            project=job['project'], package=job['image'],
+            project=job['project'], image_name=job['image'],
             conditions=job['conditions'],
             download_root=job.get(
                 'download_root'

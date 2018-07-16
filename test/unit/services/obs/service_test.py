@@ -1,3 +1,4 @@
+from pytest import raises
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import Mock
@@ -54,9 +55,10 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.channel.start_consuming.assert_called_once_with()
 
         self.obs_result.channel.start_consuming.side_effect = Exception
-        self.obs_result.post_init()
-        self.obs_result.channel.stop_consuming.assert_called_once_with()
-        self.obs_result.close_connection.assert_called_once_with()
+        with raises(Exception):
+            self.obs_result.post_init()
+            self.obs_result.channel.stop_consuming.assert_called_once_with()
+            self.obs_result.close_connection.assert_called_once_with()
 
     def test_send_job_response(self):
         self.obs_result._send_job_response('815', {})
