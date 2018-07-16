@@ -103,6 +103,7 @@ class OBSImageBuildResult(object):
         self.conditions = conditions
         self.scheduler = None
         self.job = None
+        self.job_deleted = False
         self.job_nonstop = False
         self.log_callback = None
         self.result_callback = None
@@ -168,6 +169,7 @@ class OBSImageBuildResult(object):
         """
         try:
             self.job.remove()
+            self.job_deleted = True
         except Exception:
             pass
 
@@ -268,8 +270,11 @@ class OBSImageBuildResult(object):
         checksum_file = NamedTemporaryFile()
         checksum_current = None
         checksum_latest = None
-        while True:
+        while not self.job_deleted:
             time.sleep(timeout)
+            self._log_callback('Rechecking checksum for {0}'.format(
+                self.image_name)
+            )
             try:
                 self.remote.fetch_file(
                     self.image_name, '.sha256', checksum_file.name
