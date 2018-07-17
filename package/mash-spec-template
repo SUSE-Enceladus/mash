@@ -44,6 +44,7 @@ Requires:       python3-ec2publishimg
 Requires:       python3-ec2uploadimg
 Requires:       python3-ipa
 Requires:       python3-ipa-tests
+Requires:       python3-lxml
 BuildArch:      noarch
 
 %description

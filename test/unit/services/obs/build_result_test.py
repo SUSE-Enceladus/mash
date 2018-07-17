@@ -1,12 +1,12 @@
 from pytest import raises
-from unittest.mock import patch
-from unittest.mock import call
-from unittest.mock import Mock
+from unittest.mock import (
+    patch, call, Mock, MagicMock
+)
 from pytz import utc
 from datetime import datetime
 from collections import namedtuple
 import dateutil.parser
-import subprocess
+import io
 
 from apscheduler.events import (
     EVENT_JOB_MAX_INSTANCES,
@@ -15,15 +15,15 @@ from apscheduler.events import (
 
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.mash_exceptions import (
-    MashOBSLookupException,
     MashImageDownloadException,
     MashVersionExpressionException,
-    MashException
+    MashWebContentException
 )
 
 
 class TestOBSImageBuildResult(object):
-    def setup(self):
+    @patch('mash.services.obs.build_result.WebContent')
+    def setup(self, mock_WebContent):
         self.obs_result = OBSImageBuildResult(
             '815', 'job_file', 'obs_project', 'obs_package'
         )
@@ -142,61 +142,24 @@ class TestOBSImageBuildResult(object):
         self.obs_result.job.remove.side_effect = Exception
         self.obs_result.stop_watchdog()
 
-    @patch.object(OBSImageBuildResult, '_get_binary_list')
     @patch('mash.services.obs.build_result.mkpath')
-    @patch('mash.services.obs.build_result.Command.run')
-    def test_get_image(
-        self, mock_run, mock_mkpath, mock_get_binary_list
-    ):
-        mock_get_binary_list.return_value = [
-            'image.raw.xz',
-            'image.raw.xz.sha256'
-        ]
+    def test_get_image(self, mock_mkpath):
+        self.obs_result.image_metadata_name = \
+            'Azure-Factory.x86_64-1.0.5-Build5.28.packages'
+        self.obs_result.remote.fetch_files.return_value = \
+            ['/tmp/Azure-Factory.x86_64-1.0.5-Build5.28.vhdfixed.xz']
         assert self.obs_result.get_image() == [
-            '/tmp/image.raw.xz', '/tmp/image.raw.xz.sha256'
+            '/tmp/Azure-Factory.x86_64-1.0.5-Build5.28.vhdfixed.xz'
         ]
         mock_mkpath.assert_called_once_with('/tmp')
-        assert mock_run.call_args_list == [
-            call([
-                'osc', '-A', 'https://api.opensuse.org',
-                'getbinaries', '-d', '/tmp', '-q', 'obs_project',
-                'obs_package', 'images', 'x86_64', 'image.raw.xz'
-            ]),
-            call([
-                'osc', '-A', 'https://api.opensuse.org',
-                'getbinaries', '-d', '/tmp', '-q', 'obs_project',
-                'obs_package', 'images', 'x86_64', 'image.raw.xz.sha256'
-            ])
-        ]
-
-    def test_match_image_file(self):
-        name = 'image.iso'
-        assert self.obs_result._match_image_file(name) is True
-        name = 'image.xz'
-        assert self.obs_result._match_image_file(name) is True
-        name = 'image.xz.sha256'
-        assert self.obs_result._match_image_file(name) is True
-        name = 'foo'
-        assert self.obs_result._match_image_file(name) is False
-
-    @patch('mash.services.obs.build_result.Command.run')
-    def test_get_image_obs_error(self, mock_run):
-        mock_run.side_effect = Exception
-        with raises(MashOBSLookupException):
-            self.obs_result.get_image()
-
-    @patch('mash.services.obs.build_result.Command.run')
-    @patch.object(OBSImageBuildResult, '_get_binary_list')
-    def test_get_image_download_error(
-        self, mock_get_binary_list, mock_run
-    ):
-        mock_run.side_effect = Exception
-        mock_get_binary_list.return_value = [
-            'image.raw.xz',
-            'image.raw.xz.sha256'
-        ]
+        self.obs_result.image_metadata_name = \
+            'Azure-Factory.x86_64-1.0.5-Build42.42.packages'
         with raises(MashImageDownloadException):
             self.obs_result.get_image()
+
+    def test_get_build_number(self):
+        name = 'Azure-Factory.x86_64-1.0.5-Build42.42.packages'
+        assert self.obs_result._get_build_number(name) == ['1.0.5', '42.42']
 
     @patch.object(OBSImageBuildResult, '_log_callback')
     def test_job_submit_event(self, mock_log_callback):
@@ -212,64 +175,49 @@ class TestOBSImageBuildResult(object):
     def test_job_skipped_event(self, mock_result_callback):
         self.obs_result._job_skipped_event(Mock())
 
-    @patch.object(OBSImageBuildResult, '_setup_lock')
-    def test_lock(self, mock_setup_lock):
-        self.obs_result._lock()
-        mock_setup_lock.assert_called_once_with(command='lock')
-
-    @patch.object(OBSImageBuildResult, '_setup_lock')
-    def test_unlock(self, mock_setup_lock):
-        self.obs_result._unlock()
-        mock_setup_lock.assert_called_once_with(command='unlock')
-
-    @patch('mash.services.obs.build_result.Command.run')
-    @patch.object(OBSImageBuildResult, '_log_error')
-    @patch.object(OBSImageBuildResult, '_log_callback')
-    def test_setup_lock(self, mock_log_callback, mock_log_error, mock_run):
-        assert self.obs_result._setup_lock('lock') is True
-        mock_log_callback.assert_called_once_with(
-            'lock: obs_project/obs_package'
-        )
-        mock_run.assert_called_once_with(
-            [
-                'osc', '-A', 'https://api.opensuse.org',
-                'lock', '-m', 'mash_lock', 'obs_project', 'obs_package'
-            ]
-        )
-        mock_run.side_effect = Exception('error')
-        assert self.obs_result._setup_lock('lock') is False
-        mock_log_error.assert_called_once_with(
-            'lock failed for obs_project/obs_package: Exception: error'
-        )
-
     @patch('mash.services.obs.build_result.threading.Thread')
     @patch.object(OBSImageBuildResult, '_watch_obs_result')
     def test_wait_for_new_image(self, mock_watch_obs_result, mock_Thread):
         osc_result_thread = Mock()
-        osc_result_thread.is_alive.return_value = True
         mock_Thread.return_value = osc_result_thread
-        self.obs_result.osc_results_process = Mock()
-        self.obs_result._wait_for_new_image(10)
+        self.obs_result._wait_for_new_image()
         mock_Thread.assert_called_once_with(target=mock_watch_obs_result)
         osc_result_thread.start.assert_called_once_with()
-        assert osc_result_thread.join.call_args_list == [
-            call(10), call()
-        ]
-        self.obs_result.osc_results_process.terminate.assert_called_once_with()
+        osc_result_thread.join.assert_called_once_with()
 
-    @patch('mash.services.obs.build_result.subprocess.Popen')
-    def test_watch_obs_result(self, mock_Popen):
-        self.obs_result._watch_obs_result()
-        mock_Popen.assert_called_once_with(
-            [
-                'osc', '-A', 'https://api.opensuse.org', 'results',
-                '--arch', 'x86_64', '--repo', 'images', '--watch',
-                'obs_project', 'obs_package'
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        self.obs_result.osc_results_process.communicate.assert_called_once_with()
+    @patch('mash.services.obs.build_result.NamedTemporaryFile')
+    @patch('time.sleep')
+    def test_watch_obs_result(self, mock_sleep, mock_NamedTemporaryFile):
+        tempfile = Mock()
+        tempfile.name = 'tmpfile'
+        mock_NamedTemporaryFile.return_value = tempfile
+
+        # simulate fetch_file success, exception, success
+        fetch_file_returns = [True, False, True]
+
+        # simulate first checksum not equal second attempt
+        handle_read_returns = ['a', 'b']
+
+        def fetch_file(*args):
+            if not fetch_file_returns.pop():
+                raise Exception
+
+        def handle_read():
+            return handle_read_returns.pop()
+
+        self.obs_result.remote.fetch_file.side_effect = fetch_file
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.read.side_effect = handle_read
+            self.obs_result._watch_obs_result()
+            assert mock_sleep.call_args_list == [
+                call(60), call(60), call(60)
+            ]
+            assert mock_open.call_args_list == [
+                call(tempfile.name), call(tempfile.name)
+            ]
 
     def test_image_conditions_complied(self):
         self.obs_result.image_status['version'] = 'unknown'
@@ -279,8 +227,6 @@ class TestOBSImageBuildResult(object):
         self.obs_result.image_status['conditions'] = [{'status': False}]
         assert self.obs_result._image_conditions_complied() is False
 
-    @patch.object(OBSImageBuildResult, '_lock')
-    @patch.object(OBSImageBuildResult, '_unlock')
     @patch.object(OBSImageBuildResult, '_log_callback')
     @patch.object(OBSImageBuildResult, '_result_callback')
     @patch.object(OBSImageBuildResult, '_lookup_image_packages_metadata')
@@ -292,7 +238,7 @@ class TestOBSImageBuildResult(object):
         self, mock_get_image, mock_wait_for_new_image,
         mock_image_conditions_complied, mock_lookup_package,
         mock_lookup_image_packages_metadata,
-        mock_result_callback, mock_log_callback, mock_unlock, mock_lock
+        mock_result_callback, mock_log_callback
     ):
         self.obs_result.image_status['version'] = '1.2.3'
         self.obs_result.image_status['conditions'] = [
@@ -316,8 +262,6 @@ class TestOBSImageBuildResult(object):
         mock_lookup_package.return_value = True
         mock_image_conditions_complied.return_value = True
         self.obs_result._update_image_status()
-        mock_lock.assert_called_once_with()
-        mock_unlock.assert_called_once_with()
         mock_result_callback.assert_called_once_with()
         assert self.obs_result.image_status == {
             'job_status': 'success',
@@ -340,66 +284,39 @@ class TestOBSImageBuildResult(object):
         self.obs_result._update_image_status()
         assert self.obs_result.image_status['job_status'] == 'failed'
 
-    @patch.object(OBSImageBuildResult, '_lock')
-    @patch.object(OBSImageBuildResult, '_unlock')
     @patch.object(OBSImageBuildResult, '_log_callback')
-    def test_update_image_status_lock_failed(
-        self, mock_log_callback, mock_unlock, mock_lock
+    @patch.object(OBSImageBuildResult, '_lookup_image_packages_metadata')
+    def test_update_image_status_raises(
+        self, mock_lookup_image_packages_metadata, mock_log_callback
     ):
-        mock_lock.return_value = False
+        mock_lookup_image_packages_metadata.side_effect = \
+            MashWebContentException('request error')
         self.obs_result._update_image_status()
-        assert self.obs_result.image_status['job_status'] == 'failed'
-        mock_lock.assert_called_once_with()
+        assert mock_log_callback.call_args_list == [
+            call('Job running'),
+            call('Error: MashWebContentException: request error')
+        ]
 
-    @patch.object(OBSImageBuildResult, '_lock')
-    @patch.object(OBSImageBuildResult, '_unlock')
-    @patch.object(OBSImageBuildResult, '_log_callback')
-    def test_update_image_status_error(
-        self, mock_log_callback, mock_unlock, mock_lock
-    ):
-        self.obs_result.log = Mock()
-        mock_lock.side_effect = MashException('error')
-        self.obs_result._update_image_status()
-        mock_unlock.assert_called_once_with()
-
-    @patch.object(OBSImageBuildResult, '_get_binary_list')
-    @patch('mash.services.obs.build_result.Command.run')
     @patch('mash.services.obs.build_result.NamedTemporaryFile')
-    @patch('os.rename')
-    def test_lookup_image_packages_metadata(
-        self, mock_rename, mock_NamedTemporaryFile, mock_run,
-        mock_get_binary_list
-    ):
+    def test_lookup_image_packages_metadata(self, mock_NamedTemporaryFile):
         tempfile = Mock()
         tempfile.name = '../data/image.packages'
         mock_NamedTemporaryFile.return_value = tempfile
-        mock_get_binary_list.return_value = [
-            'Azure-Factory.x86_64-1.0.5-Build5.28.vhdfixed.xz.sha256',
-            'image.packages'
-        ]
+        self.obs_result.remote.fetch_file.return_value = \
+            'Azure-Factory.x86_64-1.0.5-Build5.28.packages'
         data = self.obs_result._lookup_image_packages_metadata()
-        mock_run.assert_called_once_with(
-            [
-                'osc', '-A', 'https://api.opensuse.org', 'getbinaries',
-                '-d', '/tmp', '-q', 'obs_project', 'obs_package',
-                'images', 'x86_64', 'image.packages'
-            ]
-        )
-        mock_rename.assert_called_once_with(
-            '/tmp/image.packages', '../data/image.packages'
+        self.obs_result.remote.fetch_file.assert_called_once_with(
+            'obs_package', '.packages', '../data/image.packages'
         )
         assert data['file-magic'].checksum == '8e776ae58aac4e50edcf190e493e5c20'
         assert self.obs_result.image_status['version'] == '1.0.5'
-        mock_get_binary_list.return_value = [
-            'foo.xz.sha256'
-        ]
+        self.obs_result.remote.fetch_file.return_value = 'foo.packages'
         self.obs_result._lookup_image_packages_metadata()
         assert self.obs_result.image_status['version'] == 'unknown'
 
-    @patch('mash.services.obs.build_result.Command.run')
     @patch('mash.services.obs.build_result.NamedTemporaryFile')
     def test_lookup_package(
-        self, mock_NamedTemporaryFile, mock_run
+        self, mock_NamedTemporaryFile
     ):
         tempfile = Mock()
         tempfile.name = '../data/image.packages'

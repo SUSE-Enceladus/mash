@@ -1,8 +1,13 @@
 {
     "obs_job": {
-        "id": "4711",
-        "image": "test-image-docker",
-        "project": "Virtualization:Appliances:Images:Testing_x86",
-        "utctime": "always"
+        "id": "5678",
+        "download_root": "http://download.suse.de/ibs",
+        "image": "SLES12-Azure-BYOS",
+        "project": "Devel:/PubCloud:/Stable:/Images12",
+        "utctime": "always",
+        "conditions": [
+            {"package": ["kernel-default", ">=3.12.61", ">=52.136"]},
+            {"image": "0.2.4"}
+        ]
     }
 }

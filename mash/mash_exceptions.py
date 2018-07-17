@@ -168,3 +168,11 @@ class MashAzurePageBlobUpdateError(MashException):
     """
     Exception raised if the page blob can not be updated
     """
+
+
+class MashWebContentException(MashException):
+    """
+    Exception raised if a remote request from the WebContent
+    method space has failed. The origin exception message is
+    part of the WebContent exception
+    """
