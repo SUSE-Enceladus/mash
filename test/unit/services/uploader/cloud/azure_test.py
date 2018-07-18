@@ -1,15 +1,15 @@
+import io
 from pytest import raises
 from unittest.mock import (
     MagicMock, Mock, patch, call
-)
-from test.unit.test_helper import (
-    patch_open, context_manager
 )
 from collections import namedtuple
 
 from mash.services.uploader.cloud.azure import UploadAzure
 from mash.mash_exceptions import MashUploadException
 from mash.utils.json_format import JsonFormat
+from mash.services.uploader.config import UploaderConfig
+from mash.services.base_defaults import Defaults
 
 from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.compute import ComputeManagementClient
@@ -17,10 +17,8 @@ from azure.mgmt.compute import ComputeManagementClient
 
 class TestUploadAzure(object):
     @patch('mash.services.uploader.cloud.azure.NamedTemporaryFile')
-    @patch_open
-    def setup(self, mock_open, mock_NamedTemporaryFile):
-        open_context = context_manager()
-        mock_open.return_value = open_context.context_manager_mock
+    @patch('mash.services.uploader.cloud.azure.get_configuration')
+    def setup(self, mock_get_configuration, mock_NamedTemporaryFile):
         tempfile = Mock()
         tempfile.name = 'tempfile'
         mock_NamedTemporaryFile.return_value = tempfile
@@ -49,43 +47,59 @@ class TestUploadAzure(object):
             'storage_account': 'storage',
             'region': 'region'
         }
-        self.uploader = UploadAzure(
-            self.credentials, 'file', 'name', 'description', custom_args
+        mock_get_configuration.return_value = UploaderConfig(
+            config_file='../data/mash_config_empty.yaml'
         )
-        open_context.file_mock.write.assert_called_once_with(
-            JsonFormat.json_message(self.credentials)
+        with patch('builtins.open', create=True):
+            self.uploader = UploadAzure(
+                self.credentials, 'file', 'name', 'description', custom_args
+            )
+            config = self.uploader.config
+            assert config.get_azure_max_chunk_byte_size() == \
+                Defaults.get_azure_max_chunk_byte_size()
+            assert config.get_azure_max_chunk_retry_attempts() == \
+                Defaults.get_azure_max_chunk_retry_attempts()
+        mock_get_configuration.return_value = UploaderConfig(
+            config_file='../data/mash_config.yaml'
         )
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            self.uploader = UploadAzure(
+                self.credentials, 'file', 'name', 'description', custom_args
+            )
+            file_handle.write.assert_called_once_with(
+                JsonFormat.json_message(self.credentials)
+            )
 
     @patch('mash.services.uploader.cloud.azure.NamedTemporaryFile')
-    @patch_open
-    def test_init_incomplete_arguments(
-        self, mock_open, mock_NamedTemporaryFile
-    ):
+    def test_init_incomplete_arguments(self, mock_NamedTemporaryFile):
         custom_args = {
             'resource_group': 'group_name',
             'container_name': 'container',
             'storage_account': 'storage',
             'region': 'region'
         }
-        del custom_args['storage_account']
-        with raises(MashUploadException):
-            UploadAzure(
-                self.credentials, 'file', 'name', 'description', custom_args
-            )
-        del custom_args['container_name']
-        with raises(MashUploadException):
-            UploadAzure(
-                self.credentials, 'file', 'name', 'description', custom_args
-            )
-        del custom_args['region']
-        with raises(MashUploadException):
-            UploadAzure(
-                self.credentials, 'file', 'name', 'description', custom_args
-            )
-        with raises(MashUploadException):
-            UploadAzure(
-                self.credentials, 'file', 'name', 'description', None
-            )
+        with patch('builtins.open', create=True):
+            del custom_args['storage_account']
+            with raises(MashUploadException):
+                UploadAzure(
+                    self.credentials, 'file', 'name', 'description', custom_args
+                )
+            del custom_args['container_name']
+            with raises(MashUploadException):
+                UploadAzure(
+                    self.credentials, 'file', 'name', 'description', custom_args
+                )
+            del custom_args['region']
+            with raises(MashUploadException):
+                UploadAzure(
+                    self.credentials, 'file', 'name', 'description', custom_args
+                )
+            with raises(MashUploadException):
+                UploadAzure(
+                    self.credentials, 'file', 'name', 'description', None
+                )
 
     @patch('mash.services.uploader.cloud.azure.get_client_from_auth_file')
     @patch('mash.services.uploader.cloud.azure.PageBlobService')
@@ -124,7 +138,7 @@ class TestUploadAzure(object):
         page_blob = Mock()
         next_results = [3, 2, 1]
 
-        def side_effect(stream):
+        def side_effect(stream, chunk_size, retry_count):
             try:
                 return next_results.pop()
             except Exception:
@@ -149,10 +163,10 @@ class TestUploadAzure(object):
             page_blob_service, 'name', 'container', 1024
         )
         assert page_blob.next.call_args_list == [
-            call(mock_lzma.LZMAFile.return_value),
-            call(mock_lzma.LZMAFile.return_value),
-            call(mock_lzma.LZMAFile.return_value),
-            call(mock_lzma.LZMAFile.return_value)
+            call(mock_lzma.LZMAFile.return_value, 4096, 5),
+            call(mock_lzma.LZMAFile.return_value, 4096, 5),
+            call(mock_lzma.LZMAFile.return_value, 4096, 5),
+            call(mock_lzma.LZMAFile.return_value, 4096, 5)
         ]
         mock_FileType.assert_called_once_with('file')
         system_image_file_type.is_xz.assert_called_once_with()
@@ -178,8 +192,8 @@ class TestUploadAzure(object):
         self.uploader.upload()
 
         assert page_blob.next.call_args_list == [
-            call(mock_open.return_value),
-            call(mock_open.return_value),
-            call(mock_open.return_value),
-            call(mock_open.return_value)
+            call(mock_open.return_value, 4096, 5),
+            call(mock_open.return_value, 4096, 5),
+            call(mock_open.return_value, 4096, 5),
+            call(mock_open.return_value, 4096, 5)
         ]

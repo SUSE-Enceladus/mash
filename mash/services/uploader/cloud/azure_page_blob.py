@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 from collections import OrderedDict
+from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
     MashAzurePageBlobZeroPageError,
@@ -53,9 +54,13 @@ class PageBlob(object):
                 '{0}: {1}'.format(type(e).__name__, e)
             )
 
-    def next(self, data_stream, max_chunk_byte_size=None, max_attempts=5):
-        if not max_chunk_byte_size:
-            max_chunk_byte_size = self.blob_service.MAX_CHUNK_GET_SIZE
+    def next(self, data_stream, max_chunk_byte_size=None, max_attempts=None):
+        max_chunk_byte_size = max_chunk_byte_size or \
+            Defaults.get_azure_max_chunk_byte_size()
+
+        max_attempts = max_attempts or \
+            Defaults.get_azure_max_chunk_retry_attempts()
+
         max_chunk_byte_size = int(max_chunk_byte_size)
 
         requested_bytes = min(

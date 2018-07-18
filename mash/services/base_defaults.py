@@ -21,7 +21,6 @@ class Defaults(object):
     """
     Default values
     """
-
     @classmethod
     def get_config(self):
         return '/etc/mash/mash_config.yaml'
@@ -52,3 +51,11 @@ class Defaults(object):
     @classmethod
     def get_non_credential_service_names(self):
         return ['obs']
+
+    @classmethod
+    def get_azure_max_chunk_byte_size(self):
+        return 4096
+
+    @classmethod
+    def get_azure_max_chunk_retry_attempts(self):
+        return 5

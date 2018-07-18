@@ -15,19 +15,35 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-
 from mash.services.base_config import BaseConfig
+from mash.services.base_defaults import Defaults
 
 
 class UploaderConfig(BaseConfig):
     """
     Implements reading of uploader service configuration file:
 
-    * /etc/mash/uploader_config.yml
+    * /etc/mash/mash_config.yaml
 
     The mash configuration file for the uploader service is a yaml
     formatted file containing information to control the behavior
     of the uploader service.
+
+    uploader:
+      azure:
+        # chunk size in bytes, default value taken from azure SDK
+        max_chunk_byte_size: 4096
+        # max retries on block upload error
+        max_chunk_retry_attempts: 5
     """
     def __init__(self, config_file=None):
         super(UploaderConfig, self).__init__(config_file)
+        self.azure_uploader = self._get_attribute('azure', 'uploader') or dict()
+
+    def get_azure_max_chunk_byte_size(self):
+        return self.azure_uploader.get('max_chunk_byte_size') or \
+            Defaults.get_azure_max_chunk_byte_size()
+
+    def get_azure_max_chunk_retry_attempts(self):
+        return self.azure_uploader.get('max_chunk_retry_attempts') or \
+            Defaults.get_azure_max_chunk_retry_attempts()

@@ -24,6 +24,7 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.storage.blob.pageblobservice import PageBlobService
 
 # project
+from mash.services import get_configuration
 from mash.services.uploader.cloud.azure_page_blob import PageBlob
 from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
@@ -72,6 +73,8 @@ class UploadAzure(UploadBase):
 
         self._create_auth_file()
 
+        self.config = get_configuration(service='uploader')
+
     def upload(self):
         system_image_file_type = FileType(
             self.system_image_file
@@ -97,7 +100,11 @@ class UploadAzure(UploadBase):
         with open_image(self.system_image_file, 'rb') as image_stream:
             try:
                 while True:
-                    self.bytes_transfered = page_blob.next(image_stream)
+                    self.bytes_transfered = page_blob.next(
+                        image_stream,
+                        self.config.get_azure_max_chunk_byte_size(),
+                        self.config.get_azure_max_chunk_retry_attempts()
+                    )
             except StopIteration:
                 image_stream.close()
 
