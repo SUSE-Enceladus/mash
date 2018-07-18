@@ -35,6 +35,10 @@ class UploadBase(object):
 
     * :attr:`cloud_image_description`
         description of the image in the public cloud
+
+    * :attr:`custom_args`
+        dictionary including cloud provider specific
+        arguments required for uploading.
     """
     def __init__(
         self, credentials, system_image_file, cloud_image_name,

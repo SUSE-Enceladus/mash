@@ -29,6 +29,36 @@ from mash.utils.mash_utils import generate_name
 class UploadAmazon(UploadBase):
     """
     Implements system image upload to Amazon
+
+    Amazon specific custom arguments:
+
+    For upload to Amazon the ec2uploadimg python interface
+    is used. The custom parameters are passed in one by one
+    to this application.
+
+    .. code:: python
+
+        custom_args={
+            'ssh_key_pair_name': 'name_of_ssh_keypair_for_upload',
+            'verbose': True|False,
+            'launch_ami': 'name_of_helper_ami_to_run_for_upload',
+            'use_grub2': True|False,
+            'use_private_ip': True|False,
+            'root_volume_size': 'size_of_attached_root_volume',
+            'image_virt_type': 'virtualization_type',
+            'launch_inst_type': 'helper_instance_type',
+            'inst_user_name': 'user_name_for_ssh_access_to_helper_instance',
+            'ssh_timeout': 'ssh_timeout_sec',
+            'wait_count': 'number_of_wait_cycles',
+            'vpc_subnet_id': 'vpc_subnet_id_for_helper_instance',
+            'ssh_key_private_key_file': 'path_to_ssh_private_key_file',
+            'security_group_ids': 'security_group_id_for_helper_instance',
+            'sriov_type': 'SRIOV type',
+            'access_key': 'helper_instance_access_key',
+            'ena_support': True|False,
+            'backing_store': 'backing_store_type',
+            'secret_key': 'helper_instance_secret_access_key'
+        }
     """
     def post_init(self):
         self.region = 'eu-central-1'

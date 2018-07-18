@@ -34,6 +34,17 @@ from mash.utils.filetype import FileType
 class UploadAzure(UploadBase):
     """
     Implements system image upload to Azure
+
+    Azure specific custom arguments:
+
+    .. code:: python
+
+        custom_args={
+            'region': 'region_name',
+            'container_name': 'storage_container_name',
+            'storage_account': 'storage_account_name',
+            'resource_group': 'optional_resource_group_name'
+        }
     """
     def post_init(self):
         if not self.custom_args:
