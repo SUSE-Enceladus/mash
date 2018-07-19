@@ -33,7 +33,7 @@ class EC2Job(BaseJob):
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, old_cloud_image_name, project,
         share_with, allow_copy, image_description, distro,
-        tests, conditions=None, instance_type=None
+        tests, conditions=None, download_root=None, instance_type=None
     ):
         self.share_with = share_with
         self.allow_copy = allow_copy
@@ -43,7 +43,8 @@ class EC2Job(BaseJob):
             job_id, accounts_info, provider_data, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, old_cloud_image_name, project,
-            image_description, distro, tests, conditions, instance_type
+            image_description, distro, tests, conditions, download_root,
+            instance_type
         )
 
     def _get_account_info(self):

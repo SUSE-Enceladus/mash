@@ -2,7 +2,7 @@
     "obs_job": {
         "id": "123",
         "image": "test_image_oem",
-        "project": "Virtualization:Appliances:Images:Testing_x86",
+        "project": "Virtualization:/Appliances:/Images:/Testing_x86",
         "utctime": "now",
         "conditions": [
             {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
