@@ -140,6 +140,7 @@ base_job_message = {
             },
             'minItems': 1
         },
+        'download_root': {'$ref': '#/definitions/non_empty_string'},
         'image_description': {'$ref': '#/definitions/non_empty_string'},
         'distro': {'$ref': '#/definitions/non_empty_string'},
         'instance_type': {'$ref': '#/definitions/non_empty_string'},

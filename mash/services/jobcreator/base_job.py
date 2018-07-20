@@ -30,7 +30,7 @@ class BaseJob(object):
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, old_cloud_image_name, project,
         image_description, distro, tests,
-        conditions=None, instance_type=None
+        conditions=None, download_root=None, instance_type=None
     ):
         self.id = job_id
         self.accounts_info = accounts_info
@@ -48,6 +48,7 @@ class BaseJob(object):
         self.distro = distro
         self.tests = tests
         self.conditions = conditions
+        self.download_root = download_root
         self.instance_type = instance_type
         self.utctime = utctime
 
@@ -126,6 +127,9 @@ class BaseJob(object):
 
         if self.conditions:
             obs_message['obs_job']['conditions'] = self.conditions
+
+        if self.download_root:
+            obs_message['obs_job']['download_root'] = self.download_root
 
         return json.dumps(obs_message, sort_keys=True)
 

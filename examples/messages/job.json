@@ -15,6 +15,7 @@
     {"package": ["name", "and", "constraints"]},
     {"image": "version"}
   ],
+  "download_root": "http://download.opensuse.org/repositories/",
   "share_with": "all",
   "allow_copy": false,
   "image_description": "New Image #123",

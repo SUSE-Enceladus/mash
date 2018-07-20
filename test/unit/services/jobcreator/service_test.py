@@ -137,6 +137,7 @@ class TestJobCreatorService(object):
             '{"obs_job": {'
             '"conditions": [{"package": ["name", "and", "constraints"]}, '
             '{"image": "version"}], '
+            '"download_root": "http://download.opensuse.org/repositories/", '
             '"id": "12345678-1234-1234-1234-123456789012", '
             '"image": "test_image_oem", '
             '"project": "Cloud:Tools", '
