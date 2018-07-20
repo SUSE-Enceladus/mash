@@ -108,8 +108,18 @@ class TestJobCreatorService(object):
             },
             "accounts": {
                 "user1": {
-                    "test-aws-gov": "aws-us-gov",
-                    "test-aws": "aws"
+                    "test-aws-gov": {
+                        "partition": "aws-us-gov"
+                    },
+                    "test-aws": {
+                        "additional_regions": [
+                            {
+                                "name": "ap-northeast-3",
+                                "helper_image": "ami-82444aff"
+                            }
+                        ],
+                        "partition": "aws"
+                    }
                 }
             }
         }
@@ -143,22 +153,6 @@ class TestJobCreatorService(object):
             '"project": "Cloud:Tools", '
             '"utctime": "now"}}'
         )
-
-        msg = mock_publish.mock_calls[2][1][2]
-        data = json.loads(msg)['uploader_job']
-        assert data['cloud_image_name'] == 'new_image_123'
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['image_description'] == 'New Image #123'
-        assert data['provider'] == 'ec2'
-        assert data['target_regions']['ap-northeast-1']['account'] == \
-            'test-aws'
-        assert data['target_regions']['ap-northeast-1']['helper_image'] == \
-            'ami-383c1956'
-        assert data['target_regions']['us-gov-west-1']['account'] == \
-            'test-aws-gov'
-        assert data['target_regions']['us-gov-west-1']['helper_image'] == \
-            'ami-c2b5d7e1'
-        assert data['utctime'] == 'now'
 
         assert mock_publish.mock_calls[2] == call(
             'uploader', 'job_document',
@@ -196,11 +190,12 @@ class TestJobCreatorService(object):
             '"replication_source_regions": {'
             '"ap-northeast-1": {"account": "test-aws", '
             '"target_regions": ["ap-northeast-1", '
-            '"ap-northeast-2"]}, '
+            '"ap-northeast-2", "ap-northeast-3"]}, '
             '"us-gov-west-1": {"account": "test-aws-gov", '
             '"target_regions": ["us-gov-west-1"]}}, '
             '"utctime": "now"}}'
         )
+
         msg = mock_publish.mock_calls[5][1][2]
         data = json.loads(msg)['publisher_job']
         assert data['allow_copy'] is False
@@ -218,6 +213,7 @@ class TestJobCreatorService(object):
                 assert region['helper_image'] == 'ami-383c1956'
                 assert 'ap-northeast-1' in region['target_regions']
                 assert 'ap-northeast-2' in region['target_regions']
+                assert 'ap-northeast-3' in region['target_regions']
 
         msg = mock_publish.mock_calls[6][1][2]
         data = json.loads(msg)['deprecation_job']
@@ -235,6 +231,7 @@ class TestJobCreatorService(object):
                 assert region['helper_image'] == 'ami-383c1956'
                 assert 'ap-northeast-1' in region['target_regions']
                 assert 'ap-northeast-2' in region['target_regions']
+                assert 'ap-northeast-3' in region['target_regions']
 
         assert mock_publish.mock_calls[7] == call(
             'pint', 'job_document',

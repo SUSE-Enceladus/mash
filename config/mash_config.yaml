@@ -25,7 +25,6 @@ provider:
       aws:
         - ap-northeast-1
         - ap-northeast-2
-        - ap-northeast-3
         - ap-south-1
         - ap-southeast-1
         - ap-southeast-2
@@ -47,7 +46,6 @@ provider:
     helper_images:
       ap-northeast-1: ami-383c1956
       ap-northeast-2: ami-249b554a
-      ap-northeast-3: ami-82444aff
       ap-southeast-1: ami-c9b572aa
       ap-southeast-2: ami-48d38c2b
       ap-south-1: ami-a6d1bac9

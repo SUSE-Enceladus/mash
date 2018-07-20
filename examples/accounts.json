@@ -7,9 +7,25 @@
     },
     "accounts": {
       "user2": {
-        "ACCOUNT_ONE": "aws-cn",
-        "ACCOUNT_TWO": "aws"
-      },
+        "ACCOUNT_ONE": {
+          "additional_regions": [
+            {
+              "name": "ap-northeast-4",
+              "helper_image": "ami-82444aff"
+            }
+          ],
+          "partition": "aws-us-gov"
+        },
+        "ACCOUNT_TWO": {
+          "additional_regions": [
+            {
+              "name": "ap-northeast-3",
+              "helper_image": "ami-82444aff"
+            }
+          ],
+          "partition": "aws"
+        }
+      }
     }
   },
   "azure": {
