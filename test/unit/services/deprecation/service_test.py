@@ -1,5 +1,3 @@
-import json
-
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
@@ -169,9 +167,7 @@ class TestDeprecationService(object):
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
         self.deprecation.log.info.assert_called_once_with(
-            'Job queued, awaiting publisher result: {0}'.format(
-                json.dumps(job_config, indent=2)
-            ),
+            'Job 1 queued, awaiting publisher result.',
             extra={'job_id': '1'}
         )
 
