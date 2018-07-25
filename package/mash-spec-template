@@ -27,7 +27,6 @@ Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
-Requires:       osc
 Requires:       rabbitmq-server
 Requires:       python3-boto3
 Requires:       python3-cryptography
