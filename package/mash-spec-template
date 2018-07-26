@@ -28,6 +28,10 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 Requires:       rabbitmq-server
+Requires:       python3-azure-mgmt-compute
+Requires:       python3-azure-mgmt-resource
+Requires:       python3-azure-mgmt-storage
+Requires:       python3-azure-storage
 Requires:       python3-boto3
 Requires:       python3-cryptography
 Requires:       python3-jsonschema

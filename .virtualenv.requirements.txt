@@ -5,6 +5,10 @@
 # $ pip install -U pip setuptools
 # $ pip install -r .virtualenv.requirements.txt
 
+azure-mgmt-compute
+azure-mgmt-resource
+azure-mgmt-storage
+azure-storage-blob
 setuptools
 idna<2.7
 boto3
@@ -20,5 +24,4 @@ ec2deprecateimg
 ec2publishimg
 ec2uploadimg
 python3-ipa
-azure
 lxml
