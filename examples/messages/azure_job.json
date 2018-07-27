@@ -21,6 +21,7 @@
     {"package": ["name", "and", "constraints"]},
     {"image": "version"}
   ],
+  "download_root": "http://download.opensuse.org/repositories/",
   "image_description": "New Image #123",
   "distro": "sles",
   "instance_type": "t2.micro",
