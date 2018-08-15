@@ -1,5 +1,3 @@
-import json
-
 from pytest import raises
 
 from unittest.mock import call, MagicMock, Mock, patch
@@ -165,9 +163,7 @@ class TestReplicationService(object):
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
         self.replication.log.info.assert_called_once_with(
-            'Job queued, awaiting testing result: {0}'.format(
-                json.dumps(job_config, indent=2)
-            ),
+            'Job 1 queued, awaiting testing result.',
             extra={'job_id': '1'}
         )
 
