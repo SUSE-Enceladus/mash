@@ -18,6 +18,7 @@
 
 import logging
 import sys
+import traceback
 
 # project
 from mash.mash_exceptions import MashException
@@ -40,11 +41,15 @@ def main():
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))
+        traceback.print_exc()
         sys.exit(1)
+    except KeyboardInterrupt:
+        sys.exit(0)
     except SystemExit as e:
         # user exception, program aborted by user
         sys.exit(e)
-    except Exception:
+    except Exception as e:
         # exception we did no expect, show python backtrace
-        log.error('Unexpected error:')
-        raise
+        log.error('Unexpected error: {0}'.format(e))
+        traceback.print_exc()
+        sys.exit(1)

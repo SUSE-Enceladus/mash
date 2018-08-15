@@ -1,4 +1,3 @@
-from pytest import raises
 from unittest.mock import patch
 
 from mash.mash_exceptions import MashTestingException
@@ -27,6 +26,16 @@ class TestIPATestingServiceMain(object):
 
     @patch('mash.services.testing_service.TestingService')
     @patch('sys.exit')
+    def test_logger_main_keyboard_interrupt(
+            self, mock_exit, mock_testing_service
+    ):
+        mock_testing_service.side_effect = KeyboardInterrupt()
+
+        main()
+        mock_exit.assert_called_once_with(0)
+
+    @patch('mash.services.testing_service.TestingService')
+    @patch('sys.exit')
     def test_testing_main_system_exit(self, mock_exit, mock_testing_service):
         mock_testing_service.side_effect = SystemExit()
 
@@ -34,8 +43,11 @@ class TestIPATestingServiceMain(object):
         mock_exit.assert_called_once_with(mock_testing_service.side_effect)
 
     @patch('mash.services.testing_service.TestingService')
-    def test_testing_main_unexpected_error(self, mock_testing_service):
+    @patch('sys.exit')
+    def test_testing_main_unexpected_error(
+        self, mock_exit, mock_testing_service
+    ):
         mock_testing_service.side_effect = Exception('Error!')
 
-        with raises(Exception):
-            main()
+        main()
+        mock_exit.assert_called_once_with(1)

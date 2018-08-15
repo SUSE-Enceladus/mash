@@ -1,4 +1,3 @@
-from pytest import raises
 from unittest.mock import patch
 
 from mash.mash_exceptions import MashLoggerException
@@ -44,8 +43,11 @@ class TestLogger(object):
         mock_exit.assert_called_once_with(0)
 
     @patch('mash.services.logger_service.LoggerService')
-    def test_logger_main_unexpected_error(self, mock_logger_service):
+    @patch('sys.exit')
+    def test_logger_main_unexpected_error(
+        self, mock_exit, mock_logger_service
+    ):
         mock_logger_service.side_effect = Exception('Error!')
 
-        with raises(Exception):
-            main()
+        main()
+        mock_exit.assert_called_once_with(1)
