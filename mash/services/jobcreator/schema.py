@@ -62,6 +62,19 @@ add_account_ec2 = {
     'type': 'object',
     'properties': {
         'account_name': {'$ref': '#/definitions/non_empty_string'},
+        'additional_regions': {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'name': {'$ref': '#/definitions/non_empty_string'},
+                    'helper_image': {'$ref': '#/definitions/non_empty_string'}
+                },
+                'required': ['name', 'helper_image'],
+                'additionalProperties': False
+            },
+            'minItems': 1
+        },
         'credentials': {
             'type': 'object',
             'properties': {

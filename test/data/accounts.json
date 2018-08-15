@@ -10,8 +10,24 @@
     },
     "accounts": {
       "user2": {
-        "test-aws-gov": "aws-us-gov",
-        "test-aws": "aws"
+        "test-aws-gov": {
+          "additional_regions": [
+            {
+              "name": "ap-northeast-4",
+              "helper_image": "ami-82444aff"
+            }
+          ],
+          "partition": "aws-us-gov"
+        },
+        "test-aws": {
+          "additional_regions": [
+            {
+              "name": "ap-northeast-3",
+              "helper_image": "ami-82444aff"
+            }
+          ],
+          "partition": "aws"
+        }
       }
     }
   },

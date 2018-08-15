@@ -613,7 +613,8 @@ class TestCredentialsService(object):
             'acnt123', 'encryptedcreds', 'ec2', 'user1'
         )
 
-        assert accounts['ec2']['accounts']['user1']['acnt123'] == 'aws'
+        assert accounts['ec2']['accounts']['user1']['acnt123'] == \
+            {'additional_regions': None, 'partition': 'aws'}
         assert accounts['ec2']['groups']['user1']['group123'] == ['acnt123']
 
     @patch.object(CredentialsService, '_store_encrypted_credentials')
@@ -704,7 +705,15 @@ class TestCredentialsService(object):
                 'ec2': {
                     'accounts': {
                         'user2': {
-                            'test-aws-gov': 'aws-us-gov'
+                            'test-aws-gov': {
+                                'additional_regions': [
+                                    {
+                                        'name': 'ap-northeast-4',
+                                        'helper_image': 'ami-82444aff'
+                                    }
+                                ],
+                                'partition': 'aws-us-gov'
+                            }
                         }
                     },
                     'groups': {

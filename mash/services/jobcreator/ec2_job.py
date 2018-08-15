@@ -92,6 +92,16 @@ class EC2Job(BaseJob):
                     account, self.requesting_user
                 )
 
+            # Add additional regions for account
+            additional_regions = \
+                self.accounts_info['accounts'][self.requesting_user][account]\
+                    .get('additional_regions')
+
+            if additional_regions:
+                for region in additional_regions:
+                    helper_images[region['name']] = region['helper_image']
+                    target_regions.append(region['name'])
+
             # A random region is selected as source region.
             index = random.randint(0, len(target_regions) - 1)
             target = target_regions[index]
@@ -105,7 +115,7 @@ class EC2Job(BaseJob):
         """
         Return a list of regions based on account name.
         """
-        regions_key = self.accounts_info['accounts'][user][account]
+        regions_key = self.accounts_info['accounts'][user][account]['partition']
         return self.provider_data['regions'][regions_key]
 
     def _get_target_regions_list(self):
