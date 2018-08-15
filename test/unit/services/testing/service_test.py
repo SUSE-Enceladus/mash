@@ -10,6 +10,7 @@ from mash.services.base_service import BaseService
 from mash.services.testing.service import TestingService
 from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
+from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
 
@@ -44,12 +45,20 @@ class TestIPATestingService(object):
         self.testing.listener_queue = 'listener'
         self.testing.ssh_private_key_file = 'private_ssh_key.file'
 
-        self.error_message = '{"testing_result": ' \
-            '{"id": "1", "status": "error"}}'
-        self.status_message = '{"testing_result": ' \
-            '{"cloud_image_name": "image123", "id": "1", ' \
-            '"source_regions": {"us-east-2": "ami-123456"}, ' \
-            '"status": "success"}}'
+        self.error_message = JsonFormat.json_message({
+            "testing_result": {
+                "id": "1", "status": "error"
+            }
+        })
+
+        self.status_message = JsonFormat.json_message({
+            "testing_result": {
+                "cloud_image_name": "image123",
+                "id": "1",
+                "source_regions": {"us-east-2": "ami-123456"},
+                "status": "success"
+            }
+        })
 
     @patch('mash.services.testing.service.os')
     @patch.object(TestingService, '_create_ssh_key_pair')
@@ -482,9 +491,13 @@ class TestIPATestingService(object):
         scheduler = Mock()
         self.testing.scheduler = scheduler
 
-        self.message.body = \
-            '{"uploader_result": {"id": "1", ' \
-            '"image_id": "image123", "status": "success"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {
+                "id": "1",
+                "image_id": "image123",
+                "status": "success"
+            }
+        })
 
         self.testing._handle_listener_message(self.message)
 
@@ -508,9 +521,13 @@ class TestIPATestingService(object):
         scheduler = Mock()
         self.testing.scheduler = scheduler
 
-        self.message.body = \
-            '{"uploader_result": {"id": "1", ' \
-            '"image_id": "image123", "status": "success"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {
+                "id": "1",
+                "image_id": "image123",
+                "status": "success"
+            }
+        })
 
         self.testing._handle_listener_message(self.message)
 
@@ -523,7 +540,11 @@ class TestIPATestingService(object):
     ):
         mock_validate_listener_msg.return_value = None
 
-        self.message.body = '{"uploader_result": {"id": "1"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {
+                "id": "1"
+            }
+        })
         self.testing._handle_listener_message(self.message)
 
         self.message.ack.assert_called_once_with()
@@ -535,11 +556,14 @@ class TestIPATestingService(object):
         job.test_regions = {'us-east-1': {'account': 'test-aws'}}
         self.testing.jobs[job.id] = job
 
-        self.message.body = \
-            '{"uploader_result": {"id": "1", ' \
-            '"cloud_image_name": "My image", ' \
-            '"source_regions": {"us-east-1": "ami-123456"}, ' \
-            '"status": "success"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {
+                "id": "1",
+                "cloud_image_name": "My image",
+                "source_regions": {"us-east-1": "ami-123456"},
+                "status": "success"
+            }
+        })
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result == job
@@ -552,9 +576,13 @@ class TestIPATestingService(object):
         job.utctime = 'always'
         self.testing.jobs['1'] = job
 
-        self.message.body = \
-            '{"uploader_result": {"id": "1", ' \
-            '"image_id": "image123", "status": "error"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {
+                "id": "1",
+                "image_id": "image123",
+                "status": "error"
+            }
+        })
         self.testing._validate_listener_msg(self.message.body)
 
         mock_cleanup_job.assert_called_once_with(job, 'error')
@@ -569,7 +597,9 @@ class TestIPATestingService(object):
         )
 
     def test_testing_validate_listener_msg_job_invalid(self):
-        self.message.body = '{"uploader_result": {"id": "2"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {"id": "2"}
+        })
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result is None
@@ -578,7 +608,9 @@ class TestIPATestingService(object):
         )
 
     def test_testing_validate_listener_msg_no_id(self):
-        self.message.body = '{"uploader_result": {"provider": "ec2"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {"provider": "ec2"}
+        })
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result is None
@@ -592,9 +624,13 @@ class TestIPATestingService(object):
         job.utctime = 'always'
         self.testing.jobs[job.id] = job
 
-        self.message.body = \
-            '{"uploader_result": {"id": "1", ' \
-            '"cloud_image_name": "My image", "status": "success"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {
+                "id": "1",
+                "cloud_image_name": "My image",
+                "status": "success"
+            }
+        })
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result is None
@@ -608,8 +644,9 @@ class TestIPATestingService(object):
         job.utctime = 'always'
         self.testing.jobs[job.id] = job
 
-        self.message.body = \
-            '{"uploader_result": {"id": "1", "status": "success"}}'
+        self.message.body = JsonFormat.json_message({
+            "uploader_result": {"id": "1", "status": "success"}
+        })
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result is None

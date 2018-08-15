@@ -29,6 +29,7 @@ from mash.mash_exceptions import (
 from mash.services.base_service import BaseService
 from mash.services.jobcreator import create_job
 from mash.services.jobcreator import schema
+from mash.utils.json_format import JsonFormat
 
 
 class JobCreatorService(BaseService):
@@ -134,7 +135,7 @@ class JobCreatorService(BaseService):
         else:
             self._publish(
                 'credentials', self.add_account_key,
-                json.dumps(message, sort_keys=True)
+                JsonFormat.json_message(message)
             )
 
     def delete_account(self, message):
@@ -153,7 +154,7 @@ class JobCreatorService(BaseService):
         else:
             self._publish(
                 'credentials', self.delete_account_key,
-                json.dumps(message, sort_keys=True)
+                JsonFormat.json_message(message)
             )
 
     def process_new_job(self, job_doc):
@@ -193,7 +194,7 @@ class JobCreatorService(BaseService):
 
             self.publish_job_doc(
                 'credentials',
-                json.dumps(account_check_message, sort_keys=True)
+                JsonFormat.json_message(account_check_message)
             )
 
     def publish_delete_job_message(self, job_id):
@@ -211,14 +212,14 @@ class JobCreatorService(BaseService):
             "obs_job_delete": job_id
         }
         self._publish(
-            'obs', self.job_document_key, json.dumps(delete_message)
+            'obs', self.job_document_key, JsonFormat.json_message(delete_message)
         )
 
         delete_message = {
             "credentials_job_delete": job_id
         }
         self._publish(
-            'credentials', self.job_document_key, json.dumps(delete_message)
+            'credentials', self.job_document_key, JsonFormat.json_message(delete_message)
         )
 
     def publish_job_doc(self, service, job_doc):
@@ -240,7 +241,7 @@ class JobCreatorService(BaseService):
         job = create_job(job_id, job_doc, accounts_info, self.provider_data)
 
         self.log.info(
-            'Started a new job: {0}'.format(json.dumps(job_doc, indent=2)),
+            'Started a new job: {0}'.format(JsonFormat.json_message(job_doc)),
             extra={'job_id': job.id}
         )
 

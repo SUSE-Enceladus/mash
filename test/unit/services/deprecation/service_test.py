@@ -8,6 +8,7 @@ from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from mash.services.base_service import BaseService
 from mash.services.deprecation.service import DeprecationService
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
+from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
 
@@ -33,18 +34,33 @@ class TestDeprecationService(object):
             method=self.method,
         )
 
-        self.error_message = '{"deprecation_result": ' \
-            '{"id": "1", "status": "error"}}'
-        self.status_message = '{"deprecation_result": ' \
-            '{"cloud_image_name": "image123", "id": "1", ' \
-            '"status": "success"}}'
+        self.error_message = JsonFormat.json_message({
+            "deprecation_result": {
+                "id": "1",
+                "status": "error"
+            }
+        })
+        self.status_message = JsonFormat.json_message({
+            "deprecation_result": {
+                "cloud_image_name": "image123",
+                "id": "1",
+                "status": "success"
+            }
+        })
 
-        self.publisher_result = \
-            '{"publisher_result": {"id": "1", ' \
-            '"cloud_image_name": "image name", ' \
-            '"status": "success"}}'
-        self.publisher_result_fail = \
-            '{"publisher_result": {"id": "1", "status": "error"}}'
+        self.publisher_result = JsonFormat.json_message({
+            "publisher_result": {
+                "id": "1",
+                "cloud_image_name": "image name",
+                "status": "success"
+            }
+        })
+        self.publisher_result_fail = JsonFormat.json_message({
+            "publisher_result": {
+                "id": "1",
+                "status": "error"
+            }
+        })
 
         self.deprecation = DeprecationService()
         self.deprecation.jobs = {}

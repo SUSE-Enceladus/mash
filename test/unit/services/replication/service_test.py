@@ -9,6 +9,7 @@ from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from mash.services.base_service import BaseService
 from mash.services.replication.service import ReplicationService
 from mash.services.replication.ec2_job import EC2ReplicationJob
+from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
 
@@ -34,11 +35,19 @@ class TestReplicationService(object):
             method=self.method,
         )
 
-        self.error_message = '{"replication_result": ' \
-            '{"id": "1", "status": "error"}}'
-        self.status_message = '{"replication_result": ' \
-            '{"cloud_image_name": "image123", "id": "1", ' \
-            '"status": "success"}}'
+        self.error_message = JsonFormat.json_message({
+            "replication_result": {
+                "id": "1",
+                "status": "error"
+            }
+        })
+        self.status_message = JsonFormat.json_message({
+            "replication_result": {
+                "cloud_image_name": "image123",
+                "id": "1",
+                "status": "success"
+            }
+        })
 
         self.replication = ReplicationService()
         self.replication.jobs = {}

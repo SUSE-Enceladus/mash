@@ -16,10 +16,10 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import json
 import random
 
 from mash.services.jobcreator.base_job import BaseJob
+from mash.utils.json_format import JsonFormat
 
 
 class EC2Job(BaseJob):
@@ -150,7 +150,7 @@ class EC2Job(BaseJob):
         }
         publisher_message['publisher_job'].update(self.base_message)
 
-        return json.dumps(publisher_message, sort_keys=True)
+        return JsonFormat.json_message(publisher_message)
 
     def get_publisher_regions(self):
         """

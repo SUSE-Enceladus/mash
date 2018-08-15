@@ -36,6 +36,7 @@ from mash.mash_exceptions import (
     MashLogSetupException,
     MashValidationException
 )
+from mash.utils.json_format import JsonFormat
 
 
 class BaseService(object):
@@ -361,7 +362,7 @@ class BaseService(object):
         )
 
         with open(config['job_file'], 'w') as config_file:
-            config_file.write(json.dumps(config, sort_keys=True))
+            config_file.write(JsonFormat.json_message(config))
 
         return config['job_file']
 

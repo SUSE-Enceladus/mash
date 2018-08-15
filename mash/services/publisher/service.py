@@ -27,6 +27,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.publisher.ec2_job import EC2PublisherJob
+from mash.utils.json_format import JsonFormat
 
 
 class PublisherService(BaseService):
@@ -170,7 +171,7 @@ class PublisherService(BaseService):
                 }
             }
 
-        return json.dumps(data, sort_keys=True)
+        return JsonFormat.json_message(data)
 
     def _handle_credentials_response(self, message):
         """

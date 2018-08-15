@@ -15,6 +15,7 @@ from mash.mash_exceptions import (
     MashLogSetupException,
     MashValidationException
 )
+from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
 
@@ -171,7 +172,10 @@ class TestBaseService(object):
             # Dict is mutable, mock compares the final value of Dict
             # not the initial value that was passed in.
             file_handle.write.assert_called_with(
-                u'{"id": "1", "job_file": "tmp-dir/job-1.json"}'
+                JsonFormat.json_message({
+                    "id": "1",
+                    "job_file": "tmp-dir/job-1.json"
+                })
             )
 
     @patch('mash.services.base_service.os.remove')
