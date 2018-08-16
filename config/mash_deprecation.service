@@ -6,7 +6,7 @@ Before=systemd-user-sessions.service
 [Service]
 Type=simple
 ExecStart=/usr/bin/mash-deprecation-service
-StandardOutput=null
+StandardOutput=journal
 Restart=always
 
 [Install]

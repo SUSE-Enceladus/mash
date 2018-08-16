@@ -1,4 +1,3 @@
-from pytest import raises
 from unittest.mock import patch
 
 from mash.mash_exceptions import MashPublisherException
@@ -28,6 +27,15 @@ class TestPublisherServiceMain(object):
 
     @patch('mash.services.publisher_service.PublisherService')
     @patch('sys.exit')
+    def test_main_keyboard_interrupt(
+        self, mock_exit, mock_publisher_service
+    ):
+        mock_publisher_service.side_effect = KeyboardInterrupt
+        main()
+        mock_exit.assert_called_once_with(0)
+
+    @patch('mash.services.publisher_service.PublisherService')
+    @patch('sys.exit')
     def test_publisher_main_system_exit(
         self, mock_exit, mock_publisher_service
     ):
@@ -37,8 +45,11 @@ class TestPublisherServiceMain(object):
         mock_exit.assert_called_once_with(0)
 
     @patch('mash.services.publisher_service.PublisherService')
-    def test_publisher_main_unexpected_error(self, mock_publisher_service):
+    @patch('sys.exit')
+    def test_publisher_main_unexpected_error(
+        self, mock_exit, mock_publisher_service
+    ):
         mock_publisher_service.side_effect = Exception('Error!')
 
-        with raises(Exception):
-            main()
+        main()
+        mock_exit.assert_called_once_with(1)

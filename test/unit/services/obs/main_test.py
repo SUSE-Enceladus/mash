@@ -1,4 +1,3 @@
-from pytest import raises
 from unittest.mock import patch
 from unittest.mock import Mock
 
@@ -14,7 +13,7 @@ class TestOBS(object):
 
     @patch('mash.services.obs_service.OBSImageBuildResultService')
     def test_main(self, mock_OBSImageBuildResultService):
-        main(event_loop=False)
+        main()
         mock_OBSImageBuildResultService.assert_called_once_with(
             host='localhost', service_exchange='obs'
         )
@@ -25,7 +24,7 @@ class TestOBS(object):
         self, mock_exit, mock_OBSImageBuildResultService
     ):
         mock_OBSImageBuildResultService.side_effect = MashException('error')
-        main(event_loop=False)
+        main()
         mock_exit.assert_called_once_with(1)
 
     @patch('mash.services.obs_service.OBSImageBuildResultService')
@@ -47,9 +46,10 @@ class TestOBS(object):
         mock_exit.assert_called_once_with(0)
 
     @patch('mash.services.obs_service.OBSImageBuildResultService')
+    @patch('sys.exit')
     def test_main_unexpected_error(
-        self, mock_OBSImageBuildResultService
+        self, mock_exit, mock_OBSImageBuildResultService
     ):
         mock_OBSImageBuildResultService.side_effect = Exception
-        with raises(Exception):
-            main()
+        main()
+        mock_exit.assert_called_once_with(1)
