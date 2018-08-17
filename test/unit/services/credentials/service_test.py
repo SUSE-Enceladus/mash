@@ -9,6 +9,7 @@ from mash.services.base_service import BaseService
 from mash.services.credentials.service import CredentialsService
 from mash.services.credentials.key_rotate import rotate_key
 from mash.services.jobcreator.accounts import accounts_template
+from mash.utils.json_format import JsonFormat
 
 
 class TestCredentialsService(object):
@@ -87,7 +88,7 @@ class TestCredentialsService(object):
 
         mock_send_control_response.assert_called_once_with(
             'Job queued, awaiting credentials requests: {0}'.format(
-                json.dumps(job_config, indent=2, sort_keys=True)
+                JsonFormat.json_message(job_config)
             ),
             job_id='1'
         )
@@ -175,8 +176,12 @@ class TestCredentialsService(object):
 
         mock_publish.assert_called_once_with(
             'jobcreator', 'job_document',
-            '{"start_job": {"accounts_info": {"accounts": "info"}, '
-            '"id": "123"}}'
+            JsonFormat.json_message({
+                "start_job": {
+                    "accounts_info": {"accounts": "info"},
+                    "id": "123"
+                }
+            })
         )
 
         # Invalid accounts
@@ -188,7 +193,8 @@ class TestCredentialsService(object):
             'User does not own requested accounts.', success=False
         )
         mock_publish.assert_called_once_with(
-            'jobcreator', 'job_document', '{"invalid_job": "123"}'
+            'jobcreator', 'job_document',
+            JsonFormat.json_message({"invalid_job": "123"})
         )
 
     @patch.object(CredentialsService, '_generate_encryption_key')
@@ -509,7 +515,7 @@ class TestCredentialsService(object):
             'Received credentials request from pint for job: 1.'
         )
         mock_publish_credentials_response.assert_called_once_with(
-            '{"jwt_token": "response"}', 'pint'
+            JsonFormat.json_message({"jwt_token": "response"}), 'pint'
         )
         mock_delete_job.assert_called_once_with('1')
 

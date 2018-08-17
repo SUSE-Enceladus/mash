@@ -8,6 +8,7 @@ from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from mash.services.base_service import BaseService
 from mash.services.publisher.service import PublisherService
 from mash.services.publisher.ec2_job import EC2PublisherJob
+from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
 
@@ -33,11 +34,19 @@ class TestPublisherService(object):
             method=self.method,
         )
 
-        self.error_message = '{"publisher_result": ' \
-            '{"id": "1", "status": "error"}}'
-        self.status_message = '{"publisher_result": ' \
-            '{"cloud_image_name": "image123", "id": "1", ' \
-            '"status": "success"}}'
+        self.error_message = JsonFormat.json_message({
+            "publisher_result": {
+                "id": "1",
+                "status": "error"
+            }
+        })
+        self.status_message = JsonFormat.json_message({
+            "publisher_result": {
+                "cloud_image_name": "image123",
+                "id": "1",
+                "status": "success"
+            }
+        })
 
         self.publisher = PublisherService()
         self.publisher.jobs = {}

@@ -23,16 +23,16 @@ class JsonFormat(object):
     Helper class to handle unicode characters
     in json formatted messages correctly
     """
-    @classmethod
-    def json_load(self, file_handle):
+    @staticmethod
+    def json_load(file_handle):
         return json.load(file_handle)
 
-    @classmethod
-    def json_loads(self, json_text):
+    @staticmethod
+    def json_loads(json_text):
         return json.loads(json_text)
 
-    @classmethod
-    def json_message(self, data_dict):
+    @staticmethod
+    def json_message(data_dict):
         return json.dumps(
             data_dict, sort_keys=True, indent=4, separators=(',', ': ')
         )

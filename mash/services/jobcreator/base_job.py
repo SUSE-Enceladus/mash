@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import json
+from mash.utils.json_format import JsonFormat
 
 
 class BaseJob(object):
@@ -88,7 +88,7 @@ class BaseJob(object):
         }
         credentials_message['credentials_job'].update(self.base_message)
 
-        return json.dumps(credentials_message, sort_keys=True)
+        return JsonFormat.json_message(credentials_message)
 
     def get_deprecation_message(self):
         """
@@ -103,7 +103,7 @@ class BaseJob(object):
         }
         deprecation_message['deprecation_job'].update(self.base_message)
 
-        return json.dumps(deprecation_message, sort_keys=True)
+        return JsonFormat.json_message(deprecation_message)
 
     def get_deprecation_regions(self):
         """
@@ -131,7 +131,7 @@ class BaseJob(object):
         if self.download_root:
             obs_message['obs_job']['download_root'] = self.download_root
 
-        return json.dumps(obs_message, sort_keys=True)
+        return JsonFormat.json_message(obs_message)
 
     def get_pint_message(self):
         """
@@ -146,7 +146,7 @@ class BaseJob(object):
         }
         pint_message['pint_job'].update(self.base_message)
 
-        return json.dumps(pint_message, sort_keys=True)
+        return JsonFormat.json_message(pint_message)
 
     def get_publisher_message(self):
         """
@@ -170,7 +170,7 @@ class BaseJob(object):
         }
         replication_message['replication_job'].update(self.base_message)
 
-        return json.dumps(replication_message, sort_keys=True)
+        return JsonFormat.json_message(replication_message)
 
     def get_replication_source_regions(self):
         """
@@ -201,7 +201,7 @@ class BaseJob(object):
 
         testing_message['testing_job'].update(self.base_message)
 
-        return json.dumps(testing_message, sort_keys=True)
+        return JsonFormat.json_message(testing_message)
 
     def get_testing_regions(self):
         """
@@ -225,7 +225,7 @@ class BaseJob(object):
         }
         uploader_message['uploader_job'].update(self.base_message)
 
-        return json.dumps(uploader_message, sort_keys=True)
+        return JsonFormat.json_message(uploader_message)
 
     def get_uploader_regions(self):
         """

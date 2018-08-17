@@ -35,6 +35,7 @@ from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
+from mash.utils.json_format import JsonFormat
 
 
 class TestingService(BaseService):
@@ -221,7 +222,7 @@ class TestingService(BaseService):
                 }
             }
 
-        return json.dumps(data, sort_keys=True)
+        return JsonFormat.json_message(data)
 
     def _handle_credentials_response(self, message):
         """

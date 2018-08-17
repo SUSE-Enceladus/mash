@@ -34,6 +34,7 @@ from mash.services.credentials.azure_account import AzureAccount
 from mash.services.credentials.ec2_account import EC2Account
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 from mash.services.jobcreator.accounts import accounts_template
+from mash.utils.json_format import JsonFormat
 
 
 class CredentialsService(BaseService):
@@ -93,7 +94,7 @@ class CredentialsService(BaseService):
 
             self._send_control_response(
                 'Job queued, awaiting credentials requests: {0}'.format(
-                    json.dumps(job_document, indent=2, sort_keys=True)
+                    JsonFormat.json_message(job_document)
                 ),
                 job_id=job_id
             )
@@ -162,7 +163,7 @@ class CredentialsService(BaseService):
             }
             self._publish(
                 'jobcreator', self.job_document_key,
-                json.dumps(job_response, sort_keys=True)
+                JsonFormat.json_message(job_response)
             )
         else:
             self._send_control_response(
@@ -171,7 +172,7 @@ class CredentialsService(BaseService):
             job_response = {'invalid_job': job_id}
             self._publish(
                 'jobcreator', self.job_document_key,
-                json.dumps(job_response, sort_keys=True)
+                JsonFormat.json_message(job_response)
             )
 
     def _create_encryption_keys_file(self):
@@ -439,7 +440,7 @@ class CredentialsService(BaseService):
             credentials_response = self._get_credentials_response(
                 job_id, issuer
             )
-            message = json.dumps({'jwt_token': credentials_response.decode()})
+            message = JsonFormat.json_message({'jwt_token': credentials_response.decode()})
 
             self.log.info(
                 'Received credentials request from {0} for job: {1}.'.format(
@@ -514,7 +515,7 @@ class CredentialsService(BaseService):
         """
         Update accounts file with provided accounts dictionary.
         """
-        account_info = json.dumps(accounts, indent=4)
+        account_info = JsonFormat.json_message(accounts)
 
         with open(self.accounts_file, 'w') as account_file:
             account_file.write(account_info)

@@ -9,6 +9,7 @@ from mash.mash_exceptions import (
 )
 from mash.services.base_service import BaseService
 from mash.services.jobcreator.service import JobCreatorService
+from mash.utils.json_format import JsonFormat
 
 
 class TestJobCreatorService(object):
@@ -124,7 +125,7 @@ class TestJobCreatorService(object):
             }
         }
 
-        message.body = json.dumps({
+        message.body = JsonFormat.json_message({
             'start_job': {
                 'id': uuid_val,
                 'accounts_info': account_info
@@ -144,56 +145,84 @@ class TestJobCreatorService(object):
 
         assert mock_publish.mock_calls[1] == call(
             'obs', 'job_document',
-            '{"obs_job": {'
-            '"conditions": [{"package": ["name", "and", "constraints"]}, '
-            '{"image": "version"}], '
-            '"download_root": "http://download.opensuse.org/repositories/", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"image": "test_image_oem", '
-            '"project": "Cloud:Tools", '
-            '"utctime": "now"}}'
+            JsonFormat.json_message({
+                "obs_job": {
+                    "conditions": [
+                        {"package": ["name", "and", "constraints"]},
+                        {"image": "version"}
+                    ],
+                    "download_root":
+                        "http://download.opensuse.org/repositories/",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image": "test_image_oem",
+                    "project": "Cloud:Tools",
+                    "utctime": "now"
+                }
+            })
         )
 
         assert mock_publish.mock_calls[2] == call(
             'uploader', 'job_document',
-            '{"uploader_job": {'
-            '"cloud_image_name": "new_image_123", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"image_description": "New Image #123", '
-            '"provider": "ec2", '
-            '"target_regions": {'
-            '"ap-northeast-1": {"account": "test-aws", '
-            '"helper_image": "ami-383c1956"}, '
-            '"us-gov-west-1": {"account": '
-            '"test-aws-gov", "helper_image": "ami-c2b5d7e1"}}, '
-            '"utctime": "now"}}'
+            JsonFormat.json_message({
+                "uploader_job": {
+                    "cloud_image_name": "new_image_123",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image_description": "New Image #123",
+                    "provider": "ec2",
+                    "target_regions": {
+                        "ap-northeast-1": {
+                            "account": "test-aws",
+                            "helper_image": "ami-383c1956"
+                        },
+                        "us-gov-west-1": {
+                            "account": "test-aws-gov",
+                            "helper_image": "ami-c2b5d7e1"
+                        }
+                    },
+                    "utctime": "now"
+                }
+            })
         )
         assert mock_publish.mock_calls[3] == call(
             'testing', 'job_document',
-            '{"testing_job": {'
-            '"distro": "sles", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"instance_type": "t2.micro", '
-            '"provider": "ec2", '
-            '"test_regions": {'
-            '"ap-northeast-1": "test-aws", '
-            '"us-gov-west-1": "test-aws-gov"}, '
-            '"tests": ["test_stuff"], '
-            '"utctime": "now"}}'
+            JsonFormat.json_message({
+                "testing_job": {
+                    "distro": "sles",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "instance_type": "t2.micro",
+                    "provider": "ec2",
+                    "test_regions": {
+                        "ap-northeast-1": "test-aws",
+                        "us-gov-west-1": "test-aws-gov"
+                    },
+                    "tests": ["test_stuff"],
+                    "utctime": "now"
+                }
+            })
         )
         assert mock_publish.mock_calls[4] == call(
             'replication', 'job_document',
-            '{"replication_job": {'
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"image_description": "New Image #123", '
-            '"provider": "ec2", '
-            '"replication_source_regions": {'
-            '"ap-northeast-1": {"account": "test-aws", '
-            '"target_regions": ["ap-northeast-1", '
-            '"ap-northeast-2", "ap-northeast-3"]}, '
-            '"us-gov-west-1": {"account": "test-aws-gov", '
-            '"target_regions": ["us-gov-west-1"]}}, '
-            '"utctime": "now"}}'
+            JsonFormat.json_message({
+                "replication_job": {
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image_description": "New Image #123",
+                    "provider": "ec2",
+                    "replication_source_regions": {
+                        "ap-northeast-1": {
+                            "account": "test-aws",
+                            "target_regions": [
+                                "ap-northeast-1", "ap-northeast-2",
+                                "ap-northeast-3"
+                            ]
+                        },
+                        "us-gov-west-1": {
+                            "account": "test-aws-gov",
+                            "target_regions": ["us-gov-west-1"]
+                        }
+                    },
+                    "utctime": "now"
+                }
+            })
         )
 
         msg = mock_publish.mock_calls[5][1][2]
@@ -235,12 +264,15 @@ class TestJobCreatorService(object):
 
         assert mock_publish.mock_calls[7] == call(
             'pint', 'job_document',
-            '{"pint_job": {'
-            '"cloud_image_name": "new_image_123", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"old_cloud_image_name": "old_new_image_123", '
-            '"provider": "ec2", '
-            '"utctime": "now"}}'
+            JsonFormat.json_message({
+                "pint_job": {
+                    "cloud_image_name": "new_image_123",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "old_cloud_image_name": "old_new_image_123",
+                    "provider": "ec2",
+                    "utctime": "now"
+                }
+            })
         )
 
     @patch('mash.services.jobcreator.service.uuid')
@@ -304,45 +336,63 @@ class TestJobCreatorService(object):
 
         assert mock_publish.mock_calls[1] == call(
             'obs', 'job_document',
-            '{"obs_job": {'
-            '"conditions": [{"package": ["name", "and", "constraints"]}, '
-            '{"image": "version"}], '
-            '"download_root": "http://download.opensuse.org/repositories/", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"image": "test_image_oem", '
-            '"project": "Cloud:Tools", '
-            '"utctime": "now"}}'
+            JsonFormat.json_message({
+                "obs_job": {
+                    "conditions": [
+                        {"package": ["name", "and", "constraints"]},
+                        {"image": "version"}
+                    ],
+                    "download_root":
+                        "http://download.opensuse.org/repositories/",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image": "test_image_oem",
+                    "project": "Cloud:Tools",
+                    "utctime": "now"
+                }
+            })
         )
         assert mock_publish.mock_calls[2] == call(
             'uploader', 'job_document',
-            '{"uploader_job": {'
-            '"cloud_image_name": "new_image_123", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"image_description": "New Image #123", '
-            '"provider": "azure", '
-            '"target_regions": {'
-            '"centralus": {"account": "test-azure2", '
-            '"container_name": "ccontainer1", '
-            '"resource_group": "c_res_group", '
-            '"storage_account": "cstorage1"}, '
-            '"southcentralus": {"account": "test-azure", '
-            '"container_name": "sccontainer1", '
-            '"resource_group": "sc_res_group", '
-            '"storage_account": "scstorage1"}}, '
-            '"utctime": "now"}}'
+            JsonFormat.json_message({
+                "uploader_job": {
+                    "cloud_image_name": "new_image_123",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image_description": "New Image #123",
+                    "provider": "azure",
+                    "target_regions": {
+                        "centralus": {
+                            "account": "test-azure2",
+                            "container_name": "ccontainer1",
+                            "resource_group": "c_res_group",
+                            "storage_account": "cstorage1"
+                        },
+                        "southcentralus": {
+                            "account": "test-azure",
+                            "container_name": "sccontainer1",
+                            "resource_group": "sc_res_group",
+                            "storage_account": "scstorage1"
+                        }
+                    },
+                    "utctime": "now"
+                }
+            })
         )
         assert mock_publish.mock_calls[3] == call(
             'testing', 'job_document',
-            '{"testing_job": {'
-            '"distro": "sles", '
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"instance_type": "t2.micro", '
-            '"provider": "azure", '
-            '"test_regions": {'
-            '"centralus": "test-azure2", '
-            '"southcentralus": "test-azure"}, '
-            '"tests": ["test_stuff"], '
-            '"utctime": "now"}}'
+            JsonFormat.json_message({
+                "testing_job": {
+                    "distro": "sles",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "instance_type": "t2.micro",
+                    "provider": "azure",
+                    "test_regions": {
+                        "centralus": "test-azure2",
+                        "southcentralus": "test-azure"
+                    },
+                    "tests": ["test_stuff"],
+                    "utctime": "now"
+                }
+            })
         )
 
     def test_jobcreator_handle_invalid_service_message(self):
@@ -372,23 +422,23 @@ class TestJobCreatorService(object):
 
         # Test add ec2 account message
         message.method = {'routing_key': 'add_account'}
-        message.body = '''{
-              "account_name": "test-aws",
-              "credentials": {
+        message.body = JsonFormat.json_message({
+            "account_name": "test-aws",
+            "credentials": {
                 "access_key_id": "123456",
                 "secret_access_key": "654321"
-              },
-              "group": "group1",
-              "partition": "aws",
-              "provider": "ec2",
-              "requesting_user": "user1"
-        }'''
+            },
+            "group": "group1",
+            "partition": "aws",
+            "provider": "ec2",
+            "requesting_user": "user1"
+        })
 
         self.jobcreator._handle_listener_message(message)
 
         mock_publish.assert_called_once_with(
             'credentials', 'add_account',
-            json.dumps(json.loads(message.body), sort_keys=True)
+            JsonFormat.json_message(json.loads(message.body))
         )
         message.ack.assert_called_once_with()
 
@@ -397,28 +447,28 @@ class TestJobCreatorService(object):
 
         # Test add azure account message
         message.method = {'routing_key': 'add_account'}
-        message.body = '''{
-              "account_name": "test-azure",
-              "container_name": "container1",
-              "credentials": {
+        message.body = JsonFormat.json_message({
+            "account_name": "test-azure",
+            "container_name": "container1",
+            "credentials": {
                 "clientId": "123456",
                 "clientSecret": "654321",
                 "subscriptionId": "654321",
                 "tenantId": "654321"
-              },
-              "group": "group1",
-              "provider": "azure",
-              "region": "southcentralus",
-              "requesting_user": "user1",
-              "resource_group": "rg_123",
-              "storage_account": "sa_1"
-        }'''
+            },
+            "group": "group1",
+            "provider": "azure",
+            "region": "southcentralus",
+            "requesting_user": "user1",
+            "resource_group": "rg_123",
+            "storage_account": "sa_1"
+        })
 
         self.jobcreator._handle_listener_message(message)
 
         mock_publish.assert_called_once_with(
             'credentials', 'add_account',
-            json.dumps(json.loads(message.body), sort_keys=True)
+            JsonFormat.json_message(json.loads(message.body))
         )
         message.ack.assert_called_once_with()
 
@@ -428,17 +478,17 @@ class TestJobCreatorService(object):
     ):
         message = MagicMock()
         message.method = {'routing_key': 'delete_account'}
-        message.body = '''{
+        message.body = JsonFormat.json_message({
             "account_name": "test-aws",
             "provider": "ec2",
             "requesting_user": "user2"
-        }'''
+        })
 
         self.jobcreator._handle_listener_message(message)
 
         mock_publish.assert_called_once_with(
             'credentials', 'delete_account',
-            json.dumps(json.loads(message.body), sort_keys=True)
+            JsonFormat.json_message(json.loads(message.body))
         )
         message.ack.assert_called_once_with()
 
@@ -470,10 +520,13 @@ class TestJobCreatorService(object):
         message.body = '{"job_delete": "1"}'
         self.jobcreator._handle_service_message(message)
         mock_publish.assert_has_calls([
-            call('obs', 'job_document', '{"obs_job_delete": "1"}'),
+            call(
+                'obs', 'job_document',
+                JsonFormat.json_message({"obs_job_delete": "1"})
+            ),
             call(
                 'credentials', 'job_document',
-                '{"credentials_job_delete": "1"}'
+                JsonFormat.json_message({"credentials_job_delete": "1"})
             )
         ])
 
@@ -520,12 +573,20 @@ class TestJobCreatorService(object):
         assert self.jobcreator.jobs[uuid_val]
         mock_publish_doc.assert_called_once_with(
             'credentials',
-            '{"credentials_job_check": {'
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"provider": "ec2", '
-            '"provider_accounts": ['
-            '{"name": "test-aws-gov", "target_regions": ["us-gov-west-1"]}], '
-            '"provider_groups": ["test"], "requesting_user": "user1"}}'
+            JsonFormat.json_message({
+                "credentials_job_check": {
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "provider": "ec2",
+                    "provider_accounts": [
+                        {
+                            "name": "test-aws-gov",
+                            "target_regions": ["us-gov-west-1"]
+                        }
+                    ],
+                    "provider_groups": ["test"],
+                    "requesting_user": "user1"
+                }
+            })
         )
 
     @patch.object(JobCreatorService, 'publish_job_doc')
@@ -548,16 +609,23 @@ class TestJobCreatorService(object):
         assert self.jobcreator.jobs[uuid_val]
         mock_publish_doc.assert_called_once_with(
             'credentials',
-            '{"credentials_job_check": {'
-            '"id": "12345678-1234-1234-1234-123456789012", '
-            '"provider": "azure", '
-            '"provider_accounts": ['
-            '{"container_name": "sccontainer1", "name": "test-azure", '
-            '"region": "southcentralus", '
-            '"resource_group": "sc_res_group", '
-            '"storage_account": "scstorage1"}], '
-            '"provider_groups": ["test-azure-group"], '
-            '"requesting_user": "user1"}}'
+            JsonFormat.json_message({
+                "credentials_job_check": {
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "provider": "azure",
+                    "provider_accounts": [
+                        {
+                            "container_name": "sccontainer1",
+                            "name": "test-azure",
+                            "region": "southcentralus",
+                            "resource_group": "sc_res_group",
+                            "storage_account": "scstorage1"
+                        }
+                    ],
+                    "provider_groups": ["test-azure-group"],
+                    "requesting_user": "user1"
+                }
+            })
         )
 
     @patch('mash.services.jobcreator.service.validate')
