@@ -3,10 +3,6 @@ import json
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
-from mash.mash_exceptions import (
-    MashJobCreatorException,
-    MashValidationException
-)
 from mash.services.base_service import BaseService
 from mash.services.jobcreator.service import JobCreatorService
 from mash.utils.json_format import JsonFormat
@@ -69,10 +65,9 @@ class TestJobCreatorService(object):
         mock_start.assert_called_once_with()
 
     @patch('mash.services.jobcreator.ec2_job.random')
-    @patch('mash.services.jobcreator.service.uuid')
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message(
-            self, mock_publish, mock_uuid, mock_random
+            self, mock_publish, mock_random
     ):
         self.jobcreator.jobs = {}
         self.jobcreator.provider_data = {
@@ -92,14 +87,12 @@ class TestJobCreatorService(object):
         }
         message = MagicMock()
 
-        uuid_val = '12345678-1234-1234-1234-123456789012'
-        mock_uuid.uuid4.return_value = uuid_val
         mock_random.randint.return_value = 0
 
         with open('../data/job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
-        self.jobcreator.jobs[uuid_val] = job
+        self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
 
         account_info = {
             "groups": {
@@ -127,7 +120,7 @@ class TestJobCreatorService(object):
 
         message.body = JsonFormat.json_message({
             'start_job': {
-                'id': uuid_val,
+                'id': '12345678-1234-1234-1234-123456789012',
                 'accounts_info': account_info
             }
         })
@@ -275,22 +268,18 @@ class TestJobCreatorService(object):
             })
         )
 
-    @patch('mash.services.jobcreator.service.uuid')
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_azure(
-            self, mock_publish, mock_uuid
+        self, mock_publish
     ):
         self.jobcreator.jobs = {}
         self.jobcreator.provider_data = {'azure': {}}
         message = MagicMock()
 
-        uuid_val = '12345678-1234-1234-1234-123456789012'
-        mock_uuid.uuid4.return_value = uuid_val
-
         with open('../data/azure_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
-        self.jobcreator.jobs[uuid_val] = job
+        self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
 
         account_info = {
             "accounts": {
@@ -318,7 +307,7 @@ class TestJobCreatorService(object):
 
         message.body = json.dumps({
             'start_job': {
-                'id': uuid_val,
+                'id': '12345678-1234-1234-1234-123456789012',
                 'accounts_info': account_info
             }
         })
@@ -530,36 +519,8 @@ class TestJobCreatorService(object):
             )
         ])
 
-    def test_jobcreator_add_account_invalid_provider(self):
-        message = {'provider': 'fake'}
-        self.jobcreator.add_account(message)
-        self.jobcreator.log.warning.assert_called_once_with(
-            'Support for fake Cloud Service not implemented.'
-        )
-
-    @patch('mash.services.jobcreator.service.validate')
-    def test_jobcreator_add_account_invalid_message(self, mock_validate):
-        mock_validate.side_effect = Exception('Message missing arguments!')
-        message = {'provider': 'ec2'}
-        self.jobcreator.add_account(message)
-        self.jobcreator.log.error.assert_called_once_with(
-            'Add account message is invalid: Message missing arguments!'
-        )
-
-    @patch('mash.services.jobcreator.service.validate')
-    def test_jobcreator_delete_account_invalid_message(self, mock_validate):
-        mock_validate.side_effect = Exception('Message missing arguments!')
-        message = {'provider': 'ec2'}
-        self.jobcreator.delete_account(message)
-        self.jobcreator.log.error.assert_called_once_with(
-            'Delete account message is invalid: Message missing arguments!'
-        )
-
     @patch.object(JobCreatorService, 'publish_job_doc')
-    @patch('mash.services.jobcreator.service.uuid')
-    def test_jobcreator_process_new_job(self, mock_uuid, mock_publish_doc):
-        uuid_val = '12345678-1234-1234-1234-123456789012'
-        mock_uuid.uuid4.return_value = uuid_val
+    def test_jobcreator_process_new_job(self, mock_publish_doc):
         self.jobcreator.jobs = {}
 
         with open('../data/job.json', 'r') as job_doc:
@@ -570,7 +531,7 @@ class TestJobCreatorService(object):
 
         self.jobcreator._handle_service_message(message)
 
-        assert self.jobcreator.jobs[uuid_val]
+        assert self.jobcreator.jobs['12345678-1234-1234-1234-123456789012']
         mock_publish_doc.assert_called_once_with(
             'credentials',
             JsonFormat.json_message({
@@ -590,12 +551,9 @@ class TestJobCreatorService(object):
         )
 
     @patch.object(JobCreatorService, 'publish_job_doc')
-    @patch('mash.services.jobcreator.service.uuid')
     def test_jobcreator_process_new_azure_job(
-        self, mock_uuid, mock_publish_doc
+        self, mock_publish_doc
     ):
-        uuid_val = '12345678-1234-1234-1234-123456789012'
-        mock_uuid.uuid4.return_value = uuid_val
         self.jobcreator.jobs = {}
 
         with open('../data/azure_job.json', 'r') as job_doc:
@@ -606,7 +564,7 @@ class TestJobCreatorService(object):
 
         self.jobcreator._handle_service_message(message)
 
-        assert self.jobcreator.jobs[uuid_val]
+        assert self.jobcreator.jobs['12345678-1234-1234-1234-123456789012']
         mock_publish_doc.assert_called_once_with(
             'credentials',
             JsonFormat.json_message({
@@ -627,25 +585,6 @@ class TestJobCreatorService(object):
                 }
             })
         )
-
-    @patch('mash.services.jobcreator.service.validate')
-    def test_jobcreator_process_new_job_error(self, mock_validate):
-        message = {'provider': 'fake'}
-
-        with raises(MashJobCreatorException) as error:
-            self.jobcreator.process_new_job(message)
-
-        assert str(error.value) == \
-            'Support for fake Cloud Service not implemented.'
-
-        mock_validate.side_effect = Exception('Invalid message.')
-        message = {'provider': 'ec2'}
-
-        with raises(MashValidationException) as error:
-            self.jobcreator.process_new_job(message)
-
-        assert str(error.value) == \
-            'Invalid message.'
 
     @patch.object(JobCreatorService, 'consume_queue')
     @patch.object(JobCreatorService, 'stop')

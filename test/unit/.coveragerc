@@ -1,3 +1,5 @@
 [run]
 omit =
     */version.py
+    */wsgi.py
+

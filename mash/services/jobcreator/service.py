@@ -17,18 +17,9 @@
 #
 
 import json
-import uuid
 
-from jsonschema import FormatChecker, validate
-
-from mash.csp import CSP
-from mash.mash_exceptions import (
-    MashJobCreatorException,
-    MashValidationException
-)
 from mash.services.base_service import BaseService
 from mash.services.jobcreator import create_job
-from mash.services.jobcreator import schema
 from mash.utils.json_format import JsonFormat
 
 
@@ -111,91 +102,41 @@ class JobCreatorService(BaseService):
         """
         Validate add account message and relay to credentials service.
         """
-        csp_name = message.get('provider')
-
-        if csp_name == CSP.ec2:
-            message_schema = schema.add_account_ec2
-        elif csp_name == CSP.azure:
-            message_schema = schema.add_account_azure
-        else:
-            self.log.warning(
-                'Support for {csp} Cloud Service not implemented.'.format(
-                    csp=csp_name
-                )
-            )
-            return
-
-        try:
-            validate(message, message_schema, format_checker=FormatChecker())
-        except Exception as error:
-            self.log.error(
-                'Add account message is invalid: {0}'.format(error)
-            )
-            return
-        else:
-            self._publish(
-                'credentials', self.add_account_key,
-                JsonFormat.json_message(message)
-            )
+        self._publish(
+            'credentials', self.add_account_key,
+            JsonFormat.json_message(message)
+        )
 
     def delete_account(self, message):
         """
         Validate delete account message and relay to credentials service.
         """
-        try:
-            validate(
-                message, schema.delete_account, format_checker=FormatChecker()
-            )
-        except Exception as error:
-            self.log.error(
-                'Delete account message is invalid: {0}'.format(error)
-            )
-            return
-        else:
-            self._publish(
-                'credentials', self.delete_account_key,
-                JsonFormat.json_message(message)
-            )
+        self._publish(
+            'credentials', self.delete_account_key,
+            JsonFormat.json_message(message)
+        )
 
     def process_new_job(self, job_doc):
         """
         Validate job and send account check message to credentials service.
         """
-        csp_name = job_doc.get('provider')
+        job_id = job_doc.get('job_id')
+        self.jobs[job_id] = job_doc
 
-        if csp_name == CSP.ec2:
-            message_schema = schema.ec2_job_message
-        elif csp_name == CSP.azure:
-            message_schema = schema.azure_job_message
-        else:
-            raise MashJobCreatorException(
-                'Support for {csp} Cloud Service not implemented.'.format(
-                    csp=csp_name
-                )
-            )
-
-        try:
-            validate(job_doc, message_schema, format_checker=FormatChecker())
-        except Exception as error:
-            raise MashValidationException(error)
-        else:
-            job_id = str(uuid.uuid4())
-            self.jobs[job_id] = job_doc
-
-            account_check_message = {
-                'credentials_job_check': {
-                    'id': job_id,
-                    'provider': job_doc['provider'],
-                    'provider_accounts': job_doc['provider_accounts'],
-                    'provider_groups': job_doc['provider_groups'],
-                    'requesting_user': job_doc['requesting_user']
-                }
+        account_check_message = {
+            'credentials_job_check': {
+                'id': job_id,
+                'provider': job_doc['provider'],
+                'provider_accounts': job_doc['provider_accounts'],
+                'provider_groups': job_doc['provider_groups'],
+                'requesting_user': job_doc['requesting_user']
             }
+        }
 
-            self.publish_job_doc(
-                'credentials',
-                JsonFormat.json_message(account_check_message)
-            )
+        self.publish_job_doc(
+            'credentials',
+            JsonFormat.json_message(account_check_message)
+        )
 
     def publish_delete_job_message(self, job_id):
         """
@@ -238,7 +179,7 @@ class JobCreatorService(BaseService):
         job_id = message['id']
         job_doc = self.jobs[job_id]
         accounts_info = message['accounts_info']
-        job = create_job(job_id, job_doc, accounts_info, self.provider_data)
+        job = create_job(job_doc, accounts_info, self.provider_data)
 
         self.log.info(
             'Started a new job: {0}'.format(JsonFormat.json_message(job_doc)),
