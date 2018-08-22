@@ -27,4 +27,4 @@ class Defaults(object):
 
     @classmethod
     def get_download_dir(self):
-        return '/tmp'
+        return '/var/lib/mash/images/'

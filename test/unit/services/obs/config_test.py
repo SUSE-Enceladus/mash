@@ -24,4 +24,4 @@ class TestOBSConfig(object):
 
     def test_get_download_directory(self):
         assert self.config.get_download_directory() == '/images'
-        assert self.config_defaults.get_download_directory() == '/tmp'
+        assert self.config_defaults.get_download_directory() == '/var/lib/mash/images/'
