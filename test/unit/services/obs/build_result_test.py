@@ -147,11 +147,13 @@ class TestOBSImageBuildResult(object):
         self.obs_result.image_metadata_name = \
             'Azure-Factory.x86_64-1.0.5-Build5.28.packages'
         self.obs_result.remote.fetch_files.return_value = \
-            ['/tmp/Azure-Factory.x86_64-1.0.5-Build5.28.vhdfixed.xz']
+            ['/var/lib/mash/images/'
+             'Azure-Factory.x86_64-1.0.5-Build5.28.vhdfixed.xz']
         assert self.obs_result.get_image() == [
-            '/tmp/Azure-Factory.x86_64-1.0.5-Build5.28.vhdfixed.xz'
+            '/var/lib/mash/images/'
+            'Azure-Factory.x86_64-1.0.5-Build5.28.vhdfixed.xz'
         ]
-        mock_mkpath.assert_called_once_with('/tmp')
+        mock_mkpath.assert_called_once_with('/var/lib/mash/images/')
         self.obs_result.image_metadata_name = \
             'Azure-Factory.x86_64-1.0.5-Build42.42.packages'
         with raises(MashImageDownloadException):
