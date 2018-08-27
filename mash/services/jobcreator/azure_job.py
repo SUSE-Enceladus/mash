@@ -24,7 +24,7 @@ class AzureJob(BaseJob):
     Azure job message class.
     """
     def __init__(
-        self, job_id, accounts_info, provider_data, provider,
+        self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, old_cloud_image_name, project,
         image_description, distro, tests, conditions=None, download_root=None,
@@ -33,7 +33,7 @@ class AzureJob(BaseJob):
         self.target_account_info = {}
 
         super(AzureJob, self).__init__(
-            job_id, accounts_info, provider_data, provider, provider_accounts,
+            accounts_info, provider_data, job_id, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, old_cloud_image_name, project,
             image_description, distro, tests, conditions, download_root,

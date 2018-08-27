@@ -22,7 +22,7 @@ from mash.services.jobcreator.azure_job import AzureJob
 from mash.services.jobcreator.ec2_job import EC2Job
 
 
-def create_job(job_id, job_doc, accounts_info, provider_data):
+def create_job(job_doc, accounts_info, provider_data):
     csp_name = job_doc.get('provider')
     provider_data = provider_data.get(csp_name)
 
@@ -37,4 +37,4 @@ def create_job(job_id, job_doc, accounts_info, provider_data):
             )
         )
 
-    return job_class(job_id, accounts_info, provider_data, **job_doc)
+    return job_class(accounts_info, provider_data, **job_doc)

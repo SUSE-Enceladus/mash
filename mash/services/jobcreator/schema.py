@@ -135,7 +135,13 @@ base_job_message = {
                 {'enum': ['always', 'now']},
                 {
                     '$ref': '#/definitions/non_empty_string',
-                    'format': 'date-time'
+                    'description': 'An RFC3339 date-time string'
+                                   '(2019-04-28T06:44:50.142Z)',
+                    'format': 'regex',
+                    'pattern': '^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]'
+                               '|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):'
+                               '([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]'
+                               '([01][0-9]|2[0-3]):[0-5][0-9]))$'
                 }
             ]
         },

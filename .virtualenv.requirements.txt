@@ -9,6 +9,7 @@ azure-mgmt-compute
 azure-mgmt-resource
 azure-mgmt-storage
 azure-storage-blob
+flask
 setuptools
 idna<2.7
 boto3
@@ -18,7 +19,6 @@ PyYAML
 PyJWT
 APScheduler
 python-dateutil>=2.6.0,<2.7.0
-strict-rfc3339
 amqpstorm
 ec2deprecateimg
 ec2publishimg

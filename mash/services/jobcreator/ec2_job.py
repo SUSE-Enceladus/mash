@@ -29,7 +29,7 @@ class EC2Job(BaseJob):
     Handles incoming job requests.
     """
     def __init__(
-        self, job_id, accounts_info, provider_data, provider,
+        self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, old_cloud_image_name, project,
         share_with, allow_copy, image_description, distro,
@@ -40,7 +40,7 @@ class EC2Job(BaseJob):
         self.target_account_info = {}
 
         super(EC2Job, self).__init__(
-            job_id, accounts_info, provider_data, provider, provider_accounts,
+            accounts_info, provider_data, job_id, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, old_cloud_image_name, project,
             image_description, distro, tests, conditions, download_root,
