@@ -4,6 +4,8 @@ After=syslog.target network.target mash_obs.service
 Before=systemd-user-sessions.service
 
 [Service]
+User=mash
+Group=mash
 Type=simple
 ExecStart=/usr/bin/mash-uploader-service
 StandardOutput=journal
