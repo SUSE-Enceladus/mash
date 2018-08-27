@@ -38,7 +38,10 @@ add_account_azure = {
                 'subscriptionId': {'$ref': '#/definitions/non_empty_string'},
                 'tenantId': {'$ref': '#/definitions/non_empty_string'}
             },
-            'additionalProperties': True
+            'additionalProperties': True,
+            'required': [
+                'clientId', 'clientSecret', 'subscriptionId', 'tenantId'
+            ],
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
         'provider': {'enum': ['azure']},
@@ -81,7 +84,8 @@ add_account_ec2 = {
                 'access_key_id': {'$ref': '#/definitions/non_empty_string'},
                 'secret_access_key': {'$ref': '#/definitions/non_empty_string'}
             },
-            'additionalProperties': False
+            'additionalProperties': False,
+            'required': ['access_key_id', 'secret_access_key']
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
         'partition': {'$ref': '#/definitions/non_empty_string'},
