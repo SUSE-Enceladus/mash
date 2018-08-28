@@ -48,6 +48,18 @@ class Defaults(object):
             'deprecation', 'pint'
         ]
 
+    @staticmethod
+    def get_amqp_host():
+        return 'localhost'
+
+    @staticmethod
+    def get_amqp_user():
+        return 'guest'
+
+    @staticmethod
+    def get_amqp_pass():
+        return 'guest'
+
     @classmethod
     def get_non_credential_service_names(self):
         return ['obs']

@@ -33,9 +33,7 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        JobCreatorService(
-            host='localhost', service_exchange='jobcreator'
-        )
+        JobCreatorService(service_exchange='jobcreator')
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))

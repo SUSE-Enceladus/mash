@@ -9,7 +9,7 @@ class TestCredentials(object):
     def test_main(self, mock_CredentialsService):
         main()
         mock_CredentialsService.assert_called_once_with(
-            host='localhost', service_exchange='credentials'
+            service_exchange='credentials'
         )
 
     @patch('mash.services.credentials_service.CredentialsService')

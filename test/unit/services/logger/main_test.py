@@ -9,7 +9,7 @@ class TestLogger(object):
     def test_main(self, mock_logger_service):
         main()
         mock_logger_service.assert_called_once_with(
-            host='localhost', service_exchange='logger',
+            service_exchange='logger',
         )
 
     @patch('mash.services.logger_service.LoggerService')
@@ -20,7 +20,7 @@ class TestLogger(object):
         main()
 
         mock_logger_service.assert_called_once_with(
-            host='localhost', service_exchange='logger',
+            service_exchange='logger',
         )
         mock_exit.assert_called_once_with(1)
 

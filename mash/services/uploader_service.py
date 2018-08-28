@@ -33,9 +33,7 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        UploadImageService(
-            host='localhost', service_exchange='uploader',
-        )
+        UploadImageService(service_exchange='uploader')
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))

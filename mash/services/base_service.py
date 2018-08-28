@@ -51,7 +51,7 @@ class BaseService(object):
     * :attr:`service_exchange`
       Name of service exchange
     """
-    def __init__(self, host, service_exchange):
+    def __init__(self, service_exchange):
         self.channel = None
         self.connection = None
 
@@ -60,7 +60,6 @@ class BaseService(object):
             'delivery_mode': 2
         }
 
-        self.host = host
         self.service_exchange = service_exchange
         self.service_queue = 'service'
         self.listener_queue = 'listener'
@@ -70,6 +69,11 @@ class BaseService(object):
         self.encryption_keys_file = self.config.get_encryption_keys_file()
         self.jwt_secret = self.config.get_jwt_secret()
         self.jwt_algorithm = self.config.get_jwt_algorithm()
+
+        # amqp settings
+        self.amqp_host = self.config.get_amqp_host()
+        self.amqp_user = self.config.get_amqp_user()
+        self.amqp_pass = self.config.get_amqp_pass()
 
         # setup service data directory
         self.job_directory = Defaults.get_job_directory(self.service_exchange)
@@ -98,7 +102,9 @@ class BaseService(object):
         self.log.propagate = False
 
         rabbit_handler = RabbitMQHandler(
-            host=self.host,
+            host=self.amqp_host,
+            username=self.amqp_user,
+            password=self.amqp_pass,
             routing_key='mash.logger'
         )
         rabbit_handler.setFormatter(
@@ -154,9 +160,9 @@ class BaseService(object):
         if not self.connection or self.connection.is_closed:
             try:
                 self.connection = Connection(
-                    self.host,
-                    'guest',
-                    'guest',
+                    self.amqp_host,
+                    self.amqp_user,
+                    self.amqp_pass,
                     kwargs={'heartbeat': 600}
                 )
             except Exception as e:

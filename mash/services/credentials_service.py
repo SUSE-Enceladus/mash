@@ -33,9 +33,7 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        CredentialsService(
-            host='localhost', service_exchange='credentials',
-        )
+        CredentialsService(service_exchange='credentials')
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))

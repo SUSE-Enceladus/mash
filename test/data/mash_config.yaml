@@ -1,6 +1,9 @@
 jwt_secret: abc123
 encryption_keys_file: /etc/mash/encryption_keys
 ssh_private_key_file: /var/lib/mash/ssh_key
+amqp_host: localhost
+amqp_user: guest
+amqp_pass: guest
 services:
   - obs
   - uploader

@@ -48,7 +48,7 @@ class TestBaseService(object):
         config = Mock()
         mock_get_configuration.return_value = config
 
-        self.service = BaseService('localhost', 'obs')
+        self.service = BaseService('obs')
         self.service.encryption_keys_file = 'encryption_keys.file'
         self.service.jwt_secret = 'a-secret'
         self.service.jwt_algorithm = 'HS256'
@@ -64,7 +64,7 @@ class TestBaseService(object):
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
-            BaseService('localhost', 'obs')
+            BaseService('obs')
         self.channel.reset_mock()
 
     def test_post_init(self):

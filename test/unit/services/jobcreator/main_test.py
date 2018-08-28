@@ -9,7 +9,7 @@ class TestJobCreatorServiceMain(object):
     def test_job_creator_main(self, mock_job_creator_service):
         main()
         mock_job_creator_service.assert_called_once_with(
-            host='localhost', service_exchange='jobcreator',
+            service_exchange='jobcreator',
         )
 
     @patch('mash.services.job_creator_service.JobCreatorService')
@@ -21,7 +21,7 @@ class TestJobCreatorServiceMain(object):
 
         main()
         mock_job_creator_service.assert_called_once_with(
-            host='localhost', service_exchange='jobcreator',
+            service_exchange='jobcreator',
         )
         mock_exit.assert_called_once_with(1)
 

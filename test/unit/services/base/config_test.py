@@ -63,3 +63,15 @@ class TestBaseConfig(object):
 
         assert str(error.value) == \
             'ssh_private_key_file is required in MASH configuration file.'
+
+    def test_get_amqp_host(self):
+        host = self.empty_config.get_amqp_host()
+        assert host == 'localhost'
+
+    def test_get_amqp_user(self):
+        user = self.empty_config.get_amqp_user()
+        assert user == 'guest'
+
+    def test_get_amqp_pass(self):
+        password = self.empty_config.get_amqp_pass()
+        assert password == 'guest'

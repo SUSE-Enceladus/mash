@@ -150,3 +150,39 @@ class BaseConfig(object):
             )
 
         return private_key_file
+
+    def get_amqp_host(self):
+        """
+        Return the amqp host url.
+
+        :rtype: string
+        """
+        amqp_host = self._get_attribute(
+            attribute='amqp_host'
+        )
+
+        return amqp_host or Defaults.get_amqp_host()
+
+    def get_amqp_user(self):
+        """
+        Return the amqp user name.
+
+        :rtype: string
+        """
+        amqp_user = self._get_attribute(
+            attribute='amqp_user'
+        )
+
+        return amqp_user or Defaults.get_amqp_user()
+
+    def get_amqp_pass(self):
+        """
+        Return the amqp password.
+
+        :rtype: string
+        """
+        amqp_pass = self._get_attribute(
+            attribute='amqp_pass'
+        )
+
+        return amqp_pass or Defaults.get_amqp_pass()
