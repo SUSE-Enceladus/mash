@@ -20,7 +20,7 @@ Name:           mash
 Version:        0.0.1
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/mash
-Summary:        Mash - Public Cloud Release Tool
+Summary:        Public Cloud Release Tool
 License:        GPL-3.0+
 Group:          System/Management
 Source:         mash-%{version}.tar.gz
@@ -117,7 +117,7 @@ install -D -m 644 config/mash_deprecation.service \
 %attr(640, mash, mash)%{_localstatedir}/lib/%{name}/wsgi.py
 %dir %{_sysconfdir}/apache2
 %dir %{_sysconfdir}/apache2/vhosts.d
-%attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/mash.conf
+%config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/mash.conf
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/%{name}/mash_config.yaml
 
 %{_bindir}/mash-obs-service
