@@ -14,11 +14,11 @@ module = sys.modules[__name__]
 
 connection = None
 channel = None
+config = None
 
-config = BaseConfig()
-amqp_host = config.get_amqp_host()
-amqp_user = config.get_amqp_user()
-amqp_pass = config.get_amqp_pass()
+amqp_host = None
+amqp_user = None
+amqp_pass = None
 
 schemas = {
     'add_account': {
@@ -47,10 +47,20 @@ def connect():
     channel.confirm_deliveries()
 
 
+def get_config():
+    module.config = BaseConfig()
+    module.amqp_host = config.get_amqp_host()
+    module.amqp_user = config.get_amqp_user()
+    module.amqp_pass = config.get_amqp_pass()
+
+
 def publish(exchange, routing_key, message):
     """
     Publish message to the provided exchange with the routing key.
     """
+    if not config:
+        get_config()
+
     if not channel or channel.is_closed:
         connect()
 
