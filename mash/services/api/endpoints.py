@@ -7,12 +7,18 @@ from flask import Flask, jsonify, request, make_response
 from jsonschema import validate
 
 from mash.services.jobcreator import schema
+from mash.services.base_config import BaseConfig
 
 app = Flask(__name__, static_url_path='/static')
 module = sys.modules[__name__]
 
 connection = None
 channel = None
+
+config = BaseConfig()
+amqp_host = config.get_amqp_host()
+amqp_user = config.get_amqp_user()
+amqp_pass = config.get_amqp_pass()
 
 schemas = {
     'add_account': {
@@ -32,9 +38,9 @@ schemas = {
 
 def connect():
     module.connection = Connection(
-        'localhost',
-        'guest',
-        'guest',
+        amqp_host,
+        amqp_user,
+        amqp_pass,
         kwargs={'heartbeat': 600}
     )
     module.channel = connection.channel()
