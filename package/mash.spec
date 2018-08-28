@@ -66,10 +66,12 @@ python3 setup.py build
 %install
 python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
 
+mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
+
 install -D -m 644 config/mash_config.yaml \
     %{buildroot}%{_sysconfdir}/%{name}/mash_config.yaml
 
-install -D -m 644 wsgi.py \
+install -D -m 644 mash/wsgi.py \
     %{buildroot}%{_localstatedir}/lib/%{name}/wsgi.py
 
 install -D -m 644 config/mash.conf \
@@ -103,6 +105,7 @@ install -D -m 644 config/mash_deprecation.service \
     %{buildroot}%{_unitdir}/mash_deprecation.service
 
 %pre
+%{_bindir}/getent group mash > /dev/null || %{_sbindir}/groupadd mash
 %{_bindir}/getent passwd mash > /dev/null || %{_sbindir}/useradd -r -g mash -s %{_bindir}/false -c "User for MASH" -d %{_localstatedir}/lib/mash mash
 
 %files
@@ -111,7 +114,9 @@ install -D -m 644 config/mash_deprecation.service \
 %dir %attr(755, mash, mash)%{_localstatedir}/log/mash
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/mash
 %dir %attr(755, mash, mash)%{_sysconfdir}/%{name}
-%attr(640, mash, mash)%{_localstatedir}/%{name}/wsgi.py
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/wsgi.py
+%dir %{_sysconfdir}/apache2
+%dir %{_sysconfdir}/apache2/vhosts.d
 %attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/mash.conf
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/%{name}/mash_config.yaml
 
