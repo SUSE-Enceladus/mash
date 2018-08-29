@@ -8,7 +8,7 @@
 azure-mgmt-compute
 azure-mgmt-resource
 azure-mgmt-storage
-azure-storage-blob
+azure-storage
 flask
 setuptools
 idna<2.7
