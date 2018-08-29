@@ -39,6 +39,7 @@ Requires:       python3-PyYAML
 Requires:       python3-PyJWT
 Requires:       python3-amqpstorm >= 2.4.0
 Requires:       python3-APScheduler >= 3.3.1
+Requires:       python2-tzlocal
 Requires:       python3-python-dateutil >= 2.6.0
 Requires:       python3-python-dateutil < 2.7.0
 Requires:       python3-ec2deprecateimg
