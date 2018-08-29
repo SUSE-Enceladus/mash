@@ -47,9 +47,10 @@ Requires:       python3-ec2uploadimg
 Requires:       python3-ipa
 Requires:       python3-ipa-tests
 Requires:       python3-lxml
-Requires:       python3-flask
+Requires:       python3-Flask
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
+Requires(pre):  pwdutils
 BuildArch:      noarch
 
 %description
