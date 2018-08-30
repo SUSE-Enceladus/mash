@@ -68,7 +68,7 @@ def ipa_test(
             secret_access_key=secret_access_key,
             service_account_file=service_account_file,
             ssh_key_name=key_name,
-            ssh_private_key=ssh_private_key_file,
+            ssh_private_key_file=ssh_private_key_file,
             ssh_user=ssh_user,
             tests=tests
         )
