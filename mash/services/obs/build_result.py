@@ -348,6 +348,8 @@ class OBSImageBuildResult(object):
                 self._log_callback('Job done')
                 self._result_callback()
         except MashException as issue:
+            if not self.job_nonstop:
+                self._result_callback()
             self._log_error(
                 '{0}: {1}'.format(type(issue).__name__, issue)
             )
