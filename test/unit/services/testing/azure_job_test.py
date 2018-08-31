@@ -58,7 +58,7 @@ class TestAzureTestingJob(object):
             secret_access_key=None,
             service_account_file='/tmp/acnt.file',
             ssh_key_name=None,
-            ssh_private_key='private_ssh_key.file',
+            ssh_private_key_file='private_ssh_key.file',
             ssh_user='azureuser',
             tests=['test_stuff']
         )

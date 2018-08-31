@@ -66,7 +66,7 @@ class TestEC2TestingJob(object):
             secret_access_key='321',
             service_account_file=None,
             ssh_key_name='random_name',
-            ssh_private_key='private_ssh_key.file',
+            ssh_private_key_file='private_ssh_key.file',
             ssh_user='ec2-user',
             tests=['test_stuff']
         )
