@@ -288,12 +288,15 @@ class TestOBSImageBuildResult(object):
 
     @patch.object(OBSImageBuildResult, '_log_callback')
     @patch.object(OBSImageBuildResult, '_lookup_image_packages_metadata')
+    @patch.object(OBSImageBuildResult, '_result_callback')
     def test_update_image_status_raises(
-        self, mock_lookup_image_packages_metadata, mock_log_callback
+        self, mock_result_callback, mock_lookup_image_packages_metadata,
+        mock_log_callback
     ):
         mock_lookup_image_packages_metadata.side_effect = \
             MashWebContentException('request error')
         self.obs_result._update_image_status()
+        mock_result_callback.assert_called_once_with()
         assert mock_log_callback.call_args_list == [
             call('Job running'),
             call('Error: MashWebContentException: request error')
