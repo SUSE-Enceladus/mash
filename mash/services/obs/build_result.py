@@ -195,7 +195,7 @@ class OBSImageBuildResult(object):
         mkpath(self.download_directory)
         build_number = self._get_build_number(self.image_metadata_name)
         image_files = self.remote.fetch_files(
-            self.image_name,
+            ''.join([self.image_name, '.', self.arch]),
             ['.xz', 'xz.sha256', '.tar.gz', '.tar.gz.sha256'],
             self.download_directory
         )
@@ -277,7 +277,9 @@ class OBSImageBuildResult(object):
             )
             try:
                 self.remote.fetch_file(
-                    self.image_name, '.sha256', checksum_file.name
+                    ''.join([self.image_name, '.', self.arch]),
+                    '.sha256',
+                    checksum_file.name
                 )
                 with open(checksum_file.name) as checksum:
                     checksum_latest = checksum.read()
