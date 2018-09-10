@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import lzma
+import os
 from tempfile import NamedTemporaryFile
 
 from azure.common.client_factory import get_client_from_auth_file
@@ -89,8 +90,11 @@ class UploadAzure(UploadBase):
             account_name=self.storage_account,
             account_key=storage_key_list.keys[0].value
         )
+        blob_name = self.system_image_file.rsplit(
+            os.sep, maxsplit=1
+        )[-1].replace('vhdfixed.xz', 'vhd')
         page_blob = PageBlob(
-            page_blob_service, self.cloud_image_name,
+            page_blob_service, blob_name,
             self.container_name, system_image_file_type.get_size()
         )
         if system_image_file_type.is_xz():
@@ -122,7 +126,7 @@ class UploadAzure(UploadBase):
                         'caching': 'ReadWrite',
                         'blob_uri': 'https://{0}.{1}/{2}/{3}'.format(
                             self.storage_account, 'blob.core.windows.net',
-                            self.container_name, self.cloud_image_name
+                            self.container_name, blob_name
                         )
                     }
                 }
