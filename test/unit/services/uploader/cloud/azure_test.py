@@ -52,7 +52,8 @@ class TestUploadAzure(object):
         )
         with patch('builtins.open', create=True):
             self.uploader = UploadAzure(
-                self.credentials, 'file', 'name', 'description', custom_args
+                self.credentials, 'file.vhdfixed.xz',
+                'name', 'description', custom_args
             )
             config = self.uploader.config
             assert config.get_azure_max_chunk_byte_size() == \
@@ -66,7 +67,8 @@ class TestUploadAzure(object):
             mock_open.return_value = MagicMock(spec=io.IOBase)
             file_handle = mock_open.return_value.__enter__.return_value
             self.uploader = UploadAzure(
-                self.credentials, 'file', 'name', 'description', custom_args
+                self.credentials, 'file.vhdfixed.xz',
+                'name', 'description', custom_args
             )
             file_handle.write.assert_called_once_with(
                 JsonFormat.json_message(self.credentials)
@@ -84,21 +86,25 @@ class TestUploadAzure(object):
             del custom_args['storage_account']
             with raises(MashUploadException):
                 UploadAzure(
-                    self.credentials, 'file', 'name', 'description', custom_args
+                    self.credentials, 'file.vhdfixed.xz',
+                    'name', 'description', custom_args
                 )
             del custom_args['container_name']
             with raises(MashUploadException):
                 UploadAzure(
-                    self.credentials, 'file', 'name', 'description', custom_args
+                    self.credentials, 'file.vhdfixed.xz',
+                    'name', 'description', custom_args
                 )
             del custom_args['region']
             with raises(MashUploadException):
                 UploadAzure(
-                    self.credentials, 'file', 'name', 'description', custom_args
+                    self.credentials, 'file.vhdfixed.xz',
+                    'name', 'description', custom_args
                 )
             with raises(MashUploadException):
                 UploadAzure(
-                    self.credentials, 'file', 'name', 'description', None
+                    self.credentials, 'file.vhdfixed.xz',
+                    'name', 'description', None
                 )
 
     @patch('mash.services.uploader.cloud.azure.get_client_from_auth_file')
@@ -160,7 +166,7 @@ class TestUploadAzure(object):
             account_key='key', account_name='storage'
         )
         mock_PageBlob.assert_called_once_with(
-            page_blob_service, 'name', 'container', 1024
+            page_blob_service, 'file.vhd', 'container', 1024
         )
         assert page_blob.next.call_args_list == [
             call(mock_lzma.LZMAFile.return_value, 4096, 5),
@@ -168,14 +174,15 @@ class TestUploadAzure(object):
             call(mock_lzma.LZMAFile.return_value, 4096, 5),
             call(mock_lzma.LZMAFile.return_value, 4096, 5)
         ]
-        mock_FileType.assert_called_once_with('file')
+        mock_FileType.assert_called_once_with('file.vhdfixed.xz')
         system_image_file_type.is_xz.assert_called_once_with()
         client.images.create_or_update.assert_called_once_with(
             'group_name', 'name', {
                 'location': 'region', 'storage_profile': {
                     'os_disk': {
                         'blob_uri':
-                        'https://storage.blob.core.windows.net/container/name',
+                        'https://storage.blob.core.windows.net/'
+                        'container/file.vhd',
                         'os_type': 'Linux',
                         'caching': 'ReadWrite',
                         'os_state': 'Generalized'
