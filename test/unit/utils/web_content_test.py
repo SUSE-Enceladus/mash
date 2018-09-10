@@ -25,7 +25,7 @@ class TestWebContent(object):
         assert result[0] == \
             'SLES12-Azure-BYOS.x86_64-0.2.4-Build3.549-raw.tar.bz2'
         mock_Request.side_effect = Exception
-        with raises(MashWebContentException):
+        with raises(MashWebContentException, match='http://example.com'):
             self.web.fetch_index_list('SLES12-Azure-BYOS')
 
     @patch('mash.utils.web_content.Request')
@@ -45,7 +45,10 @@ class TestWebContent(object):
         assert result == \
             'SLES12-Azure-BYOS.x86_64-0.2.4-Build3.549-vmx.packages'
         mock_Request.side_effect = Exception
-        with raises(MashWebContentException):
+        with raises(
+            MashWebContentException,
+            match='http://example.com/SLES12-Azure-BYOS'
+        ):
             self.web.fetch_file('SLES12-Azure-BYOS', '.packages', 'target')
 
     @patch('mash.utils.web_content.Request')
@@ -80,7 +83,10 @@ class TestWebContent(object):
             'SLES12-Azure-BYOS.x86_64-0.2.4-Build3.549.vhdfixed.xz.sha256'
         ]
         mock_Request.side_effect = Exception
-        with raises(MashWebContentException):
+        with raises(
+            MashWebContentException,
+            match='http://example.com/SLES12-Azure-BYOS'
+        ):
             self.web.fetch_files(
                 'SLES12-Azure-BYOS', ['.packages', 'vhdfixed.xz.sha256'],
                 'target_dir'

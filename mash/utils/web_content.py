@@ -51,11 +51,14 @@ class WebContent(object):
             return sorted(list(set(result)))
         except Exception as issue:
             raise MashWebContentException(
-                '{0}: {1}'.format(type(issue).__name__, issue)
+                'Fetching index list from {0} failed with {1}: {2}'.format(
+                    self.uri, type(issue).__name__, issue
+                )
             )
 
     def fetch_file(self, base_name, suffix, target_file):
         try:
+            name = base_name
             for name in self.fetch_index_list(base_name):
                 if name.startswith(base_name) and name.endswith(suffix):
                     urlretrieve(
@@ -65,12 +68,15 @@ class WebContent(object):
                     return name
         except Exception as issue:
             raise MashWebContentException(
-                '{0}: {1}'.format(type(issue).__name__, issue)
+                'Fetching file {0} failed with {1}: {2}'.format(
+                    os.sep.join([self.uri, name]), type(issue).__name__, issue
+                )
             )
 
     def fetch_files(self, base_name, suffix_list, target_dir):
         try:
             fetched = []
+            name = base_name
             for name in self.fetch_index_list(base_name):
                 if name.startswith(base_name):
                     for suffix in suffix_list:
@@ -84,5 +90,7 @@ class WebContent(object):
             return fetched
         except Exception as issue:
             raise MashWebContentException(
-                '{0}: {1}'.format(type(issue).__name__, issue)
+                'Fetching file {0} failed with {1}: {2}'.format(
+                    os.sep.join([self.uri, name]), type(issue).__name__, issue
+                )
             )
