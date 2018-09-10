@@ -87,9 +87,7 @@ class TestCredentialsService(object):
         mock_persist_job_config.assert_called_once_with(job_config)
 
         mock_send_control_response.assert_called_once_with(
-            'Job queued, awaiting credentials requests: {0}'.format(
-                JsonFormat.json_message(job_config)
-            ),
+            'Job queued, awaiting credentials requests.',
             job_id='1'
         )
 
