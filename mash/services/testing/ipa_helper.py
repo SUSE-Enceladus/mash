@@ -76,7 +76,10 @@ def ipa_test(
         results[name] = {'status': EXCEPTION, 'msg': str(error)}
     else:
         status = SUCCESS if status == 0 else FAILED
-        results[name] = {'status': status}
+        results[name] = {
+            'status': status,
+            'results_file': result['info']['results_file']
+        }
     finally:
         try:
             if provider == CSP.ec2:
