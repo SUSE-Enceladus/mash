@@ -27,6 +27,26 @@ Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
+BuildRequires:  python3-azure-mgmt-compute
+BuildRequires:  python3-azure-mgmt-resource
+BuildRequires:  python3-azure-mgmt-storage
+BuildRequires:  python3-azure-storage
+BuildRequires:  python3-boto3
+BuildRequires:  python3-cryptography
+BuildRequires:  python3-jsonschema
+BuildRequires:  python3-PyYAML
+BuildRequires:  python3-PyJWT
+BuildRequires:  python3-amqpstorm >= 2.4.0
+BuildRequires:  python3-APScheduler >= 3.3.1
+BuildRequires:  python3-python-dateutil >= 2.6.0
+BuildRequires:  python3-python-dateutil < 3.0.0
+BuildRequires:  python3-ec2deprecateimg
+BuildRequires:  python3-ec2publishimg
+BuildRequires:  python3-ec2uploadimg
+BuildRequires:  python3-ipa
+BuildRequires:  python3-ipa-tests
+BuildRequires:  python3-lxml
+BuildRequires:  python3-Flask
 Requires:       rabbitmq-server
 Requires:       python3-azure-mgmt-compute
 Requires:       python3-azure-mgmt-resource
@@ -39,9 +59,8 @@ Requires:       python3-PyYAML
 Requires:       python3-PyJWT
 Requires:       python3-amqpstorm >= 2.4.0
 Requires:       python3-APScheduler >= 3.3.1
-Requires:       python2-tzlocal
 Requires:       python3-python-dateutil >= 2.6.0
-Requires:       python3-python-dateutil < 2.7.0
+Requires:       python3-python-dateutil < 3.0.0
 Requires:       python3-ec2deprecateimg
 Requires:       python3-ec2publishimg
 Requires:       python3-ec2uploadimg
