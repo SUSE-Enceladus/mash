@@ -93,9 +93,7 @@ class CredentialsService(BaseService):
                 )
 
             self._send_control_response(
-                'Job queued, awaiting credentials requests: {0}'.format(
-                    JsonFormat.json_message(job_document)
-                ),
+                'Job queued, awaiting credentials requests.',
                 job_id=job_id
             )
 
