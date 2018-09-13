@@ -28,9 +28,9 @@ class BaseJob(object):
     def __init__(
         self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
-        utctime, image, cloud_image_name, old_cloud_image_name, project,
-        image_description, distro, tests,
-        conditions=None, download_root=None, instance_type=None
+        utctime, image, cloud_image_name, old_cloud_image_name,
+        image_description, distro, download_url, tests,
+        conditions=None, instance_type=None
     ):
         self.id = job_id
         self.accounts_info = accounts_info
@@ -43,12 +43,11 @@ class BaseJob(object):
         self.image = image
         self.cloud_image_name = cloud_image_name
         self.old_cloud_image_name = old_cloud_image_name
-        self.project = project
         self.image_description = image_description
         self.distro = distro
         self.tests = tests
         self.conditions = conditions
-        self.download_root = download_root
+        self.download_url = download_url
         self.instance_type = instance_type
         self.utctime = utctime
 
@@ -119,17 +118,14 @@ class BaseJob(object):
         """
         obs_message = {
             'obs_job': {
-                'image': self.image,
-                'project': self.project,
+                'download_url': self.download_url,
+                'image': self.image
             }
         }
         obs_message['obs_job'].update(self.base_message)
 
         if self.conditions:
             obs_message['obs_job']['conditions'] = self.conditions
-
-        if self.download_root:
-            obs_message['obs_job']['download_root'] = self.download_root
 
         return JsonFormat.json_message(obs_message)
 

@@ -109,17 +109,18 @@ class TestOBSImageBuildResultService(object):
     ):
         message = Mock()
         message.method = {'routing_key': 'job_document'}
-        message.body = '{"obs_job":{"id": "4711","project": ' + \
-            '"Virtualization:Appliances:Images:Testing_x86","image": ' + \
+        message.body = '{"obs_job":{"id": "4711","download_url": ' + \
+            '"http://download.suse.de/ibs/Devel:/PubCloud:/Stable:/' + \
+            'Images12/images","image": ' + \
             '"test-image-docker","utctime": ' + \
-            '"always","api_url": "https://api.opensuse.org"}}'
+            '"always"}}'
         self.obs_result._process_message(message)
         message.ack.assert_called_once_with()
         mock_add_job.assert_called_once_with(
             {
                 'obs_job': {
-                    'api_url': 'https://api.opensuse.org',
-                    'project': 'Virtualization:Appliances:Images:Testing_x86',
+                    "download_url": "http://download.suse.de/ibs/Devel:/"
+                                    "PubCloud:/Stable:/Images12/images",
                     'image': 'test-image-docker',
                     'id': '4711',
                     'utctime': 'always'
@@ -163,8 +164,8 @@ class TestOBSImageBuildResultService(object):
         job_data = {
             "obs_job": {
                 "id": "123",
-                "api_url": "https://api.opensuse.org",
-                "project": "Virtualization:Appliances:Images:Testing_x86",
+                "download_url": "http://download.suse.de/ibs/Devel:/"
+                                "PubCloud:/Stable:/Images12/images",
                 "image": "test-image-oem",
                 "utctime": "now",
                 "conditions": [
@@ -206,8 +207,8 @@ class TestOBSImageBuildResultService(object):
         data = {
             "id": "123",
             "job_file": "tempfile",
-            "api_url": "https://api.opensuse.org",
-            "project": "Virtualization:Appliances:Images:Testing_x86",
+            "download_url": "http://download.suse.de/ibs/Devel:/"
+                            "PubCloud:/Stable:/Images12/images",
             "image": "test-image-oem",
             "utctime": "now",
             "conditions": [
@@ -233,7 +234,8 @@ class TestOBSImageBuildResultService(object):
         data = {
             "id": "123",
             "job_file": "tempfile",
-            "project": "Virtualization:Appliances:Images:Testing_x86",
+            "download_url": "http://download.suse.de/ibs/Devel:/"
+                            "PubCloud:/Stable:/Images12/images",
             "image": "test-image-oem",
             "utctime": "always"
         }
@@ -249,7 +251,8 @@ class TestOBSImageBuildResultService(object):
         data = {
             "id": "123",
             "job_file": "tempfile",
-            "project": "Virtualization:Appliances:Images:Testing_x86",
+            "download_url": "http://download.suse.de/ibs/Devel:/"
+                            "PubCloud:/Stable:/Images12/images",
             "image": "test-image-oem",
             "utctime": "Wed Oct 11 17:50:26 UTC 2017"
         }

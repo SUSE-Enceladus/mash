@@ -23,7 +23,6 @@ import dateutil.parser
 from mash.services.base_service import BaseService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
-from mash.services.obs.defaults import Defaults
 
 
 class OBSImageBuildResultService(BaseService):
@@ -126,8 +125,8 @@ class OBSImageBuildResultService(BaseService):
         {
           "obs_job": {
               "id": "123",
-              "download_root": "http://download.suse.de/ibs",
-              "project": "Devel:/PubCloud:/Stable:/Images12",
+              "download_url": "http://download.suse.de/ibs/Devel:/PubCloud
+              :/Stable:/Images12/images",
               "image": "SLES12-Azure-BYOS",
               "utctime": "now|always|timestring_utc_timezone",
               "conditions": [
@@ -195,11 +194,9 @@ class OBSImageBuildResultService(BaseService):
 
         job_worker = OBSImageBuildResult(
             job_id=job_id, job_file=job['job_file'],
-            project=job['project'], image_name=job['image'],
+            download_url=job['download_url'],
+            image_name=job['image'],
             conditions=job['conditions'],
-            download_root=job.get(
-                'download_root'
-            ) or Defaults.get_download_root(),
             download_directory=self.download_directory
         )
         job_worker.set_log_handler(self._send_job_response)

@@ -1,7 +1,7 @@
 {
   "obsjob": {
     "id": "123",
-    "project": "Virtualization:Appliances:Images:Testing_x86",
+    "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
     "image": "test-image-oem",
     "utctime": "always"
   }

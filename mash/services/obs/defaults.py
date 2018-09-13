@@ -22,9 +22,5 @@ class Defaults(object):
     Default values
     """
     @classmethod
-    def get_download_root(self):
-        return 'https://download.opensuse.org/repositories'
-
-    @classmethod
     def get_download_dir(self):
         return '/var/lib/mash/images/'

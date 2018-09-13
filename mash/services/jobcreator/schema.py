@@ -152,7 +152,6 @@ base_job_message = {
         'image': {'$ref': '#/definitions/non_empty_string'},
         'cloud_image_name': {'$ref': '#/definitions/non_empty_string'},
         'old_cloud_image_name': {'$ref': '#/definitions/non_empty_string'},
-        'project': {'$ref': '#/definitions/non_empty_string'},
         'conditions': {
             'type': 'array',
             'items': {
@@ -163,7 +162,7 @@ base_job_message = {
             },
             'minItems': 1
         },
-        'download_root': {'$ref': '#/definitions/non_empty_string'},
+        'download_url': {'$ref': '#/definitions/non_empty_string'},
         'image_description': {'$ref': '#/definitions/non_empty_string'},
         'distro': {'$ref': '#/definitions/non_empty_string'},
         'instance_type': {'$ref': '#/definitions/non_empty_string'},
@@ -177,7 +176,7 @@ base_job_message = {
     'required': [
         'provider', 'provider_accounts', 'provider_groups', 'requesting_user',
         'last_service', 'utctime', 'image', 'cloud_image_name',
-        'old_cloud_image_name', 'project', 'image_description', 'tests'
+        'old_cloud_image_name', 'image_description', 'download_url', 'tests'
     ],
     'definitions': {
         'image_conditions': {

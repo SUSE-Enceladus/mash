@@ -26,8 +26,8 @@ class AzureJob(BaseJob):
     def __init__(
         self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
-        utctime, image, cloud_image_name, old_cloud_image_name, project,
-        image_description, distro, tests, conditions=None, download_root=None,
+        utctime, image, cloud_image_name, old_cloud_image_name,
+        image_description, distro, download_url, tests, conditions=None,
         instance_type=None
     ):
         self.target_account_info = {}
@@ -35,8 +35,8 @@ class AzureJob(BaseJob):
         super(AzureJob, self).__init__(
             accounts_info, provider_data, job_id, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
-            cloud_image_name, old_cloud_image_name, project,
-            image_description, distro, tests, conditions, download_root,
+            cloud_image_name, old_cloud_image_name,
+            image_description, distro, download_url, tests, conditions,
             instance_type
         )
 
