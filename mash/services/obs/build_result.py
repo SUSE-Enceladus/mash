@@ -73,9 +73,6 @@ class OBSImageBuildResult(object):
           {'image': '1.42.1'}
       ]
 
-    * :attr:`arch`
-      Buildservice package architecture, defaults to: x86_64
-
     * :attr:`download_root`
       Buildservice URL, defaults to: https://api.opensuse.org
 
@@ -86,8 +83,7 @@ class OBSImageBuildResult(object):
       Download directory name, defaults to: /tmp
     """
     def __init__(
-        self, job_id, job_file, project, image_name,
-        conditions=None, arch='x86_64',
+        self, job_id, job_file, project, image_name, conditions=None,
         download_root='https://download.opensuse.org/repositories',
         repository='images', download_directory=Defaults.get_download_dir()
     ):
@@ -96,7 +92,6 @@ class OBSImageBuildResult(object):
         self.download_directory = download_directory
         self.download_root = download_root
         self.repository = repository
-        self.arch = arch
         self.project = project
         self.image_name = image_name
         self.image_metadata_name = None
@@ -208,7 +203,7 @@ class OBSImageBuildResult(object):
 
     def _get_build_number(self, name):
         build = re.search(
-            '{0}-(.*)-Build([0-9]+\.[0-9]+)'.format(self.arch), name
+            '-(\d+\.\d+\.\d+)-Build([0-9]+\.[0-9]+)', name
         )
         if build:
             return [build.group(1), build.group(2)]
