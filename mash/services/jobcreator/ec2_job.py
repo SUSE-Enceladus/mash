@@ -31,9 +31,9 @@ class EC2Job(BaseJob):
     def __init__(
         self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
-        utctime, image, cloud_image_name, old_cloud_image_name, project,
-        share_with, allow_copy, image_description, distro,
-        tests, conditions=None, download_root=None, instance_type=None
+        utctime, image, cloud_image_name, old_cloud_image_name,
+        share_with, allow_copy, image_description, distro, download_url,
+        tests, conditions=None, instance_type=None
     ):
         self.share_with = share_with
         self.allow_copy = allow_copy
@@ -42,8 +42,8 @@ class EC2Job(BaseJob):
         super(EC2Job, self).__init__(
             accounts_info, provider_data, job_id, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
-            cloud_image_name, old_cloud_image_name, project,
-            image_description, distro, tests, conditions, download_root,
+            cloud_image_name, old_cloud_image_name,
+            image_description, distro, download_url, tests, conditions,
             instance_type
         )
 

@@ -17,12 +17,11 @@
   "image": "test_image_oem",
   "cloud_image_name": "new_image_123",
   "old_cloud_image_name": "old_new_image_123",
-  "project": "Cloud:Tools",
   "conditions": [
     {"package": ["name", "and", "constraints"]},
     {"image": "version"}
   ],
-  "download_root": "http://download.opensuse.org/repositories/",
+  "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
   "image_description": "New Image #123",
   "distro": "sles",
   "instance_type": "t2.micro",

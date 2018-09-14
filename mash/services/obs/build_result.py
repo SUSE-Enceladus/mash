@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import os
 import re
 import time
 import logging
@@ -55,8 +54,8 @@ class OBSImageBuildResult(object):
     * :attr:`job_file`
       job file containing the job description
 
-    * :attr:`project`
-      Buildservice project path name
+    * :attr:`download_url`
+      Buildservice URL
 
     * :attr:`image_name`
       Image name as specified in the KIWI XML description of the
@@ -73,26 +72,20 @@ class OBSImageBuildResult(object):
           {'image': '1.42.1'}
       ]
 
-    * :attr:`download_root`
-      Buildservice URL, defaults to: https://api.opensuse.org
-
-    * :attr:`repository`
-      Buildservice package repository, defaults to: images
+    * :attr:`arch`
+      Buildservice package architecture, defaults to: x86_64
 
     * :attr:`download_directory`
       Download directory name, defaults to: /tmp
     """
     def __init__(
-        self, job_id, job_file, project, image_name, conditions=None,
-        download_root='https://download.opensuse.org/repositories',
-        repository='images', download_directory=Defaults.get_download_dir()
+        self, job_id, job_file, download_url, image_name, conditions=None,
+        download_directory=Defaults.get_download_dir()
     ):
         self.job_id = job_id
         self.job_file = job_file
         self.download_directory = download_directory
-        self.download_root = download_root
-        self.repository = repository
-        self.project = project
+        self.download_url = download_url
         self.image_name = image_name
         self.image_metadata_name = None
         self.conditions = conditions
@@ -104,9 +97,7 @@ class OBSImageBuildResult(object):
         self.result_callback = None
         self.iteration_count = 0
 
-        self.remote = WebContent(
-            os.sep.join([self.download_root, self.project, self.repository])
-        )
+        self.remote = WebContent(self.download_url)
 
         self.image_status = self._init_status()
 

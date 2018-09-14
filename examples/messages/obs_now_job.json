@@ -1,9 +1,8 @@
 {
     "obs_job": {
         "id": "0815",
-        "download_root": "http://download.suse.de/ibs",
+        "download_url": "http://download.suse.de/ibs/Devel:/PubCloud:/Stable:/Images12/images",
         "image": "SLES12-Azure-BYOS",
-        "project": "Devel:/PubCloud:/Stable:/Images12",
         "utctime": "now"
     }
 }
