@@ -169,7 +169,7 @@ class TestPublisherService(object):
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
         self.publisher.log.info.assert_called_once_with(
-            'Job 1 queued, awaiting replication result.',
+            'Job queued, awaiting replication result.',
             extra={'job_id': '1'}
         )
 

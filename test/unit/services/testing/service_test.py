@@ -156,7 +156,7 @@ class TestIPATestingService(object):
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with(job.id)
         self.testing.log.info.assert_called_once_with(
-            'Job 1 queued, awaiting uploader result.',
+            'Job queued, awaiting uploader result.',
             extra={'job_id': '1'}
         )
 

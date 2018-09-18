@@ -121,9 +121,7 @@ class PublisherService(BaseService):
 
             self.bind_listener_queue(job.id)
             self.log.info(
-                'Job {0} queued, awaiting replication result.'.format(
-                    job.id
-                ),
+                'Job queued, awaiting replication result.',
                 extra=job.get_metadata()
             )
 

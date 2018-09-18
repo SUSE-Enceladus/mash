@@ -122,9 +122,7 @@ class ReplicationService(BaseService):
 
             self.bind_listener_queue(job.id)
             self.log.info(
-                'Job {0} queued, awaiting testing result.'.format(
-                    job.id
-                ),
+                'Job queued, awaiting testing result.',
                 extra=job.get_metadata()
             )
 
