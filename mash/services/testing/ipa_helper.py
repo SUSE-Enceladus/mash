@@ -19,6 +19,7 @@
 import logging
 import os
 import threading
+import traceback
 
 from ipa.ipa_controller import test_image
 from tempfile import NamedTemporaryFile
@@ -72,8 +73,10 @@ def ipa_test(
             ssh_user=ssh_user,
             tests=tests
         )
-    except Exception as error:
-        results[name] = {'status': EXCEPTION, 'msg': str(error)}
+    except Exception:
+        results[name] = {
+            'status': EXCEPTION, 'msg': str(traceback.format_exc())
+        }
     else:
         status = SUCCESS if status == 0 else FAILED
         results[name] = {
