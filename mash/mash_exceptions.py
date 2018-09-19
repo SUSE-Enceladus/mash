@@ -70,7 +70,8 @@ class MashCredentialsException(MashException):
 
 class MashConventionsException(MashException):
     """
-    Exception raised if no conventions handler for this cloud provider exists.
+    Exception raised if no conventions handler for this cloud provider exists
+    or the validation of the naming convention has failed for a reason
     """
 
 
