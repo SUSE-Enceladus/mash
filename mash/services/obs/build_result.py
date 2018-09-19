@@ -345,7 +345,7 @@ class OBSImageBuildResult(object):
     def _lookup_image_packages_metadata(self):
         packages_file = NamedTemporaryFile()
         self.image_metadata_name = self.remote.fetch_file(
-            self.image_name, '.packages', packages_file.name
+            ''.join([self.image_name, '.']), '.packages', packages_file.name
         )
         try:
             # Extract image version information from .packages file name
