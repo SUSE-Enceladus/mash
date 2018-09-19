@@ -41,6 +41,6 @@ class LoggerConfig(BaseConfig):
         :rtype: string
         """
         log_file = os.path.join(
-            self.get_log_directory(), ''.join(['job_', job_id, '.log'])
+            self.get_log_directory(), 'jobs', ''.join([job_id, '.log'])
         )
         return os.path.expanduser(os.path.normpath(log_file))

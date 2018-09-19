@@ -16,4 +16,4 @@ class TestLoggerConfig(object):
     def test_get_job_log_file(self, mock_get_log_dir):
         mock_get_log_dir.return_value = '/var/log/mash/'
         assert self.empty_config.get_job_log_file('1234') == \
-            '/var/log/mash/job_1234.log'
+            '/var/log/mash/jobs/1234.log'
