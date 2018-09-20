@@ -26,8 +26,11 @@ from mash.services.testing.ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
 
 instance_types = [
-    'Standard_DS1_v2', 'Standard_B1ms', 'Standard_F1s', 'Standard_H8m',
-    'Standard_A0', 'Standard_D1_v2', 'Standard_A2m_v2'
+    'Basic_A2',
+    'Standard_B1s',
+    'Standard_D2_v3',
+    'Standard_E2_v3',
+    'Standard_F2s_v2'
 ]
 
 
