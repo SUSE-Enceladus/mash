@@ -183,7 +183,7 @@ class TestDeprecationService(object):
         assert job.job_file == 'temp-config.json'
         mock_bind_listener_queue.assert_called_once_with('1')
         self.deprecation.log.info.assert_called_once_with(
-            'Job 1 queued, awaiting publisher result.',
+            'Job queued, awaiting publisher result.',
             extra={'job_id': '1'}
         )
 
