@@ -9,6 +9,7 @@ from test.unit.test_helper import (
 
 from mash.services.obs.service import OBSImageBuildResultService
 from mash.services.base_service import BaseService
+from mash.utils.json_format import JsonFormat
 
 
 class TestOBSImageBuildResultService(object):
@@ -101,11 +102,13 @@ class TestOBSImageBuildResultService(object):
             extra={}
         )
 
+    @patch.object(OBSImageBuildResultService, 'publish_job_result')
     @patch.object(OBSImageBuildResultService, '_delete_job')
     @patch.object(OBSImageBuildResultService, '_add_job')
     @patch.object(OBSImageBuildResultService, '_send_control_response')
     def test_process_message(
-        self, mock_send_control_response, mock_add_job, mock_delete_job
+        self, mock_send_control_response, mock_add_job, mock_delete_job,
+        mock_publish_job_result
     ):
         message = Mock()
         message.method = {'routing_key': 'job_document'}
@@ -134,6 +137,12 @@ class TestOBSImageBuildResultService(object):
         )
         message.body = '{"job_delete": "4711"}'
         self.obs_result._process_message(message)
+        mock_publish_job_result.assert_called_once_with(
+            'uploader', '4711',
+            JsonFormat.json_message(
+                {'obs_result': {'id': '4711', 'status': 'delete'}}
+            )
+        )
         message.body = 'foo'
         self.obs_result._process_message(message)
         assert mock_send_control_response.call_args_list == [

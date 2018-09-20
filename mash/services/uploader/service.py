@@ -27,6 +27,7 @@ from mash.services.base_service import BaseService
 from mash.services.uploader.upload_image import UploadImage
 from mash.utils.json_format import JsonFormat
 from mash.csp import CSP
+from mash.services.status_levels import FAILED, SUCCESS
 
 
 class UploadImageService(BaseService):
@@ -142,15 +143,31 @@ class UploadImageService(BaseService):
 
     def _handle_obs_image(self, job_data):
         obs_result = job_data['obs_result']
-        if 'id' in obs_result and 'image_file' in obs_result:
+        if 'id' in obs_result:
             job_id = obs_result['id']
-            self._set_job(job_id)
-            system_image_file = obs_result['image_file'][0]
-            self.jobs[job_id]['system_image_file'] = system_image_file
-            self._send_job_response(
-                job_id, 'Got image file: {0}'.format(system_image_file)
-            )
-            self._check_ready(job_id)
+
+            if obs_result.get('status') == SUCCESS \
+                    and 'image_file' in obs_result:
+                self._set_job(job_id)
+                system_image_file = obs_result['image_file'][0]
+                self.jobs[job_id]['system_image_file'] = system_image_file
+                self._send_job_response(
+                    job_id, 'Got image file: {0}'.format(system_image_file)
+                )
+                self._check_ready(job_id)
+            else:
+                result = self._delete_job(job_id)
+                self._send_control_response(result, job_id)
+                self.publish_job_result(
+                    'testing', job_id, JsonFormat.json_message(
+                        {
+                            'uploader_result': {
+                                'id': job_id,
+                                'status': obs_result.get('status') or FAILED
+                            }
+                        }
+                    )
+                )
 
     def _handle_credentials(self, job_data):
         job_id, credentials = self.decode_credentials(job_data)
