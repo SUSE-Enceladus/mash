@@ -14,6 +14,7 @@ class TestEC2TestingJob(object):
             'utctime': 'now',
         }
 
+    @patch('mash.services.testing.ec2_job.random')
     @patch('mash.services.testing.ipa_helper.generate_name')
     @patch('mash.services.testing.ipa_helper.get_client')
     @patch('mash.services.testing.ipa_helper.get_key_from_file')
@@ -21,12 +22,13 @@ class TestEC2TestingJob(object):
     @patch.object(EC2TestingJob, 'send_log')
     def test_testing_run_test(
         self, mock_send_log, mock_test_image, mock_get_key_from_file,
-        mock_get_client, mock_generate_name
+        mock_get_client, mock_generate_name, mock_random
     ):
         client = Mock()
         mock_get_client.return_value = client
         mock_generate_name.return_value = 'random_name'
         mock_get_key_from_file.return_value = 'fakekey'
+        mock_random.choice.return_value = 't2.micro'
 
         mock_test_image.return_value = (
             0,
@@ -60,7 +62,7 @@ class TestEC2TestingJob(object):
             description=job.description,
             distro='sles',
             image_id='ami-123',
-            instance_type=None,
+            instance_type='t2.micro',
             log_level=30,
             region='us-east-1',
             secret_access_key='321',
