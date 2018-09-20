@@ -62,11 +62,13 @@ class TestAzureTestingJob(object):
             ssh_user='azureuser',
             tests=['test_stuff']
         )
+        mock_send_log.reset_mock()
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
         job._run_tests()
-        mock_send_log.assert_has_calls(
-            [call('Image tests failed in region: East US.', success=False),
-             call('Tests broken!', success=False)]
+        assert mock_send_log.mock_calls[0] == call(
+            'Image tests failed in region: East US.', success=False
         )
+        assert 'Tests broken!' in mock_send_log.mock_calls[1][1][0]
+        assert mock_send_log.mock_calls[1][2] == {'success': False}
