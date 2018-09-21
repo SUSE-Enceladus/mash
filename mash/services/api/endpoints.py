@@ -23,15 +23,18 @@ amqp_pass = None
 schemas = {
     'add_account': {
         'azure': schema.add_account_azure,
-        'ec2': schema.add_account_ec2
+        'ec2': schema.add_account_ec2,
+        'gce': schema.add_account_gce
     },
     'delete_account': {
         'azure': schema.delete_account,
-        'ec2': schema.delete_account
+        'ec2': schema.delete_account,
+        'gce': schema.delete_account
     },
     'add_job': {
         'azure': schema.azure_job_message,
-        'ec2': schema.ec2_job_message
+        'ec2': schema.ec2_job_message,
+        'gce': schema.gce_job_message
     }
 }
 
