@@ -43,5 +43,16 @@
         }
       }
     }
+  },
+  "gce": {
+    "groups": {},
+    "accounts": {
+      "user1": {
+        "test123": {
+          "bucket": "images",
+          "region": "us-west2"
+        }
+      }
+    }
   }
 }
