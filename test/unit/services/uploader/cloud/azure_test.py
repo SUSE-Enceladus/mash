@@ -166,7 +166,7 @@ class TestUploadAzure(object):
             account_key='key', account_name='storage'
         )
         mock_PageBlob.assert_called_once_with(
-            page_blob_service, 'file.vhd', 'container', 1024
+            page_blob_service, 'name.vhd', 'container', 1024
         )
         assert page_blob.next.call_args_list == [
             call(mock_lzma.LZMAFile.return_value, 4096, 5),
@@ -182,7 +182,7 @@ class TestUploadAzure(object):
                     'os_disk': {
                         'blob_uri':
                         'https://storage.blob.core.windows.net/'
-                        'container/file.vhd',
+                        'container/name.vhd',
                         'os_type': 'Linux',
                         'caching': 'ReadWrite',
                         'os_state': 'Generalized'
