@@ -311,7 +311,7 @@ class TestOBSImageBuildResult(object):
             'Azure-Factory.x86_64-1.0.5-Build5.28.packages'
         data = self.obs_result._lookup_image_packages_metadata()
         self.obs_result.remote.fetch_file.assert_called_once_with(
-            'obs_package', '.packages', '../data/image.packages'
+            'obs_package.', '.packages', '../data/image.packages'
         )
         assert data['file-magic'].checksum == '8e776ae58aac4e50edcf190e493e5c20'
         assert self.obs_result.image_status['version'] == '1.0.5'
