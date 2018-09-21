@@ -283,7 +283,7 @@ class TestUploadImageService(object):
             'cloud_image_name': 'b',
             'image_description': 'a',
             'job_file': 'job_file',
-            'utctime': 'Wed Oct 11 17:50:26 UTC 2017',
+            'utctime': 'always',
             'provider': 'ec2',
             'target_regions': {
                 'us-east-1': {
@@ -294,14 +294,6 @@ class TestUploadImageService(object):
         }
         self.uploader.config = Mock()
         uploader_args = self.uploader._get_uploader_arguments_per_region(job)
-        self.uploader._schedule_job(job)
-        self.uploader.scheduler.add_job.assert_called_once_with(
-            mock_start_job, 'date', args=[job, False, uploader_args[0], True],
-            run_date='2017-10-11T17:50:26+00:00',
-            timezone='utc'
-        )
-        self.uploader.scheduler.add_job.reset_mock()
-        job['utctime'] = 'always'
         self.uploader._schedule_job(job)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, args=[job, True, uploader_args[0], True]
@@ -327,7 +319,7 @@ class TestUploadImageService(object):
             'cloud_image_name': 'b',
             'image_description': 'a',
             'job_file': 'job_file',
-            'utctime': 'Wed Oct 11 17:50:26 UTC 2017',
+            'utctime': 'always',
             'provider': 'azure',
             'target_regions': {
                 'westeurope': {
@@ -340,14 +332,6 @@ class TestUploadImageService(object):
         }
         self.uploader.config = Mock()
         uploader_args = self.uploader._get_uploader_arguments_per_region(job)
-        self.uploader._schedule_job(job)
-        self.uploader.scheduler.add_job.assert_called_once_with(
-            mock_start_job, 'date', args=[job, False, uploader_args[0], True],
-            run_date='2017-10-11T17:50:26+00:00',
-            timezone='utc'
-        )
-        self.uploader.scheduler.add_job.reset_mock()
-        job['utctime'] = 'always'
         self.uploader._schedule_job(job)
         self.uploader.scheduler.add_job.assert_called_once_with(
             mock_start_job, args=[job, True, uploader_args[0], True]
