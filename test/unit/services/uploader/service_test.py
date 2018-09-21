@@ -197,6 +197,32 @@ class TestUploadImageService(object):
             )
         ]
 
+    @patch.object(UploadImageService, 'publish_job_result')
+    @patch.object(UploadImageService, '_delete_job')
+    @patch.object(UploadImageService, '_send_control_response')
+    def test_process_message_for_failed_job(
+        self, mock_send_control_response, mock_delete_job,
+        mock_publish_job_result
+    ):
+        mock_delete_job.return_value = {
+            'ok': True,
+            'message': 'Job Deleted'
+        }
+        message = Mock()
+        message.body = '{"obs_result": {"id": "4711", "status": "failed"}}'
+        self.uploader._process_message(message)
+        mock_delete_job.assert_called_once_with('4711')
+        mock_send_control_response.assert_called_once_with(
+            {'ok': True, 'message': 'Job Deleted'},
+            '4711'
+        )
+        mock_publish_job_result.assert_called_once_with(
+            'testing', '4711',
+            JsonFormat.json_message(
+                {'uploader_result': {'id': '4711', 'status': 'failed'}}
+            )
+        )
+
     @patch.object(UploadImageService, 'persist_job_config')
     @patch.object(UploadImageService, '_schedule_job')
     @patch_open

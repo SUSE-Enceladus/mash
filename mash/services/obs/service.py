@@ -23,6 +23,7 @@ import dateutil.parser
 from mash.services.base_service import BaseService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
+from mash.services.status_levels import DELETE
 
 
 class OBSImageBuildResultService(BaseService):
@@ -110,6 +111,15 @@ class OBSImageBuildResultService(BaseService):
                 extra={'job_id': job_id}
             )
             result = self._delete_job(job_id)
+            message = {
+                'obs_result': {
+                    'id': job_id,
+                    'status': DELETE
+                }
+            }
+            self.publish_job_result(
+                'uploader', job_id, JsonFormat.json_message(message)
+            )
         else:
             result = {
                 'ok': False,
