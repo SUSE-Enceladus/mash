@@ -21,7 +21,6 @@ import random
 
 from threading import Thread
 
-from mash.services.status_levels import FAILED, SUCCESS
 from mash.services.testing.ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
 
@@ -54,49 +53,23 @@ class AzureTestingJob(TestingJob):
             instance_type=instance_type, ssh_user=ssh_user
         )
 
-    def _run_tests(self):
+    def _prepare_test_run(self, creds, region, results):
         """
-        Tests image with IPA and update status and results.
+        Create an IPA testing thread for the provided region.
         """
-        results = {}
-        jobs = []
-        for region, account in self.test_regions.items():
-            creds = self.credentials[account]
-            service_account_credentials = json.dumps(creds)
-            process = Thread(
-                name=region, target=ipa_test, args=(results,), kwargs={
-                    'provider': self.provider,
-                    'description': self.description,
-                    'distro': self.distro,
-                    'image_id': self.source_regions[region],
-                    'instance_type': self.instance_type,
-                    'region': region,
-                    'service_account_credentials': service_account_credentials,
-                    'ssh_private_key_file': self.ssh_private_key_file,
-                    'ssh_user': self.ssh_user,
-                    'tests': self.tests
-                }
-            )
-            process.start()
-            jobs.append(process)
-
-        for job in jobs:
-            job.join()
-
-        self.status = SUCCESS
-        for region, result in results.items():
-            if 'results_file' in result:
-                self.send_log(
-                    'Results file for {0} region: {1}'.format(
-                        region, result['results_file']
-                    )
-                )
-
-            if result['status'] != SUCCESS:
-                self.send_log(
-                    'Image tests failed in region: {0}.'.format(region),
-                    success=False
-                )
-                if result.get('msg'):
-                    self.send_log(result['msg'], success=False)
-                self.status = FAILED
+        service_account_credentials = json.dumps(creds)
+        process = Thread(
+            name=region, target=ipa_test, args=(results,), kwargs={
+                'provider': self.provider,
+                'description': self.description,
+                'distro': self.distro,
+                'image_id': self.source_regions[region],
+                'instance_type': self.instance_type,
+                'region': region,
+                'service_account_credentials': service_account_credentials,
+                'ssh_private_key_file': self.ssh_private_key_file,
+                'ssh_user': self.ssh_user,
+                'tests': self.tests
+            }
+        )
+        return process
