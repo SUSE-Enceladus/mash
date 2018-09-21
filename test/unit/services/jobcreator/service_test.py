@@ -382,6 +382,113 @@ class TestJobCreatorService(object):
             })
         )
 
+    @patch.object(JobCreatorService, '_publish')
+    def test_jobcreator_handle_service_message_gce(
+        self, mock_publish
+    ):
+        self.jobcreator.jobs = {}
+        self.jobcreator.provider_data = {'gce': {}}
+        message = MagicMock()
+
+        with open('../data/gce_job.json', 'r') as job_doc:
+            job = json.load(job_doc)
+
+        self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
+
+        account_info = {
+            "accounts": {
+                "user1": {
+                    "test-gce": {
+                        "region": "us-west1",
+                        "bucket": "images"
+                    },
+                    "test-gce2": {
+                        "region": "us-west2",
+                        "bucket": "images"
+                    }
+                }
+            },
+            "groups": {
+                "user1": {
+                    "test-gce-group": ["test-gce", "test-gce2"]
+                }
+            }
+        }
+
+        message.body = json.dumps({
+            'start_job': {
+                'id': '12345678-1234-1234-1234-123456789012',
+                'accounts_info': account_info
+            }
+        })
+        self.jobcreator._handle_service_message(message)
+
+        msg = mock_publish.mock_calls[0][1][2]
+        data = json.loads(msg)['credentials_job']
+        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        assert data['last_service'] == 'testing'
+        assert data['provider'] == 'gce'
+        assert 'test-gce' in data['provider_accounts']
+        assert 'test-gce2' in data['provider_accounts']
+        assert data['requesting_user'] == 'user1'
+        assert data['utctime'] == 'now'
+
+        assert mock_publish.mock_calls[1] == call(
+            'obs', 'job_document',
+            JsonFormat.json_message({
+                "obs_job": {
+                    "conditions": [
+                        {"package": ["name", "and", "constraints"]},
+                        {"image": "version"}
+                    ],
+                    "download_url": "http://download.opensuse.org/"
+                                    "repositories/Cloud:Tools/images",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image": "test_image_oem",
+                    "utctime": "now"
+                }
+            })
+        )
+        assert mock_publish.mock_calls[2] == call(
+            'uploader', 'job_document',
+            JsonFormat.json_message({
+                "uploader_job": {
+                    "cloud_image_name": "new_image_123",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image_description": "New Image #123",
+                    "provider": "gce",
+                    "target_regions": {
+                        "us-west2": {
+                            "account": "test-gce2",
+                            "bucket": "images"
+                        },
+                        "us-west1": {
+                            "account": "test-gce",
+                            "bucket": "images"
+                        }
+                    },
+                    "utctime": "now"
+                }
+            })
+        )
+        assert mock_publish.mock_calls[3] == call(
+            'testing', 'job_document',
+            JsonFormat.json_message({
+                "testing_job": {
+                    "distro": "sles",
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "instance_type": "t2.micro",
+                    "provider": "gce",
+                    "test_regions": {
+                        "us-west2": "test-gce2",
+                        "us-west1": "test-gce"
+                    },
+                    "tests": ["test_stuff"],
+                    "utctime": "now"
+                }
+            })
+        )
+
     def test_jobcreator_handle_invalid_service_message(self):
         message = MagicMock()
         message.body = 'invalid message'
