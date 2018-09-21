@@ -18,7 +18,6 @@
 import atexit
 import os
 import time
-import dateutil.parser
 from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -264,14 +263,12 @@ class UploadImageService(BaseService):
             self.jobs[job_id] = {}
         # get us the time when to start this job
         time = job_data['utctime']
-        nonstop = False
-        if time == 'now':
-            time = None
-        elif time == 'always':
-            time = None
+
+        if time == 'always':
             nonstop = True
         else:
-            time = dateutil.parser.parse(job_data['utctime']).isoformat()
+            nonstop = False
+
         # init the job result dictionary
         self.jobs[job_id]['uploader_result'] = {
             'id': job_id,
@@ -283,10 +280,7 @@ class UploadImageService(BaseService):
         self.jobs[job_id]['uploader'] = []
         # send request for credentials
         self.publish_credentials_request(job_id)
-        return {
-            'time': time,
-            'nonstop': nonstop
-        }
+        return {'nonstop': nonstop}
 
     def _schedule_job(self, job):
         startup = self._init_job(job)
@@ -298,16 +292,9 @@ class UploadImageService(BaseService):
             job_args = [
                 job, startup['nonstop'], uploader_args, last_upload_region
             ]
-            if startup['time']:
-                self.scheduler.add_job(
-                    self._start_job, 'date', args=job_args,
-                    run_date=startup['time'],
-                    timezone='utc'
-                )
-            else:
-                self.scheduler.add_job(
-                    self._start_job, args=job_args
-                )
+            self.scheduler.add_job(
+                self._start_job, args=job_args
+            )
 
     def _wait_until_ready(self, job_id):
         while True:
