@@ -10,6 +10,7 @@ from mash.services.base_service import BaseService
 from mash.services.testing.service import TestingService
 from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
+from mash.services.testing.gce_job import GCETestingJob
 from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
@@ -109,6 +110,18 @@ class TestIPATestingService(object):
 
         mock_create_job.assert_called_once_with(
             AzureTestingJob, {'id': job.id, 'provider': 'azure'}
+        )
+
+    @patch.object(TestingService, '_create_job')
+    def test_testing_add_gce_job(self, mock_create_job):
+        job = Mock()
+        job.id = '1'
+        job.get_metadata.return_value = {'job_id': job.id, 'provider': 'gce'}
+
+        self.testing._add_job({'id': job.id, 'provider': 'gce'})
+
+        mock_create_job.assert_called_once_with(
+            GCETestingJob, {'id': job.id, 'provider': 'gce'}
         )
 
     def test_testing_add_job_exists(self):
