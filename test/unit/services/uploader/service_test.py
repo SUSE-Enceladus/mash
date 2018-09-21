@@ -250,8 +250,9 @@ class TestUploadImageService(object):
             job_data['uploader_job']
         )
 
+    @patch.object(UploadImageService, 'unbind_queue')
     @patch('os.remove')
-    def test_delete_job(self, mock_os_remove):
+    def test_delete_job(self, mock_os_remove, mock_unbind_queue):
         assert self.uploader._delete_job('815') == {
             'message': 'Job does not exist, can not delete it', 'ok': False
         }
@@ -261,6 +262,9 @@ class TestUploadImageService(object):
         assert self.uploader._delete_job('815') == {
             'message': 'Job Deleted', 'ok': True
         }
+        mock_unbind_queue.assert_called_once_with(
+            'listener', 'uploader', '815'
+        )
         mock_os_remove.assert_called_once_with('job_file')
         assert '815' not in self.uploader.jobs
         self.uploader.jobs = {'815': {'uploader': upload_image}}

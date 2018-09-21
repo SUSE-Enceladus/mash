@@ -224,6 +224,9 @@ class UploadImageService(BaseService):
                 'message': 'Job does not exist, can not delete it'
             }
         else:
+            self.unbind_queue(
+                self.listener_queue, self.service_exchange, job_id
+            )
             upload_image = self.jobs[job_id]['uploader'][0]
             # delete job file
             try:
