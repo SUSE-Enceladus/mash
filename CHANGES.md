@@ -1,3 +1,20 @@
+v0.2.0 (2018-09-21)
+===================
+
+- Select random instance type if None provided in job doc.
+- Print traceback in log if unexpected exception in IPA testing.
+- Set date in cloud image name based on expected {date} format string.
+- Move job logs to a jobs dir.
+- Fix bug fetch image name should have period appended.
+- Fix bug, log error and set failed status before sending message
+  in OBS service.
+- Send delete message to uploader if OBS serivice receives a delete
+  job message.
+- Unbind job keys from uploader listener queue when job deleted.
+- Remove utctime special handling in uploader.
+- Use cloud image name with .vhd appended for blob name instead
+  of the file name.
+
 v0.1.0 (2018-09-14)
 ===================
 
