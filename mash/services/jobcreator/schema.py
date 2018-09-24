@@ -214,7 +214,6 @@ ec2_job_message['properties']['share_with'] = {
     ]
 }
 ec2_job_message['properties']['allow_copy'] = {'type': 'boolean'}
-ec2_job_message['required'] += ['share_with', 'allow_copy']
 ec2_job_message['definitions']['account'] = {
     'properties': {
         'name': {'$ref': '#/definitions/non_empty_string'},
