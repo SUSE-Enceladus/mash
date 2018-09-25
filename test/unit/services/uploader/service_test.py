@@ -347,6 +347,42 @@ class TestUploadImageService(object):
             '123'
         )
 
+    @patch.object(UploadImageService, 'publish_credentials_request')
+    @patch.object(UploadImageService, '_start_job')
+    def test_schedule_job_google(
+            self, mock_start_job, mock_publish_credentials_request
+    ):
+        job = {
+            'id': '123',
+            'cloud_image_name': 'b',
+            'image_description': 'a',
+            'job_file': 'job_file',
+            'utctime': 'always',
+            'provider': 'gce',
+            'target_regions': {
+                'us-east1': {
+                    'account': 'test-gce',
+                    'bucket': 'images'
+                }
+            }
+        }
+        self.uploader.config = Mock()
+        uploader_args = self.uploader._get_uploader_arguments_per_region(job)
+        self.uploader._schedule_job(job)
+        self.uploader.scheduler.add_job.assert_called_once_with(
+            mock_start_job, args=[job, True, uploader_args[0], True]
+        )
+        self.uploader.scheduler.add_job.reset_mock()
+        mock_publish_credentials_request.reset_mock()
+        job['utctime'] = 'now'
+        self.uploader._schedule_job(job)
+        self.uploader.scheduler.add_job.assert_called_once_with(
+            mock_start_job, args=[job, False, uploader_args[0], True]
+        )
+        mock_publish_credentials_request.assert_called_once_with(
+            '123'
+        )
+
     @patch('mash.services.uploader.service.UploadImage')
     @patch.object(UploadImageService, '_send_job_response')
     @patch.object(UploadImageService, '_image_already_uploading')

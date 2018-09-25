@@ -5,6 +5,7 @@
 # $ pip install -U pip setuptools
 # $ pip install -r .virtualenv.requirements.txt
 
+apache-libcloud
 azure-mgmt-compute
 azure-mgmt-resource
 azure-mgmt-storage
