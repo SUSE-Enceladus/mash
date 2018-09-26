@@ -658,6 +658,39 @@ class TestCredentialsService(object):
         assert account['resource_group'] == 'rg_123'
         assert account['storage_account'] == 'sa_123'
 
+    @patch.object(CredentialsService, '_store_encrypted_credentials')
+    @patch.object(CredentialsService, '_write_accounts_to_file')
+    @patch.object(CredentialsService, 'encrypt_credentials')
+    @patch.object(CredentialsService, '_get_accounts_from_file')
+    def test_credentials_add_account_gce(
+        self, mock_get_acnts_from_file, mock_encrypt_creds,
+        mock_write_accounts_to_file, mock_store_encrypted_creds
+    ):
+        message = {
+            "account_name": "test-gce",
+            "bucket": "images",
+            "credentials": {"encrypted": "creds"},
+            "provider": "gce",
+            "region": "us-west2",
+            "requesting_user": "user1"
+        }
+
+        with open(self.service.accounts_file) as f:
+            accounts = json.load(f)
+        mock_get_acnts_from_file.return_value = accounts
+        mock_encrypt_creds.return_value = 'encryptedcreds'
+
+        self.service.add_account(message)
+
+        self.service._write_accounts_to_file.assert_called_once_with(accounts)
+        self.service._store_encrypted_credentials.assert_called_once_with(
+            'test-gce', 'encryptedcreds', 'gce', 'user1'
+        )
+
+        account = accounts['gce']['accounts']['user1']['test-gce']
+        assert account['region'] == 'us-west2'
+        assert account['bucket'] == 'images'
+
     def test_credentials_add_account_invalid(self):
         message = {
             'account_name': 'acnt123',
@@ -738,6 +771,17 @@ class TestCredentialsService(object):
                                 "region": "centralus",
                                 "resource_group": "rg_123",
                                 "storage_account": "sa_123"
+                            }
+                        }
+                    }
+                },
+                "gce": {
+                    "groups": {},
+                    "accounts": {
+                        "user1": {
+                            "test123": {
+                                "bucket": "images",
+                                "region": "us-west2"
                             }
                         }
                     }

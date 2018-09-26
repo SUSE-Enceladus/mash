@@ -32,6 +32,7 @@ from mash.csp import CSP
 from mash.services.base_service import BaseService
 from mash.services.credentials.azure_account import AzureAccount
 from mash.services.credentials.ec2_account import EC2Account
+from mash.services.credentials.gce_account import GCEAccount
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 from mash.services.jobcreator.accounts import accounts_template
 from mash.utils.json_format import JsonFormat
@@ -536,6 +537,8 @@ class CredentialsService(BaseService):
             account = EC2Account(message)
         elif provider == CSP.azure:
             account = AzureAccount(message)
+        elif provider == CSP.gce:
+            account = GCEAccount(message)
         else:
             self.log.warning(
                 'Invalid provider for account: {0}.'.format(provider)
