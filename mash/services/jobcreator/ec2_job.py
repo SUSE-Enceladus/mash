@@ -32,8 +32,9 @@ class EC2Job(BaseJob):
         self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, old_cloud_image_name,
-        share_with, allow_copy, image_description, distro, download_url,
-        tests, conditions=None, instance_type=None
+        image_description, distro, download_url, tests,
+        allow_copy=False, conditions=None, instance_type=None,
+        share_with='none'
     ):
         self.share_with = share_with
         self.allow_copy = allow_copy
