@@ -1,0 +1,27 @@
+{
+  "job_id": "12345678-1234-1234-1234-123456789012",
+  "provider": "gce",
+  "provider_accounts": [
+    {
+      "name": "test-gce",
+      "region": "us-west1",
+      "bucket": "images"
+    }
+  ],
+  "provider_groups": ["test-gce-group"],
+  "requesting_user": "user1",
+  "last_service": "testing",
+  "utctime": "now",
+  "image": "test_image_oem",
+  "cloud_image_name": "new_image_123",
+  "old_cloud_image_name": "old_new_image_123",
+  "conditions": [
+    {"package": ["name", "and", "constraints"]},
+    {"image": "version"}
+  ],
+  "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
+  "image_description": "New Image #123",
+  "distro": "sles",
+  "instance_type": "t2.micro",
+  "tests": ["test_stuff"]
+}
