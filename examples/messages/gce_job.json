@@ -19,5 +19,6 @@
   "image_description": "New Image #123",
   "distro": "sles",
   "instance_type": "t2.micro",
+  "family": "sles-15",
   "tests": ["test_stuff"]
 }
