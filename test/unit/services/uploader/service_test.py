@@ -355,14 +355,15 @@ class TestUploadImageService(object):
         job = {
             'id': '123',
             'cloud_image_name': 'b',
-            'image_description': 'a',
+            'image_description': 'a {date}',
             'job_file': 'job_file',
             'utctime': 'always',
             'provider': 'gce',
             'target_regions': {
                 'us-east1': {
                     'account': 'test-gce',
-                    'bucket': 'images'
+                    'bucket': 'images',
+                    'family': 'sles-15'
                 }
             }
         }

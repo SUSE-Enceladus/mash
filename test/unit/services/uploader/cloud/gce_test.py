@@ -36,6 +36,7 @@ class TestUploadGCE(object):
         }
         custom_args = {
             'bucket': 'images',
+            'family': 'sles-12',
             'region': 'region'
         }
         mock_get_configuration.return_value = UploaderConfig(
@@ -46,7 +47,7 @@ class TestUploadGCE(object):
             file_handle = mock_open.return_value.__enter__.return_value
             self.uploader = UploadGCE(
                 self.credentials, '/tmp/file.vhdfixed.tar.gz',
-                'sles-12-sp4', 'description', custom_args
+                'sles-12-sp4-v20180909', 'description {date}', custom_args
             )
             file_handle.write.assert_called_once_with(
                 JsonFormat.json_message(self.credentials)
@@ -56,30 +57,42 @@ class TestUploadGCE(object):
     def test_init_incomplete_arguments(self, mock_NamedTemporaryFile):
         custom_args = {
             'bucket': 'images',
+            'family': 'sles-12',
             'region': 'region'
         }
         with patch('builtins.open', create=True):
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'sles-11-sp4', 'description', custom_args
+                    'sles-11-sp4', 'description {date}', custom_args
+                )
+            with raises(MashUploadException):
+                UploadGCE(
+                    self.credentials, 'file.vhdfixed.tar.gz',
+                    'name', 'description', custom_args
                 )
             del custom_args['region']
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'name', 'description', custom_args
+                    'name', 'description  {date}', custom_args
+                )
+            del custom_args['family']
+            with raises(MashUploadException):
+                UploadGCE(
+                    self.credentials, 'file.vhdfixed.tar.gz',
+                    'name', 'description  {date}', custom_args
                 )
             del custom_args['bucket']
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'name', 'description', custom_args
+                    'name', 'description  {date}', custom_args
                 )
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'name', 'description', None
+                    'name', 'description {date}', None
                 )
 
     @patch('mash.services.uploader.cloud.gce.Provider')
@@ -99,15 +112,15 @@ class TestUploadGCE(object):
         storage_driver = Mock()
         mock_storage_driver.return_value = storage_driver
 
-        assert self.uploader.upload() == ('sles-12-sp4', 'region')
+        assert self.uploader.upload() == ('sles-12-sp4-v20180909', 'region')
 
         storage_driver.get_container.assert_called_once_with('images')
         assert storage_driver.upload_object_via_stream.call_count == 1
 
         compute_driver.ex_create_image.assert_called_once_with(
-            'sles-12-sp4',
+            'sles-12-sp4-v20180909',
             'https://www.googleapis.com/storage/v1/b/images/o/'
-            'file.vhdfixed.tar.gz',
-            description='description',
+            'sles-12-sp4-v20180909.tar.gz',
+            description='description 20180909',
             family='sles-12'
         )

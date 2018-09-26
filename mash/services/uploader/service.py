@@ -280,6 +280,7 @@ class UploadImageService(BaseService):
                     {
                         'account': job_data['target_regions'][region]['account'],
                         'bucket': job_data['target_regions'][region]['bucket'],
+                        'family': job_data['target_regions'][region]['family'],
                         'region': region
                     }
                 )

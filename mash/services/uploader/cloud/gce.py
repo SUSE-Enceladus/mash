@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import os
+import re
 
 from tempfile import NamedTemporaryFile
 
@@ -39,7 +39,8 @@ class UploadGCE(UploadBase):
     .. code:: python
 
         custom_args={
-            'bucket': 'images'
+            'bucket': 'images',
+            'family': 'sles-15',
             'region': 'region_name'
         }
     """
@@ -49,6 +50,12 @@ class UploadGCE(UploadBase):
                 'No SLES 11 support in mash for GCE.'
             )
 
+        if '{date}' not in self.cloud_image_description:
+            raise MashUploadException(
+                'Unable to format image description. {date} must be in'
+                ' description string for GCE.'
+            )
+
         if not self.custom_args:
             self.custom_args = {}
 
@@ -56,6 +63,12 @@ class UploadGCE(UploadBase):
         if not self.bucket:
             raise MashUploadException(
                 'required GCE bucket name for upload not specified'
+            )
+
+        self.family = self.custom_args.get('family')
+        if not self.family:
+            raise MashUploadException(
+                'required GCE image family for upload not specified'
             )
 
         self.region = self.custom_args.get('region')
@@ -75,7 +88,7 @@ class UploadGCE(UploadBase):
             project=self.credentials['project_id']
         )
 
-        object_name = os.path.basename(self.system_image_file)
+        object_name = ''.join([self.cloud_image_name, '.tar.gz'])
         container = storage_driver.get_container(self.bucket)
         with open(self.system_image_file, 'rb') as image_stream:
             storage_driver.upload_object_via_stream(
@@ -93,12 +106,14 @@ class UploadGCE(UploadBase):
             'https://www.googleapis.com/storage/v1/b/',
             self.bucket, '/o/', object_name
         ])
-        name_components = self.cloud_image_name.split('-')
-        family = '-'.join([name_components[0], name_components[1]])
+
+        timestamp = re.findall('\d{8}', self.cloud_image_name)[0]
+        desc = self.cloud_image_description.format(date=timestamp)
+
         compute_driver.ex_create_image(
             self.cloud_image_name, uri,
-            description=self.cloud_image_description,
-            family=family
+            description=desc,
+            family=self.family
         )
         return self.cloud_image_name, self.region
 
