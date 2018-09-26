@@ -28,8 +28,9 @@ class GCEJob(BaseJob):
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, old_cloud_image_name,
         image_description, distro, download_url, tests, conditions=None,
-        instance_type=None
+        instance_type=None, family=None
     ):
+        self.family = family
         self.target_account_info = {}
 
         super(GCEJob, self).__init__(
@@ -47,7 +48,8 @@ class GCEJob(BaseJob):
         Example: {
             'us-west1': {
                 'account': 'acnt1',
-                'bucket': 'images'
+                'bucket': 'images',
+                'family': 'sles-15'
             }
         }
         """
@@ -80,7 +82,8 @@ class GCEJob(BaseJob):
 
             self.target_account_info[region] = {
                 'account': account,
-                'bucket': bucket
+                'bucket': bucket,
+                'family': self.family
             }
 
     def get_deprecation_regions(self):

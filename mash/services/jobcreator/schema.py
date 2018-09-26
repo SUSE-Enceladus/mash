@@ -291,6 +291,9 @@ azure_job_message['definitions']['account'] = {
 
 gce_job_message = copy.deepcopy(base_job_message)
 gce_job_message['properties']['provider'] = {'enum': ['gce']}
+gce_job_message['properties']['family'] = {
+    '$ref': '#/definitions/non_empty_string'
+}
 gce_job_message['definitions']['account'] = {
     'properties': {
         'bucket': {'$ref': '#/definitions/non_empty_string'},

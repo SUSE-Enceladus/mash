@@ -460,11 +460,13 @@ class TestJobCreatorService(object):
                     "target_regions": {
                         "us-west2": {
                             "account": "test-gce2",
-                            "bucket": "images"
+                            "bucket": "images",
+                            "family": "sles-15"
                         },
                         "us-west1": {
                             "account": "test-gce",
-                            "bucket": "images"
+                            "bucket": "images",
+                            "family": "sles-15"
                         }
                     },
                     "utctime": "now"
