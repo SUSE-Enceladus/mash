@@ -100,6 +100,52 @@ add_account_ec2 = {
 }
 
 
+add_account_gce = {
+    'type': 'object',
+    'properties': {
+        'account_name': {'$ref': '#/definitions/non_empty_string'},
+        'bucket': {'$ref': '#/definitions/non_empty_string'},
+        'credentials': {
+            'type': 'object',
+            'properties': {
+                'type': {'$ref': '#/definitions/non_empty_string'},
+                'project_id': {'$ref': '#/definitions/non_empty_string'},
+                'private_key_id': {'$ref': '#/definitions/non_empty_string'},
+                'private_key': {'$ref': '#/definitions/non_empty_string'},
+                'client_email': {'$ref': '#/definitions/non_empty_string'},
+                'client_id': {'$ref': '#/definitions/non_empty_string'},
+                'auth_uri': {'$ref': '#/definitions/non_empty_string'},
+                'token_uri': {'$ref': '#/definitions/non_empty_string'},
+                'auth_provider_x509_cert_url': {
+                    '$ref': '#/definitions/non_empty_string'
+                },
+                'client_x509_cert_url': {
+                    '$ref': '#/definitions/non_empty_string'
+                }
+            },
+            'additionalProperties': False,
+            'required': [
+                'type', 'project_id', 'private_key_id', 'private_key',
+                'client_email', 'client_id', 'auth_uri', 'token_uri',
+                'auth_provider_x509_cert_url', 'client_x509_cert_url'
+            ]
+        },
+        'group': {'$ref': '#/definitions/non_empty_string'},
+        'provider': {'enum': ['gce']},
+        'region': {'$ref': '#/definitions/non_empty_string'},
+        'requesting_user': {'$ref': '#/definitions/non_empty_string'}
+    },
+    'additionalProperties': False,
+    'required': [
+        'account_name', 'bucket', 'credentials', 'provider',
+        'requesting_user', 'region'
+    ],
+    'definitions': {
+        'non_empty_string': non_empty_string
+    }
+}
+
+
 delete_account = {
     'type': 'object',
     'properties': {
@@ -237,6 +283,19 @@ azure_job_message['definitions']['account'] = {
         'resource_group': {'$ref': '#/definitions/non_empty_string'},
         'container_name': {'$ref': '#/definitions/non_empty_string'},
         'storage_account': {'$ref': '#/definitions/non_empty_string'}
+    },
+    'additionalProperties': False,
+    'required': ['name']
+}
+
+
+gce_job_message = copy.deepcopy(base_job_message)
+gce_job_message['properties']['provider'] = {'enum': ['gce']}
+gce_job_message['definitions']['account'] = {
+    'properties': {
+        'bucket': {'$ref': '#/definitions/non_empty_string'},
+        'name': {'$ref': '#/definitions/non_empty_string'},
+        'region': {'$ref': '#/definitions/non_empty_string'}
     },
     'additionalProperties': False,
     'required': ['name']
