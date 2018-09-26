@@ -17,7 +17,7 @@
 #
 
 from mash.mash_exceptions import MashTestingException
-from mash.services.status_levels import UNKOWN
+from mash.services.status_levels import FAILED, SUCCESS, UNKOWN
 from mash.services.testing.constants import NOT_IMPLEMENTED
 
 
@@ -50,11 +50,44 @@ class TestingJob(object):
         self.tests = tests
         self.utctime = utctime
 
+    def _prepare_test_run(self, creds, region, results):
+        """
+        Create an IPA testing thread for the provided region.
+        """
+        raise NotImplementedError(NOT_IMPLEMENTED)
+
     def _run_tests(self):
         """
         Tests image with IPA and update status and results.
         """
-        raise NotImplementedError(NOT_IMPLEMENTED)
+        results = {}
+        jobs = []
+        for region, account in self.test_regions.items():
+            creds = self.credentials[account]
+            process = self._prepare_test_run(creds, region, results)
+            process.start()
+            jobs.append(process)
+
+        for job in jobs:
+            job.join()
+
+        self.status = SUCCESS
+        for region, result in results.items():
+            if 'results_file' in result:
+                self.send_log(
+                    'Results file for {0} region: {1}'.format(
+                        region, result['results_file']
+                    )
+                )
+
+            if result['status'] != SUCCESS:
+                self.send_log(
+                    'Image tests failed in region: {0}.'.format(region),
+                    success=False
+                )
+                if result.get('msg'):
+                    self.send_log(result['msg'], success=False)
+                self.status = FAILED
 
     def get_metadata(self):
         """
