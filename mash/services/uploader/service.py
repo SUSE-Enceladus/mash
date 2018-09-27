@@ -274,6 +274,16 @@ class UploadImageService(BaseService):
                         'region': region
                     }
                 )
+            elif job_data['provider'] == CSP.gce:
+                # turn region metadata into GCEImageUploader compatible format
+                uploader_args.append(
+                    {
+                        'account': job_data['target_regions'][region]['account'],
+                        'bucket': job_data['target_regions'][region]['bucket'],
+                        'family': job_data['target_regions'][region]['family'],
+                        'region': region
+                    }
+                )
         return uploader_args
 
     def _init_job(self, job_data):
