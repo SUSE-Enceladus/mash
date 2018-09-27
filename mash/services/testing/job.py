@@ -25,7 +25,7 @@ class TestingJob(object):
     """
     Class for an individual testing job.
     """
-    __test__ = False
+    __test__ = False  # Used by pytest to ignore class in auto discovery
 
     def __init__(
         self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
