@@ -37,7 +37,6 @@ class AzureTestingJob(TestingJob):
     """
     Class for an Azure testing job.
     """
-    __test__ = False
 
     def __init__(
         self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
