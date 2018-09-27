@@ -35,6 +35,7 @@ from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
+from mash.services.testing.gce_job import GCETestingJob
 from mash.utils.json_format import JsonFormat
 
 
@@ -90,6 +91,8 @@ class TestingService(BaseService):
             self._create_job(EC2TestingJob, job_config)
         elif provider == CSP.azure:
             self._create_job(AzureTestingJob, job_config)
+        elif provider == CSP.gce:
+            self._create_job(GCETestingJob, job_config)
         else:
             self.log.error(
                 'Provider {0} is not supported.'.format(provider)
