@@ -132,10 +132,6 @@ class UploadImageService(BaseService):
         handle uploader job document
         """
         job_id = job_data['uploader_job'].get('id', None)
-        self.log.info(
-            JsonFormat.json_message(job_data),
-            extra={'job_id': job_id}
-        )
         result = self._add_job(job_data)
         if result:
             self._send_control_response(result, job_id)
