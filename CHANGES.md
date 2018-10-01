@@ -1,3 +1,12 @@
+v1.0.0 (2018-10-01)
+===================
+
+- Move run tests method to base testing job class.
+- Integrate GCE through testing service.
+- Make share with and allow copy optional.
+- Add comment on pytest __test__ usage.
+- Delete job doc logging from obs and uploader.
+
 v0.2.0 (2018-09-21)
 ===================
 
