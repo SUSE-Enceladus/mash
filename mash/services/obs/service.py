@@ -99,10 +99,6 @@ class OBSImageBuildResultService(BaseService):
         job_id = None
         if 'obs_job' in job_data:
             job_id = job_data['obs_job'].get('id', None)
-            self.log.info(
-                JsonFormat.json_message(job_data),
-                extra={'job_id': job_id}
-            )
             result = self._add_job(job_data)
         elif 'obs_job_delete' in job_data and job_data['obs_job_delete']:
             job_id = job_data['obs_job_delete']
