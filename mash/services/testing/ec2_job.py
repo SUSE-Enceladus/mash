@@ -27,7 +27,7 @@ instance_types = [
     'c5d.large',
     'd2.xlarge',
     'h1.2xlarge',
-    'i3.8xlarge,'
+    'i3.8xlarge',
     'i3.metal',
     'm5.large',
     'm5d.large',
