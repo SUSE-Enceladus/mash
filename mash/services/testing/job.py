@@ -16,9 +16,12 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from threading import Thread
+
 from mash.mash_exceptions import MashTestingException
 from mash.services.status_levels import FAILED, SUCCESS, UNKOWN
 from mash.services.testing.constants import NOT_IMPLEMENTED
+from mash.services.testing.ipa_helper import ipa_test
 
 
 class TestingJob(object):
@@ -50,9 +53,9 @@ class TestingJob(object):
         self.tests = tests
         self.utctime = utctime
 
-    def _prepare_test_run(self, creds, region, results):
+    def _add_provider_creds(self, creds, ipa_kwargs):
         """
-        Create an IPA testing thread for the provided region.
+        Update IPA kwargs with provider credentials.
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
@@ -64,7 +67,22 @@ class TestingJob(object):
         jobs = []
         for region, account in self.test_regions.items():
             creds = self.credentials[account]
-            process = self._prepare_test_run(creds, region, results)
+            ipa_kwargs = {
+                'provider': self.provider,
+                'description': self.description,
+                'distro': self.distro,
+                'image_id': self.source_regions[region],
+                'instance_type': self.instance_type,
+                'region': region,
+                'ssh_private_key_file': self.ssh_private_key_file,
+                'ssh_user': self.ssh_user,
+                'tests': self.tests
+            }
+            ipa_kwargs = self._add_provider_creds(creds, ipa_kwargs)
+            process = Thread(
+                name=region, target=ipa_test,
+                args=(results,), kwargs=ipa_kwargs
+            )
             process.start()
             jobs.append(process)
 
