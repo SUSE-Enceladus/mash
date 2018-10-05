@@ -145,7 +145,7 @@ class JobCreatorService(BaseService):
         This will flush the job with the given id out of the pipeline.
         """
         self.log.info(
-            'Deleting job with ID: {0}.'.format(job_id),
+            'Deleting job.'.format(job_id),
             extra={'job_id': job_id}
         )
 
