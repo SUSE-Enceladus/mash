@@ -4,7 +4,7 @@ from mash.services.jobcreator.config import JobCreatorConfig
 class TestJobCreatorConfig(object):
     def setup(self):
         self.empty_config = JobCreatorConfig(
-            '../data/empty_job_creator_config.yml'
+            '../data/empty_mash_config.yaml'
         )
 
     def test_job_creator_get_log_file(self):

@@ -23,13 +23,12 @@ from mash.services.base_config import BaseConfig
 
 class LoggerConfig(BaseConfig):
     """
-    Implements reading of logger service configuration file:
+    Implements reading of mash configuration file:
 
-    * /etc/mash/logger_config.yml
+    * /etc/mash/mash_config.yaml
 
-    The mash configuration file for the logger service is a yaml
-    formatted file containing information to control the behavior
-    of the logger service.
+    The mash configuration file is a yaml formatted file containing
+    information to control the behavior of the mash services.
     """
     def __init__(self, config_file=None):
         super(LoggerConfig, self).__init__(config_file)

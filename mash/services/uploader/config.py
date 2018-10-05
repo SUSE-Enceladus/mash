@@ -21,13 +21,12 @@ from mash.services.base_defaults import Defaults
 
 class UploaderConfig(BaseConfig):
     """
-    Implements reading of uploader service configuration file:
+    Implements reading of mash configuration file:
 
     * /etc/mash/mash_config.yaml
 
-    The mash configuration file for the uploader service is a yaml
-    formatted file containing information to control the behavior
-    of the uploader service.
+    The mash configuration file is a yaml formatted file containing
+    information to control the behavior of the mash services.
 
     uploader:
       azure:

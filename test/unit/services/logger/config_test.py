@@ -5,8 +5,8 @@ from mash.services.logger.config import LoggerConfig
 
 class TestLoggerConfig(object):
     def setup(self):
-        self.config = LoggerConfig('../data/logger_config.yml')
-        self.empty_config = LoggerConfig('../data/empty_logger_config.yml')
+        self.config = LoggerConfig('../data/mash_config.yaml')
+        self.empty_config = LoggerConfig('../data/empty_mash_config.yaml')
 
     def test_get_log_dir(self):
         assert self.config.get_log_directory() == '/var/log/mash/'

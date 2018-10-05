@@ -48,7 +48,7 @@ class TestUploadAzure(object):
             'region': 'region'
         }
         mock_get_configuration.return_value = UploaderConfig(
-            config_file='../data/mash_config_empty.yaml'
+            config_file='../data/empty_mash_config.yaml'
         )
         with patch('builtins.open', create=True):
             self.uploader = UploadAzure(

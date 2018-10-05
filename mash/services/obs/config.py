@@ -22,13 +22,12 @@ from mash.services.obs.defaults import Defaults
 
 class OBSConfig(BaseConfig):
     """
-    Implements reading of obs service configuration file:
+    Implements reading of mash configuration file:
 
-    * /etc/mash/obs_config.yml
+    * /etc/mash/mash_config.yaml
 
-    The mash configuration file for the obs service is a yaml
-    formatted file containing information to control the behavior
-    of the obs service.
+    The mash configuration file is a yaml formatted file containing
+    information to control the behavior of the mash services.
     """
     def __init__(self, config_file=None):
         super(OBSConfig, self).__init__(config_file)
