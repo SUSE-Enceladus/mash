@@ -33,7 +33,7 @@ class TestingJob(object):
     def __init__(
         self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
         job_file=None, description=None, distro='sles', instance_type=None,
-        ssh_user=None
+        ipa_timeout=None, ssh_user=None
     ):
         self.cloud_image_name = None
         self.job_file = job_file
@@ -43,6 +43,7 @@ class TestingJob(object):
         self.instance_type = instance_type
         self.iteration_count = 0
         self.id = id
+        self.ipa_timeout = ipa_timeout
         self.log_callback = None
         self.provider = provider
         self.status = UNKOWN
@@ -73,6 +74,7 @@ class TestingJob(object):
                 'distro': self.distro,
                 'image_id': self.source_regions[region],
                 'instance_type': self.instance_type,
+                'ipa_timeout': self.ipa_timeout,
                 'region': region,
                 'ssh_private_key_file': self.ssh_private_key_file,
                 'ssh_user': self.ssh_user,

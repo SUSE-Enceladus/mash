@@ -26,6 +26,8 @@ class TestIPATestingService(object):
 
         self.config = Mock()
         self.config.config_data = None
+        self.config.get_ipa_timeout.return_value = 600
+
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
 
@@ -149,6 +151,7 @@ class TestIPATestingService(object):
         self, mock_persist_config, mock_bind_listener_queue
     ):
         mock_persist_config.return_value = 'temp-config.json'
+        self.testing.config = self.config
 
         job = Mock()
         job.id = '1'
@@ -160,7 +163,7 @@ class TestIPATestingService(object):
         self.testing._create_job(job_class, job_config)
 
         job_class.assert_called_once_with(
-            id=job.id, provider='ec2',
+            id=job.id, ipa_timeout=600, provider='ec2',
             ssh_private_key_file='private_ssh_key.file'
         )
         job.set_log_callback.assert_called_once_with(
@@ -176,6 +179,7 @@ class TestIPATestingService(object):
     def test_testing_create_job_exception(self):
         job_class = Mock()
         job_class.side_effect = Exception('Cannot create job.')
+        self.testing.config = self.config
         job_config = {'id': '1', 'provider': 'ec2'}
 
         self.testing._create_job(job_class, job_config)

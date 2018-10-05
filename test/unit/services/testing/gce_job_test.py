@@ -62,7 +62,8 @@ class TestGCETestingJob(object):
             ssh_key_name=None,
             ssh_private_key_file='private_ssh_key.file',
             ssh_user='root',
-            tests=['test_stuff']
+            tests=['test_stuff'],
+            timeout=None
         )
         mock_send_log.reset_mock()
 

@@ -70,7 +70,8 @@ class TestEC2TestingJob(object):
             ssh_key_name='random_name',
             ssh_private_key_file='private_ssh_key.file',
             ssh_user='ec2-user',
-            tests=['test_stuff']
+            tests=['test_stuff'],
+            timeout=None
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
         mock_send_log.reset_mock()
