@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -41,7 +41,7 @@ class CredentialsConfig(BaseConfig):
         """
         accounts_file = self._get_attribute(
             attribute='accounts_file',
-            element='jobcreator'
+            element='credentials'
         )
         return accounts_file or Defaults.get_accounts_file()
 
