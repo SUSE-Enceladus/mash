@@ -22,7 +22,8 @@ from mash.services.testing.defaults import Defaults
 
 class TestingConfig(BaseConfig):
     """
-    Implements reading of the mash configuration file:
+    Implements reading of testing configuration from the mash
+    configuration file:
 
     * /etc/mash/mash_config.yaml
 

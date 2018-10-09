@@ -1,3 +1,0 @@
-obs:
-  logfile: /tmp/foo.log
-  download_directory: /images

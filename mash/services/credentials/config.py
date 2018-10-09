@@ -22,7 +22,8 @@ from mash.services.credentials.defaults import Defaults
 
 class CredentialsConfig(BaseConfig):
     """
-    Implements reading of the mash configuration file.
+    Implements reading of credentials configuration from the mash
+    configuration file.
 
     * /etc/mash/mash_config.yaml
 

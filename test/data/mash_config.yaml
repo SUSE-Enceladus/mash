@@ -14,6 +14,11 @@ services:
   - pint
 non_cred_services:
   - obs
+logger:
+  log_dir: /var/log/othermash/
+obs:
+  logfile: /tmp/foo.log
+  download_directory: /images
 provider:
   ec2:
     regions:
