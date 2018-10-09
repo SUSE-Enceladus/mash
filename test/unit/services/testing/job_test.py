@@ -29,14 +29,12 @@ class TestTestingJob(object):
         metadata = job.get_metadata()
         assert metadata == {'job_id': '1'}
 
-    def test_prepare_test_run(self):
+    def test_add_provider_creds(self):
         job = TestingJob(**self.job_config)
-        results = Mock()
         with raises(NotImplementedError):
-            job._prepare_test_run(
+            job._add_provider_creds(
                 {'creds': 'dict'},
-                'us-west-1',
-                results
+                {}
             )
 
     def test_set_log_callback(self):

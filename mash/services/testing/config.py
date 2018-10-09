@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -17,6 +17,7 @@
 #
 
 from mash.services.base_config import BaseConfig
+from mash.services.testing.defaults import Defaults
 
 
 class TestingConfig(BaseConfig):
@@ -28,7 +29,19 @@ class TestingConfig(BaseConfig):
     The mash configuration file is a yaml formatted file containing
     information to control the behavior of the mash services.
     """
-    __test__ = False
+    __test__ = False  # Used by pytest to ignore class in auto discovery
 
     def __init__(self, config_file=None):
         super(TestingConfig, self).__init__(config_file)
+
+    def get_ipa_timeout(self):
+        """
+        Return the IPA timeout value in seconds.
+
+        :rtype: int
+        """
+        ipa_timeout = self._get_attribute(
+            attribute='ipa_timeout',
+            element='testing'
+        )
+        return ipa_timeout or Defaults.get_ipa_timeout()

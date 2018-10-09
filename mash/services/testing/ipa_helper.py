@@ -32,9 +32,9 @@ from mash.utils.mash_utils import generate_name, get_key_from_file
 
 def ipa_test(
     results, provider=None, access_key_id=None, description=None, distro=None,
-    image_id=None, instance_type=None, region=None, secret_access_key=None,
-    service_account_credentials=None, ssh_private_key_file=None, ssh_user=None,
-    tests=None
+    image_id=None, instance_type=None, ipa_timeout=None, region=None,
+    secret_access_key=None, service_account_credentials=None,
+    ssh_private_key_file=None, ssh_user=None, tests=None
 ):
     name = threading.current_thread().getName()
     service_account_file = None
@@ -71,7 +71,8 @@ def ipa_test(
             ssh_key_name=key_name,
             ssh_private_key_file=ssh_private_key_file,
             ssh_user=ssh_user,
-            tests=tests
+            tests=tests,
+            timeout=ipa_timeout
         )
     except Exception:
         results[name] = {

@@ -19,9 +19,6 @@
 import json
 import random
 
-from threading import Thread
-
-from mash.services.testing.ipa_helper import ipa_test
 from mash.services.testing.job import TestingJob
 
 instance_types = [
@@ -41,7 +38,7 @@ class AzureTestingJob(TestingJob):
     def __init__(
         self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
         job_file=None, credentials=None, description=None, distro='sles',
-        instance_type=None, ssh_user='azureuser'
+        instance_type=None, ipa_timeout=None, ssh_user='azureuser'
     ):
         if not instance_type:
             instance_type = random.choice(instance_types)
@@ -49,26 +46,14 @@ class AzureTestingJob(TestingJob):
         super(AzureTestingJob, self).__init__(
             id, provider, ssh_private_key_file, test_regions, tests, utctime,
             job_file=job_file, description=description, distro=distro,
-            instance_type=instance_type, ssh_user=ssh_user
+            instance_type=instance_type, ipa_timeout=ipa_timeout,
+            ssh_user=ssh_user
         )
 
-    def _prepare_test_run(self, creds, region, results):
+    def _add_provider_creds(self, creds, ipa_kwargs):
         """
-        Create an IPA testing thread for the provided region.
+        Update IPA kwargs with Azure credentials.
         """
-        service_account_credentials = json.dumps(creds)
-        process = Thread(
-            name=region, target=ipa_test, args=(results,), kwargs={
-                'provider': self.provider,
-                'description': self.description,
-                'distro': self.distro,
-                'image_id': self.source_regions[region],
-                'instance_type': self.instance_type,
-                'region': region,
-                'service_account_credentials': service_account_credentials,
-                'ssh_private_key_file': self.ssh_private_key_file,
-                'ssh_user': self.ssh_user,
-                'tests': self.tests
-            }
-        )
-        return process
+        ipa_kwargs['service_account_credentials'] = json.dumps(creds)
+
+        return ipa_kwargs

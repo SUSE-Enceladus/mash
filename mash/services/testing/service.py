@@ -128,6 +128,7 @@ class TestingService(BaseService):
         4. Bind to job listener queue.
         """
         job_config['ssh_private_key_file'] = self.ssh_private_key_file
+        job_config['ipa_timeout'] = self.config.get_ipa_timeout()
         try:
             job = job_class(**job_config)
         except Exception as e:
