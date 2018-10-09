@@ -22,7 +22,7 @@ from mash.services.obs.defaults import Defaults
 
 class OBSConfig(BaseConfig):
     """
-    Implements reading of mash configuration file:
+    Implements reading of obs configuration from mash configuration file:
 
     * /etc/mash/mash_config.yaml
 

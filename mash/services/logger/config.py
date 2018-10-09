@@ -23,7 +23,7 @@ from mash.services.base_config import BaseConfig
 
 class LoggerConfig(BaseConfig):
     """
-    Implements reading of mash configuration file:
+    Implements reading of logger configuration from mash configuration file:
 
     * /etc/mash/mash_config.yaml
 

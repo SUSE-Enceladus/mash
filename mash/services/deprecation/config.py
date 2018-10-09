@@ -21,7 +21,8 @@ from mash.services.base_config import BaseConfig
 
 class DeprecationConfig(BaseConfig):
     """
-    Implements reading of the mash configuration file:
+    Implements reading of deprecation configuration from the mash
+    configuration file:
 
     * /etc/mash/mash_config.yaml
 

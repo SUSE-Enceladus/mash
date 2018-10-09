@@ -21,7 +21,7 @@ from mash.services.base_defaults import Defaults
 
 class UploaderConfig(BaseConfig):
     """
-    Implements reading of mash configuration file:
+    Implements reading of uploader configuration from mash configuration file:
 
     * /etc/mash/mash_config.yaml
 

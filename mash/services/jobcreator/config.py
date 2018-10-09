@@ -21,7 +21,8 @@ from mash.services.base_config import BaseConfig
 
 class JobCreatorConfig(BaseConfig):
     """
-    Implements reading of mash configuration file:
+    Implements reading of job creator configuration from mash
+    configuration file:
 
     * /etc/mash/mash_config.yml
 
