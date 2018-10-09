@@ -18,7 +18,6 @@ non_cred_services:
   - obs
 credentials:
   credentials_directory: /var/lib/mash/credentials/
-jobcreator:
   accounts_file: /etc/mash/accounts.json
 obs:
   download_directory: /var/lib/mash/images
