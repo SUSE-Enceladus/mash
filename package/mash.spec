@@ -27,6 +27,7 @@ Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
+BuildRequires:  python3-adal
 BuildRequires:  python3-apache-libcloud
 BuildRequires:  python3-azure-mgmt-compute
 BuildRequires:  python3-azure-mgmt-resource
@@ -48,7 +49,9 @@ BuildRequires:  python3-ipa
 BuildRequires:  python3-ipa-tests
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
+BuildRequires:  python3-requests
 Requires:       rabbitmq-server
+Requires:       python3-adal
 Requires:       python3-apache-libcloud
 Requires:       python3-azure-mgmt-compute
 Requires:       python3-azure-mgmt-resource
@@ -70,6 +73,7 @@ Requires:       python3-ipa
 Requires:       python3-ipa-tests
 Requires:       python3-lxml
 Requires:       python3-Flask
+Requires:       python3-requests
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
 Requires(pre):  pwdutils
