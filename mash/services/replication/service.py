@@ -24,8 +24,10 @@ from apscheduler import events
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from mash.csp import CSP
 from mash.services.base_service import BaseService
 from mash.services.status_levels import EXCEPTION, SUCCESS
+from mash.services.replication.azure_job import AzureReplicationJob
 from mash.services.replication.ec2_job import EC2ReplicationJob
 from mash.utils.json_format import JsonFormat
 
@@ -68,8 +70,10 @@ class ReplicationService(BaseService):
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == 'ec2':
+        elif provider == CSP.ec2:
             self._create_job(EC2ReplicationJob, job_config)
+        elif provider == CSP.azure:
+            self._create_job(AzureReplicationJob, job_config)
         else:
             self.log.error(
                 'Provider {0} is not supported.'.format(provider)
