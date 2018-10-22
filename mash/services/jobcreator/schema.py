@@ -35,11 +35,32 @@ add_account_azure = {
                 'clientId': {'$ref': '#/definitions/non_empty_string'},
                 'clientSecret': {'$ref': '#/definitions/non_empty_string'},
                 'subscriptionId': {'$ref': '#/definitions/non_empty_string'},
-                'tenantId': {'$ref': '#/definitions/non_empty_string'}
+                'tenantId': {'$ref': '#/definitions/non_empty_string'},
+                'activeDirectoryEndpointUrl': {
+                    '$ref': '#/definitions/non_empty_string'
+                },
+                'resourceManagerEndpointUrl': {
+                    '$ref': '#/definitions/non_empty_string'
+                },
+                'activeDirectoryGraphResourceId': {
+                    '$ref': '#/definitions/non_empty_string'
+                },
+                'sqlManagementEndpointUrl': {
+                    '$ref': '#/definitions/non_empty_string'
+                },
+                'galleryEndpointUrl': {
+                    '$ref': '#/definitions/non_empty_string'
+                },
+                'managementEndpointUrl': {
+                    '$ref': '#/definitions/non_empty_string'
+                }
             },
             'additionalProperties': True,
             'required': [
-                'clientId', 'clientSecret', 'subscriptionId', 'tenantId'
+                'clientId', 'clientSecret', 'subscriptionId', 'tenantId',
+                'activeDirectoryEndpointUrl', 'resourceManagerEndpointUrl',
+                'activeDirectoryGraphResourceId', 'sqlManagementEndpointUrl',
+                'galleryEndpointUrl', 'managementEndpointUrl'
             ],
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
