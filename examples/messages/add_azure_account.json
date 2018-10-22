@@ -1,6 +1,5 @@
 {
   "account_name": "test-azure",
-  "container_name": "container1",
   "credentials": {
     "clientId": "123456",
     "clientSecret": "654321",
@@ -11,6 +10,10 @@
   "provider": "azure",
   "region": "southcentralus",
   "requesting_user": "user1",
-  "resource_group": "rg_123",
-  "storage_account": "sa_1"
+  "source_resource_group": "rg-1",
+  "source_container": "container1",
+  "source_storage_account": "sa1",
+  "destination_resource_group": "rg-2",
+  "destination_container": "container2",
+  "destination_storage_account": "sa2"
 }

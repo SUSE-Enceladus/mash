@@ -29,7 +29,6 @@ add_account_azure = {
     'type': 'object',
     'properties': {
         'account_name': {'$ref': '#/definitions/non_empty_string'},
-        'container_name': {'$ref': '#/definitions/non_empty_string'},
         'credentials': {
             'type': 'object',
             'properties': {
@@ -47,13 +46,23 @@ add_account_azure = {
         'provider': {'enum': ['azure']},
         'region': {'$ref': '#/definitions/non_empty_string'},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
-        'resource_group': {'$ref': '#/definitions/non_empty_string'},
-        'storage_account': {'$ref': '#/definitions/non_empty_string'}
+        'source_container': {'$ref': '#/definitions/non_empty_string'},
+        'source_resource_group': {'$ref': '#/definitions/non_empty_string'},
+        'source_storage_account': {'$ref': '#/definitions/non_empty_string'},
+        'destination_container': {'$ref': '#/definitions/non_empty_string'},
+        'destination_resource_group': {
+            '$ref': '#/definitions/non_empty_string'
+        },
+        'destination_storage_account': {
+            '$ref': '#/definitions/non_empty_string'
+        }
     },
     'additionalProperties': False,
     'required': [
-        'account_name', 'container_name', 'credentials', 'provider',
-        'requesting_user', 'resource_group', 'storage_account'
+        'account_name', 'credentials', 'provider', 'requesting_user',
+        'source_container', 'source_resource_group', 'source_storage_account',
+        'destination_container', 'destination_resource_group',
+        'destination_storage_account'
     ],
     'definitions': {
         'non_empty_string': non_empty_string
@@ -280,9 +289,16 @@ azure_job_message['definitions']['account'] = {
     'properties': {
         'name': {'$ref': '#/definitions/non_empty_string'},
         'region': {'$ref': '#/definitions/non_empty_string'},
-        'resource_group': {'$ref': '#/definitions/non_empty_string'},
-        'container_name': {'$ref': '#/definitions/non_empty_string'},
-        'storage_account': {'$ref': '#/definitions/non_empty_string'}
+        'source_container': {'$ref': '#/definitions/non_empty_string'},
+        'source_resource_group': {'$ref': '#/definitions/non_empty_string'},
+        'source_storage_account': {'$ref': '#/definitions/non_empty_string'},
+        'destination_container': {'$ref': '#/definitions/non_empty_string'},
+        'destination_resource_group': {
+            '$ref': '#/definitions/non_empty_string'
+        },
+        'destination_storage_account': {
+            '$ref': '#/definitions/non_empty_string'
+        }
     },
     'additionalProperties': False,
     'required': ['name']
