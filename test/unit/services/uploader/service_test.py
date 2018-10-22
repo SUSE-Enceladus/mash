@@ -326,7 +326,7 @@ class TestUploadImageService(object):
             'target_regions': {
                 'westeurope': {
                     'resource_group': 'ms_group',
-                    'container_name': 'ms1container',
+                    'container': 'ms1container',
                     'storage_account': 'ms1storage',
                     'account': 'test-azure'
                 }

@@ -43,7 +43,7 @@ class TestUploadAzure(object):
         }
         custom_args = {
             'resource_group': 'group_name',
-            'container_name': 'container',
+            'container': 'container',
             'storage_account': 'storage',
             'region': 'region'
         }
@@ -78,7 +78,7 @@ class TestUploadAzure(object):
     def test_init_incomplete_arguments(self, mock_NamedTemporaryFile):
         custom_args = {
             'resource_group': 'group_name',
-            'container_name': 'container',
+            'container': 'container',
             'storage_account': 'storage',
             'region': 'region'
         }
@@ -89,7 +89,7 @@ class TestUploadAzure(object):
                     self.credentials, 'file.vhdfixed.xz',
                     'name', 'description', custom_args
                 )
-            del custom_args['container_name']
+            del custom_args['container']
             with raises(MashUploadException):
                 UploadAzure(
                     self.credentials, 'file.vhdfixed.xz',

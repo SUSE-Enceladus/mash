@@ -1,0 +1,12 @@
+{
+  "clientId": "09876543-1234-1234-1234-123456789012",
+  "clientSecret": "09876543-1234-1234-1234-123456789012",
+  "subscriptionId": "09876543-1234-1234-1234-123456789012",
+  "tenantId": "09876543-1234-1234-1234-123456789012",
+  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
+  "resourceManagerEndpointUrl": "https://management.azure.com/",
+  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
+  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
+  "galleryEndpointUrl": "https://gallery.azure.com/",
+  "managementEndpointUrl": "https://management.core.windows.net/"
+}
