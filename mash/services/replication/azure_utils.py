@@ -82,6 +82,18 @@ def copy_blob_to_classic_storage(
     )
 
 
+def delete_page_blob(
+    auth_file, blob, container, resource_group, storage_account
+):
+    """
+    Delete page blob in container.
+    """
+    page_blob_service = get_page_blob_service(
+        auth_file, resource_group, storage_account
+    )
+    page_blob_service.delete_blob(container, blob)
+
+
 def get_blob_url(
     auth_file, blob_name, container, resource_group, storage_account,
     permissions=ContainerPermissions.READ, expire_hours=1
@@ -93,16 +105,8 @@ def get_blob_url(
 
     The signature will expire based on expire_hours.
     """
-    storage_client = get_client_from_auth_file(
-        StorageManagementClient,
-        auth_path=auth_file
-    )
-    storage_key_list = storage_client.storage_accounts.list_keys(
-        resource_group, storage_account
-    )
-    page_blob_service = PageBlobService(
-        account_name=storage_account,
-        account_key=storage_key_list.keys[0].value
+    page_blob_service = get_page_blob_service(
+        auth_file, resource_group, storage_account
     )
 
     sas_token = page_blob_service.generate_container_shared_access_signature(
@@ -118,6 +122,25 @@ def get_blob_url(
     )
 
     return source_blob_url
+
+
+def get_page_blob_service(auth_file, resource_group, storage_account):
+    """
+    Return authenticated page blob service instance for the storage account.
+    """
+    storage_client = get_client_from_auth_file(
+        StorageManagementClient,
+        auth_path=auth_file
+    )
+    storage_key_list = storage_client.storage_accounts.list_keys(
+        resource_group, storage_account
+    )
+    page_blob_service = PageBlobService(
+        account_name=storage_account,
+        account_key=storage_key_list.keys[0].value
+    )
+
+    return page_blob_service
 
 
 def get_classic_storage_account_keys(

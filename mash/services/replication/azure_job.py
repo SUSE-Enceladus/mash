@@ -18,7 +18,8 @@
 
 from mash.services.replication.azure_utils import (
     copy_blob_to_classic_storage,
-    create_auth_file
+    create_auth_file,
+    delete_page_blob
 )
 
 from mash.services.replication.job import ReplicationJob
@@ -71,6 +72,13 @@ class AzureReplicationJob(ReplicationJob):
                         reg_info['destination_container'],
                         reg_info['destination_resource_group'],
                         reg_info['destination_storage_account']
+                    )
+                    delete_page_blob(
+                        auth_file,
+                        blob_name,
+                        reg_info['source_container'],
+                        reg_info['source_resource_group'],
+                        reg_info['source_storage_account']
                     )
                 except Exception as error:
                     self.send_log(

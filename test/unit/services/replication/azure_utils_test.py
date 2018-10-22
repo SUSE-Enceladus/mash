@@ -6,9 +6,11 @@ from unittest.mock import MagicMock, patch
 from mash.mash_exceptions import MashReplicationException
 from mash.services.replication.azure_utils import (
     create_auth_file,
+    delete_page_blob,
     get_classic_storage_account_keys,
     get_blob_url,
-    copy_blob_to_classic_storage
+    copy_blob_to_classic_storage,
+    get_page_blob_service
 )
 from mash.utils.json_format import JsonFormat
 
@@ -61,9 +63,31 @@ def test_get_classic_storage_account_keys(mock_requests, mock_adal):
     assert keys['secondaryKey'] == '321'
 
 
+@patch('mash.services.replication.azure_utils.get_page_blob_service')
+def test_get_blob_url(mock_get_page_blob_service):
+    page_blob_service = MagicMock()
+    page_blob_service.generate_container_shared_access_signature \
+        .return_value = 'token123'
+    page_blob_service.make_blob_url.return_value = 'https://test/url/?token123'
+    mock_get_page_blob_service.return_value = page_blob_service
+
+    url = get_blob_url(
+        '../data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
+    )
+
+    assert url == 'https://test/url/?token123'
+    page_blob_service.make_blob_url.assert_called_once_with(
+        'container1',
+        'blob1',
+        sas_token='token123'
+    )
+
+
 @patch('mash.services.replication.azure_utils.get_client_from_auth_file')
 @patch('mash.services.replication.azure_utils.PageBlobService')
-def test_get_blob_url(mock_page_blob_service, mock_get_client_from_auth):
+def test_get_page_blob_service(
+    mock_page_blob_service, mock_get_client_from_auth
+):
     storage_client = MagicMock()
     mock_get_client_from_auth.return_value = storage_client
 
@@ -76,27 +100,18 @@ def test_get_blob_url(mock_page_blob_service, mock_get_client_from_auth):
     storage_client.storage_accounts.list_keys.return_value = key_list
 
     page_blob_service = MagicMock()
-    page_blob_service.generate_container_shared_access_signature \
-        .return_value = 'token123'
-    page_blob_service.make_blob_url.return_value = 'https://test/url/?token123'
     mock_page_blob_service.return_value = page_blob_service
 
-    url = get_blob_url(
-        '../data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
+    service = get_page_blob_service(
+        '../data/azure_creds.json', 'rg1', 'sa1'
     )
 
-    assert url == 'https://test/url/?token123'
-
+    assert service == page_blob_service
     storage_client.storage_accounts.list_keys.assert_called_once_with(
         'rg1', 'sa1'
     )
     mock_page_blob_service.assert_called_once_with(
         account_name='sa1', account_key='12345678'
-    )
-    page_blob_service.make_blob_url.assert_called_once_with(
-        'container1',
-        'blob1',
-        sas_token='token123'
     )
 
 
@@ -163,3 +178,18 @@ def test_copy_blob_to_classic_storage_timeout(
             '../data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
             'dc2', 'drg2', 'dsa2', timeout=0
         )
+
+
+@patch('mash.services.replication.azure_utils.get_page_blob_service')
+def test_delete_page_blob(mock_get_page_blob_service):
+    page_blob_service = MagicMock()
+    mock_get_page_blob_service.return_value = page_blob_service
+
+    delete_page_blob(
+        '../data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
+    )
+
+    page_blob_service.delete_blob.assert_called_once_with(
+        'container1',
+        'blob1'
+    )
