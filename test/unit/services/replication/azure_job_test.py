@@ -46,12 +46,13 @@ class TestAzureReplicationJob(object):
         self.job.cloud_image_name = 'image123'
 
     @patch('mash.services.replication.azure_job.delete_page_blob')
+    @patch('mash.services.replication.azure_job.delete_image')
     @patch('mash.services.replication.azure_job.create_auth_file')
     @patch('mash.services.replication.azure_job.copy_blob_to_classic_storage')
     @patch.object(AzureReplicationJob, 'send_log')
     def test_replicate(
         self, mock_send_log, mock_copy_blob, mock_create_auth_file,
-        mock_delete_page_blob
+        mock_delete_image, mock_delete_page_blob
     ):
         mock_delete_page_blob.side_effect = Exception('Cannot delete image.')
         mock_create_auth_file.return_value.__enter__.return_value = \
@@ -66,6 +67,9 @@ class TestAzureReplicationJob(object):
         mock_copy_blob.assert_called_once_with(
             '/tmp/file.auth', 'image123.vhd', 'container1', 'rg-1', 'sa1',
             'container2', 'rg-2', 'sa2'
+        )
+        mock_delete_image.assert_called_once_with(
+            '/tmp/file.auth', 'rg-1', 'image123'
         )
         mock_delete_page_blob.assert_called_once_with(
             '/tmp/file.auth', 'image123.vhd', 'container1', 'rg-1', 'sa1'

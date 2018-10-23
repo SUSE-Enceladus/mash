@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from mash.mash_exceptions import MashReplicationException
 from mash.services.replication.azure_utils import (
     create_auth_file,
+    delete_image,
     delete_page_blob,
     get_classic_storage_account_keys,
     get_blob_url,
@@ -193,3 +194,19 @@ def test_delete_page_blob(mock_get_page_blob_service):
         'container1',
         'blob1'
     )
+
+
+@patch('mash.services.replication.azure_utils.get_client_from_auth_file')
+def test_delete_image(mock_get_client):
+    compute_client = MagicMock()
+    async_wait = MagicMock()
+    compute_client.images.delete.return_value = async_wait
+    mock_get_client.return_value = compute_client
+
+    delete_image(
+        '../data/azure_creds.json', 'rg1', 'image123'
+    )
+    compute_client.images.delete.assert_called_once_with(
+        'rg1', 'image123'
+    )
+    async_wait.wait.assert_called_once_with()

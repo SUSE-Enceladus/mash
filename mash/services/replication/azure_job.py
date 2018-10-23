@@ -19,6 +19,7 @@
 from mash.services.replication.azure_utils import (
     copy_blob_to_classic_storage,
     create_auth_file,
+    delete_image,
     delete_page_blob
 )
 
@@ -72,6 +73,11 @@ class AzureReplicationJob(ReplicationJob):
                         reg_info['destination_container'],
                         reg_info['destination_resource_group'],
                         reg_info['destination_storage_account']
+                    )
+                    delete_image(
+                        auth_file,
+                        reg_info['source_resource_group'],
+                        self.cloud_image_name
                     )
                     delete_page_blob(
                         auth_file,

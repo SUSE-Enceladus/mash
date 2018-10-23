@@ -27,6 +27,7 @@ from datetime import datetime, timedelta
 from tempfile import NamedTemporaryFile
 
 from azure.common.client_factory import get_client_from_auth_file
+from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.storage.blob import ContainerPermissions, PageBlobService
 
@@ -92,6 +93,19 @@ def delete_page_blob(
         auth_file, resource_group, storage_account
     )
     page_blob_service.delete_blob(container, blob)
+
+
+def delete_image(auth_file, resoure_group, image_name):
+    """
+    Delete the image from resource group.
+    """
+    compute_client = get_client_from_auth_file(
+        ComputeManagementClient, auth_path=auth_file
+    )
+    async_delete_image = compute_client.images.delete(
+        resoure_group, image_name
+    )
+    async_delete_image.wait()
 
 
 def get_blob_url(
