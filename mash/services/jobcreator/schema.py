@@ -261,6 +261,7 @@ ec2_job_message['properties']['share_with'] = {
 }
 ec2_job_message['properties']['allow_copy'] = {'type': 'boolean'}
 ec2_job_message['definitions']['account'] = {
+    'type': 'object',
     'properties': {
         'name': {'$ref': '#/definitions/non_empty_string'},
         'target_regions': {
@@ -277,6 +278,7 @@ ec2_job_message['definitions']['account'] = {
 azure_job_message = copy.deepcopy(base_job_message)
 azure_job_message['properties']['provider'] = {'enum': ['azure']}
 azure_job_message['definitions']['account'] = {
+    'type': 'object',
     'properties': {
         'name': {'$ref': '#/definitions/non_empty_string'},
         'region': {'$ref': '#/definitions/non_empty_string'},
@@ -295,6 +297,7 @@ gce_job_message['properties']['family'] = {
     '$ref': '#/definitions/non_empty_string'
 }
 gce_job_message['definitions']['account'] = {
+    'type': 'object',
     'properties': {
         'bucket': {'$ref': '#/definitions/non_empty_string'},
         'name': {'$ref': '#/definitions/non_empty_string'},
