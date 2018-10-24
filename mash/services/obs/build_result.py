@@ -194,8 +194,8 @@ class OBSImageBuildResult(object):
 
     def _get_build_number(self, name):
         build = re.search(
-            '-(\d+\.\d+\.\d+)-Build([0-9]+\.[0-9]+)', name
-        ) or re.search('-(\d+\.\d+\.\d+)-Beta([0-9]+)', name)
+            r'-(\d+\.\d+\.\d+)-Build([0-9]+\.[0-9]+)', name
+        ) or re.search(r'-(\d+\.\d+\.\d+)-Beta([0-9]+)', name)
         if build:
             return [build.group(1), build.group(2)]
 
@@ -385,7 +385,7 @@ class OBSImageBuildResult(object):
 
     def _version_compare(self, expression):
         expression = expression.replace('.', '')
-        if re.match('^\d+ (<|>|<=|>=|==)\d+$', expression):
+        if re.match(r'^\d+ (<|>|<=|>=|==)\d+$', expression):
             return eval(expression)
         else:
             raise MashVersionExpressionException(

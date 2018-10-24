@@ -190,7 +190,7 @@ class TestUploadImageService(object):
             call(
                 {
                     'message':
-                        'JSON:deserialize error: foo : ' +
+                        'JSON:deserialize error: foo : '
                         'Expecting value: line 1 column 1 (char 0)',
                     'ok': False
                 }
