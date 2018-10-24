@@ -19,3 +19,7 @@ class TestUploaderConfig(object):
         mock_open.side_effect = Exception
         with raises(MashConfigException):
             UploaderConfig('../data/mash_config.yaml')
+
+    def test_get_azure_max_workers(self):
+        max_workers = self.config.get_azure_max_workers()
+        assert 8 == max_workers

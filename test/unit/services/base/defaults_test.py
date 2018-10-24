@@ -14,3 +14,8 @@ def test_get_job_directory():
 def test_get_log_directory():
     log_directory = Defaults.get_log_directory()
     assert log_directory == '/var/log/mash/'
+
+
+def test_get_azure_max_workers():
+    max_workers = Defaults.get_azure_max_workers()
+    assert max_workers == 16

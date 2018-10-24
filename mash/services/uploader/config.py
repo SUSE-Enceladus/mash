@@ -34,6 +34,8 @@ class UploaderConfig(BaseConfig):
         max_chunk_byte_size: 4096
         # max retries on block upload error
         max_chunk_retry_attempts: 5
+        # max number of worker threads for upload
+        max_workers: 16
     """
     def __init__(self, config_file=None):
         super(UploaderConfig, self).__init__(config_file)
@@ -46,3 +48,7 @@ class UploaderConfig(BaseConfig):
     def get_azure_max_chunk_retry_attempts(self):
         return self.azure_uploader.get('max_chunk_retry_attempts') or \
             Defaults.get_azure_max_chunk_retry_attempts()
+
+    def get_azure_max_workers(self):
+        return self.azure_uploader.get('max_workers') or \
+            Defaults.get_azure_max_workers()
