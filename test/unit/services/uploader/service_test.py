@@ -1,3 +1,4 @@
+from pytest import raises
 from pytz import utc
 from unittest.mock import patch
 from unittest.mock import call
@@ -67,10 +68,11 @@ class TestUploadImageService(object):
             call(mock_process_message, 'listener')
         ])
         self.uploader.channel.start_consuming.assert_called_once_with()
+        self.uploader.close_connection.reset_mock()
 
         self.uploader.channel.start_consuming.side_effect = Exception
-        self.uploader.post_init()
-        self.uploader.channel.stop_consuming.assert_called_once_with()
+        with raises(Exception):
+            self.uploader.post_init()
         self.uploader.close_connection.assert_called_once_with()
 
     def test_send_job_response(self):
