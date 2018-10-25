@@ -56,10 +56,10 @@ class TestUploadAzure(object):
                 'name', 'description', custom_args
             )
             config = self.uploader.config
-            assert config.get_azure_max_chunk_byte_size() == \
-                Defaults.get_azure_max_chunk_byte_size()
-            assert config.get_azure_max_chunk_retry_attempts() == \
-                Defaults.get_azure_max_chunk_retry_attempts()
+            assert config.get_azure_max_retry_attempts() == \
+                Defaults.get_azure_max_retry_attempts()
+            assert config.get_azure_max_workers() == \
+                Defaults.get_azure_max_workers()
         mock_get_configuration.return_value = UploaderConfig(
             config_file='../data/mash_config.yaml'
         )

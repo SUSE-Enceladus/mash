@@ -95,7 +95,7 @@ class UploadAzure(UploadBase):
         else:
             open_image = open
 
-        retries = self.config.get_azure_max_chunk_retry_attempts()
+        retries = self.config.get_azure_max_retry_attempts()
         while True:
             with open_image(self.system_image_file, 'rb') as image_stream:
                 try:
