@@ -107,7 +107,7 @@ class UploadGCE(UploadBase):
             self.bucket, '/o/', object_name
         ])
 
-        timestamp = re.findall('\d{8}', self.cloud_image_name)[0]
+        timestamp = re.findall(r'\d{8}', self.cloud_image_name)[0]
         desc = self.cloud_image_description.format(date=timestamp)
 
         compute_driver.ex_create_image(

@@ -59,7 +59,7 @@ def rotate_key(credentials_directory, keys_file, log_callback):
 
                 try:
                     credentials = fernet.rotate(credentials)
-                except Exception as error:
+                except Exception:
                     log_callback(
                         'Failed key rotation on credential file {0}.'.format(
                             path
