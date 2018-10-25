@@ -85,7 +85,7 @@ def validate_request(flask_request, endpoint):
     message = json.loads(flask_request.data)
     provider = message.get('provider')
 
-    if provider not in ['azure', 'ec2']:
+    if provider not in ['azure', 'ec2', 'gce']:
         raise Exception('{} is not a valid provider.'.format(provider))
 
     validate(message, schemas[endpoint][provider])
