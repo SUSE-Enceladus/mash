@@ -421,7 +421,7 @@ class TestingService(BaseService):
                     )
                     return None
             else:
-                job.cloud_image_name = listener_msg['cloud_image_name']
+                job.set_cloud_image_name(listener_msg['cloud_image_name'])
 
             if 'source_regions' not in listener_msg:
                     self.log.error(
@@ -429,7 +429,7 @@ class TestingService(BaseService):
                     )
                     return None
             else:
-                job.source_regions = listener_msg['source_regions']
+                job.set_source_regions(listener_msg['source_regions'])
 
         return job
 
