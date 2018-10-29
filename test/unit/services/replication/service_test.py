@@ -293,7 +293,7 @@ class TestReplicationService(object):
 
         self.replication._handle_listener_message(self.message)
 
-        assert self.replication.jobs['1'].cloud_image_name == 'image_name'
+        job.set_cloud_image_name.assert_called_once_with('image_name')
         assert self.replication.jobs['1'].listener_msg == self.message
         scheduler.add_job.assert_called_once_with(
             mock_replicate_image,

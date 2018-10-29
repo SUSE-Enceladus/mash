@@ -370,7 +370,7 @@ class ReplicationService(BaseService):
                 )
                 return None
             else:
-                job.cloud_image_name = listener_msg['cloud_image_name']
+                job.set_cloud_image_name(listener_msg['cloud_image_name'])
 
         return job
 
