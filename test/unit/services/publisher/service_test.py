@@ -288,6 +288,7 @@ class TestPublisherService(object):
 
         self.publisher._handle_listener_message(self.message)
 
+        job.set_cloud_image_name.assert_called_once_with('image name')
         assert self.publisher.jobs['1'].listener_msg == self.message
         mock_publish_creds_request.assert_called_once_with('1')
 

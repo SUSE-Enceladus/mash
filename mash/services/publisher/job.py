@@ -70,6 +70,12 @@ class PublisherJob(object):
                 success
             )
 
+    def set_cloud_image_name(self, cloud_image_name):
+        """
+        Setter for cloud image name.
+        """
+        self.cloud_image_name = cloud_image_name
+
     def set_log_callback(self, callback):
         """
         Set log_callback function to callback.
