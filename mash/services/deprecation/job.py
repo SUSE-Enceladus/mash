@@ -26,6 +26,7 @@ class DeprecationJob(object):
     """
 
     def __init__(self, id, provider, utctime, job_file=None):
+        self.cloud_image_name = None
         self.iteration_count = 0
         self.id = id
         self.job_file = job_file
@@ -63,6 +64,12 @@ class DeprecationJob(object):
                 self.get_metadata(),
                 success
             )
+
+    def set_cloud_image_name(self, cloud_image_name):
+        """
+        Setter for cloud image name.
+        """
+        self.cloud_image_name = cloud_image_name
 
     def set_log_callback(self, callback):
         """
