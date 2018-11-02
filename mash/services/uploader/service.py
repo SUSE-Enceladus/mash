@@ -151,18 +151,8 @@ class UploadImageService(BaseService):
                 )
                 self._check_ready(job_id)
             else:
-                result = self._delete_job(job_id)
-                self._send_control_response(result, job_id)
-                self.publish_job_result(
-                    'testing', job_id, JsonFormat.json_message(
-                        {
-                            'uploader_result': {
-                                'id': job_id,
-                                'status': obs_result.get('status') or FAILED
-                            }
-                        }
-                    )
-                )
+                self.jobs[job_id]['fail'] = obs_result.get('status') or FAILED
+                self.jobs[job_id]['ready'] = True
 
     def _handle_credentials(self, job_data):
         job_id, credentials = self.decode_credentials(job_data)
@@ -364,6 +354,20 @@ class UploadImageService(BaseService):
             self._send_job_result
         )
         while self.jobs[job_id]['ready']:
+            if self.jobs[job_id].get('fail'):
+                self.publish_job_result(
+                    'testing', job_id, JsonFormat.json_message(
+                        {
+                            'uploader_result': {
+                                'id': job_id,
+                                'status': self.jobs[job_id]['fail']
+                            }
+                        }
+                    )
+                )
+                result = self._delete_job(job_id)
+                self._send_control_response(result, job_id)
+                break
             if not self._image_already_uploading(job_id, upload_image):
                 upload_image.set_image_file(
                     self.jobs[job_id]['system_image_file']

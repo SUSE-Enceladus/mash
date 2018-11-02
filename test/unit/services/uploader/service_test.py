@@ -199,31 +199,13 @@ class TestUploadImageService(object):
             )
         ]
 
-    @patch.object(UploadImageService, 'publish_job_result')
-    @patch.object(UploadImageService, '_delete_job')
-    @patch.object(UploadImageService, '_send_control_response')
-    def test_process_message_for_failed_job(
-        self, mock_send_control_response, mock_delete_job,
-        mock_publish_job_result
-    ):
-        mock_delete_job.return_value = {
-            'ok': True,
-            'message': 'Job Deleted'
-        }
+    def test_process_message_for_failed_job(self):
+        self.uploader.jobs['4711'] = {}
         message = Mock()
         message.body = '{"obs_result": {"id": "4711", "status": "failed"}}'
         self.uploader._process_message(message)
-        mock_delete_job.assert_called_once_with('4711')
-        mock_send_control_response.assert_called_once_with(
-            {'ok': True, 'message': 'Job Deleted'},
-            '4711'
-        )
-        mock_publish_job_result.assert_called_once_with(
-            'testing', '4711',
-            JsonFormat.json_message(
-                {'uploader_result': {'id': '4711', 'status': 'failed'}}
-            )
-        )
+        assert self.uploader.jobs['4711']['fail'] == 'failed'
+        assert self.uploader.jobs['4711']['ready']
 
     @patch.object(UploadImageService, 'persist_job_config')
     @patch.object(UploadImageService, '_schedule_job')
@@ -386,6 +368,9 @@ class TestUploadImageService(object):
             '123'
         )
 
+    @patch.object(UploadImageService, 'publish_job_result')
+    @patch.object(UploadImageService, '_delete_job')
+    @patch.object(UploadImageService, '_send_control_response')
     @patch('mash.services.uploader.service.UploadImage')
     @patch.object(UploadImageService, '_send_job_response')
     @patch.object(UploadImageService, '_image_already_uploading')
@@ -395,7 +380,9 @@ class TestUploadImageService(object):
     def test_start_job(
         self, mock_sleep, mock_wait_until_ready,
         mock_send_job_result, mock_image_already_uploading,
-        mock_send_job_response, mock_UploadImage
+        mock_send_job_response, mock_UploadImage,
+        mock_send_control_response, mock_delete_job,
+        mock_publish_job_result
     ):
         upload_image = Mock()
         uploader = self.uploader
@@ -467,6 +454,31 @@ class TestUploadImageService(object):
             )
         ]
         mock_sleep.assert_called_once_with(30)
+
+        mock_UploadImage.reset_mock()
+        mock_send_job_response.reset_mock()
+
+        self.uploader.jobs['123']['fail'] = 'failed'
+        self.uploader.jobs['123']['ready'] = True
+
+        mock_delete_job.return_value = {
+            'ok': True,
+            'message': 'Job Deleted'
+        }
+
+        uploader._start_job(job, True, uploader_args[0], False)
+
+        mock_delete_job.assert_called_once_with('123')
+        mock_send_control_response.assert_called_once_with(
+            {'ok': True, 'message': 'Job Deleted'},
+            '123'
+        )
+        mock_publish_job_result.assert_called_once_with(
+            'testing', '123',
+            JsonFormat.json_message(
+                {'uploader_result': {'id': '123', 'status': 'failed'}}
+            )
+        )
 
     @patch('mash.services.uploader.service.time.sleep')
     def test_wait_until_ready(self, mock_sleep):
