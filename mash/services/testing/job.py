@@ -129,11 +129,23 @@ class TestingJob(object):
                 success
             )
 
+    def set_cloud_image_name(self, cloud_image_name):
+        """
+        Setter for cloud image name.
+        """
+        self.cloud_image_name = cloud_image_name
+
     def set_log_callback(self, callback):
         """
         Set log_callback function to callback.
         """
         self.log_callback = callback
+
+    def set_source_regions(self, source_regions):
+        """
+        Setter for source_regions dictionary.
+        """
+        self.source_regions = source_regions
 
     def test_image(self):
         """

@@ -584,8 +584,10 @@ class TestIPATestingService(object):
         result = self.testing._validate_listener_msg(self.message.body)
 
         assert result == job
-        assert job.cloud_image_name == 'My image'
-        assert job.source_regions == {'us-east-1': 'ami-123456'}
+        job.set_cloud_image_name.assert_called_once_with('My image')
+        job.set_source_regions.assert_called_once_with(
+            {'us-east-1': 'ami-123456'}
+        )
 
     @patch.object(TestingService, '_cleanup_job')
     def test_testing_validate_listener_msg_failed(self, mock_cleanup_job):

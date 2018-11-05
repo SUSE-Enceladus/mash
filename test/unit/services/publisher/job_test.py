@@ -50,6 +50,11 @@ class TestPublisherJob(object):
             True
         )
 
+    def test_set_cloud_image_name(self):
+        job = PublisherJob(**self.job_config)
+        job.set_cloud_image_name('name123')
+        assert job.cloud_image_name == 'name123'
+
     def test_set_log_callback(self):
         test = Mock()
 

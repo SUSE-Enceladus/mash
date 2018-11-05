@@ -298,6 +298,7 @@ class TestDeprecationService(object):
         self.message.body = self.publisher_result
         self.deprecation._handle_listener_message(self.message)
 
+        job.set_cloud_image_name.assert_called_once_with('image name')
         assert self.deprecation.jobs['1'].listener_msg == self.message
         mock_publish_creds_request.assert_called_once_with('1')
 

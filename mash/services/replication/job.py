@@ -25,7 +25,10 @@ class ReplicationJob(object):
     Class for an individual replication job.
     """
 
-    def __init__(self, id, provider, utctime, job_file=None):
+    def __init__(
+        self, id, provider, utctime, job_file=None, cloud_image_name=None
+    ):
+        self.cloud_image_name = cloud_image_name
         self.iteration_count = 0
         self.id = id
         self.job_file = job_file
@@ -63,6 +66,12 @@ class ReplicationJob(object):
                 self.get_metadata(),
                 success
             )
+
+    def set_cloud_image_name(self, cloud_image_name):
+        """
+        Setter for cloud image name.
+        """
+        self.cloud_image_name = cloud_image_name
 
     def set_log_callback(self, callback):
         """

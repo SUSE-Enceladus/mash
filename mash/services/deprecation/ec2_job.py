@@ -37,7 +37,6 @@ class EC2DeprecationJob(DeprecationJob):
         )
         self.credentials = None
         self.old_cloud_image_name = old_cloud_image_name
-        self.cloud_image_name = None
         self.job_file = job_file
         self.deprecation_regions = deprecation_regions
 
