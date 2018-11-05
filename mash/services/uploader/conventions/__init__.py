@@ -18,6 +18,7 @@
 # project
 from mash.services.uploader.conventions.amazon import ConventionsAmazon
 from mash.services.uploader.conventions.azure import ConventionsAzure
+from mash.services.uploader.conventions.gce import ConventionsGCE
 from mash.csp import CSP
 
 from mash.mash_exceptions import MashConventionsException
@@ -37,6 +38,8 @@ class Conventions(object):
             return ConventionsAmazon()
         elif csp_name == CSP.azure:
             return ConventionsAzure()
+        elif csp_name == CSP.gce:
+            return ConventionsGCE()
         else:
             raise MashConventionsException(
                 'Support for {csp} Cloud Service not implemented'.format(
