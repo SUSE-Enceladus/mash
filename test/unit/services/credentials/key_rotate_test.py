@@ -63,7 +63,8 @@ def test_rotate_key():
                 )
             ),
             call(
-                'Failed key rotation on credential file {0}.'.format(
+                'Failed key rotation on credential file {0}:'
+                ' InvalidToken: '.format(
                     os.path.join(creds_dir, 'invalid.creds')
                 ),
                 success=False

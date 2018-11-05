@@ -33,7 +33,7 @@ BuildRequires:  python3-azure-mgmt-resource
 BuildRequires:  python3-azure-mgmt-storage
 BuildRequires:  python3-azure-storage
 BuildRequires:  python3-boto3
-BuildRequires:  python3-cryptography
+BuildRequires:  python3-cryptography >= 2.2.0
 BuildRequires:  python3-jsonschema
 BuildRequires:  python3-PyYAML
 BuildRequires:  python3-PyJWT
@@ -55,7 +55,7 @@ Requires:       python3-azure-mgmt-resource
 Requires:       python3-azure-mgmt-storage
 Requires:       python3-azure-storage
 Requires:       python3-boto3
-Requires:       python3-cryptography
+Requires:       python3-cryptography >= 2.2.0
 Requires:       python3-jsonschema
 Requires:       python3-PyYAML
 Requires:       python3-PyJWT
