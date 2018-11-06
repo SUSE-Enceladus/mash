@@ -47,7 +47,15 @@ class AzureReplicationJob(ReplicationJob):
 
     def _replicate(self):
         """
-        Replicate image to all target regions in each source region.
+        Replicate image in each source region.
+
+        The azure replication process requires multiple steps:
+
+        - The image blob is copied from ARM storage to legacy ASM storage
+          + The azure publishing process requires an ASM based page blob
+
+        - Once the blob is copied to legacy storage the ARM based image
+          and blob are deleted
         """
         self.status = SUCCESS
 
