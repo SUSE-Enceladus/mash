@@ -38,13 +38,13 @@ def rotate_key(credentials_directory, keys_file, log_callback):
     success = True
 
     # Create new key
-    new_key = Fernet.generate_key().decode()
+    keys = [Fernet.generate_key().decode()]
 
     # Write both keys to file, new key is first
     with open(keys_file, 'r+') as f:
-        keys = [key.strip() for key in f.readlines()]
+        keys += [key.strip() for key in f.readlines()]
         f.seek(0)
-        f.write('\n'.join([new_key] + keys))
+        f.write('\n'.join(keys))
 
     fernet_keys = [Fernet(key) for key in keys]
     fernet = MultiFernet(fernet_keys)
