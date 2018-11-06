@@ -40,16 +40,18 @@ class EC2Account(BaseAccount):
 
         Update or add group if provided.
         """
+        account_info = {
+            'additional_regions': self.additional_regions,
+            'partition': self.partition
+        }
+
         accounts = accounts_file[self.provider]['accounts'].get(self.requesting_user)
 
         if accounts:
-            accounts[self.account_name] = self.partition
+            accounts[self.account_name] = account_info
         else:
             accounts_file[self.provider]['accounts'][self.requesting_user] = {
-                self.account_name: {
-                    'additional_regions': self.additional_regions,
-                    'partition': self.partition
-                }
+                self.account_name: account_info
             }
 
         # Add group if necessary

@@ -19,4 +19,6 @@ class TestEC2Account(object):
 
         self.account.add_account(accounts)
 
-        assert accounts['ec2']['accounts']['user2']['acnt123'] == 'aws'
+        ec2_account = accounts['ec2']['accounts']['user2']['acnt123']
+        assert ec2_account['partition'] == 'aws'
+        assert ec2_account['additional_regions'] is None
