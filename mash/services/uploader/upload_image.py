@@ -32,9 +32,6 @@ class UploadImage(object):
     * :attr:`job_file`
         job file containing the job description
 
-    * :attr:`nonstop`
-        indicate one time stop or multiple uploads possible
-
     * :attr:`csp_name`
         cloud service provider name
 
@@ -53,14 +50,13 @@ class UploadImage(object):
         specific to the selected cloud and uploader class
     """
     def __init__(
-        self, job_id, job_file, nonstop, csp_name, credentials_token,
+        self, job_id, job_file, csp_name, credentials_token,
         cloud_image_name, cloud_image_description, last_upload_region,
         custom_uploader_args=None
     ):
         self.job_id = job_id
         self.job_file = job_file
         self.csp_name = csp_name
-        self.job_nonstop = nonstop
 
         self.cloud_image_name = cloud_image_name
         self.cloud_image_description = cloud_image_description
