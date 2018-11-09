@@ -631,13 +631,16 @@ class TestCredentialsService(object):
     ):
         message = {
             "account_name": "test-azure",
-            "container_name": "container1",
             "credentials": {"encrypted": "creds"},
             "provider": "azure",
             "region": "southcentralus",
             "requesting_user": "user1",
-            "resource_group": "rg_123",
-            "storage_account": "sa_123"
+            "source_container": "container1",
+            "source_resource_group": "rg_1",
+            "source_storage_account": "sa_1",
+            "destination_container": "container2",
+            "destination_resource_group": "rg_2",
+            "destination_storage_account": "sa_2"
         }
 
         with open(self.service.accounts_file) as f:
@@ -653,10 +656,13 @@ class TestCredentialsService(object):
         )
 
         account = accounts['azure']['accounts']['user1']['test-azure']
-        assert account['container_name'] == 'container1'
         assert account['region'] == 'southcentralus'
-        assert account['resource_group'] == 'rg_123'
-        assert account['storage_account'] == 'sa_123'
+        assert account['source_container'] == 'container1'
+        assert account['source_resource_group'] == 'rg_1'
+        assert account['source_storage_account'] == 'sa_1'
+        assert account['destination_container'] == 'container2'
+        assert account['destination_resource_group'] == 'rg_2'
+        assert account['destination_storage_account'] == 'sa_2'
 
     @patch.object(CredentialsService, '_store_encrypted_credentials')
     @patch.object(CredentialsService, '_write_accounts_to_file')

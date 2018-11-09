@@ -21,8 +21,7 @@ class TestJobCreatorAzureJob(object):
         [
             'get_deprecation_regions',
             'get_publisher_message',
-            'get_publisher_regions',
-            'get_replication_source_regions'
+            'get_publisher_regions'
         ]
     )
     def test_not_implemented_methods(self, method):

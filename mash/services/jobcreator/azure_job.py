@@ -47,9 +47,12 @@ class AzureJob(BaseJob):
         Example: {
             'southcentralus': {
                 'account': 'acnt1',
-                'resource_group': 'rg-1',
-                'container_name': 'container1,
-                'storage_account': 'sa1'
+                'source_resource_group': 'rg-1',
+                'source_container': 'container1',
+                'source_storage_account': 'sa1',
+                'destination_resource_group': 'rg-2',
+                'destination_container': 'container2',
+                'destination_storage_account': 'sa2'
             }
         }
         """
@@ -74,18 +77,36 @@ class AzureJob(BaseJob):
         for account, info in accounts.items():
             region = info.get('region') or \
                 self._get_account_value(account, 'region')
-            resource_group = info.get('resource_group') or \
-                self._get_account_value(account, 'resource_group')
-            container_name = info.get('container_name') or \
-                self._get_account_value(account, 'container_name')
-            storage_account = info.get('storage_account') or \
-                self._get_account_value(account, 'storage_account')
+            source_resource_group = info.get('source_resource_group') or \
+                self._get_account_value(account, 'source_resource_group')
+            source_container = info.get('source_container') or \
+                self._get_account_value(account, 'source_container')
+            source_storage_account = info.get('source_storage_account') or \
+                self._get_account_value(account, 'source_storage_account')
+            destination_resource_group = info.get(
+                'destination_resource_group'
+            ) or self._get_account_value(
+                account, 'destination_resource_group'
+            )
+            destination_container = info.get(
+                'destination_container'
+            ) or self._get_account_value(
+                account, 'destination_container'
+            )
+            destination_storage_account = info.get(
+                'destination_storage_account'
+            ) or self._get_account_value(
+                account, 'destination_storage_account'
+            )
 
             self.target_account_info[region] = {
                 'account': account,
-                'resource_group': resource_group,
-                'container_name': container_name,
-                'storage_account': storage_account
+                'source_resource_group': source_resource_group,
+                'source_container': source_container,
+                'source_storage_account': source_storage_account,
+                'destination_resource_group': destination_resource_group,
+                'destination_container': destination_container,
+                'destination_storage_account': destination_storage_account
             }
 
     def _get_account_value(self, account, key):
@@ -117,7 +138,7 @@ class AzureJob(BaseJob):
         """
         Return a dictionary of replication source regions.
         """
-        raise NotImplementedError('TODO')
+        return self.target_account_info
 
     def get_testing_regions(self):
         """
@@ -137,7 +158,14 @@ class AzureJob(BaseJob):
         target_regions = {}
 
         for source_region, value in self.target_account_info.items():
-            target_regions[source_region] = value
+            target_regions[source_region] = {}
+            target_regions[source_region]['account'] = value['account']
+            target_regions[source_region]['container'] = \
+                value['source_container']
+            target_regions[source_region]['storage_account'] = \
+                value['source_storage_account']
+            target_regions[source_region]['resource_group'] = \
+                value['source_resource_group']
 
         return target_regions
 

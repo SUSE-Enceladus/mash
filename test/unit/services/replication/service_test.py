@@ -8,6 +8,7 @@ from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 
 from mash.services.base_service import BaseService
 from mash.services.replication.service import ReplicationService
+from mash.services.replication.azure_job import AzureReplicationJob
 from mash.services.replication.ec2_job import EC2ReplicationJob
 from mash.utils.json_format import JsonFormat
 
@@ -95,6 +96,19 @@ class TestReplicationService(object):
 
         mock_create_job.assert_called_once_with(
             EC2ReplicationJob,
+            job_config
+        )
+
+    @patch.object(ReplicationService, '_create_job')
+    def test_replication_add_job_azure(self, mock_create_job):
+        job_config = {
+            'id': '1', 'provider': 'azure', 'utctime': 'now',
+        }
+
+        self.replication._add_job(job_config)
+
+        mock_create_job.assert_called_once_with(
+            AzureReplicationJob,
             job_config
         )
 

@@ -42,7 +42,7 @@ class UploadAzure(UploadBase):
 
         custom_args={
             'region': 'region_name',
-            'container_name': 'storage_container_name',
+            'container': 'storage_container_name',
             'storage_account': 'storage_account_name',
             'resource_group': 'optional_resource_group_name'
         }
@@ -57,8 +57,8 @@ class UploadAzure(UploadBase):
                 'required Azure region name for upload not specified'
             )
 
-        self.container_name = self.custom_args.get('container_name')
-        if not self.container_name:
+        self.container = self.custom_args.get('container')
+        if not self.container:
             raise MashUploadException(
                 'required Azure container name for upload not specified'
             )
@@ -92,7 +92,7 @@ class UploadAzure(UploadBase):
         blob_name = ''.join([self.cloud_image_name, '.vhd'])
         page_blob = PageBlob(
             page_blob_service, blob_name,
-            self.container_name, system_image_file_type.get_size()
+            self.container, system_image_file_type.get_size()
         )
         if system_image_file_type.is_xz():
             open_image = lzma.LZMAFile
@@ -123,7 +123,7 @@ class UploadAzure(UploadBase):
                         'caching': 'ReadWrite',
                         'blob_uri': 'https://{0}.{1}/{2}/{3}'.format(
                             self.storage_account, 'blob.core.windows.net',
-                            self.container_name, blob_name
+                            self.container, blob_name
                         )
                     }
                 }

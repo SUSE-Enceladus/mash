@@ -31,10 +31,15 @@ class AzureAccount(BaseAccount):
             message['provider'], message['requesting_user'],
             group_name=message.get('group')
         )
-        self.container_name = message['container_name']
         self.region = message['region']
-        self.resource_group = message['resource_group']
-        self.storage_account = message['storage_account']
+        self.source_container = message['source_container']
+        self.source_resource_group = message['source_resource_group']
+        self.source_storage_account = message['source_storage_account']
+        self.destination_container = message['destination_container']
+        self.destination_resource_group = \
+            message['destination_resource_group']
+        self.destination_storage_account = \
+            message['destination_storage_account']
 
     def add_account(self, accounts_file):
         """
@@ -43,10 +48,13 @@ class AzureAccount(BaseAccount):
         Update or add group if provided.
         """
         account_info = {
-            'container_name': self.container_name,
             'region': self.region,
-            'resource_group': self.resource_group,
-            'storage_account': self.storage_account
+            'source_container': self.source_container,
+            'source_resource_group': self.source_resource_group,
+            'source_storage_account': self.source_storage_account,
+            'destination_container': self.destination_container,
+            'destination_resource_group': self.destination_resource_group,
+            'destination_storage_account': self.destination_storage_account
         }
 
         accounts = accounts_file[self.provider]['accounts'].get(self.requesting_user)

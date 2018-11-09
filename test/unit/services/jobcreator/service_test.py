@@ -285,15 +285,21 @@ class TestJobCreatorService(object):
                 "user1": {
                     "test-azure": {
                         "region": "southcentralus",
-                        "resource_group": "sc_res_group",
-                        "container_name": "sccontainer1",
-                        "storage_account": "scstorage1"
+                        "source_resource_group": "sc_res_group1",
+                        "source_container": "sccontainer1",
+                        "source_storage_account": "scstorage1",
+                        "destination_resource_group": "sc_res_group2",
+                        "destination_container": "sccontainer2",
+                        "destination_storage_account": "scstorage2"
                     },
                     "test-azure2": {
                         "region": "centralus",
-                        "resource_group": "c_res_group",
-                        "container_name": "ccontainer1",
-                        "storage_account": "cstorage1"
+                        "source_resource_group": "c_res_group1",
+                        "source_container": "ccontainer1",
+                        "source_storage_account": "cstorage1",
+                        "destination_resource_group": "c_res_group2",
+                        "destination_container": "ccontainer2",
+                        "destination_storage_account": "cstorage2"
                     }
                 }
             },
@@ -315,7 +321,7 @@ class TestJobCreatorService(object):
         msg = mock_publish.mock_calls[0][1][2]
         data = json.loads(msg)['credentials_job']
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'testing'
+        assert data['last_service'] == 'replication'
         assert data['provider'] == 'azure'
         assert 'test-azure' in data['provider_accounts']
         assert 'test-azure2' in data['provider_accounts']
@@ -349,15 +355,15 @@ class TestJobCreatorService(object):
                     "target_regions": {
                         "centralus": {
                             "account": "test-azure2",
-                            "container_name": "ccontainer1",
-                            "resource_group": "c_res_group",
+                            "container": "ccontainer1",
+                            "resource_group": "c_res_group1",
                             "storage_account": "cstorage1"
                         },
                         "southcentralus": {
                             "account": "test-azure",
-                            "container_name": "sccontainer1",
-                            "resource_group": "sc_res_group",
-                            "storage_account": "scstorage1"
+                            "container": "container1",
+                            "resource_group": "rg-1",
+                            "storage_account": "sa1"
                         }
                     },
                     "utctime": "now"
@@ -377,6 +383,37 @@ class TestJobCreatorService(object):
                         "southcentralus": "test-azure"
                     },
                     "tests": ["test_stuff"],
+                    "utctime": "now"
+                }
+            })
+        )
+        assert mock_publish.mock_calls[4] == call(
+            'replication', 'job_document',
+            JsonFormat.json_message({
+                "replication_job": {
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image_description": "New Image #123",
+                    "provider": "azure",
+                    "replication_source_regions": {
+                        "centralus": {
+                            "account": "test-azure2",
+                            "source_container": "ccontainer1",
+                            "source_resource_group": "c_res_group1",
+                            "source_storage_account": "cstorage1",
+                            "destination_container": "ccontainer2",
+                            "destination_resource_group": "c_res_group2",
+                            "destination_storage_account": "cstorage2"
+                        },
+                        "southcentralus": {
+                            "account": "test-azure",
+                            "source_container": "container1",
+                            "source_resource_group": "rg-1",
+                            "source_storage_account": "sa1",
+                            "destination_container": "container2",
+                            "destination_resource_group": "rg-2",
+                            "destination_storage_account": "sa2"
+                        }
+                    },
                     "utctime": "now"
                 }
             })
@@ -680,11 +717,14 @@ class TestJobCreatorService(object):
                     "provider": "azure",
                     "provider_accounts": [
                         {
-                            "container_name": "sccontainer1",
                             "name": "test-azure",
                             "region": "southcentralus",
-                            "resource_group": "sc_res_group",
-                            "storage_account": "scstorage1"
+                            "source_resource_group": "rg-1",
+                            "source_storage_account": "sa1",
+                            "source_container": "container1",
+                            "destination_resource_group": "rg-2",
+                            "destination_storage_account": "sa2",
+                            "destination_container": "container2"
                         }
                     ],
                     "provider_groups": ["test-azure-group"],
