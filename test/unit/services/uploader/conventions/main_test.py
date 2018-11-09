@@ -19,3 +19,8 @@ class TestConventions(object):
         mock_ConventionsAzure.assert_called_once_with()
         with raises(MashConventionsException):
             Conventions('foo')
+
+    @patch('mash.services.uploader.conventions.ConventionsGCE')
+    def test_conventions_gce(self, mock_ConventionsGCE):
+        Conventions('gce')
+        mock_ConventionsGCE.assert_called_once_with()

@@ -18,6 +18,7 @@
 # project
 from mash.services.uploader.cloud.amazon import UploadAmazon
 from mash.services.uploader.cloud.azure import UploadAzure
+from mash.services.uploader.cloud.gce import UploadGCE
 from mash.services.uploader.conventions import Conventions
 from mash.csp import CSP
 
@@ -63,6 +64,11 @@ class Upload(object):
             )
         elif csp_name == CSP.azure:
             return UploadAzure(
+                credentials, system_image_file, cloud_image_name,
+                cloud_image_description, custom_uploader_args
+            )
+        elif csp_name == CSP.gce:
+            return UploadGCE(
                 credentials, system_image_file, cloud_image_name,
                 cloud_image_description, custom_uploader_args
             )

@@ -38,3 +38,17 @@ class TestUpload(object):
         )
         with raises(MashUploadSetupException):
             Upload('foo', 'file', 'name', 'description', credentials)
+
+    @patch('mash.services.uploader.cloud.UploadGCE')
+    @patch('mash.services.uploader.cloud.Conventions')
+    def test_upload_gce(
+        self, mock_Conventions, mock_UploadGCE
+    ):
+        conventions = Mock()
+        credentials = {}
+        mock_Conventions.return_value = conventions
+        Upload('gce', 'file', 'name', 'description', credentials)
+        conventions.is_valid_name.assert_called_once_with('name')
+        mock_UploadGCE.assert_called_once_with(
+            credentials, 'file', 'name', 'description', None
+        )

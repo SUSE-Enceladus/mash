@@ -296,6 +296,7 @@ gce_job_message['properties']['provider'] = {'enum': ['gce']}
 gce_job_message['properties']['family'] = {
     '$ref': '#/definitions/non_empty_string'
 }
+gce_job_message['required'].append('family')
 gce_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {
