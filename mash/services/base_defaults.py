@@ -65,9 +65,9 @@ class Defaults(object):
         return ['obs']
 
     @classmethod
-    def get_azure_max_chunk_byte_size(self):
-        return 4096
-
-    @classmethod
-    def get_azure_max_chunk_retry_attempts(self):
+    def get_azure_max_retry_attempts(self):
         return 5
+
+    @staticmethod
+    def get_azure_max_workers():
+        return 16

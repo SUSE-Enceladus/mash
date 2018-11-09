@@ -56,10 +56,10 @@ class TestUploadAzure(object):
                 'name', 'description', custom_args
             )
             config = self.uploader.config
-            assert config.get_azure_max_chunk_byte_size() == \
-                Defaults.get_azure_max_chunk_byte_size()
-            assert config.get_azure_max_chunk_retry_attempts() == \
-                Defaults.get_azure_max_chunk_retry_attempts()
+            assert config.get_azure_max_retry_attempts() == \
+                Defaults.get_azure_max_retry_attempts()
+            assert config.get_azure_max_workers() == \
+                Defaults.get_azure_max_workers()
         mock_get_configuration.return_value = UploaderConfig(
             config_file='../data/mash_config.yaml'
         )
@@ -109,13 +109,12 @@ class TestUploadAzure(object):
 
     @patch('mash.services.uploader.cloud.azure.get_client_from_auth_file')
     @patch('mash.services.uploader.cloud.azure.PageBlobService')
-    @patch('mash.services.uploader.cloud.azure.PageBlob')
     @patch('mash.services.uploader.cloud.azure.FileType')
     @patch('mash.services.uploader.cloud.azure.lzma')
     @patch('builtins.open')
     def test_upload(
         self, mock_open, mock_lzma, mock_FileType,
-        mock_PageBlob, mock_PageBlobService, mock_get_client_from_auth_file
+        mock_PageBlobService, mock_get_client_from_auth_file
     ):
         lzma_handle = MagicMock()
         lzma_handle.__enter__.return_value = lzma_handle
@@ -141,18 +140,6 @@ class TestUploadAzure(object):
         system_image_file_type.is_xz.return_value = True
         mock_FileType.return_value = system_image_file_type
 
-        page_blob = Mock()
-        next_results = [3, 2, 1]
-
-        def side_effect(stream, chunk_size, retry_count):
-            try:
-                return next_results.pop()
-            except Exception:
-                raise StopIteration
-
-        page_blob.next.side_effect = side_effect
-        mock_PageBlob.return_value = page_blob
-
         assert self.uploader.upload() == ('name', 'region')
 
         assert mock_get_client_from_auth_file.call_args_list == [
@@ -165,17 +152,12 @@ class TestUploadAzure(object):
         mock_PageBlobService.assert_called_once_with(
             account_key='key', account_name='storage'
         )
-        mock_PageBlob.assert_called_once_with(
-            page_blob_service, 'name.vhd', 'container', 1024
-        )
-        assert page_blob.next.call_args_list == [
-            call(mock_lzma.LZMAFile.return_value, 4096, 5),
-            call(mock_lzma.LZMAFile.return_value, 4096, 5),
-            call(mock_lzma.LZMAFile.return_value, 4096, 5),
-            call(mock_lzma.LZMAFile.return_value, 4096, 5)
-        ]
         mock_FileType.assert_called_once_with('file.vhdfixed.xz')
         system_image_file_type.is_xz.assert_called_once_with()
+        page_blob_service.create_blob_from_stream.assert_called_once_with(
+            'container', 'name.vhd', lzma_handle, 1024,
+            max_connections=8
+        )
         client.images.create_or_update.assert_called_once_with(
             'group_name', 'name', {
                 'location': 'region', 'storage_profile': {
@@ -193,14 +175,7 @@ class TestUploadAzure(object):
         async_create_image.wait.assert_called_once_with()
 
         system_image_file_type.is_xz.return_value = False
-        page_blob.reset_mock()
-        next_results = [3, 2, 1]
+        page_blob_service.create_blob_from_stream.side_effect = Exception
 
-        self.uploader.upload()
-
-        assert page_blob.next.call_args_list == [
-            call(mock_open.return_value, 4096, 5),
-            call(mock_open.return_value, 4096, 5),
-            call(mock_open.return_value, 4096, 5),
-            call(mock_open.return_value, 4096, 5)
-        ]
+        with raises(MashUploadException):
+            self.uploader.upload()

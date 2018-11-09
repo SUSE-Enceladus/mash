@@ -25,7 +25,6 @@ from azure.storage.blob.pageblobservice import PageBlobService
 
 # project
 from mash.services import get_configuration
-from mash.services.uploader.cloud.azure_page_blob import PageBlob
 from mash.services.uploader.cloud.base import UploadBase
 from mash.mash_exceptions import MashUploadException
 from mash.utils.json_format import JsonFormat
@@ -90,24 +89,33 @@ class UploadAzure(UploadBase):
             account_key=storage_key_list.keys[0].value
         )
         blob_name = ''.join([self.cloud_image_name, '.vhd'])
-        page_blob = PageBlob(
-            page_blob_service, blob_name,
-            self.container, system_image_file_type.get_size()
-        )
+
         if system_image_file_type.is_xz():
             open_image = lzma.LZMAFile
         else:
             open_image = open
-        with open_image(self.system_image_file, 'rb') as image_stream:
-            try:
-                while True:
-                    self.bytes_transfered = page_blob.next(
-                        image_stream,
-                        self.config.get_azure_max_chunk_byte_size(),
-                        self.config.get_azure_max_chunk_retry_attempts()
+
+        retries = self.config.get_azure_max_retry_attempts()
+        while True:
+            with open_image(self.system_image_file, 'rb') as image_stream:
+                try:
+                    page_blob_service.create_blob_from_stream(
+                        self.container, blob_name, image_stream,
+                        system_image_file_type.get_size(),
+                        max_connections=self.config.get_azure_max_workers()
                     )
-            except StopIteration:
-                image_stream.close()
+                    break
+                except Exception as error:
+                    msg = error
+                    retries -= 1
+
+            if retries < 1:
+                raise MashUploadException(
+                    'Unable to upload image: {0} to Azure: {1}'.format(
+                        self.system_image_file,
+                        msg
+                    )
+                )
 
         compute_client = get_client_from_auth_file(
             ComputeManagementClient, auth_path=self.auth_file.name

@@ -38,5 +38,5 @@ testing:
   ipa_timeout: 600
 uploader:
   azure:
-    max_chunk_byte_size: 4096
-    max_chunk_retry_attempts: 5
+    max_retry_attempts: 5
+    max_workers: 8
