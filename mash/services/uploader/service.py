@@ -218,8 +218,8 @@ class UploadImageService(BaseService):
                 else:
                     self.publish_credentials_request(job_id)
             else:
-                self._delete_job(job_id)
                 self._publish_job_result(job_id, status=obs_status)
+                self._delete_job(job_id)
                 self._job_log(
                     job_id, 'OBS service sent failed result, dequeue uploader'
                 )
