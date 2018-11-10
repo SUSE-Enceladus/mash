@@ -159,7 +159,9 @@ class TestUploadImageService(object):
         self, mock_persist_job_config, mock_publish_job_result
     ):
         self.uploader._init_job(self.job_data_ec2)
-        self.uploader._publish_job_result('123', status=FAILED)
+        self.uploader._publish_job_result(
+            '123', publish_on_failed_job=True, status=FAILED
+        )
         mock_publish_job_result.assert_called_once_with(
             'testing', '123', JsonFormat.json_message(
                 {
@@ -169,6 +171,11 @@ class TestUploadImageService(object):
             )
         )
         assert self.uploader.jobs['123']['uploader_result']['status'] == FAILED
+        mock_publish_job_result.reset_mock()
+        self.uploader._publish_job_result(
+            '123', publish_on_failed_job=False, status=FAILED
+        )
+        assert mock_publish_job_result.called is False
 
     @patch.object(BaseService, 'persist_job_config')
     @patch.object(UploadImageService, '_publish_job_result')
@@ -183,9 +190,19 @@ class TestUploadImageService(object):
             'cloud_image_id': 'image_id'
         }
         self.uploader._send_job_result('123', True, trigger_info)
-        mock_publish_job_result.assert_called_once_with('123')
+        mock_publish_job_result.assert_called_once_with(
+            '123', publish_on_failed_job=True
+        )
         mock_delete_job.assert_called_once_with('123')
         assert self.uploader.jobs['123']['uploader_result']['status'] == SUCCESS
+        mock_publish_job_result.reset_mock()
+        trigger_info['job_status'] = 'failed'
+        self.uploader.jobs['123']['utctime'] = 'always'
+        self.uploader._send_job_result('123', True, trigger_info)
+        mock_publish_job_result.assert_called_once_with(
+            '123', publish_on_failed_job=False
+        )
+        assert self.uploader.jobs['123']['uploader_result']['status'] == FAILED
 
     @patch.object(UploadImageService, '_init_job')
     def test_process_job(self, mock_init_job):
@@ -275,7 +292,7 @@ class TestUploadImageService(object):
         self.uploader._handle_obs_image(obs_result)
         mock_delete_job.assert_called_once_with('123')
         mock_publish_job_result.assert_called_once_with(
-            '123', status='failed'
+            '123', publish_on_failed_job=True, status='failed'
         )
 
     @patch.object(UploadImageService, 'decode_credentials')

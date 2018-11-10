@@ -72,12 +72,17 @@ class UploadImageService(BaseService):
     def _job_log(self, job_id, message):
         self.log.info(message, extra={'job_id': job_id})
 
-    def _publish_job_result(self, job_id, status=None):
+    def _publish_job_result(
+        self, job_id, publish_on_failed_job, status=None
+    ):
         """
         Publish current uploader result to testing queue
         """
         if status:
             self.jobs[job_id]['uploader_result']['status'] = status
+        job_status = self.jobs[job_id]['uploader_result']['status']
+        if job_status == FAILED and publish_on_failed_job is False:
+            return
         self.publish_job_result(
             'testing', job_id, JsonFormat.json_message(
                 {'uploader_result': self.jobs[job_id]['uploader_result']}
@@ -100,9 +105,11 @@ class UploadImageService(BaseService):
         self.jobs[job_id]['uploader_result']['source_regions'][region] = \
             trigger_info['cloud_image_id']
         if last_upload_region:
-            self._publish_job_result(job_id)
             if not self.jobs[job_id]['utctime'] == 'always':
+                self._publish_job_result(job_id, publish_on_failed_job=True)
                 self._delete_job(job_id)
+            else:
+                self._publish_job_result(job_id, publish_on_failed_job=False)
 
     def _process_job(self, message):
         """
@@ -218,7 +225,9 @@ class UploadImageService(BaseService):
                 else:
                     self.publish_credentials_request(job_id)
             else:
-                self._publish_job_result(job_id, status=obs_status)
+                self._publish_job_result(
+                    job_id, publish_on_failed_job=True, status=obs_status
+                )
                 self._delete_job(job_id)
                 self._job_log(
                     job_id, 'OBS service sent failed result, dequeue uploader'
