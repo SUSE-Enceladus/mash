@@ -12,7 +12,7 @@ class TestUploadImage(object):
     def setup(self, mock_mkpath):
         self.custom_uploader_args = {'cloud-specific-param': 'foo'}
         self.upload_image = UploadImage(
-            '123', 'job_file', False, 'ec2',
+            '123', 'job_file', 'ec2',
             'token', 'cloud_image_name_at_{date}',
             'cloud_image_description',
             last_upload_region=False,

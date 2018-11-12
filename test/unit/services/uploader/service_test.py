@@ -4,8 +4,9 @@ from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import Mock
 
-from test.unit.test_helper import (
-    patch_open
+from mash.services.status_levels import (
+    FAILED,
+    SUCCESS
 )
 
 from mash.services.uploader.service import UploadImageService
@@ -18,7 +19,9 @@ class TestUploadImageService(object):
     @patch.object(BaseService, 'consume_credentials_queue')
     @patch('mash.services.base_service.BaseService.set_logfile')
     @patch('mash.services.uploader.service.BackgroundScheduler')
-    @patch.object(UploadImageService, '_process_message')
+    @patch.object(UploadImageService, '_process_credentials')
+    @patch.object(UploadImageService, '_process_job')
+    @patch.object(UploadImageService, '_process_obs_result')
     @patch.object(UploadImageService, 'restart_jobs')
     @patch.object(BaseService, '__init__')
     @patch('os.listdir')
@@ -26,10 +29,72 @@ class TestUploadImageService(object):
     @patch('atexit.register')
     def setup(
         self, mock_register, mock_log, mock_listdir,
-        mock_BaseService, mock_restart_jobs, mock_process_message,
+        mock_BaseService, mock_restart_jobs, mock_process_obs_result,
+        mock_process_job, mock_process_credentials,
         mock_BackgroundScheduler, mock_set_logfile,
         mock_consume_creds_queue, mock_bind_creds_queue
     ):
+        self.job_data_from_preserved_ec2 = {
+            'id': '888',
+            'utctime': 'now',
+            'cloud_image_name': 'name',
+            'image_description': 'description',
+            'provider': 'ec2',
+            'target_regions': {
+                'eu-central-1': {
+                    'helper_image': 'ami-bc5b48d0',
+                    'account': 'test-aws'
+                }
+            }
+        }
+        self.job_data_ec2 = {
+            'uploader_job': {
+                'id': '123',
+                'utctime': 'now',
+                'cloud_image_name': 'name',
+                'image_description': 'description',
+                'provider': 'ec2',
+                'target_regions': {
+                    'eu-central-1': {
+                        'helper_image': 'ami-bc5b48d0',
+                        'account': 'test-aws'
+                    }
+                }
+            }
+        }
+        self.job_data_azure = {
+            'uploader_job': {
+                'id': '123',
+                'utctime': 'now',
+                'cloud_image_name': 'name',
+                'image_description': 'description',
+                'provider': 'azure',
+                'target_regions': {
+                    'westeurope': {
+                        'resource_group': 'ms_group',
+                        'container': 'ms1container',
+                        'storage_account': 'ms1storage',
+                        'account': 'test-azure'
+                    }
+                }
+            }
+        }
+        self.job_data_gce = {
+            'uploader_job': {
+                'id': '123',
+                'utctime': 'now',
+                'cloud_image_name': 'name',
+                'image_description': 'description',
+                'provider': 'gce',
+                'target_regions': {
+                    'us-east1': {
+                        'account': 'test-gce',
+                        'bucket': 'images',
+                        'family': 'sles-15'
+                    }
+                }
+            }
+        }
         scheduler = Mock()
         mock_BackgroundScheduler.return_value = scheduler
         config = Mock()
@@ -61,11 +126,11 @@ class TestUploadImageService(object):
 
         mock_BackgroundScheduler.assert_called_once_with(timezone=utc)
         scheduler.start.assert_called_once_with()
-        mock_restart_jobs.assert_called_once_with(self.uploader._schedule_job)
+        mock_restart_jobs.assert_called_once_with(self.uploader._init_job)
 
         self.uploader.consume_queue.assert_has_calls([
-            call(mock_process_message, 'service'),
-            call(mock_process_message, 'listener')
+            call(mock_process_job, 'service'),
+            call(mock_process_obs_result, 'listener')
         ])
         self.uploader.channel.start_consuming.assert_called_once_with()
         self.uploader.close_connection.reset_mock()
@@ -75,81 +140,72 @@ class TestUploadImageService(object):
             self.uploader.post_init()
         self.uploader.close_connection.assert_called_once_with()
 
-    def test_send_job_response(self):
-        self.uploader._send_job_response('815', {})
+    @patch.object(BaseService, 'persist_job_config')
+    def test_init_job(self, mock_persist_job_config):
+        self.uploader._init_job(self.job_data_from_preserved_ec2)
+        self.uploader._init_job(self.job_data_ec2)
+        assert self.uploader.jobs['123'].keys() == \
+            self.uploader.jobs['888'].keys()
+
+    def test_job_log(self):
+        self.uploader._job_log('815', 'message')
         self.uploader.log.info.assert_called_once_with(
-            {}, extra={'job_id': '815'}
+            'message', extra={'job_id': '815'}
         )
 
     @patch.object(BaseService, 'publish_job_result')
+    @patch.object(BaseService, 'persist_job_config')
+    def test_publish_job_result(
+        self, mock_persist_job_config, mock_publish_job_result
+    ):
+        self.uploader._init_job(self.job_data_ec2)
+        self.uploader._publish_job_result(
+            '123', publish_on_failed_job=True, status=FAILED
+        )
+        mock_publish_job_result.assert_called_once_with(
+            'testing', '123', JsonFormat.json_message(
+                {
+                    'uploader_result':
+                        self.uploader.jobs['123']['uploader_result']
+                }
+            )
+        )
+        assert self.uploader.jobs['123']['uploader_result']['status'] == FAILED
+        mock_publish_job_result.reset_mock()
+        self.uploader._publish_job_result(
+            '123', publish_on_failed_job=False, status=FAILED
+        )
+        assert mock_publish_job_result.called is False
+
+    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(UploadImageService, '_publish_job_result')
     @patch.object(UploadImageService, '_delete_job')
     def test_send_job_result(
-        self, mock_delete_job, mock_publish_job_result
+        self, mock_delete_job, mock_publish_job_result, mock_persist_job_config
     ):
-        self.uploader.jobs['815'] = {
-            'nonstop': False,
-            'uploader_result': {
-                'status': None,
-                'source_regions': {}
-            }
-        }
+        self.uploader._init_job(self.job_data_ec2)
         trigger_info = {
             'job_status': 'success',
             'upload_region': 'region',
             'cloud_image_id': 'image_id'
         }
-        self.uploader._send_job_result('815', True, trigger_info)
+        self.uploader._send_job_result('123', True, trigger_info)
         mock_publish_job_result.assert_called_once_with(
-            'testing', '815', JsonFormat.json_message(
-                {'uploader_result':
-                 self.uploader.jobs['815']['uploader_result']}
-            )
+            '123', publish_on_failed_job=True
         )
-        mock_delete_job.assert_called_once_with('815')
-
-    def test_send_control_response_local(self):
-        result = {
-            'message': 'message',
-            'ok': False
-        }
-        self.uploader._send_control_response(result, '4711')
-        self.uploader.log.error.assert_called_once_with(
-            'message',
-            extra={'job_id': '4711'}
+        mock_delete_job.assert_called_once_with('123')
+        assert self.uploader.jobs['123']['uploader_result']['status'] == SUCCESS
+        mock_publish_job_result.reset_mock()
+        trigger_info['job_status'] = 'failed'
+        self.uploader.jobs['123']['utctime'] = 'always'
+        self.uploader._send_job_result('123', True, trigger_info)
+        mock_publish_job_result.assert_called_once_with(
+            '123', publish_on_failed_job=False
         )
+        assert self.uploader.jobs['123']['uploader_result']['status'] == FAILED
 
-    def test_send_control_response_public(self):
-        result = {
-            'message': 'message',
-            'ok': True
-        }
-        self.uploader._send_control_response(result)
-        self.uploader.log.info.assert_called_once_with(
-            'message',
-            extra={}
-        )
-
-    @patch.object(UploadImageService, '_send_control_response')
-    @patch.object(BaseService, 'decode_credentials')
-    def test_process_message_for_service_data(
-        self, mock_decode_credentials, mock_send_control_response
-    ):
-        message = Mock()
-        message.body = '{"obs_result": {"id": "123", ' + \
-            '"image_file": ["image", "sum"], "status": "success"}}'
-        self.uploader._process_message(message)
-        assert self.uploader.jobs['123']['system_image_file'] == 'image'
-        message.body = '{"jwt_token": {}}'
-        mock_decode_credentials.return_value = '123', {}
-        self.uploader._process_message(message)
-        assert self.uploader.jobs['123']['credentials'] == {}
-        assert self.uploader.jobs['123']['ready'] is True
-
-    @patch.object(UploadImageService, '_add_job')
-    @patch.object(UploadImageService, '_send_control_response')
-    def test_process_message_for_job_documents(
-        self, mock_send_control_response, mock_add_job
-    ):
+    @patch.object(UploadImageService, '_init_job')
+    def test_process_job(self, mock_init_job):
         message = Mock()
         message.body = '{"uploader_job": {"id": "123", ' + \
             '"utctime": "now", "cloud_image_name": "name", ' + \
@@ -157,336 +213,220 @@ class TestUploadImageService(object):
             '"provider": "ec2", ' +\
             '"target_regions": {"eu-central-1": { ' +\
             '"helper_image": "ami-bc5b48d0", "account": "test-aws"}}}}'
-        self.uploader._process_message(message)
+        self.uploader._process_job(message)
         message.ack.assert_called_once_with()
-        mock_add_job.assert_called_once_with(
-            {
-                'uploader_job': {
-                    'id': '123',
-                    'utctime': 'now',
-                    'cloud_image_name': 'name',
-                    'image_description': 'description',
-                    'provider': 'ec2',
-                    'target_regions': {
-                        'eu-central-1': {
-                            'helper_image': 'ami-bc5b48d0',
-                            'account': 'test-aws'
-                        }
-                    }
-                }
-            }
+        mock_init_job.assert_called_once_with(self.job_data_ec2)
+        message.body = '{"broken_command: "4711"}'
+        self.uploader._process_job(message)
+        self.uploader.log.error.assert_called_once_with(
+            'Error processing job: {"broken_command: "4711"}: '
+            'Expecting \':\' delimiter: line 1 column 20 (char 19)'
         )
-        mock_send_control_response.reset_mock()
-        message.body = '{"unknown_command": "4711"}'
-        self.uploader._process_message(message)
-        message.body = 'foo'
-        self.uploader._process_message(message)
-        assert mock_send_control_response.call_args_list == [
-            call(
-                {
-                    'message':
-                        "No idea what to do with: {'unknown_command': '4711'}",
-                    'ok': False
-                }
-            ),
-            call(
-                {
-                    'message':
-                        'JSON:deserialize error: foo : '
-                        'Expecting value: line 1 column 1 (char 0)',
-                    'ok': False
-                }
-            )
-        ]
 
-    @patch.object(UploadImageService, 'publish_job_result')
-    @patch.object(UploadImageService, '_delete_job')
-    @patch.object(UploadImageService, '_send_control_response')
-    def test_process_message_for_failed_job(
-        self, mock_send_control_response, mock_delete_job,
-        mock_publish_job_result
-    ):
-        mock_delete_job.return_value = {
-            'ok': True,
-            'message': 'Job Deleted'
-        }
+    @patch.object(UploadImageService, '_handle_obs_image')
+    def test_process_obs_result(self, mock_handle_obs_image):
         message = Mock()
-        message.body = '{"obs_result": {"id": "4711", "status": "failed"}}'
-        self.uploader._process_message(message)
-        mock_delete_job.assert_called_once_with('4711')
-        mock_send_control_response.assert_called_once_with(
-            {'ok': True, 'message': 'Job Deleted'},
-            '4711'
+        message.body = '{"obs_result": {"id": "123", ' + \
+            '"image_file": ["image", "sum"], "status": "success"}}'
+        self.uploader._process_obs_result(message)
+        message.ack.assert_called_once_with()
+        mock_handle_obs_image.assert_called_once_with(
+            {
+                'obs_result': {
+                    'id': '123',
+                    'image_file': ['image', 'sum'],
+                    'status': 'success'
+                }
+            }
         )
-        mock_publish_job_result.assert_called_once_with(
-            'testing', '4711',
-            JsonFormat.json_message(
-                {'uploader_result': {'id': '4711', 'status': 'failed'}}
-            )
+        message.body = '{"broken_command: "4711"}'
+        self.uploader._process_obs_result(message)
+        self.uploader.log.error.assert_called_once_with(
+            'Invalid obs result: {"broken_command: "4711"}: '
+            'Expecting \':\' delimiter: line 1 column 20 (char 19)'
         )
 
-    @patch.object(UploadImageService, 'persist_job_config')
+    @patch.object(UploadImageService, '_handle_credentials')
+    def test_process_credentials(self, mock_handle_credentials):
+        message = Mock()
+        message.body = '{"test-aws": {}}'
+        self.uploader._process_credentials(message)
+        message.ack.assert_called_once_with()
+        mock_handle_credentials.assert_called_once_with(
+            {'test-aws': {}}
+        )
+        message.body = '{"broken_command: "4711"}'
+        self.uploader._process_credentials(message)
+        self.uploader.log.error.assert_called_once_with(
+            'Invalid credentials: {"broken_command: "4711"}: '
+            'Expecting \':\' delimiter: line 1 column 20 (char 19)'
+        )
+
+    @patch.object(UploadImageService, '_job_log')
     @patch.object(UploadImageService, '_schedule_job')
-    @patch_open
-    def test_add_job(
-        self, mock_open, mock_schedule_job, mock_persist_job_config
+    @patch.object(UploadImageService, '_delete_job')
+    @patch.object(UploadImageService, '_publish_job_result')
+    @patch.object(UploadImageService, 'publish_credentials_request')
+    @patch.object(BaseService, 'persist_job_config')
+    def test_handle_obs_image(
+        self, mock_persist_job_config, mock_publish_credentials_request,
+        mock_publish_job_result, mock_delete_job, mock_schedule_job,
+        mock_job_log
     ):
-        job_data = {
-            "uploader_job": {
-                "id": "123",
-                "cloud_image_name": "name",
-                "image_description": "description",
-                "provider": "ec2",
-                "target_regions": {
-                    "eu-central-1": {
-                        "helper_image": "ami-bc5b48d0",
-                        "account": "test-aws"
-                    }
-                },
-                "utctime": "now"
+        self.uploader._init_job(self.job_data_ec2)
+        obs_result = {
+            'obs_result': {
+                'id': '123',
+                'image_file': ['image', 'sum'],
+                'status': 'success'
             }
         }
-        self.uploader._add_job(job_data)
-        mock_schedule_job.assert_called_once_with(job_data['uploader_job'])
-        mock_persist_job_config.assert_called_once_with(
-            job_data['uploader_job']
+        self.uploader._handle_obs_image(obs_result)
+        mock_publish_credentials_request.assert_called_once_with('123')
+
+        self.uploader.jobs['123']['credentials'] = {'test-aws': {}}
+        self.uploader._handle_obs_image(obs_result)
+        mock_schedule_job.assert_called_once_with('123')
+
+        obs_result['obs_result']['status'] = FAILED
+        self.uploader._handle_obs_image(obs_result)
+        mock_delete_job.assert_called_once_with('123')
+        mock_publish_job_result.assert_called_once_with(
+            '123', publish_on_failed_job=True, status='failed'
         )
+
+    @patch.object(UploadImageService, 'decode_credentials')
+    @patch.object(UploadImageService, '_schedule_job')
+    @patch.object(BaseService, 'persist_job_config')
+    def test_handle_credentials(
+        self, mock_persist_job_config, mock_schedule_job,
+        mock_decode_credentials
+    ):
+        mock_decode_credentials.return_value = '123', {}
+        self.uploader._init_job(self.job_data_ec2)
+        credentials_result = {'test-aws': {}}
+        self.uploader.jobs['123']['system_image_file'] = 'some image'
+        self.uploader._handle_credentials(credentials_result)
+        mock_schedule_job.assert_called_once_with('123')
 
     @patch.object(UploadImageService, 'unbind_queue')
+    @patch.object(UploadImageService, '_job_log')
     @patch('os.remove')
-    def test_delete_job(self, mock_os_remove, mock_unbind_queue):
-        assert self.uploader._delete_job('815') == {
-            'message': 'Job does not exist, can not delete it', 'ok': False
-        }
+    def test_delete_job(self, mock_os_remove, mock_job_log, mock_unbind_queue):
+        self.uploader._delete_job('815')
+        mock_job_log.assert_called_once_with(
+            '815', 'Job does not exist'
+        )
         upload_image = [Mock()]
         upload_image[0].job_file = 'job_file'
         self.uploader.jobs = {'815': {'uploader': upload_image}}
-        assert self.uploader._delete_job('815') == {
-            'message': 'Job Deleted', 'ok': True
-        }
+        mock_job_log.reset_mock()
+
+        self.uploader._delete_job('815')
+        mock_job_log.assert_called_once_with(
+            '815', 'Job Deleted'
+        )
         mock_unbind_queue.assert_called_once_with(
             'listener', 'uploader', '815'
         )
         mock_os_remove.assert_called_once_with('job_file')
         assert '815' not in self.uploader.jobs
+        mock_job_log.reset_mock()
+
         self.uploader.jobs = {'815': {'uploader': upload_image}}
         mock_os_remove.side_effect = Exception('remove_error')
-        assert self.uploader._delete_job('815') == {
-            'message': 'Job deletion failed: remove_error', 'ok': False
-        }
+        self.uploader._delete_job('815')
+        mock_job_log.assert_called_once_with(
+            '815', 'Job deletion failed: remove_error'
+        )
 
-    @patch.object(UploadImageService, 'publish_credentials_request')
+    @patch.object(BaseService, 'persist_job_config')
     @patch.object(UploadImageService, '_start_job')
-    def test_schedule_job_amazon(
-        self, mock_start_job, mock_publish_credentials_request
+    def test_schedule_job_ec2(
+        self, mock_start_job, mock_persist_job_config
     ):
-        job = {
-            'id': '123',
-            'cloud_image_name': 'b',
-            'image_description': 'a',
-            'job_file': 'job_file',
-            'utctime': 'always',
-            'provider': 'ec2',
-            'target_regions': {
-                'us-east-1': {
-                    'helper_image': 'ami-bc5b48d0',
-                    'account': 'test-aws'
-                }
-            }
-        }
-        self.uploader.config = Mock()
-        uploader_args = self.uploader._get_uploader_arguments_per_region(job)
-        self.uploader._schedule_job(job)
+        self.uploader._init_job(self.job_data_ec2)
+        self.uploader._schedule_job('123')
         self.uploader.scheduler.add_job.assert_called_once_with(
-            mock_start_job, args=[job, True, uploader_args[0], True]
-        )
-        self.uploader.scheduler.add_job.reset_mock()
-        mock_publish_credentials_request.reset_mock()
-        job['utctime'] = 'now'
-        self.uploader._schedule_job(job)
-        self.uploader.scheduler.add_job.assert_called_once_with(
-            mock_start_job, args=[job, False, uploader_args[0], True]
-        )
-        mock_publish_credentials_request.assert_called_once_with(
-            '123'
+            mock_start_job, args=[
+                '123', {
+                    'launch_ami': 'ami-bc5b48d0',
+                    'account': 'test-aws',
+                    'region': 'eu-central-1'
+                }, True
+            ]
         )
 
-    @patch.object(UploadImageService, 'publish_credentials_request')
+    @patch.object(BaseService, 'persist_job_config')
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job_azure(
-        self, mock_start_job, mock_publish_credentials_request
+        self, mock_start_job, mock_persist_job_config
     ):
-        job = {
-            'id': '123',
-            'cloud_image_name': 'b',
-            'image_description': 'a',
-            'job_file': 'job_file',
-            'utctime': 'always',
-            'provider': 'azure',
-            'target_regions': {
-                'westeurope': {
+        self.uploader._init_job(self.job_data_azure)
+        self.uploader._schedule_job('123')
+        self.uploader.scheduler.add_job.assert_called_once_with(
+            mock_start_job, args=[
+                '123', {
                     'resource_group': 'ms_group',
                     'container': 'ms1container',
                     'storage_account': 'ms1storage',
-                    'account': 'test-azure'
-                }
-            }
-        }
-        self.uploader.config = Mock()
-        uploader_args = self.uploader._get_uploader_arguments_per_region(job)
-        self.uploader._schedule_job(job)
-        self.uploader.scheduler.add_job.assert_called_once_with(
-            mock_start_job, args=[job, True, uploader_args[0], True]
-        )
-        self.uploader.scheduler.add_job.reset_mock()
-        mock_publish_credentials_request.reset_mock()
-        job['utctime'] = 'now'
-        self.uploader._schedule_job(job)
-        self.uploader.scheduler.add_job.assert_called_once_with(
-            mock_start_job, args=[job, False, uploader_args[0], True]
-        )
-        mock_publish_credentials_request.assert_called_once_with(
-            '123'
+                    'account': 'test-azure',
+                    'region': 'westeurope'
+                }, True
+            ]
         )
 
-    @patch.object(UploadImageService, 'publish_credentials_request')
+    @patch.object(BaseService, 'persist_job_config')
     @patch.object(UploadImageService, '_start_job')
-    def test_schedule_job_google(
-            self, mock_start_job, mock_publish_credentials_request
+    def test_schedule_job_gce(
+        self, mock_start_job, mock_persist_job_config
     ):
-        job = {
-            'id': '123',
-            'cloud_image_name': 'b',
-            'image_description': 'a {date}',
-            'job_file': 'job_file',
-            'utctime': 'always',
-            'provider': 'gce',
-            'target_regions': {
-                'us-east1': {
+        self.uploader._init_job(self.job_data_gce)
+        self.uploader._schedule_job('123')
+        self.uploader.scheduler.add_job.assert_called_once_with(
+            mock_start_job, args=[
+                '123', {
                     'account': 'test-gce',
                     'bucket': 'images',
-                    'family': 'sles-15'
-                }
-            }
-        }
-        self.uploader.config = Mock()
-        uploader_args = self.uploader._get_uploader_arguments_per_region(job)
-        self.uploader._schedule_job(job)
-        self.uploader.scheduler.add_job.assert_called_once_with(
-            mock_start_job, args=[job, True, uploader_args[0], True]
-        )
-        self.uploader.scheduler.add_job.reset_mock()
-        mock_publish_credentials_request.reset_mock()
-        job['utctime'] = 'now'
-        self.uploader._schedule_job(job)
-        self.uploader.scheduler.add_job.assert_called_once_with(
-            mock_start_job, args=[job, False, uploader_args[0], True]
-        )
-        mock_publish_credentials_request.assert_called_once_with(
-            '123'
+                    'family': 'sles-15',
+                    'region': 'us-east1'
+                }, True
+            ]
         )
 
     @patch('mash.services.uploader.service.UploadImage')
-    @patch.object(UploadImageService, '_send_job_response')
-    @patch.object(UploadImageService, '_image_already_uploading')
+    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(UploadImageService, '_job_log')
     @patch.object(UploadImageService, '_send_job_result')
-    @patch.object(UploadImageService, '_wait_until_ready')
-    @patch('mash.services.uploader.service.time.sleep')
     def test_start_job(
-        self, mock_sleep, mock_wait_until_ready,
-        mock_send_job_result, mock_image_already_uploading,
-        mock_send_job_response, mock_UploadImage
+        self, mock_send_job_result, mock_job_log, mock_persist_job_config,
+        mock_UploadImage
     ):
+        mock_persist_job_config.return_value = 'job_file'
         upload_image = Mock()
-        uploader = self.uploader
-
-        def done_after_one_iteration(self):
-            uploader.jobs['123']['ready'] = False
-
-        mock_image_already_uploading.return_value = False
         mock_UploadImage.return_value = upload_image
-        job = {
-            'id': '123',
-            'cloud_image_name': 'b',
-            'image_description': 'a',
-            'job_file': 'job_file',
-            'utctime': 'now',
-            'provider': 'ec2',
-            'target_regions': {
-                'us-east-1': {
-                    'helper_image': 'ami-bc5b48d0',
-                    'account': 'test-aws'
-                }
-            }
-        }
-        uploader.jobs['123'] = {
-            'ready': True,
-            'uploader': [],
-            'credentials': {'test-aws': {}},
-            'system_image_file': 'image'
-        }
-        uploader_args = uploader._get_uploader_arguments_per_region(job)
-        uploader._start_job(job, False, uploader_args[0], False)
-
-        mock_wait_until_ready.assert_called_once_with('123')
-
+        self.uploader._init_job(self.job_data_ec2)
+        self.uploader.jobs['123']['credentials'] = {'test-aws': {}}
+        self.uploader.jobs['123']['system_image_file'] = 'image'
+        self.uploader._start_job(
+            '123', {
+                'launch_ami': 'ami-bc5b48d0',
+                'account': 'test-aws',
+                'region': 'eu-central-1'
+            }, True
+        )
         mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', False, 'ec2', {}, 'b', 'a',
-            False, {
-                'launch_ami': 'ami-bc5b48d0', 'region': 'us-east-1',
+            '123', 'job_file', 'ec2', {}, 'name', 'description', True, {
+                'launch_ami': 'ami-bc5b48d0', 'region': 'eu-central-1',
                 'account': 'test-aws'
             }
         )
         upload_image.set_log_handler.assert_called_once_with(
-            mock_send_job_response
+            mock_job_log
         )
         upload_image.set_result_handler.assert_called_once_with(
             mock_send_job_result
         )
         upload_image.set_image_file.assert_called_once_with('image')
         upload_image.upload.assert_called_once_with()
-
-        mock_UploadImage.reset_mock()
-
-        mock_send_job_response.reset_mock()
-        mock_sleep.side_effect = done_after_one_iteration
-        uploader._start_job(job, True, uploader_args[0], False)
-        mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', True, 'ec2', {}, 'b', 'a',
-            False, {
-                'launch_ami': 'ami-bc5b48d0', 'region': 'us-east-1',
-                'account': 'test-aws'
-            }
-        )
-        assert mock_send_job_response.call_args_list == [
-            call(
-                '123', 'Region [us-east-1]: Waiting for image/credentials data'
-            ),
-            call(
-                '123', 'Waiting 30sec before next try...'
-            )
-        ]
-        mock_sleep.assert_called_once_with(30)
-
-    @patch('mash.services.uploader.service.time.sleep')
-    def test_wait_until_ready(self, mock_sleep):
-        uploader = self.uploader
-        uploader.jobs = {'123': {}}
-
-        def done_after_one_iteration(self):
-            uploader.jobs['123']['ready'] = True
-
-        mock_sleep.side_effect = done_after_one_iteration
-        uploader._wait_until_ready('123')
-        mock_sleep.assert_called_once_with(1)
-
-    def test_image_already_uploading(self):
-        uploader = Mock()
-        self.uploader.jobs = {'123': {}}
-        assert self.uploader._image_already_uploading('123', uploader) is False
-        uploader.system_image_file = 'image_A'
-        self.uploader.jobs['123']['system_image_file'] = 'image_B'
-        assert self.uploader._image_already_uploading('123', uploader) is False
-        uploader.system_image_file = \
-            self.uploader.jobs['123']['system_image_file']
-        assert self.uploader._image_already_uploading('123', uploader) is True
+        assert self.uploader.jobs['123']['uploader'] == [upload_image]
