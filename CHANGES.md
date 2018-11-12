@@ -1,3 +1,45 @@
+v1.1.0 (2018-11-12)
+===================
+
+- Fix typo in ec2 instance type list.
+  [\#316](https://github.com/SUSE-Enceladus/mash/pull/316)
+- Remove redundant job id from jc delete message.
+  [\#319](https://github.com/SUSE-Enceladus/mash/pull/319)
+- Add IPA timeout option.
+  [\#322](https://github.com/SUSE-Enceladus/mash/pull/322)
+- Remove service based configs from testing data.
+  [\#323](https://github.com/SUSE-Enceladus/mash/pull/323)
+- Update accounts file location in config.
+  [\#324](https://github.com/SUSE-Enceladus/mash/pull/324)
+- Integrate Azure replication.
+  [\#328](https://github.com/SUSE-Enceladus/mash/pull/328)
+- Re-raise exceptions in event loop.
+  [\#329](https://github.com/SUSE-Enceladus/mash/pull/329)
+- Cleanup flake8 warnings.
+  [\#330](https://github.com/SUSE-Enceladus/mash/pull/330)
+- Add missing types in provider account schemas.
+  [\#331](https://github.com/SUSE-Enceladus/mash/pull/331)
+- Enable GCE endpoints.
+  [\#332](https://github.com/SUSE-Enceladus/mash/pull/332)
+- Use ARM endpoint for Azure upload.
+  [\#333](https://github.com/SUSE-Enceladus/mash/pull/333)
+- Add python3.7 build target for ci testing.
+  [\#334](https://github.com/SUSE-Enceladus/mash/pull/334)
+- Use setter methods in job classes.
+  [\#335](https://github.com/SUSE-Enceladus/mash/pull/335)
+- Add python3.7 to supported versions in setup.py.
+  [\#336](https://github.com/SUSE-Enceladus/mash/pull/336)
+- Fernet key rotation requires cryptography > 2.2.
+  [\#338](https://github.com/SUSE-Enceladus/mash/pull/338)
+- Cleanup GCE uploader integration.
+  [\#339](https://github.com/SUSE-Enceladus/mash/pull/339)
+- Fix key rotation.
+  [\#342](https://github.com/SUSE-Enceladus/mash/pull/342)
+- Fix ec2 account update.
+  [\#343](https://github.com/SUSE-Enceladus/mash/pull/343)
+- Drop uploader event loop.
+  [\#345](https://github.com/SUSE-Enceladus/mash/pull/345)
+
 v1.0.0 (2018-10-01)
 ===================
 
