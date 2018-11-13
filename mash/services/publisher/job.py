@@ -25,12 +25,16 @@ class PublisherJob(object):
     Class for an individual publisher job.
     """
 
-    def __init__(self, id, provider, publish_regions, utctime, job_file=None):
+    def __init__(
+        self, id, last_service, provider, publish_regions, utctime,
+        job_file=None
+    ):
         self.cloud_image_name = None
         self.credentials = None
         self.iteration_count = 0
         self.id = id
         self.job_file = job_file
+        self.last_service = last_service
         self.log_callback = None
         self.provider = provider
         self.publish_regions = publish_regions

@@ -11,6 +11,7 @@ class TestEC2PublisherJob(object):
         self.job_config = {
             'allow_copy': False,
             'id': '1',
+            'last_service': 'publisher',
             'provider': 'ec2',
             'publish_regions': [
                 {
