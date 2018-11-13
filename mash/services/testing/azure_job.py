@@ -36,18 +36,19 @@ class AzureTestingJob(TestingJob):
     """
 
     def __init__(
-        self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
-        job_file=None, credentials=None, description=None, distro='sles',
-        instance_type=None, ipa_timeout=None, ssh_user='azureuser'
+        self, id, last_service, provider, ssh_private_key_file, test_regions,
+        tests, utctime, job_file=None, credentials=None, description=None,
+        distro='sles', instance_type=None, ipa_timeout=None,
+        ssh_user='azureuser'
     ):
         if not instance_type:
             instance_type = random.choice(instance_types)
 
         super(AzureTestingJob, self).__init__(
-            id, provider, ssh_private_key_file, test_regions, tests, utctime,
-            job_file=job_file, description=description, distro=distro,
-            instance_type=instance_type, ipa_timeout=ipa_timeout,
-            ssh_user=ssh_user
+            id, last_service, provider, ssh_private_key_file, test_regions,
+            tests, utctime, job_file=job_file, description=description,
+            distro=distro, instance_type=instance_type,
+            ipa_timeout=ipa_timeout, ssh_user=ssh_user
         )
 
     def _add_provider_creds(self, creds, ipa_kwargs):
