@@ -33,11 +33,11 @@ class AzureReplicationJob(ReplicationJob):
     """
 
     def __init__(
-        self, id, image_description, provider, utctime,
+        self, id, image_description, last_service, provider, utctime,
         replication_source_regions, cloud_image_name=None, job_file=None
     ):
         super(AzureReplicationJob, self).__init__(
-            id, provider, utctime, job_file=job_file
+            id, last_service, provider, utctime, job_file=job_file
         )
         self.credentials = None
         self.image_description = image_description
