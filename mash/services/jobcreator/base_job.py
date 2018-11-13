@@ -51,7 +51,11 @@ class BaseJob(object):
         self.instance_type = instance_type
         self.utctime = utctime
 
-        self.base_message = {'id': self.id, 'utctime': self.utctime}
+        self.base_message = {
+            'id': self.id,
+            'utctime': self.utctime,
+            'last_service': self.last_service
+        }
 
         self.post_init()
 
@@ -80,7 +84,6 @@ class BaseJob(object):
         credentials_message = {
             'credentials_job': {
                 'provider': self.provider,
-                'last_service': self.last_service,
                 'provider_accounts': accounts,
                 'requesting_user': self.requesting_user
             }
