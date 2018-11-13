@@ -36,6 +36,7 @@ class TestUploadImageService(object):
     ):
         self.job_data_from_preserved_ec2 = {
             'id': '888',
+            'last_service': 'uploader',
             'utctime': 'now',
             'cloud_image_name': 'name',
             'image_description': 'description',
@@ -50,6 +51,7 @@ class TestUploadImageService(object):
         self.job_data_ec2 = {
             'uploader_job': {
                 'id': '123',
+                'last_service': 'testing',
                 'utctime': 'now',
                 'cloud_image_name': 'name',
                 'image_description': 'description',
@@ -65,6 +67,7 @@ class TestUploadImageService(object):
         self.job_data_azure = {
             'uploader_job': {
                 'id': '123',
+                'last_service': 'uploader',
                 'utctime': 'now',
                 'cloud_image_name': 'name',
                 'image_description': 'description',
@@ -82,6 +85,7 @@ class TestUploadImageService(object):
         self.job_data_gce = {
             'uploader_job': {
                 'id': '123',
+                'last_service': 'uploader',
                 'utctime': 'now',
                 'cloud_image_name': 'name',
                 'image_description': 'description',
@@ -208,6 +212,7 @@ class TestUploadImageService(object):
     def test_process_job(self, mock_init_job):
         message = Mock()
         message.body = '{"uploader_job": {"id": "123", ' + \
+            '"last_service": "testing", ' + \
             '"utctime": "now", "cloud_image_name": "name", ' + \
             '"image_description": "description", ' + \
             '"provider": "ec2", ' +\

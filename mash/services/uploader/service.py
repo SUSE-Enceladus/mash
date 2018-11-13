@@ -81,7 +81,8 @@ class UploadImageService(BaseService):
         if status:
             self.jobs[job_id]['uploader_result']['status'] = status
         job_status = self.jobs[job_id]['uploader_result']['status']
-        if job_status == FAILED and publish_on_failed_job is False:
+        if (job_status == FAILED and publish_on_failed_job is False) \
+                or self.jobs[job_id]['last_service'] == self.service_exchange:
             return
         self.publish_job_result(
             'testing', job_id, JsonFormat.json_message(
@@ -183,6 +184,7 @@ class UploadImageService(BaseService):
         if job_id not in self.jobs:
             self.jobs[job_id] = {
                 'job_config': job_config,
+                'last_service': job_config.get('last_service'),
                 'utctime': job_config.get('utctime'),
                 'job_file': self.persist_job_config(job_config),
                 'credentials': None,
