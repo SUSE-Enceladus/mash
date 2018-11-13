@@ -3,6 +3,7 @@
         "id": "123",
         "cloud_image_name": "ms_image-{DS}-x86_64",
         "image_description": "ami-12345",
+        "last_service": "uploader",
         "utctime": "now",
         "provider": "ec2",
         "target_regions": {

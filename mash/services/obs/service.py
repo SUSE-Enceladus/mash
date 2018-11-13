@@ -134,6 +134,7 @@ class OBSImageBuildResultService(BaseService):
               "download_url": "http://download.suse.de/ibs/Devel:/PubCloud
               :/Stable:/Images12/images",
               "image": "SLES12-Azure-BYOS",
+              "last_service": "uploader",
               "utctime": "now|always|timestring_utc_timezone",
               "conditions": [
                   {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
