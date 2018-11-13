@@ -25,5 +25,8 @@ accounts_template = {
         'groups': {},
         'accounts': {}
     },
-    'gce': {}
+    'gce': {
+        'groups': {},
+        'accounts': {}
+    }
 }
