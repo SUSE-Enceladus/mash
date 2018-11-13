@@ -8,6 +8,7 @@ class TestDeprecationJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
+            'last_service': 'deprecation',
             'provider': 'ec2',
             'utctime': 'now'
         }
