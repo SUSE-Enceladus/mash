@@ -206,7 +206,7 @@ base_job_message = {
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
         'last_service': {
             'enum': [
-                'obs', 'uploader', 'testing', 'replication',
+                'uploader', 'testing', 'replication',
                 'publisher', 'deprecation', 'pint'
             ]
         },
