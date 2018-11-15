@@ -22,9 +22,7 @@ PyJWT
 APScheduler
 python-dateutil>=2.6.0,<3.0.0
 amqpstorm
-ec2deprecateimg
-ec2publishimg
-ec2uploadimg
+ec2imgutils
 python3-ipa
 lxml
 requests
