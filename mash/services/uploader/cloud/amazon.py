@@ -17,7 +17,7 @@
 #
 from tempfile import NamedTemporaryFile
 from collections import namedtuple
-from ec2utils.ec2uploadimg import EC2ImageUploader
+from ec2imgutils.ec2uploadimg import EC2ImageUploader
 
 # project
 from mash.services.uploader.cloud.base import UploadBase

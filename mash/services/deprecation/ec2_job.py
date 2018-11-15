@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from ec2utils.ec2deprecateimg import EC2DeprecateImg
+from ec2imgutils.ec2deprecateimg import EC2DeprecateImg
 
 from mash.mash_exceptions import MashDeprecationException
 from mash.services.deprecation.job import DeprecationJob

@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from ec2utils.ec2publishimg import EC2PublishImage
+from ec2imgutils.ec2publishimg import EC2PublishImage
 
 from mash.mash_exceptions import MashPublisherException
 from mash.services.publisher.job import PublisherJob
