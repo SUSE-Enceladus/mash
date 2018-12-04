@@ -115,7 +115,9 @@ class TestingService(BaseService):
             pass
 
         self._delete_job(job.id)
-        self._publish_message(job)
+
+        if job.last_service != self.service_exchange:
+            self._publish_message(job)
 
     def _create_job(self, job_class, job_config):
         """
@@ -260,6 +262,7 @@ class TestingService(BaseService):
         {
             "testing_job": {
                 "id": "123",
+                "last_service": "testing",
                 "provider": "ec2",
                 "tests": "test_stuff",
                 "utctime": "now",
@@ -346,8 +349,10 @@ class TestingService(BaseService):
                 extra=metata
             )
 
-        # Don't send failure messages for always jobs.
-        if job.utctime != 'always' or job.status == SUCCESS:
+        # Don't send failure messages for always jobs and
+        # don't send message if last service.
+        if (job.utctime != 'always' or job.status == SUCCESS) \
+                and job.last_service != self.service_exchange:
             self._publish_message(job)
         job.listener_msg.ack()
 

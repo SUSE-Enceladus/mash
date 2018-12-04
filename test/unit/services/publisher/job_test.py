@@ -8,6 +8,7 @@ class TestPublisherJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
+            'last_service': 'publisher',
             'provider': 'ec2',
             'publish_regions': [
                 {

@@ -7,6 +7,7 @@ class TestAzureTestingJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
+            'last_service': 'testing',
             'provider': 'azure',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {'East US': 'test-azure'},

@@ -3,6 +3,7 @@
         "id": "123",
         "distro": "sles",
         "instance_type": "t2.micro",
+        "last_service": "testing",
         "provider": "ec2",
         "tests": ["test_stuff"],
         "utctime": "now",

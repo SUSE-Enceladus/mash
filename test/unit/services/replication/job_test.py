@@ -8,6 +8,7 @@ class TestReplicationJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
+            'last_service': 'replication',
             'provider': 'ec2',
             'utctime': 'now'
         }

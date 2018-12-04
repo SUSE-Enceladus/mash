@@ -1,6 +1,7 @@
 {
     "pint_job": {
         "id": "123",
+        "last_service": "pint",
         "provider": "ec2",
         "utctime": "now",
         "cloud_image_name": "image_123",

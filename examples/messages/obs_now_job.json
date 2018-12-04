@@ -3,6 +3,7 @@
         "id": "0815",
         "download_url": "http://download.suse.de/ibs/Devel:/PubCloud:/Stable:/Images12/images",
         "image": "SLES12-Azure-BYOS",
+        "last_service": "testing",
         "utctime": "now"
     }
 }

@@ -7,6 +7,7 @@ class TestGCETestingJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
+            'last_service': 'testing',
             'provider': 'gce',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {'us-west1': 'test-gce'},

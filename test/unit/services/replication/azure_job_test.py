@@ -9,6 +9,7 @@ class TestAzureReplicationJob(object):
         self.job_config = {
             'id': '1',
             'image_description': 'My image',
+            'last_service': 'replication',
             'provider': 'azure',
             'utctime': 'now',
             "replication_source_regions": {

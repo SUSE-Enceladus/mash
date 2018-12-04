@@ -9,6 +9,7 @@ class TestTestingJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
+            'last_service': 'testing',
             'provider': 'ec2',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {'us-east-1': 'test-aws'},

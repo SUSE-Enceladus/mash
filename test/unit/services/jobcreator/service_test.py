@@ -148,6 +148,7 @@ class TestJobCreatorService(object):
                                     "repositories/Cloud:Tools/images",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
+                    "last_service": "pint",
                     "utctime": "now"
                 }
             })
@@ -160,6 +161,7 @@ class TestJobCreatorService(object):
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
+                    "last_service": "pint",
                     "provider": "ec2",
                     "target_regions": {
                         "ap-northeast-1": {
@@ -182,6 +184,7 @@ class TestJobCreatorService(object):
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
+                    "last_service": "pint",
                     "provider": "ec2",
                     "test_regions": {
                         "ap-northeast-1": "test-aws",
@@ -198,6 +201,7 @@ class TestJobCreatorService(object):
                 "replication_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
+                    "last_service": "pint",
                     "provider": "ec2",
                     "replication_source_regions": {
                         "ap-northeast-1": {
@@ -224,6 +228,7 @@ class TestJobCreatorService(object):
         assert data['provider'] == 'ec2'
         assert data['share_with'] == 'all'
         assert data['utctime'] == 'now'
+        assert data['last_service'] == 'pint'
 
         for region in data['publish_regions']:
             if region['account'] == 'test-aws-gov':
@@ -242,6 +247,7 @@ class TestJobCreatorService(object):
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert data['provider'] == 'ec2'
         assert data['utctime'] == 'now'
+        assert data['last_service'] == 'pint'
 
         for region in data['deprecation_regions']:
             if region['account'] == 'test-aws-gov':
@@ -260,6 +266,7 @@ class TestJobCreatorService(object):
                 "pint_job": {
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
+                    "last_service": "pint",
                     "old_cloud_image_name": "old_new_image_123",
                     "provider": "ec2",
                     "utctime": "now"
@@ -340,6 +347,7 @@ class TestJobCreatorService(object):
                                     "repositories/Cloud:Tools/images",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
+                    "last_service": "replication",
                     "utctime": "now"
                 }
             })
@@ -351,6 +359,7 @@ class TestJobCreatorService(object):
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
+                    "last_service": "replication",
                     "provider": "azure",
                     "target_regions": {
                         "centralus": {
@@ -377,6 +386,7 @@ class TestJobCreatorService(object):
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
+                    "last_service": "replication",
                     "provider": "azure",
                     "test_regions": {
                         "centralus": "test-azure2",
@@ -393,6 +403,7 @@ class TestJobCreatorService(object):
                 "replication_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
+                    "last_service": "replication",
                     "provider": "azure",
                     "replication_source_regions": {
                         "centralus": {
@@ -482,6 +493,7 @@ class TestJobCreatorService(object):
                                     "repositories/Cloud:Tools/images",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
+                    "last_service": "testing",
                     "utctime": "now"
                 }
             })
@@ -493,6 +505,7 @@ class TestJobCreatorService(object):
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
+                    "last_service": "testing",
                     "provider": "gce",
                     "target_regions": {
                         "us-west2": {
@@ -517,6 +530,7 @@ class TestJobCreatorService(object):
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
+                    "last_service": "testing",
                     "provider": "gce",
                     "test_regions": {
                         "us-west2": "test-gce2",

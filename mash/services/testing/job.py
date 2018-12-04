@@ -31,9 +31,9 @@ class TestingJob(object):
     __test__ = False  # Used by pytest to ignore class in auto discovery
 
     def __init__(
-        self, id, provider, ssh_private_key_file, test_regions, tests, utctime,
-        job_file=None, description=None, distro='sles', instance_type=None,
-        ipa_timeout=None, ssh_user=None
+        self, id, last_service, provider, ssh_private_key_file, test_regions,
+        tests, utctime, job_file=None, description=None, distro='sles',
+        instance_type=None, ipa_timeout=None, ssh_user=None
     ):
         self.cloud_image_name = None
         self.job_file = job_file
@@ -44,6 +44,7 @@ class TestingJob(object):
         self.iteration_count = 0
         self.id = id
         self.ipa_timeout = ipa_timeout
+        self.last_service = last_service
         self.log_callback = None
         self.provider = provider
         self.status = UNKOWN
