@@ -93,15 +93,15 @@ class EC2Job(BaseJob):
                     account, self.requesting_user
                 )
 
-            # Add additional regions for account
-            additional_regions = \
-                self.accounts_info['accounts'][self.requesting_user][account]\
-                    .get('additional_regions')
+                # Add additional regions for account
+                additional_regions = \
+                    self.accounts_info['accounts'][self.requesting_user][account]\
+                        .get('additional_regions')
 
-            if additional_regions:
-                for region in additional_regions:
-                    helper_images[region['name']] = region['helper_image']
-                    target_regions.append(region['name'])
+                if additional_regions:
+                    for region in additional_regions:
+                        helper_images[region['name']] = region['helper_image']
+                        target_regions.append(region['name'])
 
             # A random region is selected as source region.
             index = random.randint(0, len(target_regions) - 1)
