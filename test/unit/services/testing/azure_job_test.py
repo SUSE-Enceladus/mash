@@ -59,10 +59,12 @@ class TestAzureTestingJob(object):
             log_level=30,
             region='East US',
             secret_access_key=None,
+            security_group_id=None,
             service_account_file='/tmp/acnt.file',
             ssh_key_name=None,
             ssh_private_key_file='private_ssh_key.file',
             ssh_user='azureuser',
+            subnet_id=None,
             tests=['test_stuff'],
             timeout=None
         )

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -29,6 +29,8 @@ from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
 from mash.utils.ec2 import get_client
 from mash.utils.mash_utils import generate_name, get_key_from_file
 
+from ec2imgutils.ec2setup import EC2Setup
+
 
 def ipa_test(
     results, provider=None, access_key_id=None, description=None, distro=None,
@@ -39,6 +41,8 @@ def ipa_test(
     name = threading.current_thread().getName()
     service_account_file = None
     key_name = None
+    subnet_id = None
+    security_group_id = None
 
     try:
         if provider == CSP.ec2:
@@ -50,6 +54,19 @@ def ipa_test(
             client.import_key_pair(
                 KeyName=key_name, PublicKeyMaterial=ssh_public_key
             )
+
+            # Create a temporary vpc, subnet and security group for the
+            # test instance. This provides a security group with an open
+            # ssh port.
+            ec2_setup = EC2Setup(
+                access_key_id,
+                region,
+                secret_access_key,
+                None,
+                False
+            )
+            subnet_id = ec2_setup.create_vpc_subnet()
+            security_group_id = ec2_setup.create_security_group()
         else:
             temp_file = NamedTemporaryFile(delete=False, mode='w+')
             temp_file.write(service_account_credentials)
@@ -67,10 +84,12 @@ def ipa_test(
             log_level=logging.WARNING,
             region=region,
             secret_access_key=secret_access_key,
+            security_group_id=security_group_id,
             service_account_file=service_account_file,
             ssh_key_name=key_name,
             ssh_private_key_file=ssh_private_key_file,
             ssh_user=ssh_user,
+            subnet_id=subnet_id,
             tests=tests,
             timeout=ipa_timeout
         )
@@ -88,6 +107,14 @@ def ipa_test(
         try:
             if provider == CSP.ec2:
                 client.delete_key_pair(KeyName=key_name)
+
+                # Wait until instance is terminated
+                # to cleanup security group.
+                instance_id = result['info']['instance']
+                waiter = client.get_waiter('instance_terminated')
+                waiter.wait(InstanceIds=[instance_id])
+
+                ec2_setup.clean_up()
             else:
                 os.remove(service_account_file)
         except Exception:
