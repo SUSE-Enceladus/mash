@@ -1,3 +1,21 @@
+v1.2.0 (2018-12-11)
+===================
+
+- Add keys to accounts template for GCE.
+  [\#347](https://github.com/SUSE-Enceladus/mash/pull/347)
+- Pass job last service to all services.
+  [\#348](https://github.com/SUSE-Enceladus/mash/pull/348)
+- OBS service should not be a valid option.
+  [\#349](https://github.com/SUSE-Enceladus/mash/pull/349)
+- Update MASH requirements to use ec2imgutils.
+  [\#350](https://github.com/SUSE-Enceladus/mash/pull/350)
+- Only add additional regions when none provided.
+  [\#352](https://github.com/SUSE-Enceladus/mash/pull/352)
+- Use temporary subnet and security group.
+  [\#353](https://github.com/SUSE-Enceladus/mash/pull/353)
+- Use temporary subnet and security group.
+  [\#354](https://github.com/SUSE-Enceladus/mash/pull/354)
+
 v1.1.0 (2018-11-12)
 ===================
 
