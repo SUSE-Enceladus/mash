@@ -1,3 +1,6 @@
+import datetime
+import json
+
 from pytest import raises
 from pytz import utc
 from unittest.mock import patch
@@ -53,7 +56,7 @@ class TestUploadImageService(object):
                 'id': '123',
                 'last_service': 'testing',
                 'utctime': 'now',
-                'cloud_image_name': 'name',
+                'cloud_image_name': 'name-{date}',
                 'image_description': 'description',
                 'provider': 'ec2',
                 'target_regions': {
@@ -211,13 +214,24 @@ class TestUploadImageService(object):
     @patch.object(UploadImageService, '_init_job')
     def test_process_job(self, mock_init_job):
         message = Mock()
-        message.body = '{"uploader_job": {"id": "123", ' + \
-            '"last_service": "testing", ' + \
-            '"utctime": "now", "cloud_image_name": "name", ' + \
-            '"image_description": "description", ' + \
-            '"provider": "ec2", ' +\
-            '"target_regions": {"eu-central-1": { ' +\
-            '"helper_image": "ami-bc5b48d0", "account": "test-aws"}}}}'
+        data = {
+            "uploader_job": {
+                "id": "123",
+                "last_service": "testing",
+                "utctime": "now",
+                "cloud_image_name": "name-{date}",
+                "image_description": "description",
+                "provider": "ec2",
+                "target_regions": {
+                    "eu-central-1": {
+                        "helper_image": "ami-bc5b48d0",
+                        "account": "test-aws"
+                    }
+                }
+            }
+        }
+        message.body = json.dumps(data)
+
         self.uploader._process_job(message)
         message.ack.assert_called_once_with()
         mock_init_job.assert_called_once_with(self.job_data_ec2)
@@ -420,8 +434,11 @@ class TestUploadImageService(object):
                 'region': 'eu-central-1'
             }, True
         )
+        image_name = 'name-{}'.format(
+            datetime.date.today().strftime("%Y%m%d")
+        )
         mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', 'ec2', {}, 'name', 'description', True, {
+            '123', 'job_file', 'ec2', {}, image_name, 'description', True, {
                 'launch_ami': 'ami-bc5b48d0', 'region': 'eu-central-1',
                 'account': 'test-aws'
             }
@@ -435,3 +452,8 @@ class TestUploadImageService(object):
         upload_image.set_image_file.assert_called_once_with('image')
         upload_image.upload.assert_called_once_with()
         assert self.uploader.jobs['123']['uploader'] == [upload_image]
+
+    def test_set_upload_date(self):
+        name = 'cloud_image_name_{datetime}'
+        formatted_name = self.uploader._set_upload_date(name)
+        assert name == formatted_name
