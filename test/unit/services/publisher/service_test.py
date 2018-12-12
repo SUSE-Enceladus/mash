@@ -59,6 +59,7 @@ class TestPublisherService(object):
         self.publisher.service_queue = 'service'
         self.publisher.listener_queue = 'listener'
         self.publisher.job_document_key = 'job_document'
+        self.publisher.listener_msg_key = 'listener_msg'
 
     @patch.object(PublisherService, 'bind_credentials_queue')
     @patch.object(PublisherService, 'restart_jobs')
@@ -146,10 +147,9 @@ class TestPublisherService(object):
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
-    @patch.object(PublisherService, 'bind_listener_queue')
     @patch.object(PublisherService, 'persist_job_config')
     def test_publisher_create_job(
-        self, mock_persist_config, mock_bind_listener_queue
+        self, mock_persist_config
     ):
         mock_persist_config.return_value = 'temp-config.json'
 
@@ -167,7 +167,6 @@ class TestPublisherService(object):
             self.publisher.log_job_message
         )
         assert job.job_file == 'temp-config.json'
-        mock_bind_listener_queue.assert_called_once_with('1')
         self.publisher.log.info.assert_called_once_with(
             'Job queued, awaiting replication result.',
             extra={'job_id': '1'}
@@ -204,9 +203,6 @@ class TestPublisherService(object):
         )
 
         assert '1' not in self.publisher.jobs
-        mock_unbind_queue.assert_called_once_with(
-            'listener', 'publisher', '1'
-        )
         mock_remove_file.assert_called_once_with('job-test.json')
 
     def test_publisher_delete_invalid_job(self):
@@ -475,7 +471,6 @@ class TestPublisherService(object):
         self.publisher._publish_message(job)
         mock_publish.assert_called_once_with(
             'deprecation',
-            '1',
             self.status_message
         )
 
@@ -492,7 +487,6 @@ class TestPublisherService(object):
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
         self.publisher._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('deprecation', '1', 'listener')
         self.publisher.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}

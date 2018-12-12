@@ -64,6 +64,7 @@ class BaseService(object):
         self.service_queue = 'service'
         self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
+        self.listener_msg_key = 'listener_msg'
 
         self.config = get_configuration(self.service_exchange)
         self.encryption_keys_file = self.config.get_encryption_keys_file()
@@ -84,6 +85,9 @@ class BaseService(object):
         self._open_connection()
         self.bind_queue(
             self.service_exchange, self.job_document_key, self.service_queue
+        )
+        self.bind_queue(
+            self.service_exchange, self.listener_msg_key, self.listener_queue
         )
 
         # Credentials
@@ -193,14 +197,6 @@ class BaseService(object):
         self.bind_queue(
             self.service_exchange, self.credentials_response_key,
             self.credentials_queue
-        )
-
-    def bind_listener_queue(self, routing_key):
-        """
-        Bind the provided routing_key to the services listener queue.
-        """
-        self.bind_queue(
-            self.service_exchange, routing_key, self.listener_queue
         )
 
     def bind_queue(self, exchange, routing_key, name):
@@ -381,12 +377,11 @@ class BaseService(object):
             self.get_credential_request(job_id)
         )
 
-    def publish_job_result(self, exchange, job_id, message):
+    def publish_job_result(self, exchange, message):
         """
         Publish the result message to the listener queue on given exchange.
         """
-        self.bind_queue(exchange, job_id, self.listener_queue)
-        self._publish(exchange, job_id, message)
+        self._publish(exchange, self.listener_msg_key, message)
 
     def remove_file(self, config_file):
         """
@@ -427,15 +422,6 @@ class BaseService(object):
             raise MashLogSetupException(
                 'Log setup failed: {0}'.format(e)
             )
-
-    def unbind_listener_queue(self, routing_key):
-        """
-        Unbind job_id/routing_key from listener queue on exchange.
-        """
-        self.unbind_queue(
-            queue=self.listener_queue, exchange=self.service_exchange,
-            routing_key=routing_key
-        )
 
     def unbind_queue(self, queue, exchange, routing_key):
         """

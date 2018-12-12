@@ -102,17 +102,10 @@ class TestBaseService(object):
     @patch('mash.services.base_service.Connection')
     def test_publish_job_result(self, mock_connection):
         mock_connection.return_value = self.connection
-        self.service.publish_job_result('exchange', 'job_id', 'message')
-        self.channel.queue.declare.assert_called_once_with(
-            queue='exchange.listener', durable=True
-        )
-        self.channel.queue.bind.assert_called_once_with(
-            exchange='exchange', routing_key='job_id',
-            queue='exchange.listener'
-        )
+        self.service.publish_job_result('exchange', 'message')
         self.channel.basic.publish.assert_called_once_with(
             body='message', exchange='exchange', mandatory=True,
-            properties=self.msg_properties, routing_key='job_id'
+            properties=self.msg_properties, routing_key='listener_msg'
         )
 
     def test_consume_queue(self):
@@ -201,25 +194,12 @@ class TestBaseService(object):
 
         mock_callback.assert_called_once_with({'id': '1'})
 
-    @patch.object(BaseService, 'bind_queue')
-    def test_bind_listener_queue(self, mock_bind_queue):
-        self.service.bind_listener_queue('1')
-        mock_bind_queue.assert_called_once_with(
-            'obs', '1', 'listener'
-        )
-
     def test_unbind_queue(self):
         self.service.unbind_queue(
             'service', 'testing', '1'
         )
         self.service.channel.queue.unbind.assert_called_once_with(
             queue='testing.service', exchange='testing', routing_key='1'
-        )
-
-    def test_unbind_listener_queue(self):
-        self.service.unbind_listener_queue('1')
-        self.service.channel.queue.unbind.assert_called_once_with(
-            queue='obs.listener', exchange='obs', routing_key='1'
         )
 
     def test_get_credentials_request(self):

@@ -170,7 +170,7 @@ class TestUploadImageService(object):
             '123', publish_on_failed_job=True, status=FAILED
         )
         mock_publish_job_result.assert_called_once_with(
-            'testing', '123', JsonFormat.json_message(
+            'testing', JsonFormat.json_message(
                 {
                     'uploader_result':
                         self.uploader.jobs['123']['uploader_result']
@@ -344,9 +344,6 @@ class TestUploadImageService(object):
         self.uploader._delete_job('815')
         mock_job_log.assert_called_once_with(
             '815', 'Job Deleted'
-        )
-        mock_unbind_queue.assert_called_once_with(
-            'listener', 'uploader', '815'
         )
         mock_os_remove.assert_called_once_with('job_file')
         assert '815' not in self.uploader.jobs

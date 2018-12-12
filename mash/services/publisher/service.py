@@ -121,7 +121,6 @@ class PublisherService(BaseService):
                 )
                 job.job_file = job_config['job_file']
 
-            self.bind_listener_queue(job.id)
             self.log.info(
                 'Job queued, awaiting replication result.',
                 extra=job.get_metadata()
@@ -139,9 +138,6 @@ class PublisherService(BaseService):
             )
 
             del self.jobs[job_id]
-            self.unbind_queue(
-                self.listener_queue, self.service_exchange, job_id
-            )
             self.remove_file(job.job_file)
         else:
             self.log.warning(
@@ -322,7 +318,7 @@ class PublisherService(BaseService):
         message = self._get_status_message(job)
 
         try:
-            self.publish_job_result('deprecation', job.id, message)
+            self.publish_job_result('deprecation', message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),

@@ -147,7 +147,6 @@ class TestingService(BaseService):
                 )
                 job.job_file = job_config['job_file']
 
-            self.bind_listener_queue(job.id)
             self.log.info(
                 'Job queued, awaiting uploader result.',
                 extra=job.get_metadata()
@@ -194,9 +193,6 @@ class TestingService(BaseService):
             )
 
             del self.jobs[job_id]
-            self.unbind_queue(
-                self.listener_queue, self.service_exchange, job_id
-            )
             self.remove_file(job.job_file)
         else:
             self.log.warning(
@@ -362,7 +358,7 @@ class TestingService(BaseService):
         """
         message = self._get_status_message(job)
         try:
-            self.publish_job_result('replication', job.id, message)
+            self.publish_job_result('replication', message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
