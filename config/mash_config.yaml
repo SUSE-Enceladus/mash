@@ -32,6 +32,7 @@ provider:
         - ap-southeast-2
         - ca-central-1
         - eu-central-1
+        - eu-north-1
         - eu-west-1
         - eu-west-2
         - eu-west-3
@@ -44,6 +45,7 @@ provider:
         - cn-north-1
         - cn-northwest-1
       aws-us-gov:
+        - us-gov-east-1
         - us-gov-west-1
     helper_images:
       ap-northeast-1: ami-383c1956
@@ -55,12 +57,14 @@ provider:
       cn-north-1: ami-bcc45885
       cn-northwest-1: ami-23978241
       eu-central-1: ami-bc5b48d0
+      eu-north-1: ami-4abe3234
       eu-west-1: ami-bff32ccc
       eu-west-2: ami-2a676d4
       eu-west-3: ami-7bc17406
       sa-east-1: ami-6817af04
       us-east-1: ami-4b814f22
       us-east-2: ami-71ca9114
+      us-gov-east-1: ami-43896f32
       us-gov-west-1: ami-c2b5d7e1
       us-west-1: ami-d5ea86b5
       us-west-2: ami-f0091d9
