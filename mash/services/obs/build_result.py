@@ -37,8 +37,7 @@ from mash.services.obs.defaults import Defaults
 from mash.log.filter import SchedulerLoggingFilter
 from mash.mash_exceptions import (
     MashImageDownloadException,
-    MashVersionExpressionException,
-    MashException
+    MashVersionExpressionException
 )
 
 
@@ -335,7 +334,7 @@ class OBSImageBuildResult(object):
             else:
                 self._log_callback('Job done')
                 self._result_callback()
-        except MashException as issue:
+        except Exception as issue:
             self._log_error(
                 '{0}: {1}'.format(type(issue).__name__, issue)
             )
