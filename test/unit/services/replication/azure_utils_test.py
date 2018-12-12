@@ -154,6 +154,32 @@ def test_copy_blob_to_classic_storage(
 
 @patch('mash.services.replication.azure_utils.get_blob_url')
 @patch('mash.services.replication.azure_utils.get_classic_storage_account_keys')
+@patch('mash.services.replication.azure_utils.PageBlobService')
+def test_copy_blob_to_classic_storage_failed(
+    mock_page_blob_service, mock_get_keys, mock_get_blob_url
+):
+    mock_get_blob_url.return_value = 'https://test/url/?token123'
+    keys = {'primaryKey': '123456'}
+    mock_get_keys.return_value = keys
+
+    copy = MagicMock()
+    copy.status = 'failed'
+
+    page_blob_service = MagicMock()
+    page_blob_service.copy_blob.return_value = copy
+    mock_page_blob_service.return_value = page_blob_service
+
+    with raises(MashReplicationException) as error:
+        copy_blob_to_classic_storage(
+            '../data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
+            'dc2', 'drg2', 'dsa2'
+        )
+
+    assert str(error.value) == 'Azure blob copy failed.'
+
+
+@patch('mash.services.replication.azure_utils.get_blob_url')
+@patch('mash.services.replication.azure_utils.get_classic_storage_account_keys')
 @patch('mash.services.replication.azure_utils.time.sleep')
 @patch('mash.services.replication.azure_utils.PageBlobService')
 def test_copy_blob_to_classic_storage_timeout(

@@ -33,11 +33,10 @@ class EC2ReplicationJob(ReplicationJob):
 
     def __init__(
         self, id, image_description, last_service, provider, utctime,
-        replication_source_regions, cloud_image_name=None, job_file=None
+        replication_source_regions, job_file=None
     ):
         super(EC2ReplicationJob, self).__init__(
-            id, last_service, provider, utctime, job_file=job_file,
-            cloud_image_name=cloud_image_name
+            id, last_service, provider, utctime, job_file=job_file
         )
         self.credentials = None
         self.image_description = image_description

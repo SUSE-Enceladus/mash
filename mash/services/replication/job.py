@@ -26,10 +26,9 @@ class ReplicationJob(object):
     """
 
     def __init__(
-        self, id, last_service, provider, utctime, job_file=None,
-        cloud_image_name=None
+        self, id, last_service, provider, utctime, job_file=None
     ):
-        self.cloud_image_name = cloud_image_name
+        self.cloud_image_name = None
         self.iteration_count = 0
         self.id = id
         self.job_file = job_file
