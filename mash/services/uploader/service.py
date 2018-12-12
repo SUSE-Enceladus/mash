@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import atexit
+import datetime
 import os
 from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -102,9 +103,11 @@ class UploadImageService(BaseService):
         if self.jobs[job_id]['uploader_result']['status'] != 'failed':
             self.jobs[job_id]['uploader_result']['status'] = \
                 trigger_info['job_status']
+
         region = trigger_info['upload_region']
         self.jobs[job_id]['uploader_result']['source_regions'][region] = \
             trigger_info['cloud_image_id']
+
         if last_upload_region:
             if not self.jobs[job_id]['utctime'] == 'always':
                 self._publish_job_result(job_id, publish_on_failed_job=True)
@@ -182,6 +185,10 @@ class UploadImageService(BaseService):
             job_config = job_data
         job_id = job_config['id']
         if job_id not in self.jobs:
+            job_config['cloud_image_name'] = self._set_upload_date(
+                job_config['cloud_image_name']
+            )
+
             self.jobs[job_id] = {
                 'job_config': job_config,
                 'last_service': job_config.get('last_service'),
@@ -369,3 +376,15 @@ class UploadImageService(BaseService):
             self.jobs[job_id]['system_image_file']
         )
         upload_image.upload()
+
+    @staticmethod
+    def _set_upload_date(cloud_image_name):
+        today = datetime.date.today().strftime("%Y%m%d")
+
+        try:
+            cloud_image_name = cloud_image_name.format(date=today)
+        except KeyError:
+            # Ignore unknown format strings.
+            pass
+
+        return cloud_image_name

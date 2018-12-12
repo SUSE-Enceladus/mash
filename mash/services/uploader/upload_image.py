@@ -15,11 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import datetime
 
 # project
 from mash.services.uploader.cloud import Upload
-from mash.mash_exceptions import MashConventionsException
 
 
 class UploadImage(object):
@@ -95,7 +93,6 @@ class UploadImage(object):
                 )
             )
             try:
-                self._set_upload_date()
                 self.uploader = Upload(
                     self.csp_name, self.system_image_file,
                     self.cloud_image_name, self.cloud_image_description,
@@ -120,25 +117,6 @@ class UploadImage(object):
 
     def call_result_handler(self):
         self._result_callback()
-
-    def _set_upload_date(self):
-        today = datetime.date.today().strftime("%Y%m%d")
-        try:
-            self.cloud_image_name = self.cloud_image_name.format(
-                date=today
-            )
-        except KeyError:
-            raise MashConventionsException(
-                'Invalid cloud_image_name format to apply {0} in: {1}'.format(
-                    '{date}', self.cloud_image_name
-                )
-            )
-        if today not in self.cloud_image_name:
-            raise MashConventionsException(
-                'No {0} key specified in cloud_image_name format: {1}'.format(
-                    '{date}', self.cloud_image_name
-                )
-            )
 
     def _result_callback(self):
         if self.result_callback:
