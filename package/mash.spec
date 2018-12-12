@@ -43,8 +43,8 @@ BuildRequires:  python3-APScheduler >= 3.3.1
 BuildRequires:  python3-python-dateutil >= 2.6.0
 BuildRequires:  python3-python-dateutil < 3.0.0
 BuildRequires:  python3-ec2imgutils
-BuildRequires:  python3-ipa
-BuildRequires:  python3-ipa-tests
+BuildRequires:  python3-ipa>=2.5.0
+BuildRequires:  python3-ipa-tests>=2.5.0
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
 BuildRequires:  python3-requests
@@ -65,8 +65,8 @@ Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil >= 2.6.0
 Requires:       python3-python-dateutil < 3.0.0
 Requires:       python3-ec2imgutils
-Requires:       python3-ipa
-Requires:       python3-ipa-tests
+Requires:       python3-ipa>=2.5.0
+Requires:       python3-ipa-tests>=2.5.0
 Requires:       python3-lxml
 Requires:       python3-Flask
 Requires:       python3-requests
