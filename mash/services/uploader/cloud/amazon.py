@@ -18,6 +18,7 @@
 from tempfile import NamedTemporaryFile
 from collections import namedtuple
 from ec2imgutils.ec2uploadimg import EC2ImageUploader
+from ec2imgutils.ec2setup import EC2Setup
 
 # project
 from mash.services.uploader.cloud.base import UploadBase
@@ -127,6 +128,23 @@ class UploadAmazon(UploadBase):
             self.ec2_upload_parameters['ssh_key_private_key_file'] = \
                 ssh_key_pair.private_key_file.name
 
+            # Create a temporary vpc, subnet and security group for the
+            # helper image. This provides a security group with an open
+            # ssh port.
+            self.ec2_setup = EC2Setup(
+                self.credentials['access_key_id'],
+                self.region,
+                self.credentials['secret_access_key'],
+                None,
+                False
+            )
+            vpc_subnet_id = self.ec2_setup.create_vpc_subnet()
+            security_group_id = self.ec2_setup.create_security_group()
+
+            self.ec2_upload_parameters['vpc_subnet_id'] = vpc_subnet_id
+            self.ec2_upload_parameters['security_group_ids'] = \
+                security_group_id
+
             ec2_upload = EC2ImageUploader(
                 **self.ec2_upload_parameters
             )
@@ -145,6 +163,7 @@ class UploadAmazon(UploadBase):
             self._delete_key_pair(
                 ec2_client, ssh_key_pair
             )
+            self.ec2_setup.clean_up()
 
     def _create_key_pair(self, ec2_client):
         ssh_key_pair_type = namedtuple(

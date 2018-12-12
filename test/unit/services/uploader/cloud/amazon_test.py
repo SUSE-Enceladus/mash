@@ -28,6 +28,7 @@ class TestUploadAmazon(object):
             self.credentials, 'file', 'name', 'description', custom_args
         )
 
+    @patch('mash.services.uploader.cloud.amazon.EC2Setup')
     @patch('mash.services.uploader.cloud.amazon.get_client')
     @patch('mash.services.uploader.cloud.amazon.generate_name')
     @patch('mash.services.uploader.cloud.amazon.NamedTemporaryFile')
@@ -35,7 +36,7 @@ class TestUploadAmazon(object):
     @patch_open
     def test_upload(
         self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
-        mock_generate_name, mock_get_client
+        mock_generate_name, mock_get_client, mock_ec2_setup
     ):
         open_context = context_manager()
         mock_open.return_value = open_context.context_manager_mock
@@ -54,6 +55,10 @@ class TestUploadAmazon(object):
         }
         mock_get_client.return_value = ec2_client
         mock_generate_name.return_value = 'xxxx'
+        ec2_setup = Mock()
+        ec2_setup.create_vpc_subnet.return_value = 'subnet-123456789'
+        ec2_setup.create_security_group.return_value = 'sg-123456789'
+        mock_ec2_setup.return_value = ec2_setup
         assert self.uploader.upload() == ('ami_id', 'us-east-1')
         mock_get_client.assert_called_once_with(
             'ec2', 'access-key', 'secret-access-key', 'us-east-1'
@@ -73,7 +78,7 @@ class TestUploadAmazon(object):
             root_volume_size=10,
             running_id=None,
             secret_key='secret-access-key',
-            security_group_ids='',
+            security_group_ids='sg-123456789',
             sriov_type='simple',
             ssh_key_pair_name='mash-xxxx',
             ssh_key_private_key_file='tmpfile',
@@ -81,7 +86,7 @@ class TestUploadAmazon(object):
             use_grub2=True,
             use_private_ip=False,
             verbose=True,
-            vpc_subnet_id='',
+            vpc_subnet_id='subnet-123456789',
             wait_count=3
         )
         open_context.file_mock.write.assert_called_once_with('pkey')
@@ -89,6 +94,7 @@ class TestUploadAmazon(object):
         ec2_client.delete_key_pair.assert_called_once_with(KeyName='mash-xxxx')
         ec2_upload.set_region.assert_called_once_with('us-east-1')
         ec2_upload.create_image.assert_called_once_with('file')
+        ec2_setup.clean_up.assert_called_once_with()
         ec2_upload.create_image.side_effect = Exception
         with raises(MashUploadException):
             self.uploader.upload()
