@@ -34,9 +34,7 @@ def main():
         log.setLevel(logging.DEBUG)
 
         # run service, enter main loop
-        PublisherService(
-            service_exchange='publisher', next_service='deprecation'
-        )
+        PublisherService(service_exchange='publisher')
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))

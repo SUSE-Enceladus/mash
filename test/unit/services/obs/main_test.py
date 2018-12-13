@@ -15,7 +15,7 @@ class TestOBS(object):
     def test_main(self, mock_OBSImageBuildResultService):
         main()
         mock_OBSImageBuildResultService.assert_called_once_with(
-            service_exchange='obs', next_service='uploader'
+            service_exchange='obs'
         )
 
     @patch('mash.services.obs_service.OBSImageBuildResultService')

@@ -35,9 +35,7 @@ def main():
         log.setLevel(logging.INFO)
 
         # run service, enter main loop
-        ReplicationService(
-            service_exchange='replication', next_service='publisher'
-        )
+        ReplicationService(service_exchange='replication')
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))

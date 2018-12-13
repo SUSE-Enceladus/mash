@@ -9,7 +9,7 @@ class TestIPATestingServiceMain(object):
     def test_main(self, mock_testing_service):
         main()
         mock_testing_service.assert_called_once_with(
-            service_exchange='testing', next_service='replication'
+            service_exchange='testing',
         )
 
     @patch('mash.services.testing_service.TestingService')
@@ -20,7 +20,7 @@ class TestIPATestingServiceMain(object):
         main()
 
         mock_testing_service.assert_called_once_with(
-            service_exchange='testing', next_service='replication'
+            service_exchange='testing',
         )
         mock_exit.assert_called_once_with(1)
 

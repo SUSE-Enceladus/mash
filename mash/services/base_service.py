@@ -51,7 +51,7 @@ class BaseService(object):
     * :attr:`service_exchange`
       Name of service exchange
     """
-    def __init__(self, service_exchange, next_service=None):
+    def __init__(self, service_exchange):
         self.channel = None
         self.connection = None
 
@@ -65,9 +65,9 @@ class BaseService(object):
         self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
         self.listener_msg_key = 'listener_msg'
-        self.next_service = next_service
 
         self.config = get_configuration(self.service_exchange)
+        self.next_service = self._get_next_service()
         self.encryption_keys_file = self.config.get_encryption_keys_file()
         self.jwt_secret = self.config.get_jwt_secret()
         self.jwt_algorithm = self.config.get_jwt_algorithm()
@@ -146,6 +146,17 @@ class BaseService(object):
         Declare the queue and set as durable.
         """
         return self.channel.queue.declare(queue=queue, durable=True)
+
+    def _get_next_service(self):
+        """Return the next service based on the current exchange."""
+        services = self.config.get_service_names()
+
+        try:
+            next_service = services[services.index(self.service_exchange) + 1]
+        except (IndexError, ValueError):
+            next_service = None
+
+        return next_service
 
     def _get_queue_name(self, exchange, name):
         """

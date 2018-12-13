@@ -35,9 +35,7 @@ def main():
         log.setLevel(logging.INFO)
 
         # run service, enter main loop
-        DeprecationService(
-            service_exchange='deprecation', next_service='pint'
-        )
+        DeprecationService(service_exchange='deprecation')
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))

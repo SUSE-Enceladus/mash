@@ -46,6 +46,10 @@ class TestBaseService(object):
         mock_connection.return_value = self.connection
 
         config = Mock()
+        config.get_service_names.return_value = [
+            'obs', 'uploader', 'testing', 'replication', 'publisher',
+            'deprecation', 'pint'
+        ]
         mock_get_configuration.return_value = config
 
         self.service = BaseService('obs')
@@ -338,3 +342,14 @@ class TestBaseService(object):
 
         assert "'cloud_provider' is not one of ['azure', 'ec2']" \
             in str(error.value)
+
+    def test_get_next_service_error(self):
+        # Test service with no next service
+        self.service.service_exchange = 'pint'
+        next_service = self.service._get_next_service()
+        assert next_service is None
+
+        # Test service not in pipeline
+        self.service.service_exchange = 'credentials'
+        next_service = self.service._get_next_service()
+        assert next_service is None
