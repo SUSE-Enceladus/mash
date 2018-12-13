@@ -9,7 +9,7 @@ class TestPublisherServiceMain(object):
     def test_publisher_main(self, mock_publisher_service):
         main()
         mock_publisher_service.assert_called_once_with(
-            service_exchange='publisher',
+            service_exchange='publisher', next_service='deprecation'
         )
 
     @patch('mash.services.publisher_service.PublisherService')
@@ -21,7 +21,7 @@ class TestPublisherServiceMain(object):
 
         main()
         mock_publisher_service.assert_called_once_with(
-            service_exchange='publisher',
+            service_exchange='publisher', next_service='deprecation'
         )
         mock_exit.assert_called_once_with(1)
 

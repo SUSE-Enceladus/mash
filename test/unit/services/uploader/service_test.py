@@ -126,6 +126,7 @@ class TestUploadImageService(object):
         self.uploader.job_document_key = 'job_document'
         self.uploader.credentials_queue = 'credentials'
         self.uploader.credentials_response_key = 'response'
+        self.uploader.next_service = 'testing'
 
         self.uploader.post_init()
 

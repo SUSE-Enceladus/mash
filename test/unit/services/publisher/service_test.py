@@ -60,6 +60,7 @@ class TestPublisherService(object):
         self.publisher.listener_queue = 'listener'
         self.publisher.job_document_key = 'job_document'
         self.publisher.listener_msg_key = 'listener_msg'
+        self.publisher.next_service = 'deprecation'
 
     @patch.object(PublisherService, 'bind_credentials_queue')
     @patch.object(PublisherService, 'restart_jobs')

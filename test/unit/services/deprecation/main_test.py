@@ -9,7 +9,7 @@ class TestDeprecationServiceMain(object):
     def test_main(self, mock_deprecation_service):
         main()
         mock_deprecation_service.assert_called_once_with(
-            service_exchange='deprecation',
+            service_exchange='deprecation', next_service='pint'
         )
 
     @patch('mash.services.deprecation_service.DeprecationService')
@@ -24,7 +24,7 @@ class TestDeprecationServiceMain(object):
         main()
 
         mock_deprecation_service.assert_called_once_with(
-            service_exchange='deprecation',
+            service_exchange='deprecation', next_service='pint'
         )
         mock_exit.assert_called_once_with(1)
 

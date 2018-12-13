@@ -35,7 +35,9 @@ def main():
         log.setLevel(logging.INFO)
 
         # run service, enter main loop
-        TestingService(service_exchange='testing')
+        TestingService(
+            service_exchange='testing', next_service='replication'
+        )
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))

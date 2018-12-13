@@ -33,7 +33,9 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        OBSImageBuildResultService(service_exchange='obs')
+        OBSImageBuildResultService(
+            service_exchange='obs', next_service='uploader'
+        )
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))

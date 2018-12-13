@@ -51,7 +51,7 @@ class BaseService(object):
     * :attr:`service_exchange`
       Name of service exchange
     """
-    def __init__(self, service_exchange):
+    def __init__(self, service_exchange, next_service=None):
         self.channel = None
         self.connection = None
 
@@ -65,6 +65,7 @@ class BaseService(object):
         self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
         self.listener_msg_key = 'listener_msg'
+        self.next_service = next_service
 
         self.config = get_configuration(self.service_exchange)
         self.encryption_keys_file = self.config.get_encryption_keys_file()

@@ -16,7 +16,7 @@ class TestUploader(object):
     def test_main(self, mock_UploadImageService):
         main()
         mock_UploadImageService.assert_called_once_with(
-            service_exchange='uploader'
+            service_exchange='uploader', next_service='testing'
         )
 
     @patch('mash.services.uploader_service.UploadImageService')

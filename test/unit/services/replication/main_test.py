@@ -9,7 +9,7 @@ class TestReplicationServiceMain(object):
     def test_replication_main(self, mock_replication_service):
         main()
         mock_replication_service.assert_called_once_with(
-            service_exchange='replication',
+            service_exchange='replication', next_service='publisher'
         )
 
     @patch('mash.services.replication_service.ReplicationService')
@@ -23,7 +23,7 @@ class TestReplicationServiceMain(object):
 
         main()
         mock_replication_service.assert_called_once_with(
-            service_exchange='replication',
+            service_exchange='replication', next_service='publisher'
         )
         mock_exit.assert_called_once_with(1)
 

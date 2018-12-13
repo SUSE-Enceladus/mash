@@ -59,7 +59,7 @@ class OBSImageBuildResultService(BaseService):
 
     def _send_job_result_for_uploader(self, job_id, trigger_info):
         self.publish_job_result(
-            'uploader', JsonFormat.json_message(trigger_info)
+            self.next_service, JsonFormat.json_message(trigger_info)
         )
         if not self.jobs[job_id].job_nonstop:
             self._delete_job(job_id)
@@ -114,7 +114,7 @@ class OBSImageBuildResultService(BaseService):
                 }
             }
             self.publish_job_result(
-                'uploader', JsonFormat.json_message(message)
+                self.next_service, JsonFormat.json_message(message)
             )
         else:
             result = {

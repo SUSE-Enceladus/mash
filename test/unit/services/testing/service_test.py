@@ -48,6 +48,7 @@ class TestIPATestingService(object):
         self.testing.listener_msg_key = 'listener_msg'
         self.testing.listener_queue = 'listener'
         self.testing.ssh_private_key_file = 'private_ssh_key.file'
+        self.testing.next_service = 'replication'
 
         self.error_message = JsonFormat.json_message({
             "testing_result": {
