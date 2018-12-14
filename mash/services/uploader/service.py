@@ -86,7 +86,7 @@ class UploadImageService(BaseService):
                 or self.jobs[job_id]['last_service'] == self.service_exchange:
             return
         self.publish_job_result(
-            'testing', JsonFormat.json_message(
+            self.next_service, JsonFormat.json_message(
                 {'uploader_result': self.jobs[job_id]['uploader_result']}
             )
         )

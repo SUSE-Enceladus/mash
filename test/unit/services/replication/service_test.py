@@ -62,6 +62,7 @@ class TestReplicationService(object):
         self.replication.listener_queue = 'listener'
         self.replication.job_document_key = 'job_document'
         self.replication.listener_msg_key = 'listener_msg'
+        self.replication.next_service = 'publisher'
 
     @patch.object(ReplicationService, 'bind_credentials_queue')
     @patch.object(ReplicationService, 'restart_jobs')

@@ -44,6 +44,7 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.channel.is_open = True
         self.obs_result.close_connection = Mock()
         self.obs_result.service_exchange = 'obs'
+        self.obs_result.next_service = 'uploader'
 
         self.obs_result.post_init()
 

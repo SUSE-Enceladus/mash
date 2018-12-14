@@ -318,7 +318,7 @@ class PublisherService(BaseService):
         message = self._get_status_message(job)
 
         try:
-            self.publish_job_result('deprecation', message)
+            self.publish_job_result(self.next_service, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),

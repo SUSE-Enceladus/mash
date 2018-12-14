@@ -74,6 +74,7 @@ class TestDeprecationService(object):
         self.deprecation.listener_queue = 'listener'
         self.deprecation.job_document_key = 'job_document'
         self.deprecation.listener_msg_key = 'listener_msg'
+        self.deprecation.next_service = 'pint'
 
     @patch.object(DeprecationService, 'bind_credentials_queue')
     @patch.object(DeprecationService, 'restart_jobs')
