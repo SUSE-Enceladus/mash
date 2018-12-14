@@ -45,6 +45,7 @@ class TestIPATestingService(object):
         self.testing.service_exchange = 'testing'
         self.testing.service_queue = 'service'
         self.testing.job_document_key = 'job_document'
+        self.testing.listener_msg_key = 'listener_msg'
         self.testing.listener_queue = 'listener'
         self.testing.ssh_private_key_file = 'private_ssh_key.file'
 
@@ -145,10 +146,9 @@ class TestIPATestingService(object):
             'Provider fake is not supported.'
         )
 
-    @patch.object(TestingService, 'bind_listener_queue')
     @patch.object(TestingService, 'persist_job_config')
     def test_testing_create_job(
-        self, mock_persist_config, mock_bind_listener_queue
+        self, mock_persist_config
     ):
         mock_persist_config.return_value = 'temp-config.json'
         self.testing.config = self.config
@@ -170,7 +170,6 @@ class TestIPATestingService(object):
             self.testing.log_job_message
         )
         assert job.job_file == 'temp-config.json'
-        mock_bind_listener_queue.assert_called_once_with(job.id)
         self.testing.log.info.assert_called_once_with(
             'Job queued, awaiting uploader result.',
             extra={'job_id': '1'}
@@ -220,9 +219,6 @@ class TestIPATestingService(object):
         self.testing.log.info.assert_called_once_with(
             'Deleting job.',
             extra={'job_id': job.id}
-        )
-        mock_unbind_queue.assert_called_once_with(
-            'listener', 'testing', job.id
         )
 
     @patch.object(TestingService, '_delete_job')
@@ -361,11 +357,8 @@ class TestIPATestingService(object):
             extra={'job_id': job.id}
         )
         mock_get_status_message.assert_called_once_with(job)
-        mock_bind_queue.assert_called_once_with(
-            'replication', job.id, 'listener'
-        )
         mock_publish.assert_called_once_with(
-            'replication', job.id, self.status_message
+            'replication', 'listener_msg', self.status_message
         )
 
     def test_testing_process_test_result_exception(self):
@@ -423,7 +416,7 @@ class TestIPATestingService(object):
         )
         mock_get_status_message.assert_called_once_with(job)
         mock_publish.assert_called_once_with(
-            'replication', job.id, self.error_message
+            'replication', self.error_message
         )
 
     @patch.object(TestingService, 'bind_queue')
@@ -437,11 +430,8 @@ class TestIPATestingService(object):
         job.source_regions = {'us-east-2': 'ami-123456'}
 
         self.testing._publish_message(job)
-        mock_bind_queue.assert_called_once_with(
-            'replication', job.id, 'listener'
-        )
         mock_publish.assert_called_once_with(
-            'replication', job.id, self.status_message
+            'replication', 'listener_msg', self.status_message
         )
 
     @patch.object(TestingService, 'bind_queue')
@@ -458,7 +448,6 @@ class TestIPATestingService(object):
         mock_publish.side_effect = AMQPError('Broken')
         self.testing._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('replication', job.id, 'listener')
         self.testing.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': job.id}

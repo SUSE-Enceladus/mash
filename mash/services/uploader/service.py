@@ -86,7 +86,7 @@ class UploadImageService(BaseService):
                 or self.jobs[job_id]['last_service'] == self.service_exchange:
             return
         self.publish_job_result(
-            'testing', job_id, JsonFormat.json_message(
+            'testing', JsonFormat.json_message(
                 {'uploader_result': self.jobs[job_id]['uploader_result']}
             )
         )
@@ -204,7 +204,6 @@ class UploadImageService(BaseService):
                     'status': None
                 }
             }
-            self.bind_listener_queue(job_id)
             self._job_log(
                 job_id, 'Job queued, awaiting obs result'
             )
@@ -261,9 +260,6 @@ class UploadImageService(BaseService):
         if job_id not in self.jobs:
             self._job_log(job_id, 'Job does not exist')
         else:
-            self.unbind_queue(
-                self.listener_queue, self.service_exchange, job_id
-            )
             upload_image = self.jobs[job_id]['uploader'][0]
             # delete job file
             try:

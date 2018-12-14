@@ -61,6 +61,7 @@ class TestReplicationService(object):
         self.replication.service_queue = 'service'
         self.replication.listener_queue = 'listener'
         self.replication.job_document_key = 'job_document'
+        self.replication.listener_msg_key = 'listener_msg'
 
     @patch.object(ReplicationService, 'bind_credentials_queue')
     @patch.object(ReplicationService, 'restart_jobs')
@@ -163,10 +164,9 @@ class TestReplicationService(object):
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
-    @patch.object(ReplicationService, 'bind_listener_queue')
     @patch.object(ReplicationService, 'persist_job_config')
     def test_replication_create_job(
-        self, mock_persist_config, mock_bind_listener_queue
+        self, mock_persist_config
     ):
         mock_persist_config.return_value = 'temp-config.json'
 
@@ -184,7 +184,6 @@ class TestReplicationService(object):
             self.replication.log_job_message
         )
         assert job.job_file == 'temp-config.json'
-        mock_bind_listener_queue.assert_called_once_with('1')
         self.replication.log.info.assert_called_once_with(
             'Job queued, awaiting testing result.',
             extra={'job_id': '1'}
@@ -222,9 +221,6 @@ class TestReplicationService(object):
         )
 
         assert '1' not in self.replication.jobs
-        mock_unbind_queue.assert_called_once_with(
-            'listener', 'replication', '1'
-        )
         mock_remove_file.assert_called_once_with('job-test.json')
 
     def test_replication_delete_invalid_job(self):
@@ -515,7 +511,7 @@ class TestReplicationService(object):
 
         self.replication._publish_message(job)
         mock_publish.assert_called_once_with(
-            'publisher', '1', self.status_message
+            'publisher', self.status_message
         )
 
     @patch.object(ReplicationService, 'bind_queue')
@@ -534,7 +530,6 @@ class TestReplicationService(object):
         )
         self.replication._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('publisher', '1', 'listener')
         self.replication.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}

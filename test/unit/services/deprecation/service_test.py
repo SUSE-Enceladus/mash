@@ -73,6 +73,7 @@ class TestDeprecationService(object):
         self.deprecation.service_queue = 'service'
         self.deprecation.listener_queue = 'listener'
         self.deprecation.job_document_key = 'job_document'
+        self.deprecation.listener_msg_key = 'listener_msg'
 
     @patch.object(DeprecationService, 'bind_credentials_queue')
     @patch.object(DeprecationService, 'restart_jobs')
@@ -160,10 +161,9 @@ class TestDeprecationService(object):
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
-    @patch.object(DeprecationService, 'bind_listener_queue')
     @patch.object(DeprecationService, 'persist_job_config')
     def test_deprecation_create_job(
-        self, mock_persist_config, mock_bind_listener_queue
+        self, mock_persist_config
     ):
         mock_persist_config.return_value = 'temp-config.json'
 
@@ -181,7 +181,6 @@ class TestDeprecationService(object):
             self.deprecation.log_job_message
         )
         assert job.job_file == 'temp-config.json'
-        mock_bind_listener_queue.assert_called_once_with('1')
         self.deprecation.log.info.assert_called_once_with(
             'Job queued, awaiting publisher result.',
             extra={'job_id': '1'}
@@ -218,9 +217,6 @@ class TestDeprecationService(object):
         )
 
         assert '1' not in self.deprecation.jobs
-        mock_unbind_queue.assert_called_once_with(
-            'listener', 'deprecation', '1'
-        )
         mock_remove_file.assert_called_once_with('job-test.json')
 
     def test_deprecation_delete_invalid_job(self):
@@ -483,7 +479,6 @@ class TestDeprecationService(object):
         self.deprecation._publish_message(job)
         mock_publish.assert_called_once_with(
             'pint',
-            '1',
             self.status_message
         )
 
@@ -500,7 +495,6 @@ class TestDeprecationService(object):
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
         self.deprecation._publish_message(job)
 
-        mock_bind_queue.assert_called_once_with('pint', '1', 'listener')
         self.deprecation.log.warning.assert_called_once_with(
             'Message not received: {0}'.format(self.error_message),
             extra={'job_id': '1'}
