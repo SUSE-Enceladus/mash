@@ -1,3 +1,19 @@
+v1.3.0 (2018-12-17)
+===================
+
+- Cleanup cloud image name in replication jobs.
+  [\#357](https://github.com/SUSE-Enceladus/mash/pull/357)
+- Set cloud image name in uploader service.
+  [\#358](https://github.com/SUSE-Enceladus/mash/pull/358)
+- Add data for new EC2 regions.
+  [\#359](https://github.com/SUSE-Enceladus/mash/pull/359)
+- Simplify listener messages.
+  [\#360](https://github.com/SUSE-Enceladus/mash/pull/360)
+- Catch generic exception in update image status.
+  [\#361](https://github.com/SUSE-Enceladus/mash/pull/361)
+- Add next service attribute to services.
+  [\#362](https://github.com/SUSE-Enceladus/mash/pull/362)
+
 v1.2.0 (2018-12-11)
 ===================
 
