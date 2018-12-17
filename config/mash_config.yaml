@@ -67,7 +67,7 @@ provider:
       us-gov-east-1: ami-43896f32
       us-gov-west-1: ami-c2b5d7e1
       us-west-1: ami-d5ea86b5
-      us-west-2: ami-f0091d9
+      us-west-2: ami-f0091d91
 testing:
   ipa_timeout: 600
 uploader:
