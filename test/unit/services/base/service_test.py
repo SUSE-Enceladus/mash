@@ -2,6 +2,7 @@ import io
 import json
 import jwt
 
+from amqpstorm import AMQPError
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import MagicMock, Mock
@@ -369,3 +370,23 @@ class TestBaseService(object):
         self.service.service_exchange = 'obs'
         prev_service = self.service._get_previous_service()
         assert prev_service is None
+
+    @patch.object(BaseService, '_publish')
+    def test_publish_credentials_delete(self, mock_publish):
+        self.service.publish_credentials_delete('1')
+        mock_publish.assert_called_once_with(
+            'credentials',
+            'job_document',
+            JsonFormat.json_message({"credentials_job_delete": "1"})
+        )
+
+    @patch.object(BaseService, '_publish')
+    def test_publish_credentials_delete_exception(self, mock_publish):
+        mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
+
+        self.service.publish_credentials_delete('1')
+        self.service.log.warning.assert_called_once_with(
+            'Message not received: {0}'.format(
+                JsonFormat.json_message({"credentials_job_delete": "1"})
+            )
+        )

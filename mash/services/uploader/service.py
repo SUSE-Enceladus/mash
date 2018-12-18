@@ -260,10 +260,14 @@ class UploadImageService(BaseService):
         if job_id not in self.jobs:
             self._job_log(job_id, 'Job does not exist')
         else:
-            upload_image = self.jobs[job_id]['uploader'][0]
+            if self.jobs[job_id]['last_service'] == self.service_exchange:
+                # Send delete message to credentials
+                # if this is the last service.
+                self.publish_credentials_delete(job_id)
+
             # delete job file
             try:
-                os.remove(upload_image.job_file)
+                os.remove(self.jobs[job_id]['job_file'])
             except Exception as issue:
                 self._job_log(
                     job_id, 'Job deletion failed: {0}'.format(issue)

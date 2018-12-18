@@ -148,14 +148,16 @@ class TestPipelineService(object):
             'Invalid job configuration: Cannot create job.'
         )
 
+    @patch.object(PipelineService, 'publish_credentials_delete')
     @patch.object(PipelineService, 'remove_file')
     @patch.object(PipelineService, 'unbind_queue')
     def test_service_delete_job(
-        self, mock_unbind_queue, mock_remove_file
+        self, mock_unbind_queue, mock_remove_file, mock_publish_creds_delete
     ):
         job = Mock()
         job.id = '1'
         job.job_file = 'job-test.json'
+        job.last_service = 'replication'
         job.status = 'success'
         job.utctime = 'now'
         job.get_metadata.return_value = {'job_id': '1'}
@@ -163,6 +165,7 @@ class TestPipelineService(object):
         self.service.jobs['1'] = job
         self.service._delete_job('1')
 
+        mock_publish_creds_delete.assert_called_once_with('1')
         self.service.log.info.assert_called_once_with(
             'Deleting job.',
             extra={'job_id': '1'}

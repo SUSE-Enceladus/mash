@@ -670,10 +670,6 @@ class TestJobCreatorService(object):
             call(
                 'obs', 'job_document',
                 JsonFormat.json_message({"obs_job_delete": "1"})
-            ),
-            call(
-                'credentials', 'job_document',
-                JsonFormat.json_message({"credentials_job_delete": "1"})
             )
         ])
 

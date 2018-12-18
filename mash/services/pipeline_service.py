@@ -120,6 +120,11 @@ class PipelineService(BaseService):
                 extra=job.get_metadata()
             )
 
+            if job.last_service == self.service_exchange:
+                # Send delete message to credentials
+                # if this is the last service.
+                self.publish_credentials_delete(job_id)
+
             del self.jobs[job_id]
             self.remove_file(job.job_file)
         else:

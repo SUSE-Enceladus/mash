@@ -156,13 +156,6 @@ class JobCreatorService(BaseService):
             'obs', self.job_document_key, JsonFormat.json_message(delete_message)
         )
 
-        delete_message = {
-            "credentials_job_delete": job_id
-        }
-        self._publish(
-            'credentials', self.job_document_key, JsonFormat.json_message(delete_message)
-        )
-
     def publish_job_doc(self, service, job_doc):
         """
         Publish the job_doc message to the given service exchange.

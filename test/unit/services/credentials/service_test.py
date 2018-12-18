@@ -495,12 +495,10 @@ class TestCredentialsService(object):
             'testing', 'response', 'response'
         )
 
-    @patch.object(CredentialsService, '_delete_job')
     @patch.object(CredentialsService, '_get_credentials_response')
     @patch.object(CredentialsService, '_publish_credentials_response')
     def test_send_credential_response(
-        self, mock_publish_credentials_response, mock_get_cred_response,
-        mock_delete_job
+        self, mock_publish_credentials_response, mock_get_cred_response
     ):
         job = {'id': '1', 'last_service': 'pint', 'utctime': 'now'}
         self.service.jobs = {'1': job}
@@ -515,7 +513,6 @@ class TestCredentialsService(object):
         mock_publish_credentials_response.assert_called_once_with(
             JsonFormat.json_message({"jwt_token": "response"}), 'pint'
         )
-        mock_delete_job.assert_called_once_with('1')
 
     @patch.object(CredentialsService, '_send_control_response')
     def test_send_credential_response_invalid(
