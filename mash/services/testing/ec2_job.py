@@ -23,16 +23,13 @@ from mash.services.testing.job import TestingJob
 instance_types = [
     'c5d.large',
     'd2.xlarge',
-    'h1.2xlarge',
     'i3.8xlarge',
     'i3.metal',
     'm5.large',
     'm5d.large',
-    'p3.2xlarge',
     'r5.24xlarge',
     't2.micro',
-    't3.small',
-    'x1e.xlarge'
+    't3.small'
 ]
 
 
