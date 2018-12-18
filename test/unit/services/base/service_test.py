@@ -353,3 +353,19 @@ class TestBaseService(object):
         self.service.service_exchange = 'credentials'
         next_service = self.service._get_next_service()
         assert next_service is None
+
+    def test_get_prev_service(self):
+        # Test service with prev service
+        self.service.service_exchange = 'testing'
+        prev_service = self.service._get_previous_service()
+        assert prev_service is 'uploader'
+
+        # Test service not in pipeline
+        self.service.service_exchange = 'credentials'
+        prev_service = self.service._get_previous_service()
+        assert prev_service is None
+
+        # Test service as beginning of pipeline
+        self.service.service_exchange = 'obs'
+        prev_service = self.service._get_previous_service()
+        assert prev_service is None
