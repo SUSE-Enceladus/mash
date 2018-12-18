@@ -58,6 +58,11 @@ class TestReplicationJob(object):
 
         assert job.log_callback == test.method
 
+    def test_source_regions(self):
+        job = ReplicationJob(**self.job_config)
+        job.set_source_regions({'west': 'ami-123'})
+        assert job.source_regions['west'] == 'ami-123'
+
     @patch.object(ReplicationJob, '_replicate')
     def test_replicate_image(self, mock_replicate):
         job = ReplicationJob(**self.job_config)
