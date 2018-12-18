@@ -35,6 +35,7 @@ class ReplicationJob(object):
         self.last_service = last_service
         self.log_callback = None
         self.provider = provider
+        self.source_regions = None
         self.status = UNKOWN
         self.utctime = utctime
 
@@ -79,3 +80,9 @@ class ReplicationJob(object):
         Set log_callback function to callback.
         """
         self.log_callback = callback
+
+    def set_source_regions(self, source_regions):
+        """
+        Setter for source_regions dictionary.
+        """
+        self.source_regions = source_regions

@@ -42,7 +42,6 @@ class EC2ReplicationJob(ReplicationJob):
         self.image_description = image_description
         self.job_file = job_file
         self.source_region_results = defaultdict(dict)
-        self.source_regions = {}
         self.replication_source_regions = replication_source_regions
 
     def _replicate(self):
