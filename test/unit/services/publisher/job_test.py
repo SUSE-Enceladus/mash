@@ -26,43 +26,10 @@ class TestPublisherJob(object):
         assert job.provider == 'ec2'
         assert job.utctime == 'now'
 
-    def test_job_get_metadata(self):
-        job = PublisherJob(**self.job_config)
-        metadata = job.get_metadata()
-        assert metadata == {'job_id': '1'}
-
     def test_publish(self):
         job = PublisherJob(**self.job_config)
         with raises(NotImplementedError):
             job._publish()
-
-    def test_send_log(self):
-        callback = Mock()
-
-        job = PublisherJob(**self.job_config)
-        job.log_callback = callback
-        job.iteration_count = 0
-
-        job.send_log('Starting publish.')
-
-        callback.assert_called_once_with(
-            'Pass[0]: Starting publish.',
-            {'job_id': '1'},
-            True
-        )
-
-    def test_set_cloud_image_name(self):
-        job = PublisherJob(**self.job_config)
-        job.set_cloud_image_name('name123')
-        assert job.cloud_image_name == 'name123'
-
-    def test_set_log_callback(self):
-        test = Mock()
-
-        job = PublisherJob(**self.job_config)
-        job.set_log_callback(test.method)
-
-        assert job.log_callback == test.method
 
     @patch.object(PublisherJob, '_publish')
     def test_publish_image(self, mock_publish):

@@ -129,9 +129,7 @@ class TestPipelineService(object):
         self.service._create_job(job_class, job_config)
 
         job_class.assert_called_once_with(id='1', provider='ec2')
-        job.set_log_callback.assert_called_once_with(
-            self.service.log_job_message
-        )
+        assert job.log_callback == self.service.log_job_message
         assert job.job_file == 'temp-config.json'
         self.service.log.info.assert_called_once_with(
             'Job queued, awaiting listener message.',

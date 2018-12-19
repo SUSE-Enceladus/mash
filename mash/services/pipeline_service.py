@@ -96,7 +96,7 @@ class PipelineService(BaseService):
             )
         else:
             self.jobs[job.id] = job
-            job.set_log_callback(self.log_job_message)
+            job.log_callback = self.log_job_message
 
             if 'job_file' not in job_config:
                 job_config['job_file'] = self.persist_job_config(
@@ -354,7 +354,7 @@ class PipelineService(BaseService):
 
     def _process_msg_arg(self, listener_msg, arg, job):
         """Set the arg on the job using setter method."""
-        getattr(job, 'set_{0}'.format(arg))(listener_msg[arg])
+        setattr(job, arg, listener_msg[arg])
 
     def start(self):
         """

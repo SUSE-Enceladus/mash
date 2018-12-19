@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -19,12 +19,13 @@
 from threading import Thread
 
 from mash.mash_exceptions import MashTestingException
-from mash.services.status_levels import FAILED, SUCCESS, UNKOWN
+from mash.services.mash_job import MashJob
+from mash.services.status_levels import FAILED, SUCCESS
 from mash.services.testing.constants import NOT_IMPLEMENTED
 from mash.services.testing.ipa_helper import ipa_test
 
 
-class TestingJob(object):
+class TestingJob(MashJob):
     """
     Class for an individual testing job.
     """
@@ -35,25 +36,21 @@ class TestingJob(object):
         tests, utctime, job_file=None, description=None, distro='sles',
         instance_type=None, ipa_timeout=None, ssh_user=None
     ):
-        self.cloud_image_name = None
-        self.job_file = job_file
-        self.credentials = None
+        super(TestingJob, self).__init__(
+            id, last_service, provider, utctime, job_file
+        )
+
+        # properties
+        self._source_regions = None
+
         self.description = description
         self.distro = distro
         self.instance_type = instance_type
-        self.iteration_count = 0
-        self.id = id
         self.ipa_timeout = ipa_timeout
-        self.last_service = last_service
-        self.log_callback = None
-        self.provider = provider
-        self.status = UNKOWN
-        self.source_regions = None
         self.ssh_private_key_file = ssh_private_key_file
         self.ssh_user = ssh_user
         self.test_regions = self.validate_test_regions(test_regions)
         self.tests = tests
-        self.utctime = utctime
 
     def _add_provider_creds(self, creds, ipa_kwargs):
         """
@@ -110,43 +107,17 @@ class TestingJob(object):
                     self.send_log(result['msg'], success=False)
                 self.status = FAILED
 
-    def get_metadata(self):
-        """
-        Return dictionary of metadata based on job.
-        """
-        return {'job_id': self.id}
+    @property
+    def source_regions(self):
+        """Source regions property."""
+        return self._source_regions
 
-    def send_log(self, message, success=True):
-        """
-        Send a log message to the log callback function.
-        """
-        if self.log_callback:
-            self.log_callback(
-                'Pass[{0}]: {1}'.format(
-                    self.iteration_count,
-                    message
-                ),
-                self.get_metadata(),
-                success
-            )
-
-    def set_cloud_image_name(self, cloud_image_name):
-        """
-        Setter for cloud image name.
-        """
-        self.cloud_image_name = cloud_image_name
-
-    def set_log_callback(self, callback):
-        """
-        Set log_callback function to callback.
-        """
-        self.log_callback = callback
-
-    def set_source_regions(self, source_regions):
+    @source_regions.setter
+    def source_regions(self, regions):
         """
         Setter for source_regions dictionary.
         """
-        self.source_regions = source_regions
+        self._source_regions = regions
 
     def test_image(self):
         """
