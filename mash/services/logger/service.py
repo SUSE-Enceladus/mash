@@ -19,10 +19,10 @@
 import json
 
 from mash.mash_exceptions import MashLoggerException
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 
 
-class LoggerService(BaseService):
+class LoggerService(MashService):
     """
     Implementation of logger service. Consumes logs from all
     services and persists to files based on job id.

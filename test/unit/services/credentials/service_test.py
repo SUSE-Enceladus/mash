@@ -5,7 +5,7 @@ import json
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.credentials.service import CredentialsService
 from mash.services.credentials.key_rotate import rotate_key
 from mash.services.jobcreator.accounts import accounts_template
@@ -13,7 +13,7 @@ from mash.utils.json_format import JsonFormat
 
 
 class TestCredentialsService(object):
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     def setup(self, mock_BaseService):
         mock_BaseService.return_value = None
 

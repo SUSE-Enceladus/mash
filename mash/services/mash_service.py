@@ -39,7 +39,7 @@ from mash.mash_exceptions import (
 from mash.utils.json_format import JsonFormat
 
 
-class BaseService(object):
+class MashService(object):
     """
     Base class for RabbitMQ message broker
 

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 from pytest import raises
 
 from mash.mash_exceptions import MashLoggerException
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.logger.service import LoggerService
 
 open_name = "__builtin__.open" if sys.version_info.major < 3 \
@@ -15,7 +15,7 @@ open_name = "__builtin__.open" if sys.version_info.major < 3 \
 
 class TestLoggerService(object):
 
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     def setup(
         self, mock_base_init
     ):

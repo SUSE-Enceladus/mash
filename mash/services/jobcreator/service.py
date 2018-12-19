@@ -18,12 +18,12 @@
 
 import json
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.jobcreator import create_job
 from mash.utils.json_format import JsonFormat
 
 
-class JobCreatorService(BaseService):
+class JobCreatorService(MashService):
     """
     Implementation of job creator service.
 

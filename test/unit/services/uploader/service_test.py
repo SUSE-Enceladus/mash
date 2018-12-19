@@ -13,26 +13,26 @@ from mash.services.status_levels import (
 )
 
 from mash.services.uploader.service import UploadImageService
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.utils.json_format import JsonFormat
 
 
 class TestUploadImageService(object):
-    @patch.object(BaseService, 'bind_credentials_queue')
-    @patch.object(BaseService, 'consume_credentials_queue')
-    @patch('mash.services.base_service.BaseService.set_logfile')
+    @patch.object(MashService, 'bind_credentials_queue')
+    @patch.object(MashService, 'consume_credentials_queue')
+    @patch('mash.services.mash_service.MashService.set_logfile')
     @patch('mash.services.uploader.service.BackgroundScheduler')
     @patch.object(UploadImageService, '_process_credentials')
     @patch.object(UploadImageService, '_process_job')
     @patch.object(UploadImageService, '_process_obs_result')
     @patch.object(UploadImageService, 'restart_jobs')
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     @patch('os.listdir')
     @patch('logging.getLogger')
     @patch('atexit.register')
     def setup(
         self, mock_register, mock_log, mock_listdir,
-        mock_BaseService, mock_restart_jobs, mock_process_obs_result,
+        mock_MashService, mock_restart_jobs, mock_process_obs_result,
         mock_process_job, mock_process_credentials,
         mock_BackgroundScheduler, mock_set_logfile,
         mock_consume_creds_queue, mock_bind_creds_queue
@@ -109,7 +109,7 @@ class TestUploadImageService(object):
 
         self.log = Mock()
         mock_listdir.return_value = ['job']
-        mock_BaseService.return_value = None
+        mock_MashService.return_value = None
 
         self.uploader = UploadImageService()
         self.uploader.log = self.log
@@ -148,7 +148,7 @@ class TestUploadImageService(object):
             self.uploader.post_init()
         self.uploader.close_connection.assert_called_once_with()
 
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'persist_job_config')
     def test_init_job(self, mock_persist_job_config):
         self.uploader._init_job(self.job_data_from_preserved_ec2)
         self.uploader._init_job(self.job_data_ec2)
@@ -161,8 +161,8 @@ class TestUploadImageService(object):
             'message', extra={'job_id': '815'}
         )
 
-    @patch.object(BaseService, 'publish_job_result')
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'publish_job_result')
+    @patch.object(MashService, 'persist_job_config')
     def test_publish_job_result(
         self, mock_persist_job_config, mock_publish_job_result
     ):
@@ -185,7 +185,7 @@ class TestUploadImageService(object):
         )
         assert mock_publish_job_result.called is False
 
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'persist_job_config')
     @patch.object(UploadImageService, '_publish_job_result')
     @patch.object(UploadImageService, '_delete_job')
     def test_send_job_result(
@@ -287,7 +287,7 @@ class TestUploadImageService(object):
     @patch.object(UploadImageService, '_delete_job')
     @patch.object(UploadImageService, '_publish_job_result')
     @patch.object(UploadImageService, 'publish_credentials_request')
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'persist_job_config')
     def test_handle_obs_image(
         self, mock_persist_job_config, mock_publish_credentials_request,
         mock_publish_job_result, mock_delete_job, mock_schedule_job,
@@ -317,7 +317,7 @@ class TestUploadImageService(object):
 
     @patch.object(UploadImageService, 'decode_credentials')
     @patch.object(UploadImageService, '_schedule_job')
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'persist_job_config')
     def test_handle_credentials(
         self, mock_persist_job_config, mock_schedule_job,
         mock_decode_credentials
@@ -374,7 +374,7 @@ class TestUploadImageService(object):
             '815', 'Job deletion failed: remove_error'
         )
 
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'persist_job_config')
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job_ec2(
         self, mock_start_job, mock_persist_job_config
@@ -391,7 +391,7 @@ class TestUploadImageService(object):
             ]
         )
 
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'persist_job_config')
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job_azure(
         self, mock_start_job, mock_persist_job_config
@@ -410,7 +410,7 @@ class TestUploadImageService(object):
             ]
         )
 
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'persist_job_config')
     @patch.object(UploadImageService, '_start_job')
     def test_schedule_job_gce(
         self, mock_start_job, mock_persist_job_config
@@ -429,7 +429,7 @@ class TestUploadImageService(object):
         )
 
     @patch('mash.services.uploader.service.UploadImage')
-    @patch.object(BaseService, 'persist_job_config')
+    @patch.object(MashService, 'persist_job_config')
     @patch.object(UploadImageService, '_job_log')
     @patch.object(UploadImageService, '_send_job_result')
     def test_start_job(

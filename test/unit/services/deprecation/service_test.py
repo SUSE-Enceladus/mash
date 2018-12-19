@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, Mock, patch
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.deprecation.service import DeprecationService
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
 from mash.utils.json_format import JsonFormat
@@ -10,7 +10,7 @@ open_name = "builtins.open"
 
 class TestDeprecationService(object):
 
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     def setup(
         self, mock_base_init
     ):

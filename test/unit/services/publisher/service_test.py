@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, Mock, patch
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.publisher.service import PublisherService
 from mash.services.publisher.ec2_job import EC2PublisherJob
 from mash.utils.json_format import JsonFormat
@@ -10,7 +10,7 @@ open_name = "builtins.open"
 
 class TestPublisherService(object):
 
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     def setup(
         self, mock_base_init
     ):

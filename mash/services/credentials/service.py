@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 
 # project
 from mash.csp import CSP
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.credentials.azure_account import AzureAccount
 from mash.services.credentials.ec2_account import EC2Account
 from mash.services.credentials.gce_account import GCEAccount
@@ -38,7 +38,7 @@ from mash.services.jobcreator.accounts import accounts_template
 from mash.utils.json_format import JsonFormat
 
 
-class CredentialsService(BaseService):
+class CredentialsService(MashService):
     """
     Implements CredentialsService based on web token technology
     """
