@@ -100,7 +100,7 @@ class TestPipelineService(object):
         job.id = '1'
         job.status = 'success'
         job.utctime = 'now'
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._cleanup_job(job, 1)
@@ -121,7 +121,7 @@ class TestPipelineService(object):
 
         job = Mock()
         job.id = '1'
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         job_class = Mock()
         job_class.return_value = job
@@ -156,7 +156,7 @@ class TestPipelineService(object):
         job.job_file = 'job-test.json'
         job.status = 'success'
         job.utctime = 'now'
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._delete_job('1')
@@ -309,7 +309,7 @@ class TestPipelineService(object):
         job.status = 'success'
         job.iteration_count = 1
         job.listener_msg = msg
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
@@ -335,7 +335,7 @@ class TestPipelineService(object):
         job.utctime = 'now'
         job.status = 2
         job.iteration_count = 1
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
@@ -361,7 +361,7 @@ class TestPipelineService(object):
         job.status = 'error'
         job.utctime = 'now'
         job.iteration_count = 1
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
@@ -398,7 +398,7 @@ class TestPipelineService(object):
         job = Mock()
         job.id = '1'
         job.status = 'error'
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         mock_get_status_message.return_value = self.error_message
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')

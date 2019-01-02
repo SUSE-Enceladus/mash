@@ -64,7 +64,7 @@ class PipelineService(BaseService):
         Delete job and notify the next service.
         """
         job.status = status
-        self.log.warning('Failed upstream.', extra=job.get_metadata())
+        self.log.warning('Failed upstream.', extra=job.get_job_id())
 
         try:
             # Remove job from scheduler if it has
@@ -106,7 +106,7 @@ class PipelineService(BaseService):
 
             self.log.info(
                 'Job queued, awaiting listener message.',
-                extra=job.get_metadata()
+                extra=job.get_job_id()
             )
 
     def _delete_job(self, job_id):
@@ -117,7 +117,7 @@ class PipelineService(BaseService):
             job = self.jobs[job_id]
             self.log.info(
                 'Deleting job.',
-                extra=job.get_metadata()
+                extra=job.get_job_id()
             )
 
             del self.jobs[job_id]
@@ -199,7 +199,7 @@ class PipelineService(BaseService):
         """
         job_id = event.job_id
         job = self.jobs[job_id]
-        metadata = job.get_metadata()
+        metadata = job.get_job_id()
 
         if job.utctime != 'always':
             self._delete_job(job_id)
@@ -248,7 +248,7 @@ class PipelineService(BaseService):
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
-                extra=job.get_metadata()
+                extra=job.get_job_id()
             )
 
     def _schedule_job(self, job_id):

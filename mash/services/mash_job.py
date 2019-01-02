@@ -40,9 +40,9 @@ class MashJob(object):
         self.provider = provider
         self.utctime = utctime
 
-    def get_metadata(self):
+    def get_job_id(self):
         """
-        Return dictionary of metadata based on job.
+        Return dictionary with job id.
         """
         return {'job_id': self.id}
 
@@ -56,7 +56,7 @@ class MashJob(object):
                     self.iteration_count,
                     message
                 ),
-                self.get_metadata(),
+                self.get_job_id(),
                 success
             )
 

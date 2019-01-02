@@ -34,9 +34,9 @@ class TestMashJob(object):
             True
         )
 
-    def test_job_get_metadata(self):
+    def test_job_get_job_id(self):
         job = MashJob(**self.job_config)
-        metadata = job.get_metadata()
+        metadata = job.get_job_id()
         assert metadata == {'job_id': '1'}
 
     def test_set_cloud_image_name(self):
