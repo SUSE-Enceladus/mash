@@ -21,7 +21,7 @@ import jwt
 import logging
 import os
 
-from amqpstorm import Connection
+from amqpstorm import AMQPError, Connection
 from cryptography.fernet import Fernet, MultiFernet
 from datetime import datetime, timedelta
 from jsonschema import FormatChecker, validate
@@ -396,6 +396,23 @@ class BaseService(object):
             config_file.write(JsonFormat.json_message(config))
 
         return config['job_file']
+
+    def publish_credentials_delete(self, job_id):
+        """
+        Publish delete message to credentials service.
+        """
+        delete_message = JsonFormat.json_message(
+            {"credentials_job_delete": job_id}
+        )
+
+        try:
+            self._publish(
+                'credentials', self.job_document_key, delete_message
+            )
+        except AMQPError:
+            self.log.warning(
+                'Message not received: {0}'.format(delete_message)
+            )
 
     def publish_credentials_request(self, job_id):
         """

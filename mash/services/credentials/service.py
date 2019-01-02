@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -448,10 +448,6 @@ class CredentialsService(BaseService):
             )
 
             self._publish_credentials_response(message, issuer)
-
-            if job['utctime'] != 'always' and \
-                    job['last_service'] == issuer:
-                self._delete_job(job_id)
         else:
             self._send_control_response(
                 'Credentials job {0} does not exist.'.format(job_id),

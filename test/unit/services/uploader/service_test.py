@@ -329,20 +329,31 @@ class TestUploadImageService(object):
         self.uploader._handle_credentials(credentials_result)
         mock_schedule_job.assert_called_once_with('123')
 
+    @patch.object(UploadImageService, 'publish_credentials_delete')
     @patch.object(UploadImageService, 'unbind_queue')
     @patch.object(UploadImageService, '_job_log')
     @patch('os.remove')
-    def test_delete_job(self, mock_os_remove, mock_job_log, mock_unbind_queue):
+    def test_delete_job(
+        self, mock_os_remove, mock_job_log, mock_unbind_queue,
+        mock_publish_creds_delete
+    ):
         self.uploader._delete_job('815')
         mock_job_log.assert_called_once_with(
             '815', 'Job does not exist'
         )
         upload_image = [Mock()]
         upload_image[0].job_file = 'job_file'
-        self.uploader.jobs = {'815': {'uploader': upload_image}}
+        self.uploader.jobs = {
+            '815': {
+                'uploader': upload_image,
+                'last_service': 'uploader',
+                'job_file': 'job_file'
+            }
+        }
         mock_job_log.reset_mock()
 
         self.uploader._delete_job('815')
+        mock_publish_creds_delete.assert_called_once_with('815')
         mock_job_log.assert_called_once_with(
             '815', 'Job Deleted'
         )
@@ -350,7 +361,13 @@ class TestUploadImageService(object):
         assert '815' not in self.uploader.jobs
         mock_job_log.reset_mock()
 
-        self.uploader.jobs = {'815': {'uploader': upload_image}}
+        self.uploader.jobs = {
+            '815': {
+                'uploader': upload_image,
+                'last_service': 'uploader',
+                'job_file': 'job_file'
+            }
+        }
         mock_os_remove.side_effect = Exception('remove_error')
         self.uploader._delete_job('815')
         mock_job_log.assert_called_once_with(
