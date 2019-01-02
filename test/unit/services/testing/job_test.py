@@ -25,11 +25,6 @@ class TestTestingJob(object):
         assert job.tests == ['test_stuff']
         assert job.utctime == 'now'
 
-    def test_job_get_metadata(self):
-        job = TestingJob(**self.job_config)
-        metadata = job.get_metadata()
-        assert metadata == {'job_id': '1'}
-
     def test_add_provider_creds(self):
         job = TestingJob(**self.job_config)
         with raises(NotImplementedError):
@@ -38,21 +33,9 @@ class TestTestingJob(object):
                 {}
             )
 
-    def test_set_cloud_image_name(self):
-        job = TestingJob(**self.job_config)
-        job.set_cloud_image_name('name123')
-        assert job.cloud_image_name == 'name123'
-
-    def test_set_log_callback(self):
-        job = TestingJob(**self.job_config)
-        callback = Mock()
-        job.set_log_callback(callback)
-
-        assert job.log_callback == callback
-
     def test_source_regions(self):
         job = TestingJob(**self.job_config)
-        job.set_source_regions({'west': 'ami-123'})
+        job.source_regions = {'west': 'ami-123'}
         assert job.source_regions['west'] == 'ami-123'
 
     @patch.object(TestingJob, '_run_tests')

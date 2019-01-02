@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,11 +16,11 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.status_levels import UNKOWN
+from mash.services.mash_job import MashJob
 from mash.services.replication.constants import NOT_IMPLEMENTED
 
 
-class ReplicationJob(object):
+class ReplicationJob(MashJob):
     """
     Class for an individual replication job.
     """
@@ -28,28 +28,17 @@ class ReplicationJob(object):
     def __init__(
         self, id, last_service, provider, utctime, job_file=None
     ):
-        self.cloud_image_name = None
-        self.iteration_count = 0
-        self.id = id
-        self.job_file = job_file
-        self.last_service = last_service
-        self.log_callback = None
-        self.provider = provider
-        self.source_regions = None
-        self.status = UNKOWN
-        self.utctime = utctime
+        super(ReplicationJob, self).__init__(
+            id, last_service, provider, utctime, job_file
+        )
+
+        self._source_regions = None
 
     def _replicate(self):
         """
         Replicate image to all regions in each account.
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
-
-    def get_metadata(self):
-        """
-        Return dictionary of metadata based on job.
-        """
-        return {'job_id': self.id}
 
     def replicate_image(self):
         """
@@ -58,31 +47,14 @@ class ReplicationJob(object):
         self.iteration_count += 1
         self._replicate()
 
-    def send_log(self, message, success=True):
-        if self.log_callback:
-            self.log_callback(
-                'Pass[{0}]: {1}'.format(
-                    self.iteration_count,
-                    message
-                ),
-                self.get_metadata(),
-                success
-            )
+    @property
+    def source_regions(self):
+        """Source regions property."""
+        return self._source_regions
 
-    def set_cloud_image_name(self, cloud_image_name):
-        """
-        Setter for cloud image name.
-        """
-        self.cloud_image_name = cloud_image_name
-
-    def set_log_callback(self, callback):
-        """
-        Set log_callback function to callback.
-        """
-        self.log_callback = callback
-
-    def set_source_regions(self, source_regions):
+    @source_regions.setter
+    def source_regions(self, regions):
         """
         Setter for source_regions dictionary.
         """
-        self.source_regions = source_regions
+        self._source_regions = regions

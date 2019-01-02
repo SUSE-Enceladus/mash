@@ -100,7 +100,7 @@ class TestPipelineService(object):
         job.id = '1'
         job.status = 'success'
         job.utctime = 'now'
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._cleanup_job(job, 1)
@@ -121,7 +121,7 @@ class TestPipelineService(object):
 
         job = Mock()
         job.id = '1'
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         job_class = Mock()
         job_class.return_value = job
@@ -129,9 +129,7 @@ class TestPipelineService(object):
         self.service._create_job(job_class, job_config)
 
         job_class.assert_called_once_with(id='1', provider='ec2')
-        job.set_log_callback.assert_called_once_with(
-            self.service.log_job_message
-        )
+        assert job.log_callback == self.service.log_job_message
         assert job.job_file == 'temp-config.json'
         self.service.log.info.assert_called_once_with(
             'Job queued, awaiting listener message.',
@@ -160,7 +158,7 @@ class TestPipelineService(object):
         job.last_service = 'replication'
         job.status = 'success'
         job.utctime = 'now'
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._delete_job('1')
@@ -314,7 +312,7 @@ class TestPipelineService(object):
         job.status = 'success'
         job.iteration_count = 1
         job.listener_msg = msg
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
@@ -340,7 +338,7 @@ class TestPipelineService(object):
         job.utctime = 'now'
         job.status = 2
         job.iteration_count = 1
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
@@ -366,7 +364,7 @@ class TestPipelineService(object):
         job.status = 'error'
         job.utctime = 'now'
         job.iteration_count = 1
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
@@ -403,7 +401,7 @@ class TestPipelineService(object):
         job = Mock()
         job.id = '1'
         job.status = 'error'
-        job.get_metadata.return_value = {'job_id': '1'}
+        job.get_job_id.return_value = {'job_id': '1'}
 
         mock_get_status_message.return_value = self.error_message
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')

@@ -64,7 +64,7 @@ class PipelineService(MashService):
         Delete job and notify the next service.
         """
         job.status = status
-        self.log.warning('Failed upstream.', extra=job.get_metadata())
+        self.log.warning('Failed upstream.', extra=job.get_job_id())
 
         try:
             # Remove job from scheduler if it has
@@ -96,7 +96,7 @@ class PipelineService(MashService):
             )
         else:
             self.jobs[job.id] = job
-            job.set_log_callback(self.log_job_message)
+            job.log_callback = self.log_job_message
 
             if 'job_file' not in job_config:
                 job_config['job_file'] = self.persist_job_config(
@@ -106,7 +106,7 @@ class PipelineService(MashService):
 
             self.log.info(
                 'Job queued, awaiting listener message.',
-                extra=job.get_metadata()
+                extra=job.get_job_id()
             )
 
     def _delete_job(self, job_id):
@@ -117,7 +117,7 @@ class PipelineService(MashService):
             job = self.jobs[job_id]
             self.log.info(
                 'Deleting job.',
-                extra=job.get_metadata()
+                extra=job.get_job_id()
             )
 
             if job.last_service == self.service_exchange:
@@ -204,7 +204,7 @@ class PipelineService(MashService):
         """
         job_id = event.job_id
         job = self.jobs[job_id]
-        metadata = job.get_metadata()
+        metadata = job.get_job_id()
 
         if job.utctime != 'always':
             self._delete_job(job_id)
@@ -253,7 +253,7 @@ class PipelineService(MashService):
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
-                extra=job.get_metadata()
+                extra=job.get_job_id()
             )
 
     def _schedule_job(self, job_id):
@@ -359,7 +359,7 @@ class PipelineService(MashService):
 
     def _process_msg_arg(self, listener_msg, arg, job):
         """Set the arg on the job using setter method."""
-        getattr(job, 'set_{0}'.format(arg))(listener_msg[arg])
+        setattr(job, arg, listener_msg[arg])
 
     def start(self):
         """

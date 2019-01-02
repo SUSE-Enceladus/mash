@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,11 +16,11 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.status_levels import UNKOWN
+from mash.services.mash_job import MashJob
 from mash.services.publisher.constants import NOT_IMPLEMENTED
 
 
-class PublisherJob(object):
+class PublisherJob(MashJob):
     """
     Class for an individual publisher job.
     """
@@ -29,23 +29,11 @@ class PublisherJob(object):
         self, id, last_service, provider, publish_regions, utctime,
         job_file=None
     ):
-        self.cloud_image_name = None
-        self.credentials = None
-        self.iteration_count = 0
-        self.id = id
-        self.job_file = job_file
-        self.last_service = last_service
-        self.log_callback = None
-        self.provider = provider
-        self.publish_regions = publish_regions
-        self.status = UNKOWN
-        self.utctime = utctime
+        super(PublisherJob, self).__init__(
+            id, last_service, provider, utctime, job_file
+        )
 
-    def get_metadata(self):
-        """
-        Return dictionary of metadata based on job.
-        """
-        return {'job_id': self.id}
+        self.publish_regions = publish_regions
 
     def _publish(self):
         """
@@ -59,29 +47,3 @@ class PublisherJob(object):
         """
         self.iteration_count += 1
         self._publish()
-
-    def send_log(self, message, success=True):
-        """
-        Send message to log callback method.
-        """
-        if self.log_callback:
-            self.log_callback(
-                'Pass[{0}]: {1}'.format(
-                    self.iteration_count,
-                    message
-                ),
-                self.get_metadata(),
-                success
-            )
-
-    def set_cloud_image_name(self, cloud_image_name):
-        """
-        Setter for cloud image name.
-        """
-        self.cloud_image_name = cloud_image_name
-
-    def set_log_callback(self, callback):
-        """
-        Set log_callback function to callback.
-        """
-        self.log_callback = callback
