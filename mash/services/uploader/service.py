@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -22,7 +22,7 @@ from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # project
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.uploader.upload_image import UploadImage
 from mash.utils.json_format import JsonFormat
 from mash.csp import CSP
@@ -32,7 +32,7 @@ from mash.services.status_levels import (
 )
 
 
-class UploadImageService(BaseService):
+class UploadImageService(MashService):
     """
     Implements upload to the public cloud network service
     """

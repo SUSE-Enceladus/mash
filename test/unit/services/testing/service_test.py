@@ -2,7 +2,7 @@ import io
 
 from unittest.mock import call, MagicMock, Mock, patch
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.testing.service import TestingService
 from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
@@ -14,7 +14,7 @@ open_name = "builtins.open"
 
 class TestIPATestingService(object):
 
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     def setup(
         self, mock_base_init
     ):

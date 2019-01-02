@@ -8,22 +8,22 @@ from test.unit.test_helper import (
 )
 
 from mash.services.obs.service import OBSImageBuildResultService
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.utils.json_format import JsonFormat
 
 
 class TestOBSImageBuildResultService(object):
-    @patch('mash.services.base_service.BaseService.set_logfile')
+    @patch('mash.services.mash_service.MashService.set_logfile')
     @patch.object(OBSImageBuildResultService, '_process_message')
     @patch.object(OBSImageBuildResultService, '_send_job_response')
     @patch.object(OBSImageBuildResultService, '_send_job_result_for_uploader')
     @patch.object(OBSImageBuildResultService, 'restart_jobs')
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     @patch('os.listdir')
     @patch('logging.getLogger')
     @patch('atexit.register')
     def setup(
-        self, mock_register, mock_log, mock_listdir, mock_BaseService,
+        self, mock_register, mock_log, mock_listdir, mock_MashService,
         mock_restart_jobs, mock_send_job_result_for_uploader,
         mock_send_job_response, mock_process_message,
         mock_set_logfile
@@ -32,7 +32,7 @@ class TestOBSImageBuildResultService(object):
         config.get_log_file.return_value = 'logfile'
         self.log = Mock()
         mock_listdir.return_value = ['job']
-        mock_BaseService.return_value = None
+        mock_MashService.return_value = None
 
         self.obs_result = OBSImageBuildResultService()
 
@@ -68,7 +68,7 @@ class TestOBSImageBuildResultService(object):
             {}, extra={'job_id': '815'}
         )
 
-    @patch.object(BaseService, 'publish_job_result')
+    @patch.object(MashService, 'publish_job_result')
     @patch.object(OBSImageBuildResultService, '_delete_job')
     def test_send_job_result_for_uploader(
         self, mock_delete_job, mock_publish_job_result

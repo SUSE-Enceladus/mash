@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -18,12 +18,12 @@
 
 import json
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.jobcreator import create_job
 from mash.utils.json_format import JsonFormat
 
 
-class JobCreatorService(BaseService):
+class JobCreatorService(MashService):
     """
     Implementation of job creator service.
 

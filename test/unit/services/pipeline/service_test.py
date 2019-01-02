@@ -6,7 +6,7 @@ from amqpstorm import AMQPError
 
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.pipeline_service import PipelineService
 from mash.utils.json_format import JsonFormat
 
@@ -18,7 +18,7 @@ NOT_IMPL_METHODS = [
 
 
 class TestPipelineService(object):
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     def setup(
         self, mock_base_init
     ):

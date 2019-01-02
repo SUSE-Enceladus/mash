@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -39,7 +39,7 @@ from mash.mash_exceptions import (
 from mash.utils.json_format import JsonFormat
 
 
-class BaseService(object):
+class MashService(object):
     """
     Base class for RabbitMQ message broker
 

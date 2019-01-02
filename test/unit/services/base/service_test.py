@@ -8,7 +8,7 @@ from unittest.mock import call
 from unittest.mock import MagicMock, Mock
 from pytest import raises
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
@@ -22,10 +22,10 @@ open_name = "builtins.open"
 
 
 class TestBaseService(object):
-    @patch('mash.services.base_service.get_configuration')
-    @patch('mash.services.base_service.os.makedirs')
+    @patch('mash.services.mash_service.get_configuration')
+    @patch('mash.services.mash_service.os.makedirs')
     @patch.object(Defaults, 'get_job_directory')
-    @patch('mash.services.base_service.Connection')
+    @patch('mash.services.mash_service.Connection')
     def setup(
         self, mock_connection, mock_get_job_directory, mock_makedirs,
         mock_get_configuration
@@ -53,7 +53,7 @@ class TestBaseService(object):
         ]
         mock_get_configuration.return_value = config
 
-        self.service = BaseService('obs')
+        self.service = MashService('obs')
         self.service.encryption_keys_file = 'encryption_keys.file'
         self.service.jwt_secret = 'a-secret'
         self.service.jwt_algorithm = 'HS256'
@@ -69,13 +69,13 @@ class TestBaseService(object):
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
-            BaseService('obs')
+            MashService('obs')
         self.channel.reset_mock()
 
     def test_post_init(self):
         self.service.post_init()
 
-    @patch('mash.services.base_service.os')
+    @patch('mash.services.mash_service.os')
     @patch('logging.FileHandler')
     def test_set_logfile(self, mock_logging_FileHandler, mock_os):
         logfile_handler = Mock()
@@ -97,14 +97,14 @@ class TestBaseService(object):
             [call(logfile_handler)]
         )
 
-    @patch('mash.services.base_service.os')
+    @patch('mash.services.mash_service.os')
     @patch('logging.FileHandler')
     def test_set_logfile_raises(self, mock_logging_FileHandler, mock_os):
         mock_logging_FileHandler.side_effect = Exception
         with raises(MashLogSetupException):
             self.service.set_logfile('/some/log')
 
-    @patch('mash.services.base_service.Connection')
+    @patch('mash.services.mash_service.Connection')
     def test_publish_job_result(self, mock_connection):
         mock_connection.return_value = self.connection
         self.service.publish_job_result('exchange', 'message')
@@ -128,7 +128,7 @@ class TestBaseService(object):
             callback=callback, queue='obs.credentials'
         )
 
-    @patch.object(BaseService, 'bind_queue')
+    @patch.object(MashService, 'bind_queue')
     def test_bind_credentials_queue(self, mock_bind_queue):
         self.service.bind_credentials_queue()
 
@@ -176,14 +176,14 @@ class TestBaseService(object):
                 })
             )
 
-    @patch('mash.services.base_service.os.remove')
+    @patch('mash.services.mash_service.os.remove')
     def test_remove_file(self, mock_remove):
         mock_remove.side_effect = Exception('File not found.')
         self.service.remove_file('job-test.json')
         mock_remove.assert_called_once_with('job-test.json')
 
-    @patch('mash.services.base_service.json.load')
-    @patch('mash.services.base_service.os.listdir')
+    @patch('mash.services.mash_service.json.load')
+    @patch('mash.services.mash_service.os.listdir')
     def test_restart_jobs(self, mock_os_listdir, mock_json_load):
         self.service.job_directory = 'tmp-dir'
         mock_os_listdir.return_value = ['job-123.json']
@@ -236,8 +236,8 @@ class TestBaseService(object):
         assert len(result) == 1
         assert type(result[0]).__name__ == 'Fernet'
 
-    @patch.object(BaseService, 'decrypt_credentials')
-    @patch('mash.services.base_service.jwt')
+    @patch.object(MashService, 'decrypt_credentials')
+    @patch('mash.services.mash_service.jwt')
     def test_decode_credentials(self, mock_jwt, mock_decrypt):
         self.service.jwt_algorithm = 'HS256'
         self.service.jwt_secret = 'super.secret'
@@ -297,8 +297,8 @@ class TestBaseService(object):
         assert creds['access_key_id'] == '123456'
         assert creds['secret_access_key'] == '654321'
 
-    @patch.object(BaseService, 'get_encryption_keys_from_file')
-    @patch('mash.services.base_service.MultiFernet')
+    @patch.object(MashService, 'get_encryption_keys_from_file')
+    @patch('mash.services.mash_service.MultiFernet')
     def test_encrypt_credentials(self, mock_fernet, mock_get_keys_from_file):
         mock_get_keys_from_file.return_value = [Mock()]
         fernet_key = Mock()
@@ -307,8 +307,8 @@ class TestBaseService(object):
         result = self.service.encrypt_credentials(b'secret')
         assert result == 'encrypted_secret'
 
-    @patch.object(BaseService, 'get_credential_request')
-    @patch.object(BaseService, '_publish')
+    @patch.object(MashService, 'get_credential_request')
+    @patch.object(MashService, '_publish')
     def test_publish_credentials_request(
         self, mock_publish, mock_get_credential_request
     ):
@@ -371,7 +371,7 @@ class TestBaseService(object):
         prev_service = self.service._get_previous_service()
         assert prev_service is None
 
-    @patch.object(BaseService, '_publish')
+    @patch.object(MashService, '_publish')
     def test_publish_credentials_delete(self, mock_publish):
         self.service.publish_credentials_delete('1')
         mock_publish.assert_called_once_with(
@@ -380,7 +380,7 @@ class TestBaseService(object):
             JsonFormat.json_message({"credentials_job_delete": "1"})
         )
 
-    @patch.object(BaseService, '_publish')
+    @patch.object(MashService, '_publish')
     def test_publish_credentials_delete_exception(self, mock_publish):
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
 

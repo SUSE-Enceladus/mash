@@ -18,7 +18,7 @@
 
 import json
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 
 from amqpstorm import AMQPError
@@ -28,7 +28,7 @@ from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
-class PipelineService(BaseService):
+class PipelineService(MashService):
     """
     Base class for MASH services that live in the image pipeline.
     """

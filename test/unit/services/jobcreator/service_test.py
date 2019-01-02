@@ -3,14 +3,14 @@ import json
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.jobcreator.service import JobCreatorService
 from mash.utils.json_format import JsonFormat
 
 
 class TestJobCreatorService(object):
 
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     def setup(
         self, mock_base_init
     ):

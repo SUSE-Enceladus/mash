@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2018 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -20,13 +20,13 @@ import os
 import dateutil.parser
 
 # project
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
 from mash.services.status_levels import DELETE
 
 
-class OBSImageBuildResultService(BaseService):
+class OBSImageBuildResultService(MashService):
     """
     Implements Open BuildService image result network
     service

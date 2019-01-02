@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, Mock, patch
 
-from mash.services.base_service import BaseService
+from mash.services.mash_service import MashService
 from mash.services.replication.service import ReplicationService
 from mash.services.replication.azure_job import AzureReplicationJob
 from mash.services.replication.ec2_job import EC2ReplicationJob
@@ -11,7 +11,7 @@ open_name = "builtins.open"
 
 class TestReplicationService(object):
 
-    @patch.object(BaseService, '__init__')
+    @patch.object(MashService, '__init__')
     def setup(
         self, mock_base_init
     ):
