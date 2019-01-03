@@ -1,3 +1,23 @@
+v1.4.0 (2019-01-03)
+===================
+
+- Fix us-west-2 helper ami id.
+  [\#364](https://github.com/SUSE-Enceladus/mash/pull/364)
+- Remove types that are not in all regions.
+  [\#365](https://github.com/SUSE-Enceladus/mash/pull/365)
+- Add source regions setter in replication job.
+  [\#366](https://github.com/SUSE-Enceladus/mash/pull/366)
+- Add prev service to base service class.
+  [\#367](https://github.com/SUSE-Enceladus/mash/pull/367)
+- Combine pipeline methods.
+  [\#368](https://github.com/SUSE-Enceladus/mash/pull/368)
+- Refactor credentials deletion.
+  [\#369](https://github.com/SUSE-Enceladus/mash/pull/369)
+- Rename base service to mash service.
+  [\#370](https://github.com/SUSE-Enceladus/mash/pull/370)
+- Add base mash job class for shared methods.
+  [\#371](https://github.com/SUSE-Enceladus/mash/pull/371)
+
 v1.3.0 (2018-12-17)
 ===================
 
