@@ -29,7 +29,7 @@ class EC2DeprecationJob(DeprecationJob):
     """
 
     def __init__(
-        self, id, last_service, provider, utctime, old_cloud_image_name,
+        self, id, last_service, provider, utctime, old_cloud_image_name=None,
         job_file=None, deprecation_regions=None
     ):
         super(EC2DeprecationJob, self).__init__(
