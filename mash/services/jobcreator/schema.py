@@ -252,7 +252,7 @@ base_job_message = {
     'required': [
         'provider', 'provider_accounts', 'provider_groups', 'requesting_user',
         'last_service', 'utctime', 'image', 'cloud_image_name',
-        'old_cloud_image_name', 'image_description', 'download_url', 'tests'
+        'image_description', 'download_url', 'tests'
     ],
     'definitions': {
         'image_conditions': {
