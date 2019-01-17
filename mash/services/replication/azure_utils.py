@@ -38,7 +38,7 @@ from mash.utils.json_format import JsonFormat
 def copy_blob_to_classic_storage(
     auth_file, blob_name, source_container, source_resource_group,
     source_storage_account, destination_container, destination_resource_group,
-    destination_storage_account, timeout=1200
+    destination_storage_account
 ):
     """
     Copy a blob from ARM based storage account to a classic storage account.
@@ -63,10 +63,7 @@ def copy_blob_to_classic_storage(
         source_blob_url
     )
 
-    start = time.time()
-    end = start + timeout
-
-    while time.time() < end:
+    while True:
         if copy.status == 'success':
             return
         elif copy.status == 'failed':
@@ -74,17 +71,11 @@ def copy_blob_to_classic_storage(
                 'Azure blob copy failed.'
             )
         else:
-            time.sleep(30)
-
-        copy = page_blob_service.get_blob_properties(
-            destination_container,
-            blob_name
-        ).properties.copy
-
-    raise MashReplicationException(
-        'Time out waiting for async copy to complete. Copy may not have'
-        ' completed successfully.'
-    )
+            time.sleep(60)
+            copy = page_blob_service.get_blob_properties(
+                destination_container,
+                blob_name
+            ).properties.copy
 
 
 def delete_page_blob(
