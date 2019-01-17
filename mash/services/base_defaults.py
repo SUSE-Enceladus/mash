@@ -70,4 +70,4 @@ class Defaults(object):
 
     @staticmethod
     def get_azure_max_workers():
-        return 16
+        return 5
