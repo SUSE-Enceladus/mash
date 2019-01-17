@@ -177,3 +177,9 @@ class MashWebContentException(MashException):
     method space has failed. The origin exception message is
     part of the WebContent exception
     """
+
+
+class MashAzureUtilsException(MashException):
+    """
+    Exception raised if an error occurs in Azure Utils.
+    """
