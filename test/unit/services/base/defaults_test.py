@@ -18,4 +18,4 @@ def test_get_log_directory():
 
 def test_get_azure_max_workers():
     max_workers = Defaults.get_azure_max_workers()
-    assert max_workers == 16
+    assert max_workers == 5
