@@ -12,17 +12,16 @@ class TestJobCreatorAzureJob(object):
             '123', {}, {}, 'azure', ['test-aws'], [], 'test-user', 'pint',
             'now', 'test-image', 'test-cloud-image',
             'test-project', 'image description',
-            'sles', 'test-stuff',
-            [{"package": ["name", "and", "constraints"]}], 'instance type',
-            'test-old-cloud-image-name', 'arch'
+            'sles', 'test-stuff', 'offer', 'publisher', 'sku', 'emails',
+            'label', [{"package": ["name", "and", "constraints"]}],
+            'instance type', 'test-old-cloud-image-name', 'arch',
+            'version-key'
         )
 
     @pytest.mark.parametrize(
         'method',
         [
-            'get_deprecation_regions',
-            'get_publisher_message',
-            'get_publisher_regions'
+            'get_deprecation_regions'
         ]
     )
     def test_not_implemented_methods(self, method):
