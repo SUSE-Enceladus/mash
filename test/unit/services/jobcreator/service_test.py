@@ -140,6 +140,7 @@ class TestJobCreatorService(object):
             'obs', 'job_document',
             JsonFormat.json_message({
                 "obs_job": {
+                    "architecture": "aarch64",
                     "conditions": [
                         {"package": ["name", "and", "constraints"]},
                         {"image": "version"}
@@ -158,6 +159,7 @@ class TestJobCreatorService(object):
             'uploader', 'job_document',
             JsonFormat.json_message({
                 "uploader_job": {
+                    "architecture": "aarch64",
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",

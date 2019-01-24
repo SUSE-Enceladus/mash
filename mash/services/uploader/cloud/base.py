@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -39,11 +39,15 @@ class UploadBase(object):
     * :attr:`custom_args`
         dictionary including cloud provider specific
         arguments required for uploading.
+
+    * :attr:`arch`
+        image architecture, defaults to: x86_64
     """
     def __init__(
         self, credentials, system_image_file, cloud_image_name,
-        cloud_image_description, custom_args
+        cloud_image_description, custom_args, arch='x86_64'
     ):
+        self.arch = arch
         self.system_image_file = system_image_file
         self.cloud_image_name = cloud_image_name
         self.cloud_image_description = cloud_image_description

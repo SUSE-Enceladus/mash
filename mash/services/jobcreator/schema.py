@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -247,7 +247,10 @@ base_job_message = {
             'items': {'$ref': '#/definitions/non_empty_string'},
             'minItems': 1
         },
-        'cleanup_images': {'type': 'boolean'}
+        'cleanup_images': {'type': 'boolean'},
+        'cloud_architecture': {
+            'enum': ['x86_64', 'aarch64']
+        }
     },
     'additionalProperties': False,
     'required': [

@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -68,7 +68,7 @@ class UploadAmazon(UploadBase):
             'image_description': self.cloud_image_description,
             'ssh_key_pair_name': None,
             'verbose': True,
-            'image_arch': 'x86_64',
+            'image_arch': self.arch,
             'launch_ami': None,
             'use_grub2': True,
             'use_private_ip': False,

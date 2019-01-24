@@ -456,7 +456,7 @@ class TestUploadImageService(object):
             '123', 'job_file', 'ec2', {}, image_name, 'description', True, {
                 'launch_ami': 'ami-bc5b48d0', 'region': 'eu-central-1',
                 'account': 'test-aws'
-            }
+            }, 'x86_64'
         )
         upload_image.set_log_handler.assert_called_once_with(
             mock_job_log

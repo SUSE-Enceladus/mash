@@ -8,7 +8,7 @@ class TestUploadBase(object):
     def setup(self):
         self.credentials = Mock()
         self.uploader = UploadBase(
-            self.credentials, 'file', 'name', 'description', None
+            self.credentials, 'file', 'name', 'description', None, 'arch'
         )
 
     def test_upload(self):

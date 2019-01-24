@@ -14,7 +14,7 @@ class TestJobCreatorAzureJob(object):
             'test-project', 'image description',
             'sles', 'test-stuff',
             [{"package": ["name", "and", "constraints"]}], 'instance type',
-            'test-old-cloud-image-name'
+            'test-old-cloud-image-name', 'arch'
         )
 
     @pytest.mark.parametrize(

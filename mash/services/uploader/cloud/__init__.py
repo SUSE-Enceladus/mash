@@ -48,11 +48,14 @@ class Upload(object):
 
     * :attr:`custom_uploader_args`
         custom argument hash for uploader, cloud specific
+
+    * :attr:`arch`
+        image architecture, defaults to: x86_64
     """
     def __new__(
         self, csp_name, system_image_file,
         cloud_image_name, cloud_image_description, credentials,
-        custom_uploader_args=None
+        custom_uploader_args=None, arch='x86_64'
     ):
         conventions = Conventions(csp_name)
         conventions.is_valid_name(cloud_image_name)
@@ -60,17 +63,17 @@ class Upload(object):
         if csp_name == CSP.ec2:
             return UploadAmazon(
                 credentials, system_image_file, cloud_image_name,
-                cloud_image_description, custom_uploader_args
+                cloud_image_description, custom_uploader_args, arch
             )
         elif csp_name == CSP.azure:
             return UploadAzure(
                 credentials, system_image_file, cloud_image_name,
-                cloud_image_description, custom_uploader_args
+                cloud_image_description, custom_uploader_args, arch
             )
         elif csp_name == CSP.gce:
             return UploadGCE(
                 credentials, system_image_file, cloud_image_name,
-                cloud_image_description, custom_uploader_args
+                cloud_image_description, custom_uploader_args, arch
             )
         else:
             raise MashUploadSetupException(

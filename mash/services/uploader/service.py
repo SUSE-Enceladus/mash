@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -193,6 +193,7 @@ class UploadImageService(MashService):
                 'job_config': job_config,
                 'last_service': job_config.get('last_service'),
                 'utctime': job_config.get('utctime'),
+                'architecture': job_config.get('architecture'),
                 'job_file': self.persist_job_config(job_config),
                 'credentials': None,
                 'system_image_file': None,
@@ -356,6 +357,9 @@ class UploadImageService(MashService):
                 uploader_args['region']
             )
         )
+
+        arch = self.jobs[job_id]['job_config'].get('architecture', 'x86_64')
+
         upload_image = UploadImage(
             job_id, self.jobs[job_id]['job_file'],
             self.jobs[job_id]['job_config']['provider'],
@@ -363,7 +367,8 @@ class UploadImageService(MashService):
             self.jobs[job_id]['job_config']['cloud_image_name'],
             self.jobs[job_id]['job_config']['image_description'],
             last_upload_region,
-            uploader_args
+            uploader_args,
+            arch
         )
         self.jobs[job_id]['uploader'].append(upload_image)
         upload_image.set_log_handler(

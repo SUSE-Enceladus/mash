@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -46,14 +46,18 @@ class UploadImage(object):
     * :attr:`custom_uploader_args`
         dictionary of parameters for the used upload tool
         specific to the selected cloud and uploader class
+
+    * :attr:`arch`
+        image architecture, defaults to: x86_64
     """
     def __init__(
         self, job_id, job_file, csp_name, credentials_token,
         cloud_image_name, cloud_image_description, last_upload_region,
-        custom_uploader_args=None
+        custom_uploader_args=None, arch='x86_64'
     ):
         self.job_id = job_id
         self.job_file = job_file
+        self.arch = arch
         self.csp_name = csp_name
 
         self.cloud_image_name = cloud_image_name
@@ -97,7 +101,8 @@ class UploadImage(object):
                     self.csp_name, self.system_image_file,
                     self.cloud_image_name, self.cloud_image_description,
                     self.credentials_token,
-                    self.custom_uploader_args
+                    self.custom_uploader_args,
+                    self.arch
                 )
                 self.cloud_image_id, self.upload_region = \
                     self.uploader.upload()
