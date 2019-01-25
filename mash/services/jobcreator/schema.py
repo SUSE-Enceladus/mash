@@ -246,7 +246,8 @@ base_job_message = {
             'type': 'array',
             'items': {'$ref': '#/definitions/non_empty_string'},
             'minItems': 1
-        }
+        },
+        'cleanup_images': {'type': 'boolean'}
     },
     'additionalProperties': False,
     'required': [

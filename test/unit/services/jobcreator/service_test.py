@@ -401,6 +401,7 @@ class TestJobCreatorService(object):
             'replication', 'job_document',
             JsonFormat.json_message({
                 "replication_job": {
+                    "cleanup_images": True,
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "replication",
@@ -546,7 +547,6 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({
                 "replication_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
-                    "image_description": "New Image #123",
                     "last_service": "publisher",
                     "provider": "gce",
                     "replication_source_regions": {},

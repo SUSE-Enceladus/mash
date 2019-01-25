@@ -33,7 +33,8 @@ class EC2Job(BaseJob):
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, allow_copy=False, conditions=None,
-        instance_type=None, share_with='none', old_cloud_image_name=None
+        instance_type=None, share_with='none', old_cloud_image_name=None,
+        cleanup_images=True
     ):
         self.share_with = share_with
         self.allow_copy = allow_copy
@@ -43,7 +44,7 @@ class EC2Job(BaseJob):
             accounts_info, provider_data, job_id, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, image_description, distro, download_url, tests,
-            conditions, instance_type, old_cloud_image_name
+            conditions, instance_type, old_cloud_image_name, cleanup_images
         )
 
     def _get_account_info(self):
@@ -156,6 +157,22 @@ class EC2Job(BaseJob):
         Return a list of publisher region info.
         """
         return self._get_target_regions_list()
+
+    def get_replication_message(self):
+        """
+        Build replication job message and publish to replication exchange.
+        """
+        replication_message = {
+            'replication_job': {
+                'image_description': self.image_description,
+                'provider': self.provider,
+                'replication_source_regions':
+                    self.get_replication_source_regions()
+            }
+        }
+        replication_message['replication_job'].update(self.base_message)
+
+        return JsonFormat.json_message(replication_message)
 
     def get_replication_source_regions(self):
         """

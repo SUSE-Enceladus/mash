@@ -17,6 +17,7 @@
 #
 
 from mash.services.jobcreator.base_job import BaseJob
+from mash.utils.json_format import JsonFormat
 
 
 class AzureJob(BaseJob):
@@ -28,7 +29,7 @@ class AzureJob(BaseJob):
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None,
-        old_cloud_image_name=None
+        old_cloud_image_name=None, cleanup_images=True
     ):
         self.target_account_info = {}
 
@@ -36,7 +37,7 @@ class AzureJob(BaseJob):
             accounts_info, provider_data, job_id, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, image_description, distro, download_url, tests,
-            conditions, instance_type, old_cloud_image_name
+            conditions, instance_type, old_cloud_image_name, cleanup_images
         )
 
     def _get_account_info(self):
@@ -132,6 +133,23 @@ class AzureJob(BaseJob):
         Return a list of publisher region info.
         """
         raise NotImplementedError('TODO')
+
+    def get_replication_message(self):
+        """
+        Build replication job message and publish to replication exchange.
+        """
+        replication_message = {
+            'replication_job': {
+                'cleanup_images': self.cleanup_images,
+                'image_description': self.image_description,
+                'provider': self.provider,
+                'replication_source_regions':
+                    self.get_replication_source_regions()
+            }
+        }
+        replication_message['replication_job'].update(self.base_message)
+
+        return JsonFormat.json_message(replication_message)
 
     def get_replication_source_regions(self):
         """

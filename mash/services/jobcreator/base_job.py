@@ -30,7 +30,7 @@ class BaseJob(object):
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None,
-        old_cloud_image_name=None
+        old_cloud_image_name=None, cleanup_images=True
     ):
         self.id = job_id
         self.accounts_info = accounts_info
@@ -46,6 +46,7 @@ class BaseJob(object):
         self.image_description = image_description
         self.distro = distro
         self.tests = tests
+        self.cleanup_images = cleanup_images
         self.conditions = conditions
         self.download_url = download_url
         self.instance_type = instance_type
@@ -165,17 +166,7 @@ class BaseJob(object):
         """
         Build replication job message and publish to replication exchange.
         """
-        replication_message = {
-            'replication_job': {
-                'image_description': self.image_description,
-                'provider': self.provider,
-                'replication_source_regions':
-                    self.get_replication_source_regions()
-            }
-        }
-        replication_message['replication_job'].update(self.base_message)
-
-        return JsonFormat.json_message(replication_message)
+        pass
 
     def get_replication_source_regions(self):
         """

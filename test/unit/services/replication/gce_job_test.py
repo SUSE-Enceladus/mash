@@ -9,7 +9,7 @@ class TestGCEReplicationJob(object):
             'last_service': 'replication',
             'provider': 'gce',
             'utctime': 'now',
-            "replication_source_regions": {}
+            'replication_source_regions': {}
         }
         self.job = GCEReplicationJob(**self.job_config)
 
