@@ -26,7 +26,7 @@ class TestUploadAmazon(object):
         }
         self.uploader = UploadAmazon(
             self.credentials, 'file', 'name', 'description',
-            custom_args, 'arch'
+            custom_args, 'aarch64'
         )
 
     @patch('mash.services.uploader.cloud.amazon.EC2Setup')

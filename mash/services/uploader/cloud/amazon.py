@@ -63,6 +63,10 @@ class UploadAmazon(UploadBase):
     """
     def post_init(self):
         self.region = 'eu-central-1'
+
+        if self.arch == 'aarch64':
+            self.arch = 'arm64'
+
         self.ec2_upload_parameters = {
             'image_name': self.cloud_image_name,
             'image_description': self.cloud_image_description,
