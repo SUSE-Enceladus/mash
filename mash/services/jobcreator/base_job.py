@@ -28,9 +28,9 @@ class BaseJob(object):
     def __init__(
         self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
-        utctime, image, cloud_image_name, old_cloud_image_name,
-        image_description, distro, download_url, tests,
-        conditions=None, instance_type=None
+        utctime, image, cloud_image_name, image_description, distro,
+        download_url, tests, conditions=None, instance_type=None,
+        old_cloud_image_name=None
     ):
         self.id = job_id
         self.accounts_info = accounts_info
@@ -99,11 +99,14 @@ class BaseJob(object):
         deprecation_message = {
             'deprecation_job': {
                 'provider': self.provider,
-                'old_cloud_image_name': self.old_cloud_image_name,
                 'deprecation_regions': self.get_deprecation_regions()
             }
         }
         deprecation_message['deprecation_job'].update(self.base_message)
+
+        if self.old_cloud_image_name:
+            deprecation_message['deprecation_job']['old_cloud_image_name'] = \
+                self.old_cloud_image_name
 
         return JsonFormat.json_message(deprecation_message)
 
@@ -140,10 +143,13 @@ class BaseJob(object):
             'pint_job': {
                 'provider': self.provider,
                 'cloud_image_name': self.cloud_image_name,
-                'old_cloud_image_name': self.old_cloud_image_name
             }
         }
         pint_message['pint_job'].update(self.base_message)
+
+        if self.old_cloud_image_name:
+            pint_message['pint_job']['old_cloud_image_name'] = \
+                self.old_cloud_image_name
 
         return JsonFormat.json_message(pint_message)
 

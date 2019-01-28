@@ -26,9 +26,9 @@ class GCEJob(BaseJob):
     def __init__(
         self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
-        utctime, image, cloud_image_name, old_cloud_image_name,
-        image_description, distro, download_url, tests, conditions=None,
-        instance_type=None, family=None
+        utctime, image, cloud_image_name, image_description, distro,
+        download_url, tests, conditions=None, instance_type=None, family=None,
+        old_cloud_image_name=None
     ):
         self.family = family
         self.target_account_info = {}
@@ -36,9 +36,8 @@ class GCEJob(BaseJob):
         super(GCEJob, self).__init__(
             accounts_info, provider_data, job_id, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
-            cloud_image_name, old_cloud_image_name,
-            image_description, distro, download_url, tests, conditions,
-            instance_type
+            cloud_image_name, image_description, distro, download_url, tests,
+            conditions, instance_type, old_cloud_image_name
         )
 
     def _get_account_info(self):

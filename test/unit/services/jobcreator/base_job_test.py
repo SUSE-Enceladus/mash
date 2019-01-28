@@ -5,10 +5,10 @@ class TestJobCreatorBaseJob(object):
     def setup(self):
         self.job = BaseJob(
             {}, 'ec2', ['test-aws'], [], 'test-user', 'pint', 'now',
-            'test-image', 'test-cloud-image', 'test-old-cloud-image-name',
+            'test-image', 'test-cloud-image',
             'test-project', 'image description', 'sles', 'test-stuff',
             [{"package": ["name", "and", "constraints"]}],
-            'instance type'
+            'instance type', 'test-old-cloud-image-name'
         )
 
     def test_base_job_empty_methods(self):
