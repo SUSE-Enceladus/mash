@@ -42,8 +42,7 @@ class AzurePublisherJob(PublisherJob):
         utctime, job_file=None, version_key=None
     ):
         super(AzurePublisherJob, self).__init__(
-            id, last_service, provider, publish_regions, utctime,
-            job_file=job_file
+            id, last_service, provider, utctime, job_file=job_file
         )
 
         self.emails = emails
@@ -51,6 +50,7 @@ class AzurePublisherJob(PublisherJob):
         self.label = label
         self.offer_id = offer_id
         self.publisher_id = publisher_id
+        self.publish_regions = publish_regions
         self.sku = sku
         self.version_key = version_key
 
