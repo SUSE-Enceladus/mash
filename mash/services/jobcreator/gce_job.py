@@ -17,6 +17,7 @@
 #
 
 from mash.services.jobcreator.base_job import BaseJob
+from mash.utils.json_format import JsonFormat
 
 
 class GCEJob(BaseJob):
@@ -97,19 +98,26 @@ class GCEJob(BaseJob):
         """
         Build publisher job message.
         """
-        raise NotImplementedError('TODO')
+        publisher_message = {
+            'publisher_job': {
+                'provider': self.provider
+            }
+        }
+        publisher_message['publisher_job'].update(self.base_message)
+
+        return JsonFormat.json_message(publisher_message)
 
     def get_publisher_regions(self):
         """
         Return a list of publisher region info.
         """
-        raise NotImplementedError('TODO')
+        return {}  # No publishing in GCE
 
     def get_replication_source_regions(self):
         """
         Return a dictionary of replication source regions.
         """
-        raise NotImplementedError('TODO')
+        return {}  # No replication in GCE
 
     def get_testing_regions(self):
         """

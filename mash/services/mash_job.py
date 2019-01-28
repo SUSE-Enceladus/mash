@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -30,11 +30,11 @@ class MashJob(object):
         self._cloud_image_name = None
         self._credentials = None
         self._log_callback = None
+        self._job_file = job_file
 
         self.iteration_count = 0
         self.status = UNKOWN
 
-        self.job_file = job_file
         self.id = id
         self.last_service = last_service
         self.provider = provider
@@ -81,6 +81,16 @@ class MashJob(object):
     def credentials(self, creds):
         """Setter for credentials."""
         self._credentials = creds
+
+    @property
+    def job_file(self):
+        """Job file property."""
+        return self._job_file
+
+    @job_file.setter
+    def job_file(self, file):
+        """Setter for job file."""
+        self._job_file = file
 
     @property
     def log_callback(self):

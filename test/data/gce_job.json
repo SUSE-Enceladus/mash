@@ -10,7 +10,7 @@
   ],
   "provider_groups": ["test-gce-group"],
   "requesting_user": "user1",
-  "last_service": "testing",
+  "last_service": "publisher",
   "utctime": "now",
   "image": "test_image_oem",
   "cloud_image_name": "new_image_123",

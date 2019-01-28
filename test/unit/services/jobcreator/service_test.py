@@ -474,7 +474,7 @@ class TestJobCreatorService(object):
         msg = mock_publish.mock_calls[0][1][2]
         data = json.loads(msg)['credentials_job']
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'testing'
+        assert data['last_service'] == 'publisher'
         assert data['provider'] == 'gce'
         assert 'test-gce' in data['provider_accounts']
         assert 'test-gce2' in data['provider_accounts']
@@ -493,7 +493,7 @@ class TestJobCreatorService(object):
                                     "repositories/Cloud:Tools/images",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
-                    "last_service": "testing",
+                    "last_service": "publisher",
                     "utctime": "now"
                 }
             })
@@ -505,7 +505,7 @@ class TestJobCreatorService(object):
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
-                    "last_service": "testing",
+                    "last_service": "publisher",
                     "provider": "gce",
                     "target_regions": {
                         "us-west2": {
@@ -530,13 +530,37 @@ class TestJobCreatorService(object):
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
-                    "last_service": "testing",
+                    "last_service": "publisher",
                     "provider": "gce",
                     "test_regions": {
                         "us-west2": "test-gce2",
                         "us-west1": "test-gce"
                     },
                     "tests": ["test_stuff"],
+                    "utctime": "now"
+                }
+            })
+        )
+        assert mock_publish.mock_calls[4] == call(
+            'replication', 'job_document',
+            JsonFormat.json_message({
+                "replication_job": {
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "image_description": "New Image #123",
+                    "last_service": "publisher",
+                    "provider": "gce",
+                    "replication_source_regions": {},
+                    "utctime": "now"
+                }
+            })
+        )
+        assert mock_publish.mock_calls[5] == call(
+            'publisher', 'job_document',
+            JsonFormat.json_message({
+                "publisher_job": {
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "last_service": "publisher",
+                    "provider": "gce",
                     "utctime": "now"
                 }
             })

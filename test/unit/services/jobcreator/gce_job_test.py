@@ -19,10 +19,7 @@ class TestJobCreatorGCEJob(object):
     @pytest.mark.parametrize(
         'method',
         [
-            'get_deprecation_regions',
-            'get_publisher_message',
-            'get_publisher_regions',
-            'get_replication_source_regions'
+            'get_deprecation_regions'
         ]
     )
     def test_not_implemented_methods(self, method):
@@ -31,3 +28,6 @@ class TestJobCreatorGCEJob(object):
             getattr(self.job, method)()
 
         assert 'TODO' == str(error.value)
+
+    def test_test_get_publisher_regions(self):
+        assert self.job.get_publisher_regions() == {}

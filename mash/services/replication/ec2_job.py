@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -36,13 +36,10 @@ class EC2ReplicationJob(ReplicationJob):
         replication_source_regions, job_file=None
     ):
         super(EC2ReplicationJob, self).__init__(
-            id, last_service, provider, utctime, job_file=job_file
+            id, image_description, last_service, provider, utctime,
+            replication_source_regions, job_file=job_file
         )
-        self.credentials = None
-        self.image_description = image_description
-        self.job_file = job_file
         self.source_region_results = defaultdict(dict)
-        self.replication_source_regions = replication_source_regions
 
     def _replicate(self):
         """
