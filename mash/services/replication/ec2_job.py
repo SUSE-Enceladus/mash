@@ -36,9 +36,11 @@ class EC2ReplicationJob(ReplicationJob):
         replication_source_regions, job_file=None
     ):
         super(EC2ReplicationJob, self).__init__(
-            id, image_description, last_service, provider, utctime,
-            replication_source_regions, job_file=job_file
+            id, last_service, provider, utctime, job_file=job_file
         )
+
+        self.image_description = image_description
+        self.replication_source_regions = replication_source_regions
         self.source_region_results = defaultdict(dict)
 
     def _replicate(self):

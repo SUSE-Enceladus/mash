@@ -26,12 +26,10 @@ class GCEPublisherJob(PublisherJob):
     """
 
     def __init__(
-        self, id, last_service, provider, publish_regions, utctime,
-        job_file=None
+        self, id, last_service, provider, utctime, job_file=None
     ):
         super(GCEPublisherJob, self).__init__(
-            id, last_service, provider, publish_regions, utctime,
-            job_file=job_file
+            id, last_service, provider, utctime, job_file=job_file
         )
 
     def _publish(self):

@@ -549,7 +549,6 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "last_service": "publisher",
                     "provider": "gce",
-                    "replication_source_regions": {},
                     "utctime": "now"
                 }
             })
@@ -561,7 +560,6 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "last_service": "publisher",
                     "provider": "gce",
-                    "publish_regions": [],
                     "utctime": "now"
                 }
             })

@@ -10,12 +10,6 @@ class TestPublisherJob(object):
             'id': '1',
             'last_service': 'publisher',
             'provider': 'ec2',
-            'publish_regions': [
-                {
-                    'account': 'test-aws',
-                    'target_regions': ['us-east-2']
-                }
-            ],
             'utctime': 'now'
         }
 

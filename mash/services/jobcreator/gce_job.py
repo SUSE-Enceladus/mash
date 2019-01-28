@@ -99,19 +99,12 @@ class GCEJob(BaseJob):
         """
         publisher_message = {
             'publisher_job': {
-                'provider': self.provider,
-                'publish_regions': self.get_publisher_regions()
+                'provider': self.provider
             }
         }
         publisher_message['publisher_job'].update(self.base_message)
 
         return JsonFormat.json_message(publisher_message)
-
-    def get_publisher_regions(self):
-        """
-        Return a list of publisher region info.
-        """
-        return []  # No publishing in GCE
 
     def get_replication_message(self):
         """
@@ -119,20 +112,12 @@ class GCEJob(BaseJob):
         """
         replication_message = {
             'replication_job': {
-                'provider': self.provider,
-                'replication_source_regions':
-                    self.get_replication_source_regions()
+                'provider': self.provider
             }
         }
         replication_message['replication_job'].update(self.base_message)
 
         return JsonFormat.json_message(replication_message)
-
-    def get_replication_source_regions(self):
-        """
-        Return a dictionary of replication source regions.
-        """
-        return {}  # No replication in GCE
 
     def get_testing_regions(self):
         """
