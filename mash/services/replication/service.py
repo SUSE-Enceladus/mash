@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -21,6 +21,7 @@ from mash.services.pipeline_service import PipelineService
 from mash.services.status_levels import SUCCESS
 from mash.services.replication.azure_job import AzureReplicationJob
 from mash.services.replication.ec2_job import EC2ReplicationJob
+from mash.services.replication.gce_job import GCEReplicationJob
 from mash.utils.json_format import JsonFormat
 
 
@@ -46,6 +47,8 @@ class ReplicationService(PipelineService):
             self._create_job(EC2ReplicationJob, job_config)
         elif provider == CSP.azure:
             self._create_job(AzureReplicationJob, job_config)
+        elif provider == CSP.gce:
+            self._create_job(GCEReplicationJob, job_config)
         else:
             self.log.error(
                 'Provider {0} is not supported.'.format(provider)

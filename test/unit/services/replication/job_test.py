@@ -8,9 +8,16 @@ class TestReplicationJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
+            'image_description': 'test image',
             'last_service': 'replication',
             'provider': 'ec2',
-            'utctime': 'now'
+            'utctime': 'now',
+            'replication_source_regions': {
+                'us-east-1': {
+                    'account': 'test-aws',
+                    'target_regions': ['us-east-2']
+                }
+            }
         }
 
     def test_valid_job(self):

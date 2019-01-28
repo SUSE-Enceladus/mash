@@ -4,6 +4,7 @@ from mash.services.mash_service import MashService
 from mash.services.replication.service import ReplicationService
 from mash.services.replication.azure_job import AzureReplicationJob
 from mash.services.replication.ec2_job import EC2ReplicationJob
+from mash.services.replication.gce_job import GCEReplicationJob
 from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
@@ -78,6 +79,19 @@ class TestReplicationService(object):
 
         mock_create_job.assert_called_once_with(
             AzureReplicationJob,
+            job_config
+        )
+
+    @patch.object(ReplicationService, '_create_job')
+    def test_replication_add_job_gce(self, mock_create_job):
+        job_config = {
+            'id': '1', 'provider': 'gce', 'utctime': 'now',
+        }
+
+        self.replication._add_job(job_config)
+
+        mock_create_job.assert_called_once_with(
+            GCEReplicationJob,
             job_config
         )
 
