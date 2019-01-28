@@ -22,7 +22,8 @@ class TestAzureReplicationJob(object):
                     'destination_container': 'container2',
                     'destination_storage_account': 'sa2'
                 }
-            }
+            },
+            "cleanup_images": True
         }
         self.job = AzureReplicationJob(**self.job_config)
 

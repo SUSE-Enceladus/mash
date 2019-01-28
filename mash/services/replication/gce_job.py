@@ -26,12 +26,10 @@ class GCEReplicationJob(ReplicationJob):
     """
 
     def __init__(
-        self, id, image_description, last_service, provider, utctime,
-        replication_source_regions, job_file=None
+        self, id, last_service, provider, utctime, job_file=None
     ):
         super(GCEReplicationJob, self).__init__(
-            id, image_description, last_service, provider, utctime,
-            replication_source_regions, job_file=job_file
+            id, last_service, provider, utctime, job_file=job_file
         )
 
     def _replicate(self):

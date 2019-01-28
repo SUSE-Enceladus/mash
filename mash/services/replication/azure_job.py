@@ -34,12 +34,15 @@ class AzureReplicationJob(ReplicationJob):
 
     def __init__(
         self, id, image_description, last_service, provider, utctime,
-        replication_source_regions, job_file=None
+        replication_source_regions, cleanup_images=True, job_file=None
     ):
         super(AzureReplicationJob, self).__init__(
-            id, image_description, last_service, provider, utctime,
-            replication_source_regions, job_file=job_file
+            id, last_service, provider, utctime, job_file=job_file
         )
+
+        self.cleanup_images = cleanup_images
+        self.image_description = image_description
+        self.replication_source_regions = replication_source_regions
 
     def _replicate(self):
         """
@@ -78,18 +81,26 @@ class AzureReplicationJob(ReplicationJob):
                         reg_info['destination_resource_group'],
                         reg_info['destination_storage_account']
                     )
-                    delete_image(
-                        auth_file,
-                        reg_info['source_resource_group'],
-                        self.cloud_image_name
-                    )
-                    delete_page_blob(
-                        auth_file,
-                        blob_name,
-                        reg_info['source_container'],
-                        reg_info['source_resource_group'],
-                        reg_info['source_storage_account']
-                    )
+
+                    if self.cleanup_images:
+                        self.send_log(
+                            'Removing ARM image and page blob for account:'
+                            ' {}.'.format(
+                                reg_info['account']
+                            )
+                        )
+                        delete_image(
+                            auth_file,
+                            reg_info['source_resource_group'],
+                            self.cloud_image_name
+                        )
+                        delete_page_blob(
+                            auth_file,
+                            blob_name,
+                            reg_info['source_container'],
+                            reg_info['source_resource_group'],
+                            reg_info['source_storage_account']
+                        )
                 except Exception as error:
                     self.send_log(
                         'There was an error copying image blob in {0}:'

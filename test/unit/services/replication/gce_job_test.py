@@ -5,11 +5,9 @@ class TestGCEReplicationJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'image_description': 'test image',
             'last_service': 'replication',
             'provider': 'gce',
-            'utctime': 'now',
-            "replication_source_regions": {}
+            'utctime': 'now'
         }
         self.job = GCEReplicationJob(**self.job_config)
 

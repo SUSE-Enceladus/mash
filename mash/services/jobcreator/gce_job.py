@@ -29,7 +29,7 @@ class GCEJob(BaseJob):
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None, family=None,
-        old_cloud_image_name=None
+        old_cloud_image_name=None, cleanup_images=True
     ):
         self.family = family
         self.target_account_info = {}
@@ -38,7 +38,7 @@ class GCEJob(BaseJob):
             accounts_info, provider_data, job_id, provider, provider_accounts,
             provider_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, image_description, distro, download_url, tests,
-            conditions, instance_type, old_cloud_image_name
+            conditions, instance_type, old_cloud_image_name, cleanup_images
         )
 
     def _get_account_info(self):
@@ -99,25 +99,25 @@ class GCEJob(BaseJob):
         """
         publisher_message = {
             'publisher_job': {
-                'provider': self.provider,
-                'publish_regions': self.get_publisher_regions()
+                'provider': self.provider
             }
         }
         publisher_message['publisher_job'].update(self.base_message)
 
         return JsonFormat.json_message(publisher_message)
 
-    def get_publisher_regions(self):
+    def get_replication_message(self):
         """
-        Return a list of publisher region info.
+        Build replication job message and publish to replication exchange.
         """
-        return []  # No publishing in GCE
+        replication_message = {
+            'replication_job': {
+                'provider': self.provider
+            }
+        }
+        replication_message['replication_job'].update(self.base_message)
 
-    def get_replication_source_regions(self):
-        """
-        Return a dictionary of replication source regions.
-        """
-        return {}  # No replication in GCE
+        return JsonFormat.json_message(replication_message)
 
     def get_testing_regions(self):
         """

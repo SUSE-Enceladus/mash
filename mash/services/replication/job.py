@@ -26,17 +26,13 @@ class ReplicationJob(MashJob):
     """
 
     def __init__(
-        self, id, image_description, last_service, provider, utctime,
-        replication_source_regions, job_file=None
+        self, id, last_service, provider, utctime, job_file=None
     ):
         super(ReplicationJob, self).__init__(
             id, last_service, provider, utctime, job_file
         )
 
         self._source_regions = None
-
-        self.image_description = image_description
-        self.replication_source_regions = replication_source_regions
 
     def _replicate(self):
         """

@@ -33,10 +33,11 @@ class EC2PublisherJob(PublisherJob):
         allow_copy=False, job_file=None, share_with='all'
     ):
         super(EC2PublisherJob, self).__init__(
-            id, last_service, provider, publish_regions, utctime,
-            job_file=job_file
+            id, last_service, provider, utctime, job_file=job_file
         )
+
         self.allow_copy = allow_copy
+        self.publish_regions = publish_regions
         self.share_with = share_with
 
     def _publish(self):

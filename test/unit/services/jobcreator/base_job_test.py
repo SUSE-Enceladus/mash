@@ -17,6 +17,7 @@ class TestJobCreatorBaseJob(object):
         self.job._get_account_info()
         self.job.get_deprecation_regions()
         self.job.get_publisher_message()
+        self.job.get_replication_message()
         self.job.get_replication_source_regions()
         self.job.get_testing_regions()
         self.job.get_uploader_regions()

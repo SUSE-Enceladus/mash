@@ -7,7 +7,6 @@ class TestGCEPublisherJob(object):
             'id': '1',
             'last_service': 'publisher',
             'provider': 'ec2',
-            'publish_regions': [],
             'utctime': 'now'
         }
 

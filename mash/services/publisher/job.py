@@ -26,14 +26,11 @@ class PublisherJob(MashJob):
     """
 
     def __init__(
-        self, id, last_service, provider, publish_regions, utctime,
-        job_file=None
+        self, id, last_service, provider, utctime, job_file=None
     ):
         super(PublisherJob, self).__init__(
             id, last_service, provider, utctime, job_file
         )
-
-        self.publish_regions = publish_regions
 
     def _publish(self):
         """
