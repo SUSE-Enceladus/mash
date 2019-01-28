@@ -193,7 +193,7 @@ class UploadImageService(MashService):
                 'job_config': job_config,
                 'last_service': job_config.get('last_service'),
                 'utctime': job_config.get('utctime'),
-                'architecture': job_config.get('architecture'),
+                'cloud_architecture': job_config.get('cloud_architecture'),
                 'job_file': self.persist_job_config(job_config),
                 'credentials': None,
                 'system_image_file': None,
@@ -358,7 +358,9 @@ class UploadImageService(MashService):
             )
         )
 
-        arch = self.jobs[job_id]['job_config'].get('architecture', 'x86_64')
+        arch = self.jobs[job_id]['job_config'].get(
+            'cloud_architecture', 'x86_64'
+        )
 
         upload_image = UploadImage(
             job_id, self.jobs[job_id]['job_file'],

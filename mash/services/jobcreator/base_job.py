@@ -31,7 +31,7 @@ class BaseJob(object):
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None,
         old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture=None
+        cloud_architecture='x86_64'
     ):
         self.id = job_id
         self.accounts_info = accounts_info

@@ -207,8 +207,8 @@ class OBSImageBuildResultService(MashService):
         if 'conditions' in job:
             kwargs['conditions'] = job['conditions']
 
-        if 'architecture' in job:
-            kwargs['arch'] = job['architecture']
+        if 'cloud_architecture' in job:
+            kwargs['arch'] = job['cloud_architecture']
 
         job_worker = OBSImageBuildResult(**kwargs)
         job_worker.set_log_handler(self._send_job_response)

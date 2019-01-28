@@ -9,6 +9,6 @@
             {"package": ["kernel-default", ">=4.4.1", ">=1.1"]},
             {"image": "15.1.0"}
         ],
-        "architecture": "x86_64"
+        "cloud_architecture": "x86_64"
     }
 }
