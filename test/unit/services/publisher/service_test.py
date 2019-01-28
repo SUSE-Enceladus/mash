@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, Mock, patch
 from mash.services.mash_service import MashService
 from mash.services.publisher.service import PublisherService
 from mash.services.publisher.ec2_job import EC2PublisherJob
+from mash.services.publisher.gce_job import GCEPublisherJob
 from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
@@ -64,6 +65,19 @@ class TestPublisherService(object):
 
         mock_create_job.assert_called_once_with(
             EC2PublisherJob,
+            job_config
+        )
+
+    @patch.object(PublisherService, '_create_job')
+    def test_publisher_add_job_gce(self, mock_create_job):
+        job_config = {
+            'id': '1', 'provider': 'gce', 'utctime': 'now',
+        }
+
+        self.publisher._add_job(job_config)
+
+        mock_create_job.assert_called_once_with(
+            GCEPublisherJob,
             job_config
         )
 

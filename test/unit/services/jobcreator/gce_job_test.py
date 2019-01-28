@@ -28,6 +28,3 @@ class TestJobCreatorGCEJob(object):
             getattr(self.job, method)()
 
         assert 'TODO' == str(error.value)
-
-    def test_test_get_publisher_regions(self):
-        assert self.job.get_publisher_regions() == {}

@@ -100,7 +100,8 @@ class GCEJob(BaseJob):
         """
         publisher_message = {
             'publisher_job': {
-                'provider': self.provider
+                'provider': self.provider,
+                'publish_regions': self.get_publisher_regions()
             }
         }
         publisher_message['publisher_job'].update(self.base_message)
@@ -111,7 +112,7 @@ class GCEJob(BaseJob):
         """
         Return a list of publisher region info.
         """
-        return {}  # No publishing in GCE
+        return []  # No publishing in GCE
 
     def get_replication_source_regions(self):
         """
