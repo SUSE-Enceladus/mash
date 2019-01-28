@@ -11,9 +11,10 @@ class TestJobCreatorGCEJob(object):
         self.job = GCEJob(
             '123', {}, {}, 'gce', ['test-gce'], [], 'test-user', 'pint',
             'now', 'test-image', 'test-cloud-image',
-            'test-old-cloud-image-name', 'test-project', 'image description',
+            'test-project', 'image description',
             'sles', 'test-stuff',
-            [{"package": ["name", "and", "constraints"]}], 'instance type'
+            [{"package": ["name", "and", "constraints"]}], 'instance type',
+            'test-old-cloud-image-name'
         )
 
     @pytest.mark.parametrize(
