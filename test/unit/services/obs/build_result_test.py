@@ -229,6 +229,7 @@ class TestOBSImageBuildResult(object):
         self.obs_result.image_status['conditions'] = [{'status': False}]
         assert self.obs_result._image_conditions_complied() is False
 
+    @patch('mash.services.obs.build_result.time')
     @patch.object(OBSImageBuildResult, '_log_callback')
     @patch.object(OBSImageBuildResult, '_result_callback')
     @patch.object(OBSImageBuildResult, '_lookup_image_packages_metadata')
@@ -240,7 +241,7 @@ class TestOBSImageBuildResult(object):
         self, mock_get_image, mock_wait_for_new_image,
         mock_image_conditions_complied, mock_lookup_package,
         mock_lookup_image_packages_metadata,
-        mock_result_callback, mock_log_callback
+        mock_result_callback, mock_log_callback, mock_time
     ):
         self.obs_result.image_status['version'] = '1.2.3'
         self.obs_result.image_status['conditions'] = [
@@ -281,10 +282,9 @@ class TestOBSImageBuildResult(object):
         mock_wait_for_new_image.assert_called_once_with()
 
         self.obs_result.image_status['version'] = '7.7.7'
-        mock_lookup_package.return_value = False
-        mock_image_conditions_complied.return_value = False
+        mock_lookup_package.side_effect = [False, True]
+        mock_image_conditions_complied.side_effect = [False, True]
         self.obs_result._update_image_status()
-        assert self.obs_result.image_status['job_status'] == 'failed'
 
     @patch.object(OBSImageBuildResult, '_log_callback')
     @patch.object(OBSImageBuildResult, '_lookup_image_packages_metadata')

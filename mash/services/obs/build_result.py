@@ -291,38 +291,48 @@ class OBSImageBuildResult(object):
     def _update_image_status(self):
         try:
             self.iteration_count += 1
+            conditions_fail_logged = False
             self._log_callback('Job running')
-            packages = self._lookup_image_packages_metadata()
-            for condition in self.image_status['conditions']:
-                if 'image' in condition:
-                    if self.image_status['version'] == condition['image']:
-                        condition['status'] = True
-                    else:
-                        condition['status'] = False
-                elif 'package' in condition:
-                    if self._lookup_package(packages, condition['package']):
-                        condition['status'] = True
-                    else:
-                        condition['status'] = False
 
-            if self._image_conditions_complied():
-                packages_digest = hashlib.md5()
-                packages_digest.update(format(packages).encode())
-                packages_checksum = packages_digest.hexdigest()
-                if packages_checksum != self.image_status['packages_checksum']:
-                    self._log_callback('Downloading image...')
-                    self.image_status['packages_checksum'] = 'unknown'
-                    self.image_status['image_source'] = self.get_image()
-                    self._log_callback(
-                        'Downloaded: {0}'.format(
-                            self.image_status['image_source']
+            while True:
+                packages = self._lookup_image_packages_metadata()
+                for condition in self.image_status['conditions']:
+                    if 'image' in condition:
+                        if self.image_status['version'] == condition['image']:
+                            condition['status'] = True
+                        else:
+                            condition['status'] = False
+                    elif 'package' in condition:
+                        if self._lookup_package(
+                            packages, condition['package']
+                        ):
+                            condition['status'] = True
+                        else:
+                            condition['status'] = False
+
+                if self._image_conditions_complied():
+                    packages_digest = hashlib.md5()
+                    packages_digest.update(format(packages).encode())
+                    packages_checksum = packages_digest.hexdigest()
+                    if packages_checksum != \
+                            self.image_status['packages_checksum']:
+                        self._log_callback('Downloading image...')
+                        self.image_status['packages_checksum'] = 'unknown'
+                        self.image_status['image_source'] = self.get_image()
+                        self._log_callback(
+                            'Downloaded: {0}'.format(
+                                self.image_status['image_source']
+                            )
                         )
-                    )
-                self.image_status['packages_checksum'] = packages_checksum
-                self.image_status['job_status'] = 'success'
-            else:
-                self._log_callback('Unaccomplished job download conditions')
-                self.image_status['job_status'] = 'failed'
+                    self.image_status['packages_checksum'] = packages_checksum
+                    self.image_status['job_status'] = 'success'
+                    break
+                else:
+                    if not conditions_fail_logged:
+                        self._log_callback('Waiting for conditions to be met.')
+                        conditions_fail_logged = True
+
+                    time.sleep(300)
 
             self._log_callback(
                 'Job status: {0}'.format(self.image_status['job_status'])
