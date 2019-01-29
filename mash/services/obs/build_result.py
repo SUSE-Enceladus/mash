@@ -332,7 +332,7 @@ class OBSImageBuildResult(object):
                         self._log_callback('Waiting for conditions to be met.')
                         conditions_fail_logged = True
 
-                    time.sleep(120)
+                    time.sleep(300)
 
             self._log_callback(
                 'Job status: {0}'.format(self.image_status['job_status'])
