@@ -330,7 +330,7 @@ class TestJobCreatorService(object):
         msg = mock_publish.mock_calls[0][1][2]
         data = json.loads(msg)['credentials_job']
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'publisher'
+        assert data['last_service'] == 'deprecation'
         assert data['cloud'] == 'azure'
         assert 'test-azure' in data['cloud_accounts']
         assert 'test-azure2' in data['cloud_accounts']
@@ -350,7 +350,7 @@ class TestJobCreatorService(object):
                                     "repositories/Cloud:Tools/images",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "utctime": "now"
                 }
             })
@@ -363,7 +363,7 @@ class TestJobCreatorService(object):
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "cloud": "azure",
                     "target_regions": {
                         "centralus": {
@@ -390,7 +390,7 @@ class TestJobCreatorService(object):
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "cloud": "azure",
                     "test_regions": {
                         "centralus": "test-azure2",
@@ -408,7 +408,7 @@ class TestJobCreatorService(object):
                     "cleanup_images": True,
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "cloud": "azure",
                     "replication_source_regions": {
                         "centralus": {
@@ -440,7 +440,7 @@ class TestJobCreatorService(object):
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
         assert data['image_description'] == 'New Image #123'
         assert data['label'] == 'New Image 123'
-        assert data['last_service'] == 'publisher'
+        assert data['last_service'] == 'deprecation'
         assert data['offer_id'] == 'sles'
         assert data['cloud'] == 'azure'
         assert data['publisher_id'] == 'suse'
@@ -457,6 +457,18 @@ class TestJobCreatorService(object):
                 assert region['destination_container'] == 'ccontainer2'
                 assert region['destination_resource_group'] == 'c_res_group2'
                 assert region['destination_storage_account'] == 'cstorage2'
+
+        assert mock_publish.mock_calls[6] == call(
+            'deprecation', 'job_document',
+            JsonFormat.json_message({
+                "deprecation_job": {
+                    "id": "12345678-1234-1234-1234-123456789012",
+                    "last_service": "deprecation",
+                    "cloud": "azure",
+                    "utctime": "now"
+                }
+            })
+        )
 
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_gce(

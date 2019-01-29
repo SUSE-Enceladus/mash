@@ -19,6 +19,7 @@
 from mash.csp import CSP
 from mash.services.pipeline_service import PipelineService
 from mash.services.status_levels import SUCCESS
+from mash.services.deprecation.azure_job import AzureDeprecationJob
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
 from mash.services.deprecation.gce_job import GCEDeprecationJob
 from mash.utils.json_format import JsonFormat
@@ -46,6 +47,8 @@ class DeprecationService(PipelineService):
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
+        elif cloud == CSP.azure:
+            self._create_job(AzureDeprecationJob, job_config)
         elif cloud == CSP.ec2:
             self._create_job(EC2DeprecationJob, job_config)
         elif cloud == CSP.gce:

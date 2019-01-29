@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from mash.services.mash_service import MashService
 from mash.services.deprecation.service import DeprecationService
+from mash.services.deprecation.azure_job import AzureDeprecationJob
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
 from mash.services.deprecation.gce_job import GCEDeprecationJob
 from mash.utils.json_format import JsonFormat
@@ -78,6 +79,19 @@ class TestDeprecationService(object):
 
         mock_create_job.assert_called_once_with(
             GCEDeprecationJob,
+            job_config
+        )
+
+    @patch.object(DeprecationService, '_create_job')
+    def test_deprecation_add_job_azure(self, mock_create_job):
+        job_config = {
+            'id': '1', 'cloud': 'azure', 'utctime': 'now',
+        }
+
+        self.deprecation._add_job(job_config)
+
+        mock_create_job.assert_called_once_with(
+            AzureDeprecationJob,
             job_config
         )
 
