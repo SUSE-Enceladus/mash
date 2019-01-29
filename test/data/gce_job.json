@@ -10,7 +10,7 @@
   ],
   "cloud_groups": ["test-gce-group"],
   "requesting_user": "user1",
-  "last_service": "publisher",
+  "last_service": "deprecation",
   "utctime": "now",
   "image": "test_image_oem",
   "cloud_image_name": "new_image_123",
@@ -24,5 +24,6 @@
   "distro": "sles",
   "instance_type": "t2.micro",
   "family": "sles-15",
+  "months_to_deletion": 5,
   "tests": ["test_stuff"]
 }

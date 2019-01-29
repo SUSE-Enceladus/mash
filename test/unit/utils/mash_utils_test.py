@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -19,6 +19,7 @@
 import io
 
 from unittest.mock import MagicMock, patch
+
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import (
     create_json_file,

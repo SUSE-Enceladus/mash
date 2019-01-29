@@ -10,6 +10,7 @@ class TestDeprecationJob(object):
             'id': '1',
             'last_service': 'deprecation',
             'cloud': 'ec2',
+            'old_cloud_image_name': 'old_image_123',
             'utctime': 'now'
         }
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -20,6 +20,7 @@ from mash.csp import CSP
 from mash.services.pipeline_service import PipelineService
 from mash.services.status_levels import SUCCESS
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
+from mash.services.deprecation.gce_job import GCEDeprecationJob
 from mash.utils.json_format import JsonFormat
 
 
@@ -47,6 +48,8 @@ class DeprecationService(PipelineService):
             )
         elif cloud == CSP.ec2:
             self._create_job(EC2DeprecationJob, job_config)
+        elif cloud == CSP.gce:
+            self._create_job(GCEDeprecationJob, job_config)
         else:
             self.log.exception(
                 'Cloud {0} is not supported.'.format(cloud)
