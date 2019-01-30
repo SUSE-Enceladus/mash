@@ -359,7 +359,7 @@ class TestBaseService(object):
         # Test service with prev service
         self.service.service_exchange = 'testing'
         prev_service = self.service._get_previous_service()
-        assert prev_service is 'uploader'
+        assert prev_service == 'uploader'
 
         # Test service not in pipeline
         self.service.service_exchange = 'credentials'
