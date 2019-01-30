@@ -47,7 +47,8 @@ class TestUploadGCE(object):
             file_handle = mock_open.return_value.__enter__.return_value
             self.uploader = UploadGCE(
                 self.credentials, '/tmp/file.vhdfixed.tar.gz',
-                'sles-12-sp4-v20180909', 'description {date}', custom_args
+                'sles-12-sp4-v20180909', 'description {date}', custom_args,
+                'x86_64'
             )
             file_handle.write.assert_called_once_with(
                 JsonFormat.json_message(self.credentials)
@@ -64,35 +65,35 @@ class TestUploadGCE(object):
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'sles-11-sp4', 'description {date}', custom_args
+                    'sles-11-sp4', 'description {date}', custom_args, 'x86_64'
                 )
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'name', 'description', custom_args
+                    'name', 'description', custom_args, 'x86_64'
                 )
             del custom_args['region']
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'name', 'description  {date}', custom_args
+                    'name', 'description  {date}', custom_args, 'x86_64'
                 )
             del custom_args['family']
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'name', 'description  {date}', custom_args
+                    'name', 'description  {date}', custom_args, 'x86_64'
                 )
             del custom_args['bucket']
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'name', 'description  {date}', custom_args
+                    'name', 'description  {date}', custom_args, 'x86_64'
                 )
             with raises(MashUploadException):
                 UploadGCE(
                     self.credentials, 'file.vhdfixed.tar.gz',
-                    'name', 'description {date}', None
+                    'name', 'description {date}', None, 'x86_64'
                 )
 
     @patch('mash.services.uploader.cloud.gce.Provider')

@@ -53,7 +53,7 @@ class TestUploadAzure(object):
         with patch('builtins.open', create=True):
             self.uploader = UploadAzure(
                 self.credentials, 'file.vhdfixed.xz',
-                'name', 'description', custom_args
+                'name', 'description', custom_args, 'x86_64'
             )
             config = self.uploader.config
             assert config.get_azure_max_retry_attempts() == \
@@ -68,7 +68,8 @@ class TestUploadAzure(object):
             file_handle = mock_open.return_value.__enter__.return_value
             self.uploader = UploadAzure(
                 self.credentials, 'file.vhdfixed.xz',
-                'name', 'description', custom_args
+                'name', 'description', custom_args,
+                'x86_64'
             )
             file_handle.write.assert_called_once_with(
                 JsonFormat.json_message(self.credentials)
@@ -87,24 +88,24 @@ class TestUploadAzure(object):
             with raises(MashUploadException):
                 UploadAzure(
                     self.credentials, 'file.vhdfixed.xz',
-                    'name', 'description', custom_args
+                    'name', 'description', custom_args, 'x86_64'
                 )
             del custom_args['container']
             with raises(MashUploadException):
                 UploadAzure(
                     self.credentials, 'file.vhdfixed.xz',
-                    'name', 'description', custom_args
+                    'name', 'description', custom_args, 'x86_64'
                 )
             del custom_args['region']
             with raises(MashUploadException):
                 UploadAzure(
                     self.credentials, 'file.vhdfixed.xz',
-                    'name', 'description', custom_args
+                    'name', 'description', custom_args, 'x86_64'
                 )
             with raises(MashUploadException):
                 UploadAzure(
                     self.credentials, 'file.vhdfixed.xz',
-                    'name', 'description', None
+                    'name', 'description', None, 'x86_64'
                 )
 
     @patch('mash.services.uploader.cloud.azure.get_client_from_auth_file')

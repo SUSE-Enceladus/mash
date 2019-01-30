@@ -140,6 +140,7 @@ class TestJobCreatorService(object):
             'obs', 'job_document',
             JsonFormat.json_message({
                 "obs_job": {
+                    "cloud_architecture": "aarch64",
                     "conditions": [
                         {"package": ["name", "and", "constraints"]},
                         {"image": "version"}
@@ -158,6 +159,7 @@ class TestJobCreatorService(object):
             'uploader', 'job_document',
             JsonFormat.json_message({
                 "uploader_job": {
+                    "cloud_architecture": "aarch64",
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
@@ -339,6 +341,7 @@ class TestJobCreatorService(object):
             'obs', 'job_document',
             JsonFormat.json_message({
                 "obs_job": {
+                    "cloud_architecture": "x86_64",
                     "conditions": [
                         {"package": ["name", "and", "constraints"]},
                         {"image": "version"}
@@ -356,6 +359,7 @@ class TestJobCreatorService(object):
             'uploader', 'job_document',
             JsonFormat.json_message({
                 "uploader_job": {
+                    "cloud_architecture": "x86_64",
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
@@ -486,6 +490,7 @@ class TestJobCreatorService(object):
             'obs', 'job_document',
             JsonFormat.json_message({
                 "obs_job": {
+                    "cloud_architecture": "x86_64",
                     "conditions": [
                         {"package": ["name", "and", "constraints"]},
                         {"image": "version"}
@@ -503,6 +508,7 @@ class TestJobCreatorService(object):
             'uploader', 'job_document',
             JsonFormat.json_message({
                 "uploader_job": {
+                    "cloud_architecture": "x86_64",
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",

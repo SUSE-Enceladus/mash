@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -79,8 +79,9 @@ class OBSImageBuildResult(object):
     """
     def __init__(
         self, job_id, job_file, download_url, image_name, conditions=None,
-        download_directory=Defaults.get_download_dir()
+        arch='x86_64', download_directory=Defaults.get_download_dir()
     ):
+        self.arch = arch
         self.job_id = job_id
         self.job_file = job_file
         self.download_directory = download_directory
@@ -193,8 +194,12 @@ class OBSImageBuildResult(object):
 
     def _get_build_number(self, name):
         build = re.search(
-            r'-(\d+\.\d+\.\d+)-Build([0-9]+\.[0-9]+)', name
-        ) or re.search(r'-(\d+\.\d+\.\d+)-Beta([0-9]+)', name)
+            r'{0}-(\d+\.\d+\.\d+)-Build([0-9]+\.[0-9]+)'.format(self.arch),
+            name
+        ) or re.search(
+            r'{0}-(\d+\.\d+\.\d+)-Beta([0-9]+)'.format(self.arch),
+            name
+        )
         if build:
             return [build.group(1), build.group(2)]
 
@@ -262,7 +267,7 @@ class OBSImageBuildResult(object):
             )
             try:
                 self.remote.fetch_file(
-                    ''.join([self.image_name, '.']),
+                    ''.join([self.image_name, '.', self.arch]),
                     '.sha256',
                     checksum_file.name
                 )
@@ -355,7 +360,9 @@ class OBSImageBuildResult(object):
     def _lookup_image_packages_metadata(self):
         packages_file = NamedTemporaryFile()
         self.image_metadata_name = self.remote.fetch_file(
-            ''.join([self.image_name, '.']), '.packages', packages_file.name
+            ''.join([self.image_name, '.', self.arch]),
+            '.packages',
+            packages_file.name
         )
         try:
             # Extract image version information from .packages file name

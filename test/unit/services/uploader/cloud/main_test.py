@@ -18,7 +18,7 @@ class TestUpload(object):
         Upload('ec2', 'file', 'name', 'description', credentials)
         conventions.is_valid_name.assert_called_once_with('name')
         mock_UploadAmazon.assert_called_once_with(
-            credentials, 'file', 'name', 'description', None
+            credentials, 'file', 'name', 'description', None, 'x86_64'
         )
         with raises(MashUploadSetupException):
             Upload('foo', 'file', 'name', 'description', credentials)
@@ -34,7 +34,7 @@ class TestUpload(object):
         Upload('azure', 'file', 'name', 'description', credentials)
         conventions.is_valid_name.assert_called_once_with('name')
         mock_UploadAzure.assert_called_once_with(
-            credentials, 'file', 'name', 'description', None
+            credentials, 'file', 'name', 'description', None, 'x86_64'
         )
         with raises(MashUploadSetupException):
             Upload('foo', 'file', 'name', 'description', credentials)
@@ -50,5 +50,5 @@ class TestUpload(object):
         Upload('gce', 'file', 'name', 'description', credentials)
         conventions.is_valid_name.assert_called_once_with('name')
         mock_UploadGCE.assert_called_once_with(
-            credentials, 'file', 'name', 'description', None
+            credentials, 'file', 'name', 'description', None, 'x86_64'
         )

@@ -224,7 +224,8 @@ class TestOBSImageBuildResultService(object):
             "conditions": [
                 {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
                 {"image": "1.42.1"}
-            ]
+            ],
+            "cloud_architecture": "aarch64"
         }
         self.obs_result._start_job(data)
         job_worker.set_log_handler.assert_called_once_with(

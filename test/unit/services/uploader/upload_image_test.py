@@ -14,7 +14,8 @@ class TestUploadImage(object):
             'token', 'cloud_image_name_at_080808',
             'cloud_image_description',
             last_upload_region=False,
-            custom_uploader_args=self.custom_uploader_args
+            custom_uploader_args=self.custom_uploader_args,
+            arch='arch'
         )
         self.upload_image.set_image_file('image_file')
 
@@ -32,7 +33,8 @@ class TestUploadImage(object):
             'ec2', 'image_file',
             'cloud_image_name_at_080808',
             'cloud_image_description',
-            'token', {'cloud-specific-param': 'foo'}
+            'token', {'cloud-specific-param': 'foo'},
+            'arch'
         )
         uploader.upload.assert_called_once_with()
         assert mock_log_callback.call_args_list == [

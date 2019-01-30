@@ -22,5 +22,6 @@
   "distro": "sles",
   "instance_type": "t2.micro",
   "tests": ["test_stuff"],
-  "cleanup_images": true
+  "cleanup_images": true,
+  "cloud_architecture": "aarch64"
 }

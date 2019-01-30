@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -185,9 +185,6 @@ class OBSImageBuildResultService(MashService):
                 }
 
     def _start_job(self, job):
-        if 'conditions' not in job:
-            job['conditions'] = None
-
         job_id = job['id']
         time = job['utctime']
         nonstop = False
@@ -199,13 +196,21 @@ class OBSImageBuildResultService(MashService):
         else:
             time = dateutil.parser.parse(job['utctime']).isoformat()
 
-        job_worker = OBSImageBuildResult(
-            job_id=job_id, job_file=job['job_file'],
-            download_url=job['download_url'],
-            image_name=job['image'],
-            conditions=job['conditions'],
-            download_directory=self.download_directory
-        )
+        kwargs = {
+            'job_id': job_id,
+            'job_file': job['job_file'],
+            'download_url': job['download_url'],
+            'image_name': job['image'],
+            'download_directory': self.download_directory
+        }
+
+        if 'conditions' in job:
+            kwargs['conditions'] = job['conditions']
+
+        if 'cloud_architecture' in job:
+            kwargs['arch'] = job['cloud_architecture']
+
+        job_worker = OBSImageBuildResult(**kwargs)
         job_worker.set_log_handler(self._send_job_response)
         job_worker.set_result_handler(self._send_job_result_for_uploader)
         job_worker.start_watchdog(

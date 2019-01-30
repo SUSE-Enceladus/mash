@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -30,7 +30,8 @@ class BaseJob(object):
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None,
-        old_cloud_image_name=None, cleanup_images=True
+        old_cloud_image_name=None, cleanup_images=True,
+        cloud_architecture='x86_64'
     ):
         self.id = job_id
         self.accounts_info = accounts_info
@@ -50,6 +51,7 @@ class BaseJob(object):
         self.conditions = conditions
         self.download_url = download_url
         self.instance_type = instance_type
+        self.cloud_architecture = cloud_architecture
         self.utctime = utctime
 
         self.base_message = {
@@ -130,6 +132,10 @@ class BaseJob(object):
             }
         }
         obs_message['obs_job'].update(self.base_message)
+
+        if self.cloud_architecture:
+            obs_message['obs_job']['cloud_architecture'] = \
+                self.cloud_architecture
 
         if self.conditions:
             obs_message['obs_job']['conditions'] = self.conditions
@@ -220,6 +226,10 @@ class BaseJob(object):
             }
         }
         uploader_message['uploader_job'].update(self.base_message)
+
+        if self.cloud_architecture:
+            uploader_message['uploader_job']['cloud_architecture'] = \
+                self.cloud_architecture
 
         return JsonFormat.json_message(uploader_message)
 
