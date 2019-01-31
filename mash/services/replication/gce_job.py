@@ -32,6 +32,9 @@ class GCEReplicationJob(ReplicationJob):
             id, last_service, provider, utctime, job_file=job_file
         )
 
+        # Skip credential request since there is no replication in GCE
+        self.credentials = {'status': 'no replication'}
+
     def _replicate(self):
         """
         No replication in GCE.
