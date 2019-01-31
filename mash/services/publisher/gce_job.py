@@ -32,6 +32,9 @@ class GCEPublisherJob(PublisherJob):
             id, last_service, provider, utctime, job_file=job_file
         )
 
+        # Skip credential request since there is no publishing in GCE
+        self.credentials = {'status': 'no publishing'}
+
     def _publish(self):
         """
         No publishing in GCE.
