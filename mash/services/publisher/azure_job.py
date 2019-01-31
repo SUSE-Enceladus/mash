@@ -17,7 +17,6 @@
 #
 
 from mash.services.azure_utils import (
-    create_auth_file,
     get_blob_url,
     get_classic_page_blob_service,
     publish_cloud_partner_offer,
@@ -29,6 +28,7 @@ from mash.services.azure_utils import (
 
 from mash.services.publisher.job import PublisherJob
 from mash.services.status_levels import FAILED, SUCCESS
+from mash.utils.mash_utils import create_json_file
 
 
 class AzurePublisherJob(PublisherJob):
@@ -64,7 +64,7 @@ class AzurePublisherJob(PublisherJob):
             credential = self.credentials[region_info['account']]
             blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
-            with create_auth_file(credential) as auth_file:
+            with create_json_file(credential) as auth_file:
                 self.send_log(
                     'Publishing image for account: {},'
                     ' using cloud partner API.'.format(

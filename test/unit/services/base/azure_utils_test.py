@@ -1,4 +1,3 @@
-import io
 import json
 
 from datetime import date
@@ -8,7 +7,6 @@ from unittest.mock import MagicMock, patch
 from mash.mash_exceptions import MashAzureUtilsException
 from mash.services.azure_utils import (
     acquire_access_token,
-    create_auth_file,
     delete_image,
     delete_page_blob,
     get_classic_storage_account_keys,
@@ -24,7 +22,6 @@ from mash.services.azure_utils import (
     update_cloud_partner_offer_doc,
     wait_on_cloud_partner_operation
 )
-from mash.utils.json_format import JsonFormat
 
 
 @patch('mash.services.azure_utils.adal')
@@ -73,25 +70,6 @@ def test_acquire_access_token_cloud_partner(mock_adal):
         '09876543-1234-1234-1234-123456789012',
         '09876543-1234-1234-1234-123456789012'
     )
-
-
-@patch('mash.services.azure_utils.os')
-@patch('mash.services.azure_utils.NamedTemporaryFile')
-def test_create_auth_file(mock_temp_file, mock_os):
-    auth_file = MagicMock()
-    auth_file.name = 'test.json'
-    mock_temp_file.return_value = auth_file
-
-    creds = {'tenantId': '123456', 'subscriptionId': '98765'}
-    with patch('builtins.open', create=True) as mock_open:
-        mock_open.return_value = MagicMock(spec=io.IOBase)
-        with create_auth_file(creds) as auth:
-            assert auth == 'test.json'
-
-        file_handle = mock_open.return_value.__enter__.return_value
-        file_handle.write.assert_called_with(JsonFormat.json_message(creds))
-
-    mock_os.remove.assert_called_once_with('test.json')
 
 
 @patch('mash.services.azure_utils.acquire_access_token')

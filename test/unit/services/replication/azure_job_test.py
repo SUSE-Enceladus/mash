@@ -49,15 +49,15 @@ class TestAzureReplicationJob(object):
 
     @patch('mash.services.replication.azure_job.delete_page_blob')
     @patch('mash.services.replication.azure_job.delete_image')
-    @patch('mash.services.replication.azure_job.create_auth_file')
+    @patch('mash.services.replication.azure_job.create_json_file')
     @patch('mash.services.replication.azure_job.copy_blob_to_classic_storage')
     @patch.object(AzureReplicationJob, 'send_log')
     def test_replicate(
-        self, mock_send_log, mock_copy_blob, mock_create_auth_file,
+        self, mock_send_log, mock_copy_blob, mock_create_json_file,
         mock_delete_image, mock_delete_page_blob
     ):
         mock_delete_page_blob.side_effect = Exception('Cannot delete image.')
-        mock_create_auth_file.return_value.__enter__.return_value = \
+        mock_create_json_file.return_value.__enter__.return_value = \
             '/tmp/file.auth'
 
         self.job._replicate()
