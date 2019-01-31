@@ -18,14 +18,11 @@
 
 import adal
 import json
-import os
 import re
 import requests
 import time
 
-from contextlib import contextmanager, suppress
 from datetime import date, datetime, timedelta
-from tempfile import NamedTemporaryFile
 
 from azure.common.client_factory import get_client_from_auth_file
 from azure.mgmt.compute import ComputeManagementClient
@@ -33,7 +30,6 @@ from azure.mgmt.storage import StorageManagementClient
 from azure.storage.blob import ContainerPermissions, PageBlobService
 
 from mash.mash_exceptions import MashAzureUtilsException
-from mash.utils.json_format import JsonFormat
 
 
 def acquire_access_token(credentials, cloud_partner=False):
@@ -217,18 +213,6 @@ def get_classic_storage_account_keys(
     json_output = requests.post(endpoint, headers=headers).json()
 
     return json_output
-
-
-@contextmanager
-def create_auth_file(credentials):
-    try:
-        auth_file = NamedTemporaryFile(delete=False)
-        with open(auth_file.name, 'w') as azure_auth:
-            azure_auth.write(JsonFormat.json_message(credentials))
-        yield auth_file.name
-    finally:
-        with suppress(OSError):
-            os.remove(auth_file.name)
 
 
 def go_live_with_cloud_partner_offer(

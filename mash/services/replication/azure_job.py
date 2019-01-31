@@ -18,13 +18,13 @@
 
 from mash.services.azure_utils import (
     copy_blob_to_classic_storage,
-    create_auth_file,
     delete_image,
     delete_page_blob
 )
 
 from mash.services.replication.job import ReplicationJob
 from mash.services.status_levels import FAILED, SUCCESS
+from mash.utils.mash_utils import create_json_file
 
 
 class AzureReplicationJob(ReplicationJob):
@@ -62,7 +62,7 @@ class AzureReplicationJob(ReplicationJob):
             credential = self.credentials[reg_info['account']]
             blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
-            with create_auth_file(credential) as auth_file:
+            with create_json_file(credential) as auth_file:
                 self.send_log(
                     'Copying image for account: {},'
                     ' to classic storage container.'.format(

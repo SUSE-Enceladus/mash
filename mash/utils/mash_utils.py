@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,8 +16,26 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import os
 import random
+
+from contextlib import contextmanager, suppress
 from string import ascii_lowercase
+from tempfile import NamedTemporaryFile
+
+from mash.utils.json_format import JsonFormat
+
+
+@contextmanager
+def create_json_file(data):
+    try:
+        temp_file = NamedTemporaryFile(delete=False)
+        with open(temp_file.name, 'w') as json_file:
+            json_file.write(JsonFormat.json_message(data))
+        yield temp_file.name
+    finally:
+        with suppress(OSError):
+            os.remove(temp_file.name)
 
 
 def generate_name(length=8):
