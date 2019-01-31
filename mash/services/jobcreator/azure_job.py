@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -28,9 +28,9 @@ class AzureJob(BaseJob):
         self, accounts_info, provider_data, job_id, provider,
         provider_accounts, provider_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
-        download_url, tests, conditions=None, instance_type=None,
-        old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture='x86_64'
+        download_url, tests, offer_id, publisher_id, sku, emails, label,
+        conditions=None, instance_type=None, old_cloud_image_name=None,
+        cleanup_images=True, cloud_architecture='x86_64', version_key=None
     ):
         self.target_account_info = {}
 
@@ -41,6 +41,13 @@ class AzureJob(BaseJob):
             conditions, instance_type, old_cloud_image_name, cleanup_images,
             cloud_architecture
         )
+
+        self.emails = emails
+        self.label = label
+        self.offer_id = offer_id
+        self.publisher_id = publisher_id
+        self.sku = sku
+        self.version_key = version_key
 
     def _get_account_info(self):
         """
@@ -128,13 +135,44 @@ class AzureJob(BaseJob):
         """
         Build publisher job message.
         """
-        raise NotImplementedError('TODO')
+        publisher_message = {
+            'publisher_job': {
+                'emails': self.emails,
+                'image_description': self.image_description,
+                'label': self.label,
+                'offer_id': self.offer_id,
+                'provider': self.provider,
+                'publish_regions': self.get_publisher_regions(),
+                'publisher_id': self.publisher_id,
+                'sku': self.sku
+            }
+        }
+
+        if self.version_key:
+            publisher_message['publisher_job']['version_key'] = \
+                self.version_key
+
+        publisher_message['publisher_job'].update(self.base_message)
+
+        return JsonFormat.json_message(publisher_message)
 
     def get_publisher_regions(self):
         """
         Return a list of publisher region info.
         """
-        raise NotImplementedError('TODO')
+        publish_regions = []
+
+        for source_region, value in self.target_account_info.items():
+            publish_regions.append({
+                'account': value['account'],
+                'destination_container': value['destination_container'],
+                'destination_resource_group':
+                    value['destination_resource_group'],
+                'destination_storage_account':
+                    value['destination_storage_account']
+            })
+
+        return publish_regions
 
     def get_replication_message(self):
         """

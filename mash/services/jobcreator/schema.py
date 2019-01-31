@@ -311,6 +311,29 @@ ec2_job_message['definitions']['account'] = {
 
 azure_job_message = copy.deepcopy(base_job_message)
 azure_job_message['properties']['provider'] = {'enum': ['azure']}
+azure_job_message['properties']['emails'] = {
+    '$ref': '#/definitions/non_empty_string'
+}
+azure_job_message['properties']['label'] = {
+    '$ref': '#/definitions/non_empty_string'
+}
+azure_job_message['properties']['offer_id'] = {
+    '$ref': '#/definitions/non_empty_string'
+}
+azure_job_message['properties']['publisher_id'] = {
+    '$ref': '#/definitions/non_empty_string'
+}
+azure_job_message['properties']['sku'] = {
+    '$ref': '#/definitions/non_empty_string'
+}
+azure_job_message['properties']['version_key'] = {
+    '$ref': '#/definitions/non_empty_string'
+}
+azure_job_message['required'].append('emails')
+azure_job_message['required'].append('label')
+azure_job_message['required'].append('offer_id')
+azure_job_message['required'].append('publisher_id')
+azure_job_message['required'].append('sku')
 azure_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {

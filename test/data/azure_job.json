@@ -15,7 +15,7 @@
   ],
   "provider_groups": ["test-azure-group"],
   "requesting_user": "user1",
-  "last_service": "replication",
+  "last_service": "publisher",
   "utctime": "now",
   "image": "test_image_oem",
   "cloud_image_name": "new_image_123",
@@ -28,5 +28,11 @@
   "image_description": "New Image #123",
   "distro": "sles",
   "instance_type": "t2.micro",
-  "tests": ["test_stuff"]
+  "tests": ["test_stuff"],
+  "emails": "jdoe@fake.com",
+  "offer_id": "sles",
+  "publisher_id": "suse",
+  "label": "New Image 123",
+  "sku": "123",
+  "version_key": "key123"
 }

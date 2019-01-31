@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.replication.azure_utils import (
+from mash.services.azure_utils import (
     copy_blob_to_classic_storage,
     create_auth_file,
     delete_image,
