@@ -29,7 +29,7 @@ class Credentials(object):
     Attributes
 
     * :attr:`csp_name`
-        cloud service provider name
+        cloud service cloud name
     """
     def __new__(self, csp_name, custom_args=None):
         if csp_name == CSP.ec2:

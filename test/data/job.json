@@ -1,10 +1,10 @@
 {
   "job_id": "12345678-1234-1234-1234-123456789012",
-  "provider": "ec2",
-  "provider_accounts": [
+  "cloud": "ec2",
+  "cloud_accounts": [
     {"name": "test-aws-gov", "target_regions": ["us-gov-west-1"]}
   ],
-  "provider_groups": ["test"],
+  "cloud_groups": ["test"],
   "requesting_user": "user1",
   "last_service": "pint",
   "utctime": "now",

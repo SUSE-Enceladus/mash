@@ -9,7 +9,7 @@ class TestGCEAccount(object):
             'account_name': 'acnt123',
             'bucket': 'images',
             'group': 'group123',
-            'provider': 'gce',
+            'cloud': 'gce',
             'region': 'us-west1',
             'requesting_user': 'user2'
         }

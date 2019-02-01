@@ -1,7 +1,7 @@
 {
   "job_id": "12345678-1234-1234-1234-123456789012",
-  "provider": "azure",
-  "provider_accounts": [
+  "cloud": "azure",
+  "cloud_accounts": [
     {
       "name": "test-azure",
       "region": "southcentralus",
@@ -13,7 +13,7 @@
       "destination_storage_account": "sa2"
     }
   ],
-  "provider_groups": ["test"],
+  "cloud_groups": ["test"],
   "requesting_user": "user1",
   "last_service": "pint",
   "utctime": "now",

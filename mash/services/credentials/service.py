@@ -107,29 +107,29 @@ class CredentialsService(MashService):
                 self.service_exchange, 'request.{0}'.format(service), 'request'
             )
 
-    def _check_credentials_exist(self, account, provider, user):
+    def _check_credentials_exist(self, account, cloud, user):
         """
         Return True if the credentials file exists.
         """
-        path = self._get_credentials_file_path(account, provider, user)
+        path = self._get_credentials_file_path(account, cloud, user)
         return os.path.exists(path)
 
     def _check_job_accounts(
-        self, provider, provider_accounts,
-        provider_groups, requesting_user
+        self, cloud, cloud_accounts,
+        cloud_groups, requesting_user
     ):
         """
         Confirm all the accounts for the given user have credentials.
         """
-        accounts = [account['name'] for account in provider_accounts]
-        for group in provider_groups:
+        accounts = [account['name'] for account in cloud_accounts]
+        for group in cloud_groups:
             accounts += self._get_accounts_in_group(
-                group, provider, requesting_user
+                group, cloud, requesting_user
             )
 
         for account in set(accounts):
             exists = self._check_credentials_exist(
-                account, provider, requesting_user
+                account, cloud, requesting_user
             )
 
             if not exists:
@@ -141,23 +141,23 @@ class CredentialsService(MashService):
         Check the user for a given job has access to the requested accounts.
 
         If the user has access to all accounts respond with the accounts
-        info for the given provider.
+        info for the given cloud.
         """
         job_id = job_document['id']
-        provider = job_document['provider']
-        provider_accounts = job_document['provider_accounts']
-        provider_groups = job_document['provider_groups']
+        cloud = job_document['cloud']
+        cloud_accounts = job_document['cloud_accounts']
+        cloud_groups = job_document['cloud_groups']
         requesting_user = job_document['requesting_user']
 
         valid = self._check_job_accounts(
-            provider, provider_accounts, provider_groups, requesting_user
+            cloud, cloud_accounts, cloud_groups, requesting_user
         )
 
         if valid:
             job_response = {
                 'start_job': {
                     'id': job_id,
-                    'accounts_info': self._get_accounts_from_file(provider)
+                    'accounts_info': self._get_accounts_from_file(cloud)
                 }
             }
             self._publish(
@@ -208,33 +208,33 @@ class CredentialsService(MashService):
         """
         return Fernet.generate_key().decode()
 
-    def _get_accounts_from_file(self, provider=None):
+    def _get_accounts_from_file(self, cloud=None):
         """
         Return a dictionary of account information from accounts json file.
         """
         with open(self.accounts_file, 'r') as acnt_file:
             accounts = json.load(acnt_file)
 
-        if provider:
-            return accounts[provider]
+        if cloud:
+            return accounts[cloud]
         else:
             return accounts
 
-    def _get_accounts_in_group(self, group, provider, user):
+    def _get_accounts_in_group(self, group, cloud, user):
         """
         Return a list of account names given the group name.
         """
-        accounts_info = self._get_accounts_from_file(provider)
+        accounts_info = self._get_accounts_from_file(cloud)
         return accounts_info['groups'][user][group]
 
-    def _get_credentials_file_path(self, account, provider, user):
+    def _get_credentials_file_path(self, account, cloud, user):
         """
         Return the string path to the credentials file.
 
-        Based on user, provider and account name.
+        Based on user, cloud and account name.
         """
         path = os.path.join(
-            self.credentials_directory, user, provider, account
+            self.credentials_directory, user, cloud, account
         )
         return path
 
@@ -255,11 +255,11 @@ class CredentialsService(MashService):
             response, self.jwt_secret, algorithm=self.jwt_algorithm
         )
 
-    def _get_encrypted_credentials(self, account, provider, user):
+    def _get_encrypted_credentials(self, account, cloud, user):
         """
         Return encrypted credentials string from file.
         """
-        path = self._get_credentials_file_path(account, provider, user)
+        path = self._get_credentials_file_path(account, cloud, user)
         with open(path, 'r') as credentials_file:
             credentials = credentials_file.read()
 
@@ -273,7 +273,7 @@ class CredentialsService(MashService):
         {
             "account_name": "test-aws",
             "credentials": "encrypted_creds",
-            "provider": "ec2",
+            "cloud": "ec2",
             "requesting_user": "user1"
         }
         """
@@ -299,8 +299,8 @@ class CredentialsService(MashService):
         {
             "credentials_job": {
                 "id": "123",
-                "provider": "EC2",
-                "provider_accounts": ["test-aws", "test-aws-cn"],
+                "cloud": "EC2",
+                "cloud_accounts": ["test-aws", "test-aws-cn"],
                 "requesting_user": "test-aws",
                 "last_service": "pint"
             }
@@ -387,18 +387,18 @@ class CredentialsService(MashService):
             issuer, self.credentials_response_key, credentials_response
         )
 
-    def _remove_credentials_file(self, account_name, provider, user):
+    def _remove_credentials_file(self, account_name, cloud, user):
         """
         Attempt to remove the credentials file for account.
         """
         self.log.info(
             'Deleting credentials for account: '
-            '{0}, provider: {1}, user: {2}.'.format(
-                account_name, provider, user
+            '{0}, cloud: {1}, user: {2}.'.format(
+                account_name, cloud, user
             )
         )
 
-        path = self._get_credentials_file_path(account_name, provider, user)
+        path = self._get_credentials_file_path(account_name, cloud, user)
 
         with suppress(Exception):
             os.remove(path)
@@ -410,9 +410,9 @@ class CredentialsService(MashService):
         job = self.jobs[job_id]
 
         credentials = {}
-        for account in job['provider_accounts']:
+        for account in job['cloud_accounts']:
             credentials[account] = self._get_encrypted_credentials(
-                account, job['provider'], job['requesting_user']
+                account, job['cloud'], job['requesting_user']
             )
         return credentials
 
@@ -474,7 +474,7 @@ class CredentialsService(MashService):
         )
 
     def _store_encrypted_credentials(
-        self, account, credentials, provider, user
+        self, account, credentials, cloud, user
     ):
         """
         Store the provided credentials encrypted on disk.
@@ -483,16 +483,16 @@ class CredentialsService(MashService):
 
         Example: {"access_key_id": "key123", "secret_access_key": "123456"}
 
-        Path is based on the user, provider and account.
+        Path is based on the user, cloud and account.
         """
         self.log.info(
             'Storing credentials for account: '
-            '{0}, provider: {1}, user: {2}.'.format(
-                account, provider, user
+            '{0}, cloud: {1}, user: {2}.'.format(
+                account, cloud, user
             )
         )
 
-        path = self._get_credentials_file_path(account, provider, user)
+        path = self._get_credentials_file_path(account, cloud, user)
 
         credentials_dir = os.path.dirname(path)
         if not os.path.isdir(credentials_dir):
@@ -517,7 +517,7 @@ class CredentialsService(MashService):
 
     def add_account(self, message):
         """
-        Add new provider account to MASH.
+        Add new cloud account to MASH.
         """
         self.log.info(
             'Received add account message for account {0}.'.format(
@@ -525,19 +525,19 @@ class CredentialsService(MashService):
             )
         )
 
-        provider = message['provider']
+        cloud = message['cloud']
         account_name = message['account_name']
         requesting_user = message['requesting_user']
 
-        if provider == CSP.ec2:
+        if cloud == CSP.ec2:
             account = EC2Account(message)
-        elif provider == CSP.azure:
+        elif cloud == CSP.azure:
             account = AzureAccount(message)
-        elif provider == CSP.gce:
+        elif cloud == CSP.gce:
             account = GCEAccount(message)
         else:
             self.log.warning(
-                'Invalid provider for account: {0}.'.format(provider)
+                'Invalid cloud for account: {0}.'.format(cloud)
             )
             return
 
@@ -550,16 +550,16 @@ class CredentialsService(MashService):
         )
 
         self._store_encrypted_credentials(
-            account_name, credentials, provider, requesting_user
+            account_name, credentials, cloud, requesting_user
         )
 
     def _remove_account_from_groups(
-        self, account_name, provider, requesting_user, accounts
+        self, account_name, cloud, requesting_user, accounts
     ):
         """
         Remove account from any groups it currently exists for user.
         """
-        groups = accounts[provider]['groups'][requesting_user]
+        groups = accounts[cloud]['groups'][requesting_user]
 
         for group, account_names in groups.items():
             if account_name in account_names:
@@ -567,20 +567,20 @@ class CredentialsService(MashService):
 
     def delete_account(self, message):
         """
-        Delete provider account from MASH.
+        Delete cloud account from MASH.
         """
         account_name = message['account_name']
-        provider = message['provider']
+        cloud = message['cloud']
         requesting_user = message['requesting_user']
 
         self._remove_credentials_file(
-            account_name, provider, requesting_user
+            account_name, cloud, requesting_user
         )
 
         accounts = self._get_accounts_from_file()
 
         try:
-            del accounts[provider]['accounts'][requesting_user][account_name]
+            del accounts[cloud]['accounts'][requesting_user][account_name]
         except KeyError:
             self.log.error(
                 'Account {0} does not exist for {1}.'.format(
@@ -589,7 +589,7 @@ class CredentialsService(MashService):
             )
         else:
             self._remove_account_from_groups(
-                account_name, provider, requesting_user, accounts
+                account_name, cloud, requesting_user, accounts
             )
             self._write_accounts_to_file(accounts)
 

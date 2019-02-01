@@ -29,11 +29,11 @@ class EC2PublisherJob(PublisherJob):
     """
 
     def __init__(
-        self, id, last_service, provider, publish_regions, utctime,
+        self, id, last_service, cloud, publish_regions, utctime,
         allow_copy=False, job_file=None, share_with='all'
     ):
         super(EC2PublisherJob, self).__init__(
-            id, last_service, provider, utctime, job_file=job_file
+            id, last_service, cloud, utctime, job_file=job_file
         )
 
         self.allow_copy = allow_copy

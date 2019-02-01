@@ -3,7 +3,7 @@
         "allow_copy": "",
         "id": "123",
         "last_service": "publisher",
-        "provider": "ec2",
+        "cloud": "ec2",
         "share_with": "None",
         "utctime": "now",
         "publish_regions": [

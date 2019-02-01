@@ -21,14 +21,14 @@ from mash.services.credentials.base_account import BaseAccount
 
 class GCEAccount(BaseAccount):
     """
-    GCE provider account.
+    GCE cloud account.
 
     Handles management of accounts in the json accounts file.
     """
     def __init__(self, message):
         super(GCEAccount, self).__init__(
             message['account_name'],
-            message['provider'], message['requesting_user'],
+            message['cloud'], message['requesting_user'],
             group_name=message.get('group')
         )
         self.bucket = message['bucket']
@@ -45,12 +45,12 @@ class GCEAccount(BaseAccount):
             'region': self.region
         }
 
-        accounts = accounts_file[self.provider]['accounts'].get(self.requesting_user)
+        accounts = accounts_file[self.cloud]['accounts'].get(self.requesting_user)
 
         if accounts:
             accounts[self.account_name] = account_info
         else:
-            accounts_file[self.provider]['accounts'][self.requesting_user] = {
+            accounts_file[self.cloud]['accounts'][self.requesting_user] = {
                 self.account_name: account_info
             }
 

@@ -25,8 +25,8 @@ class GCEJob(BaseJob):
     GCE job message class.
     """
     def __init__(
-        self, accounts_info, provider_data, job_id, provider,
-        provider_accounts, provider_groups, requesting_user, last_service,
+        self, accounts_info, cloud_data, job_id, cloud,
+        cloud_accounts, cloud_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None, family=None,
         old_cloud_image_name=None, cleanup_images=True,
@@ -36,8 +36,8 @@ class GCEJob(BaseJob):
         self.target_account_info = {}
 
         super(GCEJob, self).__init__(
-            accounts_info, provider_data, job_id, provider, provider_accounts,
-            provider_groups, requesting_user, last_service, utctime, image,
+            accounts_info, cloud_data, job_id, cloud, cloud_accounts,
+            cloud_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, image_description, distro, download_url, tests,
             conditions, instance_type, old_cloud_image_name, cleanup_images,
             cloud_architecture
@@ -59,11 +59,11 @@ class GCEJob(BaseJob):
         accounts = {}
 
         # Get dictionary of account names to account dict
-        for provider_account in self.provider_accounts:
-            accounts[provider_account['name']] = provider_account
+        for cloud_account in self.cloud_accounts:
+            accounts[cloud_account['name']] = cloud_account
 
         # Get all accounts from all groups
-        for group in self.provider_groups:
+        for group in self.cloud_groups:
             group_accounts += self._get_accounts_in_group(
                 group, self.requesting_user
             )
@@ -101,7 +101,7 @@ class GCEJob(BaseJob):
         """
         publisher_message = {
             'publisher_job': {
-                'provider': self.provider
+                'cloud': self.cloud
             }
         }
         publisher_message['publisher_job'].update(self.base_message)
@@ -114,7 +114,7 @@ class GCEJob(BaseJob):
         """
         replication_message = {
             'replication_job': {
-                'provider': self.provider
+                'cloud': self.cloud
             }
         }
         replication_message['replication_job'].update(self.base_message)

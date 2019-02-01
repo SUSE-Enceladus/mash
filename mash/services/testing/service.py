@@ -35,7 +35,7 @@ from mash.utils.json_format import JsonFormat
 class TestingService(PipelineService):
     """
     Implementation of testing service. Launches an instance of the
-    image in the given cloud provider and tests image using IPA.
+    image in the given cloud framework and tests image using IPA.
 
     * :attr:`custom_args`
     """
@@ -60,7 +60,7 @@ class TestingService(PipelineService):
         Job description is validated and converted to dict from json.
         """
         job_id = job_config['id']
-        provider = job_config['provider']
+        cloud = job_config['cloud']
 
         job_config['ssh_private_key_file'] = self.ssh_private_key_file
         job_config['ipa_timeout'] = self.ipa_timeout
@@ -70,15 +70,15 @@ class TestingService(PipelineService):
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == CSP.ec2:
+        elif cloud == CSP.ec2:
             self._create_job(EC2TestingJob, job_config)
-        elif provider == CSP.azure:
+        elif cloud == CSP.azure:
             self._create_job(AzureTestingJob, job_config)
-        elif provider == CSP.gce:
+        elif cloud == CSP.gce:
             self._create_job(GCETestingJob, job_config)
         else:
             self.log.error(
-                'Provider {0} is not supported.'.format(provider)
+                'Cloud {0} is not supported.'.format(cloud)
             )
 
     def _create_ssh_key_pair(self):

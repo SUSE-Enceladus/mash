@@ -27,7 +27,7 @@ class DeprecationService(PipelineService):
     """
     Implementation of deprecation service.
 
-    Deprecates the old image in the given cloud provider for new image.
+    Deprecates the old image in the given cloud framework for new image.
 
     * :attr:`custom_args`
     """
@@ -38,18 +38,18 @@ class DeprecationService(PipelineService):
         Job description is validated and converted to dict from json.
         """
         job_id = job_config['id']
-        provider = job_config['provider']
+        cloud = job_config['cloud']
 
         if job_id in self.jobs:
             self.log.warning(
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == CSP.ec2:
+        elif cloud == CSP.ec2:
             self._create_job(EC2DeprecationJob, job_config)
         else:
             self.log.exception(
-                'Provider {0} is not supported.'.format(provider)
+                'Cloud {0} is not supported.'.format(cloud)
             )
 
     def _get_status_message(self, job):

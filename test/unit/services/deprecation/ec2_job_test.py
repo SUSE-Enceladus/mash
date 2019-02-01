@@ -11,7 +11,7 @@ class TestEC2DeprecationJob(object):
         self.job_config = {
             'id': '1',
             'last_service': 'deprecation',
-            'provider': 'ec2',
+            'cloud': 'ec2',
             'old_cloud_image_name': 'old_image_123',
             'deprecation_regions': [
                 {

@@ -43,7 +43,7 @@ class TestUploadImageService(object):
             'utctime': 'now',
             'cloud_image_name': 'name',
             'image_description': 'description',
-            'provider': 'ec2',
+            'cloud': 'ec2',
             'target_regions': {
                 'eu-central-1': {
                     'helper_image': 'ami-bc5b48d0',
@@ -58,7 +58,7 @@ class TestUploadImageService(object):
                 'utctime': 'now',
                 'cloud_image_name': 'name-{date}',
                 'image_description': 'description',
-                'provider': 'ec2',
+                'cloud': 'ec2',
                 'target_regions': {
                     'eu-central-1': {
                         'helper_image': 'ami-bc5b48d0',
@@ -74,7 +74,7 @@ class TestUploadImageService(object):
                 'utctime': 'now',
                 'cloud_image_name': 'name',
                 'image_description': 'description',
-                'provider': 'azure',
+                'cloud': 'azure',
                 'target_regions': {
                     'westeurope': {
                         'resource_group': 'ms_group',
@@ -92,7 +92,7 @@ class TestUploadImageService(object):
                 'utctime': 'now',
                 'cloud_image_name': 'name',
                 'image_description': 'description',
-                'provider': 'gce',
+                'cloud': 'gce',
                 'target_regions': {
                     'us-east1': {
                         'account': 'test-gce',
@@ -222,7 +222,7 @@ class TestUploadImageService(object):
                 "utctime": "now",
                 "cloud_image_name": "name-{date}",
                 "image_description": "description",
-                "provider": "ec2",
+                "cloud": "ec2",
                 "target_regions": {
                     "eu-central-1": {
                         "helper_image": "ami-bc5b48d0",

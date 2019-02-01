@@ -10,7 +10,7 @@ class TestAzureReplicationJob(object):
             'id': '1',
             'image_description': 'My image',
             'last_service': 'replication',
-            'provider': 'azure',
+            'cloud': 'azure',
             'utctime': 'now',
             "replication_source_regions": {
                 "westus": {

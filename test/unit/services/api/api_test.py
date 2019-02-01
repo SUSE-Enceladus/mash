@@ -39,7 +39,7 @@ def test_api_add_account(mock_connection, mock_config, test_client):
         },
         'group': 'group1',
         'partition': 'aws',
-        'provider': 'ec2',
+        'cloud': 'ec2',
         'requesting_user': 'user1'
     }, sort_keys=True)
     response = test_client.post(
@@ -84,7 +84,7 @@ def test_api_add_account_error(mock_connection, mock_config, test_client):
         },
         'group': 'group1',
         'partition': 'aws',
-        'provider': 'fake',
+        'cloud': 'fake',
         'requesting_user': 'user1'
     }, sort_keys=True)
     response = test_client.post(
@@ -93,7 +93,7 @@ def test_api_add_account_error(mock_connection, mock_config, test_client):
         data=data
     )
     assert response.status_code == 400
-    assert b'fake is not a valid provider.' in response.data
+    assert b'fake is not a valid cloud.' in response.data
 
 
 @patch('mash.services.api.endpoints.BaseConfig')
@@ -112,7 +112,7 @@ def test_api_delete_account(mock_connection, mock_config, test_client):
 
     data = json.dumps({
         'account_name': 'test',
-        'provider': 'ec2',
+        'cloud': 'ec2',
         'requesting_user': 'user1'
     }, sort_keys=True)
     response = test_client.post(
@@ -151,7 +151,7 @@ def test_api_delete_account_error(mock_connection, mock_config, test_client):
 
     data = json.dumps({
         'account_name': 'test',
-        'provider': 'fake',
+        'cloud': 'fake',
         'requesting_user': 'user1'
     }, sort_keys=True)
     response = test_client.post(
@@ -160,7 +160,7 @@ def test_api_delete_account_error(mock_connection, mock_config, test_client):
         data=data
     )
     assert response.status_code == 400
-    assert b"fake is not a valid provider." in response.data
+    assert b"fake is not a valid cloud." in response.data
 
 
 @patch('mash.services.api.endpoints.BaseConfig')

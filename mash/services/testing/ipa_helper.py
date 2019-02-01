@@ -33,7 +33,7 @@ from ec2imgutils.ec2setup import EC2Setup
 
 
 def ipa_test(
-    results, provider=None, access_key_id=None, description=None, distro=None,
+    results, cloud=None, access_key_id=None, description=None, distro=None,
     image_id=None, instance_type=None, ipa_timeout=None, region=None,
     secret_access_key=None, service_account_credentials=None,
     ssh_private_key_file=None, ssh_user=None, tests=None
@@ -45,7 +45,7 @@ def ipa_test(
     security_group_id = None
 
     try:
-        if provider == CSP.ec2:
+        if cloud == CSP.ec2:
             key_name = generate_name()
             client = get_client(
                 'ec2', access_key_id, secret_access_key, region
@@ -74,7 +74,7 @@ def ipa_test(
             service_account_file = temp_file.name
 
         status, result = test_image(
-            provider,
+            cloud,
             access_key_id=access_key_id,
             cleanup=True,
             description=description,
@@ -105,7 +105,7 @@ def ipa_test(
         }
     finally:
         try:
-            if provider == CSP.ec2:
+            if cloud == CSP.ec2:
                 client.delete_key_pair(KeyName=key_name)
 
                 # Wait until instance is terminated

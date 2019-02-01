@@ -70,7 +70,7 @@ class TestJobCreatorService(object):
             self, mock_publish, mock_random
     ):
         self.jobcreator.jobs = {}
-        self.jobcreator.provider_data = {
+        self.jobcreator.cloud_data = {
             'ec2': {
                 'regions': {
                     'aws': ['ap-northeast-1', 'ap-northeast-2'],
@@ -130,9 +130,9 @@ class TestJobCreatorService(object):
         data = json.loads(msg)['credentials_job']
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
         assert data['last_service'] == 'pint'
-        assert data['provider'] == 'ec2'
-        assert 'test-aws-gov' in data['provider_accounts']
-        assert 'test-aws' in data['provider_accounts']
+        assert data['cloud'] == 'ec2'
+        assert 'test-aws-gov' in data['cloud_accounts']
+        assert 'test-aws' in data['cloud_accounts']
         assert data['requesting_user'] == 'user1'
         assert data['utctime'] == 'now'
 
@@ -164,7 +164,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "pint",
-                    "provider": "ec2",
+                    "cloud": "ec2",
                     "target_regions": {
                         "ap-northeast-1": {
                             "account": "test-aws",
@@ -187,7 +187,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
                     "last_service": "pint",
-                    "provider": "ec2",
+                    "cloud": "ec2",
                     "test_regions": {
                         "ap-northeast-1": "test-aws",
                         "us-gov-west-1": "test-aws-gov"
@@ -204,7 +204,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "pint",
-                    "provider": "ec2",
+                    "cloud": "ec2",
                     "replication_source_regions": {
                         "ap-northeast-1": {
                             "account": "test-aws",
@@ -227,7 +227,7 @@ class TestJobCreatorService(object):
         data = json.loads(msg)['publisher_job']
         assert data['allow_copy'] is False
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['provider'] == 'ec2'
+        assert data['cloud'] == 'ec2'
         assert data['share_with'] == 'all'
         assert data['utctime'] == 'now'
         assert data['last_service'] == 'pint'
@@ -247,7 +247,7 @@ class TestJobCreatorService(object):
         data = json.loads(msg)['deprecation_job']
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
         assert data['old_cloud_image_name'] == 'old_new_image_123'
-        assert data['provider'] == 'ec2'
+        assert data['cloud'] == 'ec2'
         assert data['utctime'] == 'now'
         assert data['last_service'] == 'pint'
 
@@ -270,7 +270,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "last_service": "pint",
                     "old_cloud_image_name": "old_new_image_123",
-                    "provider": "ec2",
+                    "cloud": "ec2",
                     "utctime": "now"
                 }
             })
@@ -281,7 +281,7 @@ class TestJobCreatorService(object):
         self, mock_publish
     ):
         self.jobcreator.jobs = {}
-        self.jobcreator.provider_data = {'azure': {}}
+        self.jobcreator.cloud_data = {'azure': {}}
         message = MagicMock()
 
         with open('../data/azure_job.json', 'r') as job_doc:
@@ -331,9 +331,9 @@ class TestJobCreatorService(object):
         data = json.loads(msg)['credentials_job']
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
         assert data['last_service'] == 'publisher'
-        assert data['provider'] == 'azure'
-        assert 'test-azure' in data['provider_accounts']
-        assert 'test-azure2' in data['provider_accounts']
+        assert data['cloud'] == 'azure'
+        assert 'test-azure' in data['cloud_accounts']
+        assert 'test-azure2' in data['cloud_accounts']
         assert data['requesting_user'] == 'user1'
         assert data['utctime'] == 'now'
 
@@ -364,7 +364,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "publisher",
-                    "provider": "azure",
+                    "cloud": "azure",
                     "target_regions": {
                         "centralus": {
                             "account": "test-azure2",
@@ -391,7 +391,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
                     "last_service": "publisher",
-                    "provider": "azure",
+                    "cloud": "azure",
                     "test_regions": {
                         "centralus": "test-azure2",
                         "southcentralus": "test-azure"
@@ -409,7 +409,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "publisher",
-                    "provider": "azure",
+                    "cloud": "azure",
                     "replication_source_regions": {
                         "centralus": {
                             "account": "test-azure2",
@@ -442,7 +442,7 @@ class TestJobCreatorService(object):
         assert data['label'] == 'New Image 123'
         assert data['last_service'] == 'publisher'
         assert data['offer_id'] == 'sles'
-        assert data['provider'] == 'azure'
+        assert data['cloud'] == 'azure'
         assert data['publisher_id'] == 'suse'
         assert data['sku'] == '123'
         assert data['utctime'] == 'now'
@@ -463,7 +463,7 @@ class TestJobCreatorService(object):
         self, mock_publish
     ):
         self.jobcreator.jobs = {}
-        self.jobcreator.provider_data = {'gce': {}}
+        self.jobcreator.cloud_data = {'gce': {}}
         message = MagicMock()
 
         with open('../data/gce_job.json', 'r') as job_doc:
@@ -503,9 +503,9 @@ class TestJobCreatorService(object):
         data = json.loads(msg)['credentials_job']
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
         assert data['last_service'] == 'publisher'
-        assert data['provider'] == 'gce'
-        assert 'test-gce' in data['provider_accounts']
-        assert 'test-gce2' in data['provider_accounts']
+        assert data['cloud'] == 'gce'
+        assert 'test-gce' in data['cloud_accounts']
+        assert 'test-gce2' in data['cloud_accounts']
         assert data['requesting_user'] == 'user1'
         assert data['utctime'] == 'now'
 
@@ -536,7 +536,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "publisher",
-                    "provider": "gce",
+                    "cloud": "gce",
                     "target_regions": {
                         "us-west2": {
                             "account": "test-gce2",
@@ -561,7 +561,7 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
                     "last_service": "publisher",
-                    "provider": "gce",
+                    "cloud": "gce",
                     "test_regions": {
                         "us-west2": "test-gce2",
                         "us-west1": "test-gce"
@@ -577,7 +577,7 @@ class TestJobCreatorService(object):
                 "replication_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
                     "last_service": "publisher",
-                    "provider": "gce",
+                    "cloud": "gce",
                     "utctime": "now"
                 }
             })
@@ -588,7 +588,7 @@ class TestJobCreatorService(object):
                 "publisher_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
                     "last_service": "publisher",
-                    "provider": "gce",
+                    "cloud": "gce",
                     "utctime": "now"
                 }
             })
@@ -629,7 +629,7 @@ class TestJobCreatorService(object):
             },
             "group": "group1",
             "partition": "aws",
-            "provider": "ec2",
+            "cloud": "ec2",
             "requesting_user": "user1"
         })
 
@@ -656,7 +656,7 @@ class TestJobCreatorService(object):
                 "tenantId": "654321"
             },
             "group": "group1",
-            "provider": "azure",
+            "cloud": "azure",
             "region": "southcentralus",
             "requesting_user": "user1",
             "resource_group": "rg_123",
@@ -679,7 +679,7 @@ class TestJobCreatorService(object):
         message.method = {'routing_key': 'delete_account'}
         message.body = JsonFormat.json_message({
             "account_name": "test-aws",
-            "provider": "ec2",
+            "cloud": "ec2",
             "requesting_user": "user2"
         })
 
@@ -743,14 +743,14 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({
                 "credentials_job_check": {
                     "id": "12345678-1234-1234-1234-123456789012",
-                    "provider": "ec2",
-                    "provider_accounts": [
+                    "cloud": "ec2",
+                    "cloud_accounts": [
                         {
                             "name": "test-aws-gov",
                             "target_regions": ["us-gov-west-1"]
                         }
                     ],
-                    "provider_groups": ["test"],
+                    "cloud_groups": ["test"],
                     "requesting_user": "user1"
                 }
             })
@@ -776,8 +776,8 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({
                 "credentials_job_check": {
                     "id": "12345678-1234-1234-1234-123456789012",
-                    "provider": "azure",
-                    "provider_accounts": [
+                    "cloud": "azure",
+                    "cloud_accounts": [
                         {
                             "name": "test-azure",
                             "region": "southcentralus",
@@ -789,7 +789,7 @@ class TestJobCreatorService(object):
                             "destination_container": "container2"
                         }
                     ],
-                    "provider_groups": ["test-azure-group"],
+                    "cloud_groups": ["test-azure-group"],
                     "requesting_user": "user1"
                 }
             })

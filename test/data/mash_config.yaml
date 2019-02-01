@@ -19,7 +19,7 @@ logger:
 obs:
   logfile: /tmp/foo.log
   download_directory: /images
-provider:
+cloud:
   ec2:
     regions:
       aws:

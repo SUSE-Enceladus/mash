@@ -5,7 +5,7 @@
         "image_description": "ami-12345",
         "last_service": "uploader",
         "utctime": "now",
-        "provider": "ec2",
+        "cloud": "ec2",
         "target_regions": {
             "us-east-1": {
                 "helper_image": "ami-bc5b48d0",

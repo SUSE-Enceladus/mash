@@ -59,7 +59,7 @@ class TestPublisherService(object):
     @patch.object(PublisherService, '_create_job')
     def test_publisher_add_job(self, mock_create_job):
         job_config = {
-            'id': '1', 'provider': 'ec2', 'utctime': 'now',
+            'id': '1', 'cloud': 'ec2', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
@@ -72,7 +72,7 @@ class TestPublisherService(object):
     @patch.object(PublisherService, '_create_job')
     def test_publisher_add_job_gce(self, mock_create_job):
         job_config = {
-            'id': '1', 'provider': 'gce', 'utctime': 'now',
+            'id': '1', 'cloud': 'gce', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
@@ -85,7 +85,7 @@ class TestPublisherService(object):
     @patch.object(PublisherService, '_create_job')
     def test_publisher_add_job_azure(self, mock_create_job):
         job_config = {
-            'id': '1', 'provider': 'azure', 'utctime': 'now',
+            'id': '1', 'cloud': 'azure', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
@@ -101,7 +101,7 @@ class TestPublisherService(object):
         self.publisher.jobs['1'] = job
         job_config = {
             'id': '1', 'image_desc': 'image 123',
-            'provider': 'ec2', 'utctime': 'now',
+            'cloud': 'ec2', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
@@ -110,15 +110,15 @@ class TestPublisherService(object):
             extra={'job_id': '1'}
         )
 
-    def test_publisher_add_job_invalid_provider(self):
+    def test_publisher_add_job_invalid_cloud(self):
         job_config = {
             'id': '1', 'image_desc': 'image 123',
-            'provider': 'Provider', 'utctime': 'now',
+            'cloud': 'fake', 'utctime': 'now',
         }
 
         self.publisher._add_job(job_config)
         self.publisher.log.error.assert_called_once_with(
-            'Provider Provider is not supported.'
+            'Cloud fake is not supported.'
         )
 
     def test_publisher_get_status_message(self):

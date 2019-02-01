@@ -29,8 +29,8 @@ class EC2Job(BaseJob):
     Handles incoming job requests.
     """
     def __init__(
-        self, accounts_info, provider_data, job_id, provider,
-        provider_accounts, provider_groups, requesting_user, last_service,
+        self, accounts_info, cloud_data, job_id, cloud,
+        cloud_accounts, cloud_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, allow_copy=False, conditions=None,
         instance_type=None, share_with='none', old_cloud_image_name=None,
@@ -41,8 +41,8 @@ class EC2Job(BaseJob):
         self.target_account_info = {}
 
         super(EC2Job, self).__init__(
-            accounts_info, provider_data, job_id, provider, provider_accounts,
-            provider_groups, requesting_user, last_service, utctime, image,
+            accounts_info, cloud_data, job_id, cloud, cloud_accounts,
+            cloud_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, image_description, distro, download_url, tests,
             conditions, instance_type, old_cloud_image_name, cleanup_images,
             cloud_architecture
@@ -69,14 +69,14 @@ class EC2Job(BaseJob):
         accounts = {}
 
         # Get dictionary of account names to target regions
-        for provider_account in self.provider_accounts:
-            accounts[provider_account['name']] = \
-                provider_account['target_regions']
+        for cloud_account in self.cloud_accounts:
+            accounts[cloud_account['name']] = \
+                cloud_account['target_regions']
 
-        helper_images = self.provider_data.get('helper_images')
+        helper_images = self.cloud_data.get('helper_images')
 
         # Get all accounts from all groups
-        for group in self.provider_groups:
+        for group in self.cloud_groups:
             group_accounts += self._get_accounts_in_group(
                 group, self.requesting_user
             )
@@ -117,7 +117,7 @@ class EC2Job(BaseJob):
         Return a list of regions based on account name.
         """
         regions_key = self.accounts_info['accounts'][user][account]['partition']
-        return self.provider_data['regions'][regions_key]
+        return self.cloud_data['regions'][regions_key]
 
     def _get_target_regions_list(self):
         """
@@ -143,7 +143,7 @@ class EC2Job(BaseJob):
         """
         publisher_message = {
             'publisher_job': {
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'allow_copy': self.allow_copy,
                 'share_with': self.share_with,
                 'publish_regions': self.get_publisher_regions()
@@ -166,7 +166,7 @@ class EC2Job(BaseJob):
         replication_message = {
             'replication_job': {
                 'image_description': self.image_description,
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'replication_source_regions':
                     self.get_replication_source_regions()
             }

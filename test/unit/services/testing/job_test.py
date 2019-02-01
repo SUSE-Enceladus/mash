@@ -10,7 +10,7 @@ class TestTestingJob(object):
         self.job_config = {
             'id': '1',
             'last_service': 'testing',
-            'provider': 'ec2',
+            'cloud': 'ec2',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {'us-east-1': 'test-aws'},
             'tests': ['test_stuff'],
@@ -21,14 +21,14 @@ class TestTestingJob(object):
         job = TestingJob(**self.job_config)
 
         assert job.id == '1'
-        assert job.provider == 'ec2'
+        assert job.cloud == 'ec2'
         assert job.tests == ['test_stuff']
         assert job.utctime == 'now'
 
-    def test_add_provider_creds(self):
+    def test_add_cloud_creds(self):
         job = TestingJob(**self.job_config)
         with raises(NotImplementedError):
-            job._add_provider_creds(
+            job._add_cloud_creds(
                 {'creds': 'dict'},
                 {}
             )

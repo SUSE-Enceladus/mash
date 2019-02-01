@@ -35,7 +35,7 @@ class JobCreatorService(MashService):
         Initialize job creator service class.
         """
         self.set_logfile(self.config.get_log_file(self.service_exchange))
-        self.provider_data = self.config.get_provider_data()
+        self.cloud_data = self.config.get_cloud_data()
         self.services = self.config.get_service_names()
 
         self.bind_queue(
@@ -126,9 +126,9 @@ class JobCreatorService(MashService):
         account_check_message = {
             'credentials_job_check': {
                 'id': job_id,
-                'provider': job_doc['provider'],
-                'provider_accounts': job_doc['provider_accounts'],
-                'provider_groups': job_doc['provider_groups'],
+                'cloud': job_doc['cloud'],
+                'cloud_accounts': job_doc['cloud_accounts'],
+                'cloud_groups': job_doc['cloud_groups'],
                 'requesting_user': job_doc['requesting_user']
             }
         }
@@ -167,12 +167,12 @@ class JobCreatorService(MashService):
         Create instance of job and send to all services to initiate job.
 
         Message from credentials service contains account info for the
-        provider.
+        cloud.
         """
         job_id = message['id']
         job_doc = self.jobs[job_id]
         accounts_info = message['accounts_info']
-        job = create_job(job_doc, accounts_info, self.provider_data)
+        job = create_job(job_doc, accounts_info, self.cloud_data)
 
         self.log.info(
             'Started a new job: {0}'.format(JsonFormat.json_message(job_doc)),

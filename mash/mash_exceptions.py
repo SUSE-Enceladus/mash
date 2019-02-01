@@ -64,13 +64,13 @@ class MashConfigException(MashException):
 
 class MashCredentialsException(MashException):
     """
-    Exception raised if no credentials handler for this cloud provider exists.
+    Exception raised if no credentials handler for this cloud exists.
     """
 
 
 class MashConventionsException(MashException):
     """
-    Exception raised if no conventions handler for this cloud provider exists
+    Exception raised if no conventions handler for this cloud exists
     or the validation of the naming convention has failed for a reason
     """
 
@@ -101,7 +101,7 @@ class MashUploadException(MashException):
 
 class MashUploadSetupException(MashException):
     """
-    Exception raised if no image upload handler for this cloud provider exists.
+    Exception raised if no image upload handler for this cloud exists.
     """
 
 

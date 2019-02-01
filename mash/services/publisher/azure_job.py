@@ -38,11 +38,11 @@ class AzurePublisherJob(PublisherJob):
 
     def __init__(
         self, emails, id, image_description, label,
-        last_service, offer_id, provider, publish_regions, publisher_id, sku,
+        last_service, offer_id, cloud, publish_regions, publisher_id, sku,
         utctime, job_file=None, version_key=None
     ):
         super(AzurePublisherJob, self).__init__(
-            id, last_service, provider, utctime, job_file=job_file
+            id, last_service, cloud, utctime, job_file=job_file
         )
 
         self.emails = emails

@@ -2,7 +2,7 @@
     "deprecation_job": {
         "id": "123",
         "last_service": "deprecation",
-        "provider": "ec2",
+        "cloud": "ec2",
         "utctime": "now",
         "old_cloud_image_name": "old_image_123",
         "deprecation_regions": [

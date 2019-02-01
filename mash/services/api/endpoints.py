@@ -83,12 +83,12 @@ def validate_request(flask_request, endpoint):
     # Python 3.4 + 3.5 json module requires string not bytes
     flask_request.data = flask_request.data.decode()
     message = json.loads(flask_request.data)
-    provider = message.get('provider')
+    cloud = message.get('cloud')
 
-    if provider not in ['azure', 'ec2', 'gce']:
-        raise Exception('{} is not a valid provider.'.format(provider))
+    if cloud not in ['azure', 'ec2', 'gce']:
+        raise Exception('{} is not a valid cloud.'.format(cloud))
 
-    validate(message, schemas[endpoint][provider])
+    validate(message, schemas[endpoint][cloud])
     return message
 
 
