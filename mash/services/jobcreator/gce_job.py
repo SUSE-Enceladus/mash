@@ -30,7 +30,7 @@ class GCEJob(BaseJob):
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None, family=None,
         old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture='x86_64'
+        cloud_architecture='x86_64', months_to_deletion=6
     ):
         self.family = family
         self.target_account_info = {}
@@ -42,6 +42,8 @@ class GCEJob(BaseJob):
             conditions, instance_type, old_cloud_image_name, cleanup_images,
             cloud_architecture
         )
+
+        self.months_to_deletion = months_to_deletion
 
     def _get_account_info(self):
         """
@@ -88,12 +90,35 @@ class GCEJob(BaseJob):
                 'family': self.family
             }
 
-    def get_deprecation_regions(self):
+    def get_deprecation_message(self):
         """
-        Return list of deprecation region info.
+        Build deprecation job message.
+        """
+        deprecation_message = {
+            'deprecation_job': {
+                'cloud': self.cloud,
+                'deprecation_accounts': self.get_deprecation_accounts(),
+                'months_to_deletion': self.months_to_deletion
+            }
+        }
+        deprecation_message['deprecation_job'].update(self.base_message)
 
+        if self.old_cloud_image_name:
+            deprecation_message['deprecation_job']['old_cloud_image_name'] = \
+                self.old_cloud_image_name
+
+        return JsonFormat.json_message(deprecation_message)
+
+    def get_deprecation_accounts(self):
         """
-        raise NotImplementedError('TODO')
+        Return list of deprecation account info.
+        """
+        deprecation_accounts = []
+
+        for source_region, value in self.target_account_info.items():
+            deprecation_accounts.append(value['account'])
+
+        return deprecation_accounts
 
     def get_publisher_message(self):
         """

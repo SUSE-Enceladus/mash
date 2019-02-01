@@ -502,7 +502,7 @@ class TestJobCreatorService(object):
         msg = mock_publish.mock_calls[0][1][2]
         data = json.loads(msg)['credentials_job']
         assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'publisher'
+        assert data['last_service'] == 'deprecation'
         assert data['cloud'] == 'gce'
         assert 'test-gce' in data['cloud_accounts']
         assert 'test-gce2' in data['cloud_accounts']
@@ -522,7 +522,7 @@ class TestJobCreatorService(object):
                                     "repositories/Cloud:Tools/images",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "utctime": "now"
                 }
             })
@@ -535,7 +535,7 @@ class TestJobCreatorService(object):
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "cloud": "gce",
                     "target_regions": {
                         "us-west2": {
@@ -560,7 +560,7 @@ class TestJobCreatorService(object):
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "cloud": "gce",
                     "test_regions": {
                         "us-west2": "test-gce2",
@@ -576,7 +576,7 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({
                 "replication_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "cloud": "gce",
                     "utctime": "now"
                 }
@@ -587,12 +587,21 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({
                 "publisher_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
-                    "last_service": "publisher",
+                    "last_service": "deprecation",
                     "cloud": "gce",
                     "utctime": "now"
                 }
             })
         )
+        msg = mock_publish.mock_calls[6][1][2]
+        data = json.loads(msg)['deprecation_job']
+        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        assert data['last_service'] == 'deprecation'
+        assert data['old_cloud_image_name'] == 'old_new_image_123'
+        assert data['cloud'] == 'gce'
+        assert 'test-gce' in data['deprecation_accounts']
+        assert 'test-gce2' in data['deprecation_accounts']
+        assert data['utctime'] == 'now'
 
     def test_jobcreator_handle_invalid_service_message(self):
         message = MagicMock()

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -24,11 +24,15 @@ class DeprecationJob(MashJob):
     """
     Class for an individual deprecation job.
     """
-
-    def __init__(self, id, last_service, cloud, utctime, job_file=None):
+    def __init__(
+        self, id, last_service, cloud, utctime,
+        old_cloud_image_name=None, job_file=None
+    ):
         super(DeprecationJob, self).__init__(
             id, last_service, cloud, utctime, job_file
         )
+
+        self.old_cloud_image_name = old_cloud_image_name
 
     def _deprecate(self):
         """

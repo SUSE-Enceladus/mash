@@ -130,6 +130,24 @@ class EC2Job(BaseJob):
 
         return regions
 
+    def get_deprecation_message(self):
+        """
+        Build deprecation job message.
+        """
+        deprecation_message = {
+            'deprecation_job': {
+                'cloud': self.cloud,
+                'deprecation_regions': self.get_deprecation_regions()
+            }
+        }
+        deprecation_message['deprecation_job'].update(self.base_message)
+
+        if self.old_cloud_image_name:
+            deprecation_message['deprecation_job']['old_cloud_image_name'] = \
+                self.old_cloud_image_name
+
+        return JsonFormat.json_message(deprecation_message)
+
     def get_deprecation_regions(self):
         """
         Return list of deprecation region info.
