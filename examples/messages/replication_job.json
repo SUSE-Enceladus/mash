@@ -3,7 +3,7 @@
         "id": "123",
         "image_description": "My Image",
         "last_service": "replication",
-        "provider": "ec2",
+        "cloud": "ec2",
         "utctime": "now",
         "replication_source_regions": {
             "us-east-1": {

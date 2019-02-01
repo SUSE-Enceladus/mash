@@ -7,7 +7,7 @@
     "tenantId": "654321"
   },
   "group": "group1",
-  "provider": "azure",
+  "cloud": "azure",
   "region": "southcentralus",
   "requesting_user": "user1",
   "source_resource_group": "rg-1",

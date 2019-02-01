@@ -125,10 +125,10 @@ class TestPipelineService(object):
 
         job_class = Mock()
         job_class.return_value = job
-        job_config = {'id': '1', 'provider': 'ec2'}
+        job_config = {'id': '1', 'cloud': 'ec2'}
         self.service._create_job(job_class, job_config)
 
-        job_class.assert_called_once_with(id='1', provider='ec2')
+        job_class.assert_called_once_with(id='1', cloud='ec2')
         assert job.log_callback == self.service.log_job_message
         assert job.job_file == 'temp-config.json'
         self.service.log.info.assert_called_once_with(
@@ -139,7 +139,7 @@ class TestPipelineService(object):
     def test_service_create_job_exception(self):
         job_class = Mock()
         job_class.side_effect = Exception('Cannot create job.')
-        job_config = {'id': '1', 'provider': 'ec2'}
+        job_config = {'id': '1', 'cloud': 'ec2'}
 
         self.service._create_job(job_class, job_config)
         self.service.log.exception.assert_called_once_with(
@@ -277,11 +277,11 @@ class TestPipelineService(object):
     def test_service_handle_service_message(self, mock_add_job):
         self.method['routing_key'] = 'job_document'
         self.message.body = '{"replication_job": {"id": "1", ' \
-            '"provider": "ec2", "utctime": "now"}}'
+            '"cloud": "ec2", "utctime": "now"}}'
         self.service._handle_service_message(self.message)
 
         mock_add_job.assert_called_once_with({
-            'id': '1', 'provider': 'ec2', 'utctime': 'now'
+            'id': '1', 'cloud': 'ec2', 'utctime': 'now'
         })
         self.message.ack.assert_called_once_with()
 

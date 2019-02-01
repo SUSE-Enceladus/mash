@@ -79,10 +79,10 @@ class TestCredentialsService(object):
         self, mock_send_control_response, mock_persist_job_config
     ):
         mock_persist_job_config.return_value = 'temp-config.json'
-        self.service._add_job({'id': '1', 'provider': 'ec2'})
+        self.service._add_job({'id': '1', 'cloud': 'ec2'})
 
         job_config = {
-            'id': '1', 'job_file': 'temp-config.json', 'provider': 'ec2'
+            'id': '1', 'job_file': 'temp-config.json', 'cloud': 'ec2'
         }
         mock_persist_job_config.assert_called_once_with(job_config)
 
@@ -93,10 +93,10 @@ class TestCredentialsService(object):
 
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_add_job_exists(self, mock_send_control_response):
-        job = {'id': '1', 'provider': 'ec2'}
+        job = {'id': '1', 'cloud': 'ec2'}
 
         self.service.jobs['1'] = job
-        self.service._add_job({'id': '1', 'provider': 'ec2'})
+        self.service._add_job({'id': '1', 'cloud': 'ec2'})
 
         mock_send_control_response.assert_called_once_with(
             'Job already queued.', success=False, job_id='1'
@@ -162,13 +162,13 @@ class TestCredentialsService(object):
 
         doc = {
             'id': '123',
-            'provider': 'ec2',
-            'provider_accounts': [
+            'cloud': 'ec2',
+            'cloud_accounts': [
                 {
                     'name': 'test-aws-gov', 'target_regions': ['us-gov-west-1']
                 }
             ],
-            'provider_groups': ['test'], 'requesting_user': 'user1'
+            'cloud_groups': ['test'], 'requesting_user': 'user1'
         }
         self.service._confirm_job(doc)
 
@@ -212,7 +212,7 @@ class TestCredentialsService(object):
     def test_credentials_delete_job(
         self, mock_send_control_response, mock_remove_file
     ):
-        job = {'id': '1', 'provider': 'ec2', 'job_file': 'temp-config.json'}
+        job = {'id': '1', 'cloud': 'ec2', 'job_file': 'temp-config.json'}
 
         self.service.jobs['1'] = job
         self.service._delete_job('1')
@@ -247,7 +247,7 @@ class TestCredentialsService(object):
 
         assert result['account'] == 'info'
 
-        # Test get accounts with no provider
+        # Test get accounts with no cloud
         with patch('builtins.open', create=True) as mock_open:
             mock_open.return_value = MagicMock(spec=io.IOBase)
             file_handle = mock_open.return_value.__enter__.return_value
@@ -299,7 +299,7 @@ class TestCredentialsService(object):
         message.body = '''{
             "account_name": "test-aws",
             "credentials": "encrypted_creds",
-            "provider": "ec2",
+            "cloud": "ec2",
             "requesting_user": "user1"
         }'''
         self.service._handle_account_request(message)
@@ -313,7 +313,7 @@ class TestCredentialsService(object):
         message = MagicMock()
         message.body = '''{
             "account_name": "test-aws",
-            "provider": "ec2",
+            "cloud": "ec2",
             "requesting_user": "user1"
         }'''
         message.method = {'routing_key': 'delete_account'}
@@ -449,7 +449,7 @@ class TestCredentialsService(object):
             file_handle.write.assert_called_once_with('encrypted_secrets')
             self.service.log.info.assert_called_once_with(
                 'Storing credentials for account: '
-                'account1, provider: ec2, user: user1.'
+                'account1, cloud: ec2, user: user1.'
             )
 
         with patch('builtins.open', create=True) as mock_open:
@@ -545,8 +545,8 @@ class TestCredentialsService(object):
         self.service.jobs = {
             '1': {
                 'id': '1',
-                'provider': 'ec2',
-                'provider_accounts': ['test-aws'],
+                'cloud': 'ec2',
+                'cloud_accounts': ['test-aws'],
                 'requesting_user': 'user1',
                 'last_service': 'pint'
             }
@@ -597,7 +597,7 @@ class TestCredentialsService(object):
             'account_name': 'acnt123',
             'credentials': {'creds': 'data'},
             'partition': 'aws',
-            'provider': 'ec2',
+            'cloud': 'ec2',
             'requesting_user': 'user1',
             'group': 'group123'
         }
@@ -629,7 +629,7 @@ class TestCredentialsService(object):
         message = {
             "account_name": "test-azure",
             "credentials": {"encrypted": "creds"},
-            "provider": "azure",
+            "cloud": "azure",
             "region": "southcentralus",
             "requesting_user": "user1",
             "source_container": "container1",
@@ -673,7 +673,7 @@ class TestCredentialsService(object):
             "account_name": "test-gce",
             "bucket": "images",
             "credentials": {"encrypted": "creds"},
-            "provider": "gce",
+            "cloud": "gce",
             "region": "us-west2",
             "requesting_user": "user1"
         }
@@ -699,14 +699,14 @@ class TestCredentialsService(object):
             'account_name': 'acnt123',
             'credentials': {'creds': 'data'},
             'partition': 'aws',
-            'provider': 'fake',
+            'cloud': 'fake',
             'requesting_user': 'user1',
             'group': 'group123'
         }
 
         self.service.add_account(message)
         self.service.log.warning.assert_called_once_with(
-            'Invalid provider for account: fake.'
+            'Invalid cloud for account: fake.'
         )
 
     @patch.object(CredentialsService, '_get_credentials_file_path')
@@ -726,7 +726,7 @@ class TestCredentialsService(object):
 
         message = {
             "account_name": "test-aws",
-            "provider": "ec2",
+            "cloud": "ec2",
             "requesting_user": "user2"
         }
 
@@ -735,7 +735,7 @@ class TestCredentialsService(object):
         mock_get_acnts_from_file.assert_called_once_with()
         self.service.log.info.assert_called_once_with(
             'Deleting credentials for account: '
-            'test-aws, provider: ec2, user: user2.'
+            'test-aws, cloud: ec2, user: user2.'
         )
         mock_os.remove.assert_called_once_with(
             '/var/lib/mash/credentials/user2/ec2/test-aws'
@@ -803,7 +803,7 @@ class TestCredentialsService(object):
 
         message = {
             "account_name": "fake",
-            "provider": "ec2",
+            "cloud": "ec2",
             "requesting_user": "user2"
         }
 

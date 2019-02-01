@@ -12,7 +12,7 @@ class TestEC2PublisherJob(object):
             'allow_copy': False,
             'id': '1',
             'last_service': 'publisher',
-            'provider': 'ec2',
+            'cloud': 'ec2',
             'publish_regions': [
                 {
                     'account': 'test-aws',

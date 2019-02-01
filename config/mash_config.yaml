@@ -21,7 +21,7 @@ credentials:
   accounts_file: /etc/mash/accounts.json
 obs:
   download_directory: /var/lib/mash/images
-provider:
+cloud:
   ec2:
     regions:
       aws:

@@ -8,7 +8,7 @@ class TestAzureAccount(object):
         message = {
             'account_name': 'acnt123',
             'group': 'group123',
-            'provider': 'azure',
+            'cloud': 'azure',
             'region': 'southcentralus',
             'requesting_user': 'user2',
             'source_resource_group': 'rg-1',

@@ -102,15 +102,15 @@ class BaseConfig(object):
             dir=log_dir, service=service
         )
 
-    def get_provider_data(self):
+    def get_cloud_data(self):
         """
-        Return the provider data from config.
+        Return the cloud data from config.
         """
-        data = self._get_attribute(attribute='provider')
+        data = self._get_attribute(attribute='cloud')
 
         if not data:
             raise MashConfigException(
-                'Provider data must be provided in config file.'
+                'cloud data must be provided in config file.'
             )
 
         return data

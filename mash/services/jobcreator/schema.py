@@ -64,7 +64,7 @@ add_account_azure = {
             ],
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
-        'provider': {'enum': ['azure']},
+        'cloud': {'enum': ['azure']},
         'region': {'$ref': '#/definitions/non_empty_string'},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
         'source_container': {'$ref': '#/definitions/non_empty_string'},
@@ -80,7 +80,7 @@ add_account_azure = {
     },
     'additionalProperties': False,
     'required': [
-        'account_name', 'credentials', 'provider', 'requesting_user',
+        'account_name', 'credentials', 'cloud', 'requesting_user',
         'source_container', 'source_resource_group', 'source_storage_account',
         'destination_container', 'destination_resource_group',
         'destination_storage_account'
@@ -119,11 +119,11 @@ add_account_ec2 = {
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
         'partition': {'$ref': '#/definitions/non_empty_string'},
-        'provider': {'enum': ['ec2']},
+        'cloud': {'enum': ['ec2']},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,
-    'required': ['account_name', 'credentials', 'provider', 'requesting_user'],
+    'required': ['account_name', 'credentials', 'cloud', 'requesting_user'],
     'definitions': {
         'non_empty_string': non_empty_string
     }
@@ -161,13 +161,13 @@ add_account_gce = {
             ]
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
-        'provider': {'enum': ['gce']},
+        'cloud': {'enum': ['gce']},
         'region': {'$ref': '#/definitions/non_empty_string'},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'}
     },
     'additionalProperties': False,
     'required': [
-        'account_name', 'bucket', 'credentials', 'provider',
+        'account_name', 'bucket', 'credentials', 'cloud',
         'requesting_user', 'region'
     ],
     'definitions': {
@@ -180,11 +180,11 @@ delete_account = {
     'type': 'object',
     'properties': {
         'account_name': {'$ref': '#/definitions/non_empty_string'},
-        'provider': {'enum': ['azure', 'ec2']},
+        'cloud': {'enum': ['azure', 'ec2']},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,
-    'required': ['account_name', 'provider', 'requesting_user'],
+    'required': ['account_name', 'cloud', 'requesting_user'],
     'definitions': {
         'non_empty_string': non_empty_string
     }
@@ -194,11 +194,11 @@ delete_account = {
 base_job_message = {
     'type': 'object',
     'properties': {
-        'provider_accounts': {
+        'cloud_accounts': {
             'type': 'array',
             'items': {'$ref': '#definitions/account'}
         },
-        'provider_groups': {
+        'cloud_groups': {
             'type': 'array',
             'items': {'$ref': '#/definitions/non_empty_string'},
             'uniqueItems': True
@@ -254,7 +254,7 @@ base_job_message = {
     },
     'additionalProperties': False,
     'required': [
-        'provider', 'provider_accounts', 'provider_groups', 'requesting_user',
+        'cloud', 'cloud_accounts', 'cloud_groups', 'requesting_user',
         'last_service', 'utctime', 'image', 'cloud_image_name',
         'image_description', 'download_url', 'tests'
     ],
@@ -282,7 +282,7 @@ base_job_message = {
 }
 
 ec2_job_message = copy.deepcopy(base_job_message)
-ec2_job_message['properties']['provider'] = {'enum': ['ec2']}
+ec2_job_message['properties']['cloud'] = {'enum': ['ec2']}
 ec2_job_message['properties']['share_with'] = {
     'anyOf': [
         {'enum': ['all', 'none']},
@@ -310,7 +310,7 @@ ec2_job_message['definitions']['account'] = {
 
 
 azure_job_message = copy.deepcopy(base_job_message)
-azure_job_message['properties']['provider'] = {'enum': ['azure']}
+azure_job_message['properties']['cloud'] = {'enum': ['azure']}
 azure_job_message['properties']['emails'] = {
     '$ref': '#/definitions/non_empty_string'
 }
@@ -356,7 +356,7 @@ azure_job_message['definitions']['account'] = {
 
 
 gce_job_message = copy.deepcopy(base_job_message)
-gce_job_message['properties']['provider'] = {'enum': ['gce']}
+gce_job_message['properties']['cloud'] = {'enum': ['gce']}
 gce_job_message['properties']['family'] = {
     '$ref': '#/definitions/non_empty_string'
 }

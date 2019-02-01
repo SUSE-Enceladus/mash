@@ -326,17 +326,17 @@ class TestBaseService(object):
         template = {
             'type': 'object',
             'properties': {
-                'provider': {'enum': ['azure', 'ec2']}
+                'cloud': {'enum': ['azure', 'ec2']}
             },
             'additionalProperties': False,
-            'required': ['provider']
+            'required': ['cloud']
         }
-        message = {'provider': 'ec2'}
+        message = {'cloud': 'ec2'}
         result = self.service.validate_message(message, template)
 
         assert result is None
 
-        message = {'provider': 'cloud_provider'}
+        message = {'cloud': 'cloud_provider'}
 
         with raises(MashValidationException) as error:
             self.service.validate_message(message, template)

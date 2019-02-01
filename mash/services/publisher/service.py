@@ -29,29 +29,29 @@ class PublisherService(PipelineService):
     """
     Implementation of publisher service.
 
-    Handles the publishing of images in public cloud providers.
+    Handles the publishing of images in public cloud frameworks.
     """
     def _add_job(self, job_config):
         """
         Add new job to publisher queue from job_config.
         """
         job_id = job_config['id']
-        provider = job_config['provider']
+        cloud = job_config['cloud']
 
         if job_id in self.jobs:
             self.log.warning(
                 'Job already queued.',
                 extra={'job_id': job_id}
             )
-        elif provider == CSP.ec2:
+        elif cloud == CSP.ec2:
             self._create_job(EC2PublisherJob, job_config)
-        elif provider == CSP.gce:
+        elif cloud == CSP.gce:
             self._create_job(GCEPublisherJob, job_config)
-        elif provider == CSP.azure:
+        elif cloud == CSP.azure:
             self._create_job(AzurePublisherJob, job_config)
         else:
             self.log.error(
-                'Provider {0} is not supported.'.format(provider)
+                'Cloud {0} is not supported.'.format(cloud)
             )
 
     def _get_status_message(self, job):

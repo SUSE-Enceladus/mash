@@ -127,7 +127,7 @@ class UploadImageService(MashService):
             "utctime": "now|always,
             "cloud_image_name": "name",
             "image_description": "description",
-            "provider": "ec2",
+            "cloud": "ec2",
             "target_regions": {
                 "us-east-1": {
                     "helper_image": "ami-bc5b48d0",
@@ -319,17 +319,17 @@ class UploadImageService(MashService):
     def _get_uploader_arguments_per_region(self, job_config):
         uploader_args = []
         for region in job_config['target_regions']:
-            if job_config['provider'] == CSP.ec2:
+            if job_config['cloud'] == CSP.ec2:
                 # turn region metadata into EC2ImageUploader compatible format
                 uploader_args.append(
                     self._get_uploader_arguments_ec2(job_config, region)
                 )
-            elif job_config['provider'] == CSP.azure:
+            elif job_config['cloud'] == CSP.azure:
                 # turn region metadata into AzureImageUploader compatible format
                 uploader_args.append(
                     self._get_uploader_arguments_azure(job_config, region)
                 )
-            elif job_config['provider'] == CSP.gce:
+            elif job_config['cloud'] == CSP.gce:
                 # turn region metadata into GCEImageUploader compatible format
                 uploader_args.append(
                     self._get_uploader_arguments_gce(job_config, region)
@@ -364,7 +364,7 @@ class UploadImageService(MashService):
 
         upload_image = UploadImage(
             job_id, self.jobs[job_id]['job_file'],
-            self.jobs[job_id]['job_config']['provider'],
+            self.jobs[job_id]['job_config']['cloud'],
             self.jobs[job_id]['credentials'][uploader_args['account']],
             self.jobs[job_id]['job_config']['cloud_image_name'],
             self.jobs[job_id]['job_config']['image_description'],

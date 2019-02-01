@@ -8,7 +8,7 @@ class TestEC2Account(object):
         message = {
             'account_name': 'acnt123',
             'partition': 'aws',
-            'provider': 'ec2',
+            'cloud': 'ec2',
             'requesting_user': 'user2'
         }
         self.account = EC2Account(message)

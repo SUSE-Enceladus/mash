@@ -12,6 +12,6 @@
   },
   "group": "group1",
   "partition": "aws",
-  "provider": "ec2",
+  "cloud": "ec2",
   "requesting_user": "user1"
 }

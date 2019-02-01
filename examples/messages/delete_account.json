@@ -1,5 +1,5 @@
 {
   "account_name": "test-aws",
-  "provider": "ec2",
+  "cloud": "ec2",
   "requesting_user": "user1"
 }

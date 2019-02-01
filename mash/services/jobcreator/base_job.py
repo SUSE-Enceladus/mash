@@ -26,8 +26,8 @@ class BaseJob(object):
     Handles incoming job requests.
     """
     def __init__(
-        self, accounts_info, provider_data, job_id, provider,
-        provider_accounts, provider_groups, requesting_user, last_service,
+        self, accounts_info, cloud_data, job_id, cloud,
+        cloud_accounts, cloud_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None,
         old_cloud_image_name=None, cleanup_images=True,
@@ -35,10 +35,10 @@ class BaseJob(object):
     ):
         self.id = job_id
         self.accounts_info = accounts_info
-        self.provider_data = provider_data
-        self.provider = provider
-        self.provider_accounts = provider_accounts
-        self.provider_groups = provider_groups
+        self.cloud_data = cloud_data
+        self.cloud = cloud
+        self.cloud_accounts = cloud_accounts
+        self.cloud_groups = cloud_groups
         self.requesting_user = requesting_user
         self.last_service = last_service
         self.image = image
@@ -86,8 +86,8 @@ class BaseJob(object):
 
         credentials_message = {
             'credentials_job': {
-                'provider': self.provider,
-                'provider_accounts': accounts,
+                'cloud': self.cloud,
+                'cloud_accounts': accounts,
                 'requesting_user': self.requesting_user
             }
         }
@@ -101,7 +101,7 @@ class BaseJob(object):
         """
         deprecation_message = {
             'deprecation_job': {
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'deprecation_regions': self.get_deprecation_regions()
             }
         }
@@ -148,7 +148,7 @@ class BaseJob(object):
         """
         pint_message = {
             'pint_job': {
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'cloud_image_name': self.cloud_image_name,
             }
         }
@@ -188,7 +188,7 @@ class BaseJob(object):
         """
         testing_message = {
             'testing_job': {
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'tests': self.tests,
                 'test_regions': self.get_testing_regions()
             }
@@ -220,7 +220,7 @@ class BaseJob(object):
         uploader_message = {
             'uploader_job': {
                 'cloud_image_name': self.cloud_image_name,
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'image_description': self.image_description,
                 'target_regions': self.get_uploader_regions()
             }

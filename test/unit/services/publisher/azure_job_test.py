@@ -12,7 +12,7 @@ class TestAzurePublisherJob(object):
             'label': 'New Image 123',
             'last_service': 'publisher',
             'offer_id': 'sles',
-            'provider': 'azure',
+            'cloud': 'azure',
             'publish_regions': [
                 {
                     'account': 'acnt1',

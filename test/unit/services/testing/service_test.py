@@ -77,15 +77,15 @@ class TestIPATestingService(object):
     def test_testing_add_job(self, mock_create_job):
         job = Mock()
         job.id = '1'
-        job.get_metadata.return_value = {'job_id': job.id, 'provider': 'ec2'}
+        job.get_metadata.return_value = {'job_id': job.id, 'cloud': 'ec2'}
 
-        self.testing._add_job({'id': job.id, 'provider': 'ec2'})
+        self.testing._add_job({'id': job.id, 'cloud': 'ec2'})
 
         mock_create_job.assert_called_once_with(
             EC2TestingJob, {
                 'id': job.id,
                 'ipa_timeout': 600,
-                'provider': 'ec2',
+                'cloud': 'ec2',
                 'ssh_private_key_file': 'private_ssh_key.file'
             }
         )
@@ -94,15 +94,15 @@ class TestIPATestingService(object):
     def test_testing_add_azure_job(self, mock_create_job):
         job = Mock()
         job.id = '1'
-        job.get_metadata.return_value = {'job_id': job.id, 'provider': 'azure'}
+        job.get_metadata.return_value = {'job_id': job.id, 'cloud': 'azure'}
 
-        self.testing._add_job({'id': job.id, 'provider': 'azure'})
+        self.testing._add_job({'id': job.id, 'cloud': 'azure'})
 
         mock_create_job.assert_called_once_with(
             AzureTestingJob, {
                 'id': job.id,
                 'ipa_timeout': 600,
-                'provider': 'azure',
+                'cloud': 'azure',
                 'ssh_private_key_file': 'private_ssh_key.file'
             }
         )
@@ -111,15 +111,15 @@ class TestIPATestingService(object):
     def test_testing_add_gce_job(self, mock_create_job):
         job = Mock()
         job.id = '1'
-        job.get_metadata.return_value = {'job_id': job.id, 'provider': 'gce'}
+        job.get_metadata.return_value = {'job_id': job.id, 'cloud': 'gce'}
 
-        self.testing._add_job({'id': job.id, 'provider': 'gce'})
+        self.testing._add_job({'id': job.id, 'cloud': 'gce'})
 
         mock_create_job.assert_called_once_with(
             GCETestingJob, {
                 'id': job.id,
                 'ipa_timeout': 600,
-                'provider': 'gce',
+                'cloud': 'gce',
                 'ssh_private_key_file': 'private_ssh_key.file'
             }
         )
@@ -130,7 +130,7 @@ class TestIPATestingService(object):
         job.get_metadata.return_value = {'job_id': job.id}
 
         self.testing.jobs[job.id] = Mock()
-        self.testing._add_job({'id': job.id, 'provider': 'ec2'})
+        self.testing._add_job({'id': job.id, 'cloud': 'ec2'})
 
         self.testing.log.warning.assert_called_once_with(
             'Job already queued.',
@@ -138,9 +138,9 @@ class TestIPATestingService(object):
         )
 
     def test_testing_add_job_invalid(self):
-        self.testing._add_job({'id': '1', 'provider': 'fake'})
+        self.testing._add_job({'id': '1', 'cloud': 'fake'})
         self.testing.log.error.assert_called_once_with(
-            'Provider fake is not supported.'
+            'Cloud fake is not supported.'
         )
 
     @patch('mash.services.testing.service.rsa')
@@ -185,7 +185,7 @@ class TestIPATestingService(object):
 
     def test_testing_start_job(self):
         job = Mock()
-        job.provider = 'ec2'
+        job.cloud = 'ec2'
         job.account = 'test_account'
         job.distro = 'SLES'
         job.image_id = 'image123'

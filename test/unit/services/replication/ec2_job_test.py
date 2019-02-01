@@ -13,7 +13,7 @@ class TestEC2ReplicationJob(object):
             'id': '1',
             'image_description': 'My image',
             'last_service': 'replication',
-            'provider': 'ec2',
+            'cloud': 'ec2',
             'utctime': 'now',
             "replication_source_regions": {
                 "us-east-1": {

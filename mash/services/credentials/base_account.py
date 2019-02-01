@@ -19,15 +19,15 @@
 
 class BaseAccount(object):
     """
-    Base provider account.
+    Base cloud account.
     """
     def __init__(
-        self, account_name, provider,
+        self, account_name, cloud,
         requesting_user, group_name=None
     ):
         self.account_name = account_name
         self.group_name = group_name
-        self.provider = provider
+        self.cloud = cloud
         self.requesting_user = requesting_user
 
     def add_account(self, accounts_file):
@@ -44,7 +44,7 @@ class BaseAccount(object):
 
         If the group does not exist create it with the new account.
         """
-        groups = accounts[self.provider]['groups'].get(self.requesting_user)
+        groups = accounts[self.cloud]['groups'].get(self.requesting_user)
 
         if groups:
             group = groups.get(self.group_name)
@@ -55,6 +55,6 @@ class BaseAccount(object):
                 # Allow for account updates, don't append multiple times.
                 group.append(self.account_name)
         else:
-            accounts[self.provider]['groups'][self.requesting_user] = {
+            accounts[self.cloud]['groups'][self.requesting_user] = {
                 self.group_name: [self.account_name]
             }

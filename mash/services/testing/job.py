@@ -32,12 +32,12 @@ class TestingJob(MashJob):
     __test__ = False  # Used by pytest to ignore class in auto discovery
 
     def __init__(
-        self, id, last_service, provider, ssh_private_key_file, test_regions,
+        self, id, last_service, cloud, ssh_private_key_file, test_regions,
         tests, utctime, job_file=None, description=None, distro='sles',
         instance_type=None, ipa_timeout=None, ssh_user=None
     ):
         super(TestingJob, self).__init__(
-            id, last_service, provider, utctime, job_file
+            id, last_service, cloud, utctime, job_file
         )
 
         # properties
@@ -52,9 +52,9 @@ class TestingJob(MashJob):
         self.test_regions = self.validate_test_regions(test_regions)
         self.tests = tests
 
-    def _add_provider_creds(self, creds, ipa_kwargs):
+    def _add_cloud_creds(self, creds, ipa_kwargs):
         """
-        Update IPA kwargs with provider credentials.
+        Update IPA kwargs with cloud credentials.
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
@@ -67,7 +67,7 @@ class TestingJob(MashJob):
         for region, account in self.test_regions.items():
             creds = self.credentials[account]
             ipa_kwargs = {
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'description': self.description,
                 'distro': self.distro,
                 'image_id': self.source_regions[region],
@@ -78,7 +78,7 @@ class TestingJob(MashJob):
                 'ssh_user': self.ssh_user,
                 'tests': self.tests
             }
-            ipa_kwargs = self._add_provider_creds(creds, ipa_kwargs)
+            ipa_kwargs = self._add_cloud_creds(creds, ipa_kwargs)
             process = Thread(
                 name=region, target=ipa_test,
                 args=(results,), kwargs=ipa_kwargs

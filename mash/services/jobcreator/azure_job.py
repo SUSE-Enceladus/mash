@@ -25,8 +25,8 @@ class AzureJob(BaseJob):
     Azure job message class.
     """
     def __init__(
-        self, accounts_info, provider_data, job_id, provider,
-        provider_accounts, provider_groups, requesting_user, last_service,
+        self, accounts_info, cloud_data, job_id, cloud,
+        cloud_accounts, cloud_groups, requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, offer_id, publisher_id, sku, emails, label,
         conditions=None, instance_type=None, old_cloud_image_name=None,
@@ -35,8 +35,8 @@ class AzureJob(BaseJob):
         self.target_account_info = {}
 
         super(AzureJob, self).__init__(
-            accounts_info, provider_data, job_id, provider, provider_accounts,
-            provider_groups, requesting_user, last_service, utctime, image,
+            accounts_info, cloud_data, job_id, cloud, cloud_accounts,
+            cloud_groups, requesting_user, last_service, utctime, image,
             cloud_image_name, image_description, distro, download_url, tests,
             conditions, instance_type, old_cloud_image_name, cleanup_images,
             cloud_architecture
@@ -69,11 +69,11 @@ class AzureJob(BaseJob):
         accounts = {}
 
         # Get dictionary of account names to account dict
-        for provider_account in self.provider_accounts:
-            accounts[provider_account['name']] = provider_account
+        for cloud_account in self.cloud_accounts:
+            accounts[cloud_account['name']] = cloud_account
 
         # Get all accounts from all groups
-        for group in self.provider_groups:
+        for group in self.cloud_groups:
             group_accounts += self._get_accounts_in_group(
                 group, self.requesting_user
             )
@@ -141,7 +141,7 @@ class AzureJob(BaseJob):
                 'image_description': self.image_description,
                 'label': self.label,
                 'offer_id': self.offer_id,
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'publish_regions': self.get_publisher_regions(),
                 'publisher_id': self.publisher_id,
                 'sku': self.sku
@@ -182,7 +182,7 @@ class AzureJob(BaseJob):
             'replication_job': {
                 'cleanup_images': self.cleanup_images,
                 'image_description': self.image_description,
-                'provider': self.provider,
+                'cloud': self.cloud,
                 'replication_source_regions':
                     self.get_replication_source_regions()
             }

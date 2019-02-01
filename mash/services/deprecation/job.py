@@ -25,9 +25,9 @@ class DeprecationJob(MashJob):
     Class for an individual deprecation job.
     """
 
-    def __init__(self, id, last_service, provider, utctime, job_file=None):
+    def __init__(self, id, last_service, cloud, utctime, job_file=None):
         super(DeprecationJob, self).__init__(
-            id, last_service, provider, utctime, job_file
+            id, last_service, cloud, utctime, job_file
         )
 
     def _deprecate(self):

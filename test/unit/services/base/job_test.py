@@ -8,7 +8,7 @@ class TestMashJob(object):
         self.job_config = {
             'id': '1',
             'last_service': 'testing',
-            'provider': 'ec2',
+            'cloud': 'ec2',
             'utctime': 'now'
         }
 
@@ -16,7 +16,7 @@ class TestMashJob(object):
         job = MashJob(**self.job_config)
 
         assert job.id == '1'
-        assert job.provider == 'ec2'
+        assert job.cloud == 'ec2'
         assert job.utctime == 'now'
 
     def test_send_log(self):
