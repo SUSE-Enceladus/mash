@@ -23,6 +23,6 @@ APScheduler
 python-dateutil>=2.6.0,<3.0.0
 amqpstorm
 ec2imgutils
-python3-ipa>=2.5.0
+python3-ipa>=3.0.0
 lxml
 requests

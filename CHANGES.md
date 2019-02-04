@@ -1,3 +1,33 @@
+v2.0.0 (2019-02-04)
+===================
+
+- Old cloud image name is optional.
+  [\#372](https://github.com/SUSE-Enceladus/mash/pull/372)
+- Implement Azure publishing.
+  [\#373](https://github.com/SUSE-Enceladus/mash/pull/373)
+- Update max workers default.
+  [\#374](https://github.com/SUSE-Enceladus/mash/pull/374)
+- Remove timeout from Azure copy blob function.
+  [\#375](https://github.com/SUSE-Enceladus/mash/pull/375)
+- Add architecture option to support aarch64.
+  [\#377](https://github.com/SUSE-Enceladus/mash/pull/377)
+- Add cleanup_images option.
+  [\#379](https://github.com/SUSE-Enceladus/mash/pull/379)
+- Wait for obs conditions to be met.
+  [\#380](https://github.com/SUSE-Enceladus/mash/pull/380)
+- Fix old cloud image name bug in job creator.
+  [\#381](https://github.com/SUSE-Enceladus/mash/pull/381)
+- Add GCE handling to replication and publisher.
+  [\#382](https://github.com/SUSE-Enceladus/mash/pull/382)
+- Implement GCE deprecation class.
+  [\#383](https://github.com/SUSE-Enceladus/mash/pull/383)
+- Move create auth file method to mash utils.
+  [\#384](https://github.com/SUSE-Enceladus/mash/pull/384)
+- Skip cred request in gce publish/replicate.
+  [\#385](https://github.com/SUSE-Enceladus/mash/pull/385)
+- Remove references to provider.
+  [\#386](https://github.com/SUSE-Enceladus/mash/pull/386)
+
 v1.4.0 (2019-01-03)
 ===================
 
