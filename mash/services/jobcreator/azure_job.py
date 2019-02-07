@@ -124,12 +124,18 @@ class AzureJob(BaseJob):
         """
         return self.accounts_info['accounts'][self.requesting_user][account][key]
 
-    def get_deprecation_regions(self):
+    def get_deprecation_message(self):
         """
-        Return list of deprecation region info.
+        Build deprecation job message.
+        """
+        deprecation_message = {
+            'deprecation_job': {
+                'cloud': self.cloud
+            }
+        }
+        deprecation_message['deprecation_job'].update(self.base_message)
 
-        """
-        raise NotImplementedError('TODO')
+        return JsonFormat.json_message(deprecation_message)
 
     def get_publisher_message(self):
         """
