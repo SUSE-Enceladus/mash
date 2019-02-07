@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from mash.mash_exceptions import MashReplicationException
 from mash.services.status_levels import FAILED
 from mash.services.replication.ec2_job import EC2ReplicationJob
-from mash.services.replication.job import ReplicationJob
+from mash.services.replication.replication_job import ReplicationJob
 
 
 class TestEC2ReplicationJob(object):

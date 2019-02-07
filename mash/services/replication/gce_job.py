@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.replication.job import ReplicationJob
+from mash.services.replication.replication_job import ReplicationJob
 from mash.services.status_levels import SUCCESS
 
 

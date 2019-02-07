@@ -40,7 +40,7 @@ class ReplicationJob(MashJob):
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def replicate_image(self):
+    def process_job(self):
         """
         Replicate image.
         """

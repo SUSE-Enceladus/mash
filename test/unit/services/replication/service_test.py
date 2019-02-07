@@ -143,7 +143,7 @@ class TestReplicationService(object):
         self.replication.jobs['1'] = job
 
         self.replication._start_job('1')
-        job.replicate_image.assert_called_once_with()
+        job.process_job.assert_called_once_with()
 
     def test_replication_get_listener_msg_args(self):
         args = self.replication._get_listener_msg_args()
