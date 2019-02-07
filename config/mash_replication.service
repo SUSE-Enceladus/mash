@@ -1,6 +1,6 @@
 [Unit]
 Description=Mash replication service
-After=syslog.target network.target
+After=syslog.target network.target rabbitmq-server.service
 Before=systemd-user-sessions.service
 
 [Service]

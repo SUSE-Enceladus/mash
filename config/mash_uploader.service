@@ -1,6 +1,6 @@
 [Unit]
 Description=Mash Uploader service
-After=syslog.target network.target mash_obs.service
+After=syslog.target network.target rabbitmq-server.service
 Before=systemd-user-sessions.service
 
 [Service]
