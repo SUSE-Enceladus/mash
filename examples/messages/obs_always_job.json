@@ -7,7 +7,7 @@
         "utctime": "always",
         "conditions": [
             {
-                "name": "kernel-default",
+                "package_name": "kernel-default",
                 "version": "3.12.61",
                 "build_id": "52.136",
                 "condition": ">="

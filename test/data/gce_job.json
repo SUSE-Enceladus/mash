@@ -16,7 +16,7 @@
   "cloud_image_name": "new_image_123",
   "old_cloud_image_name": "old_new_image_123",
   "conditions": [
-    {"name": "name", "version": "and", "build_id": "constraints"},
+    {"package_name": "openssl", "version": "13.4.3", "build_id": "1.1"},
     {"image": "version"}
   ],
   "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",

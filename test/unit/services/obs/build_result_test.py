@@ -246,7 +246,7 @@ class TestOBSImageBuildResult(object):
         self.obs_result.image_status['version'] = '1.2.3'
         self.obs_result.image_status['conditions'] = [
             {'image': '1.2.3'},
-            {'name': 'package'}
+            {'package_name': 'package'}
         ]
         package_type = namedtuple(
             'package_type', [
@@ -273,7 +273,7 @@ class TestOBSImageBuildResult(object):
             'version': '1.2.3',
             'conditions': [
                 {'status': True, 'image': '1.2.3'},
-                {'status': True, 'name': 'package'}
+                {'status': True, 'package_name': 'package'}
             ], 'image_source': []
         }
 
@@ -328,17 +328,17 @@ class TestOBSImageBuildResult(object):
         mock_NamedTemporaryFile.return_value = tempfile
         packages = self.obs_result._lookup_image_packages_metadata()
         assert self.obs_result._lookup_package(
-            packages, {'name': 'foo'}
+            packages, {'package_name': 'foo'}
         ) is False
         assert self.obs_result._lookup_package(
             packages, {
-                'name': 'file-magic',
+                'package_name': 'file-magic',
                 'version': '5.32'
             }
         ) is True
         assert self.obs_result._lookup_package(
             packages, {
-                'name': 'file-magic',
+                'package_name': 'file-magic',
                 'version': '5.32',
                 'condition': '=='
             }
@@ -346,7 +346,7 @@ class TestOBSImageBuildResult(object):
         assert self.obs_result._lookup_package(
             packages,
             {
-                'name': 'file-magic',
+                'package_name': 'file-magic',
                 'version': '5.32',
                 'condition': '>'
             }
@@ -354,7 +354,7 @@ class TestOBSImageBuildResult(object):
         assert self.obs_result._lookup_package(
             packages,
             {
-                'name': 'file-magic',
+                'package_name': 'file-magic',
                 'version': '5.32',
                 'condition': '<'
             }
@@ -362,7 +362,7 @@ class TestOBSImageBuildResult(object):
         assert self.obs_result._lookup_package(
             packages,
             {
-                'name': 'file-magic',
+                'package_name': 'file-magic',
                 'version': '5.32',
                 'build_id': '1.2',
                 'condition': '<='
@@ -371,7 +371,7 @@ class TestOBSImageBuildResult(object):
         assert self.obs_result._lookup_package(
             packages,
             {
-                'name': 'file-magic',
+                'package_name': 'file-magic',
                 'version': '5.32',
                 'build_id': '1.1',
                 'condition': '<='
@@ -381,7 +381,7 @@ class TestOBSImageBuildResult(object):
             self.obs_result._lookup_package(
                 packages,
                 {
-                    'name': 'file-magic',
+                    'package_name': 'file-magic',
                     'version': '5.32',
                     'condition': '='
                 }

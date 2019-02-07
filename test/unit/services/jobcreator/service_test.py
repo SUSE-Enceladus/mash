@@ -143,9 +143,9 @@ class TestJobCreatorService(object):
                     "cloud_architecture": "aarch64",
                     "conditions": [
                         {
-                            "build_id": "constraints",
-                            "name": "name",
-                            "version": "and"
+                            "build_id": "1.1",
+                            "package_name": "openssl",
+                            "version": "13.4.3"
                         },
                         {"image": "version"}
                     ],
@@ -348,9 +348,9 @@ class TestJobCreatorService(object):
                     "cloud_architecture": "x86_64",
                     "conditions": [
                         {
-                            "build_id": "constraints",
-                            "name": "name",
-                            "version": "and"
+                            "build_id": "1.1",
+                            "package_name": "openssl",
+                            "version": "13.4.3"
                         },
                         {"image": "version"}
                     ],
@@ -536,9 +536,9 @@ class TestJobCreatorService(object):
                     "cloud_architecture": "x86_64",
                     "conditions": [
                         {
-                            "build_id": "constraints",
-                            "name": "name",
-                            "version": "and"
+                            "build_id": "1.1",
+                            "package_name": "openssl",
+                            "version": "13.4.3"
                         },
                         {"image": "version"}
                     ],

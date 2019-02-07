@@ -138,7 +138,7 @@ class OBSImageBuildResultService(MashService):
               "utctime": "now|always|timestring_utc_timezone",
               "conditions": [
                   {
-                    "name": "kernel-default",
+                    "package_name": "kernel-default",
                     "version": "4.13.1",
                     "build_id": "1.1",
                     "condition": ">="

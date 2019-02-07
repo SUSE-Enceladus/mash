@@ -269,7 +269,7 @@ base_job_message = {
         'non_empty_string': non_empty_string,
         'package_conditions': {
             'properties': {
-                'name': {'$ref': '#/definitions/non_empty_string'},
+                'package_name': {'$ref': '#/definitions/non_empty_string'},
                 'version': {'$ref': '#/definitions/non_empty_string'},
                 'build_id': {'$ref': '#/definitions/non_empty_string'},
                 'condition': {
@@ -277,7 +277,7 @@ base_job_message = {
                 }
             },
             'additionalProperties': False,
-            'required': ['name']
+            'required': ['package_name']
         }
     }
 }

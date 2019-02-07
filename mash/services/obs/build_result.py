@@ -67,7 +67,11 @@ class OBSImageBuildResult(object):
 
       conditions=[
           # a package condition with version and release spec
-          {'package': ['kernel-default', '4.13.1', '1.1']},
+          {
+           'package_name': 'kernel-default',
+           'version': '4.13.1',
+           'build_id': '1.1'
+          },
           # a image version condition
           {'image': '1.42.1'}
       ]
@@ -308,7 +312,7 @@ class OBSImageBuildResult(object):
                             condition['status'] = True
                         else:
                             condition['status'] = False
-                    elif 'name' in condition:
+                    elif 'package_name' in condition:
                         if self._lookup_package(
                             packages, condition
                         ):
@@ -417,7 +421,7 @@ class OBSImageBuildResult(object):
             )
 
     def _lookup_package(self, packages, condition):
-        package_name = condition['name']
+        package_name = condition['package_name']
 
         if package_name not in packages:
             return False
