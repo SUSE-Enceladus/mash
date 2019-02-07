@@ -142,7 +142,11 @@ class TestJobCreatorService(object):
                 "obs_job": {
                     "cloud_architecture": "aarch64",
                     "conditions": [
-                        {"package": ["name", "and", "constraints"]},
+                        {
+                            "build_id": "constraints",
+                            "name": "name",
+                            "version": "and"
+                        },
                         {"image": "version"}
                     ],
                     "download_url": "http://download.opensuse.org/"
@@ -343,7 +347,11 @@ class TestJobCreatorService(object):
                 "obs_job": {
                     "cloud_architecture": "x86_64",
                     "conditions": [
-                        {"package": ["name", "and", "constraints"]},
+                        {
+                            "build_id": "constraints",
+                            "name": "name",
+                            "version": "and"
+                        },
                         {"image": "version"}
                     ],
                     "download_url": "http://download.opensuse.org/"
@@ -527,7 +535,11 @@ class TestJobCreatorService(object):
                 "obs_job": {
                     "cloud_architecture": "x86_64",
                     "conditions": [
-                        {"package": ["name", "and", "constraints"]},
+                        {
+                            "build_id": "constraints",
+                            "name": "name",
+                            "version": "and"
+                        },
                         {"image": "version"}
                     ],
                     "download_url": "http://download.opensuse.org/"

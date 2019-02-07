@@ -6,7 +6,12 @@
         "last_service": "testing",
         "utctime": "always",
         "conditions": [
-            {"package": ["kernel-default", ">=3.12.61", ">=52.136"]},
+            {
+                "name": "kernel-default",
+                "version": "3.12.61",
+                "build_id": "52.136",
+                "condition": ">="
+            },
             {"image": "0.2.4"}
         ]
     }

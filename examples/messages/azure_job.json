@@ -21,7 +21,7 @@
   "cloud_image_name": "new_image_123",
   "old_cloud_image_name": "old_new_image_123",
   "conditions": [
-    {"package": ["name", "and", "constraints"]},
+    {"name": "name", "version": "and", "build_id": "constraints"},
     {"image": "version"}
   ],
   "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",

@@ -246,7 +246,7 @@ class TestOBSImageBuildResult(object):
         self.obs_result.image_status['version'] = '1.2.3'
         self.obs_result.image_status['conditions'] = [
             {'image': '1.2.3'},
-            {'package': 'package'}
+            {'name': 'package'}
         ]
         package_type = namedtuple(
             'package_type', [
@@ -273,7 +273,7 @@ class TestOBSImageBuildResult(object):
             'version': '1.2.3',
             'conditions': [
                 {'status': True, 'image': '1.2.3'},
-                {'status': True, 'package': 'package'}
+                {'status': True, 'name': 'package'}
             ], 'image_source': []
         }
 
@@ -328,21 +328,61 @@ class TestOBSImageBuildResult(object):
         mock_NamedTemporaryFile.return_value = tempfile
         packages = self.obs_result._lookup_image_packages_metadata()
         assert self.obs_result._lookup_package(
-            packages, ['foo']
+            packages, {'name': 'foo'}
         ) is False
         assert self.obs_result._lookup_package(
-            packages, ['file-magic']
+            packages, {
+                'name': 'file-magic',
+                'version': '5.32'
+            }
         ) is True
         assert self.obs_result._lookup_package(
-            packages, ['file-magic', '>=5.32']
+            packages, {
+                'name': 'file-magic',
+                'version': '5.32',
+                'condition': '=='
+            }
         ) is True
         assert self.obs_result._lookup_package(
-            packages, ['file-magic', '>=5.32', '>=1.2']
+            packages,
+            {
+                'name': 'file-magic',
+                'version': '5.32',
+                'condition': '>'
+            }
+        ) is False
+        assert self.obs_result._lookup_package(
+            packages,
+            {
+                'name': 'file-magic',
+                'version': '5.32',
+                'condition': '<'
+            }
+        ) is False
+        assert self.obs_result._lookup_package(
+            packages,
+            {
+                'name': 'file-magic',
+                'version': '5.32',
+                'build_id': '1.2',
+                'condition': '<='
+            }
         ) is True
         assert self.obs_result._lookup_package(
-            packages, ['file-magic', '<5.32', '<1.2']
+            packages,
+            {
+                'name': 'file-magic',
+                'version': '5.32',
+                'build_id': '1.1',
+                'condition': '<='
+            }
         ) is False
         with raises(MashVersionExpressionException):
             self.obs_result._lookup_package(
-                packages, ['file-magic', '=5.32']
+                packages,
+                {
+                    'name': 'file-magic',
+                    'version': '5.32',
+                    'condition': '='
+                }
             )
