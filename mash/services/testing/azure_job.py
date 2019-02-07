@@ -19,7 +19,7 @@
 import json
 import random
 
-from mash.services.testing.job import TestingJob
+from mash.services.testing.testing_job import TestingJob
 
 instance_types = [
     'Basic_A2',
@@ -37,7 +37,7 @@ class AzureTestingJob(TestingJob):
 
     def __init__(
         self, id, last_service, cloud, ssh_private_key_file, test_regions,
-        tests, utctime, job_file=None, credentials=None, description=None,
+        tests, utctime, job_file=None, description=None,
         distro='sles', instance_type=None, ipa_timeout=None,
         ssh_user='azureuser'
     ):

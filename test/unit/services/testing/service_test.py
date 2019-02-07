@@ -193,7 +193,7 @@ class TestIPATestingService(object):
         self.testing.jobs['1'] = job
 
         self.testing._start_job('1')
-        job.test_image.assert_called_once_with()
+        job.process_job.assert_called_once_with()
 
     def test_testing_get_listener_msg_args(self):
         args = self.testing._get_listener_msg_args()
