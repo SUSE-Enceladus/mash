@@ -19,7 +19,7 @@
 from ec2imgutils.ec2publishimg import EC2PublishImage
 
 from mash.mash_exceptions import MashPublisherException
-from mash.services.publisher.job import PublisherJob
+from mash.services.publisher.publisher_job import PublisherJob
 from mash.services.status_levels import SUCCESS
 
 

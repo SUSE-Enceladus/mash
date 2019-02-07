@@ -38,7 +38,7 @@ class PublisherJob(MashJob):
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def publish_image(self):
+    def process_job(self):
         """
         Update iteration_count and publish image.
         """

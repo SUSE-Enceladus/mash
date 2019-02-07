@@ -144,7 +144,7 @@ class TestPublisherService(object):
         self.publisher.host = 'localhost'
 
         self.publisher._start_job('1')
-        job.publish_image.assert_called_once_with()
+        job.process_job.assert_called_once_with()
 
     def test_publisher_get_listener_msg_args(self):
         args = self.publisher._get_listener_msg_args()

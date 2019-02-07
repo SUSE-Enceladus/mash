@@ -26,7 +26,7 @@ from mash.services.azure_utils import (
     wait_on_cloud_partner_operation
 )
 
-from mash.services.publisher.job import PublisherJob
+from mash.services.publisher.publisher_job import PublisherJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 
