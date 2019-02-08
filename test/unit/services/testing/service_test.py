@@ -45,6 +45,7 @@ class TestIPATestingService(object):
         self.testing.ssh_private_key_file = 'private_ssh_key.file'
         self.testing.next_service = 'replication'
         self.testing.ipa_timeout = 600
+        self.testing.listener_msg_args = ['cloud_image_name']
 
         self.error_message = JsonFormat.json_message({
             "testing_result": {
@@ -182,7 +183,3 @@ class TestIPATestingService(object):
 
         data = self.testing._get_status_message(job)
         assert data == self.error_message
-
-    def test_testing_get_listener_msg_args(self):
-        args = self.testing._get_listener_msg_args()
-        assert args == ['cloud_image_name', 'source_regions']

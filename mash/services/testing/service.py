@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -47,6 +47,7 @@ class TestingService(PipelineService):
 
         Setup private key file and ipa timeout.
         """
+        self.listener_msg_args.append('source_regions')
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
         self.ipa_timeout = self.config.get_ipa_timeout()
 
@@ -133,9 +134,3 @@ class TestingService(PipelineService):
             }
 
         return JsonFormat.json_message(data)
-
-    def _get_listener_msg_args(self):
-        """
-        Return the required args for the listener message.
-        """
-        return ['cloud_image_name', 'source_regions']

@@ -137,7 +137,3 @@ class TestPublisherService(object):
 
         data = self.publisher._get_status_message(job)
         assert data == self.error_message
-
-    def test_publisher_get_listener_msg_args(self):
-        args = self.publisher._get_listener_msg_args()
-        assert args == ['cloud_image_name']
