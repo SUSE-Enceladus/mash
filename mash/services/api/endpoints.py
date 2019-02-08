@@ -6,7 +6,7 @@ from amqpstorm import Connection
 from flask import Flask, jsonify, request, make_response
 from jsonschema import validate
 
-from mash.services.jobcreator import schema
+from mash.services.api import schema
 from mash.services.base_config import BaseConfig
 
 app = Flask(__name__, static_url_path='/static')
