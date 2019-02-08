@@ -104,19 +104,21 @@ class TestLoggerService(object):
                 self.logger._process_log(self.message)
 
     @patch.object(LoggerService, 'consume_queue')
-    @patch.object(LoggerService, 'stop')
-    def test_logger_start(self, mock_stop, mock_consume_queue):
+    @patch.object(LoggerService, 'close_connection')
+    def test_logger_start(self, mock_close_connection, mock_consume_queue):
         self.logger.channel = self.channel
         self.logger.start()
         self.channel.start_consuming.assert_called_once_with()
         mock_consume_queue.assert_called_once_with(
             self.logger._process_log, 'logging'
         )
-        mock_stop.assert_called_once_with()
+        mock_close_connection.assert_called_once_with()
 
     @patch.object(LoggerService, 'consume_queue')
-    @patch.object(LoggerService, 'stop')
-    def test_logger_start_exception(self, mock_stop, mock_consume_queue):
+    @patch.object(LoggerService, 'close_connection')
+    def test_logger_start_exception(
+        self, mock_close_connection, mock_consume_queue
+    ):
         scheduler = Mock()
         self.logger.scheduler = scheduler
         self.logger.channel = self.channel
@@ -124,8 +126,8 @@ class TestLoggerService(object):
         self.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.logger.start()
 
-        mock_stop.assert_called_once_with()
-        mock_stop.reset_mock()
+        mock_close_connection.assert_called_once_with()
+        mock_close_connection.reset_mock()
         self.channel.start_consuming.side_effect = Exception(
             'Cannot start scheduler.'
         )
@@ -134,11 +136,3 @@ class TestLoggerService(object):
             self.logger.start()
 
         assert 'Cannot start scheduler.' == str(error.value)
-
-    @patch.object(LoggerService, 'close_connection')
-    def test_logger_stop(self, mock_close_connection):
-        self.logger.channel = self.channel
-
-        self.logger.stop()
-        self.channel.stop_consuming.assert_called_once_with()
-        mock_close_connection.assert_called_once_with()

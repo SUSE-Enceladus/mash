@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -26,6 +26,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from contextlib import suppress
 from cryptography.fernet import Fernet
 from datetime import datetime, timedelta
+from pytz import utc
 
 # project
 from mash.csp import CSP
@@ -66,7 +67,7 @@ class CredentialsService(MashService):
         )
         self._bind_credential_request_keys()
 
-        self.scheduler = BackgroundScheduler()
+        self.scheduler = BackgroundScheduler(timezone=utc)
         self.scheduler.add_listener(
             self._handle_key_rotation_result,
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
@@ -615,14 +616,5 @@ class CredentialsService(MashService):
         except Exception:
             raise
         finally:
-            self.stop()
-
-    def stop(self):
-        """
-        Stop credentials service.
-
-        Stop consuming queues and close pika connections.
-        """
-        self.scheduler.shutdown()
-        self.channel.stop_consuming()
-        self.close_connection()
+            self.scheduler.shutdown()
+            self.close_connection()

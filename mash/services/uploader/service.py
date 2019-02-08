@@ -65,9 +65,12 @@ class UploadImageService(MashService):
 
         try:
             self.channel.start_consuming()
+        except KeyboardInterrupt:
+            pass
         except Exception:
             raise
         finally:
+            self.scheduler.shutdown()
             self.close_connection()
 
     def _job_log(self, job_id, message):

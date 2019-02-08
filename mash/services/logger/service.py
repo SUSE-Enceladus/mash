@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -79,6 +79,7 @@ class LoggerService(MashService):
         Start logger service.
         """
         self.consume_queue(self._process_log, 'logging')
+
         try:
             self.channel.start_consuming()
         except KeyboardInterrupt:
@@ -86,11 +87,4 @@ class LoggerService(MashService):
         except Exception:
             raise
         finally:
-            self.stop()
-
-    def stop(self):
-        """
-        Stop logger service.
-        """
-        self.channel.stop_consuming()
-        self.close_connection()
+            self.close_connection()
