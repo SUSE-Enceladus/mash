@@ -40,7 +40,7 @@ class DeprecationJob(MashJob):
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def deprecate_image(self):
+    def process_job(self):
         """
         Deprecate image.
         """

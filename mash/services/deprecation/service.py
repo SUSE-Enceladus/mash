@@ -87,7 +87,7 @@ class DeprecationService(PipelineService):
         Deprecate image based on job id.
         """
         job = self.jobs[job_id]
-        job.deprecate_image()
+        job.process_job()
 
     def _get_listener_msg_args(self):
         """

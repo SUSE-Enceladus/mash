@@ -23,7 +23,7 @@ from dateutil.relativedelta import relativedelta
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 
-from mash.services.deprecation.job import DeprecationJob
+from mash.services.deprecation.deprecation_job import DeprecationJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 

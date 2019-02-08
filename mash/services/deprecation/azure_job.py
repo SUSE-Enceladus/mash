@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.deprecation.job import DeprecationJob
+from mash.services.deprecation.deprecation_job import DeprecationJob
 from mash.services.status_levels import SUCCESS
 
 

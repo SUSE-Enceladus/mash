@@ -144,7 +144,7 @@ class TestDeprecationService(object):
         self.deprecation.host = 'localhost'
 
         self.deprecation._start_job('1')
-        job.deprecate_image.assert_called_once_with()
+        job.process_job.assert_called_once_with()
 
     def test_deprecation_get_listener_msg_args(self):
         args = self.deprecation._get_listener_msg_args()
