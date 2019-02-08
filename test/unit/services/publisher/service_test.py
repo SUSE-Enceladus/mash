@@ -138,14 +138,6 @@ class TestPublisherService(object):
         data = self.publisher._get_status_message(job)
         assert data == self.error_message
 
-    def test_publisher_start_job(self):
-        job = Mock()
-        self.publisher.jobs['1'] = job
-        self.publisher.host = 'localhost'
-
-        self.publisher._start_job('1')
-        job.process_job.assert_called_once_with()
-
     def test_publisher_get_listener_msg_args(self):
         args = self.publisher._get_listener_msg_args()
         assert args == ['cloud_image_name']

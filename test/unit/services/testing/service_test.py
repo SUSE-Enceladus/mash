@@ -183,18 +183,6 @@ class TestIPATestingService(object):
         data = self.testing._get_status_message(job)
         assert data == self.error_message
 
-    def test_testing_start_job(self):
-        job = Mock()
-        job.cloud = 'ec2'
-        job.account = 'test_account'
-        job.distro = 'SLES'
-        job.image_id = 'image123'
-        job.tests = 'test1,test2'
-        self.testing.jobs['1'] = job
-
-        self.testing._start_job('1')
-        job.process_job.assert_called_once_with()
-
     def test_testing_get_listener_msg_args(self):
         args = self.testing._get_listener_msg_args()
         assert args == ['cloud_image_name', 'source_regions']

@@ -278,9 +278,10 @@ class PipelineService(MashService):
 
     def _start_job(self, job_id):
         """
-        Run job method.
+        Process job based on job id.
         """
-        raise NotImplementedError('Implement in child service.')
+        job = self.jobs[job_id]
+        job.process_job()
 
     def _validate_listener_msg(self, message):
         """

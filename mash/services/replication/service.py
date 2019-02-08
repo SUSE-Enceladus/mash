@@ -78,13 +78,6 @@ class ReplicationService(PipelineService):
 
         return JsonFormat.json_message(data)
 
-    def _start_job(self, job_id):
-        """
-        Replicate image for job that matches job_id.
-        """
-        job = self.jobs[job_id]
-        job.process_job()
-
     def _get_listener_msg_args(self):
         """
         Return the required args for the listener message.
