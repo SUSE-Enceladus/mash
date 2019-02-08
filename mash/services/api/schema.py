@@ -269,14 +269,15 @@ base_job_message = {
         'non_empty_string': non_empty_string,
         'package_conditions': {
             'properties': {
-                'package': {
-                    'type': 'array',
-                    'items': {'$ref': '#/definitions/non_empty_string'},
-                    'minItems': 2
+                'package_name': {'$ref': '#/definitions/non_empty_string'},
+                'version': {'$ref': '#/definitions/non_empty_string'},
+                'build_id': {'$ref': '#/definitions/non_empty_string'},
+                'condition': {
+                    'enum': ['>=', '==', '<=', '>', '<']
                 }
             },
             'additionalProperties': False,
-            'required': ['package']
+            'required': ['package_name']
         }
     }
 }

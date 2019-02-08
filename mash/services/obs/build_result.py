@@ -21,6 +21,7 @@ import logging
 import hashlib
 from distutils.dir_util import mkpath
 from datetime import datetime
+from pkg_resources import parse_version
 from pytz import utc
 from tempfile import NamedTemporaryFile
 from collections import namedtuple
@@ -66,7 +67,11 @@ class OBSImageBuildResult(object):
 
       conditions=[
           # a package condition with version and release spec
-          {'package': ['kernel-default', '4.13.1', '1.1']},
+          {
+           'package_name': 'kernel-default',
+           'version': '4.13.1',
+           'build_id': '1.1'
+          },
           # a image version condition
           {'image': '1.42.1'}
       ]
@@ -307,9 +312,9 @@ class OBSImageBuildResult(object):
                             condition['status'] = True
                         else:
                             condition['status'] = False
-                    elif 'package' in condition:
+                    elif 'package_name' in condition:
                         if self._lookup_package(
-                            packages, condition['package']
+                            packages, condition
                         ):
                             condition['status'] = True
                         else:
@@ -399,41 +404,51 @@ class OBSImageBuildResult(object):
                 result_packages[package_name] = package_result
         return result_packages
 
-    def _version_compare(self, expression):
-        expression = expression.replace('.', '')
-        if re.match(r'^\d+ (<|>|<=|>=|==)\d+$', expression):
-            return eval(expression)
+    def _version_compare(self, current, expected, condition):
+        if condition == '>=':
+            return parse_version(current) >= parse_version(expected)
+        elif condition == '<=':
+            return parse_version(current) <= parse_version(expected)
+        elif condition == '==':
+            return parse_version(current) == parse_version(expected)
+        elif condition == '>':
+            return parse_version(current) > parse_version(expected)
+        elif condition == '<':
+            return parse_version(current) < parse_version(expected)
         else:
             raise MashVersionExpressionException(
-                'Invalid version compare expression: "{0}"'.format(expression)
+                'Invalid version compare expression: "{0}"'.format(condition)
             )
 
-    def _lookup_package(self, packages, package_search_data):
-        package_name = package_search_data[0]
+    def _lookup_package(self, packages, condition):
+        package_name = condition['package_name']
+
         if package_name not in packages:
             return False
 
-        if len(package_search_data) > 1:
-            # we want to lookup a specific version, release of the package
-            package_data = packages[package_name]
+        condition_eval = condition.get('condition', '>=')
+        package_data = packages[package_name]
 
-            package_lookup_version = package_search_data[1]
-            package_lookup_release = None
-            if len(package_search_data) == 3:
-                package_lookup_release = package_search_data[2]
-
-            version_check = '{0} {1}'.format(
-                package_data.version, package_lookup_version
+        if 'version' in condition:
+            # we want to lookup a specific version
+            match = self._version_compare(
+                package_data.version,
+                condition['version'],
+                condition_eval
             )
-            if self._version_compare(version_check):
-                if not package_lookup_release:
-                    return True
-                release_check = '{0} {1}'.format(
-                    package_data.release, package_lookup_release
-                )
-                if self._version_compare(release_check):
-                    return True
-            return False
-        else:
-            # we want to lookup just the package name
-            return True
+
+            if not match:
+                return False
+
+        if 'build_id' in condition:
+            # we want to lookup a specific build number
+            match = self._version_compare(
+                package_data.release,
+                condition['build_id'],
+                condition_eval
+            )
+
+            if not match:
+                return False
+
+        return True

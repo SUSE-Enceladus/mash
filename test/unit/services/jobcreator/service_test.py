@@ -142,7 +142,11 @@ class TestJobCreatorService(object):
                 "obs_job": {
                     "cloud_architecture": "aarch64",
                     "conditions": [
-                        {"package": ["name", "and", "constraints"]},
+                        {
+                            "build_id": "1.1",
+                            "package_name": "openssl",
+                            "version": "13.4.3"
+                        },
                         {"image": "version"}
                     ],
                     "download_url": "http://download.opensuse.org/"
@@ -343,7 +347,11 @@ class TestJobCreatorService(object):
                 "obs_job": {
                     "cloud_architecture": "x86_64",
                     "conditions": [
-                        {"package": ["name", "and", "constraints"]},
+                        {
+                            "build_id": "1.1",
+                            "package_name": "openssl",
+                            "version": "13.4.3"
+                        },
                         {"image": "version"}
                     ],
                     "download_url": "http://download.opensuse.org/"
@@ -527,7 +535,11 @@ class TestJobCreatorService(object):
                 "obs_job": {
                     "cloud_architecture": "x86_64",
                     "conditions": [
-                        {"package": ["name", "and", "constraints"]},
+                        {
+                            "build_id": "1.1",
+                            "package_name": "openssl",
+                            "version": "13.4.3"
+                        },
                         {"image": "version"}
                     ],
                     "download_url": "http://download.opensuse.org/"

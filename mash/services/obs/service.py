@@ -137,7 +137,12 @@ class OBSImageBuildResultService(MashService):
               "last_service": "uploader",
               "utctime": "now|always|timestring_utc_timezone",
               "conditions": [
-                  {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
+                  {
+                    "package_name": "kernel-default",
+                    "version": "4.13.1",
+                    "build_id": "1.1",
+                    "condition": ">="
+                  },
                   {"image": "1.42.1"}
               ]
           }

@@ -6,7 +6,12 @@
         "last_service": "testing",
         "utctime": "now",
         "conditions": [
-            {"package": ["kernel-default", ">=4.4.1", ">=1.1"]},
+            {
+                "package_name": "kernel-default",
+                "version": "4.4.1",
+                "build_id": "1.1",
+                "condition": ">="
+            },
             {"image": "15.1.0"}
         ],
         "cloud_architecture": "x86_64"
