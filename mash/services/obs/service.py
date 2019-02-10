@@ -77,7 +77,6 @@ class OBSImageBuildResultService(MashService):
             self.log.error(message, extra=job_metadata)
 
     def _process_message(self, message):
-        message.ack()
         try:
             job_data = JsonFormat.json_loads(format(message.body))
         except Exception as e:
@@ -91,6 +90,8 @@ class OBSImageBuildResultService(MashService):
             )
         if message.method['routing_key'] == 'job_document':
             self._handle_jobs(job_data)
+
+        message.ack()
 
     def _handle_jobs(self, job_data):
         """
