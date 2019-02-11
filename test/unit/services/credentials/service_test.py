@@ -818,10 +818,10 @@ class TestCredentialsService(object):
     @patch.object(CredentialsService, '_start_rotation_job')
     @patch.object(CredentialsService, 'consume_credentials_queue')
     @patch.object(CredentialsService, 'consume_queue')
-    @patch.object(CredentialsService, 'stop')
+    @patch.object(CredentialsService, 'close_connection')
     def test_credentials_start(
-        self, mock_stop, mock_consume_queue, mock_consume_creds_queue,
-        mock_start_rotation_job
+        self, mock_close_connection, mock_consume_queue,
+        mock_consume_creds_queue, mock_start_rotation_job
     ):
         scheduler = Mock()
         self.service.scheduler = scheduler
@@ -838,13 +838,14 @@ class TestCredentialsService(object):
         mock_consume_creds_queue.assert_called_once_with(
             self.service._handle_credential_request, queue_name='request'
         )
-        mock_stop.assert_called_once_with()
+        mock_close_connection.assert_called_once_with()
 
     @patch.object(CredentialsService, 'consume_credentials_queue')
     @patch.object(CredentialsService, 'consume_queue')
-    @patch.object(CredentialsService, 'stop')
+    @patch.object(CredentialsService, 'close_connection')
     def test_credentials_start_exception(
-        self, mock_stop, mock_consume_queue, mock_consume_creds_queue
+        self, mock_close_connection, mock_consume_queue,
+        mock_consume_creds_queue
     ):
         scheduler = Mock()
         self.service.scheduler = scheduler
@@ -852,8 +853,8 @@ class TestCredentialsService(object):
         self.service.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.service.start()
 
-        mock_stop.assert_called_once_with()
-        mock_stop.reset_mock()
+        mock_close_connection.assert_called_once_with()
+        mock_close_connection.reset_mock()
         self.service.channel.start_consuming.side_effect = Exception(
             'Cannot start scheduler.'
         )
@@ -862,13 +863,3 @@ class TestCredentialsService(object):
             self.service.start()
 
         assert 'Cannot start scheduler.' == str(error.value)
-
-    @patch.object(CredentialsService, 'close_connection')
-    def test_credentials_stop(self, mock_close_connection):
-        scheduler = Mock()
-        self.service.scheduler = scheduler
-
-        self.service.stop()
-        scheduler.shutdown.assert_called_once_with()
-        mock_close_connection.assert_called_once_with()
-        self.service.channel.stop_consuming.assert_called_once_with()

@@ -59,8 +59,10 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.channel.start_consuming.side_effect = Exception
         with raises(Exception):
             self.obs_result.post_init()
-            self.obs_result.channel.stop_consuming.assert_called_once_with()
             self.obs_result.close_connection.assert_called_once_with()
+
+        self.obs_result.channel.start_consuming.side_effect = KeyboardInterrupt()
+        self.obs_result.post_init()
 
     def test_send_job_response(self):
         self.obs_result._send_job_response('815', {})

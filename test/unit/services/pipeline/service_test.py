@@ -458,9 +458,10 @@ class TestPipelineService(object):
 
     @patch.object(PipelineService, 'consume_credentials_queue')
     @patch.object(PipelineService, 'consume_queue')
-    @patch.object(PipelineService, 'stop')
+    @patch.object(PipelineService, 'close_connection')
     def test_service_start(
-        self, mock_stop, mock_consume_queue, mock_consume_credentials_queue
+        self, mock_close_connection, mock_consume_queue,
+        mock_consume_credentials_queue
     ):
         self.service.channel = self.channel
         self.service.start()
@@ -476,20 +477,20 @@ class TestPipelineService(object):
         mock_consume_credentials_queue.assert_called_once_with(
             self.service._handle_credentials_response
         )
-        mock_stop.assert_called_once_with()
+        mock_close_connection.assert_called_once_with()
 
     @patch.object(PipelineService, 'consume_credentials_queue')
-    @patch.object(PipelineService, 'stop')
+    @patch.object(PipelineService, 'close_connection')
     def test_service_start_exception(
-        self, mock_stop, mock_consume_credentials_queue
+        self, mock_close_connection, mock_consume_credentials_queue
     ):
         self.service.channel = self.channel
 
         self.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.service.start()
 
-        mock_stop.assert_called_once_with()
-        mock_stop.reset_mock()
+        mock_close_connection.assert_called_once_with()
+        mock_close_connection.reset_mock()
         self.channel.start_consuming.side_effect = Exception(
             'Cannot start consuming.'
         )
@@ -498,14 +499,6 @@ class TestPipelineService(object):
             self.service.start()
 
         assert 'Cannot start consuming.' == str(error.value)
-
-    @patch.object(PipelineService, 'close_connection')
-    def test_service_stop(self, mock_close_connection):
-        self.service.channel = self.channel
-
-        self.service.stop()
-        self.channel.stop_consuming.assert_called_once_with()
-        mock_close_connection.assert_called_once_with()
 
     @patch.object(PipelineService, '_get_listener_msg_args')
     def test_service_validate_listener_msg(

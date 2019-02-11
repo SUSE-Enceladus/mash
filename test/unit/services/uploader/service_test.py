@@ -148,6 +148,9 @@ class TestUploadImageService(object):
             self.uploader.post_init()
         self.uploader.close_connection.assert_called_once_with()
 
+        self.uploader.channel.start_consuming.side_effect = KeyboardInterrupt()
+        self.uploader.post_init()
+
     @patch.object(MashService, 'persist_job_config')
     def test_init_job(self, mock_persist_job_config):
         self.uploader._init_job(self.job_data_from_preserved_ec2)

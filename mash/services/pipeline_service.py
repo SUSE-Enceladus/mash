@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -18,14 +18,16 @@
 
 import json
 
-from mash.services.mash_service import MashService
-from mash.services.status_levels import EXCEPTION, SUCCESS
-
 from amqpstorm import AMQPError
 
 from apscheduler import events
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
+
+from pytz import utc
+
+from mash.services.mash_service import MashService
+from mash.services.status_levels import EXCEPTION, SUCCESS
 
 
 class PipelineService(MashService):
@@ -39,7 +41,7 @@ class PipelineService(MashService):
         self.service_init()
         self.bind_credentials_queue()
 
-        self.scheduler = BackgroundScheduler()
+        self.scheduler = BackgroundScheduler(timezone=utc)
         self.scheduler.add_listener(
             self._process_job_result,
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
@@ -379,14 +381,5 @@ class PipelineService(MashService):
         except Exception:
             raise
         finally:
-            self.stop()
-
-    def stop(self):
-        """
-        Stop pipeline service.
-
-        Stop consuming queues and close rabbitmq connections.
-        """
-        self.scheduler.shutdown()
-        self.channel.stop_consuming()
-        self.close_connection()
+            self.scheduler.shutdown()
+            self.close_connection()
