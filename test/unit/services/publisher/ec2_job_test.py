@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashPublisherException
 from mash.services.publisher.ec2_job import EC2PublisherJob
-from mash.services.publisher.job import PublisherJob
+from mash.services.publisher.publisher_job import PublisherJob
 
 
 class TestEC2PublisherJob(object):

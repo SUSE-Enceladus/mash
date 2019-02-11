@@ -21,7 +21,7 @@ import time
 from collections import defaultdict
 
 from mash.mash_exceptions import MashReplicationException
-from mash.services.replication.job import ReplicationJob
+from mash.services.replication.replication_job import ReplicationJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.ec2 import get_client
 

@@ -1,7 +1,7 @@
 from pytest import raises
 from unittest.mock import Mock, patch
 
-from mash.services.replication.job import ReplicationJob
+from mash.services.replication.replication_job import ReplicationJob
 
 
 class TestReplicationJob(object):
@@ -34,6 +34,6 @@ class TestReplicationJob(object):
     def test_replicate_image(self, mock_replicate):
         job = ReplicationJob(**self.job_config)
         job.log_callback = Mock()
-        job.replicate_image()
+        job.process_job()
 
         mock_replicate.assert_called_once_with()

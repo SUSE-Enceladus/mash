@@ -17,44 +17,32 @@
 #
 
 from mash.services.mash_job import MashJob
-from mash.services.replication.constants import NOT_IMPLEMENTED
+from mash.services.deprecation.constants import NOT_IMPLEMENTED
 
 
-class ReplicationJob(MashJob):
+class DeprecationJob(MashJob):
     """
-    Class for an individual replication job.
+    Class for an individual deprecation job.
     """
-
     def __init__(
-        self, id, last_service, cloud, utctime, job_file=None
+        self, id, last_service, cloud, utctime,
+        old_cloud_image_name=None, job_file=None
     ):
-        super(ReplicationJob, self).__init__(
+        super(DeprecationJob, self).__init__(
             id, last_service, cloud, utctime, job_file
         )
 
-        self._source_regions = None
+        self.old_cloud_image_name = old_cloud_image_name
 
-    def _replicate(self):
+    def _deprecate(self):
         """
-        Replicate image to all regions in each account.
+        Deprecate image to all regions in each account.
         """
         raise NotImplementedError(NOT_IMPLEMENTED)
 
-    def replicate_image(self):
+    def process_job(self):
         """
-        Replicate image.
+        Deprecate image.
         """
         self.iteration_count += 1
-        self._replicate()
-
-    @property
-    def source_regions(self):
-        """Source regions property."""
-        return self._source_regions
-
-    @source_regions.setter
-    def source_regions(self, regions):
-        """
-        Setter for source_regions dictionary.
-        """
-        self._source_regions = regions
+        self._deprecate()

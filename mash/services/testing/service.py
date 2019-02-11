@@ -134,13 +134,6 @@ class TestingService(PipelineService):
 
         return JsonFormat.json_message(data)
 
-    def _start_job(self, job_id):
-        """
-        Test image with IPA based on job id.
-        """
-        job = self.jobs[job_id]
-        job.test_image()
-
     def _get_listener_msg_args(self):
         """
         Return the required args for the listener message.

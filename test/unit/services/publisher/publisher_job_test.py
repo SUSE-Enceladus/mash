@@ -1,7 +1,7 @@
 from pytest import raises
 from unittest.mock import Mock, patch
 
-from mash.services.publisher.job import PublisherJob
+from mash.services.publisher.publisher_job import PublisherJob
 
 
 class TestPublisherJob(object):
@@ -29,6 +29,6 @@ class TestPublisherJob(object):
     def test_publish_image(self, mock_publish):
         job = PublisherJob(**self.job_config)
         job.log_callback = Mock()
-        job.publish_image()
+        job.process_job()
 
         mock_publish.assert_called_once_with()

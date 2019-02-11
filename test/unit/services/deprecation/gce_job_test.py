@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from mash.services.deprecation.gce_job import GCEDeprecationJob
-from mash.services.deprecation.job import DeprecationJob
+from mash.services.deprecation.deprecation_job import DeprecationJob
 
 
 class TestGCEDeprecationJob(object):

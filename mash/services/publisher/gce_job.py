@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.publisher.job import PublisherJob
+from mash.services.publisher.publisher_job import PublisherJob
 from mash.services.status_levels import SUCCESS
 
 

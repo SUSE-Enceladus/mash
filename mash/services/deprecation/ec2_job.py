@@ -19,7 +19,7 @@
 from ec2imgutils.ec2deprecateimg import EC2DeprecateImg
 
 from mash.mash_exceptions import MashDeprecationException
-from mash.services.deprecation.job import DeprecationJob
+from mash.services.deprecation.deprecation_job import DeprecationJob
 from mash.services.status_levels import SUCCESS
 
 

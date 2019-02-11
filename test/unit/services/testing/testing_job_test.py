@@ -2,7 +2,7 @@ from pytest import raises
 from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashTestingException
-from mash.services.testing.job import TestingJob
+from mash.services.testing.testing_job import TestingJob
 
 
 class TestTestingJob(object):
@@ -42,7 +42,7 @@ class TestTestingJob(object):
     def test_test_image(self, mock_run_tests):
         job = TestingJob(**self.job_config)
         job.log_callback = Mock()
-        job.test_image()
+        job.process_job()
 
         job.log_callback.assert_called_once_with(
             'Pass[1]: Running IPA tests against image.',

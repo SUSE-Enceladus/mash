@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashDeprecationException
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
-from mash.services.deprecation.job import DeprecationJob
+from mash.services.deprecation.deprecation_job import DeprecationJob
 
 
 class TestEC2DeprecationJob(object):

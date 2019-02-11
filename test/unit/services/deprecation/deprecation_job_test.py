@@ -1,7 +1,7 @@
 from pytest import raises
 from unittest.mock import Mock, patch
 
-from mash.services.deprecation.job import DeprecationJob
+from mash.services.deprecation.deprecation_job import DeprecationJob
 
 
 class TestDeprecationJob(object):
@@ -30,6 +30,6 @@ class TestDeprecationJob(object):
     def test_deprecate_image(self, mock_deprecate):
         job = DeprecationJob(**self.job_config)
         job.log_callback = Mock()
-        job.deprecate_image()
+        job.process_job()
 
         mock_deprecate.assert_called_once_with()

@@ -12,8 +12,7 @@ from mash.utils.json_format import JsonFormat
 
 NOT_IMPL_METHODS = [
     '_add_job',
-    '_get_status_message',
-    '_start_job'
+    '_get_status_message'
 ]
 
 
@@ -574,3 +573,11 @@ class TestPipelineService(object):
             message, ['cloud_image_name']
         )
         assert result is False
+
+    def test_deprecation_start_job(self):
+        job = Mock()
+        self.service.jobs['1'] = job
+        self.service.host = 'localhost'
+
+        self.service._start_job('1')
+        job.process_job.assert_called_once_with()

@@ -119,7 +119,7 @@ class TestingJob(MashJob):
         """
         self._source_regions = regions
 
-    def test_image(self):
+    def process_job(self):
         """
         Get credentials and run image tests with IPA.
         """

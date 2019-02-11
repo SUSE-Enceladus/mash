@@ -22,7 +22,7 @@ from mash.services.azure_utils import (
     delete_page_blob
 )
 
-from mash.services.replication.job import ReplicationJob
+from mash.services.replication.replication_job import ReplicationJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 
