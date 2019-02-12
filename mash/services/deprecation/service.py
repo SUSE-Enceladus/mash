@@ -18,11 +18,9 @@
 
 from mash.csp import CSP
 from mash.services.pipeline_service import PipelineService
-from mash.services.status_levels import SUCCESS
 from mash.services.deprecation.azure_job import AzureDeprecationJob
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
 from mash.services.deprecation.gce_job import GCEDeprecationJob
-from mash.utils.json_format import JsonFormat
 
 
 class DeprecationService(PipelineService):
@@ -57,27 +55,3 @@ class DeprecationService(PipelineService):
             self.log.exception(
                 'Cloud {0} is not supported.'.format(cloud)
             )
-
-    def get_status_message(self, job):
-        """
-        Build and return json message with completion status.
-
-        Publish message to service exchange.
-        """
-        if job.status == SUCCESS:
-            data = {
-                'deprecation_result': {
-                    'id': job.id,
-                    'cloud_image_name': job.cloud_image_name,
-                    'status': job.status,
-                }
-            }
-        else:
-            data = {
-                'deprecation_result': {
-                    'id': job.id,
-                    'status': job.status,
-                }
-            }
-
-        return JsonFormat.json_message(data)

@@ -11,8 +11,7 @@ from mash.services.pipeline_service import PipelineService
 from mash.utils.json_format import JsonFormat
 
 NOT_IMPL_METHODS = [
-    'add_job',
-    'get_status_message'
+    'add_job'
 ]
 
 
@@ -37,13 +36,13 @@ class TestPipelineService(object):
         )
 
         self.error_message = JsonFormat.json_message({
-            "testing_result": {
+            "replication_result": {
                 "id": "1",
                 "status": "failed"
             }
         })
         self.status_message = JsonFormat.json_message({
-            "testing_result": {
+            "replication_result": {
                 "cloud_image_name": "image123",
                 "id": "1",
                 "status": "success"
@@ -65,6 +64,7 @@ class TestPipelineService(object):
         self.service.next_service = 'publisher'
         self.service.prev_service = 'testing'
         self.service.listener_msg_args = ['cloud_image_name']
+        self.service.status_msg_args = ['cloud_image_name']
 
     @patch.object(PipelineService, 'bind_credentials_queue')
     @patch.object(PipelineService, 'restart_jobs')
@@ -376,7 +376,7 @@ class TestPipelineService(object):
         mock_delete_job('1')
         mock_publish_message.assert_called_once_with(job)
 
-    @patch.object(PipelineService, 'get_status_message')
+    @patch.object(PipelineService, '_get_status_message')
     @patch.object(PipelineService, 'publish_job_result')
     def test_service_publish_message(
         self, mock_publish, mock_get_status_message
@@ -393,7 +393,7 @@ class TestPipelineService(object):
             self.status_message
         )
 
-    @patch.object(PipelineService, 'get_status_message')
+    @patch.object(PipelineService, '_get_status_message')
     @patch.object(PipelineService, '_publish')
     def test_service_publish_message_exception(
         self, mock_publish, mock_get_status_message
@@ -564,3 +564,13 @@ class TestPipelineService(object):
 
         self.service._start_job('1')
         job.process_job.assert_called_once_with()
+
+    def test_get_status_message(self):
+        job = Mock()
+        job.id = '1'
+        job.status = "success"
+        job.cloud_image_name = 'image123'
+        job.source_regions = {'us-east-2': 'ami-123456'}
+
+        data = self.service._get_status_message(job)
+        assert data == self.status_message

@@ -25,11 +25,9 @@ from cryptography.hazmat.primitives import serialization
 from mash.csp import CSP
 
 from mash.services.pipeline_service import PipelineService
-from mash.services.status_levels import SUCCESS
 from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
 from mash.services.testing.gce_job import GCETestingJob
-from mash.utils.json_format import JsonFormat
 
 
 class TestingService(PipelineService):
@@ -48,6 +46,7 @@ class TestingService(PipelineService):
         Setup private key file and ipa timeout.
         """
         self.listener_msg_args.append('source_regions')
+        self.status_msg_args.append('source_regions')
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
         self.ipa_timeout = self.config.get_ipa_timeout()
 
@@ -110,27 +109,3 @@ class TestingService(PipelineService):
         )
         with open(''.join([self.ssh_private_key_file, '.pub']), 'wb') as public_key_file:
             public_key_file.write(ssh_public_key)
-
-    def get_status_message(self, job):
-        """
-        Build and return json message with completion status
-        to post to service exchange.
-        """
-        if job.status == SUCCESS:
-            data = {
-                'testing_result': {
-                    'id': job.id,
-                    'cloud_image_name': job.cloud_image_name,
-                    'source_regions': job.source_regions,
-                    'status': job.status,
-                }
-            }
-        else:
-            data = {
-                'testing_result': {
-                    'id': job.id,
-                    'status': job.status,
-                }
-            }
-
-        return JsonFormat.json_message(data)

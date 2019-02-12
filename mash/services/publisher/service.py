@@ -18,11 +18,9 @@
 
 from mash.csp import CSP
 from mash.services.pipeline_service import PipelineService
-from mash.services.status_levels import SUCCESS
 from mash.services.publisher.azure_job import AzurePublisherJob
 from mash.services.publisher.ec2_job import EC2PublisherJob
 from mash.services.publisher.gce_job import GCEPublisherJob
-from mash.utils.json_format import JsonFormat
 
 
 class PublisherService(PipelineService):
@@ -53,27 +51,3 @@ class PublisherService(PipelineService):
             self.log.error(
                 'Cloud {0} is not supported.'.format(cloud)
             )
-
-    def get_status_message(self, job):
-        """
-        Build and return json message.
-
-        Message contiains completion status to post to service exchange.
-        """
-        if job.status == SUCCESS:
-            data = {
-                'publisher_result': {
-                    'id': job.id,
-                    'cloud_image_name': job.cloud_image_name,
-                    'status': job.status,
-                }
-            }
-        else:
-            data = {
-                'publisher_result': {
-                    'id': job.id,
-                    'status': job.status,
-                }
-            }
-
-        return JsonFormat.json_message(data)

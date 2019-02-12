@@ -28,6 +28,7 @@ from pytz import utc
 
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
+from mash.utils.json_format import JsonFormat
 
 
 class PipelineService(MashService):
@@ -38,6 +39,7 @@ class PipelineService(MashService):
         """Initialize base service class and job scheduler."""
         self.jobs = {}
         self.listener_msg_args = ['cloud_image_name']
+        self.status_msg_args = ['cloud_image_name']
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.service_init()
@@ -137,13 +139,26 @@ class PipelineService(MashService):
                 extra={'job_id': job_id}
             )
 
-    def get_status_message(self, job):
+    def _get_status_message(self, job):
         """
         Build and return json message.
 
         Message contains completion status to post to next service exchange.
         """
-        raise NotImplementedError('Implement in child service.')
+        key = '{0}_result'.format(self.service_exchange)
+
+        data = {
+            key: {
+                'id': job.id,
+                'status': job.status,
+            }
+        }
+
+        if job.status == SUCCESS:
+            for arg in self.status_msg_args:
+                data[key][arg] = getattr(job, arg)
+
+        return JsonFormat.json_message(data)
 
     def _handle_credentials_response(self, message):
         """
@@ -251,7 +266,7 @@ class PipelineService(MashService):
         """
         Publish status message to next service exchange.
         """
-        message = self.get_status_message(job)
+        message = self._get_status_message(job)
         try:
             self.publish_job_result(self.next_service, message)
         except AMQPError:

@@ -125,20 +125,3 @@ class TestReplicationService(object):
         self.replication.log.error.assert_called_once_with(
             'Cloud fake is not supported.'
         )
-
-    def test_replication_get_status_message(self):
-        job = Mock()
-        job.id = '1'
-        job.status = 'success'
-        job.cloud_image_name = 'image123'
-
-        data = self.replication.get_status_message(job)
-        assert data == self.status_message
-
-    def test_replication_get_status_message_error(self):
-        job = Mock()
-        job.id = '1'
-        job.status = 'failed'
-
-        data = self.replication.get_status_message(job)
-        assert data == self.error_message
