@@ -62,7 +62,7 @@ class TestDeprecationService(object):
             'id': '1', 'cloud': 'ec2', 'utctime': 'now',
         }
 
-        self.deprecation._add_job(job_config)
+        self.deprecation.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             EC2DeprecationJob,
@@ -75,7 +75,7 @@ class TestDeprecationService(object):
             'id': '1', 'cloud': 'gce', 'utctime': 'now',
         }
 
-        self.deprecation._add_job(job_config)
+        self.deprecation.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             GCEDeprecationJob,
@@ -88,7 +88,7 @@ class TestDeprecationService(object):
             'id': '1', 'cloud': 'azure', 'utctime': 'now',
         }
 
-        self.deprecation._add_job(job_config)
+        self.deprecation.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             AzureDeprecationJob,
@@ -104,7 +104,7 @@ class TestDeprecationService(object):
             'cloud': 'ec2', 'utctime': 'now',
         }
 
-        self.deprecation._add_job(job_config)
+        self.deprecation.add_job(job_config)
         self.deprecation.log.warning.assert_called_once_with(
             'Job already queued.',
             extra={'job_id': '1'}
@@ -116,7 +116,7 @@ class TestDeprecationService(object):
             'cloud': 'fake', 'utctime': 'now',
         }
 
-        self.deprecation._add_job(job_config)
+        self.deprecation.add_job(job_config)
         self.deprecation.log.exception.assert_called_once_with(
             'Cloud fake is not supported.'
         )
@@ -127,7 +127,7 @@ class TestDeprecationService(object):
         job.status = 'success'
         job.cloud_image_name = 'image123'
 
-        data = self.deprecation._get_status_message(job)
+        data = self.deprecation.get_status_message(job)
         assert data == self.status_message
 
     def test_deprecation_get_status_message_error(self):
@@ -135,5 +135,5 @@ class TestDeprecationService(object):
         job.id = '1'
         job.status = 'failed'
 
-        data = self.deprecation._get_status_message(job)
+        data = self.deprecation.get_status_message(job)
         assert data == self.error_message

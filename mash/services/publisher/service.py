@@ -31,7 +31,7 @@ class PublisherService(PipelineService):
 
     Handles the publishing of images in public cloud frameworks.
     """
-    def _add_job(self, job_config):
+    def add_job(self, job_config):
         """
         Add new job to publisher queue from job_config.
         """
@@ -54,7 +54,7 @@ class PublisherService(PipelineService):
                 'Cloud {0} is not supported.'.format(cloud)
             )
 
-    def _get_status_message(self, job):
+    def get_status_message(self, job):
         """
         Build and return json message.
 

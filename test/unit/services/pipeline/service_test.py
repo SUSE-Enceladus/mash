@@ -11,8 +11,8 @@ from mash.services.pipeline_service import PipelineService
 from mash.utils.json_format import JsonFormat
 
 NOT_IMPL_METHODS = [
-    '_add_job',
-    '_get_status_message'
+    'add_job',
+    'get_status_message'
 ]
 
 
@@ -86,7 +86,7 @@ class TestPipelineService(object):
         )
 
         mock_bind_creds.assert_called_once_with()
-        mock_restart_jobs.assert_called_once_with(self.service._add_job)
+        mock_restart_jobs.assert_called_once_with(self.service.add_job)
         mock_start.assert_called_once_with()
 
     @patch.object(PipelineService, '_delete_job')
@@ -273,7 +273,7 @@ class TestPipelineService(object):
 
         self.message.ack.assert_called_once_with()
 
-    @patch.object(PipelineService, '_add_job')
+    @patch.object(PipelineService, 'add_job')
     def test_service_handle_service_message(self, mock_add_job):
         self.method['routing_key'] = 'job_document'
         self.message.body = '{"replication_job": {"id": "1", ' \
@@ -376,7 +376,7 @@ class TestPipelineService(object):
         mock_delete_job('1')
         mock_publish_message.assert_called_once_with(job)
 
-    @patch.object(PipelineService, '_get_status_message')
+    @patch.object(PipelineService, 'get_status_message')
     @patch.object(PipelineService, 'publish_job_result')
     def test_service_publish_message(
         self, mock_publish, mock_get_status_message
@@ -393,7 +393,7 @@ class TestPipelineService(object):
             self.status_message
         )
 
-    @patch.object(PipelineService, '_get_status_message')
+    @patch.object(PipelineService, 'get_status_message')
     @patch.object(PipelineService, '_publish')
     def test_service_publish_message_exception(
         self, mock_publish, mock_get_status_message

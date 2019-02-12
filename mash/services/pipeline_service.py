@@ -49,13 +49,13 @@ class PipelineService(MashService):
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
         )
 
-        self.restart_jobs(self._add_job)
+        self.restart_jobs(self.add_job)
         self.start()
 
     def service_init(self):
         """Initialize child service class."""
 
-    def _add_job(self, job_config):
+    def add_job(self, job_config):
         """
         Add new job to queue from job_config.
         """
@@ -137,7 +137,7 @@ class PipelineService(MashService):
                 extra={'job_id': job_id}
             )
 
-    def _get_status_message(self, job):
+    def get_status_message(self, job):
         """
         Build and return json message.
 
@@ -194,7 +194,7 @@ class PipelineService(MashService):
         job_key = '{0}_job'.format(self.service_exchange)
         try:
             job_desc = json.loads(message.body)
-            self._add_job(job_desc[job_key])
+            self.add_job(job_desc[job_key])
         except Exception as e:
             self.log.error('Error adding job: {0}.'.format(e))
 
@@ -251,7 +251,7 @@ class PipelineService(MashService):
         """
         Publish status message to next service exchange.
         """
-        message = self._get_status_message(job)
+        message = self.get_status_message(job)
         try:
             self.publish_job_result(self.next_service, message)
         except AMQPError:

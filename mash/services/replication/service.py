@@ -37,7 +37,7 @@ class ReplicationService(PipelineService):
         """
         self.listener_msg_args.append('source_regions')
 
-    def _add_job(self, job_config):
+    def add_job(self, job_config):
         """
         Add new job to replication queue from job_config.
         """
@@ -60,7 +60,7 @@ class ReplicationService(PipelineService):
                 'Cloud {0} is not supported.'.format(cloud)
             )
 
-    def _get_status_message(self, job):
+    def get_status_message(self, job):
         """
         Build and return json message.
 

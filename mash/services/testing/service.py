@@ -54,7 +54,7 @@ class TestingService(PipelineService):
         if not os.path.exists(self.ssh_private_key_file):
             self._create_ssh_key_pair()
 
-    def _add_job(self, job_config):
+    def add_job(self, job_config):
         """
         Add job to jobs dict and bind new listener queue to uploader exchange.
 
@@ -111,7 +111,7 @@ class TestingService(PipelineService):
         with open(''.join([self.ssh_private_key_file, '.pub']), 'wb') as public_key_file:
             public_key_file.write(ssh_public_key)
 
-    def _get_status_message(self, job):
+    def get_status_message(self, job):
         """
         Build and return json message with completion status
         to post to service exchange.

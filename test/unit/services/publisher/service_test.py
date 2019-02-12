@@ -62,7 +62,7 @@ class TestPublisherService(object):
             'id': '1', 'cloud': 'ec2', 'utctime': 'now',
         }
 
-        self.publisher._add_job(job_config)
+        self.publisher.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             EC2PublisherJob,
@@ -75,7 +75,7 @@ class TestPublisherService(object):
             'id': '1', 'cloud': 'gce', 'utctime': 'now',
         }
 
-        self.publisher._add_job(job_config)
+        self.publisher.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             GCEPublisherJob,
@@ -88,7 +88,7 @@ class TestPublisherService(object):
             'id': '1', 'cloud': 'azure', 'utctime': 'now',
         }
 
-        self.publisher._add_job(job_config)
+        self.publisher.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             AzurePublisherJob,
@@ -104,7 +104,7 @@ class TestPublisherService(object):
             'cloud': 'ec2', 'utctime': 'now',
         }
 
-        self.publisher._add_job(job_config)
+        self.publisher.add_job(job_config)
         self.publisher.log.warning.assert_called_once_with(
             'Job already queued.',
             extra={'job_id': '1'}
@@ -116,7 +116,7 @@ class TestPublisherService(object):
             'cloud': 'fake', 'utctime': 'now',
         }
 
-        self.publisher._add_job(job_config)
+        self.publisher.add_job(job_config)
         self.publisher.log.error.assert_called_once_with(
             'Cloud fake is not supported.'
         )
@@ -127,7 +127,7 @@ class TestPublisherService(object):
         job.status = 'success'
         job.cloud_image_name = 'image123'
 
-        data = self.publisher._get_status_message(job)
+        data = self.publisher.get_status_message(job)
         assert data == self.status_message
 
     def test_publisher_get_status_message_error(self):
@@ -135,5 +135,5 @@ class TestPublisherService(object):
         job.id = '1'
         job.status = 'failed'
 
-        data = self.publisher._get_status_message(job)
+        data = self.publisher.get_status_message(job)
         assert data == self.error_message
