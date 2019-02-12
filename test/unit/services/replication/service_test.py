@@ -55,6 +55,11 @@ class TestReplicationService(object):
         self.replication.job_document_key = 'job_document'
         self.replication.listener_msg_key = 'listener_msg'
         self.replication.next_service = 'publisher'
+        self.replication.listener_msg_args = ['cloud_image_name']
+
+    def test_testing_service_init(self):
+        self.replication.service_init()
+        assert 'source_regions' in self.replication.listener_msg_args
 
     @patch.object(ReplicationService, '_create_job')
     def test_replication_add_job(self, mock_create_job):
@@ -137,7 +142,3 @@ class TestReplicationService(object):
 
         data = self.replication._get_status_message(job)
         assert data == self.error_message
-
-    def test_replication_get_listener_msg_args(self):
-        args = self.replication._get_listener_msg_args()
-        assert args == ['cloud_image_name', 'source_regions']

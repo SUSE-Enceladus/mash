@@ -137,7 +137,3 @@ class TestDeprecationService(object):
 
         data = self.deprecation._get_status_message(job)
         assert data == self.error_message
-
-    def test_deprecation_get_listener_msg_args(self):
-        args = self.deprecation._get_listener_msg_args()
-        assert args == ['cloud_image_name']

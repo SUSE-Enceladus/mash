@@ -37,6 +37,8 @@ class PipelineService(MashService):
     def post_init(self):
         """Initialize base service class and job scheduler."""
         self.jobs = {}
+        self.listener_msg_args = ['cloud_image_name']
+
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.service_init()
         self.bind_credentials_queue()
@@ -291,7 +293,6 @@ class PipelineService(MashService):
 
         If listener message is valid return the job instance.
         """
-        args = self._get_listener_msg_args()
         listener_msg = self._get_listener_msg(
             message,
             '{0}_result'.format(self.prev_service)
@@ -300,19 +301,15 @@ class PipelineService(MashService):
         if not listener_msg:
             return None
 
-        if self._validate_base_msg(listener_msg, args):
+        if self._validate_base_msg(listener_msg, self.listener_msg_args):
             job = self.jobs[listener_msg['id']]
 
-            for arg in args:
+            for arg in self.listener_msg_args:
                 self._process_msg_arg(listener_msg, arg, job)
 
             return job
         else:
             return None
-
-    def _get_listener_msg_args(self):
-        """Return the required args for the listener message"""
-        raise NotImplementedError('Implement in child service.')
 
     def _get_listener_msg(self, message, key):
         """Load json and attempt to get message by key."""

@@ -77,9 +77,3 @@ class PublisherService(PipelineService):
             }
 
         return JsonFormat.json_message(data)
-
-    def _get_listener_msg_args(self):
-        """
-        Return the required args for the listener message.
-        """
-        return ['cloud_image_name']

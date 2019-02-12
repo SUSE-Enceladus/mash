@@ -64,6 +64,7 @@ class TestPipelineService(object):
         self.service.listener_msg_key = 'listener_msg'
         self.service.next_service = 'publisher'
         self.service.prev_service = 'testing'
+        self.service.listener_msg_args = ['cloud_image_name']
 
     @patch.object(PipelineService, 'bind_credentials_queue')
     @patch.object(PipelineService, 'restart_jobs')
@@ -450,11 +451,6 @@ class TestPipelineService(object):
             getattr(self.service, method)(mock_arg)
         assert str(error.value) == 'Implement in child service.'
 
-    def test_service_get_listener_msg_args(self):
-        with pytest.raises(NotImplementedError) as error:
-            self.service._get_listener_msg_args()
-        assert str(error.value) == 'Implement in child service.'
-
     @patch.object(PipelineService, 'consume_credentials_queue')
     @patch.object(PipelineService, 'consume_queue')
     @patch.object(PipelineService, 'close_connection')
@@ -499,12 +495,7 @@ class TestPipelineService(object):
 
         assert 'Cannot start consuming.' == str(error.value)
 
-    @patch.object(PipelineService, '_get_listener_msg_args')
-    def test_service_validate_listener_msg(
-        self, mock_get_listener_msg_args
-    ):
-        mock_get_listener_msg_args.return_value = ['cloud_image_name']
-
+    def test_service_validate_listener_msg(self):
         job = MagicMock()
         self.service.jobs = {'1': job}
         message = '{' \
@@ -516,20 +507,12 @@ class TestPipelineService(object):
         result = self.service._validate_listener_msg(message)
         assert result == job
 
-    @patch.object(PipelineService, '_get_listener_msg_args')
-    def test_service_validate_listener_msg_invalid(
-        self, mock_get_listener_msg_args
-    ):
-        mock_get_listener_msg_args.return_value = ['cloud_image_name']
+    def test_service_validate_listener_msg_invalid(self):
         message = '{"fake_result": {"status": "success"}}'
         result = self.service._validate_listener_msg(message)
         assert result is None
 
-    @patch.object(PipelineService, '_get_listener_msg_args')
-    def test_service_validate_listener_msg_no_job(
-        self, mock_get_listener_msg_args
-    ):
-        mock_get_listener_msg_args.return_value = ['cloud_image_name']
+    def test_service_validate_listener_msg_no_job(self):
         message = '{' \
                   '"testing_result": {' \
                   '"status": "success", "id": "1", ' \
