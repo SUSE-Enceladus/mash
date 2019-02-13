@@ -28,6 +28,7 @@ from pytz import utc
 
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
+from mash.utils.json_format import JsonFormat
 
 
 class PipelineService(MashService):
@@ -38,6 +39,7 @@ class PipelineService(MashService):
         """Initialize base service class and job scheduler."""
         self.jobs = {}
         self.listener_msg_args = ['cloud_image_name']
+        self.status_msg_args = ['cloud_image_name']
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.service_init()
@@ -49,13 +51,13 @@ class PipelineService(MashService):
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
         )
 
-        self.restart_jobs(self._add_job)
+        self.restart_jobs(self.add_job)
         self.start()
 
     def service_init(self):
         """Initialize child service class."""
 
-    def _add_job(self, job_config):
+    def add_job(self, job_config):
         """
         Add new job to queue from job_config.
         """
@@ -143,7 +145,20 @@ class PipelineService(MashService):
 
         Message contains completion status to post to next service exchange.
         """
-        raise NotImplementedError('Implement in child service.')
+        key = '{0}_result'.format(self.service_exchange)
+
+        data = {
+            key: {
+                'id': job.id,
+                'status': job.status,
+            }
+        }
+
+        if job.status == SUCCESS:
+            for arg in self.status_msg_args:
+                data[key][arg] = getattr(job, arg)
+
+        return JsonFormat.json_message(data)
 
     def _handle_credentials_response(self, message):
         """
@@ -194,7 +209,7 @@ class PipelineService(MashService):
         job_key = '{0}_job'.format(self.service_exchange)
         try:
             job_desc = json.loads(message.body)
-            self._add_job(job_desc[job_key])
+            self.add_job(job_desc[job_key])
         except Exception as e:
             self.log.error('Error adding job: {0}.'.format(e))
 

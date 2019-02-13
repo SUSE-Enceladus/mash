@@ -67,7 +67,7 @@ class TestReplicationService(object):
             'id': '1', 'cloud': 'ec2', 'utctime': 'now',
         }
 
-        self.replication._add_job(job_config)
+        self.replication.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             EC2ReplicationJob,
@@ -80,7 +80,7 @@ class TestReplicationService(object):
             'id': '1', 'cloud': 'azure', 'utctime': 'now',
         }
 
-        self.replication._add_job(job_config)
+        self.replication.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             AzureReplicationJob,
@@ -93,7 +93,7 @@ class TestReplicationService(object):
             'id': '1', 'cloud': 'gce', 'utctime': 'now',
         }
 
-        self.replication._add_job(job_config)
+        self.replication.add_job(job_config)
 
         mock_create_job.assert_called_once_with(
             GCEReplicationJob,
@@ -109,7 +109,7 @@ class TestReplicationService(object):
             'cloud': 'ec2', 'utctime': 'now',
         }
 
-        self.replication._add_job(job_config)
+        self.replication.add_job(job_config)
         self.replication.log.warning.assert_called_once_with(
             'Job already queued.',
             extra={'job_id': '1'}
@@ -121,24 +121,7 @@ class TestReplicationService(object):
             'cloud': 'fake', 'utctime': 'now',
         }
 
-        self.replication._add_job(job_config)
+        self.replication.add_job(job_config)
         self.replication.log.error.assert_called_once_with(
             'Cloud fake is not supported.'
         )
-
-    def test_replication_get_status_message(self):
-        job = Mock()
-        job.id = '1'
-        job.status = 'success'
-        job.cloud_image_name = 'image123'
-
-        data = self.replication._get_status_message(job)
-        assert data == self.status_message
-
-    def test_replication_get_status_message_error(self):
-        job = Mock()
-        job.id = '1'
-        job.status = 'failed'
-
-        data = self.replication._get_status_message(job)
-        assert data == self.error_message

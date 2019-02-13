@@ -18,11 +18,9 @@
 
 from mash.csp import CSP
 from mash.services.pipeline_service import PipelineService
-from mash.services.status_levels import SUCCESS
 from mash.services.replication.azure_job import AzureReplicationJob
 from mash.services.replication.ec2_job import EC2ReplicationJob
 from mash.services.replication.gce_job import GCEReplicationJob
-from mash.utils.json_format import JsonFormat
 
 
 class ReplicationService(PipelineService):
@@ -37,7 +35,7 @@ class ReplicationService(PipelineService):
         """
         self.listener_msg_args.append('source_regions')
 
-    def _add_job(self, job_config):
+    def add_job(self, job_config):
         """
         Add new job to replication queue from job_config.
         """
@@ -59,27 +57,3 @@ class ReplicationService(PipelineService):
             self.log.error(
                 'Cloud {0} is not supported.'.format(cloud)
             )
-
-    def _get_status_message(self, job):
-        """
-        Build and return json message.
-
-        Message contiains completion status to post to service exchange.
-        """
-        if job.status == SUCCESS:
-            data = {
-                'replication_result': {
-                    'id': job.id,
-                    'cloud_image_name': job.cloud_image_name,
-                    'status': job.status,
-                }
-            }
-        else:
-            data = {
-                'replication_result': {
-                    'id': job.id,
-                    'status': job.status,
-                }
-            }
-
-        return JsonFormat.json_message(data)

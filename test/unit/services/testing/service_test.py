@@ -46,6 +46,7 @@ class TestIPATestingService(object):
         self.testing.next_service = 'replication'
         self.testing.ipa_timeout = 600
         self.testing.listener_msg_args = ['cloud_image_name']
+        self.testing.status_msg_args = ['cloud_image_name']
 
         self.error_message = JsonFormat.json_message({
             "testing_result": {
@@ -80,7 +81,7 @@ class TestIPATestingService(object):
         job.id = '1'
         job.get_metadata.return_value = {'job_id': job.id, 'cloud': 'ec2'}
 
-        self.testing._add_job({'id': job.id, 'cloud': 'ec2'})
+        self.testing.add_job({'id': job.id, 'cloud': 'ec2'})
 
         mock_create_job.assert_called_once_with(
             EC2TestingJob, {
@@ -97,7 +98,7 @@ class TestIPATestingService(object):
         job.id = '1'
         job.get_metadata.return_value = {'job_id': job.id, 'cloud': 'azure'}
 
-        self.testing._add_job({'id': job.id, 'cloud': 'azure'})
+        self.testing.add_job({'id': job.id, 'cloud': 'azure'})
 
         mock_create_job.assert_called_once_with(
             AzureTestingJob, {
@@ -114,7 +115,7 @@ class TestIPATestingService(object):
         job.id = '1'
         job.get_metadata.return_value = {'job_id': job.id, 'cloud': 'gce'}
 
-        self.testing._add_job({'id': job.id, 'cloud': 'gce'})
+        self.testing.add_job({'id': job.id, 'cloud': 'gce'})
 
         mock_create_job.assert_called_once_with(
             GCETestingJob, {
@@ -131,7 +132,7 @@ class TestIPATestingService(object):
         job.get_metadata.return_value = {'job_id': job.id}
 
         self.testing.jobs[job.id] = Mock()
-        self.testing._add_job({'id': job.id, 'cloud': 'ec2'})
+        self.testing.add_job({'id': job.id, 'cloud': 'ec2'})
 
         self.testing.log.warning.assert_called_once_with(
             'Job already queued.',
@@ -139,7 +140,7 @@ class TestIPATestingService(object):
         )
 
     def test_testing_add_job_invalid(self):
-        self.testing._add_job({'id': '1', 'cloud': 'fake'})
+        self.testing.add_job({'id': '1', 'cloud': 'fake'})
         self.testing.log.error.assert_called_once_with(
             'Cloud fake is not supported.'
         )
@@ -164,22 +165,3 @@ class TestIPATestingService(object):
                 call(b'1234567890'),
                 call(b'0987654321')
             ])
-
-    def test_testing_get_status_message(self):
-        job = Mock()
-        job.id = '1'
-        job.status = "success"
-        job.cloud_image_name = 'image123'
-        job.test_regions = {'us-east-2': {'account': 'test-aws'}}
-        job.source_regions = {'us-east-2': 'ami-123456'}
-
-        data = self.testing._get_status_message(job)
-        assert data == self.status_message
-
-    def test_testing_get_status_message_error(self):
-        job = Mock()
-        job.id = '1'
-        job.status = "failed"
-
-        data = self.testing._get_status_message(job)
-        assert data == self.error_message
