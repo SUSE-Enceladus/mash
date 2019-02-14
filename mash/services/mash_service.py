@@ -20,10 +20,12 @@ import json
 import jwt
 import logging
 import os
+import smtplib
 
 from amqpstorm import AMQPError, Connection
 from cryptography.fernet import Fernet, MultiFernet
 from datetime import datetime, timedelta
+from email.message import EmailMessage
 from jsonschema import FormatChecker, validate
 
 # project
@@ -31,6 +33,7 @@ from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
 from mash.services.base_defaults import Defaults
 from mash.services import get_configuration
+from mash.services.status_levels import SUCCESS
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
     MashLogSetupException,
@@ -77,6 +80,13 @@ class MashService(object):
         self.amqp_host = self.config.get_amqp_host()
         self.amqp_user = self.config.get_amqp_user()
         self.amqp_pass = self.config.get_amqp_pass()
+
+        # smtp settings
+        self.smtp_host = self.config.get_smtp_host()
+        self.smtp_port = self.config.get_smtp_port()
+        self.smtp_ssl = self.config.get_smtp_ssl()
+        self.smtp_user = self.config.get_smtp_user()
+        self.smtp_pass = self.config.get_smtp_pass()
 
         # setup service data directory
         self.job_directory = Defaults.get_job_directory(self.service_exchange)
@@ -489,3 +499,131 @@ class MashService(object):
             validate(message, template, format_checker=FormatChecker())
         except Exception as error:
             raise MashValidationException(error)
+
+    def _create_email_message(self, msg, subject, to_email, from_email):
+        """
+        Return email message object.
+        """
+        email_msg = EmailMessage()
+
+        email_msg['Subject'] = subject
+        email_msg['From'] = from_email
+        email_msg['To'] = to_email
+
+        email_msg.set_content(msg)
+
+        return email_msg
+
+    def send_email(self, email_msg):
+        """
+        Send email message using smtp server.
+
+        :param email_msg:  email.message.EmailMessage
+        """
+        if self.smtp_ssl:
+            smtp_class = smtplib.SMTP_SSL
+        else:
+            smtp_class = smtplib.SMTP
+
+        try:
+            smtp_server = smtp_class(self.smtp_host, self.smtp_port)
+
+            if self.smtp_user and self.smtp_pass:
+                smtp_server.login(self.smtp_user, self.smtp_pass)
+
+            smtp_server.send_message(email_msg)
+        except Exception as error:
+            self.log.warning(
+                'Unable to send notification email: {0}'.format(error)
+            )
+
+    def _should_notify(
+        self, notification_email, notification_type, utctime, status,
+        last_service
+    ):
+        """
+        Return True if a notification email should be sent based on job info.
+        """
+        if not notification_email:
+            return False
+        elif status != SUCCESS:
+            return True
+        elif notification_type == 'periodic' and utctime != 'always':
+            return True
+        elif last_service == self.service_exchange and utctime != 'always':
+            return True
+
+        return False
+
+    def _get_job_log_path(self, job_id):
+        """
+        Return the path to log for given job.
+        """
+        path = os.path.normpath(
+            '{0}/jobs/{1}.log'.format(self.config.get_log_directory(), job_id)
+        )
+
+        return path
+
+    def _create_notification_content(
+        self, job_id, status, utctime, last_service,
+        iteration_count=None, error=None
+    ):
+        """
+        Build content string for body of job notification email.
+        """
+        msg = [
+            'Job: {job_id}\n'
+            'Service: {service}\n'
+            'Log: {job_log}\n\n'
+        ]
+
+        if status == SUCCESS:
+            if self.service_exchange == last_service:
+                msg.append('Job finished successfully.')
+            else:
+                msg.append(
+                    'Job finished through the {service} service.'
+                )
+        else:
+            msg.append('Job failed.')
+
+            if utctime == 'always' and iteration_count:
+                msg.append(' The current pass is #{iteration_count}.')
+
+            if error:
+                msg.append(' The following error was logged: \n\n{error}')
+
+        msg = ''.join(msg)
+
+        return msg.format(
+            job_id=job_id,
+            service=self.service_exchange,
+            job_log=self._get_job_log_path(job_id),
+            iteration_count=str(iteration_count),
+            error=error
+        )
+
+    def send_email_notification(
+        self, job_id, notification_email, notification_type, status, utctime,
+        last_service, iteration_count=None, error=None
+    ):
+        """
+        Send job notification email based on result of _should_notify.
+        """
+        notify = self._should_notify(
+            notification_email, notification_type, utctime, status,
+            last_service
+        )
+
+        if notify:
+            content = self._create_notification_content(
+                job_id, status, utctime, last_service, iteration_count, error
+            )
+            email_msg = self._create_email_message(
+                msg=content,
+                subject=self.notification_subject,
+                to_email=notification_email,
+                from_email=self.smtp_user
+            )
+            self.send_email(email_msg)
