@@ -32,7 +32,8 @@ class AzureJob(BaseJob):
         tests=None, conditions=None, instance_type=None,
         old_cloud_image_name=None, cleanup_images=True,
         cloud_architecture='x86_64', version_key=None,
-        cloud_accounts=None, cloud_groups=None
+        cloud_accounts=None, cloud_groups=None,
+        notification_email=None, notification_type='single'
     ):
         self.target_account_info = {}
 
@@ -41,7 +42,8 @@ class AzureJob(BaseJob):
             requesting_user, last_service, utctime, image,
             cloud_image_name, image_description, distro, download_url, tests,
             conditions, instance_type, old_cloud_image_name, cleanup_images,
-            cloud_architecture, cloud_accounts, cloud_groups
+            cloud_architecture, cloud_accounts, cloud_groups,
+            notification_email, notification_type
         )
 
         self.emails = emails

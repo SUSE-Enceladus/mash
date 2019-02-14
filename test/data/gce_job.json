@@ -25,5 +25,6 @@
   "instance_type": "t2.micro",
   "family": "sles-15",
   "months_to_deletion": 5,
-  "tests": ["test_stuff"]
+  "tests": ["test_stuff"],
+  "notification_email": "test@fake.com"
 }
