@@ -26,10 +26,13 @@ class ReplicationJob(MashJob):
     """
 
     def __init__(
-        self, id, last_service, cloud, utctime, job_file=None
+        self, id, last_service, cloud, utctime, job_file=None,
+        notification_email=None, notification_type='single'
     ):
         super(ReplicationJob, self).__init__(
-            id, last_service, cloud, utctime, job_file
+            id, last_service, cloud, utctime, job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
         self._source_regions = None

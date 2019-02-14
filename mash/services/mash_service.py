@@ -503,7 +503,7 @@ class MashService(object):
 
     def _create_email_message(self, msg, subject, to_email, from_email):
         """
-        Return email message object.
+        Return notification email message object.
         """
         email_msg = EmailMessage()
 

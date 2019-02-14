@@ -33,10 +33,13 @@ class EC2ReplicationJob(ReplicationJob):
 
     def __init__(
         self, id, image_description, last_service, cloud, utctime,
-        replication_source_regions, job_file=None
+        replication_source_regions, job_file=None,
+        notification_email=None, notification_type='single'
     ):
         super(EC2ReplicationJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file
+            id, last_service, cloud, utctime, job_file=job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
         self.image_description = image_description

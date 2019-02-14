@@ -26,10 +26,13 @@ class GCEPublisherJob(PublisherJob):
     """
 
     def __init__(
-        self, id, last_service, cloud, utctime, job_file=None
+        self, id, last_service, cloud, utctime, job_file=None,
+        notification_email=None, notification_type='single'
     ):
         super(GCEPublisherJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file
+            id, last_service, cloud, utctime, job_file=job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
         # Skip credential request since there is no publishing in GCE

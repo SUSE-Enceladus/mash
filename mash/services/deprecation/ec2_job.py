@@ -30,11 +30,14 @@ class EC2DeprecationJob(DeprecationJob):
 
     def __init__(
         self, id, deprecation_regions, last_service, cloud, utctime,
-        old_cloud_image_name=None, job_file=None
+        old_cloud_image_name=None, job_file=None,
+        notification_email=None, notification_type='single'
     ):
         super(EC2DeprecationJob, self).__init__(
             id, last_service, cloud, utctime,
-            old_cloud_image_name=old_cloud_image_name, job_file=job_file
+            old_cloud_image_name=old_cloud_image_name, job_file=job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
         self.deprecation_regions = deprecation_regions

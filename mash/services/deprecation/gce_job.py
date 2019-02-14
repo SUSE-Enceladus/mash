@@ -35,11 +35,14 @@ class GCEDeprecationJob(DeprecationJob):
 
     def __init__(
         self, id, deprecation_accounts, last_service, cloud, utctime,
-        old_cloud_image_name=None, job_file=None, months_to_deletion=6
+        old_cloud_image_name=None, job_file=None, months_to_deletion=6,
+        notification_email=None, notification_type='single'
     ):
         super(GCEDeprecationJob, self).__init__(
             id, last_service, cloud, utctime,
-            old_cloud_image_name=old_cloud_image_name, job_file=job_file
+            old_cloud_image_name=old_cloud_image_name, job_file=job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
         self.deprecation_accounts = deprecation_accounts

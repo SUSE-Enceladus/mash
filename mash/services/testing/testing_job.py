@@ -34,10 +34,13 @@ class TestingJob(MashJob):
     def __init__(
         self, id, last_service, cloud, ssh_private_key_file, test_regions,
         tests, utctime, job_file=None, description=None, distro='sles',
-        instance_type=None, ipa_timeout=None, ssh_user=None
+        instance_type=None, ipa_timeout=None, ssh_user=None,
+        notification_email=None, notification_type='single'
     ):
         super(TestingJob, self).__init__(
-            id, last_service, cloud, utctime, job_file
+            id, last_service, cloud, utctime, job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
         # properties

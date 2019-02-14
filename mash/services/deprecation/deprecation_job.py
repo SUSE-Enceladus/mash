@@ -26,10 +26,13 @@ class DeprecationJob(MashJob):
     """
     def __init__(
         self, id, last_service, cloud, utctime,
-        old_cloud_image_name=None, job_file=None
+        old_cloud_image_name=None, job_file=None,
+        notification_email=None, notification_type='single'
     ):
         super(DeprecationJob, self).__init__(
-            id, last_service, cloud, utctime, job_file
+            id, last_service, cloud, utctime, job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
         self.old_cloud_image_name = old_cloud_image_name
