@@ -6,6 +6,9 @@ ssh_private_key_file: /var/lib/mash/ssh_key
 amqp_host: localhost
 amqp_user: guest
 amqp_pass: guest
+smtp_host: localhost
+smtp_port: 25
+smtp_ssl: False
 services:
   - obs
   - uploader
