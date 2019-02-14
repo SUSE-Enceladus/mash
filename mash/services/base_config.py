@@ -233,6 +233,11 @@ class BaseConfig(object):
             attribute='smtp_user'
         )
 
+        if not smtp_user:
+            raise MashConfigException(
+                'smtp_user is required in MASH configuration file.'
+            )
+
         return smtp_user
 
     def get_smtp_pass(self):

@@ -9,6 +9,7 @@ amqp_pass: guest
 smtp_host: localhost
 smtp_port: 25
 smtp_ssl: False
+smtp_user: test@fake.com
 services:
   - obs
   - uploader
