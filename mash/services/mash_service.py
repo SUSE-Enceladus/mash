@@ -87,6 +87,7 @@ class MashService(object):
         self.smtp_ssl = self.config.get_smtp_ssl()
         self.smtp_user = self.config.get_smtp_user()
         self.smtp_pass = self.config.get_smtp_pass()
+        self.notification_subject = self.config.get_notification_subject()
 
         # setup service data directory
         self.job_directory = Defaults.get_job_directory(self.service_exchange)

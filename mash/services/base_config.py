@@ -251,3 +251,15 @@ class BaseConfig(object):
         )
 
         return smtp_pass
+
+    def get_notification_subject(self):
+        """
+        Return the email notification_subject.
+
+        :rtype: string
+        """
+        notification_subject = self._get_attribute(
+            attribute='notification_subject'
+        )
+
+        return notification_subject or Defaults.get_notification_subject()

@@ -104,3 +104,7 @@ class TestBaseConfig(object):
 
         password = self.empty_config.get_smtp_pass()
         assert password is None
+
+    def test_get_notification_subject(self):
+        subject = self.empty_config.get_notification_subject()
+        assert subject == '[MASH] Job Status Update'

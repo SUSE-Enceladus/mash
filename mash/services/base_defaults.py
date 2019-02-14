@@ -83,3 +83,7 @@ class Defaults(object):
     @staticmethod
     def get_smtp_ssl():
         return False
+
+    @staticmethod
+    def get_notification_subject():
+        return '[MASH] Job Status Update'
