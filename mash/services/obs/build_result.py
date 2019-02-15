@@ -36,6 +36,7 @@ import threading
 from mash.utils.web_content import WebContent
 from mash.services.obs.defaults import Defaults
 from mash.log.filter import SchedulerLoggingFilter
+from mash.services.status_levels import FAILED, SUCCESS
 from mash.mash_exceptions import (
     MashImageDownloadException,
     MashVersionExpressionException
@@ -61,6 +62,9 @@ class OBSImageBuildResult(object):
       Image name as specified in the KIWI XML description of the
       Buildservice project and package
 
+    * :attr:`last_service`
+      The last service for the job.
+
     * :attr:`conditions`
       Criteria for the image build which is a list of hashes like
       the following example demonstrates:
@@ -81,10 +85,18 @@ class OBSImageBuildResult(object):
 
     * :attr:`download_directory`
       Download directory name, defaults to: /tmp
+
+    * :attr:`notification_email`
+      Email to send job notifications.
+
+    * :attr:`notification_type`
+      The frequency of notification emails.
     """
     def __init__(
-        self, job_id, job_file, download_url, image_name, conditions=None,
-        arch='x86_64', download_directory=Defaults.get_download_dir()
+        self, job_id, job_file, download_url, image_name, last_service,
+        conditions=None, arch='x86_64',
+        download_directory=Defaults.get_download_dir(),
+        notification_email=None, notification_type='single'
     ):
         self.arch = arch
         self.job_id = job_id
@@ -92,6 +104,7 @@ class OBSImageBuildResult(object):
         self.download_directory = download_directory
         self.download_url = download_url
         self.image_name = image_name
+        self.last_service = last_service
         self.image_metadata_name = None
         self.conditions = conditions
         self.scheduler = None
@@ -100,7 +113,10 @@ class OBSImageBuildResult(object):
         self.job_nonstop = False
         self.log_callback = None
         self.result_callback = None
+        self.notification_callback = None
         self.iteration_count = 0
+        self.notification_email = notification_email
+        self.notification_type = notification_type
 
         self.remote = WebContent(self.download_url)
 
@@ -170,6 +186,9 @@ class OBSImageBuildResult(object):
     def set_result_handler(self, function):
         self.result_callback = function
 
+    def set_notification_handler(self, function):
+        self.notification_callback = function
+
     def call_result_handler(self):
         self._result_callback()
 
@@ -235,6 +254,18 @@ class OBSImageBuildResult(object):
                         'status': job_status
                     }
                 }
+            )
+
+    def _notification_callback(
+        self, status, error=None
+    ):
+        utctime = 'always' if self.job_nonstop else 'now'
+
+        if self.notification_callback:
+            self.notification_callback(
+                self.job_id, self.notification_email, self.notification_type,
+                status, utctime, self.last_service, self.iteration_count,
+                error
             )
 
     def _init_status(self):
@@ -351,17 +382,19 @@ class OBSImageBuildResult(object):
             self._log_callback(
                 'Job status: {0}'.format(self.image_status['job_status'])
             )
+            self._result_callback()
+
             if self.job_nonstop:
-                self._result_callback()
                 self._log_callback('Waiting for image update')
                 self._wait_for_new_image()
             else:
+                self._notification_callback(SUCCESS)
                 self._log_callback('Job done')
-                self._result_callback()
         except Exception as issue:
-            self._log_error(
-                '{0}: {1}'.format(type(issue).__name__, issue)
-            )
+            msg = '{0}: {1}'.format(type(issue).__name__, issue)
+
+            self._log_error(msg)
+            self._notification_callback(FAILED, msg)
 
             if not self.job_nonstop:
                 self._result_callback()

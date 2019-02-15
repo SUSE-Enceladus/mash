@@ -147,7 +147,9 @@ class OBSImageBuildResultService(MashService):
                     "condition": ">="
                   },
                   {"image": "1.42.1"}
-              ]
+              ],
+              "notification_email": "test@fake.com",
+              "notification_type": "single"
           }
         }
         """
@@ -209,6 +211,7 @@ class OBSImageBuildResultService(MashService):
             'job_file': job['job_file'],
             'download_url': job['download_url'],
             'image_name': job['image'],
+            'last_service': job['last_service'],
             'download_directory': self.download_directory
         }
 
@@ -218,9 +221,14 @@ class OBSImageBuildResultService(MashService):
         if 'cloud_architecture' in job:
             kwargs['arch'] = job['cloud_architecture']
 
+        if 'notification_email' in job:
+            kwargs['notification_email'] = job['notification_email']
+            kwargs['notification_type'] = job['notification_type']
+
         job_worker = OBSImageBuildResult(**kwargs)
         job_worker.set_log_handler(self._send_job_response)
         job_worker.set_result_handler(self._send_job_result_for_uploader)
+        job_worker.set_notification_handler(self.send_email_notification)
         job_worker.start_watchdog(
             nonstop=nonstop, isotime=time
         )
