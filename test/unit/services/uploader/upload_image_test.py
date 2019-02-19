@@ -91,7 +91,8 @@ class TestUploadImage(object):
                 'cloud_image_id': 'id',
                 'upload_region': None,
                 'csp_name': 'ec2',
-                'job_status': 'success'
+                'job_status': 'success',
+                'error_msg': None
             }
         )
         self.upload_image.result_callback.reset_mock()
@@ -103,6 +104,7 @@ class TestUploadImage(object):
                 'cloud_image_id': None,
                 'upload_region': 'eu-central-1',
                 'csp_name': 'ec2',
-                'job_status': 'failed'
+                'job_status': 'failed',
+                'error_msg': None
             }
         )

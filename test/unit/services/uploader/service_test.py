@@ -49,7 +49,9 @@ class TestUploadImageService(object):
                     'helper_image': 'ami-bc5b48d0',
                     'account': 'test-aws'
                 }
-            }
+            },
+            'notification_email': 'test@fake.com',
+            'notification_type': 'single'
         }
         self.job_data_ec2 = {
             'uploader_job': {
@@ -64,7 +66,9 @@ class TestUploadImageService(object):
                         'helper_image': 'ami-bc5b48d0',
                         'account': 'test-aws'
                     }
-                }
+                },
+                'notification_email': None,
+                'notification_type': None
             }
         }
         self.job_data_azure = {
@@ -82,7 +86,9 @@ class TestUploadImageService(object):
                         'storage_account': 'ms1storage',
                         'account': 'test-azure'
                     }
-                }
+                },
+                'notification_email': 'test@fake.com',
+                'notification_type': 'periodic'
             }
         }
         self.job_data_gce = {
@@ -99,7 +105,9 @@ class TestUploadImageService(object):
                         'bucket': 'images',
                         'family': 'sles-15'
                     }
-                }
+                },
+                'notification_email': 'est@fake.com',
+                'notification_type': 'periodic'
             }
         }
         scheduler = Mock()
@@ -169,7 +177,11 @@ class TestUploadImageService(object):
     def test_publish_job_result(
         self, mock_persist_job_config, mock_publish_job_result
     ):
+        upload_image = [Mock()]
+        upload_image[0].iteration_count = 1
+
         self.uploader._init_job(self.job_data_ec2)
+        self.uploader.jobs['123']['uploader'] = upload_image
         self.uploader._publish_job_result(
             '123', publish_on_failed_job=True, status=FAILED
         )
@@ -198,7 +210,8 @@ class TestUploadImageService(object):
         trigger_info = {
             'job_status': 'success',
             'upload_region': 'region',
-            'cloud_image_id': 'image_id'
+            'cloud_image_id': 'image_id',
+            'error_msg': 'Job failed'
         }
         self.uploader._send_job_result('123', True, trigger_info)
         mock_publish_job_result.assert_called_once_with(
@@ -207,7 +220,12 @@ class TestUploadImageService(object):
         mock_delete_job.assert_called_once_with('123')
         assert self.uploader.jobs['123']['uploader_result']['status'] == SUCCESS
         mock_publish_job_result.reset_mock()
+
         trigger_info['job_status'] = 'failed'
+        mock_count = Mock()
+        mock_count.iteration_count = 3
+        uploader = [mock_count]
+        self.uploader.jobs['123']['uploader'] = uploader
         self.uploader.jobs['123']['utctime'] = 'always'
         self.uploader._send_job_result('123', True, trigger_info)
         mock_publish_job_result.assert_called_once_with(
@@ -231,7 +249,9 @@ class TestUploadImageService(object):
                         "helper_image": "ami-bc5b48d0",
                         "account": "test-aws"
                     }
-                }
+                },
+                "notification_email": None,
+                "notification_type": None
             }
         }
         message.body = json.dumps(data)
