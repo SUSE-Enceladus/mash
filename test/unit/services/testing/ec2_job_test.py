@@ -94,7 +94,7 @@ class TestEC2TestingJob(object):
         )
         assert 'Tests broken!' in mock_send_log.mock_calls[1][1][0]
         assert mock_send_log.mock_calls[1][2] == {'success': False}
-        ec2_setup.clean_up.assert_called_once_with()
+        assert ec2_setup.clean_up.call_count == 2
 
         # Failed key cleanup
         client.delete_key_pair.side_effect = Exception('Cannot delete key!')
