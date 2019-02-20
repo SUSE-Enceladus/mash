@@ -196,12 +196,14 @@ base_job_message = {
     'properties': {
         'cloud_accounts': {
             'type': 'array',
-            'items': {'$ref': '#definitions/account'}
+            'items': {'$ref': '#definitions/account'},
+            'minItems': 1
         },
         'cloud_groups': {
             'type': 'array',
             'items': {'$ref': '#/definitions/non_empty_string'},
-            'uniqueItems': True
+            'uniqueItems': True,
+            'minItems': 1
         },
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
         'last_service': {
@@ -253,8 +255,11 @@ base_job_message = {
         }
     },
     'additionalProperties': False,
+    'anyOf': [
+        {'required': ['cloud_accounts']}, {'required': ['cloud_groups']}
+    ],
     'required': [
-        'cloud', 'cloud_accounts', 'cloud_groups', 'requesting_user',
+        'cloud', 'requesting_user',
         'last_service', 'utctime', 'image', 'cloud_image_name',
         'image_description', 'download_url', 'tests'
     ],
@@ -302,11 +307,12 @@ ec2_job_message['definitions']['account'] = {
         'target_regions': {
             'type': 'array',
             'items': {'$ref': '#/definitions/non_empty_string'},
-            'uniqueItems': True
+            'uniqueItems': True,
+            'minItems': 1
         }
     },
     'additionalProperties': False,
-    'required': ['name', 'target_regions']
+    'required': ['name']
 }
 
 
