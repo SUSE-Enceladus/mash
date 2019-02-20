@@ -89,6 +89,22 @@ class TestEC2ReplicationJob(object):
 
     @patch.object(EC2ReplicationJob, 'image_exists')
     @patch('mash.services.replication.ec2_job.get_client')
+    def test_replicate_to_region_exists(
+            self, mock_get_client, mock_image_exists
+    ):
+        client = Mock()
+        mock_get_client.return_value = client
+        mock_image_exists.return_value = True
+
+        result = self.job._replicate_to_region(
+            self.job.credentials['test-aws'],
+            'ami-12345', 'us-east-1', 'us-east-2'
+        )
+
+        assert result is None
+
+    @patch.object(EC2ReplicationJob, 'image_exists')
+    @patch('mash.services.replication.ec2_job.get_client')
     def test_replicate_to_region_exception(
         self, mock_get_client, mock_image_exists
     ):
