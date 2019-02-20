@@ -27,18 +27,18 @@ class BaseJob(object):
     """
     def __init__(
         self, accounts_info, cloud_data, job_id, cloud,
-        cloud_accounts, cloud_groups, requesting_user, last_service,
+        requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests, conditions=None, instance_type=None,
         old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture='x86_64'
+        cloud_architecture='x86_64', cloud_accounts=None, cloud_groups=None
     ):
         self.id = job_id
         self.accounts_info = accounts_info
         self.cloud_data = cloud_data
         self.cloud = cloud
-        self.cloud_accounts = cloud_accounts
-        self.cloud_groups = cloud_groups
+        self.cloud_accounts = cloud_accounts or []
+        self.cloud_groups = cloud_groups or []
         self.requesting_user = requesting_user
         self.last_service = last_service
         self.image = image

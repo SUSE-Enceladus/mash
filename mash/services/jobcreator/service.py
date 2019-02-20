@@ -127,8 +127,8 @@ class JobCreatorService(MashService):
             'credentials_job_check': {
                 'id': job_id,
                 'cloud': job_doc['cloud'],
-                'cloud_accounts': job_doc['cloud_accounts'],
-                'cloud_groups': job_doc['cloud_groups'],
+                'cloud_accounts': job_doc.get('cloud_accounts', []),
+                'cloud_groups': job_doc.get('cloud_groups', []),
                 'requesting_user': job_doc['requesting_user']
             }
         }
