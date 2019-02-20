@@ -28,8 +28,8 @@ class GCEJob(BaseJob):
         self, accounts_info, cloud_data, job_id, cloud,
         requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
-        download_url, tests, conditions=None, instance_type=None, family=None,
-        old_cloud_image_name=None, cleanup_images=True,
+        download_url, tests=None, conditions=None, instance_type=None,
+        family=None, old_cloud_image_name=None, cleanup_images=True,
         cloud_architecture='x86_64', months_to_deletion=6,
         cloud_accounts=None, cloud_groups=None
     ):

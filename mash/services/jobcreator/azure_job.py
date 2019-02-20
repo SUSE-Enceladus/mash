@@ -28,10 +28,11 @@ class AzureJob(BaseJob):
         self, accounts_info, cloud_data, job_id, cloud,
         requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
-        download_url, tests, offer_id, publisher_id, sku, emails, label,
-        conditions=None, instance_type=None, old_cloud_image_name=None,
-        cleanup_images=True, cloud_architecture='x86_64', version_key=None,
-        cloud_accounts=None, cloud_groups=None,
+        download_url, offer_id, publisher_id, sku, emails, label,
+        tests=None, conditions=None, instance_type=None,
+        old_cloud_image_name=None, cleanup_images=True,
+        cloud_architecture='x86_64', version_key=None,
+        cloud_accounts=None, cloud_groups=None
     ):
         self.target_account_info = {}
 

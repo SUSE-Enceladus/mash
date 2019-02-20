@@ -261,7 +261,7 @@ base_job_message = {
     'required': [
         'cloud', 'requesting_user',
         'last_service', 'utctime', 'image', 'cloud_image_name',
-        'image_description', 'download_url', 'tests'
+        'image_description', 'download_url'
     ],
     'definitions': {
         'image_conditions': {

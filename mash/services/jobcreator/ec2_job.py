@@ -32,7 +32,7 @@ class EC2Job(BaseJob):
         self, accounts_info, cloud_data, job_id, cloud,
         requesting_user, last_service,
         utctime, image, cloud_image_name, image_description, distro,
-        download_url, tests, allow_copy=True, conditions=None,
+        download_url, tests=None, allow_copy=True, conditions=None,
         instance_type=None, share_with='all', old_cloud_image_name=None,
         cleanup_images=True, cloud_architecture='x86_64',
         cloud_accounts=None, cloud_groups=None
