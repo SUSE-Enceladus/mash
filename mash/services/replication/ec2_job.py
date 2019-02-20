@@ -94,46 +94,52 @@ class EC2ReplicationJob(ReplicationJob):
             'ec2', credential['access_key_id'],
             credential['secret_access_key'], target_region
         )
-        if not self.image_exists(client, self.cloud_image_name):
-            try:
+
+        try:
+            exists = self.image_exists(client, self.cloud_image_name)
+            if not exists:
                 new_image = client.copy_image(
                     Description=self.image_description,
                     Name=self.cloud_image_name,
                     SourceImageId=image_id,
                     SourceRegion=source_region,
                 )
-            except Exception as e:
-                raise MashReplicationException(
-                    'There was an error replicating image to {0}. {1}'
-                    .format(
-                        target_region, e
-                    )
+            else:
+                new_image = {'ImageId': None}
+        except Exception as e:
+            raise MashReplicationException(
+                'There was an error replicating image to {0}. {1}'
+                .format(
+                    target_region, e
                 )
-            return new_image['ImageId']
+            )
+
+        return new_image['ImageId']
 
     def _wait_on_image(self, credential, image_id, region):
         """
         Wait on image to finish replicating in the given region.
         """
-        client = get_client(
-            'ec2', credential['access_key_id'],
-            credential['secret_access_key'], region
-        )
+        if image_id:
+            client = get_client(
+                'ec2', credential['access_key_id'],
+                credential['secret_access_key'], region
+            )
 
-        try:
-            waiter = client.get_waiter('image_available')
-            waiter.wait(
-                ImageIds=[image_id],
-                Filters=[{'Name': 'state', 'Values': ['available']}],
-            )
-        except Exception as e:
-            # Log all errors instead of exiting on first exception.
-            self.send_log(
-                'There was an error replicating image to {0}. {1}'
-                .format(region, e),
-                False
-            )
-            self.status = FAILED
+            try:
+                waiter = client.get_waiter('image_available')
+                waiter.wait(
+                    ImageIds=[image_id],
+                    Filters=[{'Name': 'state', 'Values': ['available']}],
+                )
+            except Exception as e:
+                # Log all errors instead of exiting on first exception.
+                self.send_log(
+                    'There was an error replicating image to {0}. {1}'
+                    .format(region, e),
+                    False
+                )
+                self.status = FAILED
 
     def image_exists(self, client, cloud_image_name):
         """
