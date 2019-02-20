@@ -119,11 +119,14 @@ add_account_ec2 = {
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
         'partition': {'$ref': '#/definitions/non_empty_string'},
+        'region': {'$ref': '#/definitions/non_empty_string'},
         'cloud': {'enum': ['ec2']},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,
-    'required': ['account_name', 'credentials', 'cloud', 'requesting_user'],
+    'required': [
+        'account_name', 'credentials', 'cloud', 'requesting_user', 'region'
+    ],
     'definitions': {
         'non_empty_string': non_empty_string
     }
@@ -304,12 +307,7 @@ ec2_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {
         'name': {'$ref': '#/definitions/non_empty_string'},
-        'target_regions': {
-            'type': 'array',
-            'items': {'$ref': '#/definitions/non_empty_string'},
-            'uniqueItems': True,
-            'minItems': 1
-        }
+        'region': {'$ref': '#/definitions/non_empty_string'}
     },
     'additionalProperties': False,
     'required': ['name']

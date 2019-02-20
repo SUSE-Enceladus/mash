@@ -64,10 +64,9 @@ class TestJobCreatorService(object):
         ])
         mock_start.assert_called_once_with()
 
-    @patch('mash.services.jobcreator.ec2_job.random')
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message(
-            self, mock_publish, mock_random
+            self, mock_publish
     ):
         self.jobcreator.jobs = {}
         self.jobcreator.cloud_data = {
@@ -87,8 +86,6 @@ class TestJobCreatorService(object):
         }
         message = MagicMock()
 
-        mock_random.randint.return_value = 0
-
         with open('../data/job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
@@ -103,7 +100,8 @@ class TestJobCreatorService(object):
             "accounts": {
                 "user1": {
                     "test-aws-gov": {
-                        "partition": "aws-us-gov"
+                        "partition": "aws-us-gov",
+                        "region": "us-gov-west-1"
                     },
                     "test-aws": {
                         "additional_regions": [
@@ -112,7 +110,8 @@ class TestJobCreatorService(object):
                                 "helper_image": "ami-82444aff"
                             }
                         ],
-                        "partition": "aws"
+                        "partition": "aws",
+                        "region": "ap-northeast-1"
                     }
                 }
             }
@@ -779,8 +778,7 @@ class TestJobCreatorService(object):
                     "cloud": "ec2",
                     "cloud_accounts": [
                         {
-                            "name": "test-aws-gov",
-                            "target_regions": ["us-gov-west-1"]
+                            "name": "test-aws-gov"
                         }
                     ],
                     "cloud_groups": ["test"],
