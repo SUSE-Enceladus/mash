@@ -37,6 +37,7 @@ from mash.services.credentials.gce_account import GCEAccount
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 from mash.services.jobcreator.accounts import accounts_template
 from mash.utils.json_format import JsonFormat
+from mash.mash_exceptions import MashCredentialsException
 
 
 class CredentialsService(MashService):
@@ -134,8 +135,12 @@ class CredentialsService(MashService):
             )
 
             if not exists:
-                return False
-        return True
+                raise MashCredentialsException(
+                    'The requesting user {0}, does not have '
+                    'the following account: {1}'.format(
+                        requesting_user, account
+                    )
+                )
 
     def _confirm_job(self, job_document):
         """
@@ -150,26 +155,27 @@ class CredentialsService(MashService):
         cloud_groups = job_document['cloud_groups']
         requesting_user = job_document['requesting_user']
 
-        valid = self._check_job_accounts(
-            cloud, cloud_accounts, cloud_groups, requesting_user
-        )
-
-        if valid:
+        try:
+            self._check_job_accounts(
+                cloud, cloud_accounts, cloud_groups, requesting_user
+            )
+        except Exception as error:
+            self._send_control_response(
+                'Invalid job: {0}.'.format(error), success=False,
+                job_id=job_id
+            )
+            job_response = {'invalid_job': job_id}
+            self._publish(
+                'jobcreator', self.job_document_key,
+                JsonFormat.json_message(job_response)
+            )
+        else:
             job_response = {
                 'start_job': {
                     'id': job_id,
                     'accounts_info': self._get_accounts_from_file(cloud)
                 }
             }
-            self._publish(
-                'jobcreator', self.job_document_key,
-                JsonFormat.json_message(job_response)
-            )
-        else:
-            self._send_control_response(
-                'User does not own requested accounts.', success=False
-            )
-            job_response = {'invalid_job': job_id}
             self._publish(
                 'jobcreator', self.job_document_key,
                 JsonFormat.json_message(job_response)
@@ -226,7 +232,18 @@ class CredentialsService(MashService):
         Return a list of account names given the group name.
         """
         accounts_info = self._get_accounts_from_file(cloud)
-        return accounts_info['groups'][user][group]
+
+        try:
+            accounts = accounts_info['groups'][user][group]
+        except KeyError:
+            raise MashCredentialsException(
+                'The requesting user: {0}, does not have the '
+                'following group: {1}'.format(
+                    user, group
+                )
+            )
+
+        return accounts
 
     def _get_credentials_file_path(self, account, cloud, user):
         """
@@ -452,7 +469,7 @@ class CredentialsService(MashService):
         else:
             self._send_control_response(
                 'Credentials job {0} does not exist.'.format(job_id),
-                success=False
+                success=False, job_id=job_id
             )
 
     def _start_rotation_job(self):

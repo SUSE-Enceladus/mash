@@ -10,6 +10,7 @@ from mash.services.credentials.service import CredentialsService
 from mash.services.credentials.key_rotate import rotate_key
 from mash.services.jobcreator.accounts import accounts_template
 from mash.utils.json_format import JsonFormat
+from mash.mash_exceptions import MashCredentialsException
 
 
 class TestCredentialsService(object):
@@ -132,22 +133,24 @@ class TestCredentialsService(object):
     def test_check_job_accounts(
         self, mock_get_accounts_in_group, mock_check_credentials_exist
     ):
-        mock_get_accounts_in_group.return_value = ['test-aws', 'test-aws-cn']
+        mock_get_accounts_in_group.return_value = ['test-aws']
         mock_check_credentials_exist.return_value = True
 
-        value = self.service._check_job_accounts(
+        self.service._check_job_accounts(
             'ec2', [{'name': 'test-aws'}], ['test'], 'user1'
         )
-
-        assert value
 
         # Account does not exist for user
         mock_check_credentials_exist.return_value = False
-        value = self.service._check_job_accounts(
-            'ec2', [{'name': 'test-aws'}], ['test'], 'user1'
-        )
 
-        assert not value
+        with raises(MashCredentialsException) as error:
+            self.service._check_job_accounts(
+                'ec2', [{'name': 'test-aws'}], ['test'], 'user1'
+            )
+
+        msg = 'The requesting user user1, does not have ' \
+              'the following account: test-aws'
+        assert str(error.value) == msg
 
     @patch.object(CredentialsService, '_get_accounts_from_file')
     @patch.object(CredentialsService, '_check_job_accounts')
@@ -184,11 +187,14 @@ class TestCredentialsService(object):
 
         # Invalid accounts
         mock_publish.reset_mock()
-        mock_check_job_accounts.return_value = False
+        mock_check_job_accounts.side_effect = MashCredentialsException(
+            'missing account'
+        )
         self.service._confirm_job(doc)
 
         mock_send_control_response.assert_called_once_with(
-            'User does not own requested accounts.', success=False
+            'Invalid job: missing account.', success=False,
+            job_id='123'
         )
         mock_publish.assert_called_once_with(
             'jobcreator', 'job_document',
@@ -265,6 +271,19 @@ class TestCredentialsService(object):
         }
         accounts = self.service._get_accounts_in_group('test', 'ec2', 'user1')
         assert accounts == ['test-1', 'test-2']
+
+    @patch.object(CredentialsService, '_get_accounts_from_file')
+    def test_get_accounts_in_group_error(self, mock_get_accounts_from_file):
+        mock_get_accounts_from_file.return_value = {
+            'groups': {}
+        }
+
+        with raises(MashCredentialsException) as error:
+            self.service._get_accounts_in_group('test', 'ec2', 'user1')
+
+        msg = 'The requesting user: user1, does ' \
+              'not have the following group: test'
+        assert str(error.value) == msg
 
     def test_get_encrypted_credentials(self):
         with patch('builtins.open', create=True) as mock_open:
@@ -520,7 +539,8 @@ class TestCredentialsService(object):
     ):
         self.service._send_credential_response({'id': '1', 'iss': 'pint'})
         mock_send_control_response.assert_called_once_with(
-            'Credentials job 1 does not exist.', success=False
+            'Credentials job 1 does not exist.', success=False,
+            job_id='1'
         )
 
     def test_send_control_response_local(self):
