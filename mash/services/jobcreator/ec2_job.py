@@ -16,8 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import random
-
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
 
@@ -51,28 +49,25 @@ class EC2Job(BaseJob):
 
     def _get_account_info(self):
         """
-        Returns a dictionary of accounts and regions.
+        Returns a dictionary mapping target region info.
 
-        The provided target_regions dictionary may contain a list
-        of groups and accounts. An account may have a list of regions.
-
-        If regions are not provided for an account the default list
-        of all regions available is used.
+        For each target region there is a related account, a list
+        of available regions and a helper image.
 
         Example: {
             'us-east-1': {
                 'account': 'acnt1',
-                'target_regions': ['us-east-2', 'us-west-1', 'us-west-2']
+                'target_regions': ['us-east-2', 'us-west-1', 'us-west-2'],
+                'helper_image': 'ami-123456789'
             }
         }
         """
         group_accounts = []
         accounts = {}
 
-        # Get dictionary of account names to target regions
+        # Get dictionary of account names to target region
         for cloud_account in self.cloud_accounts:
-            accounts[cloud_account['name']] = \
-                cloud_account.get('target_regions')
+            accounts[cloud_account['name']] = cloud_account.get('region')
 
         helper_images = self.cloud_data.get('helper_images')
 
@@ -87,30 +82,30 @@ class EC2Job(BaseJob):
             if account not in accounts:
                 accounts[account] = None
 
-        for account, target_regions in accounts.items():
-            if not target_regions:
-                # Get default list of all available regions for account
-                target_regions = self._get_regions_for_account(
-                    account, self.requesting_user
-                )
+        for account, target_region in accounts.items():
+            # Get default list of all available regions for account
+            target_regions = self._get_regions_for_account(
+                account, self.requesting_user
+            )
 
-                # Add additional regions for account
-                additional_regions = \
-                    self.accounts_info['accounts'][self.requesting_user][account]\
-                        .get('additional_regions')
+            account_info = \
+                self.accounts_info['accounts'][self.requesting_user][account]
 
-                if additional_regions:
-                    for region in additional_regions:
-                        helper_images[region['name']] = region['helper_image']
-                        target_regions.append(region['name'])
+            if not target_region:
+                target_region = account_info.get('region')
 
-            # A random region is selected as source region.
-            index = random.randint(0, len(target_regions) - 1)
-            target = target_regions[index]
-            self.target_account_info[target] = {
+            # Add additional regions for account
+            additional_regions = account_info.get('additional_regions')
+
+            if additional_regions:
+                for region in additional_regions:
+                    helper_images[region['name']] = region['helper_image']
+                    target_regions.append(region['name'])
+
+            self.target_account_info[target_region] = {
                 'account': account,
                 'target_regions': target_regions,
-                'helper_image': helper_images[target]
+                'helper_image': helper_images[target_region]
             }
 
     def _get_regions_for_account(self, account, user):

@@ -619,6 +619,7 @@ class TestCredentialsService(object):
             'partition': 'aws',
             'cloud': 'ec2',
             'requesting_user': 'user1',
+            'region': 'us-east-1',
             'group': 'group123'
         }
 
@@ -634,8 +635,11 @@ class TestCredentialsService(object):
             'acnt123', 'encryptedcreds', 'ec2', 'user1'
         )
 
-        assert accounts['ec2']['accounts']['user1']['acnt123'] == \
-            {'additional_regions': None, 'partition': 'aws'}
+        assert accounts['ec2']['accounts']['user1']['acnt123'] == {
+            'additional_regions': None,
+            'partition': 'aws',
+            'region': 'us-east-1'
+        }
         assert accounts['ec2']['groups']['user1']['group123'] == ['acnt123']
 
     @patch.object(CredentialsService, '_store_encrypted_credentials')

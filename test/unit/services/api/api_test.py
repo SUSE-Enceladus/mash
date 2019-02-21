@@ -40,6 +40,7 @@ def test_api_add_account(mock_connection, mock_config, test_client):
         'group': 'group1',
         'partition': 'aws',
         'cloud': 'ec2',
+        'region': 'us-east-1',
         'requesting_user': 'user1'
     }, sort_keys=True)
     response = test_client.post(
