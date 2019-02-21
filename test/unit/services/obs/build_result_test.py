@@ -159,6 +159,10 @@ class TestOBSImageBuildResult(object):
         with raises(MashImageDownloadException):
             self.obs_result.get_image()
 
+        self.obs_result.remote.fetch_files.return_value = []
+        with raises(MashImageDownloadException):
+            self.obs_result.get_image()
+
     def test_get_build_number(self):
         name = 'Azure-Factory.x86_64-1.0.5-Build42.42.packages'
         assert self.obs_result._get_build_number(name) == ['1.0.5', '42.42']

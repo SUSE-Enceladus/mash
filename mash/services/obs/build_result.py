@@ -190,6 +190,14 @@ class OBSImageBuildResult(object):
             ['.xz', 'xz.sha256', '.tar.gz', '.tar.gz.sha256'],
             self.download_directory
         )
+
+        if not image_files:
+            raise MashImageDownloadException(
+                'No images found that match the image name {0}.'.format(
+                    self.image_name
+                )
+            )
+
         for image_file in image_files:
             if self._get_build_number(image_file) != build_number:
                 raise MashImageDownloadException(
