@@ -293,10 +293,6 @@ class OBSImageBuildResult(object):
                 continue
 
     def _image_conditions_complied(self):
-        if self.image_status['version'] == 'unknown':
-            # if no image build was found, conditions no matter
-            # if there are any are not complied
-            return False
         for condition in self.image_status['conditions']:
             if condition['status'] is not True:
                 return False
@@ -377,6 +373,14 @@ class OBSImageBuildResult(object):
             '.packages',
             packages_file.name
         )
+
+        if not self.image_metadata_name:
+            raise MashImageDownloadException(
+                'No image metadata found for image name: {0}'.format(
+                    self.image_name
+                )
+            )
+
         try:
             # Extract image version information from .packages file name
             self.image_status['version'] = \
@@ -384,18 +388,19 @@ class OBSImageBuildResult(object):
         except Exception:
             # Naming conventions for image names in obs violated
             self.image_status['version'] = 'unknown'
-            self._log_error(
+            raise MashImageDownloadException(
+                'No image version found. '
                 'Unexpected image name format: {0}'.format(
                     self.image_metadata_name
                 )
             )
-        if self.image_status['version'] == 'unknown':
-            self._log_error('No image version found')
+
         package_type = namedtuple(
             'package_type', [
                 'version', 'release', 'arch', 'checksum'
             ]
         )
+
         result_packages = {}
         with open(packages_file.name) as packages:
             for package in packages.readlines():
