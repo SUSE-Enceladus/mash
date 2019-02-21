@@ -43,6 +43,7 @@ def ipa_test(
     key_name = None
     subnet_id = None
     security_group_id = None
+    result = {}
 
     try:
         if cloud == CSP.ec2:
@@ -108,11 +109,16 @@ def ipa_test(
             if cloud == CSP.ec2:
                 client.delete_key_pair(KeyName=key_name)
 
-                # Wait until instance is terminated
-                # to cleanup security group.
-                instance_id = result['info']['instance']
-                waiter = client.get_waiter('instance_terminated')
-                waiter.wait(InstanceIds=[instance_id])
+                try:
+                    instance_id = result['info']['instance']
+                except KeyError:
+                    instance_id = None
+
+                if instance_id:
+                    # Wait until instance is terminated
+                    # to cleanup security group.
+                    waiter = client.get_waiter('instance_terminated')
+                    waiter.wait(InstanceIds=[instance_id])
 
                 ec2_setup.clean_up()
             else:
