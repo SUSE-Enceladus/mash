@@ -1,3 +1,45 @@
+v2.1.0 (2019-02-22)
+===================
+
+- Integrate azure deprecation class.
+  [\#387](https://github.com/SUSE-Enceladus/mash/pull/387)
+- Start mash services after rabbitmq-server.
+  [\#388](https://github.com/SUSE-Enceladus/mash/pull/388)
+- Make OBS package conditions expressive.
+  [\#389](https://github.com/SUSE-Enceladus/mash/pull/389)
+- Move schema to api module where it's used.
+  [\#390](https://github.com/SUSE-Enceladus/mash/pull/390)
+- Move start jobs to base pipeline class.
+  [\#391](https://github.com/SUSE-Enceladus/mash/pull/391)
+- Cleanup start/stop service methods.
+  [\#392](https://github.com/SUSE-Enceladus/mash/pull/392)
+- Ack job doc message only after the job is saved.
+  [\#393](https://github.com/SUSE-Enceladus/mash/pull/393)
+- Move listener message args to list.
+  [\#394](https://github.com/SUSE-Enceladus/mash/pull/394)
+- Fixup systemd unit files for required services.
+  [\#395](https://github.com/SUSE-Enceladus/mash/pull/395)
+- Same defaults for ec2 options.
+  [\#398](https://github.com/SUSE-Enceladus/mash/pull/398)
+- Move get status message impl to pipeline class.
+  [\#399](https://github.com/SUSE-Enceladus/mash/pull/399)
+- Handle job verification better.
+  [\#400](https://github.com/SUSE-Enceladus/mash/pull/400)
+- Make accounts and groups optional in job doc.
+  [\#401](https://github.com/SUSE-Enceladus/mash/pull/401)
+- Remove random region handling for ec2 jobs.
+  [\#402](https://github.com/SUSE-Enceladus/mash/pull/402)
+- Ensure vpc is cleaned on ipa failure.
+  [\#403](https://github.com/SUSE-Enceladus/mash/pull/403)
+- Move image exists inside try block.
+  [\#404](https://github.com/SUSE-Enceladus/mash/pull/404)
+- Allow no tests in job doc.
+  [\#405](https://github.com/SUSE-Enceladus/mash/pull/405)
+- Better error message for empty image files.
+  [\#406](https://github.com/SUSE-Enceladus/mash/pull/406)
+- If no image matches image name raise exception.
+  [\#409](https://github.com/SUSE-Enceladus/mash/pull/409)
+
 v2.0.0 (2019-02-04)
 ===================
 
