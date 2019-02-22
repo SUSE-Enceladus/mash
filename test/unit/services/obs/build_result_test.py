@@ -226,8 +226,6 @@ class TestOBSImageBuildResult(object):
             ]
 
     def test_image_conditions_complied(self):
-        self.obs_result.image_status['version'] = 'unknown'
-        assert self.obs_result._image_conditions_complied() is False
         self.obs_result.image_status['version'] = '1.2.3'
         assert self.obs_result._image_conditions_complied() is True
         self.obs_result.image_status['conditions'] = [{'status': False}]
@@ -319,9 +317,16 @@ class TestOBSImageBuildResult(object):
         )
         assert data['file-magic'].checksum == '8e776ae58aac4e50edcf190e493e5c20'
         assert self.obs_result.image_status['version'] == '1.0.5'
+
         self.obs_result.remote.fetch_file.return_value = 'foo.packages'
-        self.obs_result._lookup_image_packages_metadata()
+        with raises(MashImageDownloadException):
+            self.obs_result._lookup_image_packages_metadata()
+
         assert self.obs_result.image_status['version'] == 'unknown'
+
+        self.obs_result.remote.fetch_file.return_value = None
+        with raises(MashImageDownloadException):
+            self.obs_result._lookup_image_packages_metadata()
 
     @patch('mash.services.obs.build_result.NamedTemporaryFile')
     def test_lookup_package(
@@ -330,6 +335,8 @@ class TestOBSImageBuildResult(object):
         tempfile = Mock()
         tempfile.name = '../data/image.packages'
         mock_NamedTemporaryFile.return_value = tempfile
+        self.obs_result.remote.fetch_file.return_value = \
+            'Azure-Factory.x86_64-1.0.5-Build5.28.packages'
         packages = self.obs_result._lookup_image_packages_metadata()
         assert self.obs_result._lookup_package(
             packages, {'package_name': 'foo'}
