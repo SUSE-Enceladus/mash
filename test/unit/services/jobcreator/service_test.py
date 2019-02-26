@@ -658,9 +658,17 @@ class TestJobCreatorService(object):
         assert 'test-gce2' in data['deprecation_accounts']
         assert data['utctime'] == 'now'
 
-    def test_jobcreator_handle_invalid_service_message(self):
+    @patch.object(JobCreatorService, 'send_email_notification')
+    def test_jobcreator_handle_invalid_service_message(
+        self, mock_send_email_notification
+    ):
         message = MagicMock()
         message.body = 'invalid message'
+
+        with open('../data/job.json', 'r') as job_doc:
+            job = json.load(job_doc)
+
+        self.jobcreator.jobs = {'123': job}
 
         self.jobcreator._handle_service_message(message)
         self.jobcreator.log.error.assert_called_once_with(
@@ -675,6 +683,9 @@ class TestJobCreatorService(object):
         self.jobcreator.log.warning.assert_called_once_with(
             'Job failed, accounts do not exist.',
             extra={'job_id': '123'}
+        )
+        mock_send_email_notification.assert_called_once_with(
+            '123', 'test@fake.com', None, 'failed', 'now', 'pint', error=None
         )
 
     @patch.object(JobCreatorService, '_publish')

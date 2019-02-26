@@ -83,10 +83,7 @@ class JobCreatorService(MashService):
             if 'job_delete' in job_doc:
                 self.publish_delete_job_message(job_doc['job_delete'])
             elif 'invalid_job' in job_doc:
-                self.log.warning(
-                    'Job failed, accounts do not exist.',
-                    extra={'job_id': job_doc['invalid_job']}
-                )
+                self._notify_failed_job(job_doc)
             elif 'start_job' in job_doc:
                 self.send_job(job_doc['start_job'])
             else:
@@ -115,6 +112,30 @@ class JobCreatorService(MashService):
             'credentials', self.delete_account_key,
             JsonFormat.json_message(message)
         )
+
+    def _notify_failed_job(self, job_doc):
+        """
+        Log and send email notification for failed job.
+
+        Credentials accounts in job are invalid.
+        """
+        job_id = job_doc['invalid_job']
+
+        self.log.warning(
+            'Job failed, accounts do not exist.',
+            extra={'job_id': job_id}
+        )
+
+        job = self.jobs[job_id]
+
+        self.send_email_notification(
+            job_id, job.get('notification_email'),
+            job.get('notification_type'), 'failed',
+            job.get('utctime'), job.get('last_service'),
+            error=job_doc.get('error_msg')
+        )
+
+        del self.jobs[job_id]
 
     def process_new_job(self, job_doc):
         """
