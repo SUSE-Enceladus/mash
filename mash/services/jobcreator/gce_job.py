@@ -60,32 +60,12 @@ class GCEJob(BaseJob):
             }
         }
         """
-        group_accounts = []
-        accounts = {}
+        for account, info in self.accounts_info.items():
+            region = self.cloud_accounts[account].get('region') or \
+                info.get('region')
 
-        # Get dictionary of account names to account dict
-        for cloud_account in self.cloud_accounts:
-            accounts[cloud_account['name']] = cloud_account
-
-        # Get all accounts from all groups
-        for group in self.cloud_groups:
-            group_accounts += self._get_accounts_in_group(
-                group, self.requesting_user
-            )
-
-        # Add accounts from groups that don't already exist
-        for account in group_accounts:
-            if account not in accounts:
-                accounts[account] = {}
-
-        for account, info in accounts.items():
-            region = info.get('region') or \
-                self.accounts_info['accounts'][self.requesting_user][account]\
-                    .get('region')
-
-            bucket = info.get('bucket') or \
-                self.accounts_info['accounts'][self.requesting_user][account] \
-                    .get('bucket')
+            bucket = self.cloud_accounts[account].get('bucket') or \
+                info.get('bucket')
 
             self.target_account_info[region] = {
                 'account': account,

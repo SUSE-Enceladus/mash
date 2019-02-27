@@ -92,28 +92,19 @@ class TestJobCreatorService(object):
         self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
 
         account_info = {
-            "groups": {
-                "user1": {
-                    "test": ["test-aws-gov", "test-aws"]
-                }
+            "test-aws-gov": {
+                "partition": "aws-us-gov",
+                "region": "us-gov-west-1"
             },
-            "accounts": {
-                "user1": {
-                    "test-aws-gov": {
-                        "partition": "aws-us-gov",
-                        "region": "us-gov-west-1"
-                    },
-                    "test-aws": {
-                        "additional_regions": [
-                            {
-                                "name": "ap-northeast-3",
-                                "helper_image": "ami-82444aff"
-                            }
-                        ],
-                        "partition": "aws",
-                        "region": "ap-northeast-1"
+            "test-aws": {
+                "additional_regions": [
+                    {
+                        "name": "ap-northeast-3",
+                        "helper_image": "ami-82444aff"
                     }
-                }
+                ],
+                "partition": "aws",
+                "region": "ap-northeast-1"
             }
         }
 
@@ -303,32 +294,23 @@ class TestJobCreatorService(object):
         self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
 
         account_info = {
-            "accounts": {
-                "user1": {
-                    "test-azure": {
-                        "region": "southcentralus",
-                        "source_resource_group": "sc_res_group1",
-                        "source_container": "sccontainer1",
-                        "source_storage_account": "scstorage1",
-                        "destination_resource_group": "sc_res_group2",
-                        "destination_container": "sccontainer2",
-                        "destination_storage_account": "scstorage2"
-                    },
-                    "test-azure2": {
-                        "region": "centralus",
-                        "source_resource_group": "c_res_group1",
-                        "source_container": "ccontainer1",
-                        "source_storage_account": "cstorage1",
-                        "destination_resource_group": "c_res_group2",
-                        "destination_container": "ccontainer2",
-                        "destination_storage_account": "cstorage2"
-                    }
-                }
+            "test-azure": {
+                "region": "southcentralus",
+                "source_resource_group": "sc_res_group1",
+                "source_container": "sccontainer1",
+                "source_storage_account": "scstorage1",
+                "destination_resource_group": "sc_res_group2",
+                "destination_container": "sccontainer2",
+                "destination_storage_account": "scstorage2"
             },
-            "groups": {
-                "user1": {
-                    "test-azure-group": ["test-azure", "test-azure2"]
-                }
+            "test-azure2": {
+                "region": "centralus",
+                "source_resource_group": "c_res_group1",
+                "source_container": "ccontainer1",
+                "source_storage_account": "cstorage1",
+                "destination_resource_group": "c_res_group2",
+                "destination_container": "ccontainer2",
+                "destination_storage_account": "cstorage2"
             }
         }
 
@@ -513,22 +495,13 @@ class TestJobCreatorService(object):
         self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
 
         account_info = {
-            "accounts": {
-                "user1": {
-                    "test-gce": {
-                        "region": "us-west1",
-                        "bucket": "images"
-                    },
-                    "test-gce2": {
-                        "region": "us-west2",
-                        "bucket": "images"
-                    }
-                }
+            "test-gce": {
+                "region": "us-west1",
+                "bucket": "images"
             },
-            "groups": {
-                "user1": {
-                    "test-gce-group": ["test-gce", "test-gce2"]
-                }
+            "test-gce2": {
+                "region": "us-west2",
+                "bucket": "images"
             }
         }
 
