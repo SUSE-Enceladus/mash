@@ -169,7 +169,10 @@ class TestCredentialsService(object):
         accounts = {
             'accounts': {
                 'user1': {
-                    'test-aws': {}
+                    'test-aws': {
+                        'testing_account': 'tester'
+                    },
+                    'tester': {}
                 }
             },
             'groups': {

@@ -177,6 +177,17 @@ class CredentialsService(MashService):
             )
 
         for account in set(account_names):
+            info = self._get_account_info(
+                account, requesting_user, accounts
+            )
+            if info.get('testing_account'):
+                # If testing account does not exist raise exception
+                # and prevent job from entering queue.
+                self._get_account_info(
+                    info['testing_account'], requesting_user, accounts
+                )
+
+        for account in set(account_names):
             accounts_info[account] = self._get_account_info(
                 account, requesting_user, accounts
             )
