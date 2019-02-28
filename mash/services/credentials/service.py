@@ -91,6 +91,12 @@ class CredentialsService(MashService):
             self.jobs[job_id] = job_document
 
             if 'job_file' not in job_document:
+                testing_accounts = self._get_testing_accounts(
+                    job_document['cloud'], job_document['cloud_accounts'],
+                    job_document['requesting_user']
+                )
+                job_document['cloud_accounts'] += testing_accounts
+
                 job_document['job_file'] = self.persist_job_config(
                     job_document
                 )
@@ -99,6 +105,29 @@ class CredentialsService(MashService):
                 'Job queued, awaiting credentials requests.',
                 job_id=job_id
             )
+
+    def _get_testing_accounts(self, cloud, cloud_accounts, requesting_user):
+        """
+        Return a list of testing accounts based on cloud accounts.
+
+        Only add an account to the list if it does not already exist.
+        """
+        accounts = self._get_accounts_from_file(cloud)
+        testing_accounts = []
+
+        for account in cloud_accounts:
+            info = self._get_account_info(
+                account, requesting_user, accounts
+            )
+
+            if info.get('testing_account') and \
+                    info['testing_account'] not in cloud_accounts and \
+                    info['testing_account'] not in testing_accounts:
+                testing_accounts.append(
+                    info['testing_account']
+                )
+
+        return testing_accounts
 
     def _bind_credential_request_keys(self):
         """

@@ -35,7 +35,6 @@ class GCEJob(BaseJob):
         notification_email=None, notification_type='single'
     ):
         self.family = family
-        self.target_account_info = {}
 
         super(GCEJob, self).__init__(
             accounts_info, cloud_data, job_id, cloud,
@@ -70,7 +69,8 @@ class GCEJob(BaseJob):
             self.target_account_info[region] = {
                 'account': account,
                 'bucket': bucket,
-                'family': self.family
+                'family': self.family,
+                'testing_account': info.get('testing_account')
             }
 
     def get_deprecation_message(self):
@@ -128,17 +128,6 @@ class GCEJob(BaseJob):
         replication_message['replication_job'].update(self.base_message)
 
         return JsonFormat.json_message(replication_message)
-
-    def get_testing_regions(self):
-        """
-        Return a dictionary of target test regions.
-        """
-        test_regions = {}
-
-        for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = value['account']
-
-        return test_regions
 
     def get_uploader_regions(self):
         """

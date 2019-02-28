@@ -74,16 +74,33 @@ class TestCredentialsService(object):
         mock_restart_jobs.assert_called_once_with(self.service._add_job)
         mock_start.assert_called_once_with()
 
+    @patch.object(CredentialsService, '_get_accounts_from_file')
     @patch.object(CredentialsService, 'persist_job_config')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_add_job(
-        self, mock_send_control_response, mock_persist_job_config
+        self, mock_send_control_response, mock_persist_job_config,
+        mock_get_accounts_from_file
     ):
         mock_persist_job_config.return_value = 'temp-config.json'
-        self.service._add_job({'id': '1', 'cloud': 'ec2'})
+        mock_get_accounts_from_file.return_value = {
+            'accounts': {
+                'user1': {
+                    'test-gce': {'testing_account': 'tester'}
+                }
+            }
+        }
+
+        self.service._add_job({
+            'id': '1',
+            'cloud': 'ec2',
+            'cloud_accounts': ['test-gce'],
+            'requesting_user': 'user1'
+        })
 
         job_config = {
-            'id': '1', 'job_file': 'temp-config.json', 'cloud': 'ec2'
+            'id': '1', 'job_file': 'temp-config.json', 'cloud': 'ec2',
+            'cloud_accounts': ['test-gce', 'tester'],
+            'requesting_user': 'user1'
         }
         mock_persist_job_config.assert_called_once_with(job_config)
 
@@ -669,7 +686,8 @@ class TestCredentialsService(object):
         assert accounts['ec2']['accounts']['user1']['acnt123'] == {
             'additional_regions': None,
             'partition': 'aws',
-            'region': 'us-east-1'
+            'region': 'us-east-1',
+            'testing_account': None
         }
         assert accounts['ec2']['groups']['user1']['group123'] == ['acnt123']
 

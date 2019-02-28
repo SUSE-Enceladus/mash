@@ -35,8 +35,6 @@ class AzureJob(BaseJob):
         cloud_accounts=None, cloud_groups=None,
         notification_email=None, notification_type='single'
     ):
-        self.target_account_info = {}
-
         super(AzureJob, self).__init__(
             accounts_info, cloud_data, job_id, cloud,
             requesting_user, last_service, utctime, image,
@@ -98,7 +96,8 @@ class AzureJob(BaseJob):
                 'source_storage_account': source_storage_account,
                 'destination_resource_group': destination_resource_group,
                 'destination_container': destination_container,
-                'destination_storage_account': destination_storage_account
+                'destination_storage_account': destination_storage_account,
+                'testing_account': info.get('testing_account')
             }
 
     def get_deprecation_message(self):
@@ -179,17 +178,6 @@ class AzureJob(BaseJob):
         Return a dictionary of replication source regions.
         """
         return self.target_account_info
-
-    def get_testing_regions(self):
-        """
-        Return a dictionary of target test regions.
-        """
-        test_regions = {}
-
-        for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = value['account']
-
-        return test_regions
 
     def get_uploader_regions(self):
         """

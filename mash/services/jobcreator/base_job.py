@@ -58,6 +58,7 @@ class BaseJob(object):
         self.utctime = utctime
         self.notification_email = notification_email
         self.notification_type = notification_type
+        self.target_account_info = {}
 
         self.base_message = {
             'id': self.id,
@@ -207,10 +208,16 @@ class BaseJob(object):
     def get_testing_regions(self):
         """
         Return a dictionary of target test regions.
-
-        Implementation in child class.
         """
-        pass
+        test_regions = {}
+
+        for source_region, value in self.target_account_info.items():
+            test_regions[source_region] = {
+                'account': value['account'],
+                'testing_account': value['testing_account']
+            }
+
+        return test_regions
 
     def get_uploader_message(self):
         """

@@ -76,7 +76,8 @@ add_account_azure = {
         },
         'destination_storage_account': {
             '$ref': '#/definitions/non_empty_string'
-        }
+        },
+        'testing_account': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,
     'required': [
@@ -121,6 +122,7 @@ add_account_ec2 = {
         'partition': {'$ref': '#/definitions/non_empty_string'},
         'region': {'$ref': '#/definitions/non_empty_string'},
         'cloud': {'enum': ['ec2']},
+        'testing_account': {'$ref': '#/definitions/non_empty_string'},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,
@@ -165,6 +167,7 @@ add_account_gce = {
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
         'cloud': {'enum': ['gce']},
+        'testing_account': {'$ref': '#/definitions/non_empty_string'},
         'region': {'$ref': '#/definitions/non_empty_string'},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'}
     },

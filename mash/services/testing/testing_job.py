@@ -67,7 +67,12 @@ class TestingJob(MashJob):
         """
         results = {}
         jobs = []
-        for region, account in self.test_regions.items():
+        for region, info in self.test_regions.items():
+            if info.get('testing_account'):
+                account = info['testing_account']
+            else:
+                account = info['account']
+
             creds = self.credentials[account]
             ipa_kwargs = {
                 'cloud': self.cloud,

@@ -38,7 +38,6 @@ class EC2Job(BaseJob):
     ):
         self.share_with = share_with
         self.allow_copy = allow_copy
-        self.target_account_info = {}
 
         super(EC2Job, self).__init__(
             accounts_info, cloud_data, job_id, cloud,
@@ -86,7 +85,8 @@ class EC2Job(BaseJob):
             self.target_account_info[target_region] = {
                 'account': account,
                 'target_regions': target_regions,
-                'helper_image': helper_images[target_region]
+                'helper_image': helper_images[target_region],
+                'testing_account': info.get('testing_account')
             }
 
     def _get_regions_for_partition(self, partition):
@@ -182,17 +182,6 @@ class EC2Job(BaseJob):
             }
 
         return replication_source_regions
-
-    def get_testing_regions(self):
-        """
-        Return a dictionary of target test regions.
-        """
-        test_regions = {}
-
-        for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = value['account']
-
-        return test_regions
 
     def get_uploader_regions(self):
         """

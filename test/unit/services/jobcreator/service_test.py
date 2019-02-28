@@ -189,8 +189,14 @@ class TestJobCreatorService(object):
                     "notification_email": "test@fake.com",
                     "notification_type": "single",
                     "test_regions": {
-                        "ap-northeast-1": "test-aws",
-                        "us-gov-west-1": "test-aws-gov"
+                        "ap-northeast-1": {
+                            "account": "test-aws",
+                            "testing_account": None
+                        },
+                        "us-gov-west-1": {
+                            "account": "test-aws-gov",
+                            "testing_account": None
+                        }
                     },
                     "tests": ["test_stuff"],
                     "utctime": "now"
@@ -398,8 +404,14 @@ class TestJobCreatorService(object):
                     "notification_email": "test@fake.com",
                     "notification_type": "single",
                     "test_regions": {
-                        "centralus": "test-azure2",
-                        "southcentralus": "test-azure"
+                        "centralus": {
+                            "account": "test-azure2",
+                            "testing_account": None
+                        },
+                        "southcentralus": {
+                            "account": "test-azure",
+                            "testing_account": None
+                        }
                     },
                     "tests": ["test_stuff"],
                     "utctime": "now"
@@ -425,7 +437,8 @@ class TestJobCreatorService(object):
                             "source_storage_account": "cstorage1",
                             "destination_container": "ccontainer2",
                             "destination_resource_group": "c_res_group2",
-                            "destination_storage_account": "cstorage2"
+                            "destination_storage_account": "cstorage2",
+                            "testing_account": None
                         },
                         "southcentralus": {
                             "account": "test-azure",
@@ -434,7 +447,8 @@ class TestJobCreatorService(object):
                             "source_storage_account": "sa1",
                             "destination_container": "container2",
                             "destination_resource_group": "rg-2",
-                            "destination_storage_account": "sa2"
+                            "destination_storage_account": "sa2",
+                            "testing_account": None
                         }
                     },
                     "utctime": "now"
@@ -563,12 +577,14 @@ class TestJobCreatorService(object):
                         "us-west2": {
                             "account": "test-gce2",
                             "bucket": "images",
-                            "family": "sles-15"
+                            "family": "sles-15",
+                            "testing_account": None
                         },
                         "us-west1": {
                             "account": "test-gce",
                             "bucket": "images",
-                            "family": "sles-15"
+                            "family": "sles-15",
+                            "testing_account": None
                         }
                     },
                     "utctime": "now"
@@ -587,8 +603,14 @@ class TestJobCreatorService(object):
                     "notification_email": "test@fake.com",
                     "notification_type": "single",
                     "test_regions": {
-                        "us-west2": "test-gce2",
-                        "us-west1": "test-gce"
+                        "us-west2": {
+                            "account": "test-gce2",
+                            "testing_account": None
+                        },
+                        "us-west1": {
+                            "account": "test-gce",
+                            "testing_account": None
+                        }
                     },
                     "tests": ["test_stuff"],
                     "utctime": "now"
