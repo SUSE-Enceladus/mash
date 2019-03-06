@@ -179,6 +179,7 @@ class TestOBSImageBuildResultService(object):
                 "download_url": "http://download.suse.de/ibs/Devel:/"
                                 "PubCloud:/Stable:/Images12/images",
                 "image": "test-image-oem",
+                "last_service": "publisher",
                 "utctime": "now",
                 "conditions": [
                     {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
@@ -222,12 +223,15 @@ class TestOBSImageBuildResultService(object):
             "download_url": "http://download.suse.de/ibs/Devel:/"
                             "PubCloud:/Stable:/Images12/images",
             "image": "test-image-oem",
+            "last_service": "publisher",
             "utctime": "now",
             "conditions": [
                 {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
                 {"image": "1.42.1"}
             ],
-            "cloud_architecture": "aarch64"
+            "cloud_architecture": "aarch64",
+            "notification_email": "test@fake.com",
+            "notification_type": "single"
         }
         self.obs_result._start_job(data)
         job_worker.set_log_handler.assert_called_once_with(
@@ -250,6 +254,7 @@ class TestOBSImageBuildResultService(object):
             "download_url": "http://download.suse.de/ibs/Devel:/"
                             "PubCloud:/Stable:/Images12/images",
             "image": "test-image-oem",
+            "last_service": "publisher",
             "utctime": "always"
         }
         self.obs_result._start_job(data)
@@ -267,6 +272,7 @@ class TestOBSImageBuildResultService(object):
             "download_url": "http://download.suse.de/ibs/Devel:/"
                             "PubCloud:/Stable:/Images12/images",
             "image": "test-image-oem",
+            "last_service": "publisher",
             "utctime": "Wed Oct 11 17:50:26 UTC 2017"
         }
         self.obs_result._start_job(data)

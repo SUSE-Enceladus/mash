@@ -295,10 +295,12 @@ class TestPipelineService(object):
             ' line 1 column 1 (char 0).'
         )
 
+    @patch.object(PipelineService, 'send_email_notification')
     @patch.object(PipelineService, '_delete_job')
     @patch.object(PipelineService, '_publish_message')
     def test_service_process_job_result(
-        self, mock_publish_message, mock_delete_job
+        self, mock_publish_message, mock_delete_job,
+        mock_send_email_notification
     ):
         event = Mock()
         event.job_id = '1'
@@ -325,10 +327,12 @@ class TestPipelineService(object):
         mock_publish_message.assert_called_once_with(job)
         msg.ack.assert_called_once_with()
 
+    @patch.object(PipelineService, 'send_email_notification')
     @patch.object(PipelineService, '_delete_job')
     @patch.object(PipelineService, '_publish_message')
     def test_service_process_job_result_exception(
-        self, mock_publish_message, mock_delete_job
+        self, mock_publish_message, mock_delete_job,
+        mock_send_email_notification
     ):
         event = Mock()
         event.job_id = '1'
@@ -350,10 +354,12 @@ class TestPipelineService(object):
         )
         mock_publish_message.assert_called_once_with(job)
 
+    @patch.object(PipelineService, 'send_email_notification')
     @patch.object(PipelineService, '_delete_job')
     @patch.object(PipelineService, '_publish_message')
     def test_publishing_process_job_result_fail(
-        self, mock_publish_message, mock_delete_job
+        self, mock_publish_message, mock_delete_job,
+        mock_send_email_notification
     ):
         event = Mock()
         event.job_id = '1'

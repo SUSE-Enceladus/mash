@@ -5,6 +5,8 @@
         "cloud": "ec2",
         "utctime": "now",
         "cloud_image_name": "image_123",
-        "old_cloud_image_name": "old_image_123"
+        "old_cloud_image_name": "old_image_123",
+        "notification_email": "test@fake.com",
+        "notification_type": "single"
     }
 }

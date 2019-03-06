@@ -26,10 +26,13 @@ class PublisherJob(MashJob):
     """
 
     def __init__(
-        self, id, last_service, cloud, utctime, job_file=None
+        self, id, last_service, cloud, utctime, job_file=None,
+        notification_email=None, notification_type='single'
     ):
         super(PublisherJob, self).__init__(
-            id, last_service, cloud, utctime, job_file
+            id, last_service, cloud, utctime, job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
     def _publish(self):

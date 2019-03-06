@@ -25,7 +25,8 @@ class TestOBSImageBuildResult(object):
     @patch('mash.services.obs.build_result.WebContent')
     def setup(self, mock_WebContent):
         self.obs_result = OBSImageBuildResult(
-            '815', 'job_file', 'obs_project', 'obs_package'
+            '815', 'job_file', 'obs_project', 'obs_package', 'publisher',
+            notification_email='test@fake.com', notification_type='single'
         )
 
     def test_initial_image_status(self):
@@ -49,6 +50,11 @@ class TestOBSImageBuildResult(object):
         function = Mock()
         self.obs_result.set_result_handler(function)
         assert self.obs_result.result_callback == function
+
+    def test_set_notification_handler(self):
+        function = Mock()
+        self.obs_result.set_notification_handler(function)
+        assert self.obs_result.notification_callback == function
 
     @patch.object(OBSImageBuildResult, '_result_callback')
     def test_call_result_handler(self, mock_result_callback):
@@ -75,6 +81,17 @@ class TestOBSImageBuildResult(object):
                     'image_file': ['image', 'sum'], 'status': 'success'
                 }
             }
+        )
+
+    def test_notification_callback(self):
+        self.obs_result.notification_callback = Mock()
+        self.obs_result.iteration_count = 2
+        self.obs_result._notification_callback(
+            'success', 'error!'
+        )
+        self.obs_result.notification_callback.assert_called_once_with(
+            '815', 'test@fake.com', 'single', 'success', 'now',
+            'publisher', 2, 'error!'
         )
 
     @patch('mash.services.obs.build_result.BackgroundScheduler')
@@ -231,6 +248,7 @@ class TestOBSImageBuildResult(object):
         self.obs_result.image_status['conditions'] = [{'status': False}]
         assert self.obs_result._image_conditions_complied() is False
 
+    @patch.object(OBSImageBuildResult, '_notification_callback')
     @patch('mash.services.obs.build_result.time')
     @patch.object(OBSImageBuildResult, '_log_callback')
     @patch.object(OBSImageBuildResult, '_result_callback')
@@ -243,7 +261,8 @@ class TestOBSImageBuildResult(object):
         self, mock_get_image, mock_wait_for_new_image,
         mock_image_conditions_complied, mock_lookup_package,
         mock_lookup_image_packages_metadata,
-        mock_result_callback, mock_log_callback, mock_time
+        mock_result_callback, mock_log_callback, mock_time,
+        mock_notification_callback
     ):
         self.obs_result.image_status['version'] = '1.2.3'
         self.obs_result.image_status['conditions'] = [
@@ -288,12 +307,13 @@ class TestOBSImageBuildResult(object):
         mock_image_conditions_complied.side_effect = [False, True]
         self.obs_result._update_image_status()
 
+    @patch.object(OBSImageBuildResult, '_notification_callback')
     @patch.object(OBSImageBuildResult, '_log_callback')
     @patch.object(OBSImageBuildResult, '_lookup_image_packages_metadata')
     @patch.object(OBSImageBuildResult, '_result_callback')
     def test_update_image_status_raises(
         self, mock_result_callback, mock_lookup_image_packages_metadata,
-        mock_log_callback
+        mock_log_callback, mock_notification_callback
     ):
         mock_lookup_image_packages_metadata.side_effect = \
             MashWebContentException('request error')

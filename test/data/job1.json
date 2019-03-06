@@ -7,6 +7,8 @@
     "conditions": [
       {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
       {"image": "1.42.1"}
-    ]
+    ],
+    "notification_email": "test@fake.com",
+    "notification_type": "single"
   }
 }

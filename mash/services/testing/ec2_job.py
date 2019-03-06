@@ -42,7 +42,8 @@ class EC2TestingJob(TestingJob):
         self, id, last_service, cloud, ssh_private_key_file, test_regions,
         tests, utctime, job_file=None, description=None,
         distro='sles', instance_type=None, ipa_timeout=None,
-        ssh_user='ec2-user'
+        ssh_user='ec2-user', notification_email=None,
+        notification_type='single'
     ):
         if not instance_type:
             instance_type = random.choice(instance_types)
@@ -51,7 +52,9 @@ class EC2TestingJob(TestingJob):
             id, last_service, cloud, ssh_private_key_file, test_regions,
             tests, utctime, job_file=job_file, description=description,
             distro=distro, instance_type=instance_type,
-            ipa_timeout=ipa_timeout, ssh_user=ssh_user
+            ipa_timeout=ipa_timeout, ssh_user=ssh_user,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
     def _add_cloud_creds(self, creds, ipa_kwargs):

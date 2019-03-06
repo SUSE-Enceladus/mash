@@ -164,7 +164,10 @@ class CredentialsService(MashService):
                 'Invalid job: {0}.'.format(error), success=False,
                 job_id=job_id
             )
-            job_response = {'invalid_job': job_id}
+            job_response = {
+                'invalid_job': job_id,
+                'error_msg': str(error)
+            }
             self._publish(
                 'jobcreator', self.job_document_key,
                 JsonFormat.json_message(job_response)

@@ -255,6 +255,14 @@ base_job_message = {
         'cleanup_images': {'type': 'boolean'},
         'cloud_architecture': {
             'enum': ['x86_64', 'aarch64']
+        },
+        'notification_email': {
+            '$ref': '#/definitions/non_empty_string',
+            'format': 'regex',
+            'pattern': r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+        },
+        'notification_type': {
+            'enum': ['periodic', 'single']
         }
     },
     'additionalProperties': False,

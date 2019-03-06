@@ -153,6 +153,8 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
                     "last_service": "pint",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "utctime": "now"
                 }
             })
@@ -162,12 +164,14 @@ class TestJobCreatorService(object):
             'uploader', 'job_document',
             JsonFormat.json_message({
                 "uploader_job": {
+                    "cloud": "ec2",
                     "cloud_architecture": "aarch64",
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "pint",
-                    "cloud": "ec2",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "target_regions": {
                         "ap-northeast-1": {
                             "account": "test-aws",
@@ -186,11 +190,13 @@ class TestJobCreatorService(object):
             'testing', 'job_document',
             JsonFormat.json_message({
                 "testing_job": {
+                    "cloud": "ec2",
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
                     "last_service": "pint",
-                    "cloud": "ec2",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "test_regions": {
                         "ap-northeast-1": "test-aws",
                         "us-gov-west-1": "test-aws-gov"
@@ -204,10 +210,12 @@ class TestJobCreatorService(object):
             'replication', 'job_document',
             JsonFormat.json_message({
                 "replication_job": {
+                    "cloud": "ec2",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "pint",
-                    "cloud": "ec2",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "replication_source_regions": {
                         "ap-northeast-1": {
                             "account": "test-aws",
@@ -269,11 +277,13 @@ class TestJobCreatorService(object):
             'pint', 'job_document',
             JsonFormat.json_message({
                 "pint_job": {
+                    "cloud": "ec2",
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "last_service": "pint",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "old_cloud_image_name": "old_new_image_123",
-                    "cloud": "ec2",
                     "utctime": "now"
                 }
             })
@@ -358,6 +368,8 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
                     "last_service": "deprecation",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "utctime": "now"
                 }
             })
@@ -366,12 +378,14 @@ class TestJobCreatorService(object):
             'uploader', 'job_document',
             JsonFormat.json_message({
                 "uploader_job": {
+                    "cloud": "azure",
                     "cloud_architecture": "x86_64",
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "deprecation",
-                    "cloud": "azure",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "target_regions": {
                         "centralus": {
                             "account": "test-azure2",
@@ -394,11 +408,13 @@ class TestJobCreatorService(object):
             'testing', 'job_document',
             JsonFormat.json_message({
                 "testing_job": {
+                    "cloud": "azure",
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
                     "last_service": "deprecation",
-                    "cloud": "azure",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "test_regions": {
                         "centralus": "test-azure2",
                         "southcentralus": "test-azure"
@@ -413,10 +429,12 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({
                 "replication_job": {
                     "cleanup_images": True,
+                    "cloud": "azure",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "deprecation",
-                    "cloud": "azure",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "replication_source_regions": {
                         "centralus": {
                             "account": "test-azure2",
@@ -454,6 +472,8 @@ class TestJobCreatorService(object):
         assert data['sku'] == '123'
         assert data['utctime'] == 'now'
         assert data['version_key'] == 'key123'
+        assert data['notification_email'] == 'test@fake.com'
+        assert data['notification_type'] == 'single'
         for region in data['publish_regions']:
             assert region['account'] in ('test-azure', 'test-azure2')
             if region['account'] == 'test-azure':
@@ -469,9 +489,11 @@ class TestJobCreatorService(object):
             'deprecation', 'job_document',
             JsonFormat.json_message({
                 "deprecation_job": {
+                    "cloud": "azure",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "last_service": "deprecation",
-                    "cloud": "azure",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "utctime": "now"
                 }
             })
@@ -546,6 +568,8 @@ class TestJobCreatorService(object):
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image": "test_image_oem",
                     "last_service": "deprecation",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "utctime": "now"
                 }
             })
@@ -554,12 +578,14 @@ class TestJobCreatorService(object):
             'uploader', 'job_document',
             JsonFormat.json_message({
                 "uploader_job": {
+                    "cloud": "gce",
                     "cloud_architecture": "x86_64",
                     "cloud_image_name": "new_image_123",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "image_description": "New Image #123",
                     "last_service": "deprecation",
-                    "cloud": "gce",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "target_regions": {
                         "us-west2": {
                             "account": "test-gce2",
@@ -580,11 +606,13 @@ class TestJobCreatorService(object):
             'testing', 'job_document',
             JsonFormat.json_message({
                 "testing_job": {
+                    "cloud": "gce",
                     "distro": "sles",
                     "id": "12345678-1234-1234-1234-123456789012",
                     "instance_type": "t2.micro",
                     "last_service": "deprecation",
-                    "cloud": "gce",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "test_regions": {
                         "us-west2": "test-gce2",
                         "us-west1": "test-gce"
@@ -599,8 +627,10 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({
                 "replication_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
-                    "last_service": "deprecation",
                     "cloud": "gce",
+                    "last_service": "deprecation",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "utctime": "now"
                 }
             })
@@ -610,8 +640,10 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({
                 "publisher_job": {
                     "id": "12345678-1234-1234-1234-123456789012",
-                    "last_service": "deprecation",
                     "cloud": "gce",
+                    "last_service": "deprecation",
+                    "notification_email": "test@fake.com",
+                    "notification_type": "single",
                     "utctime": "now"
                 }
             })
@@ -626,9 +658,17 @@ class TestJobCreatorService(object):
         assert 'test-gce2' in data['deprecation_accounts']
         assert data['utctime'] == 'now'
 
-    def test_jobcreator_handle_invalid_service_message(self):
+    @patch.object(JobCreatorService, 'send_email_notification')
+    def test_jobcreator_handle_invalid_service_message(
+        self, mock_send_email_notification
+    ):
         message = MagicMock()
         message.body = 'invalid message'
+
+        with open('../data/job.json', 'r') as job_doc:
+            job = json.load(job_doc)
+
+        self.jobcreator.jobs = {'123': job}
 
         self.jobcreator._handle_service_message(message)
         self.jobcreator.log.error.assert_called_once_with(
@@ -643,6 +683,9 @@ class TestJobCreatorService(object):
         self.jobcreator.log.warning.assert_called_once_with(
             'Job failed, accounts do not exist.',
             extra={'job_id': '123'}
+        )
+        mock_send_email_notification.assert_called_once_with(
+            '123', 'test@fake.com', None, 'failed', 'now', 'pint', error=None
         )
 
     @patch.object(JobCreatorService, '_publish')

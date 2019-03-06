@@ -186,3 +186,80 @@ class BaseConfig(object):
         )
 
         return amqp_pass or Defaults.get_amqp_pass()
+
+    def get_smtp_host(self):
+        """
+        Return the smtp hostname.
+
+        :rtype: string
+        """
+        smtp_host = self._get_attribute(
+            attribute='smtp_host'
+        )
+
+        return smtp_host or Defaults.get_smtp_host()
+
+    def get_smtp_port(self):
+        """
+        Return the smtp port.
+
+        :rtype: string
+        """
+        smtp_port = self._get_attribute(
+            attribute='smtp_port'
+        )
+
+        return smtp_port or Defaults.get_smtp_port()
+
+    def get_smtp_ssl(self):
+        """
+        Return the smtp ssl boolean.
+
+        :rtype: string
+        """
+        smtp_ssl = self._get_attribute(
+            attribute='smtp_ssl'
+        )
+
+        return smtp_ssl or Defaults.get_smtp_ssl()
+
+    def get_smtp_user(self):
+        """
+        Return the smtp username.
+
+        :rtype: string
+        """
+        smtp_user = self._get_attribute(
+            attribute='smtp_user'
+        )
+
+        if not smtp_user:
+            raise MashConfigException(
+                'smtp_user is required in MASH configuration file.'
+            )
+
+        return smtp_user
+
+    def get_smtp_pass(self):
+        """
+        Return the smtp password.
+
+        :rtype: string
+        """
+        smtp_pass = self._get_attribute(
+            attribute='smtp_pass'
+        )
+
+        return smtp_pass
+
+    def get_notification_subject(self):
+        """
+        Return the email notification_subject.
+
+        :rtype: string
+        """
+        notification_subject = self._get_attribute(
+            attribute='notification_subject'
+        )
+
+        return notification_subject or Defaults.get_notification_subject()

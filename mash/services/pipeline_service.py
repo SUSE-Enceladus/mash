@@ -260,6 +260,13 @@ class PipelineService(MashService):
         if (job.utctime != 'always' or job.status == SUCCESS) \
                 and job.last_service != self.service_exchange:
             self._publish_message(job)
+
+        self.send_email_notification(
+            job.id, job.notification_email, job.notification_type, job.status,
+            job.utctime, job.last_service, job.iteration_count,
+            event.exception
+        )
+
         job.listener_msg.ack()
 
     def _publish_message(self, job):

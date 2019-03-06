@@ -17,6 +17,8 @@
                 "account": "test-aws-cn",
                 "target_regions": ["cn-north-1", "cn-northwest-1"]
             }
-        ]
+        ],
+        "notification_email": "test@fake.com",
+        "notification_type": "single"
     }
 }

@@ -3,6 +3,8 @@
     "id": "123",
     "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
     "image": "test-image-oem",
-    "utctime": "always"
+    "utctime": "always",
+    "notification_email": "test@fake.com",
+    "notification_type": "single"
   }
 }

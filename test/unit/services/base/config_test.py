@@ -75,3 +75,36 @@ class TestBaseConfig(object):
     def test_get_amqp_pass(self):
         password = self.empty_config.get_amqp_pass()
         assert password == 'guest'
+
+    def test_get_smtp_host(self):
+        host = self.empty_config.get_smtp_host()
+        assert host == 'localhost'
+
+    def test_get_smtp_port(self):
+        port = self.empty_config.get_smtp_port()
+        assert port == 25
+
+    def test_get_smtp_ssl(self):
+        ssl = self.empty_config.get_smtp_ssl()
+        assert not ssl
+
+    def test_get_smtp_user(self):
+        user = self.config.get_smtp_user()
+        assert user == 'user@test.com'
+
+        with raises(MashConfigException) as error:
+            self.empty_config.get_smtp_user()
+
+        msg = 'smtp_user is required in MASH configuration file.'
+        assert str(error.value) == msg
+
+    def test_get_smtp_pass(self):
+        password = self.config.get_smtp_pass()
+        assert password == 'super.secret'
+
+        password = self.empty_config.get_smtp_pass()
+        assert password is None
+
+    def test_get_notification_subject(self):
+        subject = self.empty_config.get_notification_subject()
+        assert subject == '[MASH] Job Status Update'

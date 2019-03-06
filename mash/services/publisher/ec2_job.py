@@ -30,10 +30,13 @@ class EC2PublisherJob(PublisherJob):
 
     def __init__(
         self, id, last_service, cloud, publish_regions, utctime,
-        allow_copy=True, job_file=None, share_with='all'
+        allow_copy=True, job_file=None, share_with='all',
+        notification_email=None, notification_type='single'
     ):
         super(EC2PublisherJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file
+            id, last_service, cloud, utctime, job_file=job_file,
+            notification_email=notification_email,
+            notification_type=notification_type
         )
 
         self.allow_copy = allow_copy

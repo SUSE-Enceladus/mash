@@ -198,7 +198,9 @@ class TestCredentialsService(object):
         )
         mock_publish.assert_called_once_with(
             'jobcreator', 'job_document',
-            JsonFormat.json_message({"invalid_job": "123"})
+            JsonFormat.json_message(
+                {"error_msg": "missing account", "invalid_job": "123"}
+            )
         )
 
     @patch.object(CredentialsService, '_generate_encryption_key')

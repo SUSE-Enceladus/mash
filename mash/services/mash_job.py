@@ -24,7 +24,8 @@ class MashJob(object):
     Class for an individual mash job.
     """
     def __init__(
-        self, id, last_service, cloud, utctime, job_file=None
+        self, id, last_service, cloud, utctime, job_file=None,
+        notification_email=None, notification_type='single'
     ):
         # Properties
         self._cloud_image_name = None
@@ -39,6 +40,8 @@ class MashJob(object):
         self.last_service = last_service
         self.cloud = cloud
         self.utctime = utctime
+        self.notification_email = notification_email
+        self.notification_type = notification_type
 
     def get_job_id(self):
         """

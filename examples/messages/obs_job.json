@@ -14,6 +14,8 @@
             },
             {"image": "15.1.0"}
         ],
-        "cloud_architecture": "x86_64"
+        "cloud_architecture": "x86_64",
+        "notification_email": "test@fake.com",
+        "notification_type": "single"
     }
 }

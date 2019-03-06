@@ -13,6 +13,8 @@
                 "condition": ">="
             },
             {"image": "0.2.4"}
-        ]
+        ],
+        "notification_email": "test@fake.com",
+        "notification_type": "single"
     }
 }

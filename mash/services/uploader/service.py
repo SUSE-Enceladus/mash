@@ -103,20 +103,38 @@ class UploadImageService(MashService):
         and publishes the overall result if the upload to the
         last region has finished
         """
-        if self.jobs[job_id]['uploader_result']['status'] != 'failed':
-            self.jobs[job_id]['uploader_result']['status'] = \
-                trigger_info['job_status']
+        job = self.jobs[job_id]
+        if job['uploader_result']['status'] != 'failed':
+            job['uploader_result']['status'] = trigger_info['job_status']
 
         region = trigger_info['upload_region']
-        self.jobs[job_id]['uploader_result']['source_regions'][region] = \
+        job['uploader_result']['source_regions'][region] = \
             trigger_info['cloud_image_id']
 
+        if trigger_info['error_msg']:
+            job['error_msg'] = trigger_info['error_msg']
+
         if last_upload_region:
-            if not self.jobs[job_id]['utctime'] == 'always':
+            if not job['utctime'] == 'always':
                 self._publish_job_result(job_id, publish_on_failed_job=True)
                 self._delete_job(job_id)
             else:
                 self._publish_job_result(job_id, publish_on_failed_job=False)
+
+            if job['uploader']:
+                iteration_count = job['uploader'][-1].iteration_count
+            else:
+                iteration_count = 1
+
+            self.send_email_notification(
+                job_id, job['notification_email'],
+                job['notification_type'],
+                job['uploader_result']['status'],
+                job['utctime'],
+                job['last_service'],
+                iteration_count,
+                job.get('error_msg')
+            )
 
     def _process_job(self, message):
         """
@@ -136,7 +154,9 @@ class UploadImageService(MashService):
                     "helper_image": "ami-bc5b48d0",
                     "account": "test-aws"
                 }
-            }
+            },
+            "notification_email": "test@fake.com",
+            "notification_type": "single"
           }
         }
         """
@@ -206,7 +226,9 @@ class UploadImageService(MashService):
                     'cloud_image_name': job_config['cloud_image_name'],
                     'source_regions': {},
                     'status': None
-                }
+                },
+                'notification_email': job_config.get('notification_email'),
+                'notification_type': job_config.get('notification_type')
             }
             self._job_log(
                 job_id, 'Job queued, awaiting obs result'

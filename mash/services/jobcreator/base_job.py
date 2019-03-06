@@ -31,7 +31,8 @@ class BaseJob(object):
         utctime, image, cloud_image_name, image_description, distro,
         download_url, tests=None, conditions=None, instance_type=None,
         old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture='x86_64', cloud_accounts=None, cloud_groups=None
+        cloud_architecture='x86_64', cloud_accounts=None, cloud_groups=None,
+        notification_email=None, notification_type='single'
     ):
         self.id = job_id
         self.accounts_info = accounts_info
@@ -53,12 +54,18 @@ class BaseJob(object):
         self.instance_type = instance_type
         self.cloud_architecture = cloud_architecture
         self.utctime = utctime
+        self.notification_email = notification_email
+        self.notification_type = notification_type
 
         self.base_message = {
             'id': self.id,
             'utctime': self.utctime,
             'last_service': self.last_service
         }
+
+        if self.notification_email:
+            self.base_message['notification_email'] = self.notification_email
+            self.base_message['notification_type'] = self.notification_type
 
         self.post_init()
 

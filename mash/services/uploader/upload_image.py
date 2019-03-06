@@ -74,6 +74,7 @@ class UploadImage(object):
         self.upload_region = None
         self.iteration_count = 0
         self.uploader = None
+        self.error_msg = None
 
     def set_image_file(self, system_image_file):
         self.system_image_file = system_image_file
@@ -111,6 +112,7 @@ class UploadImage(object):
                 )
             except Exception as e:
                 self._log_callback(format(e))
+                self.error_msg = e
 
             self._result_callback()
 
@@ -134,7 +136,8 @@ class UploadImage(object):
                     'csp_name': self.csp_name,
                     'cloud_image_id': self.cloud_image_id,
                     'upload_region': self.upload_region,
-                    'job_status': job_status
+                    'job_status': job_status,
+                    'error_msg': self.error_msg
                 }
             )
 
