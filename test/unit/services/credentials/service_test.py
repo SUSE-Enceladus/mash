@@ -689,8 +689,7 @@ class TestCredentialsService(object):
         assert accounts['ec2']['accounts']['user1']['acnt123'] == {
             'additional_regions': None,
             'partition': 'aws',
-            'region': 'us-east-1',
-            'testing_account': None
+            'region': 'us-east-1'
         }
         assert accounts['ec2']['groups']['user1']['group123'] == ['acnt123']
 

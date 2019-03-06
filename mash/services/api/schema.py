@@ -76,8 +76,7 @@ add_account_azure = {
         },
         'destination_storage_account': {
             '$ref': '#/definitions/non_empty_string'
-        },
-        'testing_account': {'$ref': '#/definitions/non_empty_string'},
+        }
     },
     'additionalProperties': False,
     'required': [
@@ -122,7 +121,6 @@ add_account_ec2 = {
         'partition': {'$ref': '#/definitions/non_empty_string'},
         'region': {'$ref': '#/definitions/non_empty_string'},
         'cloud': {'enum': ['ec2']},
-        'testing_account': {'$ref': '#/definitions/non_empty_string'},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,
@@ -379,6 +377,9 @@ gce_job_message['properties']['family'] = {
 gce_job_message['properties']['months_to_deletion'] = {
     'type': 'integer',
     'minimum': 0
+}
+gce_job_message['properties']['testing_account'] = {
+    '$ref': '#/definitions/non_empty_string'
 }
 gce_job_message['required'].append('family')
 gce_job_message['definitions']['account'] = {

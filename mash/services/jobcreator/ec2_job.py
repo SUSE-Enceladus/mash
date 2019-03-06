@@ -85,8 +85,7 @@ class EC2Job(BaseJob):
             self.target_account_info[target_region] = {
                 'account': account,
                 'target_regions': target_regions,
-                'helper_image': helper_images[target_region],
-                'testing_account': info.get('testing_account')
+                'helper_image': helper_images[target_region]
             }
 
     def _get_regions_for_partition(self, partition):
@@ -182,6 +181,19 @@ class EC2Job(BaseJob):
             }
 
         return replication_source_regions
+
+    def get_testing_regions(self):
+        """
+        Return a dictionary of target test regions.
+        """
+        test_regions = {}
+
+        for source_region, value in self.target_account_info.items():
+            test_regions[source_region] = {
+                'account': value['account']
+            }
+
+        return test_regions
 
     def get_uploader_regions(self):
         """

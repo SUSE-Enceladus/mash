@@ -40,7 +40,6 @@ class AzureAccount(BaseAccount):
             message['destination_resource_group']
         self.destination_storage_account = \
             message['destination_storage_account']
-        self.testing_account = message.get('testing_account')
 
     def add_account(self, accounts_file):
         """
@@ -55,8 +54,7 @@ class AzureAccount(BaseAccount):
             'source_storage_account': self.source_storage_account,
             'destination_container': self.destination_container,
             'destination_resource_group': self.destination_resource_group,
-            'destination_storage_account': self.destination_storage_account,
-            'testing_account': self.testing_account
+            'destination_storage_account': self.destination_storage_account
         }
 
         accounts = accounts_file[self.cloud]['accounts'].get(self.requesting_user)

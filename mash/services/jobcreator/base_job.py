@@ -208,16 +208,10 @@ class BaseJob(object):
     def get_testing_regions(self):
         """
         Return a dictionary of target test regions.
+
+        Implementation in child class.
         """
-        test_regions = {}
-
-        for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = {
-                'account': value['account'],
-                'testing_account': value['testing_account']
-            }
-
-        return test_regions
+        pass
 
     def get_uploader_message(self):
         """

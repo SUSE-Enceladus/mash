@@ -60,17 +60,23 @@ class GCEJob(BaseJob):
         }
         """
         for account, info in self.accounts_info.items():
-            region = self.cloud_accounts[account].get('region') or \
-                info.get('region')
+            region = self.cloud_accounts[account].get(
+                'region'
+            ) or info.get('region')
 
-            bucket = self.cloud_accounts[account].get('bucket') or \
-                info.get('bucket')
+            bucket = self.cloud_accounts[account].get(
+                'bucket'
+            ) or info.get('bucket')
+
+            testing_account = self.cloud_accounts[account].get(
+                'testing_account'
+            ) or info.get('testing_account')
 
             self.target_account_info[region] = {
                 'account': account,
                 'bucket': bucket,
                 'family': self.family,
-                'testing_account': info.get('testing_account')
+                'testing_account': testing_account
             }
 
     def get_deprecation_message(self):
@@ -128,6 +134,20 @@ class GCEJob(BaseJob):
         replication_message['replication_job'].update(self.base_message)
 
         return JsonFormat.json_message(replication_message)
+
+    def get_testing_regions(self):
+        """
+        Return a dictionary of target test regions.
+        """
+        test_regions = {}
+
+        for source_region, value in self.target_account_info.items():
+            test_regions[source_region] = {
+                'account': value['account'],
+                'testing_account': value['testing_account']
+            }
+
+        return test_regions
 
     def get_uploader_regions(self):
         """

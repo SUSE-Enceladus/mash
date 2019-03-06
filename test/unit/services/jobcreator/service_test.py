@@ -190,12 +190,10 @@ class TestJobCreatorService(object):
                     "notification_type": "single",
                     "test_regions": {
                         "ap-northeast-1": {
-                            "account": "test-aws",
-                            "testing_account": None
+                            "account": "test-aws"
                         },
                         "us-gov-west-1": {
-                            "account": "test-aws-gov",
-                            "testing_account": None
+                            "account": "test-aws-gov"
                         }
                     },
                     "tests": ["test_stuff"],
@@ -405,12 +403,10 @@ class TestJobCreatorService(object):
                     "notification_type": "single",
                     "test_regions": {
                         "centralus": {
-                            "account": "test-azure2",
-                            "testing_account": None
+                            "account": "test-azure2"
                         },
                         "southcentralus": {
-                            "account": "test-azure",
-                            "testing_account": None
+                            "account": "test-azure"
                         }
                     },
                     "tests": ["test_stuff"],
@@ -437,8 +433,7 @@ class TestJobCreatorService(object):
                             "source_storage_account": "cstorage1",
                             "destination_container": "ccontainer2",
                             "destination_resource_group": "c_res_group2",
-                            "destination_storage_account": "cstorage2",
-                            "testing_account": None
+                            "destination_storage_account": "cstorage2"
                         },
                         "southcentralus": {
                             "account": "test-azure",
@@ -447,8 +442,7 @@ class TestJobCreatorService(object):
                             "source_storage_account": "sa1",
                             "destination_container": "container2",
                             "destination_resource_group": "rg-2",
-                            "destination_storage_account": "sa2",
-                            "testing_account": None
+                            "destination_storage_account": "sa2"
                         }
                     },
                     "utctime": "now"

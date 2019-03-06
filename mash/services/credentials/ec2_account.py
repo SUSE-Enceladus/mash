@@ -34,7 +34,6 @@ class EC2Account(BaseAccount):
         self.additional_regions = message.get('additional_regions')
         self.region = message.get('region')
         self.partition = message['partition']
-        self.testing_account = message.get('testing_account')
 
     def add_account(self, accounts_file):
         """
@@ -45,8 +44,7 @@ class EC2Account(BaseAccount):
         account_info = {
             'additional_regions': self.additional_regions,
             'partition': self.partition,
-            'region': self.region,
-            'testing_account': self.testing_account
+            'region': self.region
         }
 
         accounts = accounts_file[self.cloud]['accounts'].get(self.requesting_user)
