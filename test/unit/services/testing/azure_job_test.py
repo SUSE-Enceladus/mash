@@ -10,7 +10,7 @@ class TestAzureTestingJob(object):
             'last_service': 'testing',
             'cloud': 'azure',
             'ssh_private_key_file': 'private_ssh_key.file',
-            'test_regions': {'East US': 'test-azure'},
+            'test_regions': {'East US': {'account': 'test-azure'}},
             'tests': ['test_stuff'],
             'utctime': 'now',
         }

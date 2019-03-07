@@ -74,16 +74,33 @@ class TestCredentialsService(object):
         mock_restart_jobs.assert_called_once_with(self.service._add_job)
         mock_start.assert_called_once_with()
 
+    @patch.object(CredentialsService, '_get_accounts_from_file')
     @patch.object(CredentialsService, 'persist_job_config')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_add_job(
-        self, mock_send_control_response, mock_persist_job_config
+        self, mock_send_control_response, mock_persist_job_config,
+        mock_get_accounts_from_file
     ):
         mock_persist_job_config.return_value = 'temp-config.json'
-        self.service._add_job({'id': '1', 'cloud': 'ec2'})
+        mock_get_accounts_from_file.return_value = {
+            'accounts': {
+                'user1': {
+                    'test-gce': {'testing_account': 'tester'}
+                }
+            }
+        }
+
+        self.service._add_job({
+            'id': '1',
+            'cloud': 'ec2',
+            'cloud_accounts': ['test-gce'],
+            'requesting_user': 'user1'
+        })
 
         job_config = {
-            'id': '1', 'job_file': 'temp-config.json', 'cloud': 'ec2'
+            'id': '1', 'job_file': 'temp-config.json', 'cloud': 'ec2',
+            'cloud_accounts': ['test-gce', 'tester'],
+            'requesting_user': 'user1'
         }
         mock_persist_job_config.assert_called_once_with(job_config)
 
@@ -128,16 +145,46 @@ class TestCredentialsService(object):
             'account1', 'ec2', 'user1'
         )
 
+    def test_get_account_info_error(self):
+        accounts = {
+            'accounts': {},
+            'groups': {}
+        }
+
+        with raises(MashCredentialsException) as error:
+            self.service._get_account_info(
+                'test-aws', 'user1', accounts
+            )
+
+        msg = 'The requesting user user1, does not have ' \
+              'the following account: test-aws'
+        assert str(error.value) == msg
+
     @patch.object(CredentialsService, '_check_credentials_exist')
-    @patch.object(CredentialsService, '_get_accounts_in_group')
     def test_check_job_accounts(
-        self, mock_get_accounts_in_group, mock_check_credentials_exist
+        self, mock_check_credentials_exist
     ):
-        mock_get_accounts_in_group.return_value = ['test-aws']
         mock_check_credentials_exist.return_value = True
 
+        accounts = {
+            'accounts': {
+                'user1': {
+                    'test-aws': {
+                        'testing_account': 'tester'
+                    },
+                    'tester': {}
+                }
+            },
+            'groups': {
+                'user1': {
+                    'test': ['test-aws']
+                }
+            }
+        }
+
         self.service._check_job_accounts(
-            'ec2', [{'name': 'test-aws'}], ['test'], 'user1'
+            'ec2', [{'name': 'test-aws'}], ['test'], 'user1',
+            accounts
         )
 
         # Account does not exist for user
@@ -145,7 +192,8 @@ class TestCredentialsService(object):
 
         with raises(MashCredentialsException) as error:
             self.service._check_job_accounts(
-                'ec2', [{'name': 'test-aws'}], ['test'], 'user1'
+                'ec2', [{'name': 'test-aws'}], ['test'], 'user1',
+                accounts
             )
 
         msg = 'The requesting user user1, does not have ' \
@@ -160,8 +208,7 @@ class TestCredentialsService(object):
         self, mock_publish, mock_send_control_response,
         mock_check_job_accounts, mock_get_accounts_from_file
     ):
-        mock_check_job_accounts.return_value = True
-        mock_get_accounts_from_file.return_value = {'accounts': 'info'}
+        mock_check_job_accounts.return_value = {'accounts': 'info'}
 
         doc = {
             'id': '123',
@@ -264,24 +311,26 @@ class TestCredentialsService(object):
 
         assert result['ec2']['account'] == 'info'
 
-    @patch.object(CredentialsService, '_get_accounts_from_file')
-    def test_get_accounts_in_group(self, mock_get_accounts_from_file):
-        mock_get_accounts_from_file.return_value = {
+    def test_get_accounts_in_group(self):
+        accounts_info = {
             'groups': {
                 'user1': {'test': ['test-1', 'test-2']}
             }
         }
-        accounts = self.service._get_accounts_in_group('test', 'ec2', 'user1')
+        accounts = self.service._get_accounts_in_group(
+            'test', 'user1', accounts_info
+        )
         assert accounts == ['test-1', 'test-2']
 
-    @patch.object(CredentialsService, '_get_accounts_from_file')
-    def test_get_accounts_in_group_error(self, mock_get_accounts_from_file):
-        mock_get_accounts_from_file.return_value = {
+    def test_get_accounts_in_group_error(self):
+        accounts_info = {
             'groups': {}
         }
 
         with raises(MashCredentialsException) as error:
-            self.service._get_accounts_in_group('test', 'ec2', 'user1')
+            self.service._get_accounts_in_group(
+                'test', 'user1', accounts_info
+            )
 
         msg = 'The requesting user: user1, does ' \
               'not have the following group: test'

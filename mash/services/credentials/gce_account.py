@@ -33,6 +33,7 @@ class GCEAccount(BaseAccount):
         )
         self.bucket = message['bucket']
         self.region = message['region']
+        self.testing_account = message.get('testing_account')
 
     def add_account(self, accounts_file):
         """
@@ -42,7 +43,8 @@ class GCEAccount(BaseAccount):
         """
         account_info = {
             'bucket': self.bucket,
-            'region': self.region
+            'region': self.region,
+            'testing_account': self.testing_account
         }
 
         accounts = accounts_file[self.cloud]['accounts'].get(self.requesting_user)

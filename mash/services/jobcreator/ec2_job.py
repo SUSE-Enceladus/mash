@@ -38,7 +38,6 @@ class EC2Job(BaseJob):
     ):
         self.share_with = share_with
         self.allow_copy = allow_copy
-        self.target_account_info = {}
 
         super(EC2Job, self).__init__(
             accounts_info, cloud_data, job_id, cloud,
@@ -64,40 +63,19 @@ class EC2Job(BaseJob):
             }
         }
         """
-        group_accounts = []
-        accounts = {}
-
-        # Get dictionary of account names to target region
-        for cloud_account in self.cloud_accounts:
-            accounts[cloud_account['name']] = cloud_account.get('region')
-
         helper_images = self.cloud_data.get('helper_images')
 
-        # Get all accounts from all groups
-        for group in self.cloud_groups:
-            group_accounts += self._get_accounts_in_group(
-                group, self.requesting_user
-            )
-
-        # Add accounts from groups that don't already exist
-        for account in group_accounts:
-            if account not in accounts:
-                accounts[account] = None
-
-        for account, target_region in accounts.items():
+        for account, info in self.accounts_info.items():
             # Get default list of all available regions for account
-            target_regions = self._get_regions_for_account(
-                account, self.requesting_user
+            target_regions = self._get_regions_for_partition(
+                info['partition']
             )
 
-            account_info = \
-                self.accounts_info['accounts'][self.requesting_user][account]
-
-            if not target_region:
-                target_region = account_info.get('region')
+            target_region = self.cloud_accounts[account].get('region') or \
+                info.get('region')
 
             # Add additional regions for account
-            additional_regions = account_info.get('additional_regions')
+            additional_regions = info.get('additional_regions')
 
             if additional_regions:
                 for region in additional_regions:
@@ -110,12 +88,11 @@ class EC2Job(BaseJob):
                 'helper_image': helper_images[target_region]
             }
 
-    def _get_regions_for_account(self, account, user):
+    def _get_regions_for_partition(self, partition):
         """
         Return a list of regions based on account name.
         """
-        regions_key = self.accounts_info['accounts'][user][account]['partition']
-        return self.cloud_data['regions'][regions_key]
+        return self.cloud_data['regions'][partition]
 
     def _get_target_regions_list(self):
         """
@@ -212,7 +189,9 @@ class EC2Job(BaseJob):
         test_regions = {}
 
         for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = value['account']
+            test_regions[source_region] = {
+                'account': value['account']
+            }
 
         return test_regions
 

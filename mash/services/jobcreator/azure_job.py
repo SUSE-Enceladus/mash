@@ -35,8 +35,6 @@ class AzureJob(BaseJob):
         cloud_accounts=None, cloud_groups=None,
         notification_email=None, notification_type='single'
     ):
-        self.target_account_info = {}
-
         super(AzureJob, self).__init__(
             accounts_info, cloud_data, job_id, cloud,
             requesting_user, last_service, utctime, image,
@@ -69,48 +67,27 @@ class AzureJob(BaseJob):
             }
         }
         """
-        group_accounts = []
-        accounts = {}
-
-        # Get dictionary of account names to account dict
-        for cloud_account in self.cloud_accounts:
-            accounts[cloud_account['name']] = cloud_account
-
-        # Get all accounts from all groups
-        for group in self.cloud_groups:
-            group_accounts += self._get_accounts_in_group(
-                group, self.requesting_user
-            )
-
-        # Add accounts from groups that don't already exist
-        for account in group_accounts:
-            if account not in accounts:
-                accounts[account] = {}
-
-        for account, info in accounts.items():
-            region = info.get('region') or \
-                self._get_account_value(account, 'region')
-            source_resource_group = info.get('source_resource_group') or \
-                self._get_account_value(account, 'source_resource_group')
-            source_container = info.get('source_container') or \
-                self._get_account_value(account, 'source_container')
-            source_storage_account = info.get('source_storage_account') or \
-                self._get_account_value(account, 'source_storage_account')
-            destination_resource_group = info.get(
+        for account, info in self.accounts_info.items():
+            region = self.cloud_accounts[account].get('region') or \
+                info.get('region')
+            source_resource_group = self.cloud_accounts[account].get(
+                'source_resource_group'
+            ) or info.get('source_resource_group')
+            source_container = self.cloud_accounts[account].get(
+                'source_container'
+            ) or info.get('source_container')
+            source_storage_account = self.cloud_accounts[account].get(
+                'source_storage_account'
+            ) or info.get('source_storage_account')
+            destination_resource_group = self.cloud_accounts[account].get(
                 'destination_resource_group'
-            ) or self._get_account_value(
-                account, 'destination_resource_group'
-            )
-            destination_container = info.get(
+            ) or info.get('destination_resource_group')
+            destination_container = self.cloud_accounts[account].get(
                 'destination_container'
-            ) or self._get_account_value(
-                account, 'destination_container'
-            )
-            destination_storage_account = info.get(
+            ) or info.get('destination_container')
+            destination_storage_account = self.cloud_accounts[account].get(
                 'destination_storage_account'
-            ) or self._get_account_value(
-                account, 'destination_storage_account'
-            )
+            ) or info.get('destination_storage_account')
 
             self.target_account_info[region] = {
                 'account': account,
@@ -121,12 +98,6 @@ class AzureJob(BaseJob):
                 'destination_container': destination_container,
                 'destination_storage_account': destination_storage_account
             }
-
-    def _get_account_value(self, account, key):
-        """
-        Return the value for the provided account key from accounts file.
-        """
-        return self.accounts_info['accounts'][self.requesting_user][account][key]
 
     def get_deprecation_message(self):
         """
@@ -214,7 +185,9 @@ class AzureJob(BaseJob):
         test_regions = {}
 
         for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = value['account']
+            test_regions[source_region] = {
+                'account': value['account']
+            }
 
         return test_regions
 

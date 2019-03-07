@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from collections import defaultdict
+
 from mash.utils.json_format import JsonFormat
 
 
@@ -38,7 +40,7 @@ class BaseJob(object):
         self.accounts_info = accounts_info
         self.cloud_data = cloud_data
         self.cloud = cloud
-        self.cloud_accounts = cloud_accounts or []
+        self.cloud_accounts = self._get_accounts_data(cloud_accounts)
         self.cloud_groups = cloud_groups or []
         self.requesting_user = requesting_user
         self.last_service = last_service
@@ -56,6 +58,7 @@ class BaseJob(object):
         self.utctime = utctime
         self.notification_email = notification_email
         self.notification_type = notification_type
+        self.target_account_info = {}
 
         self.base_message = {
             'id': self.id,
@@ -77,11 +80,19 @@ class BaseJob(object):
         """
         pass
 
-    def _get_accounts_in_group(self, group, user):
+    def _get_accounts_data(self, cloud_accounts):
         """
-        Return a list of account names given the group name.
+        Convert cloud accounts from a list to dictionary.
+
+        This simplifies data lookup.
         """
-        return self.accounts_info['groups'][user][group]
+        account_data = defaultdict(dict)
+
+        if cloud_accounts:
+            for account in cloud_accounts:
+                account_data[account['name']] = account
+
+        return account_data
 
     def get_credentials_message(self):
         """

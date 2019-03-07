@@ -91,6 +91,12 @@ class CredentialsService(MashService):
             self.jobs[job_id] = job_document
 
             if 'job_file' not in job_document:
+                testing_accounts = self._get_testing_accounts(
+                    job_document['cloud'], job_document['cloud_accounts'],
+                    job_document['requesting_user']
+                )
+                job_document['cloud_accounts'] += testing_accounts
+
                 job_document['job_file'] = self.persist_job_config(
                     job_document
                 )
@@ -99,6 +105,29 @@ class CredentialsService(MashService):
                 'Job queued, awaiting credentials requests.',
                 job_id=job_id
             )
+
+    def _get_testing_accounts(self, cloud, cloud_accounts, requesting_user):
+        """
+        Return a list of testing accounts based on cloud accounts.
+
+        Only add an account to the list if it does not already exist.
+        """
+        accounts = self._get_accounts_from_file(cloud)
+        testing_accounts = []
+
+        for account in cloud_accounts:
+            info = self._get_account_info(
+                account, requesting_user, accounts
+            )
+
+            if info.get('testing_account') and \
+                    info['testing_account'] not in cloud_accounts and \
+                    info['testing_account'] not in testing_accounts:
+                testing_accounts.append(
+                    info['testing_account']
+                )
+
+        return testing_accounts
 
     def _bind_credential_request_keys(self):
         """
@@ -116,20 +145,53 @@ class CredentialsService(MashService):
         path = self._get_credentials_file_path(account, cloud, user)
         return os.path.exists(path)
 
+    def _get_account_info(self, account, user, accounts):
+        """
+        Return info for the requested account.
+        """
+        try:
+            account_info = accounts['accounts'][user][account]
+        except KeyError:
+            raise MashCredentialsException(
+                'The requesting user {0}, does not have '
+                'the following account: {1}'.format(
+                    user, account
+                )
+            )
+
+        return account_info
+
     def _check_job_accounts(
         self, cloud, cloud_accounts,
-        cloud_groups, requesting_user
+        cloud_groups, requesting_user, accounts
     ):
         """
         Confirm all the accounts for the given user have credentials.
         """
-        accounts = [account['name'] for account in cloud_accounts]
+        account_names = [account['name'] for account in cloud_accounts]
+        accounts_info = {}
+
         for group in cloud_groups:
-            accounts += self._get_accounts_in_group(
-                group, cloud, requesting_user
+            account_names += self._get_accounts_in_group(
+                group, requesting_user, accounts
             )
 
-        for account in set(accounts):
+        for account in set(account_names):
+            info = self._get_account_info(
+                account, requesting_user, accounts
+            )
+            if info.get('testing_account'):
+                # If testing account does not exist raise exception
+                # and prevent job from entering queue.
+                self._get_account_info(
+                    info['testing_account'], requesting_user, accounts
+                )
+
+        for account in set(account_names):
+            accounts_info[account] = self._get_account_info(
+                account, requesting_user, accounts
+            )
+
             exists = self._check_credentials_exist(
                 account, cloud, requesting_user
             )
@@ -141,6 +203,8 @@ class CredentialsService(MashService):
                         requesting_user, account
                     )
                 )
+
+        return accounts_info
 
     def _confirm_job(self, job_document):
         """
@@ -155,9 +219,12 @@ class CredentialsService(MashService):
         cloud_groups = job_document['cloud_groups']
         requesting_user = job_document['requesting_user']
 
+        accounts = self._get_accounts_from_file(cloud)
+
         try:
-            self._check_job_accounts(
-                cloud, cloud_accounts, cloud_groups, requesting_user
+            accounts_info = self._check_job_accounts(
+                cloud, cloud_accounts, cloud_groups, requesting_user,
+                accounts
             )
         except Exception as error:
             self._send_control_response(
@@ -176,7 +243,7 @@ class CredentialsService(MashService):
             job_response = {
                 'start_job': {
                     'id': job_id,
-                    'accounts_info': self._get_accounts_from_file(cloud)
+                    'accounts_info': accounts_info
                 }
             }
             self._publish(
@@ -230,12 +297,10 @@ class CredentialsService(MashService):
         else:
             return accounts
 
-    def _get_accounts_in_group(self, group, cloud, user):
+    def _get_accounts_in_group(self, group, user, accounts_info):
         """
         Return a list of account names given the group name.
         """
-        accounts_info = self._get_accounts_from_file(cloud)
-
         try:
             accounts = accounts_info['groups'][user][group]
         except KeyError:

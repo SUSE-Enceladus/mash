@@ -10,7 +10,12 @@ class TestGCETestingJob(object):
             'last_service': 'testing',
             'cloud': 'gce',
             'ssh_private_key_file': 'private_ssh_key.file',
-            'test_regions': {'us-west1': 'test-gce'},
+            'test_regions': {
+                'us-west1': {
+                    'account': 'test-gce',
+                    'testing_account': 'testingacnt'
+                }
+            },
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
@@ -41,6 +46,10 @@ class TestGCETestingJob(object):
         job = GCETestingJob(**self.job_config)
         job.credentials = {
             'test-gce': {
+                'fake': '123',
+                'credentials': '321'
+            },
+            'testingacnt': {
                 'fake': '123',
                 'credentials': '321'
             }

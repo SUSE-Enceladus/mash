@@ -165,6 +165,7 @@ add_account_gce = {
         },
         'group': {'$ref': '#/definitions/non_empty_string'},
         'cloud': {'enum': ['gce']},
+        'testing_account': {'$ref': '#/definitions/non_empty_string'},
         'region': {'$ref': '#/definitions/non_empty_string'},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'}
     },
@@ -376,6 +377,9 @@ gce_job_message['properties']['family'] = {
 gce_job_message['properties']['months_to_deletion'] = {
     'type': 'integer',
     'minimum': 0
+}
+gce_job_message['properties']['testing_account'] = {
+    '$ref': '#/definitions/non_empty_string'
 }
 gce_job_message['required'].append('family')
 gce_job_message['definitions']['account'] = {
