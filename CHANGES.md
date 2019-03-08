@@ -1,3 +1,13 @@
+v2.2.0 (2019-03-08)
+===================
+
+- Add Pull Request Template.
+  [\#411](https://github.com/SUSE-Enceladus/mash/pull/411)
+- Add email notifications.
+  [\#412](https://github.com/SUSE-Enceladus/mash/pull/412)
+- Add testing account option.
+  [\#413](https://github.com/SUSE-Enceladus/mash/pull/413)
+
 v2.1.0 (2019-02-22)
 ===================
 
