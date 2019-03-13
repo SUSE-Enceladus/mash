@@ -313,6 +313,8 @@ class UploadImageService(MashService):
                 job_config['target_regions'][region]['helper_image'],
             'account':
                 job_config['target_regions'][region]['account'],
+            'billing_codes':
+                job_config['target_regions'][region]['billing_codes'],
             'region': region
         }
 

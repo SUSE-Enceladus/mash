@@ -34,10 +34,12 @@ class EC2Job(BaseJob):
         instance_type=None, share_with='all', old_cloud_image_name=None,
         cleanup_images=True, cloud_architecture='x86_64',
         cloud_accounts=None, cloud_groups=None,
-        notification_email=None, notification_type='single'
+        notification_email=None, notification_type='single',
+        billing_codes=None
     ):
         self.share_with = share_with
         self.allow_copy = allow_copy
+        self.billing_codes = billing_codes
 
         super(EC2Job, self).__init__(
             accounts_info, cloud_data, job_id, cloud,
@@ -204,7 +206,8 @@ class EC2Job(BaseJob):
         for source_region, value in self.target_account_info.items():
             target_regions[source_region] = {
                 'account': value['account'],
-                'helper_image': value['helper_image']
+                'helper_image': value['helper_image'],
+                'billing_codes': self.billing_codes
             }
 
         return target_regions

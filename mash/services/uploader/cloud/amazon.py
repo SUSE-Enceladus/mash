@@ -58,7 +58,8 @@ class UploadAmazon(UploadBase):
             'access_key': 'helper_instance_access_key',
             'ena_support': True|False,
             'backing_store': 'backing_store_type',
-            'secret_key': 'helper_instance_secret_access_key'
+            'secret_key': 'helper_instance_secret_access_key',
+            'billing_codes': 'image_billing_codes_comma_sep_list'
         }
     """
     def post_init(self):
@@ -91,7 +92,8 @@ class UploadAmazon(UploadBase):
             'ena_support': True,
             'backing_store': 'ssd',
             'running_id': None,
-            'secret_key': None
+            'secret_key': None,
+            'billing_codes': None
         }
 
         self.ec2_upload_parameters['access_key'] = \

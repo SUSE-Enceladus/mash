@@ -312,6 +312,9 @@ ec2_job_message['properties']['share_with'] = {
     ]
 }
 ec2_job_message['properties']['allow_copy'] = {'type': 'boolean'}
+ec2_job_message['properties']['billing_codes'] = {
+    '$ref': '#/definitions/non_empty_string'
+}
 ec2_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {
