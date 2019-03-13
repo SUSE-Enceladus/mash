@@ -108,7 +108,8 @@ class UploadImage(object):
                 self.cloud_image_id, self.upload_region = \
                     self.uploader.upload()
                 self._log_callback(
-                    'Uploaded image has ID: {0}'.format(self.cloud_image_id)
+                    'Uploaded image has ID: {0} in region {1}'.format(
+                        self.cloud_image_id, self.upload_region)
                 )
             except Exception as e:
                 self._log_callback(format(e))

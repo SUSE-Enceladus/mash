@@ -43,7 +43,7 @@ class TestUploadImage(object):
                     self.custom_uploader_args
                 )
             ),
-            call('Uploaded image has ID: image_id')
+            call('Uploaded image has ID: image_id in region region')
         ]
         mock_result_callback.assert_called_once_with()
 
