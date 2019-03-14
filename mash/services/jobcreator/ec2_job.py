@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import copy
+
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
 
@@ -92,7 +94,7 @@ class EC2Job(BaseJob):
         """
         Return a list of regions based on account name.
         """
-        return self.cloud_data['regions'][partition]
+        return copy.deepcopy(self.cloud_data['regions'][partition])
 
     def _get_target_regions_list(self):
         """
