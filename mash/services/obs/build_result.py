@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+import os
 import re
 import time
+import threading
 import logging
 import hashlib
+
 from distutils.dir_util import mkpath
 from datetime import datetime
 from pkg_resources import parse_version
@@ -30,7 +34,6 @@ from apscheduler.events import (
     EVENT_JOB_MAX_INSTANCES,
     EVENT_JOB_SUBMITTED
 )
-import threading
 
 # project
 from mash.utils.web_content import WebContent
@@ -101,7 +104,7 @@ class OBSImageBuildResult(object):
         self.arch = arch
         self.job_id = job_id
         self.job_file = job_file
-        self.download_directory = download_directory
+        self.download_directory = os.path.join(download_directory, job_id)
         self.download_url = download_url
         self.image_name = image_name
         self.last_service = last_service
@@ -203,25 +206,25 @@ class OBSImageBuildResult(object):
         Download image and shasum to given file
         """
         mkpath(self.download_directory)
-        build_number = self._get_build_number(self.image_metadata_name)
+        file_prefix = self.image_metadata_name.replace('.packages', '')
         image_files = self.remote.fetch_files(
             ''.join([self.image_name, '.']),
-            ['.xz', 'xz.sha256', '.tar.gz', '.tar.gz.sha256'],
+            [
+                ''.join([file_prefix, '.xz.sha256']),
+                ''.join([file_prefix, '.xz']),
+                ''.join([file_prefix, '.tar.gz.sha256']),
+                ''.join([file_prefix, '.tar.gz'])
+            ],
             self.download_directory
         )
 
         if not image_files:
             raise MashImageDownloadException(
-                'No images found that match the image name {0}.'.format(
-                    self.image_name
+                'No images found that match the image file name {0}.'.format(
+                    file_prefix
                 )
             )
 
-        for image_file in image_files:
-            if self._get_build_number(image_file) != build_number:
-                raise MashImageDownloadException(
-                    'Build number mismatch between metadata and image files'
-                )
         return image_files
 
     def _get_build_number(self, name):
@@ -336,6 +339,7 @@ class OBSImageBuildResult(object):
     def _update_image_status(self):
         try:
             self.iteration_count += 1
+            retries = 10
             conditions_fail_logged = False
             self._log_callback('Job running')
 
@@ -363,7 +367,20 @@ class OBSImageBuildResult(object):
                             self.image_status['packages_checksum']:
                         self._log_callback('Downloading image...')
                         self.image_status['packages_checksum'] = 'unknown'
-                        self.image_status['image_source'] = self.get_image()
+
+                        try:
+                            self.image_status['image_source'] = \
+                                self.get_image()
+                        except MashImageDownloadException:
+                            if retries > 0:
+                                retries -= 1
+                                self._log_callback(
+                                    'Image files not found, retrying...'
+                                )
+                                continue
+                            else:
+                                raise
+
                         self._log_callback(
                             'Downloaded: {0}'.format(
                                 self.image_status['image_source']
