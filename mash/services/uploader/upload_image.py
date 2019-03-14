@@ -52,7 +52,7 @@ class UploadImage(object):
     """
     def __init__(
         self, job_id, job_file, csp_name, credentials_token,
-        cloud_image_name, cloud_image_description, last_upload_region,
+        cloud_image_name, cloud_image_description,
         custom_uploader_args=None, arch='x86_64'
     ):
         self.job_id = job_id
@@ -63,7 +63,6 @@ class UploadImage(object):
         self.cloud_image_name = cloud_image_name
         self.cloud_image_description = cloud_image_description
         self.custom_uploader_args = custom_uploader_args
-        self.last_upload_region = last_upload_region
 
         self.credentials_token = credentials_token
 
@@ -133,7 +132,7 @@ class UploadImage(object):
             else:
                 job_status = 'failed'
             self.result_callback(
-                self.job_id, self.last_upload_region, {
+                self.job_id, {
                     'csp_name': self.csp_name,
                     'cloud_image_id': self.cloud_image_id,
                     'upload_region': self.upload_region,

@@ -94,7 +94,7 @@ class UploadImageService(MashService):
             )
         )
 
-    def _send_job_result(self, job_id, last_upload_region, trigger_info):
+    def _send_job_result(self, job_id, trigger_info):
         """
         UploadImage result callback
 
@@ -108,13 +108,21 @@ class UploadImageService(MashService):
             job['uploader_result']['status'] = trigger_info['job_status']
 
         region = trigger_info['upload_region']
+
+        job['regions_finished'][region] = True
         job['uploader_result']['source_regions'][region] = \
             trigger_info['cloud_image_id']
 
         if trigger_info['error_msg']:
             job['error_msg'] = trigger_info['error_msg']
 
-        if last_upload_region:
+        last_region = True
+        for region in job['job_config']['target_regions']:
+            if not job['regions_finished'].get(region):
+                last_region = False
+                break
+
+        if last_region:
             if not job['utctime'] == 'always':
                 self._publish_job_result(job_id, publish_on_failed_job=True)
                 self._delete_job(job_id)
@@ -228,7 +236,8 @@ class UploadImageService(MashService):
                     'status': None
                 },
                 'notification_email': job_config.get('notification_email'),
-                'notification_type': job_config.get('notification_type')
+                'notification_type': job_config.get('notification_type'),
+                'regions_finished': {}
             }
             self._job_log(
                 job_id, 'Job queued, awaiting obs result'
@@ -367,18 +376,13 @@ class UploadImageService(MashService):
         region_list = self._get_uploader_arguments_per_region(
             self.jobs[job_id]['job_config']
         )
-        for index, uploader_args in enumerate(region_list):
-            last_upload_region = False
-            if index == len(region_list) - 1:
-                last_upload_region = True
-            job_args = [
-                job_id, uploader_args, last_upload_region
-            ]
+        for uploader_args in region_list:
+            job_args = [job_id, uploader_args]
             self.scheduler.add_job(
                 self._start_job, args=job_args
             )
 
-    def _start_job(self, job_id, uploader_args, last_upload_region):
+    def _start_job(self, job_id, uploader_args):
         self._job_log(
             job_id, 'Region [{0}]: Starting Upload'.format(
                 uploader_args['region']
@@ -395,7 +399,6 @@ class UploadImageService(MashService):
             self.jobs[job_id]['credentials'][uploader_args['account']],
             self.jobs[job_id]['job_config']['cloud_image_name'],
             self.jobs[job_id]['job_config']['image_description'],
-            last_upload_region,
             uploader_args,
             arch
         )

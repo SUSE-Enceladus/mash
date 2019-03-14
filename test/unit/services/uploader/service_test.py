@@ -210,11 +210,18 @@ class TestUploadImageService(object):
         self.uploader._init_job(self.job_data_ec2)
         trigger_info = {
             'job_status': 'success',
-            'upload_region': 'region',
+            'upload_region': 'eu-central-2',
             'cloud_image_id': 'image_id',
             'error_msg': 'Job failed'
         }
-        self.uploader._send_job_result('123', True, trigger_info)
+        self.uploader._send_job_result('123', trigger_info)
+        trigger_info = {
+            'job_status': 'success',
+            'upload_region': 'eu-central-1',
+            'cloud_image_id': 'image_id',
+            'error_msg': 'Job failed'
+        }
+        self.uploader._send_job_result('123', trigger_info)
         mock_publish_job_result.assert_called_once_with(
             '123', publish_on_failed_job=True
         )
@@ -228,7 +235,7 @@ class TestUploadImageService(object):
         uploader = [mock_count]
         self.uploader.jobs['123']['uploader'] = uploader
         self.uploader.jobs['123']['utctime'] = 'always'
-        self.uploader._send_job_result('123', True, trigger_info)
+        self.uploader._send_job_result('123', trigger_info)
         mock_publish_job_result.assert_called_once_with(
             '123', publish_on_failed_job=False
         )
@@ -413,7 +420,7 @@ class TestUploadImageService(object):
                     'account': 'test-aws',
                     'region': 'eu-central-1',
                     'billing_codes': 'ab-1ab12345'
-                }, True
+                }
             ]
         )
 
@@ -432,7 +439,7 @@ class TestUploadImageService(object):
                     'storage_account': 'ms1storage',
                     'account': 'test-azure',
                     'region': 'westeurope'
-                }, True
+                }
             ]
         )
 
@@ -450,7 +457,7 @@ class TestUploadImageService(object):
                     'bucket': 'images',
                     'family': 'sles-15',
                     'region': 'us-east1'
-                }, True
+                }
             ]
         )
 
@@ -473,13 +480,13 @@ class TestUploadImageService(object):
                 'launch_ami': 'ami-bc5b48d0',
                 'account': 'test-aws',
                 'region': 'eu-central-1'
-            }, True
+            }
         )
         image_name = 'name-{}'.format(
             datetime.date.today().strftime("%Y%m%d")
         )
         mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', 'ec2', {}, image_name, 'description', True, {
+            '123', 'job_file', 'ec2', {}, image_name, 'description', {
                 'launch_ami': 'ami-bc5b48d0', 'region': 'eu-central-1',
                 'account': 'test-aws'
             }, 'x86_64'
