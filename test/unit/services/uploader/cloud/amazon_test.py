@@ -67,6 +67,7 @@ class TestUploadAmazon(object):
         mock_EC2ImageUploader.assert_called_once_with(
             access_key='access-key',
             backing_store='ssd',
+            billing_codes=None,
             bootkernel=None,
             ena_support=True,
             image_arch='x86_64',

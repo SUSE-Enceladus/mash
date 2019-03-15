@@ -166,11 +166,13 @@ class TestJobCreatorService(object):
                     "target_regions": {
                         "ap-northeast-1": {
                             "account": "test-aws",
-                            "helper_image": "ami-383c1956"
+                            "helper_image": "ami-383c1956",
+                            "billing_codes": None
                         },
                         "us-gov-west-1": {
                             "account": "test-aws-gov",
-                            "helper_image": "ami-c2b5d7e1"
+                            "helper_image": "ami-c2b5d7e1",
+                            "billing_codes": None
                         }
                     },
                     "utctime": "now"

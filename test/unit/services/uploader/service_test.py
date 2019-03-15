@@ -64,7 +64,8 @@ class TestUploadImageService(object):
                 'target_regions': {
                     'eu-central-1': {
                         'helper_image': 'ami-bc5b48d0',
-                        'account': 'test-aws'
+                        'account': 'test-aws',
+                        'billing_codes': 'ab-1ab12345'
                     }
                 },
                 'notification_email': None,
@@ -247,7 +248,8 @@ class TestUploadImageService(object):
                 "target_regions": {
                     "eu-central-1": {
                         "helper_image": "ami-bc5b48d0",
-                        "account": "test-aws"
+                        "account": "test-aws",
+                        "billing_codes": 'ab-1ab12345'
                     }
                 },
                 "notification_email": None,
@@ -409,7 +411,8 @@ class TestUploadImageService(object):
                 '123', {
                     'launch_ami': 'ami-bc5b48d0',
                     'account': 'test-aws',
-                    'region': 'eu-central-1'
+                    'region': 'eu-central-1',
+                    'billing_codes': 'ab-1ab12345'
                 }, True
             ]
         )
