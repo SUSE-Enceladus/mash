@@ -1,3 +1,17 @@
+v2.3.0 (2019-03-15)
+===================
+
+- Improve message for uploading, add region.
+  [\#417](https://github.com/SUSE-Enceladus/mash/pull/417)
+- Add billing codes option for ec2 publish jobs.
+  [\#419](https://github.com/SUSE-Enceladus/mash/pull/419)
+- Remove last region handling in uploader.
+  [\#421](https://github.com/SUSE-Enceladus/mash/pull/421)
+- Deep copy the regions list from cloud data.
+  [\#423](https://github.com/SUSE-Enceladus/mash/pull/423)
+- Download images to job specific dir.
+  [\#424](https://github.com/SUSE-Enceladus/mash/pull/424)
+
 v2.2.0 (2019-03-08)
 ===================
 
