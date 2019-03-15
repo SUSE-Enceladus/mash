@@ -39,7 +39,7 @@ class AzurePublisherJob(PublisherJob):
     def __init__(
         self, emails, id, image_description, label,
         last_service, offer_id, cloud, publish_regions, publisher_id, sku,
-        utctime, job_file=None, version_key=None,
+        utctime, job_file=None, vm_images_key=None,
         notification_email=None, notification_type='single'
     ):
         super(AzurePublisherJob, self).__init__(
@@ -55,7 +55,7 @@ class AzurePublisherJob(PublisherJob):
         self.publisher_id = publisher_id
         self.publish_regions = publish_regions
         self.sku = sku
-        self.version_key = version_key
+        self.vm_images_key = vm_images_key
 
     def _publish(self):
         """
@@ -89,8 +89,8 @@ class AzurePublisherJob(PublisherJob):
                         self.publisher_id
                     )
 
-                    if self.version_key:
-                        kwargs = {'version_key': self.version_key}
+                    if self.vm_images_key:
+                        kwargs = {'vm_images_key': self.vm_images_key}
                     else:
                         kwargs = {}
 

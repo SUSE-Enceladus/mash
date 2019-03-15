@@ -343,7 +343,7 @@ azure_job_message['properties']['publisher_id'] = {
 azure_job_message['properties']['sku'] = {
     '$ref': '#/definitions/non_empty_string'
 }
-azure_job_message['properties']['version_key'] = {
+azure_job_message['properties']['vm_images_key'] = {
     '$ref': '#/definitions/non_empty_string'
 }
 azure_job_message['required'].append('emails')

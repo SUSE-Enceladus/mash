@@ -463,7 +463,7 @@ class TestJobCreatorService(object):
         assert data['publisher_id'] == 'suse'
         assert data['sku'] == '123'
         assert data['utctime'] == 'now'
-        assert data['version_key'] == 'key123'
+        assert data['vm_images_key'] == 'key123'
         assert data['notification_email'] == 'test@fake.com'
         assert data['notification_type'] == 'single'
         for region in data['publish_regions']:

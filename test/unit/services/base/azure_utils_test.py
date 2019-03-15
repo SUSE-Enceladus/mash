@@ -363,7 +363,7 @@ def test_request_cloud_partner_offer_doc(
 def test_update_cloud_partner_offer_doc():
     today = date.today()
     release = today.strftime("%Y.%m.%d")
-    version_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+    vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
 
     doc = {
         'definition': {
@@ -382,12 +382,12 @@ def test_update_cloud_partner_offer_doc():
         '123'
     )
 
-    assert doc['definition']['plans'][0][version_key][release]['label'] == \
+    assert doc['definition']['plans'][0][vm_images_key][release]['label'] == \
         'New Image 123'
 
 
 def test_update_cloud_partner_offer_doc_existing_date():
-    version_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+    vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
 
     doc = {
         'definition': {
@@ -406,7 +406,7 @@ def test_update_cloud_partner_offer_doc_existing_date():
         '123'
     )
 
-    label = doc['definition']['plans'][0][version_key]['2018.09.09']['label']
+    label = doc['definition']['plans'][0][vm_images_key]['2018.09.09']['label']
     assert label == 'New Image 123'
 
 

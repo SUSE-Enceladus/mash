@@ -31,7 +31,7 @@ class AzureJob(BaseJob):
         download_url, offer_id, publisher_id, sku, emails, label,
         tests=None, conditions=None, instance_type=None,
         old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture='x86_64', version_key=None,
+        cloud_architecture='x86_64', vm_images_key=None,
         cloud_accounts=None, cloud_groups=None,
         notification_email=None, notification_type='single'
     ):
@@ -49,7 +49,7 @@ class AzureJob(BaseJob):
         self.offer_id = offer_id
         self.publisher_id = publisher_id
         self.sku = sku
-        self.version_key = version_key
+        self.vm_images_key = vm_images_key
 
     def _get_account_info(self):
         """
@@ -129,9 +129,9 @@ class AzureJob(BaseJob):
             }
         }
 
-        if self.version_key:
-            publisher_message['publisher_job']['version_key'] = \
-                self.version_key
+        if self.vm_images_key:
+            publisher_message['publisher_job']['vm_images_key'] = \
+                self.vm_images_key
 
         publisher_message['publisher_job'].update(self.base_message)
 

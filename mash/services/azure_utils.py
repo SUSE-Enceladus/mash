@@ -430,7 +430,7 @@ def request_cloud_partner_offer_doc(credentials, offer_id, publisher_id):
 
 def update_cloud_partner_offer_doc(
     doc, blob_url, description, image_name, label, sku,
-    version_key='microsoft-azure-corevm.vmImagesPublicAzure'
+    vm_images_key='microsoft-azure-corevm.vmImagesPublicAzure'
 ):
     """
     Update the cloud partner offer doc with a new version of the given sku.
@@ -456,10 +456,10 @@ def update_cloud_partner_offer_doc(
         if doc_sku['planId'] == sku:
             release = release_date.strftime("%Y.%m.%d")
 
-            if version_key not in doc_sku:
-                doc_sku[version_key] = {}
+            if vm_images_key not in doc_sku:
+                doc_sku[vm_images_key] = {}
 
-            doc_sku[version_key][release] = version
+            doc_sku[vm_images_key][release] = version
             break
 
     return doc
