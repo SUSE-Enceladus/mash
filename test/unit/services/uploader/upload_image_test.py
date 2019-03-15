@@ -13,7 +13,6 @@ class TestUploadImage(object):
             '123', 'job_file', 'ec2',
             'token', 'cloud_image_name_at_080808',
             'cloud_image_description',
-            last_upload_region=False,
             custom_uploader_args=self.custom_uploader_args,
             arch='arch'
         )
@@ -87,7 +86,7 @@ class TestUploadImage(object):
         self.upload_image.cloud_image_id = 'id'
         self.upload_image._result_callback()
         self.upload_image.result_callback.assert_called_once_with(
-            '123', False, {
+            '123', {
                 'cloud_image_id': 'id',
                 'upload_region': None,
                 'csp_name': 'ec2',
@@ -100,7 +99,7 @@ class TestUploadImage(object):
         self.upload_image.upload_region = 'eu-central-1'
         self.upload_image._result_callback()
         self.upload_image.result_callback.assert_called_once_with(
-            '123', False, {
+            '123', {
                 'cloud_image_id': None,
                 'upload_region': 'eu-central-1',
                 'csp_name': 'ec2',
