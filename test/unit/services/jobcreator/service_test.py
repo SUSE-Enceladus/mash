@@ -477,19 +477,21 @@ class TestJobCreatorService(object):
                 assert region['destination_resource_group'] == 'c_res_group2'
                 assert region['destination_storage_account'] == 'cstorage2'
 
-        assert mock_publish.mock_calls[6] == call(
-            'deprecation', 'job_document',
-            JsonFormat.json_message({
-                "deprecation_job": {
-                    "cloud": "azure",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "utctime": "now"
-                }
-            })
-        )
+        msg = mock_publish.mock_calls[6][1][2]
+        data = json.loads(msg)['deprecation_job']
+        assert data['emails'] == 'jdoe@fake.com'
+        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        assert data['last_service'] == 'deprecation'
+        assert data['offer_id'] == 'sles'
+        assert data['cloud'] == 'azure'
+        assert data['publisher_id'] == 'suse'
+        assert data['sku'] == '123'
+        assert data['utctime'] == 'now'
+        assert data['vm_images_key'] == 'key123'
+        assert data['notification_email'] == 'test@fake.com'
+        assert data['notification_type'] == 'single'
+        assert 'test-azure' in data['deprecation_regions']
+        assert 'test-azure2' in data['deprecation_regions']
 
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_gce(

@@ -9,6 +9,7 @@ from mash.services.azure_utils import (
     acquire_access_token,
     delete_image,
     delete_page_blob,
+    deprecate_image_in_offer_doc,
     get_classic_storage_account_keys,
     get_blob_url,
     go_live_with_cloud_partner_offer,
@@ -457,3 +458,49 @@ def test_wait_on_cloud_partner_operation_failed(
 
     assert str(error.value) == \
         'Cloud partner operation did not finish successfully.'
+
+
+def test_deprecate_image_in_offer():
+    vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+
+    doc = {
+        'definition': {
+            'plans': [
+                {
+                    'planId': '123',
+                    vm_images_key: {
+                        '2018.09.09': {
+                            'label': 'New Image 20180909'
+                        }
+                    }
+                }
+            ]
+        }
+    }
+
+    doc = deprecate_image_in_offer_doc(
+        doc,
+        'new_image_20180909',
+        '123'
+    )
+
+    release = doc['definition']['plans'][0][vm_images_key]['2018.09.09']
+    assert release['showInGui'] is False
+
+
+def test_deprecate_image_in_offer_invalid():
+    doc = {
+        'definition': {
+            'plans': [
+                {
+                    'planId': '123'
+                }
+            ]
+        }
+    }
+
+    deprecate_image_in_offer_doc(
+        doc,
+        'new_image',
+        '123'
+    )

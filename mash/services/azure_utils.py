@@ -465,6 +465,34 @@ def update_cloud_partner_offer_doc(
     return doc
 
 
+def deprecate_image_in_offer_doc(
+    doc, image_name, sku,
+    vm_images_key='microsoft-azure-corevm.vmImagesPublicAzure'
+):
+    """
+    Deprecate the image in the cloud partner offer doc.
+
+    The image is set to not show in gui.
+    """
+    matches = re.findall(r'\d{8}', image_name)
+
+    if matches:
+        release_date = datetime.strptime(matches[0], '%Y%m%d').date()
+        release = release_date.strftime("%Y.%m.%d")
+    else:
+        # image name must have a date to generate release key
+        return doc
+
+    for doc_sku in doc['definition']['plans']:
+        if doc_sku['planId'] == sku:
+            if vm_images_key in doc_sku \
+                    and doc_sku[vm_images_key].get(release):
+                doc_sku[vm_images_key][release]['showInGui'] = False
+            break
+
+    return doc
+
+
 def wait_on_cloud_partner_operation(
     credentials, operation, log_callback, wait_time=60 * 60 * 4
 ):
