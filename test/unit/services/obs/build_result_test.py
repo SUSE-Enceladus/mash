@@ -170,11 +170,7 @@ class TestOBSImageBuildResult(object):
             '/var/lib/mash/images/'
             'Azure-Factory.x86_64-1.0.5-Build5.28.vhdfixed.xz'
         ]
-        mock_mkpath.assert_called_once_with('/var/lib/mash/images/')
-        self.obs_result.image_metadata_name = \
-            'Azure-Factory.x86_64-1.0.5-Build42.42.packages'
-        with raises(MashImageDownloadException):
-            self.obs_result.get_image()
+        mock_mkpath.assert_called_once_with('/var/lib/mash/images/815')
 
         self.obs_result.remote.fetch_files.return_value = []
         with raises(MashImageDownloadException):
@@ -307,13 +303,14 @@ class TestOBSImageBuildResult(object):
         mock_image_conditions_complied.side_effect = [False, True]
         self.obs_result._update_image_status()
 
+    @patch.object(OBSImageBuildResult, 'get_image')
     @patch.object(OBSImageBuildResult, '_notification_callback')
     @patch.object(OBSImageBuildResult, '_log_callback')
     @patch.object(OBSImageBuildResult, '_lookup_image_packages_metadata')
     @patch.object(OBSImageBuildResult, '_result_callback')
     def test_update_image_status_raises(
         self, mock_result_callback, mock_lookup_image_packages_metadata,
-        mock_log_callback, mock_notification_callback
+        mock_log_callback, mock_notification_callback, mock_get_image
     ):
         mock_lookup_image_packages_metadata.side_effect = \
             MashWebContentException('request error')
@@ -323,6 +320,14 @@ class TestOBSImageBuildResult(object):
             call('Job running'),
             call('Error: MashWebContentException: request error')
         ]
+        mock_result_callback.reset_mock()
+
+        mock_lookup_image_packages_metadata.side_effect = None
+        mock_get_image.side_effect = MashImageDownloadException(
+            'Image not found'
+        )
+        self.obs_result._update_image_status()
+        mock_result_callback.assert_called_once_with()
 
     @patch('mash.services.obs.build_result.NamedTemporaryFile')
     def test_lookup_image_packages_metadata(self, mock_NamedTemporaryFile):
