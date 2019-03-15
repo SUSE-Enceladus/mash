@@ -33,7 +33,8 @@ class AzureJob(BaseJob):
         old_cloud_image_name=None, cleanup_images=True,
         cloud_architecture='x86_64', vm_images_key=None,
         cloud_accounts=None, cloud_groups=None,
-        notification_email=None, notification_type='single'
+        notification_email=None, notification_type='single',
+        publish_offer=False
     ):
         super(AzureJob, self).__init__(
             accounts_info, cloud_data, job_id, cloud,
@@ -50,6 +51,7 @@ class AzureJob(BaseJob):
         self.publisher_id = publisher_id
         self.sku = sku
         self.vm_images_key = vm_images_key
+        self.publish_offer = publish_offer
 
     def _get_account_info(self):
         """
@@ -125,7 +127,8 @@ class AzureJob(BaseJob):
                 'cloud': self.cloud,
                 'publish_regions': self.get_publisher_regions(),
                 'publisher_id': self.publisher_id,
-                'sku': self.sku
+                'sku': self.sku,
+                'publish_offer': self.publish_offer
             }
         }
 

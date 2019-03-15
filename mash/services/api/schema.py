@@ -346,6 +346,7 @@ azure_job_message['properties']['sku'] = {
 azure_job_message['properties']['vm_images_key'] = {
     '$ref': '#/definitions/non_empty_string'
 }
+azure_job_message['properties']['publish_offer'] = {'type': 'boolean'}
 azure_job_message['required'].append('emails')
 azure_job_message['required'].append('label')
 azure_job_message['required'].append('offer_id')

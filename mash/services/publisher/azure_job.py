@@ -40,7 +40,8 @@ class AzurePublisherJob(PublisherJob):
         self, emails, id, image_description, label,
         last_service, offer_id, cloud, publish_regions, publisher_id, sku,
         utctime, job_file=None, vm_images_key=None,
-        notification_email=None, notification_type='single'
+        notification_email=None, notification_type='single',
+        publish_offer=False
     ):
         super(AzurePublisherJob, self).__init__(
             id, last_service, cloud, utctime, job_file=job_file,
@@ -56,6 +57,7 @@ class AzurePublisherJob(PublisherJob):
         self.publish_regions = publish_regions
         self.sku = sku
         self.vm_images_key = vm_images_key
+        self.publish_offer = publish_offer
 
     def _publish(self):
         """
@@ -115,17 +117,20 @@ class AzurePublisherJob(PublisherJob):
                             region_info['account']
                         )
                     )
-                    operation = publish_cloud_partner_offer(
-                        credential,
-                        self.emails,
-                        self.offer_id,
-                        self.publisher_id
-                    )
-                    wait_on_cloud_partner_operation(
-                        credential,
-                        operation,
-                        self.send_log
-                    )
+
+                    if self.publish_offer:
+                        operation = publish_cloud_partner_offer(
+                            credential,
+                            self.emails,
+                            self.offer_id,
+                            self.publisher_id
+                        )
+                        wait_on_cloud_partner_operation(
+                            credential,
+                            operation,
+                            self.send_log
+                        )
+
                     self.send_log(
                         'Publishing finished for account: '
                         '{}.'.format(

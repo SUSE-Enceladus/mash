@@ -24,7 +24,8 @@ class TestAzurePublisherJob(object):
             'publisher_id': 'suse',
             'sku': '123',
             'utctime': 'now',
-            'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure'
+            'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure',
+            'publish_offer': True
         }
 
         self.job = AzurePublisherJob(**self.job_config)
