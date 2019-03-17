@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+import os
 import yaml
 
 from mash.mash_exceptions import MashConfigException
@@ -101,6 +103,17 @@ class BaseConfig(object):
         return '{dir}{service}_service.log'.format(
             dir=log_dir, service=service
         )
+
+    def get_job_log_file(self, job_id):
+        """
+        Return log file given the job_id.
+
+        :rtype: string
+        """
+        log_file = os.path.join(
+            self.get_log_directory(), 'jobs', ''.join([job_id, '.log'])
+        )
+        return os.path.expanduser(os.path.normpath(log_file))
 
     def get_cloud_data(self):
         """

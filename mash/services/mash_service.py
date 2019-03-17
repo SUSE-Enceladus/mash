@@ -556,16 +556,6 @@ class MashService(object):
 
         return False
 
-    def _get_job_log_path(self, job_id):
-        """
-        Return the path to log for given job.
-        """
-        path = os.path.normpath(
-            '{0}/jobs/{1}.log'.format(self.config.get_log_directory(), job_id)
-        )
-
-        return path
-
     def _create_notification_content(
         self, job_id, status, utctime, last_service,
         iteration_count=None, error=None
@@ -600,7 +590,7 @@ class MashService(object):
         return msg.format(
             job_id=job_id,
             service=self.service_exchange,
-            job_log=self._get_job_log_path(job_id),
+            job_log=self.config.get_job_log_file(job_id),
             iteration_count=str(iteration_count),
             error=error
         )

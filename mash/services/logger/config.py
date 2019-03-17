@@ -16,8 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import os
-
 from mash.services.base_config import BaseConfig
 
 
@@ -32,14 +30,3 @@ class LoggerConfig(BaseConfig):
     """
     def __init__(self, config_file=None):
         super(LoggerConfig, self).__init__(config_file)
-
-    def get_job_log_file(self, job_id):
-        """
-        Return log file given the job_id.
-
-        :rtype: string
-        """
-        log_file = os.path.join(
-            self.get_log_directory(), 'jobs', ''.join([job_id, '.log'])
-        )
-        return os.path.expanduser(os.path.normpath(log_file))
