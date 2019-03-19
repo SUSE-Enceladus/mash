@@ -210,8 +210,10 @@ class OBSImageBuildResult(object):
         image_files = self.remote.fetch_files(
             ''.join([self.image_name, '.']),
             [
-                ''.join([file_prefix, '.xz.sha256']),
-                ''.join([file_prefix, '.xz']),
+                ''.join([file_prefix, '.raw.xz.sha256']),
+                ''.join([file_prefix, '.raw.xz']),
+                ''.join([file_prefix, '.vhdfixed.xz.sha256']),
+                ''.join([file_prefix, '.vhdfixed.xz']),
                 ''.join([file_prefix, '.tar.gz.sha256']),
                 ''.join([file_prefix, '.tar.gz'])
             ],
