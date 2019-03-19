@@ -85,6 +85,7 @@ class AzureDeprecationJob(DeprecationJob):
                     offer_doc,
                     self.old_cloud_image_name,
                     self.sku,
+                    self.send_log,
                     kwargs
                 )
                 put_cloud_partner_offer_doc(

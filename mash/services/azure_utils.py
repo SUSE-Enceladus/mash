@@ -466,7 +466,7 @@ def update_cloud_partner_offer_doc(
 
 
 def deprecate_image_in_offer_doc(
-    doc, image_name, sku,
+    doc, image_name, sku, log_callback,
     vm_images_key='microsoft-azure-corevm.vmImagesPublicAzure'
 ):
     """
@@ -484,10 +484,23 @@ def deprecate_image_in_offer_doc(
         return doc
 
     for doc_sku in doc['definition']['plans']:
-        if doc_sku['planId'] == sku:
-            if vm_images_key in doc_sku \
-                    and doc_sku[vm_images_key].get(release):
-                doc_sku[vm_images_key][release]['showInGui'] = False
+        if doc_sku['planId'] == sku \
+                and doc_sku.get(vm_images_key) \
+                and doc_sku[vm_images_key].get(release):
+
+            image = doc_sku[vm_images_key][release]
+
+            if image['mediaName'] == image_name:
+                image['showInGui'] = False
+            else:
+                log_callback(
+                    'Deprecation image name, {0} does match the mediaName '
+                    'attribute, {1}.'.format(
+                        image_name,
+                        image['mediaName']
+                    )
+                )
+
             break
 
     return doc

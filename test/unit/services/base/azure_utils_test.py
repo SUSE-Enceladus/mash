@@ -462,6 +462,7 @@ def test_wait_on_cloud_partner_operation_failed(
 
 def test_deprecate_image_in_offer():
     vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+    callback = MagicMock()
 
     doc = {
         'definition': {
@@ -470,7 +471,8 @@ def test_deprecate_image_in_offer():
                     'planId': '123',
                     vm_images_key: {
                         '2018.09.09': {
-                            'label': 'New Image 20180909'
+                            'label': 'New Image 20180909',
+                            'mediaName': 'new_image_20180909'
                         }
                     }
                 }
@@ -481,7 +483,8 @@ def test_deprecate_image_in_offer():
     doc = deprecate_image_in_offer_doc(
         doc,
         'new_image_20180909',
-        '123'
+        '123',
+        callback
     )
 
     release = doc['definition']['plans'][0][vm_images_key]['2018.09.09']
@@ -489,6 +492,9 @@ def test_deprecate_image_in_offer():
 
 
 def test_deprecate_image_in_offer_invalid():
+    vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+    callback = MagicMock()
+
     doc = {
         'definition': {
             'plans': [
@@ -502,5 +508,34 @@ def test_deprecate_image_in_offer_invalid():
     deprecate_image_in_offer_doc(
         doc,
         'new_image',
-        '123'
+        '123',
+        callback
+    )
+
+    doc = {
+        'definition': {
+            'plans': [
+                {
+                    'planId': '123',
+                    vm_images_key: {
+                        '2018.09.09': {
+                            'label': 'New Image 20180909',
+                            'mediaName': 'new_image'
+                        }
+                    }
+                }
+            ]
+        }
+    }
+
+    deprecate_image_in_offer_doc(
+        doc,
+        'new_image_20180909',
+        '123',
+        callback
+    )
+
+    callback.assert_called_once_with(
+        'Deprecation image name, new_image_20180909 does match the '
+        'mediaName attribute, new_image.'
     )
