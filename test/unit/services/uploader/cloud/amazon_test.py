@@ -60,7 +60,7 @@ class TestUploadAmazon(object):
         ec2_setup.create_vpc_subnet.return_value = 'subnet-123456789'
         ec2_setup.create_security_group.return_value = 'sg-123456789'
         mock_ec2_setup.return_value = ec2_setup
-        assert self.uploader.upload() == ('ami_id', 'us-east-1')
+        assert self.uploader.upload() == 'ami_id'
         mock_get_client.assert_called_once_with(
             'ec2', 'access-key', 'secret-access-key', 'us-east-1'
         )

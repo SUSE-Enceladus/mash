@@ -141,7 +141,7 @@ class TestUploadAzure(object):
         system_image_file_type.is_xz.return_value = True
         mock_FileType.return_value = system_image_file_type
 
-        assert self.uploader.upload() == ('name', 'region')
+        assert self.uploader.upload() == 'name'
 
         assert mock_get_client_from_auth_file.call_args_list == [
             call(StorageManagementClient, auth_path='tempfile'),

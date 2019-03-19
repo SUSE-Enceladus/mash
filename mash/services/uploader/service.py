@@ -399,6 +399,7 @@ class UploadImageService(MashService):
             self.jobs[job_id]['credentials'][uploader_args['account']],
             self.jobs[job_id]['job_config']['cloud_image_name'],
             self.jobs[job_id]['job_config']['image_description'],
+            uploader_args['region'],
             uploader_args,
             arch
         )

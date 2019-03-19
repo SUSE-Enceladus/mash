@@ -138,7 +138,7 @@ class UploadAzure(UploadBase):
             }
         )
         async_create_image.wait()
-        return self.cloud_image_name, self.region
+        return self.cloud_image_name
 
     def _create_auth_file(self):
         self.auth_file = NamedTemporaryFile()

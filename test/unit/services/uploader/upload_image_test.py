@@ -12,7 +12,7 @@ class TestUploadImage(object):
         self.upload_image = UploadImage(
             '123', 'job_file', 'ec2',
             'token', 'cloud_image_name_at_080808',
-            'cloud_image_description',
+            'cloud_image_description', 'us-west-3',
             custom_uploader_args=self.custom_uploader_args,
             arch='arch'
         )
@@ -25,7 +25,7 @@ class TestUploadImage(object):
         self, mock_result_callback, mock_log_callback, mock_Upload
     ):
         uploader = Mock()
-        uploader.upload.return_value = ('image_id', 'region')
+        uploader.upload.return_value = 'image_id'
         mock_Upload.return_value = uploader
         self.upload_image.upload()
         mock_Upload.assert_called_once_with(
@@ -42,7 +42,7 @@ class TestUploadImage(object):
                     self.custom_uploader_args
                 )
             ),
-            call('Uploaded image has ID: image_id in region region')
+            call('Uploaded image has ID: image_id in region us-west-3')
         ]
         mock_result_callback.assert_called_once_with()
 
@@ -88,7 +88,7 @@ class TestUploadImage(object):
         self.upload_image.result_callback.assert_called_once_with(
             '123', {
                 'cloud_image_id': 'id',
-                'upload_region': None,
+                'upload_region': 'us-west-3',
                 'csp_name': 'ec2',
                 'job_status': 'success',
                 'error_msg': None

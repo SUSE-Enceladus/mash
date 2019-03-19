@@ -115,7 +115,7 @@ class UploadGCE(UploadBase):
             description=desc,
             family=self.family
         )
-        return self.cloud_image_name, self.region
+        return self.cloud_image_name
 
     def _create_auth_file(self):
         self.auth_file = NamedTemporaryFile()

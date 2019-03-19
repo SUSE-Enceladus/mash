@@ -160,7 +160,7 @@ class UploadAmazon(UploadBase):
             ami_id = ec2_upload.create_image(
                 self.system_image_file
             )
-            return ami_id, self.region
+            return ami_id
         except Exception as e:
             raise MashUploadException(
                 'Upload to Amazon EC2 failed with: {0}'.format(e)
