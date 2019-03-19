@@ -430,7 +430,7 @@ def request_cloud_partner_offer_doc(credentials, offer_id, publisher_id):
 
 def update_cloud_partner_offer_doc(
     doc, blob_url, description, image_name, label, sku,
-    version_key='microsoft-azure-corevm.vmImagesPublicAzure'
+    vm_images_key='microsoft-azure-corevm.vmImagesPublicAzure'
 ):
     """
     Update the cloud partner offer doc with a new version of the given sku.
@@ -456,10 +456,51 @@ def update_cloud_partner_offer_doc(
         if doc_sku['planId'] == sku:
             release = release_date.strftime("%Y.%m.%d")
 
-            if version_key not in doc_sku:
-                doc_sku[version_key] = {}
+            if vm_images_key not in doc_sku:
+                doc_sku[vm_images_key] = {}
 
-            doc_sku[version_key][release] = version
+            doc_sku[vm_images_key][release] = version
+            break
+
+    return doc
+
+
+def deprecate_image_in_offer_doc(
+    doc, image_name, sku, log_callback,
+    vm_images_key='microsoft-azure-corevm.vmImagesPublicAzure'
+):
+    """
+    Deprecate the image in the cloud partner offer doc.
+
+    The image is set to not show in gui.
+    """
+    matches = re.findall(r'\d{8}', image_name)
+
+    if matches:
+        release_date = datetime.strptime(matches[0], '%Y%m%d').date()
+        release = release_date.strftime("%Y.%m.%d")
+    else:
+        # image name must have a date to generate release key
+        return doc
+
+    for doc_sku in doc['definition']['plans']:
+        if doc_sku['planId'] == sku \
+                and doc_sku.get(vm_images_key) \
+                and doc_sku[vm_images_key].get(release):
+
+            image = doc_sku[vm_images_key][release]
+
+            if image['mediaName'] == image_name:
+                image['showInGui'] = False
+            else:
+                log_callback(
+                    'Deprecation image name, {0} does match the mediaName '
+                    'attribute, {1}.'.format(
+                        image_name,
+                        image['mediaName']
+                    )
+                )
+
             break
 
     return doc

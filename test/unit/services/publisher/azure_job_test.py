@@ -24,7 +24,8 @@ class TestAzurePublisherJob(object):
             'publisher_id': 'suse',
             'sku': '123',
             'utctime': 'now',
-            'version_key': 'microsoft-azure-corevm.vmImagesPublicAzure'
+            'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure',
+            'publish_offer': True
         }
 
         self.job = AzurePublisherJob(**self.job_config)
@@ -64,7 +65,7 @@ class TestAzurePublisherJob(object):
         mock_request_doc, mock_put_doc, mock_publish_offer,
         mock_wait_on_operation
     ):
-        self.job.version_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+        self.job.vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
         mock_get_blob_url.return_value = 'blob/url/.vhd'
         mock_create_json_file.return_value.__enter__.return_value = \
             '/tmp/file.auth'
@@ -98,7 +99,7 @@ class TestAzurePublisherJob(object):
         self, mock_get_blob_url, mock_send_log, mock_create_json_file,
         mock_request_doc, mock_put_doc
     ):
-        self.job.version_key = None
+        self.job.vm_images_key = None
         mock_get_blob_url.return_value = 'blob/url/.vhd'
         mock_create_json_file.return_value.__enter__.return_value = \
             '/tmp/file.auth'

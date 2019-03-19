@@ -34,6 +34,7 @@
   "publisher_id": "suse",
   "label": "New Image 123",
   "sku": "123",
-  "version_key": "key123",
-  "notification_email": "test@fake.com"
+  "vm_images_key": "key123",
+  "notification_email": "test@fake.com",
+  "publish_offer": true
 }

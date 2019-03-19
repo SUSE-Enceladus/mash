@@ -9,6 +9,7 @@ from mash.services.azure_utils import (
     acquire_access_token,
     delete_image,
     delete_page_blob,
+    deprecate_image_in_offer_doc,
     get_classic_storage_account_keys,
     get_blob_url,
     go_live_with_cloud_partner_offer,
@@ -363,7 +364,7 @@ def test_request_cloud_partner_offer_doc(
 def test_update_cloud_partner_offer_doc():
     today = date.today()
     release = today.strftime("%Y.%m.%d")
-    version_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+    vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
 
     doc = {
         'definition': {
@@ -382,12 +383,12 @@ def test_update_cloud_partner_offer_doc():
         '123'
     )
 
-    assert doc['definition']['plans'][0][version_key][release]['label'] == \
+    assert doc['definition']['plans'][0][vm_images_key][release]['label'] == \
         'New Image 123'
 
 
 def test_update_cloud_partner_offer_doc_existing_date():
-    version_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+    vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
 
     doc = {
         'definition': {
@@ -406,7 +407,7 @@ def test_update_cloud_partner_offer_doc_existing_date():
         '123'
     )
 
-    label = doc['definition']['plans'][0][version_key]['2018.09.09']['label']
+    label = doc['definition']['plans'][0][vm_images_key]['2018.09.09']['label']
     assert label == 'New Image 123'
 
 
@@ -457,3 +458,84 @@ def test_wait_on_cloud_partner_operation_failed(
 
     assert str(error.value) == \
         'Cloud partner operation did not finish successfully.'
+
+
+def test_deprecate_image_in_offer():
+    vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+    callback = MagicMock()
+
+    doc = {
+        'definition': {
+            'plans': [
+                {
+                    'planId': '123',
+                    vm_images_key: {
+                        '2018.09.09': {
+                            'label': 'New Image 20180909',
+                            'mediaName': 'new_image_20180909'
+                        }
+                    }
+                }
+            ]
+        }
+    }
+
+    doc = deprecate_image_in_offer_doc(
+        doc,
+        'new_image_20180909',
+        '123',
+        callback
+    )
+
+    release = doc['definition']['plans'][0][vm_images_key]['2018.09.09']
+    assert release['showInGui'] is False
+
+
+def test_deprecate_image_in_offer_invalid():
+    vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
+    callback = MagicMock()
+
+    doc = {
+        'definition': {
+            'plans': [
+                {
+                    'planId': '123'
+                }
+            ]
+        }
+    }
+
+    deprecate_image_in_offer_doc(
+        doc,
+        'new_image',
+        '123',
+        callback
+    )
+
+    doc = {
+        'definition': {
+            'plans': [
+                {
+                    'planId': '123',
+                    vm_images_key: {
+                        '2018.09.09': {
+                            'label': 'New Image 20180909',
+                            'mediaName': 'new_image'
+                        }
+                    }
+                }
+            ]
+        }
+    }
+
+    deprecate_image_in_offer_doc(
+        doc,
+        'new_image_20180909',
+        '123',
+        callback
+    )
+
+    callback.assert_called_once_with(
+        'Deprecation image name, new_image_20180909 does match the '
+        'mediaName attribute, new_image.'
+    )

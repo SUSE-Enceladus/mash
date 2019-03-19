@@ -31,9 +31,10 @@ class AzureJob(BaseJob):
         download_url, offer_id, publisher_id, sku, emails, label,
         tests=None, conditions=None, instance_type=None,
         old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture='x86_64', version_key=None,
+        cloud_architecture='x86_64', vm_images_key=None,
         cloud_accounts=None, cloud_groups=None,
-        notification_email=None, notification_type='single'
+        notification_email=None, notification_type='single',
+        publish_offer=False
     ):
         super(AzureJob, self).__init__(
             accounts_info, cloud_data, job_id, cloud,
@@ -49,7 +50,8 @@ class AzureJob(BaseJob):
         self.offer_id = offer_id
         self.publisher_id = publisher_id
         self.sku = sku
-        self.version_key = version_key
+        self.vm_images_key = vm_images_key
+        self.publish_offer = publish_offer
 
     def _get_account_info(self):
         """
@@ -105,12 +107,37 @@ class AzureJob(BaseJob):
         """
         deprecation_message = {
             'deprecation_job': {
-                'cloud': self.cloud
+                'cloud': self.cloud,
+                'emails': self.emails,
+                'offer_id': self.offer_id,
+                'deprecation_regions': self.get_deprecation_regions(),
+                'publisher_id': self.publisher_id,
+                'sku': self.sku
             }
         }
         deprecation_message['deprecation_job'].update(self.base_message)
 
+        if self.old_cloud_image_name:
+            deprecation_message['deprecation_job']['old_cloud_image_name'] = \
+                self.old_cloud_image_name
+
+        if self.vm_images_key:
+            deprecation_message['deprecation_job']['vm_images_key'] = \
+                self.vm_images_key
+
         return JsonFormat.json_message(deprecation_message)
+
+    def get_deprecation_regions(self):
+        """
+        Return list of deprecation region info.
+
+        """
+        regions = []
+
+        for source_region, value in self.target_account_info.items():
+            regions.append(value['account'])
+
+        return regions
 
     def get_publisher_message(self):
         """
@@ -125,13 +152,14 @@ class AzureJob(BaseJob):
                 'cloud': self.cloud,
                 'publish_regions': self.get_publisher_regions(),
                 'publisher_id': self.publisher_id,
-                'sku': self.sku
+                'sku': self.sku,
+                'publish_offer': self.publish_offer
             }
         }
 
-        if self.version_key:
-            publisher_message['publisher_job']['version_key'] = \
-                self.version_key
+        if self.vm_images_key:
+            publisher_message['publisher_job']['vm_images_key'] = \
+                self.vm_images_key
 
         publisher_message['publisher_job'].update(self.base_message)
 
