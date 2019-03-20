@@ -18,6 +18,7 @@
 
 from collections import defaultdict
 
+from mash.mash_exceptions import MashJobCreatorException
 from mash.utils.json_format import JsonFormat
 
 
@@ -27,38 +28,42 @@ class BaseJob(object):
 
     Handles incoming job requests.
     """
-    def __init__(
-        self, accounts_info, cloud_data, job_id, cloud,
-        requesting_user, last_service,
-        utctime, image, cloud_image_name, image_description, distro,
-        download_url, tests=None, conditions=None, instance_type=None,
-        old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture='x86_64', cloud_accounts=None, cloud_groups=None,
-        notification_email=None, notification_type='single'
-    ):
-        self.id = job_id
+    def __init__(self, accounts_info, cloud_data, kwargs):
         self.accounts_info = accounts_info
         self.cloud_data = cloud_data
-        self.cloud = cloud
-        self.cloud_accounts = self._get_accounts_data(cloud_accounts)
-        self.cloud_groups = cloud_groups or []
-        self.requesting_user = requesting_user
-        self.last_service = last_service
-        self.image = image
-        self.cloud_image_name = cloud_image_name
-        self.old_cloud_image_name = old_cloud_image_name
-        self.image_description = image_description
-        self.distro = distro
-        self.tests = tests or []
-        self.cleanup_images = cleanup_images
-        self.conditions = conditions
-        self.download_url = download_url
-        self.instance_type = instance_type
-        self.cloud_architecture = cloud_architecture
-        self.utctime = utctime
-        self.notification_email = notification_email
-        self.notification_type = notification_type
         self.target_account_info = {}
+
+        try:
+            self.id = kwargs['job_id']
+            self.cloud = kwargs['cloud']
+            self.requesting_user = kwargs['requesting_user']
+            self.last_service = kwargs['last_service']
+            self.utctime = kwargs['utctime']
+            self.image = kwargs['image']
+            self.cloud_image_name = kwargs['cloud_image_name']
+            self.image_description = kwargs['image_description']
+            self.distro = kwargs['distro']
+            self.download_url = kwargs['download_url']
+        except KeyError as error:
+            raise MashJobCreatorException(
+                'Jobs require a(n) {0} key in the job doc.'.format(
+                    error
+                )
+            )
+
+        self.tests = kwargs.get('tests', [])
+        self.conditions = kwargs.get('conditions')
+        self.instance_type = kwargs.get('instance_type')
+        self.old_cloud_image_name = kwargs.get('old_cloud_image_name')
+        self.cleanup_images = kwargs.get('cleanup_images', True)
+        self.cloud_architecture = kwargs.get('cloud_architecture', 'x86_64')
+        self.cloud_accounts = self._get_accounts_data(
+            kwargs.get('cloud_accounts')
+        )
+        self.cloud_groups = kwargs.get('cloud_groups', [])
+        self.notification_email = kwargs.get('notification_email')
+        self.notification_type = kwargs.get('notification_type', 'single')
+        self.kwargs = kwargs
 
         self.base_message = {
             'id': self.id,
@@ -71,14 +76,20 @@ class BaseJob(object):
             self.base_message['notification_type'] = self.notification_type
 
         self.post_init()
+        self.get_account_info()
 
-    def _get_account_info(self):
+    def get_account_info(self):
         """
         Parse dictionary of account data from accounts file.
 
         Implementation in child class.
         """
-        pass
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            '_get_account_info method.'.format(
+                self.__class__.__name__
+            )
+        )
 
     def _get_accounts_data(self, cloud_accounts):
         """
@@ -119,7 +130,12 @@ class BaseJob(object):
 
         Implement in child class.
         """
-        pass
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_deprecation_message method.'.format(
+                self.__class__.__name__
+            )
+        )
 
     def get_obs_message(self):
         """
@@ -166,13 +182,23 @@ class BaseJob(object):
 
         Implementation in child class.
         """
-        pass
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_publisher_message method.'.format(
+                self.__class__.__name__
+            )
+        )
 
     def get_replication_message(self):
         """
         Build replication job message and publish to replication exchange.
         """
-        pass
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_replication_message method.'.format(
+                self.__class__.__name__
+            )
+        )
 
     def get_replication_source_regions(self):
         """
@@ -180,7 +206,12 @@ class BaseJob(object):
 
         Implementation in child class.
         """
-        pass
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_replication_source_regions method.'.format(
+                self.__class__.__name__
+            )
+        )
 
     def get_testing_message(self):
         """
@@ -211,7 +242,12 @@ class BaseJob(object):
 
         Implementation in child class.
         """
-        pass
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_testing_regions method.'.format(
+                self.__class__.__name__
+            )
+        )
 
     def get_uploader_message(self):
         """
@@ -239,7 +275,12 @@ class BaseJob(object):
 
         Implementation in child class.
         """
-        pass
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_uploader_regions method.'.format(
+                self.__class__.__name__
+            )
+        )
 
     def post_init(self):
         """

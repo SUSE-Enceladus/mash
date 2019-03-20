@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -28,31 +28,16 @@ class EC2Job(BaseJob):
 
     Handles incoming job requests.
     """
-    def __init__(
-        self, accounts_info, cloud_data, job_id, cloud,
-        requesting_user, last_service,
-        utctime, image, cloud_image_name, image_description, distro,
-        download_url, tests=None, allow_copy=True, conditions=None,
-        instance_type=None, share_with='all', old_cloud_image_name=None,
-        cleanup_images=True, cloud_architecture='x86_64',
-        cloud_accounts=None, cloud_groups=None,
-        notification_email=None, notification_type='single',
-        billing_codes=None
-    ):
-        self.share_with = share_with
-        self.allow_copy = allow_copy
-        self.billing_codes = billing_codes
 
-        super(EC2Job, self).__init__(
-            accounts_info, cloud_data, job_id, cloud,
-            requesting_user, last_service, utctime, image,
-            cloud_image_name, image_description, distro, download_url, tests,
-            conditions, instance_type, old_cloud_image_name, cleanup_images,
-            cloud_architecture, cloud_accounts, cloud_groups,
-            notification_email, notification_type
-        )
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        self.share_with = self.kwargs.get('share_with', 'all')
+        self.allow_copy = self.kwargs.get('allow_copy', True)
+        self.billing_codes = self.kwargs.get('billing_codes')
 
-    def _get_account_info(self):
+    def get_account_info(self):
         """
         Returns a dictionary mapping target region info.
 
@@ -213,9 +198,3 @@ class EC2Job(BaseJob):
             }
 
         return target_regions
-
-    def post_init(self):
-        """
-        Post initialization method.
-        """
-        self._get_account_info()
