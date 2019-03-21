@@ -86,7 +86,7 @@ class BaseJob(object):
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            '_get_account_info method.'.format(
+            'get_account_info method.'.format(
                 self.__class__.__name__
             )
         )
