@@ -208,13 +208,8 @@ class OBSImageBuildResult(object):
         mkpath(self.download_directory)
         file_prefix = self.image_metadata_name.replace('.packages', '')
         image_files = self.remote.fetch_files(
-            ''.join([self.image_name, '.']),
-            [
-                ''.join([file_prefix, '.xz.sha256']),
-                ''.join([file_prefix, '.xz']),
-                ''.join([file_prefix, '.tar.gz.sha256']),
-                ''.join([file_prefix, '.tar.gz'])
-            ],
+            file_prefix,
+            ['.xz', 'xz.sha256', '.tar.gz', '.tar.gz.sha256'],
             self.download_directory
         )
 
