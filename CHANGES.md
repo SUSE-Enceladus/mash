@@ -1,3 +1,17 @@
+v2.4.0 (2019-03-26)
+===================
+
+- Update Azure publishing and deprecation workflow.
+  [\#425](https://github.com/SUSE-Enceladus/mash/pull/425)
+- Move get job log file method to base config.
+  [\#426](https://github.com/SUSE-Enceladus/mash/pull/426)
+- Use full extension for ec2 and azure image files.
+  [\#427](https://github.com/SUSE-Enceladus/mash/pull/427)
+- Provide region to UploadImage class in init.
+  [\#428](https://github.com/SUSE-Enceladus/mash/pull/428)
+- Job creator classes don't override init method.
+  [\#429](https://github.com/SUSE-Enceladus/mash/pull/429)
+
 v2.3.0 (2019-03-15)
 ===================
 
