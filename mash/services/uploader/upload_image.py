@@ -52,7 +52,7 @@ class UploadImage(object):
     """
     def __init__(
         self, job_id, job_file, csp_name, credentials_token,
-        cloud_image_name, cloud_image_description,
+        cloud_image_name, cloud_image_description, region,
         custom_uploader_args=None, arch='x86_64'
     ):
         self.job_id = job_id
@@ -70,7 +70,7 @@ class UploadImage(object):
         self.result_callback = None
         self.log_callback = None
         self.cloud_image_id = None
-        self.upload_region = None
+        self.upload_region = region
         self.iteration_count = 0
         self.uploader = None
         self.error_msg = None
@@ -104,8 +104,7 @@ class UploadImage(object):
                     self.custom_uploader_args,
                     self.arch
                 )
-                self.cloud_image_id, self.upload_region = \
-                    self.uploader.upload()
+                self.cloud_image_id = self.uploader.upload()
                 self._log_callback(
                     'Uploaded image has ID: {0} in region {1}'.format(
                         self.cloud_image_id, self.upload_region)

@@ -113,7 +113,7 @@ class TestUploadGCE(object):
         storage_driver = Mock()
         mock_storage_driver.return_value = storage_driver
 
-        assert self.uploader.upload() == ('sles-12-sp4-v20180909', 'region')
+        assert self.uploader.upload() == 'sles-12-sp4-v20180909'
 
         storage_driver.get_container.assert_called_once_with('images')
         assert storage_driver.upload_object_via_stream.call_count == 1

@@ -486,7 +486,8 @@ class TestUploadImageService(object):
             datetime.date.today().strftime("%Y%m%d")
         )
         mock_UploadImage.assert_called_once_with(
-            '123', 'job_file', 'ec2', {}, image_name, 'description', {
+            '123', 'job_file', 'ec2', {}, image_name, 'description',
+            'eu-central-1', {
                 'launch_ami': 'ami-bc5b48d0', 'region': 'eu-central-1',
                 'account': 'test-aws'
             }, 'x86_64'
