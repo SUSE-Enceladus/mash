@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -40,4 +40,4 @@ def create_job(job_doc, accounts_info, cloud_data):
             )
         )
 
-    return job_class(accounts_info, cloud_data, **job_doc)
+    return job_class(accounts_info, cloud_data, job_doc)

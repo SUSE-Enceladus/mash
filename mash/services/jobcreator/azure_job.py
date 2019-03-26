@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.mash_exceptions import MashJobCreatorException
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
 
@@ -24,36 +25,28 @@ class AzureJob(BaseJob):
     """
     Azure job message class.
     """
-    def __init__(
-        self, accounts_info, cloud_data, job_id, cloud,
-        requesting_user, last_service,
-        utctime, image, cloud_image_name, image_description, distro,
-        download_url, offer_id, publisher_id, sku, emails, label,
-        tests=None, conditions=None, instance_type=None,
-        old_cloud_image_name=None, cleanup_images=True,
-        cloud_architecture='x86_64', vm_images_key=None,
-        cloud_accounts=None, cloud_groups=None,
-        notification_email=None, notification_type='single',
-        publish_offer=False
-    ):
-        super(AzureJob, self).__init__(
-            accounts_info, cloud_data, job_id, cloud,
-            requesting_user, last_service, utctime, image,
-            cloud_image_name, image_description, distro, download_url, tests,
-            conditions, instance_type, old_cloud_image_name, cleanup_images,
-            cloud_architecture, cloud_accounts, cloud_groups,
-            notification_email, notification_type
-        )
 
-        self.emails = emails
-        self.label = label
-        self.offer_id = offer_id
-        self.publisher_id = publisher_id
-        self.sku = sku
-        self.vm_images_key = vm_images_key
-        self.publish_offer = publish_offer
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        try:
+            self.emails = self.kwargs['emails']
+            self.label = self.kwargs['label']
+            self.offer_id = self.kwargs['offer_id']
+            self.publisher_id = self.kwargs['publisher_id']
+            self.sku = self.kwargs['sku']
+        except KeyError as error:
+            raise MashJobCreatorException(
+                'Azure jobs require a(n) {0} key in the job doc.'.format(
+                    error
+                )
+            )
 
-    def _get_account_info(self):
+        self.vm_images_key = self.kwargs.get('vm_images_key')
+        self.publish_offer = self.kwargs.get('publish_offer', False)
+
+    def get_account_info(self):
         """
         Returns a dictionary of accounts and regions.
 
@@ -236,9 +229,3 @@ class AzureJob(BaseJob):
                 value['source_resource_group']
 
         return target_regions
-
-    def post_init(self):
-        """
-        Post initialization method.
-        """
-        self._get_account_info()
