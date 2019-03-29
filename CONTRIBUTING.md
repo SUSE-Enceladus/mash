@@ -17,7 +17,7 @@
 - All patches must be signed. [Signing Commits](#signing-commits)
 - All contributed code must conform to flake8. [Code Style](#code-style)
 - All new code contributions must be accompanied by a test.
-    - Tests must pass and coverage remain above 100%. [Unit & Integration Tests](#unit-&-integration-tests)
+    - Tests must pass and coverage remain at 100%. [Unit & Integration Tests](#unit-&-integration-tests)
 - Follow Semantic Versioning. [Versions & Releases](#versions-&-releases)
 
 
@@ -46,7 +46,7 @@ $ git push --tags
 
 ## Unit & Integration Tests
 
-All tests should pass and test coverage should remain above 100%.
+All tests should pass and test coverage should remain at 100%.
 
 The tests and coverage can be run directly via pytest.
 
