@@ -19,7 +19,7 @@ class TestAzureDeprecationJob(object):
             'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure'
         }
 
-        self.job = AzureDeprecationJob(**self.job_config)
+        self.job = AzureDeprecationJob(self.job_config)
         self.job.credentials = {
             "acnt1": {
                 "clientId": "09876543-1234-1234-1234-123456789012",
@@ -67,7 +67,7 @@ class TestAzureDeprecationJob(object):
             }
         }
 
-        self.job._deprecate()
+        self.job._run_job()
 
         mock_send_log.assert_has_calls([
             call(
@@ -107,7 +107,7 @@ class TestAzureDeprecationJob(object):
         mock_put_doc.side_effect = Exception('Invalid doc!')
         self.job.old_cloud_image_name = 'image_123'
 
-        self.job._deprecate()
+        self.job._run_job()
 
         mock_send_log.assert_has_calls([
             call(

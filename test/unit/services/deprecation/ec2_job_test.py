@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashDeprecationException
 from mash.services.deprecation.ec2_job import EC2DeprecationJob
-from mash.services.deprecation.deprecation_job import DeprecationJob
 
 
 class TestEC2DeprecationJob(object):
@@ -22,7 +21,7 @@ class TestEC2DeprecationJob(object):
             'utctime': 'now'
         }
 
-        self.job = EC2DeprecationJob(**self.job_config)
+        self.job = EC2DeprecationJob(self.job_config)
         self.job.credentials = {
             'test-aws': {
                 'access_key_id': '123456',
@@ -36,7 +35,7 @@ class TestEC2DeprecationJob(object):
         mock_ec2_deprecate_image.return_value = deprecation
 
         self.job.source_regions = {'us-east-2': 'ami-123456'}
-        self.job._deprecate()
+        self.job._run_job()
 
         mock_ec2_deprecate_image.assert_called_once_with(
             access_key='123456', deprecation_image_name='old_image_123',
@@ -52,10 +51,10 @@ class TestEC2DeprecationJob(object):
     def test_deprecate_no_old_image(self):
         self.job.source_regions = {'us-east-2': 'ami-123456'}
         self.job.old_cloud_image_name = None
-        self.job._deprecate()
+        self.job._run_job()
         assert self.job.status == 'success'
 
-    @patch.object(DeprecationJob, 'send_log')
+    @patch.object(EC2DeprecationJob, 'send_log')
     @patch('mash.services.deprecation.ec2_job.EC2DeprecateImg')
     def test_deprecate_exception(
         self, mock_ec2_deprecate_image, mock_send_log
@@ -69,5 +68,5 @@ class TestEC2DeprecationJob(object):
         msg = 'Error deprecating image old_image_123 in us-east-2.' \
             ' No images to deprecate.'
         with raises(MashDeprecationException) as e:
-            self.job._deprecate()
+            self.job._run_job()
         assert msg == str(e.value)

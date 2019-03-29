@@ -10,7 +10,7 @@ class TestGCEPublisherJob(object):
             'utctime': 'now'
         }
 
-        self.job = GCEPublisherJob(**self.job_config)
+        self.job = GCEPublisherJob(self.job_config)
 
     def test_publish(self):
-        self.job._publish()
+        self.job._run_job()

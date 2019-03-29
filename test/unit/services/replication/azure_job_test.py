@@ -25,7 +25,7 @@ class TestAzureReplicationJob(object):
             },
             "cleanup_images": True
         }
-        self.job = AzureReplicationJob(**self.job_config)
+        self.job = AzureReplicationJob(self.job_config)
 
         self.job.credentials = {
             "acnt1": {
@@ -60,7 +60,7 @@ class TestAzureReplicationJob(object):
         mock_create_json_file.return_value.__enter__.return_value = \
             '/tmp/file.auth'
 
-        self.job._replicate()
+        self.job._run_job()
 
         mock_send_log.has_calls([
             call('Copying image for account: acnt1, to classic storage container.'),

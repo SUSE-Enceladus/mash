@@ -19,7 +19,12 @@
 import json
 import random
 
-from mash.services.testing.testing_job import TestingJob
+from threading import Thread
+
+from mash.mash_exceptions import MashTestingException
+from mash.services.mash_job import MashJob
+from mash.services.status_levels import FAILED, SUCCESS
+from mash.services.testing.ipa_helper import ipa_test
 
 instance_types = [
     'Basic_A2',
@@ -30,34 +35,91 @@ instance_types = [
 ]
 
 
-class AzureTestingJob(TestingJob):
+class AzureTestingJob(MashJob):
     """
     Class for an Azure testing job.
     """
 
-    def __init__(
-        self, id, last_service, cloud, ssh_private_key_file, test_regions,
-        tests, utctime, job_file=None, description=None,
-        distro='sles', instance_type=None, ipa_timeout=None,
-        ssh_user='azureuser', notification_email=None,
-        notification_type='single'
-    ):
-        if not instance_type:
-            instance_type = random.choice(instance_types)
-
-        super(AzureTestingJob, self).__init__(
-            id, last_service, cloud, ssh_private_key_file, test_regions,
-            tests, utctime, job_file=job_file, description=description,
-            distro=distro, instance_type=instance_type,
-            ipa_timeout=ipa_timeout, ssh_user=ssh_user,
-            notification_email=notification_email,
-            notification_type=notification_type
-        )
-
-    def _add_cloud_creds(self, creds, ipa_kwargs):
+    def post_init(self):
         """
-        Update IPA kwargs with Azure credentials.
+        Post initialization method.
         """
-        ipa_kwargs['service_account_credentials'] = json.dumps(creds)
+        try:
+            self.ssh_private_key_file = self.job_config['ssh_private_key_file']
+            self.test_regions = self.job_config['test_regions']
+            self.tests = self.job_config['tests']
+        except KeyError as error:
+            raise MashTestingException(
+                'Azure testing jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
 
-        return ipa_kwargs
+        self.description = self.job_config.get('description')
+        self.distro = self.job_config.get('distro', 'sles')
+        self.instance_type = self.job_config.get('instance_type')
+        self.ipa_timeout = self.job_config.get('ipa_timeout')
+        self.ssh_user = self.job_config.get('ssh_user', 'azureuser')
+
+        if not self.instance_type:
+            self.instance_type = random.choice(instance_types)
+
+    def _run_job(self):
+        """
+        Tests image with IPA and update status and results.
+        """
+        results = {}
+        jobs = []
+
+        self.status = SUCCESS
+        self.send_log('Running IPA tests against image.')
+
+        for region, info in self.test_regions.items():
+            if info.get('testing_account'):
+                account = info['testing_account']
+            else:
+                account = info['account']
+
+            creds = self.credentials[account]
+            ipa_kwargs = {
+                'cloud': self.cloud,
+                'description': self.description,
+                'distro': self.distro,
+                'image_id': self.source_regions[region],
+                'instance_type': self.instance_type,
+                'ipa_timeout': self.ipa_timeout,
+                'region': region,
+                'service_account_credentials': json.dumps(creds),
+                'ssh_private_key_file': self.ssh_private_key_file,
+                'ssh_user': self.ssh_user,
+                'tests': self.tests
+            }
+
+            process = Thread(
+                name=region, target=ipa_test,
+                args=(results,), kwargs=ipa_kwargs
+            )
+            process.start()
+            jobs.append(process)
+
+        for job in jobs:
+            job.join()
+
+        for region, result in results.items():
+            if 'results_file' in result:
+                self.send_log(
+                    'Results file for {0} region: {1}'.format(
+                        region, result['results_file']
+                    )
+                )
+
+            if result['status'] != SUCCESS:
+                self.send_log(
+                    'Image tests failed in region: {0}.'.format(region),
+                    success=False
+                )
+                if result.get('msg'):
+                    self.send_log(result['msg'], success=False)
+
+                self.status = FAILED

@@ -21,32 +21,35 @@ import time
 from collections import defaultdict
 
 from mash.mash_exceptions import MashReplicationException
-from mash.services.replication.replication_job import ReplicationJob
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.ec2 import get_client
 
 
-class EC2ReplicationJob(ReplicationJob):
+class EC2ReplicationJob(MashJob):
     """
     Class for an EC2 replication job.
     """
 
-    def __init__(
-        self, id, image_description, last_service, cloud, utctime,
-        replication_source_regions, job_file=None,
-        notification_email=None, notification_type='single'
-    ):
-        super(EC2ReplicationJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
-        )
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        try:
+            self.image_description = self.job_config['image_description']
+            self.replication_source_regions = \
+                self.job_config['replication_source_regions']
+        except KeyError as error:
+            raise MashReplicationException(
+                'EC2 replication jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
 
-        self.image_description = image_description
-        self.replication_source_regions = replication_source_regions
         self.source_region_results = defaultdict(dict)
 
-    def _replicate(self):
+    def _run_job(self):
         """
         Replicate image to all target regions in each source region.
         """

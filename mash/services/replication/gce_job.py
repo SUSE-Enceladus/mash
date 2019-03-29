@@ -16,29 +16,23 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.replication.replication_job import ReplicationJob
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 
 
-class GCEReplicationJob(ReplicationJob):
+class GCEReplicationJob(MashJob):
     """
     Class for an GCE replication job.
     """
 
-    def __init__(
-        self, id, last_service, cloud, utctime, job_file=None,
-        notification_email=None, notification_type='single'
-    ):
-        super(GCEReplicationJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
-        )
-
+    def post_init(self):
+        """
+        Post initialization method.
+        """
         # Skip credential request since there is no replication in GCE
         self.credentials = {'status': 'no replication'}
 
-    def _replicate(self):
+    def _run_job(self):
         """
         No replication in GCE.
         """

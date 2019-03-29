@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -19,30 +19,34 @@
 from ec2imgutils.ec2deprecateimg import EC2DeprecateImg
 
 from mash.mash_exceptions import MashDeprecationException
-from mash.services.deprecation.deprecation_job import DeprecationJob
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 
 
-class EC2DeprecationJob(DeprecationJob):
+class EC2DeprecationJob(MashJob):
     """
     Class for an EC2 deprecation job.
     """
 
-    def __init__(
-        self, id, deprecation_regions, last_service, cloud, utctime,
-        old_cloud_image_name=None, job_file=None,
-        notification_email=None, notification_type='single'
-    ):
-        super(EC2DeprecationJob, self).__init__(
-            id, last_service, cloud, utctime,
-            old_cloud_image_name=old_cloud_image_name, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        try:
+            self.deprecation_regions = self.job_config['deprecation_regions']
+        except KeyError as error:
+            raise MashDeprecationException(
+                'EC2 deprecation Jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
+
+        self.old_cloud_image_name = self.job_config.get(
+            'old_cloud_image_name'
         )
 
-        self.deprecation_regions = deprecation_regions
-
-    def _deprecate(self):
+    def _run_job(self):
         """
         Deprecate image in all target regions in each source region.
         """

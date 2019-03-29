@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.mash_exceptions import MashJobException
 from mash.services.status_levels import UNKOWN
 
 
@@ -23,25 +24,35 @@ class MashJob(object):
     """
     Class for an individual mash job.
     """
-    def __init__(
-        self, id, last_service, cloud, utctime, job_file=None,
-        notification_email=None, notification_type='single'
-    ):
+    def __init__(self, job_config):
+        self.job_config = job_config
+
         # Properties
         self._cloud_image_name = None
         self._credentials = None
         self._log_callback = None
-        self._job_file = job_file
+        self._source_regions = None
+        self._job_file = job_config.get('job_file')
 
         self.iteration_count = 0
         self.status = UNKOWN
 
-        self.id = id
-        self.last_service = last_service
-        self.cloud = cloud
-        self.utctime = utctime
-        self.notification_email = notification_email
-        self.notification_type = notification_type
+        try:
+            self.id = job_config['id']
+            self.last_service = job_config['last_service']
+            self.cloud = job_config['cloud']
+            self.utctime = job_config['utctime']
+        except KeyError as error:
+            raise MashJobException(
+                'Jobs require a(n) {0} key in the job doc.'.format(
+                    error
+                )
+            )
+
+        self.notification_email = job_config.get('notification_email')
+        self.notification_type = job_config.get('notification_type', 'single')
+
+        self.post_init()
 
     def get_job_id(self):
         """
@@ -62,6 +73,24 @@ class MashJob(object):
                 self.get_job_id(),
                 success
             )
+
+    def _run_job(self):
+        """
+        Start and run job workflow.
+        """
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            '_run_job method.'.format(
+                self.__class__.__name__
+            )
+        )
+
+    def process_job(self):
+        """
+        Update iteration count and run job.
+        """
+        self.iteration_count += 1
+        self._run_job()
 
     @property
     def cloud_image_name(self):
@@ -106,3 +135,23 @@ class MashJob(object):
         Set log_callback function to callback.
         """
         self._log_callback = callback
+
+    @property
+    def source_regions(self):
+        """Source regions property."""
+        return self._source_regions
+
+    @source_regions.setter
+    def source_regions(self, regions):
+        """
+        Setter for source_regions dictionary.
+        """
+        self._source_regions = regions
+
+    def post_init(self):
+        """
+        Post initialization method.
+
+        Implementation in child class.
+        """
+        pass

@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashPublisherException
 from mash.services.publisher.ec2_job import EC2PublisherJob
-from mash.services.publisher.publisher_job import PublisherJob
 
 
 class TestEC2PublisherJob(object):
@@ -23,7 +22,7 @@ class TestEC2PublisherJob(object):
             'utctime': 'now'
         }
 
-        self.job = EC2PublisherJob(**self.job_config)
+        self.job = EC2PublisherJob(self.job_config)
         self.job.credentials = {
             'test-aws': {
                 'access_key_id': '123456',
@@ -38,7 +37,7 @@ class TestEC2PublisherJob(object):
         publisher = Mock()
         mock_ec2_publish_image.return_value = publisher
         self.job.cloud_image_name = 'image_name_123'
-        self.job._publish()
+        self.job._run_job()
 
         mock_ec2_publish_image.assert_called_once_with(
             access_key='123456', allow_copy=False, image_name='image_name_123',
@@ -50,7 +49,7 @@ class TestEC2PublisherJob(object):
         assert publisher.publish_images.call_count == 1
         assert self.job.status == 'success'
 
-    @patch.object(PublisherJob, 'send_log')
+    @patch.object(EC2PublisherJob, 'send_log')
     @patch('mash.services.publisher.ec2_job.EC2PublishImage')
     def test_publish_exception(
         self, mock_ec2_publish_image, mock_send_log
@@ -64,5 +63,5 @@ class TestEC2PublisherJob(object):
         msg = 'An error publishing image image_name_123 in us-east-2.' \
             ' Failed to publish.'
         with raises(MashPublisherException) as e:
-            self.job._publish()
+            self.job._run_job()
         assert msg == str(e.value)

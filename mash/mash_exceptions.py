@@ -189,3 +189,9 @@ class MashAccountDatastoreException(MashException):
     """
     Base exception for account datastore class.
     """
+
+
+class MashJobException(MashException):
+    """
+    Exception raised if an error occurs in mash job class.
+    """

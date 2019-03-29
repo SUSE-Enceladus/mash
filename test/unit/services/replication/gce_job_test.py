@@ -9,7 +9,7 @@ class TestGCEReplicationJob(object):
             'cloud': 'gce',
             'utctime': 'now'
         }
-        self.job = GCEReplicationJob(**self.job_config)
+        self.job = GCEReplicationJob(self.job_config)
 
     def test_replicate(self):
-        self.job._replicate()
+        self.job._run_job()

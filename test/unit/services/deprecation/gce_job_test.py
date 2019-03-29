@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 from mash.services.deprecation.gce_job import GCEDeprecationJob
-from mash.services.deprecation.deprecation_job import DeprecationJob
 
 
 class TestGCEDeprecationJob(object):
@@ -15,7 +14,7 @@ class TestGCEDeprecationJob(object):
             'utctime': 'now'
         }
 
-        self.job = GCEDeprecationJob(**self.job_config)
+        self.job = GCEDeprecationJob(self.job_config)
         self.job.credentials = {
             'test-gce': {
                 'client_email': 'test@gce.com',
@@ -23,7 +22,7 @@ class TestGCEDeprecationJob(object):
             }
         }
 
-    @patch.object(DeprecationJob, 'send_log')
+    @patch.object(GCEDeprecationJob, 'send_log')
     @patch('mash.services.deprecation.gce_job.Provider')
     @patch('mash.services.deprecation.gce_job.get_driver')
     def test_deprecate(self, mock_get_driver, mock_provider, mock_send_log):
@@ -33,7 +32,7 @@ class TestGCEDeprecationJob(object):
         compute_driver = MagicMock()
         compute_engine.return_value = compute_driver
 
-        self.job._deprecate()
+        self.job._run_job()
 
         assert compute_driver.ex_deprecate_image.call_count == 1
         assert self.job.status == 'success'
@@ -43,10 +42,10 @@ class TestGCEDeprecationJob(object):
 
     def test_deprecate_no_old_image(self):
         self.job.old_cloud_image_name = None
-        self.job._deprecate()
+        self.job._run_job()
         assert self.job.status == 'success'
 
-    @patch.object(DeprecationJob, 'send_log')
+    @patch.object(GCEDeprecationJob, 'send_log')
     @patch('mash.services.deprecation.gce_job.Provider')
     @patch('mash.services.deprecation.gce_job.get_driver')
     def test_deprecate_exception(
@@ -59,7 +58,7 @@ class TestGCEDeprecationJob(object):
         compute_driver.ex_deprecate_image.side_effect = Exception('Failed!')
         compute_engine.return_value = compute_driver
 
-        self.job._deprecate()
+        self.job._run_job()
 
         mock_send_log.assert_called_once_with(
             'There was an error deprecating image in test-gce: Failed!',

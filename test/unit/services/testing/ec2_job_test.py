@@ -50,7 +50,7 @@ class TestEC2TestingJob(object):
             }
         )
 
-        job = EC2TestingJob(**self.job_config)
+        job = EC2TestingJob(self.job_config)
         job.credentials = {
             'test-aws': {
                 'access_key_id': '123',
@@ -58,7 +58,7 @@ class TestEC2TestingJob(object):
             }
         }
         job.source_regions = {'us-east-1': 'ami-123'}
-        job._run_tests()
+        job._run_job()
 
         client.import_key_pair.assert_called_once_with(
             KeyName='random_name', PublicKeyMaterial='fakekey'
@@ -88,14 +88,14 @@ class TestEC2TestingJob(object):
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
-        job._run_tests()
-        assert mock_send_log.mock_calls[0] == call(
+        job._run_job()
+        assert mock_send_log.mock_calls[1] == call(
             'Image tests failed in region: us-east-1.', success=False
         )
-        assert 'Tests broken!' in mock_send_log.mock_calls[1][1][0]
-        assert mock_send_log.mock_calls[1][2] == {'success': False}
+        assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
+        assert mock_send_log.mock_calls[2][2] == {'success': False}
         assert ec2_setup.clean_up.call_count == 2
 
         # Failed key cleanup
         client.delete_key_pair.side_effect = Exception('Cannot delete key!')
-        job._run_tests()
+        job._run_job()
