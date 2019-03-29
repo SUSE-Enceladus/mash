@@ -32,6 +32,12 @@ class TestEC2PublisherJob(object):
             }
         }
 
+    def test_publish_ec2_missing_key(self):
+        del self.job_config['publish_regions']
+
+        with raises(MashPublisherException):
+            EC2PublisherJob(self.job_config)
+
     @patch('mash.services.publisher.ec2_job.EC2PublishImage')
     def test_publish(self, mock_ec2_publish_image):
         publisher = Mock()

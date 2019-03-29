@@ -30,6 +30,12 @@ class TestEC2ReplicationJob(object):
             }
         }
 
+    def test_replicate_ec2_missing_key(self):
+        del self.job_config['replication_source_regions']
+
+        with raises(MashReplicationException):
+            EC2ReplicationJob(self.job_config)
+
     @patch('mash.services.replication.ec2_job.time')
     @patch.object(EC2ReplicationJob, '_wait_on_image')
     @patch.object(EC2ReplicationJob, '_replicate_to_region')

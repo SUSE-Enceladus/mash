@@ -1,7 +1,9 @@
+from pytest import raises
 from unittest.mock import call, patch
 
 from mash.services.status_levels import FAILED
 from mash.services.replication.azure_job import AzureReplicationJob
+from mash.mash_exceptions import MashReplicationException
 
 
 class TestAzureReplicationJob(object):
@@ -46,6 +48,12 @@ class TestAzureReplicationJob(object):
             }
         }
         self.job.cloud_image_name = 'image123'
+
+    def test_replicate_ec2_missing_key(self):
+        del self.job_config['replication_source_regions']
+
+        with raises(MashReplicationException):
+            AzureReplicationJob(self.job_config)
 
     @patch('mash.services.replication.azure_job.delete_page_blob')
     @patch('mash.services.replication.azure_job.delete_image')

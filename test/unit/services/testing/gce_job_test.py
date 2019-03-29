@@ -1,6 +1,9 @@
+import pytest
+
 from unittest.mock import call, Mock, patch
 
 from mash.services.testing.gce_job import GCETestingJob
+from mash.mash_exceptions import MashTestingException
 
 
 class TestGCETestingJob(object):
@@ -19,6 +22,12 @@ class TestGCETestingJob(object):
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
+
+    def test_testing_gce_missing_key(self):
+        del self.job_config['test_regions']
+
+        with pytest.raises(MashTestingException):
+            GCETestingJob(self.job_config)
 
     @patch('mash.services.testing.gce_job.random')
     @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')

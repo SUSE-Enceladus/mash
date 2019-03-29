@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -19,12 +19,14 @@
 import json
 import random
 
-from threading import Thread
-
 from mash.mash_exceptions import MashTestingException
 from mash.services.mash_job import MashJob
-from mash.services.status_levels import FAILED, SUCCESS
-from mash.services.testing.ipa_helper import ipa_test
+from mash.services.status_levels import SUCCESS
+from mash.services.testing.utils import (
+    get_testing_account,
+    create_testing_thread,
+    process_test_result
+)
 
 instance_types = [
     'Basic_A2',
@@ -76,12 +78,9 @@ class AzureTestingJob(MashJob):
         self.send_log('Running IPA tests against image.')
 
         for region, info in self.test_regions.items():
-            if info.get('testing_account'):
-                account = info['testing_account']
-            else:
-                account = info['account']
-
+            account = get_testing_account(info)
             creds = self.credentials[account]
+
             ipa_kwargs = {
                 'cloud': self.cloud,
                 'description': self.description,
@@ -96,30 +95,13 @@ class AzureTestingJob(MashJob):
                 'tests': self.tests
             }
 
-            process = Thread(
-                name=region, target=ipa_test,
-                args=(results,), kwargs=ipa_kwargs
-            )
-            process.start()
+            process = create_testing_thread(results, ipa_kwargs, region)
             jobs.append(process)
 
         for job in jobs:
             job.join()
 
         for region, result in results.items():
-            if 'results_file' in result:
-                self.send_log(
-                    'Results file for {0} region: {1}'.format(
-                        region, result['results_file']
-                    )
-                )
-
-            if result['status'] != SUCCESS:
-                self.send_log(
-                    'Image tests failed in region: {0}.'.format(region),
-                    success=False
-                )
-                if result.get('msg'):
-                    self.send_log(result['msg'], success=False)
-
-                self.status = FAILED
+            status = process_test_result(result, self.send_log, region)
+            if status != SUCCESS:
+                self.status = status

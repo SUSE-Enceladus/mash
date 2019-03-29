@@ -1,6 +1,8 @@
+from pytest import raises
 from unittest.mock import MagicMock, patch
 
 from mash.services.deprecation.gce_job import GCEDeprecationJob
+from mash.mash_exceptions import MashDeprecationException
 
 
 class TestGCEDeprecationJob(object):
@@ -21,6 +23,12 @@ class TestGCEDeprecationJob(object):
                 'project_id': '1234567890'
             }
         }
+
+    def test_deprecation_gce_missing_key(self):
+        del self.job_config['deprecation_accounts']
+
+        with raises(MashDeprecationException):
+            GCEDeprecationJob(self.job_config)
 
     @patch.object(GCEDeprecationJob, 'send_log')
     @patch('mash.services.deprecation.gce_job.Provider')

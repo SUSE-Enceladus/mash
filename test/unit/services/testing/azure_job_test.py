@@ -1,6 +1,9 @@
+import pytest
+
 from unittest.mock import call, Mock, patch
 
 from mash.services.testing.azure_job import AzureTestingJob
+from mash.mash_exceptions import MashTestingException
 
 
 class TestAzureTestingJob(object):
@@ -14,6 +17,12 @@ class TestAzureTestingJob(object):
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
+
+    def test_testing_azure_missing_key(self):
+        del self.job_config['test_regions']
+
+        with pytest.raises(MashTestingException):
+            AzureTestingJob(self.job_config)
 
     @patch('mash.services.testing.azure_job.random')
     @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')

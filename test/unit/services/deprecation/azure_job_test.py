@@ -1,6 +1,8 @@
+from pytest import raises
 from unittest.mock import call, patch
 
 from mash.services.deprecation.azure_job import AzureDeprecationJob
+from mash.mash_exceptions import MashDeprecationException
 
 
 class TestAzureDeprecationJob(object):
@@ -39,6 +41,12 @@ class TestAzureDeprecationJob(object):
             }
         }
         self.job.cloud_image_name = 'New Image'
+
+    def test_deprecation_azure_missing_key(self):
+        del self.job_config['deprecation_regions']
+
+        with raises(MashDeprecationException):
+            AzureDeprecationJob(self.job_config)
 
     @patch('mash.services.deprecation.azure_job.deprecate_image_in_offer_doc')
     @patch('mash.services.deprecation.azure_job.put_cloud_partner_offer_doc')

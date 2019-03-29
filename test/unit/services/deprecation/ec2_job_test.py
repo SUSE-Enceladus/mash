@@ -29,6 +29,12 @@ class TestEC2DeprecationJob(object):
             }
         }
 
+    def test_deprecation_ec2_missing_key(self):
+        del self.job_config['deprecation_regions']
+
+        with raises(MashDeprecationException):
+            EC2DeprecationJob(self.job_config)
+
     @patch('mash.services.deprecation.ec2_job.EC2DeprecateImg')
     def test_deprecate(self, mock_ec2_deprecate_image):
         deprecation = Mock()

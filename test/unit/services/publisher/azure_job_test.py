@@ -1,5 +1,7 @@
+from pytest import raises
 from unittest.mock import call, Mock, patch
 
+from mash.mash_exceptions import MashPublisherException
 from mash.services.publisher.azure_job import AzurePublisherJob
 
 
@@ -48,6 +50,12 @@ class TestAzurePublisherJob(object):
             }
         }
         self.job.cloud_image_name = 'New Image'
+
+    def test_publish_ec2_missing_key(self):
+        del self.job_config['publish_regions']
+
+        with raises(MashPublisherException):
+            AzurePublisherJob(self.job_config)
 
     @patch(
         'mash.services.publisher.azure_job.wait_on_cloud_partner_operation'
