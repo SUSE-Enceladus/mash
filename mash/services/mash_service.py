@@ -26,7 +26,6 @@ from amqpstorm import AMQPError, Connection
 from cryptography.fernet import Fernet, MultiFernet
 from datetime import datetime, timedelta
 from email.message import EmailMessage
-from jsonschema import FormatChecker, validate
 
 # project
 from mash.log.filter import BaseServiceFilter
@@ -36,8 +35,7 @@ from mash.services import get_configuration
 from mash.services.status_levels import SUCCESS
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
-    MashLogSetupException,
-    MashValidationException
+    MashLogSetupException
 )
 from mash.utils.json_format import JsonFormat
 
@@ -488,18 +486,6 @@ class MashService(object):
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key
         )
-
-    def validate_message(self, message, template):
-        """
-        Validate json message using template.
-
-        Raises: jsonschema.exceptions.ValidationError
-                If message is not valid based on the provided template.
-        """
-        try:
-            validate(message, template, format_checker=FormatChecker())
-        except Exception as error:
-            raise MashValidationException(error)
 
     def _create_email_message(self, msg, subject, to_email, from_email):
         """
