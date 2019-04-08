@@ -21,14 +21,11 @@ from mash.csp import CSP
 from mash.mash_exceptions import MashCredentialsException
 
 
-def add_account_to_db(message, accounts):
+def get_account_info(message):
     """
-    Add account to accounts database based on message data.
+    Create a dictionary with account info based on cloud framework.
     """
     cloud = message['cloud']
-    requesting_user = message['requesting_user']
-    account_name = message['account_name']
-    group_name = message.get('group')
 
     if cloud == CSP.ec2:
         account_info = {
@@ -57,64 +54,4 @@ def add_account_to_db(message, accounts):
             'CSP {0} is not supported.'.format(cloud)
         )
 
-    user_data = accounts[cloud]['accounts'].get(requesting_user)
-
-    if user_data:
-        user_data[account_name] = account_info
-    else:
-        accounts[cloud]['accounts'][requesting_user] = {
-            account_name: account_info
-        }
-
-    # Add group if necessary
-    if group_name:
-        accounts = add_account_to_group(
-            accounts, cloud, requesting_user, group_name, account_name
-        )
-
-    return accounts
-
-
-def delete_account_from_db(accounts, requesting_user, account_name, cloud):
-    """Delete account for requesting user."""
-    del accounts[cloud]['accounts'][requesting_user][account_name]
-    return accounts
-
-
-def add_account_to_group(
-    accounts, cloud, requesting_user, group_name, account_name
-):
-    """
-    Add the account to the group for the requesting user.
-
-    If the group does not exist create it with the new account.
-    """
-    groups = accounts[cloud]['groups'].get(requesting_user)
-
-    if groups:
-        group = groups.get(group_name)
-
-        if not group:
-            groups[group_name] = [account_name]
-        elif account_name not in group:
-            # Allow for account updates, don't append multiple times.
-            group.append(account_name)
-    else:
-        accounts[cloud]['groups'][requesting_user] = {
-            group_name: [account_name]
-        }
-
-    return accounts
-
-
-def remove_account_from_groups(
-    accounts, account_name, cloud, requesting_user
-):
-    """Remove account from any groups it currently exists for user."""
-    groups = accounts[cloud]['groups'][requesting_user]
-
-    for group, account_names in groups.items():
-        if account_name in account_names:
-            account_names.remove(account_name)
-
-    return accounts
+    return account_info
