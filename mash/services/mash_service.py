@@ -56,11 +56,6 @@ class MashService(object):
         self.channel = None
         self.connection = None
 
-        self.msg_properties = {
-            'content_type': 'application/json',
-            'delivery_mode': 2
-        }
-
         self.service_exchange = service_exchange
         self.service_queue = 'service'
         self.listener_queue = 'listener'
@@ -224,7 +219,10 @@ class MashService(object):
             body=message,
             routing_key=routing_key,
             exchange=exchange,
-            properties=self.msg_properties,
+            properties={
+                'content_type': 'application/json',
+                'delivery_mode': 2
+            },
             mandatory=True
         )
 
