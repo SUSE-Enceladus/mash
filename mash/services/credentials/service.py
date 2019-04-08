@@ -60,6 +60,9 @@ class CredentialsService(MashService):
         if not os.path.exists(self.accounts_file):
             self._write_accounts_to_file(accounts_template)
 
+        self.add_account_key = 'add_account'
+        self.delete_account_key = 'delete_account'
+
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
         )

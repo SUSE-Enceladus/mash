@@ -38,6 +38,9 @@ class JobCreatorService(MashService):
         self.cloud_data = self.config.get_cloud_data()
         self.services = self.config.get_service_names()
 
+        self.add_account_key = 'add_account'
+        self.delete_account_key = 'delete_account'
+
         self.bind_queue(
             self.service_exchange, self.add_account_key, self.listener_queue
         )
