@@ -296,16 +296,6 @@ class TestBaseService(object):
         assert creds['access_key_id'] == '123456'
         assert creds['secret_access_key'] == '654321'
 
-    @patch.object(MashService, 'get_encryption_keys_from_file')
-    @patch('mash.services.mash_service.MultiFernet')
-    def test_encrypt_credentials(self, mock_fernet, mock_get_keys_from_file):
-        mock_get_keys_from_file.return_value = [Mock()]
-        fernet_key = Mock()
-        fernet_key.encrypt.return_value = b'encrypted_secret'
-        mock_fernet.return_value = fernet_key
-        result = self.service.encrypt_credentials(b'secret')
-        assert result == 'encrypted_secret'
-
     @patch.object(MashService, 'get_credential_request')
     @patch.object(MashService, '_publish')
     def test_publish_credentials_request(

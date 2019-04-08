@@ -74,7 +74,7 @@ class AccountDatastore(object):
             account_info, cloud, account_name, requesting_user, group_name
         )
 
-        credentials = self.encrypt_credentials(
+        credentials = self._encrypt_credentials(
             json.dumps(credentials)
         )
 
@@ -232,6 +232,25 @@ class AccountDatastore(object):
             )
             self._write_accounts_to_file(accounts)
 
+    def _encrypt_credentials(self, credentials):
+        """
+        Encrypt credentials json string.
+
+        Returns: Encrypted and decoded string.
+        """
+        encryption_keys = self._get_encryption_keys_from_file(
+            self.encryption_keys_file
+        )
+        fernet = MultiFernet(encryption_keys)
+
+        try:
+            # Ensure creds string is encoded as bytes
+            credentials = credentials.encode()
+        except Exception:
+            pass
+
+        return fernet.encrypt(credentials).decode()
+
     def _generate_encryption_key(self):
         """
         Generates and returns a new Fernet key for encryption.
@@ -302,6 +321,15 @@ class AccountDatastore(object):
             credentials = credentials_file.read()
 
         return credentials.strip()
+
+    def _get_encryption_keys_from_file(self, encryption_keys_file):
+        """
+        Returns a list of Fernet keys based on the provided keys file.
+        """
+        with open(encryption_keys_file, 'r') as keys_file:
+            keys = keys_file.readlines()
+
+        return [Fernet(key.strip()) for key in keys if key]
 
     def get_testing_accounts(self, cloud, cloud_accounts, requesting_user):
         """
