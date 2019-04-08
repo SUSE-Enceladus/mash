@@ -75,6 +75,12 @@ def add_account_to_db(message, accounts):
     return accounts
 
 
+def delete_account_from_db(accounts, requesting_user, account_name, cloud):
+    """Delete account for requesting user."""
+    del accounts[cloud]['accounts'][requesting_user][account_name]
+    return accounts
+
+
 def add_account_to_group(
     accounts, cloud, requesting_user, group_name, account_name
 ):
@@ -97,5 +103,18 @@ def add_account_to_group(
         accounts[cloud]['groups'][requesting_user] = {
             group_name: [account_name]
         }
+
+    return accounts
+
+
+def remove_account_from_groups(
+    accounts, account_name, cloud, requesting_user
+):
+    """Remove account from any groups it currently exists for user."""
+    groups = accounts[cloud]['groups'][requesting_user]
+
+    for group, account_names in groups.items():
+        if account_name in account_names:
+            account_names.remove(account_name)
 
     return accounts

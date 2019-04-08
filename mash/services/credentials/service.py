@@ -30,7 +30,11 @@ from pytz import utc
 
 # project
 from mash.services.mash_service import MashService
-from mash.services.credentials import add_account_to_db
+from mash.services.credentials import (
+    add_account_to_db,
+    delete_account_from_db,
+    remove_account_from_groups
+)
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 from mash.services.jobcreator.accounts import accounts_template
 from mash.utils.json_format import JsonFormat
@@ -632,18 +636,6 @@ class CredentialsService(MashService):
             account_name, credentials, cloud, requesting_user
         )
 
-    def _remove_account_from_groups(
-        self, account_name, cloud, requesting_user, accounts
-    ):
-        """
-        Remove account from any groups it currently exists for user.
-        """
-        groups = accounts[cloud]['groups'][requesting_user]
-
-        for group, account_names in groups.items():
-            if account_name in account_names:
-                account_names.remove(account_name)
-
     def delete_account(self, message):
         """
         Delete cloud account from MASH.
@@ -659,16 +651,18 @@ class CredentialsService(MashService):
         accounts = self._get_accounts_from_file()
 
         try:
-            del accounts[cloud]['accounts'][requesting_user][account_name]
-        except KeyError:
+            accounts = delete_account_from_db(
+                accounts, requesting_user, account_name, cloud
+            )
+        except Exception:
             self.log.error(
                 'Account {0} does not exist for {1}.'.format(
                     account_name, requesting_user
                 )
             )
         else:
-            self._remove_account_from_groups(
-                account_name, cloud, requesting_user, accounts
+            accounts = remove_account_from_groups(
+                accounts, account_name, cloud, requesting_user
             )
             self._write_accounts_to_file(accounts)
 
