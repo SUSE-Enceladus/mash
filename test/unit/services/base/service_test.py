@@ -13,8 +13,7 @@ from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
-    MashLogSetupException,
-    MashValidationException
+    MashLogSetupException
 )
 from mash.utils.json_format import JsonFormat
 
@@ -321,28 +320,6 @@ class TestBaseService(object):
         mock_publish.assert_called_once_with(
             'credentials', 'request.obs', token
         )
-
-    def test_validate_message(self):
-        template = {
-            'type': 'object',
-            'properties': {
-                'cloud': {'enum': ['azure', 'ec2']}
-            },
-            'additionalProperties': False,
-            'required': ['cloud']
-        }
-        message = {'cloud': 'ec2'}
-        result = self.service.validate_message(message, template)
-
-        assert result is None
-
-        message = {'cloud': 'cloud_provider'}
-
-        with raises(MashValidationException) as error:
-            self.service.validate_message(message, template)
-
-        assert "'cloud_provider' is not one of ['azure', 'ec2']" \
-            in str(error.value)
 
     def test_get_next_service_error(self):
         # Test service with no next service
