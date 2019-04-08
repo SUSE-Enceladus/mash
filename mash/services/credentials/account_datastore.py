@@ -26,7 +26,7 @@ from cryptography.fernet import Fernet, MultiFernet
 from pytz import utc
 
 from mash.mash_exceptions import MashAccountDatastoreException
-from mash.services.jobcreator.accounts import accounts_template
+from mash.services.credentials.accounts import accounts_template
 from mash.utils.json_format import JsonFormat
 
 
