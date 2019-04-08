@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -15,25 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import jwt
 
 
-class CredentialsBase(object):
-    """
-    Base class credentials interface class
-    """
-    def __init__(self, custom_args=None):
-        custom_args = custom_args or {}
-        self.post_init(**custom_args)
+class CloudAccounts(object):
+    """Class for handling account data store and credentials files."""
 
-    def post_init(self):
-        self.credentials = {}
-
-    def set_credentials(self, secret_token):
-        """Deprecated"""
-        self.credentials.update(
-            jwt.decode(secret_token, 'secret', algorithms=['HS256'])
-        )
-
-    def get_credentials(self):
-        return self.credentials
+    def __init__(self, accounts_file):
+        pass

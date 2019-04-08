@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -15,28 +15,87 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-# project
-from mash.services.credentials.amazon import CredentialsAmazon
+
 from mash.csp import CSP
 
 from mash.mash_exceptions import MashCredentialsException
 
 
-class Credentials(object):
+def add_account_to_db(message, accounts):
     """
-    Credentials Factory
-
-    Attributes
-
-    * :attr:`csp_name`
-        cloud service cloud name
+    Add account to accounts database based on message data.
     """
-    def __new__(self, csp_name, custom_args=None):
-        if csp_name == CSP.ec2:
-            return CredentialsAmazon(custom_args)
-        else:
-            raise MashCredentialsException(
-                'Support for {csp} Cloud Service not implemented'.format(
-                    csp=csp_name
-                )
-            )
+    cloud = message['cloud']
+    requesting_user = message['requesting_user']
+    account_name = message['account_name']
+    group_name = message.get('group')
+
+    if cloud == CSP.ec2:
+        account_info = {
+            'additional_regions': message.get('additional_regions'),
+            'partition': message['partition'],
+            'region': message.get('region')
+        }
+    elif cloud == CSP.azure:
+        account_info = {
+            'region': message['region'],
+            'source_container': message['source_container'],
+            'source_resource_group': message['source_resource_group'],
+            'source_storage_account': message['source_storage_account'],
+            'destination_container': message['destination_container'],
+            'destination_resource_group': message['destination_resource_group'],
+            'destination_storage_account': message['destination_storage_account']
+        }
+    elif cloud == CSP.gce:
+        account_info = {
+            'bucket': message['bucket'],
+            'region': message['region'],
+            'testing_account': message.get('testing_account')
+        }
+    else:
+        raise MashCredentialsException(
+            'CSP {0} is not supported.'.format(cloud)
+        )
+
+    user_data = accounts[cloud]['accounts'].get(requesting_user)
+
+    if user_data:
+        user_data[account_name] = account_info
+    else:
+        accounts[cloud]['accounts'][requesting_user] = {
+            account_name: account_info
+        }
+
+    # Add group if necessary
+    if group_name:
+        accounts = add_account_to_group(
+            accounts, cloud, requesting_user, group_name, account_name
+        )
+
+    return accounts
+
+
+def add_account_to_group(
+    accounts, cloud, requesting_user, group_name, account_name
+):
+    """
+    Add the account to the group for the requesting user.
+
+    If the group does not exist create it with the new account.
+    """
+    groups = accounts[cloud]['groups'].get(requesting_user)
+
+    if groups:
+        group = groups.get(group_name)
+
+        if not group:
+            groups[group_name] = [account_name]
+        elif account_name not in group:
+            # Allow for account updates, don't append multiple times.
+            group.append(account_name)
+    else:
+        accounts[cloud]['groups'][requesting_user] = {
+            group_name: [account_name]
+        }
+
+    return accounts

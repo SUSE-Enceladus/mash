@@ -29,11 +29,8 @@ from datetime import datetime, timedelta
 from pytz import utc
 
 # project
-from mash.csp import CSP
 from mash.services.mash_service import MashService
-from mash.services.credentials.azure_account import AzureAccount
-from mash.services.credentials.ec2_account import EC2Account
-from mash.services.credentials.gce_account import GCEAccount
+from mash.services.credentials import add_account_to_db
 from mash.services.credentials.key_rotate import clean_old_keys, rotate_key
 from mash.services.jobcreator.accounts import accounts_template
 from mash.utils.json_format import JsonFormat
@@ -615,20 +612,16 @@ class CredentialsService(MashService):
         account_name = message['account_name']
         requesting_user = message['requesting_user']
 
-        if cloud == CSP.ec2:
-            account = EC2Account(message)
-        elif cloud == CSP.azure:
-            account = AzureAccount(message)
-        elif cloud == CSP.gce:
-            account = GCEAccount(message)
-        else:
+        accounts = self._get_accounts_from_file()
+
+        try:
+            accounts = add_account_to_db(message, accounts)
+        except Exception as error:
             self.log.warning(
-                'Invalid cloud for account: {0}.'.format(cloud)
+                'Failed to add account to database: {0}'.format(error)
             )
             return
 
-        accounts = self._get_accounts_from_file()
-        account.add_account(accounts)
         self._write_accounts_to_file(accounts)
 
         credentials = self.encrypt_credentials(

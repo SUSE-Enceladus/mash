@@ -781,7 +781,7 @@ class TestCredentialsService(object):
 
         self.service.add_account(message)
         self.service.log.warning.assert_called_once_with(
-            'Invalid cloud for account: fake.'
+            'Failed to add account to database: CSP fake is not supported.'
         )
 
     @patch.object(CredentialsService, '_get_credentials_file_path')
