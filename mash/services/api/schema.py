@@ -184,7 +184,7 @@ delete_account = {
     'type': 'object',
     'properties': {
         'account_name': {'$ref': '#/definitions/non_empty_string'},
-        'cloud': {'enum': ['azure', 'ec2']},
+        'cloud': {'enum': ['azure', 'ec2', 'gce']},
         'requesting_user': {'$ref': '#/definitions/non_empty_string'},
     },
     'additionalProperties': False,

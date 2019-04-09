@@ -378,11 +378,12 @@ class AccountDatastore(object):
         self, accounts, account_name, cloud, requesting_user
     ):
         """Remove account from any groups it currently exists for user."""
-        groups = accounts[cloud]['groups'][requesting_user]
+        if accounts[cloud].get('groups'):
+            groups = accounts[cloud]['groups'].get(requesting_user, {})
 
-        for group, account_names in groups.items():
-            if account_name in account_names:
-                account_names.remove(account_name)
+            for group, account_names in groups.items():
+                if account_name in account_names:
+                    account_names.remove(account_name)
 
         return accounts
 
