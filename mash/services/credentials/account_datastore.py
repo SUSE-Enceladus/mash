@@ -195,10 +195,11 @@ class AccountDatastore(object):
                 f.readline()
                 f.truncate(f.tell())
         except Exception as error:
-            self.log_callback.error(
+            self.log_callback(
                 'Unable to clean old keys from {0}: {1}.'.format(
                     self.encryption_keys_file, error
-                )
+                ),
+                success=False
             )
 
     def _create_encryption_keys_file(self):
@@ -364,13 +365,14 @@ class AccountDatastore(object):
         Once a successful rotation happens all old keys are purged.
         """
         if event.exception:
-            self.log_callback.error(
+            self.log_callback(
                 'Key rotation did not finish successfully.'
-                ' Old key will remain in key file.'
+                ' Old key will remain in key file.',
+                success=False
             )
         else:
             self._clean_old_keys()
-            self.log_callback.info('Key rotation finished.')
+            self.log_callback('Key rotation finished.')
 
     def _remove_account_from_groups(
         self, accounts, account_name, cloud, requesting_user
@@ -388,7 +390,7 @@ class AccountDatastore(object):
         """
         Attempt to remove the credentials file for account.
         """
-        self.log_callback.info(
+        self.log_callback(
             'Deleting credentials for account: '
             '{0}, cloud: {1}, user: {2}.'.format(
                 account_name, cloud, user
@@ -512,5 +514,5 @@ class AccountDatastore(object):
             account_file.write(account_info)
 
     def shutdown(self):
-        """"""
+        """Shutdown scheduler."""
         self.scheduler.shutdown()
