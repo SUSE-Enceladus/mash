@@ -29,7 +29,7 @@ class TestCredentialsService(object):
         self.service.credentials_queue = 'credentials'
         self.service.credentials_directory = '/var/lib/mash/credentials/'
         self.service.accounts_file = '../data/accounts.json'
-        self.service.encryption_keys_file = '/var/lib/mash/encryption_keys'
+        self.service.encryption_keys_file = '../data/encryption_keys'
         self.service.account_datastore = AccountDatastore(
             self.service.accounts_file, self.service.credentials_directory,
             self.service.encryption_keys_file,
