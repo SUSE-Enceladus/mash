@@ -25,33 +25,27 @@ def get_account_info(message):
     """
     Create a dictionary with account info based on cloud framework.
     """
+    account_info = {}
     cloud = message['cloud']
 
-    if cloud == CSP.ec2:
-        account_info = {
-            'additional_regions': message.get('additional_regions'),
-            'partition': message['partition'],
-            'region': message.get('region')
-        }
-    elif cloud == CSP.azure:
-        account_info = {
-            'region': message['region'],
-            'source_container': message['source_container'],
-            'source_resource_group': message['source_resource_group'],
-            'source_storage_account': message['source_storage_account'],
-            'destination_container': message['destination_container'],
-            'destination_resource_group': message['destination_resource_group'],
-            'destination_storage_account': message['destination_storage_account']
-        }
-    elif cloud == CSP.gce:
-        account_info = {
-            'bucket': message['bucket'],
-            'region': message['region'],
-            'testing_account': message.get('testing_account')
-        }
-    else:
+    cloud_data = {
+        CSP.ec2: ('additional_regions', 'partition', 'region'),
+        CSP.azure: (
+            'region', 'source_container', 'source_resource_group',
+            'source_storage_account', 'destination_container',
+            'destination_resource_group', 'destination_storage_account'
+        ),
+        CSP.gce: ('bucket', 'region', 'testing_account')
+    }
+
+    try:
+        account_data = cloud_data[cloud]
+    except KeyError:
         raise MashCredentialsException(
             'CSP {0} is not supported.'.format(cloud)
         )
+
+    for key in account_data:
+        account_info[key] = message.get(key)
 
     return account_info
