@@ -27,7 +27,7 @@
   "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
   "image_description": "New Image #123",
   "distro": "sles",
-  "instance_type": "t2.micro",
+  "instance_type": "Basic_A2",
   "tests": ["test_stuff"],
   "emails": "jdoe@fake.com",
   "offer_id": "sles",

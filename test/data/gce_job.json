@@ -22,7 +22,7 @@
   "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
   "image_description": "New Image #123",
   "distro": "sles",
-  "instance_type": "t2.micro",
+  "instance_type": "n1-standard-1",
   "family": "sles-15",
   "months_to_deletion": 5,
   "tests": ["test_stuff"],
