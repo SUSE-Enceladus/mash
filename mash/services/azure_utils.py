@@ -449,6 +449,7 @@ def update_cloud_partner_offer_doc(
         'mediaName': image_name,
         'publishedDate': release_date.strftime("%m/%d/%Y"),
         'description': description,
+        'showInGui': True,
         'lunVhdDetails': []
     }
 
