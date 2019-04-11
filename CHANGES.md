@@ -1,3 +1,17 @@
+v2.5.0 (2019-04-11)
+===================
+
+- Add more details to readme.
+  [\#430](https://github.com/SUSE-Enceladus/mash/pull/430)
+- Remove unused validate message method.
+  [\#432](https://github.com/SUSE-Enceladus/mash/pull/432)
+- No need for instance var to hold msg properties.
+  [\#433](https://github.com/SUSE-Enceladus/mash/pull/433)
+- Move account keys to jc and creds services.
+  [\#434](https://github.com/SUSE-Enceladus/mash/pull/434)
+- Explicitly set showInGui to True in azure publish.
+  [\#438](https://github.com/SUSE-Enceladus/mash/pull/438)
+
 v2.4.0 (2019-03-26)
 ===================
 
