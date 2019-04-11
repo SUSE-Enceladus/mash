@@ -183,3 +183,9 @@ class MashAzureUtilsException(MashException):
     """
     Exception raised if an error occurs in Azure Utils.
     """
+
+
+class MashAccountDatastoreException(MashException):
+    """
+    Base exception for account datastore class.
+    """

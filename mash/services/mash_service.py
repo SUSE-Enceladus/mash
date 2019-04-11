@@ -333,25 +333,6 @@ class MashService(object):
 
         return json.loads(fernet_key.decrypt(credentials).decode())
 
-    def encrypt_credentials(self, credentials):
-        """
-        Encrypt credentials json string.
-
-        Returns: Encrypted and decoded string.
-        """
-        encryption_keys = self.get_encryption_keys_from_file(
-            self.encryption_keys_file
-        )
-        fernet = MultiFernet(encryption_keys)
-
-        try:
-            # Ensure creds string is encoded as bytes
-            credentials = credentials.encode()
-        except Exception:
-            pass
-
-        return fernet.encrypt(credentials).decode()
-
     def get_credential_request(self, job_id):
         """
         Return jwt encoded credentials request message.

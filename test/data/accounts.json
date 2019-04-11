@@ -50,6 +50,11 @@
       "user1": {
         "test123": {
           "bucket": "images",
+          "region": "us-west2",
+          "testing_account": "tester"
+        },
+        "tester": {
+          "bucket": "vmimages",
           "region": "us-west2"
         }
       }
