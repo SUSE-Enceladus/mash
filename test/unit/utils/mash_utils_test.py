@@ -18,13 +18,14 @@
 
 import io
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import call, MagicMock, patch
 
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import (
     create_json_file,
     generate_name,
-    get_key_from_file
+    get_key_from_file,
+    create_ssh_key_pair
 )
 
 
@@ -60,3 +61,25 @@ def test_get_key_from_file():
         result = get_key_from_file('my-key.file')
 
     assert result == 'fakekey'
+
+
+@patch('mash.utils.mash_utils.rsa')
+def test_create_ssh_key_pair(mock_rsa):
+    private_key = MagicMock()
+    public_key = MagicMock()
+
+    public_key.public_bytes.return_value = b'0987654321'
+
+    private_key.public_key.return_value = public_key
+    private_key.private_bytes.return_value = b'1234567890'
+
+    mock_rsa.generate_private_key.return_value = private_key
+
+    with patch('builtins.open', create=True) as mock_open:
+        mock_open.return_value = MagicMock(spec=io.IOBase)
+        create_ssh_key_pair('/temp.key')
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.write.assert_has_calls([
+            call(b'1234567890'),
+            call(b'0987654321')
+        ])

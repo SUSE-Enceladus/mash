@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import os
 import random
 
 from mash.mash_exceptions import MashTestingException
@@ -26,6 +27,7 @@ from mash.services.testing.utils import (
     create_testing_thread,
     process_test_result
 )
+from mash.utils.mash_utils import create_ssh_key_pair
 
 instance_types = [
     'c5d.large',
@@ -50,7 +52,6 @@ class EC2TestingJob(MashJob):
         Post initialization method.
         """
         try:
-            self.ssh_private_key_file = self.job_config['ssh_private_key_file']
             self.test_regions = self.job_config['test_regions']
             self.tests = self.job_config['tests']
         except KeyError as error:
@@ -64,11 +65,16 @@ class EC2TestingJob(MashJob):
         self.description = self.job_config.get('description')
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
-        self.ipa_timeout = self.job_config.get('ipa_timeout')
         self.ssh_user = self.job_config.get('ssh_user', 'ec2-user')
 
         if not self.instance_type:
             self.instance_type = random.choice(instance_types)
+
+        self.ssh_private_key_file = self.config.get_ssh_private_key_file()
+        self.ipa_timeout = self.config.get_ipa_timeout()
+
+        if not os.path.exists(self.ssh_private_key_file):
+            create_ssh_key_pair(self.ssh_private_key_file)
 
     def _run_job(self):
         """

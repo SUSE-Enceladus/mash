@@ -1,6 +1,4 @@
-import io
-
-from unittest.mock import call, MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from mash.services.mash_service import MashService
 from mash.services.testing.service import TestingService
@@ -63,17 +61,13 @@ class TestIPATestingService(object):
             }
         })
 
-    @patch('mash.services.testing.service.os')
-    @patch.object(TestingService, '_create_ssh_key_pair')
-    def test_testing_service_init(self, mock_create_ssh_key_pair, mock_os):
-        mock_os.path.exists.return_value = False
+    def test_testing_service_init(self):
         self.testing.config = self.config
         self.testing.config.get_ssh_private_key_file.return_value = \
             'private.key'
         self.testing.config.get_ipa_timeout.return_value = 600
 
         self.testing.service_init()
-        mock_create_ssh_key_pair.assert_called_once_with()
 
     @patch.object(TestingService, '_create_job')
     def test_testing_add_job(self, mock_create_job):
@@ -86,9 +80,7 @@ class TestIPATestingService(object):
         mock_create_job.assert_called_once_with(
             EC2TestingJob, {
                 'id': job.id,
-                'ipa_timeout': 600,
-                'cloud': 'ec2',
-                'ssh_private_key_file': 'private_ssh_key.file'
+                'cloud': 'ec2'
             }
         )
 
@@ -103,9 +95,7 @@ class TestIPATestingService(object):
         mock_create_job.assert_called_once_with(
             AzureTestingJob, {
                 'id': job.id,
-                'ipa_timeout': 600,
-                'cloud': 'azure',
-                'ssh_private_key_file': 'private_ssh_key.file'
+                'cloud': 'azure'
             }
         )
 
@@ -120,9 +110,7 @@ class TestIPATestingService(object):
         mock_create_job.assert_called_once_with(
             GCETestingJob, {
                 'id': job.id,
-                'ipa_timeout': 600,
-                'cloud': 'gce',
-                'ssh_private_key_file': 'private_ssh_key.file'
+                'cloud': 'gce'
             }
         )
 
@@ -144,24 +132,3 @@ class TestIPATestingService(object):
         self.testing.log.error.assert_called_once_with(
             'Cloud fake is not supported.'
         )
-
-    @patch('mash.services.testing.service.rsa')
-    def test_create_ssh_key_pair(self, mock_rsa):
-        private_key = MagicMock()
-        public_key = MagicMock()
-
-        public_key.public_bytes.return_value = b'0987654321'
-
-        private_key.public_key.return_value = public_key
-        private_key.private_bytes.return_value = b'1234567890'
-
-        mock_rsa.generate_private_key.return_value = private_key
-
-        with patch('builtins.open', create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.testing._create_ssh_key_pair()
-            file_handle = mock_open.return_value.__enter__.return_value
-            file_handle.write.assert_has_calls([
-                call(b'1234567890'),
-                call(b'0987654321')
-            ])

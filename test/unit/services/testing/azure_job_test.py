@@ -18,6 +18,9 @@ class TestAzureTestingJob(object):
             'utctime': 'now',
         }
         self.config = Mock()
+        self.config.get_ssh_private_key_file.return_value = \
+            'private_ssh_key.file'
+        self.config.get_ipa_timeout.return_value = None
 
     def test_testing_azure_missing_key(self):
         del self.job_config['test_regions']
@@ -25,12 +28,15 @@ class TestAzureTestingJob(object):
         with pytest.raises(MashTestingException):
             AzureTestingJob(self.job_config, self.config)
 
+    @patch('mash.services.testing.azure_job.os')
+    @patch('mash.services.testing.azure_job.create_ssh_key_pair')
     @patch('mash.services.testing.azure_job.random')
     @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')
     @patch('mash.services.testing.ipa_helper.test_image')
     @patch.object(AzureTestingJob, 'send_log')
     def test_testing_run_azure_test(
-        self, mock_send_log, mock_test_image, mock_temp_file, mock_random
+        self, mock_send_log, mock_test_image, mock_temp_file, mock_random,
+        mock_create_ssh_key_pair, mock_os
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -47,8 +53,10 @@ class TestAzureTestingJob(object):
             }
         )
         mock_random.choice.return_value = 'Standard_A0'
+        mock_os.path.exists.return_value = False
 
         job = AzureTestingJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         job.credentials = {
             'test-azure': {
                 'fake': '123',

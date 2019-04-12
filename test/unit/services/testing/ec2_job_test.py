@@ -18,6 +18,9 @@ class TestEC2TestingJob(object):
             'utctime': 'now',
         }
         self.config = Mock()
+        self.config.get_ssh_private_key_file.return_value = \
+            'private_ssh_key.file'
+        self.config.get_ipa_timeout.return_value = None
 
     def test_testing_ec2_missing_key(self):
         del self.job_config['test_regions']
@@ -25,6 +28,8 @@ class TestEC2TestingJob(object):
         with pytest.raises(MashTestingException):
             EC2TestingJob(self.job_config, self.config)
 
+    @patch('mash.services.testing.ec2_job.os')
+    @patch('mash.services.testing.ec2_job.create_ssh_key_pair')
     @patch('mash.services.testing.ec2_job.random')
     @patch('mash.services.testing.ipa_helper.EC2Setup')
     @patch('mash.services.testing.ipa_helper.generate_name')
@@ -34,7 +39,8 @@ class TestEC2TestingJob(object):
     @patch.object(EC2TestingJob, 'send_log')
     def test_testing_run_test(
         self, mock_send_log, mock_test_image, mock_get_key_from_file,
-        mock_get_client, mock_generate_name, mock_ec2_setup, mock_random
+        mock_get_client, mock_generate_name, mock_ec2_setup, mock_random,
+        mock_create_ssh_key_pair, mock_os
     ):
         client = Mock()
         mock_get_client.return_value = client
@@ -59,8 +65,10 @@ class TestEC2TestingJob(object):
                 }
             }
         )
+        mock_os.path.exists.return_value = False
 
         job = EC2TestingJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         job.credentials = {
             'test-aws': {
                 'access_key_id': '123',
