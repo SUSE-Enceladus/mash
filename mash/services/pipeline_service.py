@@ -39,6 +39,10 @@ class PipelineService(MashService):
     def post_init(self):
         """Initialize base service class and job scheduler."""
         self.jobs = {}
+
+        if not self.custom_args:
+            self.custom_args = {}
+
         self.listener_msg_args = ['cloud_image_name']
         self.status_msg_args = ['cloud_image_name']
 

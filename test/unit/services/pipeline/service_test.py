@@ -60,6 +60,7 @@ class TestPipelineService(object):
         self.service.listener_msg_key = 'listener_msg'
         self.service.next_service = 'publisher'
         self.service.prev_service = 'testing'
+        self.service.custom_args = None
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
 

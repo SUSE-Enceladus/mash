@@ -52,11 +52,12 @@ class MashService(object):
     * :attr:`service_exchange`
       Name of service exchange
     """
-    def __init__(self, service_exchange):
+    def __init__(self, service_exchange, custom_args=None):
         self.channel = None
         self.connection = None
 
         self.service_exchange = service_exchange
+        self.custom_args = custom_args
         self.service_queue = 'service'
         self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
