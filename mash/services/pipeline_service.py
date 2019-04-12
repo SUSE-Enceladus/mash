@@ -53,7 +53,6 @@ class PipelineService(MashService):
             self.status_msg_args += self.custom_args['status_msg_args']
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
-        self.service_init()
         self.bind_credentials_queue()
 
         self.scheduler = BackgroundScheduler(timezone=utc)
@@ -64,9 +63,6 @@ class PipelineService(MashService):
 
         self.restart_jobs(self._add_job)
         self.start()
-
-    def service_init(self):
-        """Initialize child service class."""
 
     def _add_job(self, job_config):
         """
