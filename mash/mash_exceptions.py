@@ -141,36 +141,6 @@ class MashDeprecationException(MashException):
     """
 
 
-class MashValidationException(MashException):
-    """
-    Exception for json message validation.
-    """
-
-
-class MashAzurePageBlobZeroPageError(MashException):
-    """
-    Exception raised if zero page can't be read from /dev/zero
-    """
-
-
-class MashAzurePageBlobAlignmentViolation(MashException):
-    """
-    Exception raised if the uncompressed data size is not 512b aligned
-    """
-
-
-class MashAzurePageBlobSetupError(MashException):
-    """
-    Exception raised if the page blob can not be created
-    """
-
-
-class MashAzurePageBlobUpdateError(MashException):
-    """
-    Exception raised if the page blob can not be updated
-    """
-
-
 class MashWebContentException(MashException):
     """
     Exception raised if a remote request from the WebContent
