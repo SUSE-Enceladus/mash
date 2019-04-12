@@ -563,7 +563,7 @@ class TestPipelineService(object):
         )
         assert result is False
 
-    def test_deprecation_start_job(self):
+    def test_service_start_job(self):
         job = Mock()
         self.service.jobs['1'] = job
         self.service.host = 'localhost'
