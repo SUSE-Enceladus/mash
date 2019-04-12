@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -22,7 +22,7 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.testing.service import TestingService
+from mash.services.pipeline_service import PipelineService
 
 
 def main():
@@ -35,7 +35,13 @@ def main():
         log.setLevel(logging.INFO)
 
         # run service, enter main loop
-        TestingService(service_exchange='testing')
+        PipelineService(
+            service_exchange='testing',
+            custom_args={
+                'listener_msg_args': ['source_regions'],
+                'status_msg_args': ['source_regions']
+            }
+        )
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))

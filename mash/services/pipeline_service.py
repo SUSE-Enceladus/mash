@@ -46,6 +46,12 @@ class PipelineService(MashService):
         self.listener_msg_args = ['cloud_image_name']
         self.status_msg_args = ['cloud_image_name']
 
+        if self.custom_args.get('listener_msg_args'):
+            self.listener_msg_args += self.custom_args['listener_msg_args']
+
+        if self.custom_args.get('status_msg_args'):
+            self.status_msg_args += self.custom_args['status_msg_args']
+
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.service_init()
         self.bind_credentials_queue()

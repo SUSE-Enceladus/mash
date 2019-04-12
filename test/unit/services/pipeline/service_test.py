@@ -87,6 +87,24 @@ class TestPipelineService(object):
         mock_restart_jobs.assert_called_once_with(self.service._add_job)
         mock_start.assert_called_once_with()
 
+    @patch.object(PipelineService, 'bind_credentials_queue')
+    @patch.object(PipelineService, 'restart_jobs')
+    @patch.object(PipelineService, 'set_logfile')
+    @patch.object(PipelineService, 'start')
+    def test_service_post_init_custom_args(
+        self, mock_start,
+        mock_set_logfile, mock_restart_jobs, mock_bind_creds
+    ):
+        self.service.config = self.config
+        self.service.custom_args = {
+            'listener_msg_args': ['source_regions'],
+            'status_msg_args': ['source_regions']
+        }
+        self.config.get_log_file.return_value = \
+            '/var/log/mash/service_service.log'
+
+        self.service.post_init()
+
     @patch.object(PipelineService, '_delete_job')
     @patch.object(PipelineService, '_publish_message')
     def test_service_cleanup_job(

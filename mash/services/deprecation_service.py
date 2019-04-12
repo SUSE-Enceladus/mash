@@ -22,7 +22,7 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.deprecation.service import DeprecationService
+from mash.services.pipeline_service import PipelineService
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
         log.setLevel(logging.INFO)
 
         # run service, enter main loop
-        DeprecationService(service_exchange='deprecation')
+        PipelineService(service_exchange='deprecation')
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))
