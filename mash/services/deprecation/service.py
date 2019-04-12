@@ -16,11 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.csp import CSP
 from mash.services.pipeline_service import PipelineService
-from mash.services.deprecation.azure_job import AzureDeprecationJob
-from mash.services.deprecation.ec2_job import EC2DeprecationJob
-from mash.services.deprecation.gce_job import GCEDeprecationJob
 
 
 class DeprecationService(PipelineService):
@@ -31,27 +27,3 @@ class DeprecationService(PipelineService):
 
     * :attr:`custom_args`
     """
-    def add_job(self, job_config):
-        """
-        Add job to jobs dict and bind new listener queue to publisher exchange.
-
-        Job description is validated and converted to dict from json.
-        """
-        job_id = job_config['id']
-        cloud = job_config['cloud']
-
-        if job_id in self.jobs:
-            self.log.warning(
-                'Job already queued.',
-                extra={'job_id': job_id}
-            )
-        elif cloud == CSP.azure:
-            self._create_job(AzureDeprecationJob, job_config)
-        elif cloud == CSP.ec2:
-            self._create_job(EC2DeprecationJob, job_config)
-        elif cloud == CSP.gce:
-            self._create_job(GCEDeprecationJob, job_config)
-        else:
-            self.log.exception(
-                'Cloud {0} is not supported.'.format(cloud)
-            )

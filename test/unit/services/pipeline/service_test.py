@@ -10,10 +10,6 @@ from mash.services.mash_service import MashService
 from mash.services.pipeline_service import PipelineService
 from mash.utils.json_format import JsonFormat
 
-NOT_IMPL_METHODS = [
-    'add_job'
-]
-
 
 class TestPipelineService(object):
     @patch.object(MashService, '__init__')
@@ -87,7 +83,7 @@ class TestPipelineService(object):
         )
 
         mock_bind_creds.assert_called_once_with()
-        mock_restart_jobs.assert_called_once_with(self.service.add_job)
+        mock_restart_jobs.assert_called_once_with(self.service._add_job)
         mock_start.assert_called_once_with()
 
     @patch.object(PipelineService, '_delete_job')
@@ -114,9 +110,23 @@ class TestPipelineService(object):
         mock_delete_job.assert_called_once_with('1')
         mock_publish_message.assert_called_once_with(job)
 
+    def test_service_add_job_exists(self):
+        job = Mock()
+        job.id = '1'
+        job.get_metadata.return_value = {'job_id': job.id}
+
+        self.service.jobs[job.id] = Mock()
+        self.service._add_job({'id': job.id, 'cloud': 'ec2'})
+
+        self.service.log.warning.assert_called_once_with(
+            'Job already queued.',
+            extra={'job_id': job.id}
+        )
+
+    @patch('mash.services.pipeline_service.Job')
     @patch.object(PipelineService, 'persist_job_config')
-    def test_service_create_job(
-        self, mock_persist_config
+    def test_service_add_job(
+        self, mock_persist_config, mock_job_factory
     ):
         mock_persist_config.return_value = 'temp-config.json'
 
@@ -124,12 +134,10 @@ class TestPipelineService(object):
         job.id = '1'
         job.get_job_id.return_value = {'job_id': '1'}
 
-        job_class = Mock()
-        job_class.return_value = job
+        mock_job_factory.return_value = job
         job_config = {'id': '1', 'cloud': 'ec2'}
-        self.service._create_job(job_class, job_config)
+        self.service._add_job(job_config)
 
-        job_class.assert_called_once_with(job_config, self.service.config)
         assert job.log_callback == self.service.log_job_message
         assert job.job_file == 'temp-config.json'
         self.service.log.info.assert_called_once_with(
@@ -137,14 +145,14 @@ class TestPipelineService(object):
             extra={'job_id': '1'}
         )
 
-    def test_service_create_job_exception(self):
-        job_class = Mock()
-        job_class.side_effect = Exception('Cannot create job.')
+    @patch('mash.services.pipeline_service.Job')
+    def test_service_add_job_exception(self, mock_job_factory):
         job_config = {'id': '1', 'cloud': 'ec2'}
 
-        self.service._create_job(job_class, job_config)
-        self.service.log.exception.assert_called_once_with(
-            'Invalid job configuration: Cannot create job.'
+        mock_job_factory.side_effect = Exception('Cannot create job')
+        self.service._add_job(job_config)
+        self.service.log.error.assert_called_once_with(
+            'Invalid job: Cannot create job.'
         )
 
     @patch.object(PipelineService, 'publish_credentials_delete')
@@ -274,7 +282,7 @@ class TestPipelineService(object):
 
         self.message.ack.assert_called_once_with()
 
-    @patch.object(PipelineService, 'add_job')
+    @patch.object(PipelineService, '_add_job')
     def test_service_handle_service_message(self, mock_add_job):
         self.method['routing_key'] = 'job_document'
         self.message.body = '{"replication_job": {"id": "1", ' \
@@ -445,18 +453,6 @@ class TestPipelineService(object):
             misfire_grace_time=None,
             coalesce=True
         )
-
-    @pytest.mark.parametrize(
-        "method",
-        NOT_IMPL_METHODS,
-        ids=NOT_IMPL_METHODS
-    )
-    def test_service_not_implemented_methods(self, method):
-        mock_arg = MagicMock()
-
-        with pytest.raises(NotImplementedError) as error:
-            getattr(self.service, method)(mock_arg)
-        assert str(error.value) == 'Implement in child service.'
 
     @patch.object(PipelineService, 'consume_credentials_queue')
     @patch.object(PipelineService, 'consume_queue')

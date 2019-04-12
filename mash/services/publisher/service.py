@@ -16,11 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.csp import CSP
 from mash.services.pipeline_service import PipelineService
-from mash.services.publisher.azure_job import AzurePublisherJob
-from mash.services.publisher.ec2_job import EC2PublisherJob
-from mash.services.publisher.gce_job import GCEPublisherJob
 
 
 class PublisherService(PipelineService):
@@ -29,25 +25,3 @@ class PublisherService(PipelineService):
 
     Handles the publishing of images in public cloud frameworks.
     """
-    def add_job(self, job_config):
-        """
-        Add new job to publisher queue from job_config.
-        """
-        job_id = job_config['id']
-        cloud = job_config['cloud']
-
-        if job_id in self.jobs:
-            self.log.warning(
-                'Job already queued.',
-                extra={'job_id': job_id}
-            )
-        elif cloud == CSP.ec2:
-            self._create_job(EC2PublisherJob, job_config)
-        elif cloud == CSP.gce:
-            self._create_job(GCEPublisherJob, job_config)
-        elif cloud == CSP.azure:
-            self._create_job(AzurePublisherJob, job_config)
-        else:
-            self.log.error(
-                'Cloud {0} is not supported.'.format(cloud)
-            )

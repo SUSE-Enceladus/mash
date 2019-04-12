@@ -16,11 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.csp import CSP
 from mash.services.pipeline_service import PipelineService
-from mash.services.replication.azure_job import AzureReplicationJob
-from mash.services.replication.ec2_job import EC2ReplicationJob
-from mash.services.replication.gce_job import GCEReplicationJob
 
 
 class ReplicationService(PipelineService):
@@ -34,26 +30,3 @@ class ReplicationService(PipelineService):
         Initialize replication service class.
         """
         self.listener_msg_args.append('source_regions')
-
-    def add_job(self, job_config):
-        """
-        Add new job to replication queue from job_config.
-        """
-        job_id = job_config['id']
-        cloud = job_config['cloud']
-
-        if job_id in self.jobs:
-            self.log.warning(
-                'Job already queued.',
-                extra={'job_id': job_id}
-            )
-        elif cloud == CSP.ec2:
-            self._create_job(EC2ReplicationJob, job_config)
-        elif cloud == CSP.azure:
-            self._create_job(AzureReplicationJob, job_config)
-        elif cloud == CSP.gce:
-            self._create_job(GCEReplicationJob, job_config)
-        else:
-            self.log.error(
-                'Cloud {0} is not supported.'.format(cloud)
-            )
