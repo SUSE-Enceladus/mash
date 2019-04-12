@@ -19,7 +19,6 @@
 from mash.services.uploader.cloud.amazon import UploadAmazon
 from mash.services.uploader.cloud.azure import UploadAzure
 from mash.services.uploader.cloud.gce import UploadGCE
-from mash.services.uploader.conventions import Conventions
 from mash.csp import CSP
 
 from mash.mash_exceptions import MashUploadSetupException
@@ -57,9 +56,6 @@ class Upload(object):
         cloud_image_name, cloud_image_description, credentials,
         custom_uploader_args=None, arch='x86_64'
     ):
-        conventions = Conventions(csp_name)
-        conventions.is_valid_name(cloud_image_name)
-
         if csp_name == CSP.ec2:
             return UploadAmazon(
                 credentials, system_image_file, cloud_image_name,
