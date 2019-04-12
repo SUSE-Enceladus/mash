@@ -26,40 +26,41 @@ from mash.services.azure_utils import (
     wait_on_cloud_partner_operation
 )
 
-from mash.services.publisher.publisher_job import PublisherJob
+from mash.mash_exceptions import MashPublisherException
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 
 
-class AzurePublisherJob(PublisherJob):
+class AzurePublisherJob(MashJob):
     """
     Class for an Azure publishing job.
     """
 
-    def __init__(
-        self, emails, id, image_description, label,
-        last_service, offer_id, cloud, publish_regions, publisher_id, sku,
-        utctime, job_file=None, vm_images_key=None,
-        notification_email=None, notification_type='single',
-        publish_offer=False
-    ):
-        super(AzurePublisherJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
-        )
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        try:
+            self.emails = self.job_config['emails']
+            self.image_description = self.job_config['image_description']
+            self.label = self.job_config['label']
+            self.offer_id = self.job_config['offer_id']
+            self.publisher_id = self.job_config['publisher_id']
+            self.publish_regions = self.job_config['publish_regions']
+            self.sku = self.job_config['sku']
+        except KeyError as error:
+            raise MashPublisherException(
+                'Azure publisher Jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
 
-        self.emails = emails
-        self.image_description = image_description
-        self.label = label
-        self.offer_id = offer_id
-        self.publisher_id = publisher_id
-        self.publish_regions = publish_regions
-        self.sku = sku
-        self.vm_images_key = vm_images_key
-        self.publish_offer = publish_offer
+        self.vm_images_key = self.job_config.get('vm_images_key')
+        self.publish_offer = self.job_config.get('publish_offer', False)
 
-    def _publish(self):
+    def _run_job(self):
         """
         Publish image and update status.
         """

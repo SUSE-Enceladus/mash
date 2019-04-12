@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 from mash.mash_exceptions import MashReplicationException
 from mash.services.status_levels import FAILED
 from mash.services.replication.ec2_job import EC2ReplicationJob
-from mash.services.replication.replication_job import ReplicationJob
 
 
 class TestEC2ReplicationJob(object):
@@ -22,7 +21,7 @@ class TestEC2ReplicationJob(object):
                 }
             }
         }
-        self.job = EC2ReplicationJob(**self.job_config)
+        self.job = EC2ReplicationJob(self.job_config)
 
         self.job.credentials = {
             "test-aws": {
@@ -31,10 +30,16 @@ class TestEC2ReplicationJob(object):
             }
         }
 
+    def test_replicate_ec2_missing_key(self):
+        del self.job_config['replication_source_regions']
+
+        with raises(MashReplicationException):
+            EC2ReplicationJob(self.job_config)
+
     @patch('mash.services.replication.ec2_job.time')
     @patch.object(EC2ReplicationJob, '_wait_on_image')
     @patch.object(EC2ReplicationJob, '_replicate_to_region')
-    @patch.object(ReplicationJob, 'send_log')
+    @patch.object(EC2ReplicationJob, 'send_log')
     def test_replicate(
         self, mock_send_log, mock_replicate_to_region,
         mock_wait_on_image, mock_time
@@ -42,7 +47,7 @@ class TestEC2ReplicationJob(object):
         mock_replicate_to_region.return_value = 'ami-54321'
 
         self.job.source_regions = {'us-east-1': 'ami-12345'}
-        self.job._replicate()
+        self.job._run_job()
 
         mock_send_log.assert_called_once_with(
             'Replicating source region: us-east-1 to the following regions: '
@@ -143,7 +148,7 @@ class TestEC2ReplicationJob(object):
             Filters=[{'Name': 'state', 'Values': ['available']}]
         )
 
-    @patch.object(ReplicationJob, 'send_log')
+    @patch.object(EC2ReplicationJob, 'send_log')
     @patch('mash.services.replication.ec2_job.get_client')
     def test_replicate_wait_on_image_exception(
         self, mock_get_client, mock_send_log

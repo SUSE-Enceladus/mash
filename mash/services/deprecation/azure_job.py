@@ -22,36 +22,40 @@ from mash.services.azure_utils import (
     request_cloud_partner_offer_doc
 )
 
-from mash.services.deprecation.deprecation_job import DeprecationJob
+from mash.mash_exceptions import MashDeprecationException
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 
 
-class AzureDeprecationJob(DeprecationJob):
+class AzureDeprecationJob(MashJob):
     """
     Class for an Azure deprecation job.
     """
 
-    def __init__(
-        self, emails, id, last_service, cloud, deprecation_regions, offer_id,
-        publisher_id, sku, utctime, old_cloud_image_name, job_file=None,
-        notification_email=None, notification_type='single',
-        vm_images_key=None
-    ):
-        super(AzureDeprecationJob, self).__init__(
-            id, last_service, cloud, utctime,
-            old_cloud_image_name=old_cloud_image_name, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        try:
+            self.emails = self.job_config['emails']
+            self.offer_id = self.job_config['offer_id']
+            self.publisher_id = self.job_config['publisher_id']
+            self.sku = self.job_config['sku']
+            self.deprecation_regions = self.job_config['deprecation_regions']
+        except KeyError as error:
+            raise MashDeprecationException(
+                'Azure deprecation jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
+
+        self.old_cloud_image_name = self.job_config.get(
+            'old_cloud_image_name'
         )
+        self.vm_images_key = self.job_config.get('vm_images_key')
 
-        self.emails = emails
-        self.offer_id = offer_id
-        self.publisher_id = publisher_id
-        self.deprecation_regions = deprecation_regions
-        self.sku = sku
-        self.vm_images_key = vm_images_key
-
-    def _deprecate(self):
+    def _run_job(self):
         """
         Update deprecated image in offer doc.
 

@@ -22,32 +22,36 @@ from mash.services.azure_utils import (
     delete_page_blob
 )
 
-from mash.services.replication.replication_job import ReplicationJob
+from mash.mash_exceptions import MashReplicationException
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 
 
-class AzureReplicationJob(ReplicationJob):
+class AzureReplicationJob(MashJob):
     """
     Class for an Azure replication job.
     """
 
-    def __init__(
-        self, id, image_description, last_service, cloud, utctime,
-        replication_source_regions, cleanup_images=True, job_file=None,
-        notification_email=None, notification_type='single'
-    ):
-        super(AzureReplicationJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
-        )
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        try:
+            self.image_description = self.job_config['image_description']
+            self.replication_source_regions = \
+                self.job_config['replication_source_regions']
+        except KeyError as error:
+            raise MashReplicationException(
+                'Azure replication Jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
 
-        self.cleanup_images = cleanup_images
-        self.image_description = image_description
-        self.replication_source_regions = replication_source_regions
+        self.cleanup_images = self.job_config.get('cleanup_images', True)
 
-    def _replicate(self):
+    def _run_job(self):
         """
         Replicate image in each source region.
 

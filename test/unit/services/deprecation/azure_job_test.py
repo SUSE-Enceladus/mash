@@ -1,6 +1,8 @@
+from pytest import raises
 from unittest.mock import call, patch
 
 from mash.services.deprecation.azure_job import AzureDeprecationJob
+from mash.mash_exceptions import MashDeprecationException
 
 
 class TestAzureDeprecationJob(object):
@@ -19,7 +21,7 @@ class TestAzureDeprecationJob(object):
             'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure'
         }
 
-        self.job = AzureDeprecationJob(**self.job_config)
+        self.job = AzureDeprecationJob(self.job_config)
         self.job.credentials = {
             "acnt1": {
                 "clientId": "09876543-1234-1234-1234-123456789012",
@@ -39,6 +41,12 @@ class TestAzureDeprecationJob(object):
             }
         }
         self.job.cloud_image_name = 'New Image'
+
+    def test_deprecation_azure_missing_key(self):
+        del self.job_config['deprecation_regions']
+
+        with raises(MashDeprecationException):
+            AzureDeprecationJob(self.job_config)
 
     @patch('mash.services.deprecation.azure_job.deprecate_image_in_offer_doc')
     @patch('mash.services.deprecation.azure_job.put_cloud_partner_offer_doc')
@@ -67,7 +75,7 @@ class TestAzureDeprecationJob(object):
             }
         }
 
-        self.job._deprecate()
+        self.job._run_job()
 
         mock_send_log.assert_has_calls([
             call(
@@ -107,7 +115,7 @@ class TestAzureDeprecationJob(object):
         mock_put_doc.side_effect = Exception('Invalid doc!')
         self.job.old_cloud_image_name = 'image_123'
 
-        self.job._deprecate()
+        self.job._run_job()
 
         mock_send_log.assert_has_calls([
             call(

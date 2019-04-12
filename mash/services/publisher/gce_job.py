@@ -16,29 +16,23 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.publisher.publisher_job import PublisherJob
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 
 
-class GCEPublisherJob(PublisherJob):
+class GCEPublisherJob(MashJob):
     """
     Class for an GCE publishing job.
     """
 
-    def __init__(
-        self, id, last_service, cloud, utctime, job_file=None,
-        notification_email=None, notification_type='single'
-    ):
-        super(GCEPublisherJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
-        )
-
+    def post_init(self):
+        """
+        Post initialization method.
+        """
         # Skip credential request since there is no publishing in GCE
         self.credentials = {'status': 'no publishing'}
 
-    def _publish(self):
+    def _run_job(self):
         """
         No publishing in GCE.
         """

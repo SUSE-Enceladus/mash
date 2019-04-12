@@ -1,6 +1,9 @@
+import pytest
+
 from unittest.mock import call, Mock, patch
 
 from mash.services.testing.gce_job import GCETestingJob
+from mash.mash_exceptions import MashTestingException
 
 
 class TestGCETestingJob(object):
@@ -19,6 +22,12 @@ class TestGCETestingJob(object):
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
+
+    def test_testing_gce_missing_key(self):
+        del self.job_config['test_regions']
+
+        with pytest.raises(MashTestingException):
+            GCETestingJob(self.job_config)
 
     @patch('mash.services.testing.gce_job.random')
     @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')
@@ -43,7 +52,7 @@ class TestGCETestingJob(object):
         )
         mock_random.choice.return_value = 'n1-standard-1'
 
-        job = GCETestingJob(**self.job_config)
+        job = GCETestingJob(self.job_config)
         job.credentials = {
             'test-gce': {
                 'fake': '123',
@@ -55,7 +64,7 @@ class TestGCETestingJob(object):
             }
         }
         job.source_regions = {'us-west1': 'ami-123'}
-        job._run_tests()
+        job._run_job()
 
         mock_test_image.assert_called_once_with(
             'gce',
@@ -81,9 +90,9 @@ class TestGCETestingJob(object):
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
-        job._run_tests()
-        assert mock_send_log.mock_calls[0] == call(
+        job._run_job()
+        assert mock_send_log.mock_calls[1] == call(
             'Image tests failed in region: us-west1.', success=False
         )
-        assert 'Tests broken!' in mock_send_log.mock_calls[1][1][0]
-        assert mock_send_log.mock_calls[1][2] == {'success': False}
+        assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
+        assert mock_send_log.mock_calls[2][2] == {'success': False}

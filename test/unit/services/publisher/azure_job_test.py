@@ -1,5 +1,7 @@
+from pytest import raises
 from unittest.mock import call, Mock, patch
 
+from mash.mash_exceptions import MashPublisherException
 from mash.services.publisher.azure_job import AzurePublisherJob
 
 
@@ -28,7 +30,7 @@ class TestAzurePublisherJob(object):
             'publish_offer': True
         }
 
-        self.job = AzurePublisherJob(**self.job_config)
+        self.job = AzurePublisherJob(self.job_config)
         self.job.credentials = {
             "acnt1": {
                 "clientId": "09876543-1234-1234-1234-123456789012",
@@ -48,6 +50,12 @@ class TestAzurePublisherJob(object):
             }
         }
         self.job.cloud_image_name = 'New Image'
+
+    def test_publish_ec2_missing_key(self):
+        del self.job_config['publish_regions']
+
+        with raises(MashPublisherException):
+            AzurePublisherJob(self.job_config)
 
     @patch(
         'mash.services.publisher.azure_job.wait_on_cloud_partner_operation'
@@ -80,7 +88,7 @@ class TestAzurePublisherJob(object):
 
         mock_publish_offer.return_value = '/api/operation/url'
 
-        self.job._publish()
+        self.job._run_job()
 
         mock_send_log.assert_has_calls([
             call('Publishing image for account: acnt1, using cloud partner API.'),
@@ -113,7 +121,7 @@ class TestAzurePublisherJob(object):
         }
         mock_put_doc.side_effect = Exception('Invalid doc!')
 
-        self.job._publish()
+        self.job._run_job()
 
         mock_send_log.assert_has_calls([
             call('Publishing image for account: acnt1, using cloud partner API.'),

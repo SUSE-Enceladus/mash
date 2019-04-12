@@ -128,7 +128,7 @@ class TestPipelineService(object):
         job_config = {'id': '1', 'cloud': 'ec2'}
         self.service._create_job(job_class, job_config)
 
-        job_class.assert_called_once_with(id='1', cloud='ec2')
+        job_class.assert_called_once_with(job_config)
         assert job.log_callback == self.service.log_job_message
         assert job.job_file == 'temp-config.json'
         self.service.log.info.assert_called_once_with(

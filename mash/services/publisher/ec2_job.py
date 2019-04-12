@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -19,34 +19,38 @@
 from ec2imgutils.ec2publishimg import EC2PublishImage
 
 from mash.mash_exceptions import MashPublisherException
-from mash.services.publisher.publisher_job import PublisherJob
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 
 
-class EC2PublisherJob(PublisherJob):
+class EC2PublisherJob(MashJob):
     """
     Class for an EC2 publishing job.
     """
 
-    def __init__(
-        self, id, last_service, cloud, publish_regions, utctime,
-        allow_copy=True, job_file=None, share_with='all',
-        notification_email=None, notification_type='single'
-    ):
-        super(EC2PublisherJob, self).__init__(
-            id, last_service, cloud, utctime, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
-        )
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        try:
+            self.publish_regions = self.job_config['publish_regions']
+        except KeyError as error:
+            raise MashPublisherException(
+                'EC2 publisher Jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
 
-        self.allow_copy = allow_copy
-        self.publish_regions = publish_regions
-        self.share_with = share_with
+        self.allow_copy = self.job_config.get('allow_copy', True)
+        self.share_with = self.job_config.get('share_with', 'all')
 
-    def _publish(self):
+    def _run_job(self):
         """
         Publish image and update status.
         """
+        self.status = SUCCESS
+
         for region_info in self.publish_regions:
             creds = self.credentials[region_info['account']]
 
@@ -69,5 +73,3 @@ class EC2PublisherJob(PublisherJob):
                             self.cloud_image_name, region, error
                         )
                     )
-
-        self.status = SUCCESS

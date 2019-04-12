@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -18,7 +18,14 @@
 
 import random
 
-from mash.services.testing.testing_job import TestingJob
+from mash.mash_exceptions import MashTestingException
+from mash.services.mash_job import MashJob
+from mash.services.status_levels import SUCCESS
+from mash.services.testing.utils import (
+    get_testing_account,
+    create_testing_thread,
+    process_test_result
+)
 
 instance_types = [
     'c5d.large',
@@ -33,35 +40,72 @@ instance_types = [
 ]
 
 
-class EC2TestingJob(TestingJob):
+class EC2TestingJob(MashJob):
     """
     Class for an EC2 testing job.
     """
 
-    def __init__(
-        self, id, last_service, cloud, ssh_private_key_file, test_regions,
-        tests, utctime, job_file=None, description=None,
-        distro='sles', instance_type=None, ipa_timeout=None,
-        ssh_user='ec2-user', notification_email=None,
-        notification_type='single'
-    ):
-        if not instance_type:
-            instance_type = random.choice(instance_types)
-
-        super(EC2TestingJob, self).__init__(
-            id, last_service, cloud, ssh_private_key_file, test_regions,
-            tests, utctime, job_file=job_file, description=description,
-            distro=distro, instance_type=instance_type,
-            ipa_timeout=ipa_timeout, ssh_user=ssh_user,
-            notification_email=notification_email,
-            notification_type=notification_type
-        )
-
-    def _add_cloud_creds(self, creds, ipa_kwargs):
+    def post_init(self):
         """
-        Update IPA kwargs with EC2 credentials.
+        Post initialization method.
         """
-        ipa_kwargs['access_key_id'] = creds['access_key_id']
-        ipa_kwargs['secret_access_key'] = creds['secret_access_key']
+        try:
+            self.ssh_private_key_file = self.job_config['ssh_private_key_file']
+            self.test_regions = self.job_config['test_regions']
+            self.tests = self.job_config['tests']
+        except KeyError as error:
+            raise MashTestingException(
+                'EC2 testing jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
 
-        return ipa_kwargs
+        self.description = self.job_config.get('description')
+        self.distro = self.job_config.get('distro', 'sles')
+        self.instance_type = self.job_config.get('instance_type')
+        self.ipa_timeout = self.job_config.get('ipa_timeout')
+        self.ssh_user = self.job_config.get('ssh_user', 'ec2-user')
+
+        if not self.instance_type:
+            self.instance_type = random.choice(instance_types)
+
+    def _run_job(self):
+        """
+        Tests image with IPA and update status and results.
+        """
+        results = {}
+        jobs = []
+
+        self.status = SUCCESS
+        self.send_log('Running IPA tests against image.')
+
+        for region, info in self.test_regions.items():
+            account = get_testing_account(info)
+            creds = self.credentials[account]
+
+            ipa_kwargs = {
+                'access_key_id': creds['access_key_id'],
+                'cloud': self.cloud,
+                'description': self.description,
+                'distro': self.distro,
+                'image_id': self.source_regions[region],
+                'instance_type': self.instance_type,
+                'ipa_timeout': self.ipa_timeout,
+                'region': region,
+                'secret_access_key': creds['secret_access_key'],
+                'ssh_private_key_file': self.ssh_private_key_file,
+                'ssh_user': self.ssh_user,
+                'tests': self.tests
+            }
+
+            process = create_testing_thread(results, ipa_kwargs, region)
+            jobs.append(process)
+
+        for job in jobs:
+            job.join()
+
+        for region, result in results.items():
+            status = process_test_result(result, self.send_log, region)
+            if status != SUCCESS:
+                self.status = status

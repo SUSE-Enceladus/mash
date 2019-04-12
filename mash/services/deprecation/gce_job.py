@@ -23,32 +23,37 @@ from dateutil.relativedelta import relativedelta
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 
-from mash.services.deprecation.deprecation_job import DeprecationJob
+from mash.mash_exceptions import MashDeprecationException
+from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 
 
-class GCEDeprecationJob(DeprecationJob):
+class GCEDeprecationJob(MashJob):
     """
     Class for an GCE deprecation job.
     """
 
-    def __init__(
-        self, id, deprecation_accounts, last_service, cloud, utctime,
-        old_cloud_image_name=None, job_file=None, months_to_deletion=6,
-        notification_email=None, notification_type='single'
-    ):
-        super(GCEDeprecationJob, self).__init__(
-            id, last_service, cloud, utctime,
-            old_cloud_image_name=old_cloud_image_name, job_file=job_file,
-            notification_email=notification_email,
-            notification_type=notification_type
+    def post_init(self):
+        """
+        Post initialization method.
+        """
+        try:
+            self.deprecation_accounts = self.job_config['deprecation_accounts']
+        except KeyError as error:
+            raise MashDeprecationException(
+                'GCE deprecation Jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
+
+        self.months_to_deletion = self.job_config.get('months_to_deletion', 6)
+        self.old_cloud_image_name = self.job_config.get(
+            'old_cloud_image_name'
         )
 
-        self.deprecation_accounts = deprecation_accounts
-        self.months_to_deletion = months_to_deletion
-
-    def _deprecate(self):
+    def _run_job(self):
         """
         Deprecate image in all accounts.
         """

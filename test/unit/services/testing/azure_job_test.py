@@ -1,6 +1,9 @@
+import pytest
+
 from unittest.mock import call, Mock, patch
 
 from mash.services.testing.azure_job import AzureTestingJob
+from mash.mash_exceptions import MashTestingException
 
 
 class TestAzureTestingJob(object):
@@ -14,6 +17,12 @@ class TestAzureTestingJob(object):
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
+
+    def test_testing_azure_missing_key(self):
+        del self.job_config['test_regions']
+
+        with pytest.raises(MashTestingException):
+            AzureTestingJob(self.job_config)
 
     @patch('mash.services.testing.azure_job.random')
     @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')
@@ -38,7 +47,7 @@ class TestAzureTestingJob(object):
         )
         mock_random.choice.return_value = 'Standard_A0'
 
-        job = AzureTestingJob(**self.job_config)
+        job = AzureTestingJob(self.job_config)
         job.credentials = {
             'test-azure': {
                 'fake': '123',
@@ -46,7 +55,7 @@ class TestAzureTestingJob(object):
             }
         }
         job.source_regions = {'East US': 'ami-123'}
-        job._run_tests()
+        job._run_job()
 
         mock_test_image.assert_called_once_with(
             'azure',
@@ -72,9 +81,9 @@ class TestAzureTestingJob(object):
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
-        job._run_tests()
-        assert mock_send_log.mock_calls[0] == call(
+        job._run_job()
+        assert mock_send_log.mock_calls[1] == call(
             'Image tests failed in region: East US.', success=False
         )
-        assert 'Tests broken!' in mock_send_log.mock_calls[1][1][0]
-        assert mock_send_log.mock_calls[1][2] == {'success': False}
+        assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
+        assert mock_send_log.mock_calls[2][2] == {'success': False}

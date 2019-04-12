@@ -1,7 +1,9 @@
+from pytest import raises
 from unittest.mock import call, patch
 
 from mash.services.status_levels import FAILED
 from mash.services.replication.azure_job import AzureReplicationJob
+from mash.mash_exceptions import MashReplicationException
 
 
 class TestAzureReplicationJob(object):
@@ -25,7 +27,7 @@ class TestAzureReplicationJob(object):
             },
             "cleanup_images": True
         }
-        self.job = AzureReplicationJob(**self.job_config)
+        self.job = AzureReplicationJob(self.job_config)
 
         self.job.credentials = {
             "acnt1": {
@@ -47,6 +49,12 @@ class TestAzureReplicationJob(object):
         }
         self.job.cloud_image_name = 'image123'
 
+    def test_replicate_ec2_missing_key(self):
+        del self.job_config['replication_source_regions']
+
+        with raises(MashReplicationException):
+            AzureReplicationJob(self.job_config)
+
     @patch('mash.services.replication.azure_job.delete_page_blob')
     @patch('mash.services.replication.azure_job.delete_image')
     @patch('mash.services.replication.azure_job.create_json_file')
@@ -60,7 +68,7 @@ class TestAzureReplicationJob(object):
         mock_create_json_file.return_value.__enter__.return_value = \
             '/tmp/file.auth'
 
-        self.job._replicate()
+        self.job._run_job()
 
         mock_send_log.has_calls([
             call('Copying image for account: acnt1, to classic storage container.'),
