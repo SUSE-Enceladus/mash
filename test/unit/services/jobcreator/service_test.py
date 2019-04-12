@@ -68,6 +68,16 @@ class TestJobCreatorService(object):
     def test_jobcreator_handle_service_message(
             self, mock_publish
     ):
+        def check_base_attrs(job_data, cloud=True):
+            assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
+            assert job_data['utctime'] == 'now'
+            assert job_data['last_service'] == 'pint'
+            assert job_data['notification_email'] == 'test@fake.com'
+            assert job_data['notification_type'] == 'single'
+
+            if cloud:
+                assert job_data['cloud'] == 'ec2'
+
         self.jobcreator.jobs = {}
         self.jobcreator.cloud_data = {
             'ec2': {
@@ -116,129 +126,88 @@ class TestJobCreatorService(object):
         })
         self.jobcreator._handle_service_message(message)
 
-        msg = mock_publish.mock_calls[0][1][2]
-        data = json.loads(msg)['credentials_job']
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'pint'
-        assert data['cloud'] == 'ec2'
+        # Credentials Job Doc
+
+        data = json.loads(mock_publish.mock_calls[0][1][2])['credentials_job']
+        check_base_attrs(data)
         assert 'test-aws-gov' in data['cloud_accounts']
         assert 'test-aws' in data['cloud_accounts']
         assert data['requesting_user'] == 'user1'
-        assert data['utctime'] == 'now'
 
-        assert mock_publish.mock_calls[1] == call(
-            'obs', 'job_document',
-            JsonFormat.json_message({
-                "obs_job": {
-                    "cloud_architecture": "aarch64",
-                    "conditions": [
-                        {
-                            "build_id": "1.1",
-                            "package_name": "openssl",
-                            "version": "13.4.3"
-                        },
-                        {"image": "version"}
-                    ],
-                    "download_url": "http://download.opensuse.org/"
-                                    "repositories/Cloud:Tools/images",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "image": "test_image_oem",
-                    "last_service": "pint",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "utctime": "now"
-                }
-            })
-        )
+        # OBS Job Doc
 
-        assert mock_publish.mock_calls[2] == call(
-            'uploader', 'job_document',
-            JsonFormat.json_message({
-                "uploader_job": {
-                    "cloud": "ec2",
-                    "cloud_architecture": "aarch64",
-                    "cloud_image_name": "new_image_123",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "image_description": "New Image #123",
-                    "last_service": "pint",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "target_regions": {
-                        "ap-northeast-1": {
-                            "account": "test-aws",
-                            "helper_image": "ami-383c1956",
-                            "billing_codes": None
-                        },
-                        "us-gov-west-1": {
-                            "account": "test-aws-gov",
-                            "helper_image": "ami-c2b5d7e1",
-                            "billing_codes": None
-                        }
-                    },
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[3] == call(
-            'testing', 'job_document',
-            JsonFormat.json_message({
-                "testing_job": {
-                    "cloud": "ec2",
-                    "distro": "sles",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "instance_type": "t2.micro",
-                    "last_service": "pint",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "test_regions": {
-                        "ap-northeast-1": {
-                            "account": "test-aws"
-                        },
-                        "us-gov-west-1": {
-                            "account": "test-aws-gov"
-                        }
-                    },
-                    "tests": ["test_stuff"],
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[4] == call(
-            'replication', 'job_document',
-            JsonFormat.json_message({
-                "replication_job": {
-                    "cloud": "ec2",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "image_description": "New Image #123",
-                    "last_service": "pint",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "replication_source_regions": {
-                        "ap-northeast-1": {
-                            "account": "test-aws",
-                            "target_regions": [
-                                "ap-northeast-1", "ap-northeast-2",
-                                "ap-northeast-3"
-                            ]
-                        },
-                        "us-gov-west-1": {
-                            "account": "test-aws-gov",
-                            "target_regions": ["us-gov-west-1"]
-                        }
-                    },
-                    "utctime": "now"
-                }
-            })
-        )
+        data = json.loads(mock_publish.mock_calls[1][1][2])['obs_job']
+        check_base_attrs(data, cloud=False)
+        assert data['cloud_architecture'] == 'aarch64'
+        assert data['download_url'] == \
+            'http://download.opensuse.org/repositories/Cloud:Tools/images'
+        assert data['image'] == 'test_image_oem'
 
-        msg = mock_publish.mock_calls[5][1][2]
-        data = json.loads(msg)['publisher_job']
+        for condition in data['conditions']:
+            if 'image' in condition:
+                assert condition['image'] == 'version'
+            else:
+                assert condition['build_id'] == '1.1'
+                assert condition['package_name'] == 'openssl'
+                assert condition['version'] == '13.4.3'
+
+        # Uploader Job Doc
+
+        data = json.loads(mock_publish.mock_calls[2][1][2])['uploader_job']
+        check_base_attrs(data)
+        assert data['cloud_architecture'] == 'aarch64'
+        assert data['cloud_image_name'] == 'new_image_123'
+        assert data['image_description'] == 'New Image #123'
+
+        for region, info in data['target_regions'].items():
+            if region == 'ap-northeast-1':
+                assert info['account'] == 'test-aws'
+                assert info['helper_image'] == 'ami-383c1956'
+                assert info['billing_codes'] is None
+            else:
+                assert region == 'us-gov-west-1'
+                assert info['account'] == 'test-aws-gov'
+                assert info['helper_image'] == 'ami-c2b5d7e1'
+                assert info['billing_codes'] is None
+
+        # Testing Job Doc
+
+        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        check_base_attrs(data)
+        assert data['distro'] == 'sles'
+        assert data['instance_type'] == 't2.micro'
+        assert data['tests'] == ['test_stuff']
+
+        for region, info in data['test_regions'].items():
+            if region == 'ap-northeast-1':
+                assert info['account'] == 'test-aws'
+            else:
+                assert region == 'us-gov-west-1'
+                assert info['account'] == 'test-aws-gov'
+
+        # Replication Job Doc
+
+        data = json.loads(mock_publish.mock_calls[4][1][2])['replication_job']
+        check_base_attrs(data)
+        assert data['image_description'] == 'New Image #123'
+
+        for region, info in data['replication_source_regions'].items():
+            if region == 'ap-northeast-1':
+                assert info['account'] == 'test-aws'
+                assert 'ap-northeast-1' in info['target_regions']
+                assert 'ap-northeast-2' in info['target_regions']
+                assert 'ap-northeast-3' in info['target_regions']
+            else:
+                assert region == 'us-gov-west-1'
+                assert info['account'] == 'test-aws-gov'
+                assert 'us-gov-west-1' in info['target_regions']
+
+        # Publisher Job Doc
+
+        data = json.loads(mock_publish.mock_calls[5][1][2])['publisher_job']
+        check_base_attrs(data)
         assert data['allow_copy'] is False
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['cloud'] == 'ec2'
         assert data['share_with'] == 'all'
-        assert data['utctime'] == 'now'
-        assert data['last_service'] == 'pint'
 
         for region in data['publish_regions']:
             if region['account'] == 'test-aws-gov':
@@ -251,13 +220,11 @@ class TestJobCreatorService(object):
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']
 
-        msg = mock_publish.mock_calls[6][1][2]
-        data = json.loads(msg)['deprecation_job']
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
+        # Deprecation Job Doc
+
+        data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
+        check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
-        assert data['cloud'] == 'ec2'
-        assert data['utctime'] == 'now'
-        assert data['last_service'] == 'pint'
 
         for region in data['deprecation_regions']:
             if region['account'] == 'test-aws-gov':
@@ -270,26 +237,27 @@ class TestJobCreatorService(object):
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']
 
-        assert mock_publish.mock_calls[7] == call(
-            'pint', 'job_document',
-            JsonFormat.json_message({
-                "pint_job": {
-                    "cloud": "ec2",
-                    "cloud_image_name": "new_image_123",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "last_service": "pint",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "old_cloud_image_name": "old_new_image_123",
-                    "utctime": "now"
-                }
-            })
-        )
+        # Pint Job Doc
+
+        data = json.loads(mock_publish.mock_calls[7][1][2])['pint_job']
+        check_base_attrs(data)
+        assert data['cloud_image_name'] == 'new_image_123'
+        assert data['old_cloud_image_name'] == 'old_new_image_123'
 
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_azure(
         self, mock_publish
     ):
+        def check_base_attrs(job_data, cloud=True):
+            assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
+            assert job_data['utctime'] == 'now'
+            assert job_data['last_service'] == 'deprecation'
+            assert job_data['notification_email'] == 'test@fake.com'
+            assert job_data['notification_type'] == 'single'
+
+            if cloud:
+                assert job_data['cloud'] == 'azure'
+
         self.jobcreator.jobs = {}
         self.jobcreator.cloud_data = {'azure': {}}
         message = MagicMock()
@@ -328,144 +296,105 @@ class TestJobCreatorService(object):
         })
         self.jobcreator._handle_service_message(message)
 
-        msg = mock_publish.mock_calls[0][1][2]
-        data = json.loads(msg)['credentials_job']
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'deprecation'
-        assert data['cloud'] == 'azure'
+        # Credentials Job Doc
+
+        data = json.loads(mock_publish.mock_calls[0][1][2])['credentials_job']
+        check_base_attrs(data)
         assert 'test-azure' in data['cloud_accounts']
         assert 'test-azure2' in data['cloud_accounts']
         assert data['requesting_user'] == 'user1'
-        assert data['utctime'] == 'now'
 
-        assert mock_publish.mock_calls[1] == call(
-            'obs', 'job_document',
-            JsonFormat.json_message({
-                "obs_job": {
-                    "cloud_architecture": "x86_64",
-                    "conditions": [
-                        {
-                            "build_id": "1.1",
-                            "package_name": "openssl",
-                            "version": "13.4.3"
-                        },
-                        {"image": "version"}
-                    ],
-                    "download_url": "http://download.opensuse.org/"
-                                    "repositories/Cloud:Tools/images",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "image": "test_image_oem",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[2] == call(
-            'uploader', 'job_document',
-            JsonFormat.json_message({
-                "uploader_job": {
-                    "cloud": "azure",
-                    "cloud_architecture": "x86_64",
-                    "cloud_image_name": "new_image_123",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "image_description": "New Image #123",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "target_regions": {
-                        "centralus": {
-                            "account": "test-azure2",
-                            "container": "ccontainer1",
-                            "resource_group": "c_res_group1",
-                            "storage_account": "cstorage1"
-                        },
-                        "southcentralus": {
-                            "account": "test-azure",
-                            "container": "container1",
-                            "resource_group": "rg-1",
-                            "storage_account": "sa1"
-                        }
-                    },
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[3] == call(
-            'testing', 'job_document',
-            JsonFormat.json_message({
-                "testing_job": {
-                    "cloud": "azure",
-                    "distro": "sles",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "instance_type": "t2.micro",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "test_regions": {
-                        "centralus": {
-                            "account": "test-azure2"
-                        },
-                        "southcentralus": {
-                            "account": "test-azure"
-                        }
-                    },
-                    "tests": ["test_stuff"],
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[4] == call(
-            'replication', 'job_document',
-            JsonFormat.json_message({
-                "replication_job": {
-                    "cleanup_images": True,
-                    "cloud": "azure",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "image_description": "New Image #123",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "replication_source_regions": {
-                        "centralus": {
-                            "account": "test-azure2",
-                            "source_container": "ccontainer1",
-                            "source_resource_group": "c_res_group1",
-                            "source_storage_account": "cstorage1",
-                            "destination_container": "ccontainer2",
-                            "destination_resource_group": "c_res_group2",
-                            "destination_storage_account": "cstorage2"
-                        },
-                        "southcentralus": {
-                            "account": "test-azure",
-                            "source_container": "container1",
-                            "source_resource_group": "rg-1",
-                            "source_storage_account": "sa1",
-                            "destination_container": "container2",
-                            "destination_resource_group": "rg-2",
-                            "destination_storage_account": "sa2"
-                        }
-                    },
-                    "utctime": "now"
-                }
-            })
-        )
-        msg = mock_publish.mock_calls[5][1][2]
-        data = json.loads(msg)['publisher_job']
+        # OBS Job Doc
+
+        data = json.loads(mock_publish.mock_calls[1][1][2])['obs_job']
+        check_base_attrs(data, cloud=False)
+        assert data['cloud_architecture'] == 'x86_64'
+        assert data['download_url'] == \
+            'http://download.opensuse.org/repositories/Cloud:Tools/images'
+        assert data['image'] == 'test_image_oem'
+
+        for condition in data['conditions']:
+            if 'image' in condition:
+                assert condition['image'] == 'version'
+            else:
+                assert condition['build_id'] == '1.1'
+                assert condition['package_name'] == 'openssl'
+                assert condition['version'] == '13.4.3'
+
+        # Uploader Job Doc
+
+        data = json.loads(mock_publish.mock_calls[2][1][2])['uploader_job']
+        check_base_attrs(data)
+        assert data['cloud_architecture'] == 'x86_64'
+        assert data['cloud_image_name'] == 'new_image_123'
+        assert data['image_description'] == 'New Image #123'
+
+        for region, info in data['target_regions'].items():
+            if region == 'centralus':
+                assert info['account'] == 'test-azure2'
+                assert info['container'] == 'ccontainer1'
+                assert info['resource_group'] == 'c_res_group1'
+                assert info['storage_account'] == 'cstorage1'
+            else:
+                assert region == 'southcentralus'
+                assert info['account'] == 'test-azure'
+                assert info['container'] == 'container1'
+                assert info['resource_group'] == 'rg-1'
+                assert info['storage_account'] == 'sa1'
+
+        # Testing Job Doc
+
+        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        check_base_attrs(data)
+        assert data['distro'] == 'sles'
+        assert data['instance_type'] == 'Basic_A2'
+        assert data['tests'] == ['test_stuff']
+
+        for region, info in data['test_regions'].items():
+            if region == 'centralus':
+                assert info['account'] == 'test-azure2'
+            else:
+                assert region == 'southcentralus'
+                assert info['account'] == 'test-azure'
+
+        # Replication Job Doc
+
+        data = json.loads(mock_publish.mock_calls[4][1][2])['replication_job']
+        check_base_attrs(data)
+        assert data['cleanup_images']
+        assert data['image_description'] == 'New Image #123'
+
+        for region, info in data['replication_source_regions'].items():
+            if region == 'centralus':
+                assert info['account'] == 'test-azure2'
+                assert info['source_container'] == 'ccontainer1'
+                assert info['source_resource_group'] == 'c_res_group1'
+                assert info['source_storage_account'] == 'cstorage1'
+                assert info['destination_container'] == 'ccontainer2'
+                assert info['destination_resource_group'] == 'c_res_group2'
+                assert info['destination_storage_account'] == 'cstorage2'
+            else:
+                assert region == 'southcentralus'
+                assert info['account'] == 'test-azure'
+                assert info['source_container'] == 'container1'
+                assert info['source_resource_group'] == 'rg-1'
+                assert info['source_storage_account'] == 'sa1'
+                assert info['destination_container'] == 'container2'
+                assert info['destination_resource_group'] == 'rg-2'
+                assert info['destination_storage_account'] == 'sa2'
+
+        # Publisher Job Doc
+
+        data = json.loads(mock_publish.mock_calls[5][1][2])['publisher_job']
+        check_base_attrs(data)
         assert data['emails'] == 'jdoe@fake.com'
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
         assert data['image_description'] == 'New Image #123'
         assert data['label'] == 'New Image 123'
-        assert data['last_service'] == 'deprecation'
         assert data['offer_id'] == 'sles'
-        assert data['cloud'] == 'azure'
         assert data['publisher_id'] == 'suse'
         assert data['sku'] == '123'
-        assert data['utctime'] == 'now'
         assert data['vm_images_key'] == 'key123'
-        assert data['notification_email'] == 'test@fake.com'
-        assert data['notification_type'] == 'single'
+
         for region in data['publish_regions']:
             assert region['account'] in ('test-azure', 'test-azure2')
             if region['account'] == 'test-azure':
@@ -477,19 +406,15 @@ class TestJobCreatorService(object):
                 assert region['destination_resource_group'] == 'c_res_group2'
                 assert region['destination_storage_account'] == 'cstorage2'
 
-        msg = mock_publish.mock_calls[6][1][2]
-        data = json.loads(msg)['deprecation_job']
+        # Deprecation Job Doc
+
+        data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
+        check_base_attrs(data)
         assert data['emails'] == 'jdoe@fake.com'
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'deprecation'
         assert data['offer_id'] == 'sles'
-        assert data['cloud'] == 'azure'
         assert data['publisher_id'] == 'suse'
         assert data['sku'] == '123'
-        assert data['utctime'] == 'now'
         assert data['vm_images_key'] == 'key123'
-        assert data['notification_email'] == 'test@fake.com'
-        assert data['notification_type'] == 'single'
         assert 'test-azure' in data['deprecation_regions']
         assert 'test-azure2' in data['deprecation_regions']
 
@@ -497,6 +422,16 @@ class TestJobCreatorService(object):
     def test_jobcreator_handle_service_message_gce(
         self, mock_publish
     ):
+        def check_base_attrs(job_data, cloud=True):
+            assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
+            assert job_data['utctime'] == 'now'
+            assert job_data['last_service'] == 'deprecation'
+            assert job_data['notification_email'] == 'test@fake.com'
+            assert job_data['notification_type'] == 'single'
+
+            if cloud:
+                assert job_data['cloud'] == 'gce'
+
         self.jobcreator.jobs = {}
         self.jobcreator.cloud_data = {'gce': {}}
         message = MagicMock()
@@ -525,131 +460,86 @@ class TestJobCreatorService(object):
         })
         self.jobcreator._handle_service_message(message)
 
-        msg = mock_publish.mock_calls[0][1][2]
-        data = json.loads(msg)['credentials_job']
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'deprecation'
-        assert data['cloud'] == 'gce'
+        # Credentials Job Doc
+
+        data = json.loads(mock_publish.mock_calls[0][1][2])['credentials_job']
+        check_base_attrs(data)
         assert 'test-gce' in data['cloud_accounts']
         assert 'test-gce2' in data['cloud_accounts']
         assert data['requesting_user'] == 'user1'
-        assert data['utctime'] == 'now'
 
-        assert mock_publish.mock_calls[1] == call(
-            'obs', 'job_document',
-            JsonFormat.json_message({
-                "obs_job": {
-                    "cloud_architecture": "x86_64",
-                    "conditions": [
-                        {
-                            "build_id": "1.1",
-                            "package_name": "openssl",
-                            "version": "13.4.3"
-                        },
-                        {"image": "version"}
-                    ],
-                    "download_url": "http://download.opensuse.org/"
-                                    "repositories/Cloud:Tools/images",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "image": "test_image_oem",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[2] == call(
-            'uploader', 'job_document',
-            JsonFormat.json_message({
-                "uploader_job": {
-                    "cloud": "gce",
-                    "cloud_architecture": "x86_64",
-                    "cloud_image_name": "new_image_123",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "image_description": "New Image #123",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "target_regions": {
-                        "us-west2": {
-                            "account": "test-gce2",
-                            "bucket": "images",
-                            "family": "sles-15",
-                            "testing_account": None
-                        },
-                        "us-west1": {
-                            "account": "test-gce",
-                            "bucket": "images",
-                            "family": "sles-15",
-                            "testing_account": None
-                        }
-                    },
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[3] == call(
-            'testing', 'job_document',
-            JsonFormat.json_message({
-                "testing_job": {
-                    "cloud": "gce",
-                    "distro": "sles",
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "instance_type": "t2.micro",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "test_regions": {
-                        "us-west2": {
-                            "account": "test-gce2",
-                            "testing_account": None
-                        },
-                        "us-west1": {
-                            "account": "test-gce",
-                            "testing_account": None
-                        }
-                    },
-                    "tests": ["test_stuff"],
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[4] == call(
-            'replication', 'job_document',
-            JsonFormat.json_message({
-                "replication_job": {
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "cloud": "gce",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "utctime": "now"
-                }
-            })
-        )
-        assert mock_publish.mock_calls[5] == call(
-            'publisher', 'job_document',
-            JsonFormat.json_message({
-                "publisher_job": {
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "cloud": "gce",
-                    "last_service": "deprecation",
-                    "notification_email": "test@fake.com",
-                    "notification_type": "single",
-                    "utctime": "now"
-                }
-            })
-        )
-        msg = mock_publish.mock_calls[6][1][2]
-        data = json.loads(msg)['deprecation_job']
-        assert data['id'] == '12345678-1234-1234-1234-123456789012'
-        assert data['last_service'] == 'deprecation'
+        # OBS Job Doc
+
+        data = json.loads(mock_publish.mock_calls[1][1][2])['obs_job']
+        check_base_attrs(data, cloud=False)
+        assert data['cloud_architecture'] == 'x86_64'
+        assert data['download_url'] == \
+            'http://download.opensuse.org/repositories/Cloud:Tools/images'
+        assert data['image'] == 'test_image_oem'
+
+        for condition in data['conditions']:
+            if 'image' in condition:
+                assert condition['image'] == 'version'
+            else:
+                assert condition['build_id'] == '1.1'
+                assert condition['package_name'] == 'openssl'
+                assert condition['version'] == '13.4.3'
+
+        # Uploader Job Doc
+
+        data = json.loads(mock_publish.mock_calls[2][1][2])['uploader_job']
+        check_base_attrs(data)
+        assert data['cloud_architecture'] == 'x86_64'
+        assert data['cloud_image_name'] == 'new_image_123'
+        assert data['image_description'] == 'New Image #123'
+
+        for region, info in data['target_regions'].items():
+            if region == 'us-west2':
+                assert info['account'] == 'test-gce2'
+                assert info['bucket'] == 'images'
+                assert info['family'] == 'sles-15'
+                assert info['testing_account'] is None
+            else:
+                assert region == 'us-west1'
+                assert info['account'] == 'test-gce'
+                assert info['bucket'] == 'images'
+                assert info['family'] == 'sles-15'
+                assert info['testing_account'] is None
+
+        # Testing Job Doc
+
+        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        check_base_attrs(data)
+        assert data['distro'] == 'sles'
+        assert data['instance_type'] == 'n1-standard-1'
+        assert data['tests'] == ['test_stuff']
+
+        for region, info in data['test_regions'].items():
+            if region == 'us-west2':
+                assert info['account'] == 'test-gce2'
+                assert info['testing_account'] is None
+            else:
+                assert region == 'us-west1'
+                assert info['account'] == 'test-gce'
+                assert info['testing_account'] is None
+
+        # Replication Job Doc
+
+        data = json.loads(mock_publish.mock_calls[4][1][2])['replication_job']
+        check_base_attrs(data)
+
+        # Publisher Job Doc
+
+        data = json.loads(mock_publish.mock_calls[5][1][2])['publisher_job']
+        check_base_attrs(data)
+
+        # Deprecation Job Doc
+
+        data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
+        check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
-        assert data['cloud'] == 'gce'
         assert 'test-gce' in data['deprecation_accounts']
         assert 'test-gce2' in data['deprecation_accounts']
-        assert data['utctime'] == 'now'
 
     @patch.object(JobCreatorService, 'send_email_notification')
     def test_jobcreator_handle_invalid_service_message(
