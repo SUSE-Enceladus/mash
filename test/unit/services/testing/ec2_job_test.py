@@ -17,12 +17,13 @@ class TestEC2TestingJob(object):
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
+        self.config = Mock()
 
     def test_testing_ec2_missing_key(self):
         del self.job_config['test_regions']
 
         with pytest.raises(MashTestingException):
-            EC2TestingJob(self.job_config)
+            EC2TestingJob(self.job_config, self.config)
 
     @patch('mash.services.testing.ec2_job.random')
     @patch('mash.services.testing.ipa_helper.EC2Setup')
@@ -59,7 +60,7 @@ class TestEC2TestingJob(object):
             }
         )
 
-        job = EC2TestingJob(self.job_config)
+        job = EC2TestingJob(self.job_config, self.config)
         job.credentials = {
             'test-aws': {
                 'access_key_id': '123',

@@ -22,12 +22,13 @@ class TestGCETestingJob(object):
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
+        self.config = Mock()
 
     def test_testing_gce_missing_key(self):
         del self.job_config['test_regions']
 
         with pytest.raises(MashTestingException):
-            GCETestingJob(self.job_config)
+            GCETestingJob(self.job_config, self.config)
 
     @patch('mash.services.testing.gce_job.random')
     @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')
@@ -52,7 +53,7 @@ class TestGCETestingJob(object):
         )
         mock_random.choice.return_value = 'n1-standard-1'
 
-        job = GCETestingJob(self.job_config)
+        job = GCETestingJob(self.job_config, self.config)
         job.credentials = {
             'test-gce': {
                 'fake': '123',

@@ -24,7 +24,7 @@ class MashJob(object):
     """
     Class for an individual mash job.
     """
-    def __init__(self, job_config):
+    def __init__(self, job_config, config):
         self.job_config = job_config
 
         # Properties
@@ -34,6 +34,7 @@ class MashJob(object):
         self._source_regions = None
         self._job_file = job_config.get('job_file')
 
+        self.config = config
         self.iteration_count = 0
         self.status = UNKOWN
 

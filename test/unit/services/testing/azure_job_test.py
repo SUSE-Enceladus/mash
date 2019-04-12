@@ -17,12 +17,13 @@ class TestAzureTestingJob(object):
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
+        self.config = Mock()
 
     def test_testing_azure_missing_key(self):
         del self.job_config['test_regions']
 
         with pytest.raises(MashTestingException):
-            AzureTestingJob(self.job_config)
+            AzureTestingJob(self.job_config, self.config)
 
     @patch('mash.services.testing.azure_job.random')
     @patch('mash.services.testing.ipa_helper.NamedTemporaryFile')
@@ -47,7 +48,7 @@ class TestAzureTestingJob(object):
         )
         mock_random.choice.return_value = 'Standard_A0'
 
-        job = AzureTestingJob(self.job_config)
+        job = AzureTestingJob(self.job_config, self.config)
         job.credentials = {
             'test-azure': {
                 'fake': '123',

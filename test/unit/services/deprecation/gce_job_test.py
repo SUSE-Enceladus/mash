@@ -1,5 +1,5 @@
 from pytest import raises
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, Mock
 
 from mash.services.deprecation.gce_job import GCEDeprecationJob
 from mash.mash_exceptions import MashDeprecationException
@@ -16,7 +16,8 @@ class TestGCEDeprecationJob(object):
             'utctime': 'now'
         }
 
-        self.job = GCEDeprecationJob(self.job_config)
+        self.config = Mock()
+        self.job = GCEDeprecationJob(self.job_config, self.config)
         self.job.credentials = {
             'test-gce': {
                 'client_email': 'test@gce.com',
@@ -28,7 +29,7 @@ class TestGCEDeprecationJob(object):
         del self.job_config['deprecation_accounts']
 
         with raises(MashDeprecationException):
-            GCEDeprecationJob(self.job_config)
+            GCEDeprecationJob(self.job_config, self.config)
 
     @patch.object(GCEDeprecationJob, 'send_log')
     @patch('mash.services.deprecation.gce_job.Provider')

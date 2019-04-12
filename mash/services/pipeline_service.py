@@ -95,7 +95,7 @@ class PipelineService(MashService):
         4. Bind to job listener queue.
         """
         try:
-            job = job_class(job_config)
+            job = job_class(job_config, self.config)
         except Exception as e:
             self.log.exception(
                 'Invalid job configuration: {0}'.format(e)

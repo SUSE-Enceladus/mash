@@ -21,7 +21,8 @@ class TestEC2DeprecationJob(object):
             'utctime': 'now'
         }
 
-        self.job = EC2DeprecationJob(self.job_config)
+        self.config = Mock()
+        self.job = EC2DeprecationJob(self.job_config, self.config)
         self.job.credentials = {
             'test-aws': {
                 'access_key_id': '123456',
@@ -33,7 +34,7 @@ class TestEC2DeprecationJob(object):
         del self.job_config['deprecation_regions']
 
         with raises(MashDeprecationException):
-            EC2DeprecationJob(self.job_config)
+            EC2DeprecationJob(self.job_config, self.config)
 
     @patch('mash.services.deprecation.ec2_job.EC2DeprecateImg')
     def test_deprecate(self, mock_ec2_deprecate_image):

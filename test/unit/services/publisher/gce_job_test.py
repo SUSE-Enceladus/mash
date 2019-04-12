@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from mash.services.publisher.gce_job import GCEPublisherJob
 
 
@@ -10,7 +12,8 @@ class TestGCEPublisherJob(object):
             'utctime': 'now'
         }
 
-        self.job = GCEPublisherJob(self.job_config)
+        self.config = Mock()
+        self.job = GCEPublisherJob(self.job_config, self.config)
 
     def test_publish(self):
         self.job._run_job()

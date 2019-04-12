@@ -30,7 +30,8 @@ class TestAzurePublisherJob(object):
             'publish_offer': True
         }
 
-        self.job = AzurePublisherJob(self.job_config)
+        self.config = Mock()
+        self.job = AzurePublisherJob(self.job_config, self.config)
         self.job.credentials = {
             "acnt1": {
                 "clientId": "09876543-1234-1234-1234-123456789012",
@@ -55,7 +56,7 @@ class TestAzurePublisherJob(object):
         del self.job_config['publish_regions']
 
         with raises(MashPublisherException):
-            AzurePublisherJob(self.job_config)
+            AzurePublisherJob(self.job_config, self.config)
 
     @patch(
         'mash.services.publisher.azure_job.wait_on_cloud_partner_operation'
