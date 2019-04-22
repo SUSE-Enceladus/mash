@@ -410,13 +410,6 @@ class TestJobCreatorService(object):
 
         data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
         check_base_attrs(data)
-        assert data['emails'] == 'jdoe@fake.com'
-        assert data['offer_id'] == 'sles'
-        assert data['publisher_id'] == 'suse'
-        assert data['sku'] == '123'
-        assert data['vm_images_key'] == 'key123'
-        assert 'test-azure' in data['deprecation_regions']
-        assert 'test-azure2' in data['deprecation_regions']
 
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_gce(
