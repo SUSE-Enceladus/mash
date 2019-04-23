@@ -100,37 +100,12 @@ class AzureJob(BaseJob):
         """
         deprecation_message = {
             'deprecation_job': {
-                'cloud': self.cloud,
-                'emails': self.emails,
-                'offer_id': self.offer_id,
-                'deprecation_regions': self.get_deprecation_regions(),
-                'publisher_id': self.publisher_id,
-                'sku': self.sku
+                'cloud': self.cloud
             }
         }
         deprecation_message['deprecation_job'].update(self.base_message)
 
-        if self.old_cloud_image_name:
-            deprecation_message['deprecation_job']['old_cloud_image_name'] = \
-                self.old_cloud_image_name
-
-        if self.vm_images_key:
-            deprecation_message['deprecation_job']['vm_images_key'] = \
-                self.vm_images_key
-
         return JsonFormat.json_message(deprecation_message)
-
-    def get_deprecation_regions(self):
-        """
-        Return list of deprecation region info.
-
-        """
-        regions = []
-
-        for source_region, value in self.target_account_info.items():
-            regions.append(value['account'])
-
-        return regions
 
     def get_publisher_message(self):
         """
