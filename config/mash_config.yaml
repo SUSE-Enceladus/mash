@@ -29,6 +29,7 @@ cloud:
   ec2:
     regions:
       aws:
+        - ap-east-1
         - ap-northeast-1
         - ap-northeast-2
         - ap-south-1
@@ -52,6 +53,7 @@ cloud:
         - us-gov-east-1
         - us-gov-west-1
     helper_images:
+      ap-east-1: ami-024f2681e93e91a81
       ap-northeast-1: ami-383c1956
       ap-northeast-2: ami-249b554a
       ap-southeast-1: ami-c9b572aa
