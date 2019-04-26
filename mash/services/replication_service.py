@@ -22,7 +22,7 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.replication.service import ReplicationService
+from mash.services.pipeline_service import PipelineService
 
 
 def main():
@@ -35,7 +35,12 @@ def main():
         log.setLevel(logging.INFO)
 
         # run service, enter main loop
-        ReplicationService(service_exchange='replication')
+        PipelineService(
+            service_exchange='replication',
+            custom_args={
+                'listener_msg_args': ['source_regions']
+            }
+        )
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))

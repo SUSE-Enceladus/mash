@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from mash.services.replication.gce_job import GCEReplicationJob
 
 
@@ -9,7 +11,8 @@ class TestGCEReplicationJob(object):
             'cloud': 'gce',
             'utctime': 'now'
         }
-        self.job = GCEReplicationJob(self.job_config)
+        self.config = Mock()
+        self.job = GCEReplicationJob(self.job_config, self.config)
 
     def test_replicate(self):
         self.job._run_job()

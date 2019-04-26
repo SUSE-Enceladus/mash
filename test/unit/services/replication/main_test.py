@@ -5,14 +5,17 @@ from mash.services.replication_service import main
 
 
 class TestReplicationServiceMain(object):
-    @patch('mash.services.replication_service.ReplicationService')
+    @patch('mash.services.replication_service.PipelineService')
     def test_replication_main(self, mock_replication_service):
         main()
         mock_replication_service.assert_called_once_with(
             service_exchange='replication',
+            custom_args={
+                'listener_msg_args': ['source_regions']
+            }
         )
 
-    @patch('mash.services.replication_service.ReplicationService')
+    @patch('mash.services.replication_service.PipelineService')
     @patch('sys.exit')
     def test_replication_main_mash_error(
         self, mock_exit, mock_replication_service
@@ -24,10 +27,13 @@ class TestReplicationServiceMain(object):
         main()
         mock_replication_service.assert_called_once_with(
             service_exchange='replication',
+            custom_args={
+                'listener_msg_args': ['source_regions']
+            }
         )
         mock_exit.assert_called_once_with(1)
 
-    @patch('mash.services.replication_service.ReplicationService')
+    @patch('mash.services.replication_service.PipelineService')
     @patch('sys.exit')
     def test_main_keyboard_interrupt(
             self, mock_exit, mock_replication_ervice
@@ -36,7 +42,7 @@ class TestReplicationServiceMain(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.replication_service.ReplicationService')
+    @patch('mash.services.replication_service.PipelineService')
     @patch('sys.exit')
     def test_replication_main_system_exit(
         self, mock_exit, mock_replication_service
@@ -48,7 +54,7 @@ class TestReplicationServiceMain(object):
             mock_replication_service.side_effect
         )
 
-    @patch('mash.services.replication_service.ReplicationService')
+    @patch('mash.services.replication_service.PipelineService')
     @patch('sys.exit')
     def test_replication_main_unexpected_error(
         self, mock_exit, mock_replication_service

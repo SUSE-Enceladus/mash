@@ -21,7 +21,7 @@ import sys
 import traceback
 
 from mash.mash_exceptions import MashException
-from mash.services.publisher.service import PublisherService
+from mash.services.pipeline_service import PipelineService
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
         log.setLevel(logging.DEBUG)
 
         # run service, enter main loop
-        PublisherService(service_exchange='publisher')
+        PipelineService(service_exchange='publisher')
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))

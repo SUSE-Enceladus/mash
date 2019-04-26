@@ -21,7 +21,9 @@ class TestEC2ReplicationJob(object):
                 }
             }
         }
-        self.job = EC2ReplicationJob(self.job_config)
+
+        self.config = Mock()
+        self.job = EC2ReplicationJob(self.job_config, self.config)
 
         self.job.credentials = {
             "test-aws": {
@@ -34,7 +36,7 @@ class TestEC2ReplicationJob(object):
         del self.job_config['replication_source_regions']
 
         with raises(MashReplicationException):
-            EC2ReplicationJob(self.job_config)
+            EC2ReplicationJob(self.job_config, self.config)
 
     @patch('mash.services.replication.ec2_job.time')
     @patch.object(EC2ReplicationJob, '_wait_on_image')

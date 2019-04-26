@@ -26,6 +26,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from pytz import utc
 
+from mash.services.job_factory import JobFactory
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
@@ -38,11 +39,20 @@ class PipelineService(MashService):
     def post_init(self):
         """Initialize base service class and job scheduler."""
         self.jobs = {}
+
+        if not self.custom_args:
+            self.custom_args = {}
+
         self.listener_msg_args = ['cloud_image_name']
         self.status_msg_args = ['cloud_image_name']
 
+        if self.custom_args.get('listener_msg_args'):
+            self.listener_msg_args += self.custom_args['listener_msg_args']
+
+        if self.custom_args.get('status_msg_args'):
+            self.status_msg_args += self.custom_args['status_msg_args']
+
         self.set_logfile(self.config.get_log_file(self.service_exchange))
-        self.service_init()
         self.bind_credentials_queue()
 
         self.scheduler = BackgroundScheduler(timezone=utc)
@@ -51,17 +61,46 @@ class PipelineService(MashService):
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
         )
 
-        self.restart_jobs(self.add_job)
+        self.restart_jobs(self._add_job)
         self.start()
 
-    def service_init(self):
-        """Initialize child service class."""
+    def _add_job(self, job_config):
+        """
+        Create job using job factory if job id does not already exist.
 
-    def add_job(self, job_config):
+        Job config is persisted to disk if not already done.
         """
-        Add new job to queue from job_config.
-        """
-        raise NotImplementedError('Implement in child service.')
+        job_id = job_config['id']
+        cloud = job_config['cloud']
+
+        if job_id not in self.jobs:
+            try:
+                job = JobFactory.create_job(
+                    cloud, self.service_exchange, job_config, self.config
+                )
+            except Exception as error:
+                self.log.error(
+                    'Invalid job: {0}.'.format(error)
+                )
+            else:
+                self.jobs[job.id] = job
+                job.log_callback = self.log_job_message
+
+                if 'job_file' not in job_config:
+                    job_config['job_file'] = self.persist_job_config(
+                        job_config
+                    )
+                    job.job_file = job_config['job_file']
+
+                self.log.info(
+                    'Job queued, awaiting listener message.',
+                    extra=job.get_job_id()
+                )
+        else:
+            self.log.warning(
+                'Job already queued.',
+                extra={'job_id': job_id}
+            )
 
     def _cleanup_job(self, job, status):
         """
@@ -83,37 +122,6 @@ class PipelineService(MashService):
 
         if job.last_service != self.service_exchange:
             self._publish_message(job)
-
-    def _create_job(self, job_class, job_config):
-        """
-        Create an instance of job_class with the given config.
-
-        If successful:
-        1. Add to jobs queue.
-        2. Configure the job.
-        3. Store config file if not stored already.
-        4. Bind to job listener queue.
-        """
-        try:
-            job = job_class(job_config)
-        except Exception as e:
-            self.log.exception(
-                'Invalid job configuration: {0}'.format(e)
-            )
-        else:
-            self.jobs[job.id] = job
-            job.log_callback = self.log_job_message
-
-            if 'job_file' not in job_config:
-                job_config['job_file'] = self.persist_job_config(
-                    job_config
-                )
-                job.job_file = job_config['job_file']
-
-            self.log.info(
-                'Job queued, awaiting listener message.',
-                extra=job.get_job_id()
-            )
 
     def _delete_job(self, job_id):
         """
@@ -209,7 +217,7 @@ class PipelineService(MashService):
         job_key = '{0}_job'.format(self.service_exchange)
         try:
             job_desc = json.loads(message.body)
-            self.add_job(job_desc[job_key])
+            self._add_job(job_desc[job_key])
         except Exception as e:
             self.log.error('Error adding job: {0}.'.format(e))
 

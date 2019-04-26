@@ -1,5 +1,5 @@
 from pytest import raises
-from unittest.mock import call, patch
+from unittest.mock import call, patch, Mock
 
 from mash.services.status_levels import FAILED
 from mash.services.replication.azure_job import AzureReplicationJob
@@ -27,7 +27,9 @@ class TestAzureReplicationJob(object):
             },
             "cleanup_images": True
         }
-        self.job = AzureReplicationJob(self.job_config)
+
+        self.config = Mock()
+        self.job = AzureReplicationJob(self.job_config, self.config)
 
         self.job.credentials = {
             "acnt1": {
@@ -53,7 +55,7 @@ class TestAzureReplicationJob(object):
         del self.job_config['replication_source_regions']
 
         with raises(MashReplicationException):
-            AzureReplicationJob(self.job_config)
+            AzureReplicationJob(self.job_config, self.config)
 
     @patch('mash.services.replication.azure_job.delete_page_blob')
     @patch('mash.services.replication.azure_job.delete_image')
