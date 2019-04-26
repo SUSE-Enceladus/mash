@@ -27,43 +27,6 @@ from mash.services.replication.config import ReplicationConfig
 from mash.services.testing.config import TestingConfig
 from mash.services.uploader.config import UploaderConfig
 
-from mash.mash_exceptions import MashJobException
-from mash.services.deprecation.azure_job import AzureDeprecationJob
-from mash.services.deprecation.ec2_job import EC2DeprecationJob
-from mash.services.deprecation.gce_job import GCEDeprecationJob
-from mash.services.publisher.azure_job import AzurePublisherJob
-from mash.services.publisher.ec2_job import EC2PublisherJob
-from mash.services.publisher.gce_job import GCEPublisherJob
-from mash.services.replication.azure_job import AzureReplicationJob
-from mash.services.replication.ec2_job import EC2ReplicationJob
-from mash.services.replication.gce_job import GCEReplicationJob
-from mash.services.testing.azure_job import AzureTestingJob
-from mash.services.testing.ec2_job import EC2TestingJob
-from mash.services.testing.gce_job import GCETestingJob
-
-jobs = {
-    'deprecation': {
-        'azure': AzureDeprecationJob,
-        'ec2': EC2DeprecationJob,
-        'gce': GCEDeprecationJob
-    },
-    'publisher': {
-        'azure': AzurePublisherJob,
-        'ec2': EC2PublisherJob,
-        'gce': GCEPublisherJob
-    },
-    'replication': {
-        'azure': AzureReplicationJob,
-        'ec2': EC2ReplicationJob,
-        'gce': GCEReplicationJob
-    },
-    'testing': {
-        'azure': AzureTestingJob,
-        'ec2': EC2TestingJob,
-        'gce': GCETestingJob
-    }
-}
-
 
 def get_configuration(service, config_file=None):
     """
@@ -93,44 +56,3 @@ def get_configuration(service, config_file=None):
         raise MashConfigException(
             'No configuration available for {0} service.'.format(service)
         )
-
-
-class Job(object):
-    """
-    Service Job Factory.
-
-    Attributes:
-
-    * :attr:`cloud`
-        cloud service provider name
-
-    * :attr:`service_exchange`
-        service exchange name
-
-    * :attr:`job_config`
-        job json configuration
-
-    * :attr:`service_config`
-        service configuration object
-    """
-    def __new__(
-        self, cloud, service_exchange, job_config, service_config
-    ):
-        try:
-            job_class = jobs[service_exchange][cloud]
-        except KeyError:
-            raise MashJobException(
-                'Cloud {0} is not supported in {1} service.'.format(
-                    cloud,
-                    service_exchange
-                )
-            )
-
-        try:
-            job = job_class(job_config, service_config)
-        except Exception as error:
-            raise MashJobException(
-                'Invalid job configuration: {0}'.format(error)
-            )
-
-        return job

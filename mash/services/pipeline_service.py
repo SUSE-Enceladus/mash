@@ -26,7 +26,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from pytz import utc
 
-from mash.services import Job
+from mash.services.job_factory import JobFactory
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
@@ -80,7 +80,7 @@ class PipelineService(MashService):
             )
         else:
             try:
-                job = Job(
+                job = JobFactory.create_job(
                     cloud, self.service_exchange, job_config, self.config
                 )
             except Exception as error:

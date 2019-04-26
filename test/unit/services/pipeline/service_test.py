@@ -142,7 +142,7 @@ class TestPipelineService(object):
             extra={'job_id': job.id}
         )
 
-    @patch('mash.services.pipeline_service.Job')
+    @patch('mash.services.pipeline_service.JobFactory')
     @patch.object(PipelineService, 'persist_job_config')
     def test_service_add_job(
         self, mock_persist_config, mock_job_factory
@@ -153,7 +153,7 @@ class TestPipelineService(object):
         job.id = '1'
         job.get_job_id.return_value = {'job_id': '1'}
 
-        mock_job_factory.return_value = job
+        mock_job_factory.create_job.return_value = job
         job_config = {'id': '1', 'cloud': 'ec2'}
         self.service._add_job(job_config)
 
@@ -164,11 +164,13 @@ class TestPipelineService(object):
             extra={'job_id': '1'}
         )
 
-    @patch('mash.services.pipeline_service.Job')
+    @patch('mash.services.pipeline_service.JobFactory')
     def test_service_add_job_exception(self, mock_job_factory):
         job_config = {'id': '1', 'cloud': 'ec2'}
 
-        mock_job_factory.side_effect = Exception('Cannot create job')
+        mock_job_factory.create_job.side_effect = Exception(
+            'Cannot create job'
+        )
         self.service._add_job(job_config)
         self.service.log.error.assert_called_once_with(
             'Invalid job: Cannot create job.'
