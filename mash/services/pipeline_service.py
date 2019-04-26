@@ -73,12 +73,7 @@ class PipelineService(MashService):
         job_id = job_config['id']
         cloud = job_config['cloud']
 
-        if job_id in self.jobs:
-            self.log.warning(
-                'Job already queued.',
-                extra={'job_id': job_id}
-            )
-        else:
+        if job_id not in self.jobs:
             try:
                 job = JobFactory.create_job(
                     cloud, self.service_exchange, job_config, self.config
@@ -101,6 +96,11 @@ class PipelineService(MashService):
                     'Job queued, awaiting listener message.',
                     extra=job.get_job_id()
                 )
+        else:
+            self.log.warning(
+                'Job already queued.',
+                extra={'job_id': job_id}
+            )
 
     def _cleanup_job(self, job, status):
         """
