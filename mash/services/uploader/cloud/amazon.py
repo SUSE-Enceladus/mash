@@ -15,19 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
 from tempfile import NamedTemporaryFile
 from collections import namedtuple
 from ec2imgutils.ec2uploadimg import EC2ImageUploader
 from ec2imgutils.ec2setup import EC2Setup
 
 # project
-from mash.services.uploader.cloud.base import UploadBase
+from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.ec2 import get_client
-from mash.utils.mash_utils import generate_name
+from mash.utils.mash_utils import format_string_with_date, generate_name
+from mash.services.status_levels import SUCCESS
 
 
-class UploadAmazon(UploadBase):
+class EC2UploaderJob(MashJob):
     """
     Implements system image upload to Amazon
 
@@ -36,40 +38,40 @@ class UploadAmazon(UploadBase):
     For upload to Amazon the ec2uploadimg python interface
     is used. The custom parameters are passed in one by one
     to this application.
-
-    .. code:: python
-
-        custom_args={
-            'ssh_key_pair_name': 'name_of_ssh_keypair_for_upload',
-            'verbose': True|False,
-            'launch_ami': 'name_of_helper_ami_to_run_for_upload',
-            'use_grub2': True|False,
-            'use_private_ip': True|False,
-            'root_volume_size': 'size_of_attached_root_volume',
-            'image_virt_type': 'virtualization_type',
-            'launch_inst_type': 'helper_instance_type',
-            'inst_user_name': 'user_name_for_ssh_access_to_helper_instance',
-            'ssh_timeout': 'ssh_timeout_sec',
-            'wait_count': 'number_of_wait_cycles',
-            'vpc_subnet_id': 'vpc_subnet_id_for_helper_instance',
-            'ssh_key_private_key_file': 'path_to_ssh_private_key_file',
-            'security_group_ids': 'security_group_id_for_helper_instance',
-            'sriov_type': 'SRIOV type',
-            'access_key': 'helper_instance_access_key',
-            'ena_support': True|False,
-            'backing_store': 'backing_store_type',
-            'secret_key': 'helper_instance_secret_access_key',
-            'billing_codes': 'image_billing_codes_comma_sep_list'
-        }
     """
+
     def post_init(self):
-        self.region = 'eu-central-1'
+        self._image_file = None
+        self.source_regions = {}
+
+        try:
+            self.target_regions = self.job_config['target_regions']
+            self.cloud_image_name = self.job_config['cloud_image_name']
+            self.cloud_image_description = \
+                self.job_config['image_description']
+        except KeyError as error:
+            raise MashUploadException(
+                'EC2 uploader jobs require a(n) {0} '
+                'key in the job doc.'.format(
+                    error
+                )
+            )
+
+        self.arch = self.job_config.get('cloud_architecture', 'x86_64')
 
         if self.arch == 'aarch64':
             self.arch = 'arm64'
 
+    def _run_job(self):
+        self.status = SUCCESS
+        self.send_log('Uploading image.')
+
+        cloud_image_name = format_string_with_date(
+            self.cloud_image_name
+        )
+
         self.ec2_upload_parameters = {
-            'image_name': self.cloud_image_name,
+            'image_name': cloud_image_name,
             'image_description': self.cloud_image_description,
             'ssh_key_pair_name': None,
             'verbose': True,
@@ -96,80 +98,82 @@ class UploadAmazon(UploadBase):
             'billing_codes': None
         }
 
-        self.ec2_upload_parameters['access_key'] = \
-            self.credentials['access_key_id']
-        self.ec2_upload_parameters['secret_key'] = \
-            self.credentials['secret_access_key']
+        for region, info in self.target_regions.items():
+            account = info['account']
+            credentials = self.credentials[account]
 
-        if self.custom_args:
-            if 'region' in self.custom_args:
-                self.region = self.custom_args['region']
-                del self.custom_args['region']
+            self.ec2_upload_parameters['launch_ami'] = info['helper_image']
+            self.ec2_upload_parameters['billing_codes'] = \
+                info['billing_codes']
 
-            if 'account' in self.custom_args:
-                del self.custom_args['account']
+            self.ec2_upload_parameters['access_key'] = \
+                credentials['access_key_id']
+            self.ec2_upload_parameters['secret_key'] = \
+                credentials['secret_access_key']
 
-            self.ec2_upload_parameters.update(self.custom_args)
+            try:
+                ec2_client = get_client(
+                    'ec2', credentials['access_key_id'],
+                    credentials['secret_access_key'], region
+                )
 
-    def upload(self):
-        try:
-            ec2_client = get_client(
-                'ec2', self.credentials['access_key_id'],
-                self.credentials['secret_access_key'], self.region
-            )
+                # NOTE: Temporary ssh keys:
+                # The temporary creation and registration of a ssh key pair
+                # is considered a workaround implementation which should be better
+                # covered by the EC2ImageUploader code. Due to a lack of
+                # development resources in the ec2utils.ec2uploadimg project and
+                # other peoples concerns for just using a generic mash ssh key
+                # for the upload, the private _create_key_pair and _delete_key_pair
+                # methods exists and could be hopefully replaced by a better
+                # concept in the near future.
+                ssh_key_pair = self._create_key_pair(ec2_client)
 
-            # NOTE: Temporary ssh keys:
-            # The temporary creation and registration of a ssh key pair
-            # is considered a workaround implementation which should be better
-            # covered by the EC2ImageUploader code. Due to a lack of
-            # development resources in the ec2utils.ec2uploadimg project and
-            # other peoples concerns for just using a generic mash ssh key
-            # for the upload, the private _create_key_pair and _delete_key_pair
-            # methods exists and could be hopefully replaced by a better
-            # concept in the near future.
-            ssh_key_pair = self._create_key_pair(ec2_client)
+                self.ec2_upload_parameters['ssh_key_pair_name'] = \
+                    ssh_key_pair.name
+                self.ec2_upload_parameters['ssh_key_private_key_file'] = \
+                    ssh_key_pair.private_key_file.name
 
-            self.ec2_upload_parameters['ssh_key_pair_name'] = \
-                ssh_key_pair.name
-            self.ec2_upload_parameters['ssh_key_private_key_file'] = \
-                ssh_key_pair.private_key_file.name
+                # Create a temporary vpc, subnet and security group for the
+                # helper image. This provides a security group with an open
+                # ssh port.
+                ec2_setup = EC2Setup(
+                    credentials['access_key_id'],
+                    region,
+                    credentials['secret_access_key'],
+                    None,
+                    False
+                )
+                vpc_subnet_id = ec2_setup.create_vpc_subnet()
+                security_group_id = ec2_setup.create_security_group()
 
-            # Create a temporary vpc, subnet and security group for the
-            # helper image. This provides a security group with an open
-            # ssh port.
-            self.ec2_setup = EC2Setup(
-                self.credentials['access_key_id'],
-                self.region,
-                self.credentials['secret_access_key'],
-                None,
-                False
-            )
-            vpc_subnet_id = self.ec2_setup.create_vpc_subnet()
-            security_group_id = self.ec2_setup.create_security_group()
+                self.ec2_upload_parameters['vpc_subnet_id'] = vpc_subnet_id
+                self.ec2_upload_parameters['security_group_ids'] = \
+                    security_group_id
 
-            self.ec2_upload_parameters['vpc_subnet_id'] = vpc_subnet_id
-            self.ec2_upload_parameters['security_group_ids'] = \
-                security_group_id
+                ec2_upload = EC2ImageUploader(
+                    **self.ec2_upload_parameters
+                )
 
-            ec2_upload = EC2ImageUploader(
-                **self.ec2_upload_parameters
-            )
+                ec2_upload.set_region(region)
 
-            ec2_upload.set_region(self.region)
-
-            ami_id = ec2_upload.create_image(
-                self.system_image_file
-            )
-            return ami_id
-        except Exception as e:
-            raise MashUploadException(
-                'Upload to Amazon EC2 failed with: {0}'.format(e)
-            )
-        finally:
-            self._delete_key_pair(
-                ec2_client, ssh_key_pair
-            )
-            self.ec2_setup.clean_up()
+                ami_id = ec2_upload.create_image(
+                    self.image_file[0]
+                )
+                self.source_regions[region] = ami_id
+                self.send_log(
+                    'Uploaded image has ID: {0} in region {1}'.format(
+                        ami_id, region
+                    )
+                )
+            except Exception as e:
+                raise MashUploadException(
+                    'Upload to Amazon EC2 failed with: {0}'.format(e)
+                )
+            finally:
+                self._delete_key_pair(
+                    ec2_client, ssh_key_pair
+                )
+                ec2_setup.clean_up()
 
     def _create_key_pair(self, ec2_client):
         ssh_key_pair_type = namedtuple(
@@ -189,3 +193,15 @@ class UploadAmazon(UploadBase):
         ec2_client.delete_key_pair(KeyName=ssh_key_pair.name)
         private_key_file = ssh_key_pair.private_key_file
         del private_key_file
+
+    @property
+    def image_file(self):
+        """System image file property."""
+        return self._image_file
+
+    @image_file.setter
+    def image_file(self, system_image_file):
+        """
+        Setter for image_file list.
+        """
+        self._image_file = system_image_file

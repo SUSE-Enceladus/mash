@@ -9,6 +9,7 @@ class TestPublisherServiceMain(object):
     def test_publisher_main(self, mock_publisher_service):
         main()
         mock_publisher_service.assert_called_once_with(
+            custom_args={'listener_msg_args': ['cloud_image_name']},
             service_exchange='publisher',
         )
 
@@ -21,6 +22,7 @@ class TestPublisherServiceMain(object):
 
         main()
         mock_publisher_service.assert_called_once_with(
+            custom_args={'listener_msg_args': ['cloud_image_name']},
             service_exchange='publisher',
         )
         mock_exit.assert_called_once_with(1)

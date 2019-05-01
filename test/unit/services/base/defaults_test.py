@@ -16,6 +16,11 @@ def test_get_log_directory():
     assert log_directory == '/var/log/mash/'
 
 
+def test_get_azure_max_retry_attempts():
+    max_retry_attempts = Defaults.get_azure_max_retry_attempts()
+    assert max_retry_attempts == 5
+
+
 def test_get_azure_max_workers():
     max_workers = Defaults.get_azure_max_workers()
     assert max_workers == 5

@@ -11,7 +11,7 @@ class TestIPATestingServiceMain(object):
         mock_testing_service.assert_called_once_with(
             service_exchange='testing',
             custom_args={
-                'listener_msg_args': ['source_regions'],
+                'listener_msg_args': ['cloud_image_name', 'source_regions'],
                 'status_msg_args': ['source_regions']
             }
         )
@@ -26,7 +26,7 @@ class TestIPATestingServiceMain(object):
         mock_testing_service.assert_called_once_with(
             service_exchange='testing',
             custom_args={
-                'listener_msg_args': ['source_regions'],
+                'listener_msg_args': ['cloud_image_name', 'source_regions'],
                 'status_msg_args': ['source_regions']
             }
         )

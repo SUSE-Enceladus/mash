@@ -25,7 +25,8 @@ from mash.utils.mash_utils import (
     create_json_file,
     generate_name,
     get_key_from_file,
-    create_ssh_key_pair
+    create_ssh_key_pair,
+    format_string_with_date
 )
 
 
@@ -83,3 +84,8 @@ def test_create_ssh_key_pair(mock_rsa):
             call(b'1234567890'),
             call(b'0987654321')
         ])
+
+
+def test_format_string_with_date_error():
+    value = 'Name with a {timestamp}'
+    format_string_with_date(value)

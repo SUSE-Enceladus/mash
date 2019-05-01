@@ -38,7 +38,7 @@ def main():
         PipelineService(
             service_exchange='replication',
             custom_args={
-                'listener_msg_args': ['source_regions']
+                'listener_msg_args': ['cloud_image_name', 'source_regions']
             }
         )
     except MashException as e:

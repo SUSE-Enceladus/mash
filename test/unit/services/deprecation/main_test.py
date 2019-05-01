@@ -9,6 +9,7 @@ class TestDeprecationServiceMain(object):
     def test_main(self, mock_deprecation_service):
         main()
         mock_deprecation_service.assert_called_once_with(
+            custom_args={'listener_msg_args': ['cloud_image_name']},
             service_exchange='deprecation',
         )
 
@@ -24,6 +25,7 @@ class TestDeprecationServiceMain(object):
         main()
 
         mock_deprecation_service.assert_called_once_with(
+            custom_args={'listener_msg_args': ['cloud_image_name']},
             service_exchange='deprecation',
         )
         mock_exit.assert_called_once_with(1)

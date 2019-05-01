@@ -35,7 +35,12 @@ def main():
         log.setLevel(logging.INFO)
 
         # run service, enter main loop
-        PipelineService(service_exchange='deprecation')
+        PipelineService(
+            service_exchange='deprecation',
+            custom_args={
+                'listener_msg_args': ['cloud_image_name']
+            }
+        )
     except MashException as e:
         # known exception
         log.error('%s: %s', type(e).__name__, format(e))

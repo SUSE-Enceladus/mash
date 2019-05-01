@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import datetime
 import os
 import random
 
@@ -88,3 +89,16 @@ def create_ssh_key_pair(ssh_private_key_file):
 
     with open(''.join([ssh_private_key_file, '.pub']), 'wb') as public_key_file:
         public_key_file.write(ssh_public_key)
+
+
+def format_string_with_date(value, timestamp=None, date_format='%Y%m%d'):
+    if not timestamp:
+        timestamp = datetime.date.today().strftime(date_format)
+
+    try:
+        value = value.format(date=timestamp)
+    except KeyError:
+        # Ignore unknown format strings.
+        pass
+
+    return value
