@@ -41,14 +41,10 @@ class WebContent(object):
             location = urlopen(request)
             tree = html.fromstring(location.read())
             index_list = tree.xpath(
-                '//pre/a', namespaces=self.namespace_map
+                '//a[starts-with(@href, "{0}")]/@href'.format(base_name),
+                namespaces=self.namespace_map
             )
-            result = []
-            for element in index_list:
-                list_entry = element.get('href')
-                if list_entry.startswith(base_name):
-                    result.append(list_entry)
-            return sorted(list(set(result)))
+            return sorted(list(set(index_list)))
         except Exception as issue:
             raise MashWebContentException(
                 'Fetching index list from {0} failed with {1}: {2}'.format(
