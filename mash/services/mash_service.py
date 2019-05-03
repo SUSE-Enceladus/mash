@@ -105,7 +105,9 @@ class MashService(object):
         )
 
         logging.basicConfig()
-        self.log = logging.getLogger(self.__class__.__name__)
+        self.log = logging.getLogger(
+            '{0}Service'.format(self.service_exchange.title())
+        )
         self.log.setLevel(logging.DEBUG)
         self.log.propagate = False
 
