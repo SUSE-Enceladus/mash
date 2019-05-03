@@ -29,9 +29,9 @@ from mash.services.replication.gce_job import GCEReplicationJob
 from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
 from mash.services.testing.gce_job import GCETestingJob
-from mash.services.uploader.cloud.azure import AzureUploaderJob
-from mash.services.uploader.cloud.amazon import EC2UploaderJob
-from mash.services.uploader.cloud.gce import GCEUploaderJob
+from mash.services.uploader.azure_job import AzureUploaderJob
+from mash.services.uploader.ec2_job import EC2UploaderJob
+from mash.services.uploader.gce_job import GCEUploaderJob
 
 jobs = {
     'deprecation': {

@@ -5,7 +5,7 @@ from test.unit.test_helper import (
     patch_open, context_manager
 )
 
-from mash.services.uploader.cloud.amazon import EC2UploaderJob
+from mash.services.uploader.ec2_job import EC2UploaderJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.uploader.config import UploaderConfig
 
@@ -61,11 +61,11 @@ class TestAmazonUploaderJob(object):
         with raises(MashUploadException):
             EC2UploaderJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.cloud.amazon.EC2Setup')
-    @patch('mash.services.uploader.cloud.amazon.get_client')
-    @patch('mash.services.uploader.cloud.amazon.generate_name')
-    @patch('mash.services.uploader.cloud.amazon.NamedTemporaryFile')
-    @patch('mash.services.uploader.cloud.amazon.EC2ImageUploader')
+    @patch('mash.services.uploader.ec2_job.EC2Setup')
+    @patch('mash.services.uploader.ec2_job.get_client')
+    @patch('mash.services.uploader.ec2_job.generate_name')
+    @patch('mash.services.uploader.ec2_job.NamedTemporaryFile')
+    @patch('mash.services.uploader.ec2_job.EC2ImageUploader')
     @patch_open
     def test_upload(
         self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,

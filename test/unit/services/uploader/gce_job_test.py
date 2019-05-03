@@ -3,7 +3,7 @@ from unittest.mock import (
     MagicMock, Mock, patch
 )
 
-from mash.services.uploader.cloud.gce import GCEUploaderJob
+from mash.services.uploader.gce_job import GCEUploaderJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.uploader.config import UploaderConfig
 
@@ -76,10 +76,10 @@ class TestGCEUploaderJob(object):
         with raises(MashUploadException):
             GCEUploaderJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.cloud.gce.NamedTemporaryFile')
-    @patch('mash.services.uploader.cloud.gce.Provider')
-    @patch('mash.services.uploader.cloud.gce.get_driver')
-    @patch('mash.services.uploader.cloud.gce.GoogleStorageDriver')
+    @patch('mash.services.uploader.gce_job.NamedTemporaryFile')
+    @patch('mash.services.uploader.gce_job.Provider')
+    @patch('mash.services.uploader.gce_job.get_driver')
+    @patch('mash.services.uploader.gce_job.GoogleStorageDriver')
     @patch('builtins.open')
     def test_upload(
         self, mock_open, mock_storage_driver, mock_get_driver, mock_provider,

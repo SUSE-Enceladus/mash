@@ -4,7 +4,7 @@ from unittest.mock import (
 )
 from collections import namedtuple
 
-from mash.services.uploader.cloud.azure import AzureUploaderJob
+from mash.services.uploader.azure_job import AzureUploaderJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.uploader.config import UploaderConfig
 
@@ -74,11 +74,11 @@ class TestAzureUploaderJob(object):
         with raises(MashUploadException):
             AzureUploaderJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.cloud.azure.NamedTemporaryFile')
-    @patch('mash.services.uploader.cloud.azure.get_client_from_auth_file')
-    @patch('mash.services.uploader.cloud.azure.PageBlobService')
-    @patch('mash.services.uploader.cloud.azure.FileType')
-    @patch('mash.services.uploader.cloud.azure.lzma')
+    @patch('mash.services.uploader.azure_job.NamedTemporaryFile')
+    @patch('mash.services.uploader.azure_job.get_client_from_auth_file')
+    @patch('mash.services.uploader.azure_job.PageBlobService')
+    @patch('mash.services.uploader.azure_job.FileType')
+    @patch('mash.services.uploader.azure_job.lzma')
     @patch('builtins.open')
     def test_upload(
         self, mock_open, mock_lzma, mock_FileType,
