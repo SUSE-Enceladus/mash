@@ -356,10 +356,15 @@ class CredentialsService(MashService):
         requesting_user = message['requesting_user']
         group_name = message.get('group')
 
-        self.account_datastore.add_account(
-            account_info, cloud, account_name, requesting_user, credentials,
-            group_name
-        )
+        try:
+            self.account_datastore.add_account(
+                account_info, cloud, account_name, requesting_user, credentials,
+                group_name
+            )
+        except Exception as error:
+            self.log.warning(
+                'Unable to add account: {0}'.format(error)
+            )
 
     def delete_account(self, message):
         """
@@ -369,9 +374,14 @@ class CredentialsService(MashService):
         cloud = message['cloud']
         requesting_user = message['requesting_user']
 
-        self.account_datastore.delete_account(
-            requesting_user, account_name, cloud
-        )
+        try:
+            self.account_datastore.delete_account(
+                requesting_user, account_name, cloud
+            )
+        except Exception as error:
+            self.log.warning(
+                'Unable to delete account: {0}'.format(error)
+            )
 
     def start(self):
         """

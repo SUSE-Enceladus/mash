@@ -479,6 +479,27 @@ class TestCredentialsService(object):
             'Failed to add account to database: CSP fake is not supported.'
         )
 
+    @patch.object(AccountDatastore, 'add_account')
+    def test_credentials_add_account_exception(self, mock_add_account):
+        message = {
+            'account_name': 'acnt123',
+            'credentials': {'creds': 'data'},
+            'partition': 'aws',
+            'cloud': 'ec2',
+            'requesting_user': 'user1',
+            'region': 'us-east-1',
+            'group': 'group123'
+        }
+
+        mock_add_account.side_effect = Exception('Forbidden!')
+
+        self.service.add_account(message)
+        assert mock_add_account.call_count == 1
+
+        self.service.log.warning.assert_called_once_with(
+            'Unable to add account: Forbidden!'
+        )
+
     @patch.object(AccountDatastore, 'delete_account')
     def test_credentials_delete_account(self, mock_delete_account):
         message = {
@@ -491,6 +512,26 @@ class TestCredentialsService(object):
 
         mock_delete_account.assert_called_once_with(
             'user2', 'test-aws', 'ec2'
+        )
+
+    @patch.object(AccountDatastore, 'delete_account')
+    def test_credentials_delete_account_exception(self, mock_delete_account):
+        message = {
+            'account_name': 'test-aws',
+            'cloud': 'ec2',
+            'requesting_user': 'user2'
+        }
+
+        mock_delete_account.side_effect = Exception('Forbidden!')
+
+        self.service.delete_account(message)
+
+        mock_delete_account.assert_called_once_with(
+            'user2', 'test-aws', 'ec2'
+        )
+
+        self.service.log.warning.assert_called_once_with(
+            'Unable to delete account: Forbidden!'
         )
 
     @patch.object(CredentialsService, 'consume_queue')
