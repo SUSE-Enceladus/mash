@@ -21,7 +21,7 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.uploader.service import UploadImageService
+from mash.services.pipeline_service import PipelineService
 
 
 def main():
@@ -33,7 +33,13 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        UploadImageService(service_exchange='uploader')
+        PipelineService(
+            service_exchange='uploader',
+            custom_args={
+                'listener_msg_args': ['image_file'],
+                'status_msg_args': ['source_regions']
+            }
+        )
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))

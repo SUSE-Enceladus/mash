@@ -11,7 +11,7 @@ class TestReplicationServiceMain(object):
         mock_replication_service.assert_called_once_with(
             service_exchange='replication',
             custom_args={
-                'listener_msg_args': ['source_regions']
+                'listener_msg_args': ['cloud_image_name', 'source_regions']
             }
         )
 
@@ -28,7 +28,7 @@ class TestReplicationServiceMain(object):
         mock_replication_service.assert_called_once_with(
             service_exchange='replication',
             custom_args={
-                'listener_msg_args': ['source_regions']
+                'listener_msg_args': ['cloud_image_name', 'source_regions']
             }
         )
         mock_exit.assert_called_once_with(1)

@@ -43,7 +43,7 @@ class PipelineService(MashService):
         if not self.custom_args:
             self.custom_args = {}
 
-        self.listener_msg_args = ['cloud_image_name']
+        self.listener_msg_args = []
         self.status_msg_args = ['cloud_image_name']
 
         if self.custom_args.get('listener_msg_args'):

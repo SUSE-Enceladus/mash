@@ -12,14 +12,18 @@ class TestUploader(object):
             return_value='/tmp/uploader_service.log'
         )
 
-    @patch('mash.services.uploader_service.UploadImageService')
+    @patch('mash.services.uploader_service.PipelineService')
     def test_main(self, mock_UploadImageService):
         main()
         mock_UploadImageService.assert_called_once_with(
+            custom_args={
+                'listener_msg_args': ['image_file'],
+                'status_msg_args': ['source_regions']
+            },
             service_exchange='uploader'
         )
 
-    @patch('mash.services.uploader_service.UploadImageService')
+    @patch('mash.services.uploader_service.PipelineService')
     @patch('sys.exit')
     def test_main_mash_error(
         self, mock_exit, mock_UploadImageService
@@ -28,7 +32,7 @@ class TestUploader(object):
         main()
         mock_exit.assert_called_once_with(1)
 
-    @patch('mash.services.uploader_service.UploadImageService')
+    @patch('mash.services.uploader_service.PipelineService')
     @patch('sys.exit')
     def test_main_keyboard_interrupt(
         self, mock_exit, mock_UploadImageService
@@ -37,7 +41,7 @@ class TestUploader(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.uploader_service.UploadImageService')
+    @patch('mash.services.uploader_service.PipelineService')
     @patch('sys.exit')
     def test_main_system_exit(
         self, mock_exit, mock_UploadImageService
@@ -46,7 +50,7 @@ class TestUploader(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.uploader_service.UploadImageService')
+    @patch('mash.services.uploader_service.PipelineService')
     @patch('sys.exit')
     def test_main_unexpected_error(
         self, mock_exit, mock_UploadImageService
