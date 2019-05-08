@@ -53,6 +53,9 @@ class GCEUploaderJob(MashJob):
                 )
             )
 
+        # SLES 11 is EOL, however images remain available in the
+        # build service and thus we need to continue to test for
+        # this condition.
         if 'sles-11' in self.cloud_image_name:
             raise MashUploadException(
                 'No SLES 11 support in mash for GCE.'
