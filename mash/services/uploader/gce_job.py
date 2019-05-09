@@ -108,10 +108,15 @@ class GCEUploaderJob(MashJob):
                 info['bucket'], '/o/', object_name
             ])
 
+            kwargs = {'description': self.cloud_image_description}
+
+            if info['family']:
+                kwargs['family'] = info['family']
+
             compute_driver.ex_create_image(
-                self.cloud_image_name, uri,
-                description=self.cloud_image_description,
-                family=info['family']
+                self.cloud_image_name,
+                uri,
+                **kwargs
             )
             self.source_regions[region] = self.cloud_image_name
             self.send_log(
