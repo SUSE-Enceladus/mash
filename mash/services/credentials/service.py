@@ -35,6 +35,12 @@ class CredentialsService(MashService):
     def post_init(self):
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
+        self.encryption_keys_file = self.config.get_encryption_keys_file()
+        self.jwt_secret = self.config.get_jwt_secret()
+        self.jwt_algorithm = self.config.get_jwt_algorithm()
+        self.credentials_queue = 'credentials'
+        self.credentials_response_key = 'response'
+
         self.services = self.config.get_service_names(
             credentials_required=True
         )
@@ -375,8 +381,9 @@ class CredentialsService(MashService):
         self.consume_queue(
             self._handle_account_request, queue_name=self.listener_queue
         )
-        self.consume_credentials_queue(
-            self._handle_credential_request, queue_name='request'
+        self.consume_queue(
+            self._handle_credential_request,
+            queue_name='request'
         )
 
         try:

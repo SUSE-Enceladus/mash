@@ -493,32 +493,27 @@ class TestCredentialsService(object):
             'user2', 'test-aws', 'ec2'
         )
 
-    @patch.object(CredentialsService, 'consume_credentials_queue')
     @patch.object(CredentialsService, 'consume_queue')
     @patch.object(CredentialsService, 'close_connection')
     def test_credentials_start(
-        self, mock_close_connection, mock_consume_queue,
-        mock_consume_creds_queue
+        self, mock_close_connection, mock_consume_queue
     ):
         self.service.start()
 
         self.service.channel.start_consuming.assert_called_once_with()
         mock_consume_queue.has_calls([
             call(self.service._handle_job_documents),
-            call(self.service._handle_account_request, queue_name='listener')
+            call(self.service._handle_account_request, queue_name='listener'),
+            call(self.service._handle_credential_request, queue_name='request')
         ])
-        mock_consume_creds_queue.assert_called_once_with(
-            self.service._handle_credential_request, queue_name='request'
-        )
         mock_close_connection.assert_called_once_with()
 
     @patch.object(AccountDatastore, 'shutdown')
-    @patch.object(CredentialsService, 'consume_credentials_queue')
     @patch.object(CredentialsService, 'consume_queue')
     @patch.object(CredentialsService, 'close_connection')
     def test_credentials_start_exception(
         self, mock_close_connection, mock_consume_queue,
-        mock_consume_creds_queue, mock_datastore_shutdown
+        mock_datastore_shutdown
     ):
         self.service.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.service.start()
