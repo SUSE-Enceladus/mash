@@ -40,6 +40,9 @@ class PipelineService(MashService):
         """Initialize base service class and job scheduler."""
         self.jobs = {}
 
+        self.next_service = self._get_next_service()
+        self.prev_service = self._get_previous_service()
+
         if not self.custom_args:
             self.custom_args = {}
 
@@ -146,6 +149,33 @@ class PipelineService(MashService):
                 'Job deletion failed, job is not queued.',
                 extra={'job_id': job_id}
             )
+
+    def _get_next_service(self):
+        """Return the next service based on the current exchange."""
+        services = self.config.get_service_names()
+
+        try:
+            next_service = services[services.index(self.service_exchange) + 1]
+        except (IndexError, ValueError):
+            next_service = None
+
+        return next_service
+
+    def _get_previous_service(self):
+        """
+        Return the previous service based on the current exchange.
+        """
+        services = self.config.get_service_names()
+
+        try:
+            index = services.index(self.service_exchange) - 1
+        except ValueError:
+            return None
+
+        if index < 0:
+            return None
+
+        return services[index]
 
     def _get_status_message(self, job):
         """

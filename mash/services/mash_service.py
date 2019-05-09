@@ -64,8 +64,6 @@ class MashService(object):
         self.listener_msg_key = 'listener_msg'
 
         self.config = get_configuration(self.service_exchange)
-        self.next_service = self._get_next_service()
-        self.prev_service = self._get_previous_service()
         self.encryption_keys_file = self.config.get_encryption_keys_file()
         self.jwt_secret = self.config.get_jwt_secret()
         self.jwt_algorithm = self.config.get_jwt_algorithm()
@@ -151,33 +149,6 @@ class MashService(object):
         Declare the queue and set as durable.
         """
         return self.channel.queue.declare(queue=queue, durable=True)
-
-    def _get_next_service(self):
-        """Return the next service based on the current exchange."""
-        services = self.config.get_service_names()
-
-        try:
-            next_service = services[services.index(self.service_exchange) + 1]
-        except (IndexError, ValueError):
-            next_service = None
-
-        return next_service
-
-    def _get_previous_service(self):
-        """
-        Return the previous service based on the current exchange.
-        """
-        services = self.config.get_service_names()
-
-        try:
-            index = services.index(self.service_exchange) - 1
-        except ValueError:
-            return None
-
-        if index < 0:
-            return None
-
-        return services[index]
 
     def _get_queue_name(self, exchange, name):
         """

@@ -19,6 +19,10 @@ class TestPipelineService(object):
         mock_base_init.return_value = None
         self.config = Mock()
         self.config.config_data = None
+        self.config.get_service_names.return_value = [
+            'obs', 'uploader', 'testing', 'replication', 'publisher',
+            'deprecation', 'pint'
+        ]
 
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
@@ -48,7 +52,7 @@ class TestPipelineService(object):
         self.service = PipelineService()
         self.service.jobs = {}
         self.service.log = Mock()
-        self.service.config = Mock()
+        self.service.config = self.config
 
         scheduler = Mock()
         self.service.scheduler = scheduler
@@ -580,6 +584,33 @@ class TestPipelineService(object):
             message, ['cloud_image_name']
         )
         assert result is False
+
+    def test_get_next_service_error(self):
+        # Test service with no next service
+        self.service.service_exchange = 'pint'
+        next_service = self.service._get_next_service()
+        assert next_service is None
+
+        # Test service not in pipeline
+        self.service.service_exchange = 'credentials'
+        next_service = self.service._get_next_service()
+        assert next_service is None
+
+    def test_get_prev_service(self):
+        # Test service with prev service
+        self.service.service_exchange = 'testing'
+        prev_service = self.service._get_previous_service()
+        assert prev_service == 'uploader'
+
+        # Test service not in pipeline
+        self.service.service_exchange = 'credentials'
+        prev_service = self.service._get_previous_service()
+        assert prev_service is None
+
+        # Test service as beginning of pipeline
+        self.service.service_exchange = 'obs'
+        prev_service = self.service._get_previous_service()
+        assert prev_service is None
 
     def test_service_start_job(self):
         job = Mock()
