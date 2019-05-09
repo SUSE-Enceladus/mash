@@ -39,11 +39,13 @@ class GCEUploaderJob(MashJob):
     def post_init(self):
         self._image_file = None
         self.source_regions = {}
+        self.cloud_image_name = ''
+        self.cloud_image_description = ''
 
         try:
             self.target_regions = self.job_config['target_regions']
-            self.cloud_image_name = self.job_config['cloud_image_name']
-            self.cloud_image_description = \
+            self.base_cloud_image_name = self.job_config['cloud_image_name']
+            self.base_cloud_image_description = \
                 self.job_config['image_description']
         except KeyError as error:
             raise MashUploadException(
@@ -56,7 +58,7 @@ class GCEUploaderJob(MashJob):
         # SLES 11 is EOL, however images remain available in the
         # build service and thus we need to continue to test for
         # this condition.
-        if 'sles-11' in self.cloud_image_name:
+        if 'sles-11' in self.base_cloud_image_name:
             raise MashUploadException(
                 'No SLES 11 support in mash for GCE.'
             )
@@ -65,14 +67,14 @@ class GCEUploaderJob(MashJob):
         self.status = SUCCESS
         self.send_log('Uploading image.')
 
-        cloud_image_name = format_string_with_date(
-            self.cloud_image_name
+        self.cloud_image_name = format_string_with_date(
+            self.base_cloud_image_name
         )
 
-        timestamp = re.findall(r'\d{8}', cloud_image_name)[0]
+        timestamp = re.findall(r'\d{8}', self.cloud_image_name)[0]
 
-        cloud_image_description = format_string_with_date(
-            self.cloud_image_description, timestamp=timestamp
+        self.cloud_image_description = format_string_with_date(
+            self.base_cloud_image_description, timestamp=timestamp
         )
 
         for region, info in self.target_regions.items():
@@ -86,7 +88,7 @@ class GCEUploaderJob(MashJob):
                 project=credentials['project_id']
             )
 
-            object_name = ''.join([cloud_image_name, '.tar.gz'])
+            object_name = ''.join([self.cloud_image_name, '.tar.gz'])
             container = storage_driver.get_container(info['bucket'])
 
             with open(self.image_file[0], 'rb') as image_stream:
@@ -107,14 +109,14 @@ class GCEUploaderJob(MashJob):
             ])
 
             compute_driver.ex_create_image(
-                cloud_image_name, uri,
-                description=cloud_image_description,
+                self.cloud_image_name, uri,
+                description=self.cloud_image_description,
                 family=info['family']
             )
-            self.source_regions[region] = cloud_image_name
+            self.source_regions[region] = self.cloud_image_name
             self.send_log(
                 'Uploaded image has ID: {0}'.format(
-                    cloud_image_name
+                    self.cloud_image_name
                 )
             )
 
