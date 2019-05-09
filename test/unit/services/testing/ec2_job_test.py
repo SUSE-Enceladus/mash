@@ -76,7 +76,7 @@ class TestEC2TestingJob(object):
             }
         }
         job.source_regions = {'us-east-1': 'ami-123'}
-        job._run_job()
+        job.run_job()
 
         client.import_key_pair.assert_called_once_with(
             KeyName='random_name', PublicKeyMaterial='fakekey'
@@ -106,7 +106,7 @@ class TestEC2TestingJob(object):
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
-        job._run_job()
+        job.run_job()
         assert mock_send_log.mock_calls[1] == call(
             'Image tests failed in region: us-east-1.', success=False
         )
@@ -116,4 +116,4 @@ class TestEC2TestingJob(object):
 
         # Failed key cleanup
         client.delete_key_pair.side_effect = Exception('Cannot delete key!')
-        job._run_job()
+        job.run_job()

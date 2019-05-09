@@ -41,7 +41,7 @@ class TestGCEDeprecationJob(object):
         compute_driver = MagicMock()
         compute_engine.return_value = compute_driver
 
-        self.job._run_job()
+        self.job.run_job()
 
         assert compute_driver.ex_deprecate_image.call_count == 1
         assert self.job.status == 'success'
@@ -51,7 +51,7 @@ class TestGCEDeprecationJob(object):
 
     def test_deprecate_no_old_image(self):
         self.job.old_cloud_image_name = None
-        self.job._run_job()
+        self.job.run_job()
         assert self.job.status == 'success'
 
     @patch.object(GCEDeprecationJob, 'send_log')
@@ -67,7 +67,7 @@ class TestGCEDeprecationJob(object):
         compute_driver.ex_deprecate_image.side_effect = Exception('Failed!')
         compute_engine.return_value = compute_driver
 
-        self.job._run_job()
+        self.job.run_job()
 
         mock_send_log.assert_called_once_with(
             'There was an error deprecating image in test-gce: Failed!',

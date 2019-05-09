@@ -46,7 +46,7 @@ class EC2DeprecationJob(MashJob):
             'old_cloud_image_name'
         )
 
-    def _run_job(self):
+    def run_job(self):
         """
         Deprecate image in all target regions in each source region.
         """

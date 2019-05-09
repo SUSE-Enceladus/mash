@@ -61,7 +61,7 @@ class GCEUploaderJob(MashJob):
                 'No SLES 11 support in mash for GCE.'
             )
 
-    def _run_job(self):
+    def run_job(self):
         self.status = SUCCESS
         self.send_log('Uploading image.')
 

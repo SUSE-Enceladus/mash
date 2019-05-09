@@ -102,7 +102,7 @@ class TestGCEUploaderJob(object):
         tempfile.name = 'tempfile'
         mock_NamedTemporaryFile.return_value = tempfile
 
-        self.job._run_job()
+        self.job.run_job()
 
         storage_driver.get_container.assert_called_once_with('images')
         assert storage_driver.upload_object_via_stream.call_count == 1

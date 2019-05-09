@@ -32,7 +32,7 @@ class GCEReplicationJob(MashJob):
         # Skip credential request since there is no replication in GCE
         self.credentials = {'status': 'no replication'}
 
-    def _run_job(self):
+    def run_job(self):
         """
         No replication in GCE.
         """

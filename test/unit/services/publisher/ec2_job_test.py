@@ -44,7 +44,7 @@ class TestEC2PublisherJob(object):
         publisher = Mock()
         mock_ec2_publish_image.return_value = publisher
         self.job.cloud_image_name = 'image_name_123'
-        self.job._run_job()
+        self.job.run_job()
 
         mock_ec2_publish_image.assert_called_once_with(
             access_key='123456', allow_copy=False, image_name='image_name_123',
@@ -70,5 +70,5 @@ class TestEC2PublisherJob(object):
         msg = 'An error publishing image image_name_123 in us-east-2.' \
             ' Failed to publish.'
         with raises(MashPublisherException) as e:
-            self.job._run_job()
+            self.job.run_job()
         assert msg == str(e.value)

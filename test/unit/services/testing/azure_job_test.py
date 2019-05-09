@@ -64,7 +64,7 @@ class TestAzureTestingJob(object):
             }
         }
         job.source_regions = {'East US': 'ami-123'}
-        job._run_job()
+        job.run_job()
 
         mock_test_image.assert_called_once_with(
             'azure',
@@ -90,7 +90,7 @@ class TestAzureTestingJob(object):
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
-        job._run_job()
+        job.run_job()
         assert mock_send_log.mock_calls[1] == call(
             'Image tests failed in region: East US.', success=False
         )

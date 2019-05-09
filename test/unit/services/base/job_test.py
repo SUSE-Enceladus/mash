@@ -47,7 +47,7 @@ class TestMashJob(object):
         job = MashJob(self.job_config, self.config)
 
         with raises(NotImplementedError):
-            job._run_job()
+            job.run_job()
 
     def test_job_get_job_id(self):
         job = MashJob(self.job_config, self.config)
@@ -71,7 +71,7 @@ class TestMashJob(object):
 
         assert job.log_callback == callback
 
-    @patch.object(MashJob, '_run_job')
+    @patch.object(MashJob, 'run_job')
     def test_process_job(self, mock_run_job):
         job = MashJob(self.job_config, self.config)
         job.process_job()

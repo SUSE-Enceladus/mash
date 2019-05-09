@@ -16,4 +16,4 @@ class TestGCEPublisherJob(object):
         self.job = GCEPublisherJob(self.job_config, self.config)
 
     def test_publish(self):
-        self.job._run_job()
+        self.job.run_job()

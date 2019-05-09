@@ -89,7 +89,7 @@ class TestAzurePublisherJob(object):
 
         mock_publish_offer.return_value = '/api/operation/url'
 
-        self.job._run_job()
+        self.job.run_job()
 
         mock_send_log.assert_has_calls([
             call('Publishing image for account: acnt1, using cloud partner API.'),
@@ -122,7 +122,7 @@ class TestAzurePublisherJob(object):
         }
         mock_put_doc.side_effect = Exception('Invalid doc!')
 
-        self.job._run_job()
+        self.job.run_job()
 
         mock_send_log.assert_has_calls([
             call('Publishing image for account: acnt1, using cloud partner API.'),

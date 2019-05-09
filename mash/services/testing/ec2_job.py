@@ -76,7 +76,7 @@ class EC2TestingJob(MashJob):
         if not os.path.exists(self.ssh_private_key_file):
             create_ssh_key_pair(self.ssh_private_key_file)
 
-    def _run_job(self):
+    def run_job(self):
         """
         Tests image with IPA and update status and results.
         """

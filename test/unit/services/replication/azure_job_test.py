@@ -70,7 +70,7 @@ class TestAzureReplicationJob(object):
         mock_create_json_file.return_value.__enter__.return_value = \
             '/tmp/file.auth'
 
-        self.job._run_job()
+        self.job.run_job()
 
         mock_send_log.has_calls([
             call('Copying image for account: acnt1, to classic storage container.'),
