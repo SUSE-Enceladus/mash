@@ -40,10 +40,11 @@ class AzureUploaderJob(MashJob):
     def post_init(self):
         self._image_file = None
         self.source_regions = {}
+        self.cloud_image_name = ''
 
         try:
             self.target_regions = self.job_config['target_regions']
-            self.cloud_image_name = self.job_config['cloud_image_name']
+            self.base_cloud_image_name = self.job_config['cloud_image_name']
         except KeyError as error:
             raise MashUploadException(
                 'Azure uploader jobs require a(n) {0} '
@@ -56,8 +57,8 @@ class AzureUploaderJob(MashJob):
         self.status = SUCCESS
         self.send_log('Uploading image.')
 
-        cloud_image_name = format_string_with_date(
-            self.cloud_image_name
+        self.cloud_image_name = format_string_with_date(
+            self.base_cloud_image_name
         )
 
         for region, info in self.target_regions.items():
@@ -78,7 +79,7 @@ class AzureUploaderJob(MashJob):
                 account_name=info['storage_account'],
                 account_key=storage_key_list.keys[0].value
             )
-            blob_name = ''.join([cloud_image_name, '.vhd'])
+            blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
             if system_image_file_type.is_xz():
                 open_image = lzma.LZMAFile
@@ -112,7 +113,7 @@ class AzureUploaderJob(MashJob):
             )
             async_create_image = compute_client.images.create_or_update(
                 info['resource_group'],
-                cloud_image_name, {
+                self.cloud_image_name, {
                     'location': region,
                     'storage_profile': {
                         'os_disk': {
@@ -130,10 +131,10 @@ class AzureUploaderJob(MashJob):
                 }
             )
             async_create_image.wait()
-            self.source_regions[region] = cloud_image_name
+            self.source_regions[region] = self.cloud_image_name
             self.send_log(
                 'Uploaded image has ID: {0} in region {1}'.format(
-                    cloud_image_name,
+                    self.cloud_image_name,
                     region
                 )
             )

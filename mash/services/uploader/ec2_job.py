@@ -43,10 +43,11 @@ class EC2UploaderJob(MashJob):
     def post_init(self):
         self._image_file = None
         self.source_regions = {}
+        self.cloud_image_name = ''
 
         try:
             self.target_regions = self.job_config['target_regions']
-            self.cloud_image_name = self.job_config['cloud_image_name']
+            self.base_cloud_image_name = self.job_config['cloud_image_name']
             self.cloud_image_description = \
                 self.job_config['image_description']
         except KeyError as error:
@@ -66,12 +67,12 @@ class EC2UploaderJob(MashJob):
         self.status = SUCCESS
         self.send_log('Uploading image.')
 
-        cloud_image_name = format_string_with_date(
-            self.cloud_image_name
+        self.cloud_image_name = format_string_with_date(
+            self.base_cloud_image_name
         )
 
         self.ec2_upload_parameters = {
-            'image_name': cloud_image_name,
+            'image_name': self.cloud_image_name,
             'image_description': self.cloud_image_description,
             'ssh_key_pair_name': None,
             'verbose': True,
