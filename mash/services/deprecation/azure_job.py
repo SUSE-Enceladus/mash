@@ -32,7 +32,7 @@ class AzureDeprecationJob(MashJob):
         # Skip credential request since there is no deprecation in Azure
         self.credentials = {'status': 'no deprecation'}
 
-    def _run_job(self):
+    def run_job(self):
         """
         There is no deprecation process in Azure.
         """

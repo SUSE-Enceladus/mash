@@ -49,7 +49,7 @@ class TestEC2ReplicationJob(object):
         mock_replicate_to_region.return_value = 'ami-54321'
 
         self.job.source_regions = {'us-east-1': 'ami-12345'}
-        self.job._run_job()
+        self.job.run_job()
 
         mock_send_log.assert_called_once_with(
             'Replicating source region: us-east-1 to the following regions: '

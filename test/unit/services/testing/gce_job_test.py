@@ -73,7 +73,7 @@ class TestGCETestingJob(object):
             }
         }
         job.source_regions = {'us-west1': 'ami-123'}
-        job._run_job()
+        job.run_job()
 
         mock_test_image.assert_called_once_with(
             'gce',
@@ -99,7 +99,7 @@ class TestGCETestingJob(object):
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
-        job._run_job()
+        job.run_job()
         assert mock_send_log.mock_calls[1] == call(
             'Image tests failed in region: us-west1.', success=False
         )

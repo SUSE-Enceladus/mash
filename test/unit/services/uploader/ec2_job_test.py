@@ -98,7 +98,7 @@ class TestAmazonUploaderJob(object):
         ec2_setup.create_security_group.return_value = 'sg-123456789'
         mock_ec2_setup.return_value = ec2_setup
 
-        self.job._run_job()
+        self.job.run_job()
         mock_get_client.assert_called_once_with(
             'ec2', 'access-key', 'secret-access-key', 'us-east-1'
         )
@@ -141,4 +141,4 @@ class TestAmazonUploaderJob(object):
         ec2_upload.create_image.side_effect = Exception
 
         with raises(MashUploadException):
-            self.job._run_job()
+            self.job.run_job()

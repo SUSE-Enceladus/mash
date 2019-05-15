@@ -63,7 +63,7 @@ class EC2UploaderJob(MashJob):
         if self.arch == 'aarch64':
             self.arch = 'arm64'
 
-    def _run_job(self):
+    def run_job(self):
         self.status = SUCCESS
         self.send_log('Uploading image.')
 

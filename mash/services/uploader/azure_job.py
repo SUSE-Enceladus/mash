@@ -53,7 +53,7 @@ class AzureUploaderJob(MashJob):
                 )
             )
 
-    def _run_job(self):
+    def run_job(self):
         self.status = SUCCESS
         self.send_log('Uploading image.')
 

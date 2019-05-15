@@ -49,7 +49,7 @@ class EC2ReplicationJob(MashJob):
 
         self.source_region_results = defaultdict(dict)
 
-    def _run_job(self):
+    def run_job(self):
         """
         Replicate image to all target regions in each source region.
         """

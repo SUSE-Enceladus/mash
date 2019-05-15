@@ -45,7 +45,7 @@ class EC2PublisherJob(MashJob):
         self.allow_copy = self.job_config.get('allow_copy', True)
         self.share_with = self.job_config.get('share_with', 'all')
 
-    def _run_job(self):
+    def run_job(self):
         """
         Publish image and update status.
         """

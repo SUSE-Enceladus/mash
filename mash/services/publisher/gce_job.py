@@ -32,7 +32,7 @@ class GCEPublisherJob(MashJob):
         # Skip credential request since there is no publishing in GCE
         self.credentials = {'status': 'no publishing'}
 
-    def _run_job(self):
+    def run_job(self):
         """
         No publishing in GCE.
         """

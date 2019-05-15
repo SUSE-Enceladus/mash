@@ -15,4 +15,4 @@ class TestGCEReplicationJob(object):
         self.job = GCEReplicationJob(self.job_config, self.config)
 
     def test_replicate(self):
-        self.job._run_job()
+        self.job.run_job()

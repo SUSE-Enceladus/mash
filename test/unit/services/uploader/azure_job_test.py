@@ -118,7 +118,7 @@ class TestAzureUploaderJob(object):
         system_image_file_type.is_xz.return_value = True
         mock_FileType.return_value = system_image_file_type
 
-        self.job._run_job()
+        self.job.run_job()
 
         assert mock_get_client_from_auth_file.call_args_list == [
             call(StorageManagementClient, auth_path='tempfile'),
@@ -156,4 +156,4 @@ class TestAzureUploaderJob(object):
         page_blob_service.create_blob_from_stream.side_effect = Exception
 
         with raises(MashUploadException):
-            self.job._run_job()
+            self.job.run_job()

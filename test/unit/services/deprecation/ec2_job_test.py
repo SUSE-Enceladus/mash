@@ -42,7 +42,7 @@ class TestEC2DeprecationJob(object):
         mock_ec2_deprecate_image.return_value = deprecation
 
         self.job.source_regions = {'us-east-2': 'ami-123456'}
-        self.job._run_job()
+        self.job.run_job()
 
         mock_ec2_deprecate_image.assert_called_once_with(
             access_key='123456', deprecation_image_name='old_image_123',
@@ -58,7 +58,7 @@ class TestEC2DeprecationJob(object):
     def test_deprecate_no_old_image(self):
         self.job.source_regions = {'us-east-2': 'ami-123456'}
         self.job.old_cloud_image_name = None
-        self.job._run_job()
+        self.job.run_job()
         assert self.job.status == 'success'
 
     @patch.object(EC2DeprecationJob, 'send_log')
@@ -75,5 +75,5 @@ class TestEC2DeprecationJob(object):
         msg = 'Error deprecating image old_image_123 in us-east-2.' \
             ' No images to deprecate.'
         with raises(MashDeprecationException) as e:
-            self.job._run_job()
+            self.job.run_job()
         assert msg == str(e.value)

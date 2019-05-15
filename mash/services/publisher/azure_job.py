@@ -60,7 +60,7 @@ class AzurePublisherJob(MashJob):
         self.vm_images_key = self.job_config.get('vm_images_key')
         self.publish_offer = self.job_config.get('publish_offer', False)
 
-    def _run_job(self):
+    def run_job(self):
         """
         Publish image and update status.
         """

@@ -75,7 +75,7 @@ class MashJob(object):
                 success
             )
 
-    def _run_job(self):
+    def run_job(self):
         """
         Start and run job workflow.
         """
@@ -91,7 +91,7 @@ class MashJob(object):
         Update iteration count and run job.
         """
         self.iteration_count += 1
-        self._run_job()
+        self.run_job()
 
     @property
     def cloud_image_name(self):

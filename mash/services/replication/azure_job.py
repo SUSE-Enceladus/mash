@@ -51,7 +51,7 @@ class AzureReplicationJob(MashJob):
 
         self.cleanup_images = self.job_config.get('cleanup_images', True)
 
-    def _run_job(self):
+    def run_job(self):
         """
         Replicate image in each source region.
 

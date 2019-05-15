@@ -16,5 +16,5 @@ class TestAzureDeprecationJob(object):
         assert self.job.credentials['status'] == 'no deprecation'
 
     def test_deprecate(self):
-        self.job._run_job()
+        self.job.run_job()
         assert self.job.status == 'success'
