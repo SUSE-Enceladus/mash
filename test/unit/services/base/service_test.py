@@ -311,33 +311,6 @@ class TestBaseService(object):
             'credentials', 'request.obs', token
         )
 
-    def test_get_next_service_error(self):
-        # Test service with no next service
-        self.service.service_exchange = 'pint'
-        next_service = self.service._get_next_service()
-        assert next_service is None
-
-        # Test service not in pipeline
-        self.service.service_exchange = 'credentials'
-        next_service = self.service._get_next_service()
-        assert next_service is None
-
-    def test_get_prev_service(self):
-        # Test service with prev service
-        self.service.service_exchange = 'testing'
-        prev_service = self.service._get_previous_service()
-        assert prev_service == 'uploader'
-
-        # Test service not in pipeline
-        self.service.service_exchange = 'credentials'
-        prev_service = self.service._get_previous_service()
-        assert prev_service is None
-
-        # Test service as beginning of pipeline
-        self.service.service_exchange = 'obs'
-        prev_service = self.service._get_previous_service()
-        assert prev_service is None
-
     @patch.object(MashService, '_publish')
     def test_publish_credentials_delete(self, mock_publish):
         self.service.publish_credentials_delete('1')
