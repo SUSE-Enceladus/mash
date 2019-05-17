@@ -209,15 +209,6 @@ class MashService(object):
             callback=callback, queue=queue
         )
 
-    def log_job_message(self, msg, metadata, success=True):
-        """
-        Callback for job instance to log given message.
-        """
-        if success:
-            self.log.info(msg, extra=metadata)
-        else:
-            self.log.error(msg, extra=metadata)
-
     def persist_job_config(self, config):
         """
         Persist the job config file to disk for recoverability.

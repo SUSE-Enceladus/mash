@@ -576,6 +576,15 @@ class PipelineService(MashService):
         """
         self._publish(exchange, self.listener_msg_key, message)
 
+    def log_job_message(self, msg, metadata, success=True):
+        """
+        Callback for job instance to log given message.
+        """
+        if success:
+            self.log.info(msg, extra=metadata)
+        else:
+            self.log.error(msg, extra=metadata)
+
     def start(self):
         """
         Start pipeline service.

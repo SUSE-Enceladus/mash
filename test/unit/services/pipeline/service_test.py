@@ -794,6 +794,23 @@ class TestPipelineService(object):
             properties=self.msg_properties, routing_key='listener_msg'
         )
 
+    def test_log_job_message(self):
+        self.service.log_job_message('Test message', {'job_id': '1'})
+
+        self.service.log.info.assert_called_once_with(
+            'Test message',
+            extra={'job_id': '1'}
+        )
+
+        self.service.log_job_message(
+            'Test error message', {'job_id': '1'}, success=False
+        )
+
+        self.service.log.error.assert_called_once_with(
+            'Test error message',
+            extra={'job_id': '1'}
+        )
+
     def test_service_start_job(self):
         job = Mock()
         self.service.jobs['1'] = job
