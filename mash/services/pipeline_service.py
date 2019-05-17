@@ -615,6 +615,19 @@ class PipelineService(MashService):
 
         return config['job_file']
 
+    def restart_jobs(self, callback):
+        """
+        Restart jobs from config files.
+
+        Recover from service failure with existing jobs.
+        """
+        for job_file in os.listdir(self.job_directory):
+            with open(os.path.join(self.job_directory, job_file), 'r') \
+                    as conf_file:
+                job_config = json.load(conf_file)
+
+            callback(job_config)
+
     def start(self):
         """
         Start pipeline service.

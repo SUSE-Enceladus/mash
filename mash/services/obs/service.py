@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import atexit
+import json
 import os
 import dateutil.parser
 
@@ -272,3 +273,16 @@ class OBSImageBuildResultService(MashService):
             config_file.write(JsonFormat.json_message(config))
 
         return config['job_file']
+
+    def restart_jobs(self, callback):
+        """
+        Restart jobs from config files.
+
+        Recover from service failure with existing jobs.
+        """
+        for job_file in os.listdir(self.job_directory):
+            with open(os.path.join(self.job_directory, job_file), 'r') \
+                    as conf_file:
+                job_config = json.load(conf_file)
+
+            callback(job_config)

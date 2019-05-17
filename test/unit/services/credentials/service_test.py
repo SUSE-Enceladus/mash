@@ -568,6 +568,23 @@ class TestCredentialsService(object):
                 })
             )
 
+    @patch('mash.services.credentials.service.json.load')
+    @patch('mash.services.credentials.service.os.listdir')
+    def test_restart_jobs(self, mock_os_listdir, mock_json_load):
+        self.service.job_directory = 'tmp-dir'
+        mock_os_listdir.return_value = ['job-123.json']
+        mock_json_load.return_value = {'id': '1'}
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            mock_callback = Mock()
+            self.service.restart_jobs(mock_callback)
+
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.read.call_count == 1
+
+        mock_callback.assert_called_once_with({'id': '1'})
+
     @patch.object(CredentialsService, 'consume_queue')
     @patch.object(CredentialsService, 'close_connection')
     def test_credentials_start(
