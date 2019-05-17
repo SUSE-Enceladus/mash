@@ -26,3 +26,4 @@ ec2imgutils
 python3-ipa>=3.0.0
 lxml
 requests
+urllib3<1.25,>=1.20
