@@ -47,6 +47,7 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.service_queue = 'service'
         self.obs_result.next_service = 'uploader'
         self.obs_result.job_document_key = 'job_document'
+        self.obs_result.listener_msg_key = 'listener_msg'
 
         self.obs_result.post_init()
 
@@ -72,17 +73,17 @@ class TestOBSImageBuildResultService(object):
             {}, extra={'job_id': '815'}
         )
 
-    @patch.object(MashService, 'publish_job_result')
+    @patch.object(MashService, '_publish')
     @patch.object(OBSImageBuildResultService, '_delete_job')
     def test_send_job_result_for_uploader(
-        self, mock_delete_job, mock_publish_job_result
+        self, mock_delete_job, mock_publish
     ):
         self.obs_result.jobs['815'] = Mock()
         self.obs_result.jobs['815'].job_nonstop = False
         self.obs_result._send_job_result_for_uploader('815', {})
         mock_delete_job.assert_called_once_with('815')
-        mock_publish_job_result.assert_called_once_with(
-            'uploader', '{}'
+        mock_publish.assert_called_once_with(
+            'uploader', 'listener_msg', '{}'
         )
 
     def test_send_control_response_local(self):
@@ -107,13 +108,13 @@ class TestOBSImageBuildResultService(object):
             extra={}
         )
 
-    @patch.object(OBSImageBuildResultService, 'publish_job_result')
+    @patch.object(OBSImageBuildResultService, '_publish')
     @patch.object(OBSImageBuildResultService, '_delete_job')
     @patch.object(OBSImageBuildResultService, '_add_job')
     @patch.object(OBSImageBuildResultService, '_send_control_response')
     def test_process_message(
         self, mock_send_control_response, mock_add_job, mock_delete_job,
-        mock_publish_job_result
+        mock_publish
     ):
         message = Mock()
         message.method = {'routing_key': 'job_document'}
@@ -142,8 +143,9 @@ class TestOBSImageBuildResultService(object):
         )
         message.body = '{"job_delete": "4711"}'
         self.obs_result._process_message(message)
-        mock_publish_job_result.assert_called_once_with(
+        mock_publish.assert_called_once_with(
             'uploader',
+            'listener_msg',
             JsonFormat.json_message(
                 {'obs_result': {'id': '4711', 'status': 'delete'}}
             )

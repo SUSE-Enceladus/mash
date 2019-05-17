@@ -30,6 +30,8 @@ class TestPipelineService(object):
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
 
+        self.connection = Mock()
+
         self.tag = Mock()
         self.method = {'delivery_tag': self.tag}
 
@@ -37,6 +39,11 @@ class TestPipelineService(object):
             channel=self.channel,
             method=self.method,
         )
+
+        self.msg_properties = {
+            'content_type': 'application/json',
+            'delivery_mode': 2
+        }
 
         self.error_message = JsonFormat.json_message({
             "replication_result": {
@@ -776,6 +783,15 @@ class TestPipelineService(object):
             'Message not received: {0}'.format(
                 JsonFormat.json_message({"credentials_job_delete": "1"})
             )
+        )
+
+    @patch('mash.services.mash_service.Connection')
+    def test_publish_job_result(self, mock_connection):
+        mock_connection.return_value = self.connection
+        self.service.publish_job_result('exchange', 'message')
+        self.channel.basic.publish.assert_called_once_with(
+            body='message', exchange='exchange', mandatory=True,
+            properties=self.msg_properties, routing_key='listener_msg'
         )
 
     def test_service_start_job(self):

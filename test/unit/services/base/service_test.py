@@ -94,15 +94,6 @@ class TestBaseService(object):
         with raises(MashLogSetupException):
             self.service.set_logfile('/some/log')
 
-    @patch('mash.services.mash_service.Connection')
-    def test_publish_job_result(self, mock_connection):
-        mock_connection.return_value = self.connection
-        self.service.publish_job_result('exchange', 'message')
-        self.channel.basic.publish.assert_called_once_with(
-            body='message', exchange='exchange', mandatory=True,
-            properties=self.msg_properties, routing_key='listener_msg'
-        )
-
     def test_consume_queue(self):
         callback = Mock()
         self.service.consume_queue(callback, queue_name='service')

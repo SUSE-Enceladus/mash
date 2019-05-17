@@ -55,7 +55,6 @@ class MashService(object):
 
         self.service_exchange = service_exchange
         self.custom_args = custom_args
-        self.listener_msg_key = 'listener_msg'
 
         self.config = get_configuration(self.service_exchange)
 
@@ -231,12 +230,6 @@ class MashService(object):
             config_file.write(JsonFormat.json_message(config))
 
         return config['job_file']
-
-    def publish_job_result(self, exchange, message):
-        """
-        Publish the result message to the listener queue on given exchange.
-        """
-        self._publish(exchange, self.listener_msg_key, message)
 
     def remove_file(self, config_file):
         """

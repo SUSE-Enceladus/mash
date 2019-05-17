@@ -43,8 +43,9 @@ class PipelineService(MashService):
     def post_init(self):
         """Initialize base service class and job scheduler."""
         self.listener_queue = 'listener'
-        self.job_document_key = 'job_document'
         self.service_queue = 'service'
+        self.job_document_key = 'job_document'
+        self.listener_msg_key = 'listener_msg'
 
         self.jobs = {}
 
@@ -568,6 +569,12 @@ class PipelineService(MashService):
             'credentials', self.credentials_request_key,
             self.get_credential_request(job_id)
         )
+
+    def publish_job_result(self, exchange, message):
+        """
+        Publish the result message to the listener queue on given exchange.
+        """
+        self._publish(exchange, self.listener_msg_key, message)
 
     def start(self):
         """
