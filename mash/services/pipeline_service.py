@@ -44,6 +44,7 @@ class PipelineService(MashService):
         """Initialize base service class and job scheduler."""
         self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
+        self.service_queue = 'service'
 
         self.jobs = {}
 
@@ -573,9 +574,13 @@ class PipelineService(MashService):
         Start pipeline service.
         """
         self.scheduler.start()
-        self.consume_queue(self._handle_service_message)
         self.consume_queue(
-            self._handle_listener_message, queue_name=self.listener_queue
+            self._handle_service_message,
+            queue_name=self.service_queue
+        )
+        self.consume_queue(
+            self._handle_listener_message,
+            queue_name=self.listener_queue
         )
         self.consume_credentials_queue(self._handle_credentials_response)
 

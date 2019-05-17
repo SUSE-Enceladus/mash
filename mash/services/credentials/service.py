@@ -35,6 +35,7 @@ class CredentialsService(MashService):
     def post_init(self):
         self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
+        self.service_queue = 'service'
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
@@ -393,9 +394,13 @@ class CredentialsService(MashService):
         """
         Start credentials service.
         """
-        self.consume_queue(self._handle_job_documents)
         self.consume_queue(
-            self._handle_account_request, queue_name=self.listener_queue
+            self._handle_job_documents,
+            queue_name=self.service_queue
+        )
+        self.consume_queue(
+            self._handle_account_request,
+            queue_name=self.listener_queue
         )
         self.consume_queue(
             self._handle_credential_request,

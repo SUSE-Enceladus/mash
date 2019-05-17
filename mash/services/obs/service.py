@@ -33,6 +33,7 @@ class OBSImageBuildResultService(MashService):
     """
     def post_init(self):
         self.job_document_key = 'job_document'
+        self.service_queue = 'service'
 
         # setup service log file
         self.set_logfile(self.config.get_log_file(self.service_exchange))
@@ -51,7 +52,10 @@ class OBSImageBuildResultService(MashService):
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
-        self.consume_queue(self._process_message)
+        self.consume_queue(
+            self._process_message,
+            queue_name=self.service_queue
+        )
 
         try:
             self.channel.start_consuming()

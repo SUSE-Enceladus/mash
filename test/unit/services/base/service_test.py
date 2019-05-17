@@ -105,7 +105,7 @@ class TestBaseService(object):
 
     def test_consume_queue(self):
         callback = Mock()
-        self.service.consume_queue(callback)
+        self.service.consume_queue(callback, queue_name='service')
         self.channel.basic.consume.assert_called_once_with(
             callback=callback, queue='obs.service'
         )

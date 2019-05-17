@@ -55,7 +55,6 @@ class MashService(object):
 
         self.service_exchange = service_exchange
         self.custom_args = custom_args
-        self.service_queue = 'service'
         self.listener_msg_key = 'listener_msg'
 
         self.config = get_configuration(self.service_exchange)
@@ -201,15 +200,10 @@ class MashService(object):
         if self.connection and self.connection.is_open:
             self.connection.close()
 
-    def consume_queue(self, callback, queue_name=None):
+    def consume_queue(self, callback, queue_name):
         """
         Declare and consume queue.
-
-        If queue_name not provided use service_queue name attr.
         """
-        if not queue_name:
-            queue_name = self.service_queue
-
         queue = self._get_queue_name(self.service_exchange, queue_name)
         self._declare_queue(queue)
         self.channel.basic.consume(

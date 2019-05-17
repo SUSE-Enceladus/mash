@@ -36,6 +36,7 @@ class JobCreatorService(MashService):
         """
         self.listener_queue = 'listener'
         self.job_document_key = 'job_document'
+        self.service_queue = 'service'
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.cloud_data = self.config.get_cloud_data()
@@ -247,9 +248,13 @@ class JobCreatorService(MashService):
         """
         Start job creator service.
         """
-        self.consume_queue(self._handle_service_message)
         self.consume_queue(
-            self._handle_listener_message, queue_name=self.listener_queue
+            self._handle_service_message,
+            queue_name=self.service_queue
+        )
+        self.consume_queue(
+            self._handle_listener_message,
+            queue_name=self.listener_queue
         )
         try:
             self.channel.start_consuming()

@@ -749,7 +749,10 @@ class TestJobCreatorService(object):
         self.channel.start_consuming.assert_called_once_with()
 
         mock_consume_queue.assert_has_calls([
-            call(self.jobcreator._handle_service_message),
+            call(
+                self.jobcreator._handle_service_message,
+                queue_name='service'
+            ),
             call(
                 self.jobcreator._handle_listener_message,
                 queue_name='listener'

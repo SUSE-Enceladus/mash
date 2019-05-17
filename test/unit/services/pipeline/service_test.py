@@ -513,7 +513,10 @@ class TestPipelineService(object):
 
         self.channel.start_consuming.assert_called_once_with()
         mock_consume_queue.assert_has_calls([
-            call(self.service._handle_service_message),
+            call(
+                self.service._handle_service_message,
+                queue_name='service'
+            ),
             call(
                 self.service._handle_listener_message,
                 queue_name='listener'
