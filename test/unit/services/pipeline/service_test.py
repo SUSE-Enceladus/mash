@@ -1,3 +1,6 @@
+import io
+import json
+import jwt
 import pytest
 
 from unittest.mock import call, MagicMock, Mock, patch
@@ -50,8 +53,13 @@ class TestPipelineService(object):
         })
 
         self.service = PipelineService()
+        self.service.encryption_keys_file = 'encryption_keys.file'
+        self.service.jwt_secret = 'a-secret'
+        self.service.jwt_algorithm = 'HS256'
         self.service.jobs = {}
         self.service.log = Mock()
+
+        self.service.channel = self.channel
         self.service.config = self.config
 
         scheduler = Mock()
@@ -64,6 +72,9 @@ class TestPipelineService(object):
         self.service.listener_msg_key = 'listener_msg'
         self.service.next_service = 'publisher'
         self.service.prev_service = 'testing'
+        self.service.credentials_queue = 'credentials'
+        self.service.credentials_response_key = 'response'
+        self.service.credentials_request_key = 'request.replication'
         self.service.custom_args = None
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
@@ -82,6 +93,9 @@ class TestPipelineService(object):
 
         self.service.post_init()
 
+        self.config.get_encryption_keys_file.assert_called_once_with()
+        self.config.get_jwt_secret.assert_called_once_with()
+        self.config.get_jwt_algorithm.assert_called_once_with()
         self.config.get_log_file.assert_called_once_with('replication')
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/service_service.log'
@@ -611,6 +625,147 @@ class TestPipelineService(object):
         self.service.service_exchange = 'obs'
         prev_service = self.service._get_previous_service()
         assert prev_service is None
+
+    def test_consume_credentials_queue(self):
+        callback = Mock()
+
+        self.service.consume_credentials_queue(callback)
+        self.channel.basic.consume.assert_called_once_with(
+            callback=callback, queue='replication.credentials'
+        )
+
+    @patch.object(PipelineService, 'bind_queue')
+    def test_bind_credentials_queue(self, mock_bind_queue):
+        self.service.bind_credentials_queue()
+
+        mock_bind_queue.assert_called_once_with(
+            'replication', 'response', 'credentials'
+        )
+
+    def test_get_credentials_request(self):
+        self.service.jwt_algorithm = 'HS256'
+        self.service.jwt_secret = 'super.secret'
+        self.service_exchange = 'obs'
+        message = self.service.get_credential_request('1')
+
+        token = json.loads(message)['jwt_token']
+        payload = jwt.decode(
+            token, 'super.secret', algorithm='HS256',
+            issuer='replication', audience='credentials'
+        )
+
+        assert payload['id'] == '1'
+        assert payload['sub'] == 'credentials_request'
+
+    def test_get_encryption_keys_from_file(self):
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.readlines.return_value = [
+                '1234567890123456789012345678901234567890123=\n'
+            ]
+            result = self.service.get_encryption_keys_from_file(
+                'test-keys.file'
+            )
+
+        assert len(result) == 1
+        assert type(result[0]).__name__ == 'Fernet'
+
+    @patch.object(PipelineService, 'decrypt_credentials')
+    @patch('mash.services.pipeline_service.jwt')
+    def test_decode_credentials(self, mock_jwt, mock_decrypt):
+        self.service.jwt_algorithm = 'HS256'
+        self.service.jwt_secret = 'super.secret'
+        self.service_exchange = 'obs'
+
+        message = {'jwt_token': 'secret_credentials'}
+        mock_jwt.decode.return_value = {
+            "id": "1",
+            "credentials": {
+                "test-aws": {"encrypted_creds"},
+                "test-aws-cn": {"encrypted_creds"}
+            }
+        }
+        mock_decrypt.return_value = {
+            "access_key_id": "123456",
+            "secret_access_key": "654321"
+        }
+
+        job_id, credentials = self.service.decode_credentials(message)
+
+        mock_jwt.decode.assert_called_once_with(
+            'secret_credentials', 'super.secret', algorithm='HS256',
+            issuer='credentials', audience='replication'
+        )
+
+        assert len(credentials.keys()) == 2
+        assert job_id == '1'
+        assert credentials['test-aws']['access_key_id'] == '123456'
+        assert credentials['test-aws']['secret_access_key'] == '654321'
+
+        # Missing credentials key
+        mock_jwt.decode.return_value = {"id": "1"}
+
+        job_id, credentials = self.service.decode_credentials(message)
+        self.service.log.error.assert_called_once_with(
+            "Invalid credentials response recieved: 'credentials'"
+            " key must be in credentials message."
+        )
+
+        # Credential exception
+        self.service.log.error.reset_mock()
+        mock_jwt.decode.side_effect = Exception('Token is broken!')
+
+        job_id, credentials = self.service.decode_credentials(message)
+        self.service.log.error.assert_called_once_with(
+            'Invalid credentials response token: Token is broken!'
+        )
+
+    def test_decrypt_credentials(self):
+        self.service.encryption_keys_file = '../data/encryption_keys'
+        msg = b'gAAAAABaxoqn6i-IJAUaVXd6NkVqdJ8GKRiEDT9TgFkdS9r2U8NHyBoG' \
+            b'M2Bc4sUsTVBd1a3S7XCESxXgOdrTH5vUvj26TqkIuDTxg4lw-IIT3D84pT' \
+            b'6wX2cSEifMYIcjUzQGPXWhU4oQgrwOYIdR9p9DxTw5GPMwTQ=='
+
+        creds = self.service.decrypt_credentials(msg)
+
+        assert creds['access_key_id'] == '123456'
+        assert creds['secret_access_key'] == '654321'
+
+    @patch.object(PipelineService, 'get_credential_request')
+    @patch.object(PipelineService, '_publish')
+    def test_publish_credentials_request(
+        self, mock_publish, mock_get_credential_request
+    ):
+        token = Mock()
+        mock_get_credential_request.return_value = token
+
+        self.service.service_exchange = 'obs'
+        self.service.publish_credentials_request('1')
+
+        mock_publish.assert_called_once_with(
+            'credentials', 'request.replication', token
+        )
+
+    @patch.object(PipelineService, '_publish')
+    def test_publish_credentials_delete(self, mock_publish):
+        self.service.publish_credentials_delete('1')
+        mock_publish.assert_called_once_with(
+            'credentials',
+            'job_document',
+            JsonFormat.json_message({"credentials_job_delete": "1"})
+        )
+
+    @patch.object(PipelineService, '_publish')
+    def test_publish_credentials_delete_exception(self, mock_publish):
+        mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
+
+        self.service.publish_credentials_delete('1')
+        self.service.log.warning.assert_called_once_with(
+            'Message not received: {0}'.format(
+                JsonFormat.json_message({"credentials_job_delete": "1"})
+            )
+        )
 
     def test_service_start_job(self):
         job = Mock()
