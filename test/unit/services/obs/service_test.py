@@ -1,7 +1,10 @@
+import io
+
 from pytest import raises
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import Mock
+from unittest.mock import MagicMock
 
 from test.unit.test_helper import (
     patch_open
@@ -293,3 +296,19 @@ class TestOBSImageBuildResultService(object):
         job_worker.start_watchdog.assert_called_once_with(
             isotime='2017-10-11T17:50:26+00:00', nonstop=False
         )
+
+    def test_persist_job_config(self):
+        self.obs_result.job_directory = 'tmp-dir/'
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            self.obs_result.persist_job_config({'id': '1'})
+            file_handle = mock_open.return_value.__enter__.return_value
+            # Dict is mutable, mock compares the final value of Dict
+            # not the initial value that was passed in.
+            file_handle.write.assert_called_with(
+                JsonFormat.json_message({
+                    "id": "1",
+                    "job_file": "tmp-dir/job-1.json"
+                })
+            )

@@ -829,6 +829,22 @@ class TestPipelineService(object):
         self.service.remove_file('job-test.json')
         mock_remove.assert_called_once_with('job-test.json')
 
+    def test_persist_job_config(self):
+        self.service.job_directory = 'tmp-dir/'
+
+        with patch('builtins.open', create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=io.IOBase)
+            self.service.persist_job_config({'id': '1'})
+            file_handle = mock_open.return_value.__enter__.return_value
+            # Dict is mutable, mock compares the final value of Dict
+            # not the initial value that was passed in.
+            file_handle.write.assert_called_with(
+                JsonFormat.json_message({
+                    "id": "1",
+                    "job_file": "tmp-dir/job-1.json"
+                })
+            )
+
     def test_service_start_job(self):
         job = Mock()
         self.service.jobs['1'] = job

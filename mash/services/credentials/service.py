@@ -408,6 +408,19 @@ class CredentialsService(MashService):
         except Exception:
             pass
 
+    def persist_job_config(self, config):
+        """
+        Persist the job config file to disk for recoverability.
+        """
+        config['job_file'] = '{0}job-{1}.json'.format(
+            self.job_directory, config['id']
+        )
+
+        with open(config['job_file'], 'w') as config_file:
+            config_file.write(JsonFormat.json_message(config))
+
+        return config['job_file']
+
     def start(self):
         """
         Start credentials service.

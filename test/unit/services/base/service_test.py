@@ -11,7 +11,6 @@ from mash.mash_exceptions import (
     MashRabbitConnectionException,
     MashLogSetupException
 )
-from mash.utils.json_format import JsonFormat
 
 open_name = "builtins.open"
 
@@ -98,22 +97,6 @@ class TestBaseService(object):
         self.service.close_connection()
         self.connection.close.assert_called_once_with()
         self.channel.close.assert_called_once_with()
-
-    def test_persist_job_config(self):
-        self.service.job_directory = 'tmp-dir/'
-
-        with patch(open_name, create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.service.persist_job_config({'id': '1'})
-            file_handle = mock_open.return_value.__enter__.return_value
-            # Dict is mutable, mock compares the final value of Dict
-            # not the initial value that was passed in.
-            file_handle.write.assert_called_with(
-                JsonFormat.json_message({
-                    "id": "1",
-                    "job_file": "tmp-dir/job-1.json"
-                })
-            )
 
     @patch('mash.services.mash_service.json.load')
     @patch('mash.services.mash_service.os.listdir')
