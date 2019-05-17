@@ -34,6 +34,7 @@ class TestJobCreatorService(object):
         self.jobcreator.delete_account_key = 'delete_account'
         self.jobcreator.service_exchange = 'jobcreator'
         self.jobcreator.listener_queue = 'listener'
+        self.jobcreator.service_queue = 'service'
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
             'obs', 'uploader', 'testing', 'replication',

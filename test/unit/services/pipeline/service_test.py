@@ -79,13 +79,15 @@ class TestPipelineService(object):
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
 
+    @patch.object(PipelineService, 'bind_queue')
     @patch.object(PipelineService, 'bind_credentials_queue')
     @patch.object(PipelineService, 'restart_jobs')
     @patch.object(PipelineService, 'set_logfile')
     @patch.object(PipelineService, 'start')
     def test_service_post_init(
         self, mock_start,
-        mock_set_logfile, mock_restart_jobs, mock_bind_creds
+        mock_set_logfile, mock_restart_jobs, mock_bind_creds,
+        mock_bind_queue
     ):
         self.service.config = self.config
         self.config.get_log_file.return_value = \
@@ -102,16 +104,22 @@ class TestPipelineService(object):
         )
 
         mock_bind_creds.assert_called_once_with()
+        mock_bind_queue.has_calls([
+            call('replication', 'job_document', 'service'),
+            call('replication', 'listener_msg', 'listener')
+        ])
         mock_restart_jobs.assert_called_once_with(self.service._add_job)
         mock_start.assert_called_once_with()
 
+    @patch.object(PipelineService, 'bind_queue')
     @patch.object(PipelineService, 'bind_credentials_queue')
     @patch.object(PipelineService, 'restart_jobs')
     @patch.object(PipelineService, 'set_logfile')
     @patch.object(PipelineService, 'start')
     def test_service_post_init_custom_args(
         self, mock_start,
-        mock_set_logfile, mock_restart_jobs, mock_bind_creds
+        mock_set_logfile, mock_restart_jobs, mock_bind_creds,
+        mock_bind_queue
     ):
         self.service.config = self.config
         self.service.custom_args = {

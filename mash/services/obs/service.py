@@ -32,6 +32,8 @@ class OBSImageBuildResultService(MashService):
     service
     """
     def post_init(self):
+        self.job_document_key = 'job_document'
+
         # setup service log file
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
@@ -39,6 +41,10 @@ class OBSImageBuildResultService(MashService):
         self.download_directory = self.config.get_download_directory()
 
         self.jobs = {}
+
+        self.bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
+        )
 
         # read and launch open jobs
         self.restart_jobs(self._start_job)

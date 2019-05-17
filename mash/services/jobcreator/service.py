@@ -34,6 +34,9 @@ class JobCreatorService(MashService):
         """
         Initialize job creator service class.
         """
+        self.listener_queue = 'listener'
+        self.job_document_key = 'job_document'
+
         self.set_logfile(self.config.get_log_file(self.service_exchange))
         self.cloud_data = self.config.get_cloud_data()
         self.services = self.config.get_service_names()
@@ -46,6 +49,9 @@ class JobCreatorService(MashService):
         )
         self.bind_queue(
             self.service_exchange, self.delete_account_key, self.listener_queue
+        )
+        self.bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
         )
 
         self.jobs = {}

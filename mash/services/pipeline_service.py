@@ -42,6 +42,9 @@ class PipelineService(MashService):
     """
     def post_init(self):
         """Initialize base service class and job scheduler."""
+        self.listener_queue = 'listener'
+        self.job_document_key = 'job_document'
+
         self.jobs = {}
 
         self.next_service = self._get_next_service()
@@ -71,6 +74,13 @@ class PipelineService(MashService):
             self.status_msg_args += self.custom_args['status_msg_args']
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+
+        self.bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
+        )
+        self.bind_queue(
+            self.service_exchange, self.listener_msg_key, self.listener_queue
+        )
         self.bind_credentials_queue()
 
         self.scheduler = BackgroundScheduler(timezone=utc)

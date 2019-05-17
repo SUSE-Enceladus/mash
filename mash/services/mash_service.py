@@ -56,8 +56,6 @@ class MashService(object):
         self.service_exchange = service_exchange
         self.custom_args = custom_args
         self.service_queue = 'service'
-        self.listener_queue = 'listener'
-        self.job_document_key = 'job_document'
         self.listener_msg_key = 'listener_msg'
 
         self.config = get_configuration(self.service_exchange)
@@ -82,12 +80,6 @@ class MashService(object):
         )
 
         self._open_connection()
-        self.bind_queue(
-            self.service_exchange, self.job_document_key, self.service_queue
-        )
-        self.bind_queue(
-            self.service_exchange, self.listener_msg_key, self.listener_queue
-        )
 
         logging.basicConfig()
         self.log = logging.getLogger(

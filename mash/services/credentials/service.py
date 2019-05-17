@@ -33,6 +33,9 @@ class CredentialsService(MashService):
     Implements CredentialsService based on web token technology
     """
     def post_init(self):
+        self.listener_queue = 'listener'
+        self.job_document_key = 'job_document'
+
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.encryption_keys_file = self.config.get_encryption_keys_file()
@@ -61,6 +64,9 @@ class CredentialsService(MashService):
         )
         self.bind_queue(
             self.service_exchange, self.delete_account_key, self.listener_queue
+        )
+        self.bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
         )
         self._bind_credential_request_keys()
 
