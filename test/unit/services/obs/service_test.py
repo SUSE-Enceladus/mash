@@ -7,13 +7,17 @@ from test.unit.test_helper import (
     patch_open
 )
 
+from mash.services.base_defaults import Defaults
 from mash.services.obs.service import OBSImageBuildResultService
 from mash.services.mash_service import MashService
 from mash.utils.json_format import JsonFormat
 
 
 class TestOBSImageBuildResultService(object):
-    @patch('mash.services.mash_service.MashService.set_logfile')
+
+    @patch('mash.services.obs.service.os.makedirs')
+    @patch.object(Defaults, 'get_job_directory')
+    @patch.object(OBSImageBuildResultService, 'set_logfile')
     @patch.object(OBSImageBuildResultService, '_process_message')
     @patch.object(OBSImageBuildResultService, '_send_job_response')
     @patch.object(OBSImageBuildResultService, '_send_job_result_for_uploader')
@@ -26,8 +30,9 @@ class TestOBSImageBuildResultService(object):
         self, mock_register, mock_log, mock_listdir, mock_MashService,
         mock_restart_jobs, mock_send_job_result_for_uploader,
         mock_send_job_response, mock_process_message,
-        mock_set_logfile
+        mock_set_logfile, mock_get_job_directory, mock_makedirs
     ):
+        mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
         config = Mock()
         config.get_log_file.return_value = 'logfile'
         self.log = Mock()
@@ -50,6 +55,11 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.listener_msg_key = 'listener_msg'
 
         self.obs_result.post_init()
+
+        mock_get_job_directory.assert_called_once_with('obs')
+        mock_makedirs.assert_called_once_with(
+            '/var/lib/mash/obs_jobs/', exist_ok=True
+        )
 
         mock_set_logfile.assert_called_once_with('logfile')
         mock_restart_jobs.assert_called_once_with(self.obs_result._start_job)

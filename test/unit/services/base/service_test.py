@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, Mock
 from pytest import raises
 
 from mash.services.mash_service import MashService
-from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
@@ -19,14 +18,10 @@ open_name = "builtins.open"
 
 class TestBaseService(object):
     @patch('mash.services.mash_service.get_configuration')
-    @patch('mash.services.mash_service.os.makedirs')
-    @patch.object(Defaults, 'get_job_directory')
     @patch('mash.services.mash_service.Connection')
     def setup(
-        self, mock_connection, mock_get_job_directory, mock_makedirs,
-        mock_get_configuration
+        self, mock_connection, mock_get_configuration
     ):
-        mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
         self.connection = Mock()
         self.channel = Mock()
         self.msg_properties = {
@@ -52,10 +47,6 @@ class TestBaseService(object):
         self.service = MashService('obs')
 
         mock_get_configuration.assert_called_once_with('obs')
-        mock_get_job_directory.assert_called_once_with('obs')
-        mock_makedirs.assert_called_once_with(
-            '/var/lib/mash/obs_jobs/', exist_ok=True
-        )
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):

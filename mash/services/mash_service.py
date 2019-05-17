@@ -27,7 +27,6 @@ from email.message import EmailMessage
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
-from mash.services.base_defaults import Defaults
 from mash.services import get_configuration
 from mash.services.status_levels import SUCCESS
 from mash.mash_exceptions import (
@@ -70,12 +69,6 @@ class MashService(object):
         self.smtp_user = self.config.get_smtp_user()
         self.smtp_pass = self.config.get_smtp_pass()
         self.notification_subject = self.config.get_notification_subject()
-
-        # setup service data directory
-        self.job_directory = Defaults.get_job_directory(self.service_exchange)
-        os.makedirs(
-            self.job_directory, exist_ok=True
-        )
 
         self._open_connection()
 

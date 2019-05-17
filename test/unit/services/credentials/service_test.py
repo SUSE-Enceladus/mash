@@ -4,6 +4,7 @@ import json
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
+from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.credentials.service import CredentialsService
 from mash.services.credentials.account_datastore import AccountDatastore
@@ -42,6 +43,8 @@ class TestCredentialsService(object):
         self.service.jobs = {}
         self.service.log = Mock()
 
+    @patch('mash.services.credentials.service.os.makedirs')
+    @patch.object(Defaults, 'get_job_directory')
     @patch('mash.services.credentials.service.AccountDatastore')
     @patch.object(CredentialsService, 'set_logfile')
     @patch.object(CredentialsService, 'start')
@@ -49,8 +52,10 @@ class TestCredentialsService(object):
     @patch.object(CredentialsService, 'restart_jobs')
     def test_post_init(
         self, mock_restart_jobs, mock_bind_cred_req_keys, mock_start,
-        mock_set_logfile, mock_datastore
+        mock_set_logfile, mock_datastore, mock_get_job_directory,
+        mock_makedirs
     ):
+        mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
         self.service.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/credentials_service.log'
@@ -63,6 +68,11 @@ class TestCredentialsService(object):
         )
         mock_set_logfile.assert_called_once_with(
             '/var/log/mash/credentials_service.log'
+        )
+
+        mock_get_job_directory.assert_called_once_with('credentials')
+        mock_makedirs.assert_called_once_with(
+            '/var/lib/mash/obs_jobs/', exist_ok=True
         )
 
         mock_bind_cred_req_keys.assert_called_once_with()

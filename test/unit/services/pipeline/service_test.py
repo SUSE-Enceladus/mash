@@ -9,6 +9,7 @@ from amqpstorm import AMQPError
 
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 
+from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.pipeline_service import PipelineService
 from mash.utils.json_format import JsonFormat
@@ -86,6 +87,8 @@ class TestPipelineService(object):
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
 
+    @patch('mash.services.pipeline_service.os.makedirs')
+    @patch.object(Defaults, 'get_job_directory')
     @patch.object(PipelineService, 'bind_queue')
     @patch.object(PipelineService, 'bind_credentials_queue')
     @patch.object(PipelineService, 'restart_jobs')
@@ -94,13 +97,19 @@ class TestPipelineService(object):
     def test_service_post_init(
         self, mock_start,
         mock_set_logfile, mock_restart_jobs, mock_bind_creds,
-        mock_bind_queue
+        mock_bind_queue, mock_get_job_directory, mock_makedirs
     ):
+        mock_get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
         self.service.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/service_service.log'
 
         self.service.post_init()
+
+        mock_get_job_directory.assert_called_once_with('replication')
+        mock_makedirs.assert_called_once_with(
+            '/var/lib/mash/replication_jobs/', exist_ok=True
+        )
 
         self.config.get_encryption_keys_file.assert_called_once_with()
         self.config.get_jwt_secret.assert_called_once_with()
@@ -118,6 +127,8 @@ class TestPipelineService(object):
         mock_restart_jobs.assert_called_once_with(self.service._add_job)
         mock_start.assert_called_once_with()
 
+    @patch('mash.services.pipeline_service.os.makedirs')
+    @patch.object(Defaults, 'get_job_directory')
     @patch.object(PipelineService, 'bind_queue')
     @patch.object(PipelineService, 'bind_credentials_queue')
     @patch.object(PipelineService, 'restart_jobs')
@@ -126,8 +137,9 @@ class TestPipelineService(object):
     def test_service_post_init_custom_args(
         self, mock_start,
         mock_set_logfile, mock_restart_jobs, mock_bind_creds,
-        mock_bind_queue
+        mock_bind_queue, mock_get_job_directory, mock_makedirs
     ):
+        mock_makedirs.return_value = True
         self.service.config = self.config
         self.service.custom_args = {
             'listener_msg_args': ['source_regions'],

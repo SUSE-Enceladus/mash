@@ -23,6 +23,7 @@ import os
 from datetime import datetime, timedelta
 
 # project
+from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.credentials import get_account_info
 from mash.services.credentials.account_datastore import AccountDatastore
@@ -58,6 +59,12 @@ class CredentialsService(MashService):
         )
 
         self.jobs = {}
+
+        # setup service job directory
+        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        os.makedirs(
+            self.job_directory, exist_ok=True
+        )
 
         self.add_account_key = 'add_account'
         self.delete_account_key = 'delete_account'
