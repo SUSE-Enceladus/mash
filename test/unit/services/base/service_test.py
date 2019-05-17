@@ -124,12 +124,6 @@ class TestBaseService(object):
                 })
             )
 
-    @patch('mash.services.mash_service.os.remove')
-    def test_remove_file(self, mock_remove):
-        mock_remove.side_effect = Exception('File not found.')
-        self.service.remove_file('job-test.json')
-        mock_remove.assert_called_once_with('job-test.json')
-
     @patch('mash.services.mash_service.json.load')
     @patch('mash.services.mash_service.os.listdir')
     def test_restart_jobs(self, mock_os_listdir, mock_json_load):

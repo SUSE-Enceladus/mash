@@ -18,6 +18,7 @@
 
 import json
 import jwt
+import os
 
 from amqpstorm import AMQPError
 
@@ -584,6 +585,15 @@ class PipelineService(MashService):
             self.log.info(msg, extra=metadata)
         else:
             self.log.error(msg, extra=metadata)
+
+    def remove_file(self, config_file):
+        """
+        Remove file from disk if it exists.
+        """
+        try:
+            os.remove(config_file)
+        except Exception:
+            pass
 
     def start(self):
         """

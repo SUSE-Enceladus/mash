@@ -18,6 +18,7 @@
 
 import jwt
 import json
+import os
 
 from datetime import datetime, timedelta
 
@@ -390,6 +391,15 @@ class CredentialsService(MashService):
             self.log.warning(
                 'Unable to delete account: {0}'.format(error)
             )
+
+    def remove_file(self, config_file):
+        """
+        Remove file from disk if it exists.
+        """
+        try:
+            os.remove(config_file)
+        except Exception:
+            pass
 
     def start(self):
         """

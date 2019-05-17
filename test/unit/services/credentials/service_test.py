@@ -535,6 +535,12 @@ class TestCredentialsService(object):
             'Unable to delete account: Forbidden!'
         )
 
+    @patch('mash.services.credentials.service.os.remove')
+    def test_remove_file(self, mock_remove):
+        mock_remove.side_effect = Exception('File not found.')
+        self.service.remove_file('job-test.json')
+        mock_remove.assert_called_once_with('job-test.json')
+
     @patch.object(CredentialsService, 'consume_queue')
     @patch.object(CredentialsService, 'close_connection')
     def test_credentials_start(

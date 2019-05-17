@@ -811,6 +811,12 @@ class TestPipelineService(object):
             extra={'job_id': '1'}
         )
 
+    @patch('mash.services.pipeline_service.os.remove')
+    def test_remove_file(self, mock_remove):
+        mock_remove.side_effect = Exception('File not found.')
+        self.service.remove_file('job-test.json')
+        mock_remove.assert_called_once_with('job-test.json')
+
     def test_service_start_job(self):
         job = Mock()
         self.service.jobs['1'] = job
