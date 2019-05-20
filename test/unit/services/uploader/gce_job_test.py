@@ -112,5 +112,6 @@ class TestGCEUploaderJob(object):
             'https://www.googleapis.com/storage/v1/b/images/o/'
             'sles-12-sp4-v20180909.tar.gz',
             description='description 20180909',
+            wait_for_completion=True,
             family='sles-12'
         )

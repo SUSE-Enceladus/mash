@@ -108,7 +108,10 @@ class GCEUploaderJob(MashJob):
                 info['bucket'], '/o/', object_name
             ])
 
-            kwargs = {'description': self.cloud_image_description}
+            kwargs = {
+                'description': self.cloud_image_description,
+                'wait_for_completion': True
+            }
 
             if info['family']:
                 kwargs['family'] = info['family']
