@@ -158,24 +158,6 @@ class BaseJob(object):
 
         return JsonFormat.json_message(obs_message)
 
-    def get_pint_message(self):
-        """
-        Build pint job message.
-        """
-        pint_message = {
-            'pint_job': {
-                'cloud': self.cloud,
-                'cloud_image_name': self.cloud_image_name,
-            }
-        }
-        pint_message['pint_job'].update(self.base_message)
-
-        if self.old_cloud_image_name:
-            pint_message['pint_job']['old_cloud_image_name'] = \
-                self.old_cloud_image_name
-
-        return JsonFormat.json_message(pint_message)
-
     def get_publisher_message(self):
         """
         Build publisher job message.

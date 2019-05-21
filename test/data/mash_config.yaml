@@ -13,7 +13,6 @@ services:
   - replication
   - publisher
   - deprecation
-  - pint
 non_cred_services:
   - obs
 logger:

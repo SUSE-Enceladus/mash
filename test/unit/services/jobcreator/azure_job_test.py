@@ -15,7 +15,7 @@ def test_azure_job_missing_keys(mock_init):
             'job_id': '123',
             'cloud': 'azure',
             'requesting_user': 'test-user',
-            'last_service': 'pint',
+            'last_service': 'deprecation',
             'utctime': 'now',
             'image': 'test-image',
             'cloud_image_name': 'test-cloud-image',

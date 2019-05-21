@@ -113,7 +113,7 @@ class TestCredentialsService(object):
     def test_credentials_bind_credential_request_keys(self, mock_bind_queue):
         self.service.services = [
             'replication', 'deprecation', 'uploader',
-            'testing', 'publisher', 'pint'
+            'testing', 'publisher'
         ]
         self.service._bind_credential_request_keys()
 
@@ -122,8 +122,7 @@ class TestCredentialsService(object):
             call('credentials', 'request.deprecation', 'request'),
             call('credentials', 'request.uploader', 'request'),
             call('credentials', 'request.testing', 'request'),
-            call('credentials', 'request.publisher', 'request'),
-            call('credentials', 'request.pint', 'request')
+            call('credentials', 'request.publisher', 'request')
         ])
 
     @patch.object(AccountDatastore, 'check_job_accounts')
@@ -376,25 +375,27 @@ class TestCredentialsService(object):
     def test_send_credential_response(
         self, mock_publish_credentials_response, mock_get_cred_response
     ):
-        job = {'id': '1', 'last_service': 'pint', 'utctime': 'now'}
+        job = {'id': '1', 'last_service': 'deprecation', 'utctime': 'now'}
         self.service.jobs = {'1': job}
 
         mock_get_cred_response.return_value = b'response'
 
-        self.service._send_credential_response({'id': '1', 'iss': 'pint'})
-        mock_get_cred_response.assert_called_once_with('1', 'pint')
+        self.service._send_credential_response(
+            {'id': '1', 'iss': 'deprecation'}
+        )
+        mock_get_cred_response.assert_called_once_with('1', 'deprecation')
         self.service.log.info.assert_called_once_with(
-            'Received credentials request from pint for job: 1.'
+            'Received credentials request from deprecation for job: 1.'
         )
         mock_publish_credentials_response.assert_called_once_with(
-            JsonFormat.json_message({"jwt_token": "response"}), 'pint'
+            JsonFormat.json_message({"jwt_token": "response"}), 'deprecation'
         )
 
     @patch.object(CredentialsService, '_send_control_response')
     def test_send_credential_response_invalid(
         self, mock_send_control_response
     ):
-        self.service._send_credential_response({'id': '1', 'iss': 'pint'})
+        self.service._send_credential_response({'id': '1', 'iss': 'deprecation'})
         mock_send_control_response.assert_called_once_with(
             'Credentials job 1 does not exist.', success=False,
             job_id='1'

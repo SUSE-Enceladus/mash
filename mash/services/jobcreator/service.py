@@ -215,10 +215,6 @@ class JobCreatorService(MashService):
                 self.publish_job_doc(
                     'obs', job.get_obs_message()
                 )
-            elif service == 'pint':
-                self.publish_job_doc(
-                    'pint', job.get_pint_message()
-                )
             elif service == 'publisher':
                 self.publish_job_doc(
                     'publisher', job.get_publisher_message()

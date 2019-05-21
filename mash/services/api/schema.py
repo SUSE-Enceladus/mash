@@ -213,7 +213,7 @@ base_job_message = {
         'last_service': {
             'enum': [
                 'uploader', 'testing', 'replication',
-                'publisher', 'deprecation', 'pint'
+                'publisher', 'deprecation'
             ]
         },
         'utctime': {
