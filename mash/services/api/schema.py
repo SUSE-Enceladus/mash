@@ -167,7 +167,8 @@ add_account_gce = {
         'cloud': {'enum': ['gce']},
         'testing_account': {'$ref': '#/definitions/non_empty_string'},
         'region': {'$ref': '#/definitions/non_empty_string'},
-        'requesting_user': {'$ref': '#/definitions/non_empty_string'}
+        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
+        'is_publishing_account': {'type': 'boolean'}
     },
     'additionalProperties': False,
     'required': [
