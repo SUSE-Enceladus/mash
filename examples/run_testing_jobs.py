@@ -6,7 +6,7 @@ from amqpstorm import Connection
 
 services = (
     'obs', 'uploader', 'testing', 'replication', 'publisher',
-    'deprecation', 'pint'
+    'deprecation'
 )
 
 

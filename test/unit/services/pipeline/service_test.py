@@ -24,7 +24,7 @@ class TestPipelineService(object):
         self.config.config_data = None
         self.config.get_service_names.return_value = [
             'obs', 'uploader', 'testing', 'replication', 'publisher',
-            'deprecation', 'pint'
+            'deprecation'
         ]
 
         self.channel = Mock()
@@ -601,7 +601,7 @@ class TestPipelineService(object):
 
     def test_get_next_service_error(self):
         # Test service with no next service
-        self.service.service_exchange = 'pint'
+        self.service.service_exchange = 'deprecation'
         next_service = self.service._get_next_service()
         assert next_service is None
 

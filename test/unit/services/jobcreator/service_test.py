@@ -37,7 +37,7 @@ class TestJobCreatorService(object):
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
             'obs', 'uploader', 'testing', 'replication',
-            'publisher', 'deprecation', 'pint'
+            'publisher', 'deprecation'
         ]
 
     @patch.object(JobCreatorService, 'set_logfile')
@@ -71,7 +71,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'pint'
+            assert job_data['last_service'] == 'deprecation'
             assert job_data['notification_email'] == 'test@fake.com'
             assert job_data['notification_type'] == 'single'
 
@@ -236,13 +236,6 @@ class TestJobCreatorService(object):
                 assert 'ap-northeast-1' in region['target_regions']
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']
-
-        # Pint Job Doc
-
-        data = json.loads(mock_publish.mock_calls[7][1][2])['pint_job']
-        check_base_attrs(data)
-        assert data['cloud_image_name'] == 'new_image_123'
-        assert data['old_cloud_image_name'] == 'old_new_image_123'
 
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_azure(
@@ -561,7 +554,8 @@ class TestJobCreatorService(object):
             extra={'job_id': '123'}
         )
         mock_send_email_notification.assert_called_once_with(
-            '123', 'test@fake.com', None, 'failed', 'now', 'pint', error=None
+            '123', 'test@fake.com', None, 'failed', 'now', 'deprecation',
+            error=None
         )
 
     @patch.object(JobCreatorService, '_publish')

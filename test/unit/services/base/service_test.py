@@ -45,7 +45,7 @@ class TestBaseService(object):
         config = Mock()
         config.get_service_names.return_value = [
             'obs', 'uploader', 'testing', 'replication', 'publisher',
-            'deprecation', 'pint'
+            'deprecation'
         ]
         mock_get_configuration.return_value = config
 

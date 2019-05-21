@@ -227,7 +227,7 @@ class CredentialsService(MashService):
                 "cloud": "EC2",
                 "cloud_accounts": ["test-aws", "test-aws-cn"],
                 "requesting_user": "test-aws",
-                "last_service": "pint"
+                "last_service": "deprecation"
             }
         }
         """

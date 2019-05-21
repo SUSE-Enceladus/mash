@@ -15,7 +15,7 @@ class TestJobCreatorBaseJob(object):
                 'job_id': '123',
                 'cloud': 'aws',
                 'requesting_user': 'test-user',
-                'last_service': 'pint',
+                'last_service': 'deprecation',
                 'utctime': 'now',
                 'image': 'test-image',
                 'cloud_image_name': 'test-cloud-image',
@@ -47,7 +47,7 @@ class TestJobCreatorBaseJob(object):
                 {}, {}, {
                     'cloud': 'aws',
                     'requesting_user': 'test-user',
-                    'last_service': 'pint',
+                    'last_service': 'deprecation',
                     'utctime': 'now',
                     'image': 'test-image',
                     'cloud_image_name': 'test-cloud-image',

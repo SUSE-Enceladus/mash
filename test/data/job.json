@@ -6,7 +6,7 @@
   ],
   "cloud_groups": ["test"],
   "requesting_user": "user1",
-  "last_service": "pint",
+  "last_service": "deprecation",
   "utctime": "now",
   "image": "test_image_oem",
   "cloud_image_name": "new_image_123",
