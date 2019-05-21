@@ -32,7 +32,8 @@ class TestAmazonUploaderJob(object):
                 'us-east-1': {
                     'account': 'test',
                     'helper_image': 'ami-bc5b48d0',
-                    'billing_codes': None
+                    'billing_codes': None,
+                    'use_root_swap': False
                 }
             },
             'cloud_image_name': 'name',
@@ -142,3 +143,65 @@ class TestAmazonUploaderJob(object):
 
         with raises(MashUploadException):
             self.job.run_job()
+
+    @patch('mash.services.uploader.ec2_job.EC2Setup')
+    @patch('mash.services.uploader.ec2_job.get_client')
+    @patch('mash.services.uploader.ec2_job.generate_name')
+    @patch('mash.services.uploader.ec2_job.NamedTemporaryFile')
+    @patch('mash.services.uploader.ec2_job.EC2ImageUploader')
+    @patch_open
+    def test_upload_root_swap(
+        self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
+        mock_generate_name, mock_get_client, mock_ec2_setup
+    ):
+        job_doc = {
+            'cloud_architecture': 'aarch64',
+            'id': '1',
+            'last_service': 'uploader',
+            'cloud': 'ec2',
+            'utctime': 'now',
+            'target_regions': {
+                'us-east-1': {
+                    'account': 'test',
+                    'helper_image': 'ami-bc5b48d0',
+                    'billing_codes': None,
+                    'use_root_swap': True
+                }
+            },
+            'cloud_image_name': 'name',
+            'image_description': 'description'
+        }
+        self.job = EC2UploaderJob(job_doc, self.config)
+        self.job.image_file = ['file']
+        self.job.credentials = self.credentials
+
+        open_context = context_manager()
+        mock_open.return_value = open_context.context_manager_mock
+
+        ec2_upload = Mock()
+        ec2_upload.create_image.return_value = 'ami_id'
+        mock_EC2ImageUploader.return_value = ec2_upload
+
+        tempfile = Mock()
+        tempfile.name = 'tmpfile'
+        mock_NamedTemporaryFile.return_value = tempfile
+
+        ec2_client = Mock()
+        # https://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.Client.create_key_pair
+        ec2_client.create_key_pair.return_value = {
+            'KeyFingerprint': 'fingerprint',
+            'KeyMaterial': 'pkey',
+            'KeyName': 'name'
+        }
+        mock_get_client.return_value = ec2_client
+
+        mock_generate_name.return_value = 'xxxx'
+
+        ec2_setup = Mock()
+        ec2_setup.create_vpc_subnet.return_value = 'subnet-123456789'
+        ec2_setup.create_security_group.return_value = 'sg-123456789'
+        mock_ec2_setup.return_value = ec2_setup
+
+        self.job.run_job()
+
+        ec2_upload.create_image_use_root_swap.assert_called_once_with('file')

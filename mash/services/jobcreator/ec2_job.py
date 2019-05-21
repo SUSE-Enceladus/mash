@@ -36,6 +36,7 @@ class EC2Job(BaseJob):
         self.share_with = self.kwargs.get('share_with', 'all')
         self.allow_copy = self.kwargs.get('allow_copy', True)
         self.billing_codes = self.kwargs.get('billing_codes')
+        self.use_root_swap = self.kwargs.get('use_root_swap', False)
 
     def get_account_info(self):
         """
@@ -194,7 +195,8 @@ class EC2Job(BaseJob):
             target_regions[source_region] = {
                 'account': value['account'],
                 'helper_image': value['helper_image'],
-                'billing_codes': self.billing_codes
+                'billing_codes': self.billing_codes,
+                'use_root_swap': self.use_root_swap
             }
 
         return target_regions
