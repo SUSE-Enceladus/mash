@@ -157,7 +157,6 @@ class AzureJob(BaseJob):
         """
         replication_message = {
             'replication_job': {
-                'cleanup_images': self.cleanup_images,
                 'image_description': self.image_description,
                 'cloud': self.cloud,
                 'replication_source_regions':
@@ -165,6 +164,10 @@ class AzureJob(BaseJob):
             }
         }
         replication_message['replication_job'].update(self.base_message)
+
+        if self.cleanup_images is not None:
+            replication_message['replication_job']['cleanup_images'] = \
+                self.cleanup_images
 
         return JsonFormat.json_message(replication_message)
 

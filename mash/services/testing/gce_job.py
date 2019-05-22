@@ -29,6 +29,7 @@ from mash.services.testing.utils import (
     process_test_result
 )
 from mash.utils.mash_utils import create_ssh_key_pair
+from mash.utils.gce import cleanup_gce_image
 
 instance_types = [
     'n1-standard-1',
@@ -63,6 +64,7 @@ class GCETestingJob(MashJob):
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
         self.ssh_user = self.job_config.get('ssh_user', 'root')
+        self.cleanup_images = self.job_config.get('cleanup_images', False)
 
         if not self.instance_type:
             self.instance_type = random.choice(instance_types)
@@ -111,3 +113,28 @@ class GCETestingJob(MashJob):
             status = process_test_result(result, self.send_log, region)
             if status != SUCCESS:
                 self.status = status
+
+            if self.cleanup_images or \
+                    status != SUCCESS and \
+                    self.test_regions[region]['is_publishing_account']:
+                self.cleanup_image(region)
+
+    def cleanup_image(self, region):
+        account = self.test_regions[region]['account']
+        credentials = self.credentials[account]
+        cloud_image_name = self.source_regions[region]
+
+        self.send_log(
+            'Cleaning up image: {0} in region: {1}.'.format(
+                cloud_image_name,
+                region
+            )
+        )
+
+        try:
+            cleanup_gce_image(credentials, cloud_image_name)
+        except Exception as error:
+            self.send_log(
+                'Failed to cleanup image: {0}'.format(error),
+                success=False
+            )

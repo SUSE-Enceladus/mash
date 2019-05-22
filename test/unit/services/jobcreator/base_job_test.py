@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from mash.mash_exceptions import MashJobCreatorException
 from mash.services.jobcreator.base_job import BaseJob
+from mash.utils.json_format import JsonFormat
 
 
 class TestJobCreatorBaseJob(object):
@@ -15,13 +16,14 @@ class TestJobCreatorBaseJob(object):
                 'job_id': '123',
                 'cloud': 'aws',
                 'requesting_user': 'test-user',
-                'last_service': 'deprecation',
+                'last_service': 'testing',
                 'utctime': 'now',
                 'image': 'test-image',
                 'cloud_image_name': 'test-cloud-image',
                 'image_description': 'image description',
                 'distro': 'sles',
-                'download_url': 'https://download.here'
+                'download_url': 'https://download.here',
+                'cleanup_images': True
             }
         )
 
@@ -56,3 +58,10 @@ class TestJobCreatorBaseJob(object):
                     'download_url': 'https://download.here'
                 }
             )
+
+    @patch.object(BaseJob, 'get_testing_regions')
+    def test_get_testing_message_cleanup(self, mock_get_testing_regions):
+        mock_get_testing_regions.return_value = {}
+        message = self.job.get_testing_message()
+
+        assert JsonFormat.json_loads(message)['testing_job']['cleanup_images']
