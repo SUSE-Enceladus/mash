@@ -246,7 +246,7 @@ base_job_message = {
         },
         'download_url': {'$ref': '#/definitions/non_empty_string'},
         'image_description': {'$ref': '#/definitions/non_empty_string'},
-        'distro': {'$ref': '#/definitions/non_empty_string'},
+        'distro': {'enum': ['opensuse_leap', 'sles']},
         'instance_type': {'$ref': '#/definitions/non_empty_string'},
         'tests': {
             'type': 'array',
