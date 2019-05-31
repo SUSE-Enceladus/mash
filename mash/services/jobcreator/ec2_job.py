@@ -20,6 +20,7 @@ import copy
 
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
+from mash.mash_exceptions import MashJobCreatorException
 
 
 class EC2Job(BaseJob):
@@ -72,10 +73,21 @@ class EC2Job(BaseJob):
                     helper_images[region['name']] = region['helper_image']
                     target_regions.append(region['name'])
 
+            if self.use_root_swap:
+                try:
+                    helper_image = self.cloud_accounts[account]['root_swap_ami']
+                except KeyError:
+                    raise MashJobCreatorException(
+                        'root_swap_ami is required for account {0},'
+                        ' when using root swap.'.format(account)
+                    )
+            else:
+                helper_image = helper_images[target_region]
+
             self.target_account_info[target_region] = {
                 'account': account,
                 'target_regions': target_regions,
-                'helper_image': helper_images[target_region]
+                'helper_image': helper_image
             }
 
     def _get_regions_for_partition(self, partition):
