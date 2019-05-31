@@ -23,5 +23,5 @@ class Defaults(object):
     """
 
     @staticmethod
-    def get_ipa_timeout():
+    def get_img_proof_timeout():
         return 600

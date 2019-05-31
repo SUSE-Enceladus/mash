@@ -68,32 +68,32 @@ class AzureTestingJob(MashJob):
             self.instance_type = random.choice(instance_types)
 
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
-        self.ipa_timeout = self.config.get_ipa_timeout()
+        self.img_proof_timeout = self.config.get_img_proof_timeout()
 
         if not os.path.exists(self.ssh_private_key_file):
             create_ssh_key_pair(self.ssh_private_key_file)
 
     def run_job(self):
         """
-        Tests image with IPA and update status and results.
+        Tests image with img-proof and update status and results.
         """
         results = {}
         jobs = []
 
         self.status = SUCCESS
-        self.send_log('Running IPA tests against image.')
+        self.send_log('Running img-proof tests against image.')
 
         for region, info in self.test_regions.items():
             account = get_testing_account(info)
             creds = self.credentials[account]
 
-            ipa_kwargs = {
+            img_proof_kwargs = {
                 'cloud': self.cloud,
                 'description': self.description,
                 'distro': self.distro,
                 'image_id': self.source_regions[region],
                 'instance_type': self.instance_type,
-                'ipa_timeout': self.ipa_timeout,
+                'img_proof_timeout': self.img_proof_timeout,
                 'region': region,
                 'service_account_credentials': json.dumps(creds),
                 'ssh_private_key_file': self.ssh_private_key_file,
@@ -101,7 +101,7 @@ class AzureTestingJob(MashJob):
                 'tests': self.tests
             }
 
-            process = create_testing_thread(results, ipa_kwargs, region)
+            process = create_testing_thread(results, img_proof_kwargs, region)
             jobs.append(process)
 
         for job in jobs:

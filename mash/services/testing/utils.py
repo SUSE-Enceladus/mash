@@ -18,7 +18,7 @@
 
 from threading import Thread
 
-from mash.services.testing.ipa_helper import ipa_test
+from mash.services.testing.img_proof_helper import img_proof_test
 from mash.services.status_levels import FAILED, SUCCESS
 
 
@@ -26,10 +26,10 @@ def get_testing_account(account_info):
     return account_info.get('testing_account', account_info['account'])
 
 
-def create_testing_thread(results, ipa_kwargs, region):
+def create_testing_thread(results, img_proof_kwargs, region):
     process = Thread(
-        name=region, target=ipa_test,
-        args=(results,), kwargs=ipa_kwargs
+        name=region, target=img_proof_test,
+        args=(results,), kwargs=img_proof_kwargs
     )
     process.start()
 

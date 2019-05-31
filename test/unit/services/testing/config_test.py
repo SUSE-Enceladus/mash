@@ -10,5 +10,5 @@ class TestTestingConfig(object):
         assert self.empty_config.get_log_file('testing') == \
             '/var/log/mash/testing_service.log'
 
-    def test_get_ipa_timeout(self):
-        assert self.empty_config.get_ipa_timeout() == 600
+    def test_get_img_proof_timeout(self):
+        assert self.empty_config.get_img_proof_timeout() == 600

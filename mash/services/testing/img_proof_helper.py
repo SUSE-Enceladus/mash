@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -21,7 +21,7 @@ import os
 import threading
 import traceback
 
-from ipa.ipa_controller import test_image
+from img_proof.ipa_controller import test_image
 from tempfile import NamedTemporaryFile
 
 from mash.csp import CSP
@@ -32,9 +32,9 @@ from mash.utils.mash_utils import generate_name, get_key_from_file
 from ec2imgutils.ec2setup import EC2Setup
 
 
-def ipa_test(
+def img_proof_test(
     results, cloud=None, access_key_id=None, description=None, distro=None,
-    image_id=None, instance_type=None, ipa_timeout=None, region=None,
+    image_id=None, instance_type=None, img_proof_timeout=None, region=None,
     secret_access_key=None, service_account_credentials=None,
     ssh_private_key_file=None, ssh_user=None, tests=None
 ):
@@ -92,7 +92,7 @@ def ipa_test(
             ssh_user=ssh_user,
             subnet_id=subnet_id,
             tests=tests,
-            timeout=ipa_timeout
+            timeout=img_proof_timeout
         )
     except Exception:
         results[name] = {

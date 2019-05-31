@@ -4,7 +4,7 @@ from mash.mash_exceptions import MashTestingException
 from mash.services.testing_service import main
 
 
-class TestIPATestingServiceMain(object):
+class TestImgProofTestingServiceMain(object):
     @patch('mash.services.testing_service.PipelineService')
     def test_main(self, mock_testing_service):
         main()

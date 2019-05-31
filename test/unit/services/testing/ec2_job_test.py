@@ -20,7 +20,7 @@ class TestEC2TestingJob(object):
         self.config = Mock()
         self.config.get_ssh_private_key_file.return_value = \
             'private_ssh_key.file'
-        self.config.get_ipa_timeout.return_value = None
+        self.config.get_img_proof_timeout.return_value = None
 
     def test_testing_ec2_missing_key(self):
         del self.job_config['test_regions']
@@ -31,11 +31,11 @@ class TestEC2TestingJob(object):
     @patch('mash.services.testing.ec2_job.os')
     @patch('mash.services.testing.ec2_job.create_ssh_key_pair')
     @patch('mash.services.testing.ec2_job.random')
-    @patch('mash.services.testing.ipa_helper.EC2Setup')
-    @patch('mash.services.testing.ipa_helper.generate_name')
-    @patch('mash.services.testing.ipa_helper.get_client')
-    @patch('mash.services.testing.ipa_helper.get_key_from_file')
-    @patch('mash.services.testing.ipa_helper.test_image')
+    @patch('mash.services.testing.img_proof_helper.EC2Setup')
+    @patch('mash.services.testing.img_proof_helper.generate_name')
+    @patch('mash.services.testing.img_proof_helper.get_client')
+    @patch('mash.services.testing.img_proof_helper.get_key_from_file')
+    @patch('mash.services.testing.img_proof_helper.test_image')
     @patch.object(EC2TestingJob, 'send_log')
     def test_testing_run_test(
         self, mock_send_log, mock_test_image, mock_get_key_from_file,
