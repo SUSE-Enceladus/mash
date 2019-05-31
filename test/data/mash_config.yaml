@@ -36,7 +36,7 @@ cloud:
       cn-north-1: ami-bcc45885
       us-gov-west-1: ami-c2b5d7e1
 testing:
-  ipa_timeout: 600
+  img_proof_timeout: 600
 uploader:
   azure:
     max_retry_attempts: 5

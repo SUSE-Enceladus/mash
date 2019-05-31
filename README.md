@@ -66,7 +66,7 @@ Refresh & install:
 
 ```
 $ zypper refresh
-$ zypper in python3-ipa
+$ zypper in mash
 ```
 
 ## Requirements
@@ -89,7 +89,7 @@ $ zypper in python3-ipa
 - python-dateutil>=2.6.0,<3.0.0
 - amqpstorm
 - ec2imgutils
-- python3-ipa>=3.0.0
+- img-proof>=4.0.0
 - lxml
 - requests
 
@@ -100,7 +100,7 @@ Please submit issues and requests to
 
 ## Contributing
 
-Contributions to ipa are welcome and encouraged. See
+Contributions to MASH are welcome and encouraged. See
 [CONTRIBUTING](CONTRIBUTING.md) for info on getting started.
 
 ## License

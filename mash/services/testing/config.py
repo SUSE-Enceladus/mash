@@ -35,14 +35,14 @@ class TestingConfig(BaseConfig):
     def __init__(self, config_file=None):
         super(TestingConfig, self).__init__(config_file)
 
-    def get_ipa_timeout(self):
+    def get_img_proof_timeout(self):
         """
-        Return the IPA timeout value in seconds.
+        Return the img-proof timeout value in seconds.
 
         :rtype: int
         """
-        ipa_timeout = self._get_attribute(
-            attribute='ipa_timeout',
+        img_proof_timeout = self._get_attribute(
+            attribute='img_proof_timeout',
             element='testing'
         )
-        return ipa_timeout or Defaults.get_ipa_timeout()
+        return img_proof_timeout or Defaults.get_img_proof_timeout()

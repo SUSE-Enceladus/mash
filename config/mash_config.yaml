@@ -74,7 +74,7 @@ cloud:
       us-west-1: ami-d5ea86b5
       us-west-2: ami-f0091d91
 testing:
-  ipa_timeout: 600
+  img_proof_timeout: 600
 uploader:
   azure:
     max_retry_attempts: 5
