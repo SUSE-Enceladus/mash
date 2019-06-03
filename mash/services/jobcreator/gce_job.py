@@ -64,6 +64,12 @@ class GCEJob(BaseJob):
                     'Jobs using a GCE publishing account require a family.'
                 )
 
+            if is_publishing_account and not testing_account:
+                raise MashJobCreatorException(
+                    'Jobs using a GCE publishing account require'
+                    ' the use of a testing account.'
+                )
+
             self.target_account_info[region] = {
                 'account': account,
                 'bucket': bucket,
