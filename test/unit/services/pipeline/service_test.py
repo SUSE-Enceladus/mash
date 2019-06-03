@@ -91,7 +91,7 @@ class TestPipelineService(object):
     @patch.object(Defaults, 'get_job_directory')
     @patch.object(PipelineService, 'bind_queue')
     @patch.object(PipelineService, 'bind_credentials_queue')
-    @patch.object(PipelineService, 'restart_jobs')
+    @patch('mash.services.pipeline_service.restart_jobs')
     @patch.object(PipelineService, 'set_logfile')
     @patch.object(PipelineService, 'start')
     def test_service_post_init(
@@ -124,14 +124,17 @@ class TestPipelineService(object):
             call('replication', 'job_document', 'service'),
             call('replication', 'listener_msg', 'listener')
         ])
-        mock_restart_jobs.assert_called_once_with(self.service._add_job)
+        mock_restart_jobs.assert_called_once_with(
+            '/var/lib/mash/replication_jobs/',
+            self.service._add_job
+        )
         mock_start.assert_called_once_with()
 
     @patch('mash.services.pipeline_service.os.makedirs')
     @patch.object(Defaults, 'get_job_directory')
     @patch.object(PipelineService, 'bind_queue')
     @patch.object(PipelineService, 'bind_credentials_queue')
-    @patch.object(PipelineService, 'restart_jobs')
+    @patch('mash.services.pipeline_service.restart_jobs')
     @patch.object(PipelineService, 'set_logfile')
     @patch.object(PipelineService, 'start')
     def test_service_post_init_custom_args(
@@ -822,23 +825,6 @@ class TestPipelineService(object):
             'Test error message',
             extra={'job_id': '1'}
         )
-
-    @patch('mash.services.pipeline_service.json.load')
-    @patch('mash.services.pipeline_service.os.listdir')
-    def test_restart_jobs(self, mock_os_listdir, mock_json_load):
-        self.service.job_directory = 'tmp-dir'
-        mock_os_listdir.return_value = ['job-123.json']
-        mock_json_load.return_value = {'id': '1'}
-
-        with patch('builtins.open', create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            mock_callback = Mock()
-            self.service.restart_jobs(mock_callback)
-
-            file_handle = mock_open.return_value.__enter__.return_value
-            file_handle.read.call_count == 1
-
-        mock_callback.assert_called_once_with({'id': '1'})
 
     def test_service_start_job(self):
         job = Mock()

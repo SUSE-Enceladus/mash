@@ -16,7 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import atexit
-import json
 import os
 import dateutil.parser
 
@@ -26,7 +25,7 @@ from mash.services.mash_service import MashService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
 from mash.services.status_levels import DELETE
-from mash.utils.mash_utils import persist_json
+from mash.utils.mash_utils import persist_json, restart_jobs
 
 
 class OBSImageBuildResultService(MashService):
@@ -58,7 +57,7 @@ class OBSImageBuildResultService(MashService):
         )
 
         # read and launch open jobs
-        self.restart_jobs(self._start_job)
+        restart_jobs(self.job_directory, self._start_job)
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
@@ -266,16 +265,3 @@ class OBSImageBuildResultService(MashService):
             'ok': True,
             'message': 'Job started'
         }
-
-    def restart_jobs(self, callback):
-        """
-        Restart jobs from config files.
-
-        Recover from service failure with existing jobs.
-        """
-        for job_file in os.listdir(self.job_directory):
-            with open(os.path.join(self.job_directory, job_file), 'r') \
-                    as conf_file:
-                job_config = json.load(conf_file)
-
-            callback(job_config)

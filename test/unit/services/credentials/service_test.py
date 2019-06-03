@@ -1,4 +1,3 @@
-import io
 import jwt
 import json
 
@@ -50,13 +49,14 @@ class TestCredentialsService(object):
     @patch.object(CredentialsService, 'set_logfile')
     @patch.object(CredentialsService, 'start')
     @patch.object(CredentialsService, '_bind_credential_request_keys')
-    @patch.object(CredentialsService, 'restart_jobs')
+    @patch('mash.services.credentials.service.restart_jobs')
     def test_post_init(
         self, mock_restart_jobs, mock_bind_cred_req_keys, mock_start,
         mock_set_logfile, mock_datastore, mock_get_job_directory,
         mock_makedirs
     ):
-        mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
+        mock_get_job_directory.return_value = \
+            '/var/lib/mash/credentials_jobs/'
         self.service.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/credentials_service.log'
@@ -73,11 +73,14 @@ class TestCredentialsService(object):
 
         mock_get_job_directory.assert_called_once_with('credentials')
         mock_makedirs.assert_called_once_with(
-            '/var/lib/mash/obs_jobs/', exist_ok=True
+            '/var/lib/mash/credentials_jobs/', exist_ok=True
         )
 
         mock_bind_cred_req_keys.assert_called_once_with()
-        mock_restart_jobs.assert_called_once_with(self.service._add_job)
+        mock_restart_jobs.assert_called_once_with(
+            '/var/lib/mash/credentials_jobs/',
+            self.service._add_job
+        )
         mock_start.assert_called_once_with()
 
     @patch.object(AccountDatastore, 'get_testing_accounts')
@@ -545,23 +548,6 @@ class TestCredentialsService(object):
         self.service.log.warning.assert_called_once_with(
             'Unable to delete account: Forbidden!'
         )
-
-    @patch('mash.services.credentials.service.json.load')
-    @patch('mash.services.credentials.service.os.listdir')
-    def test_restart_jobs(self, mock_os_listdir, mock_json_load):
-        self.service.job_directory = 'tmp-dir'
-        mock_os_listdir.return_value = ['job-123.json']
-        mock_json_load.return_value = {'id': '1'}
-
-        with patch('builtins.open', create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            mock_callback = Mock()
-            self.service.restart_jobs(mock_callback)
-
-            file_handle = mock_open.return_value.__enter__.return_value
-            file_handle.read.call_count == 1
-
-        mock_callback.assert_called_once_with({'id': '1'})
 
     @patch.object(CredentialsService, 'consume_queue')
     @patch.object(CredentialsService, 'close_connection')

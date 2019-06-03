@@ -28,7 +28,7 @@ from mash.services.mash_service import MashService
 from mash.services.credentials import get_account_info
 from mash.services.credentials.account_datastore import AccountDatastore
 from mash.utils.json_format import JsonFormat
-from mash.utils.mash_utils import remove_file, persist_json
+from mash.utils.mash_utils import remove_file, persist_json, restart_jobs
 
 
 class CredentialsService(MashService):
@@ -81,7 +81,7 @@ class CredentialsService(MashService):
         )
         self._bind_credential_request_keys()
 
-        self.restart_jobs(self._add_job)
+        restart_jobs(self.job_directory, self._add_job)
         self.start()
 
     def _add_job(self, job_document):
@@ -402,19 +402,6 @@ class CredentialsService(MashService):
             self.log.warning(
                 'Unable to delete account: {0}'.format(error)
             )
-
-    def restart_jobs(self, callback):
-        """
-        Restart jobs from config files.
-
-        Recover from service failure with existing jobs.
-        """
-        for job_file in os.listdir(self.job_directory):
-            with open(os.path.join(self.job_directory, job_file), 'r') \
-                    as conf_file:
-                job_config = json.load(conf_file)
-
-            callback(job_config)
 
     def start(self):
         """

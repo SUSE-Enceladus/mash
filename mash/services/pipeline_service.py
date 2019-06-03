@@ -36,7 +36,7 @@ from mash.services.job_factory import JobFactory
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
-from mash.utils.mash_utils import remove_file, persist_json
+from mash.utils.mash_utils import remove_file, persist_json, restart_jobs
 
 
 class PipelineService(MashService):
@@ -100,7 +100,7 @@ class PipelineService(MashService):
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
         )
 
-        self.restart_jobs(self._add_job)
+        restart_jobs(self.job_directory, self._add_job)
         self.start()
 
     def _add_job(self, job_config):
@@ -596,19 +596,6 @@ class PipelineService(MashService):
             self.log.info(msg, extra=metadata)
         else:
             self.log.error(msg, extra=metadata)
-
-    def restart_jobs(self, callback):
-        """
-        Restart jobs from config files.
-
-        Recover from service failure with existing jobs.
-        """
-        for job_file in os.listdir(self.job_directory):
-            with open(os.path.join(self.job_directory, job_file), 'r') \
-                    as conf_file:
-                job_config = json.load(conf_file)
-
-            callback(job_config)
 
     def start(self):
         """

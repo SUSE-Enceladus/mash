@@ -1,10 +1,7 @@
-import io
-
 from pytest import raises
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import Mock
-from unittest.mock import MagicMock
 
 from test.unit.test_helper import (
     patch_open
@@ -24,7 +21,7 @@ class TestOBSImageBuildResultService(object):
     @patch.object(OBSImageBuildResultService, '_process_message')
     @patch.object(OBSImageBuildResultService, '_send_job_response')
     @patch.object(OBSImageBuildResultService, '_send_job_result_for_uploader')
-    @patch.object(OBSImageBuildResultService, 'restart_jobs')
+    @patch('mash.services.obs.service.restart_jobs')
     @patch.object(MashService, '__init__')
     @patch('os.listdir')
     @patch('logging.getLogger')
@@ -65,7 +62,10 @@ class TestOBSImageBuildResultService(object):
         )
 
         mock_set_logfile.assert_called_once_with('logfile')
-        mock_restart_jobs.assert_called_once_with(self.obs_result._start_job)
+        mock_restart_jobs.assert_called_once_with(
+            '/var/lib/mash/obs_jobs/',
+            self.obs_result._start_job
+        )
 
         self.obs_result.consume_queue.assert_called_once_with(
             mock_process_message, queue_name='service'
@@ -300,20 +300,3 @@ class TestOBSImageBuildResultService(object):
         job_worker.start_watchdog.assert_called_once_with(
             isotime='2017-10-11T17:50:26+00:00', nonstop=False
         )
-
-    @patch('mash.services.obs.service.json.load')
-    @patch('mash.services.obs.service.os.listdir')
-    def test_restart_jobs(self, mock_os_listdir, mock_json_load):
-        self.obs_result.job_directory = 'tmp-dir'
-        mock_os_listdir.return_value = ['job-123.json']
-        mock_json_load.return_value = {'id': '1'}
-
-        with patch('builtins.open', create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            mock_callback = Mock()
-            self.obs_result.restart_jobs(mock_callback)
-
-            file_handle = mock_open.return_value.__enter__.return_value
-            file_handle.read.call_count == 1
-
-        mock_callback.assert_called_once_with({'id': '1'})
