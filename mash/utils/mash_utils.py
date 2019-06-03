@@ -112,3 +112,11 @@ def remove_file(file_path):
         os.remove(file_path)
     except FileNotFoundError:
         pass
+
+
+def persist_json(file_path, data):
+    """
+    Persist the json data to a file on disk.
+    """
+    with open(file_path, 'w') as json_file:
+        json_file.write(JsonFormat.json_message(data))

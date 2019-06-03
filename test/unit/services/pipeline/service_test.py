@@ -188,22 +188,22 @@ class TestPipelineService(object):
         )
 
     @patch('mash.services.pipeline_service.JobFactory')
-    @patch.object(PipelineService, 'persist_job_config')
+    @patch('mash.services.pipeline_service.persist_json')
     def test_service_add_job(
-        self, mock_persist_config, mock_job_factory
+        self, mock_persist_json, mock_job_factory
     ):
-        mock_persist_config.return_value = 'temp-config.json'
-
         job = Mock()
         job.id = '1'
         job.get_job_id.return_value = {'job_id': '1'}
 
         mock_job_factory.create_job.return_value = job
+        self.service.job_directory = 'tmp-dir/'
+
         job_config = {'id': '1', 'cloud': 'ec2'}
         self.service._add_job(job_config)
 
         assert job.log_callback == self.service.log_job_message
-        assert job.job_file == 'temp-config.json'
+        assert job.job_file == 'tmp-dir/job-1.json'
         self.service.log.info.assert_called_once_with(
             'Job queued, awaiting listener message.',
             extra={'job_id': '1'}
@@ -822,22 +822,6 @@ class TestPipelineService(object):
             'Test error message',
             extra={'job_id': '1'}
         )
-
-    def test_persist_job_config(self):
-        self.service.job_directory = 'tmp-dir/'
-
-        with patch('builtins.open', create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.service.persist_job_config({'id': '1'})
-            file_handle = mock_open.return_value.__enter__.return_value
-            # Dict is mutable, mock compares the final value of Dict
-            # not the initial value that was passed in.
-            file_handle.write.assert_called_with(
-                JsonFormat.json_message({
-                    "id": "1",
-                    "job_file": "tmp-dir/job-1.json"
-                })
-            )
 
     @patch('mash.services.pipeline_service.json.load')
     @patch('mash.services.pipeline_service.os.listdir')

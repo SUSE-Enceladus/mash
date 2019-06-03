@@ -26,6 +26,7 @@ from mash.services.mash_service import MashService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
 from mash.services.status_levels import DELETE
+from mash.utils.mash_utils import persist_json
 
 
 class OBSImageBuildResultService(MashService):
@@ -177,7 +178,12 @@ class OBSImageBuildResultService(MashService):
         }
         """
         data = data['obs_job']
-        data['job_file'] = self.persist_job_config(data)
+        data['job_file'] = '{0}job-{1}.json'.format(
+            self.job_directory, data['id']
+        )
+        persist_json(
+            data['job_file'], data
+        )
         return self._start_job(data)
 
     def _delete_job(self, job_id):
@@ -260,19 +266,6 @@ class OBSImageBuildResultService(MashService):
             'ok': True,
             'message': 'Job started'
         }
-
-    def persist_job_config(self, config):
-        """
-        Persist the job config file to disk for recoverability.
-        """
-        config['job_file'] = '{0}job-{1}.json'.format(
-            self.job_directory, config['id']
-        )
-
-        with open(config['job_file'], 'w') as config_file:
-            config_file.write(JsonFormat.json_message(config))
-
-        return config['job_file']
 
     def restart_jobs(self, callback):
         """

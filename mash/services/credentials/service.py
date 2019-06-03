@@ -28,7 +28,7 @@ from mash.services.mash_service import MashService
 from mash.services.credentials import get_account_info
 from mash.services.credentials.account_datastore import AccountDatastore
 from mash.utils.json_format import JsonFormat
-from mash.utils.mash_utils import remove_file
+from mash.utils.mash_utils import remove_file, persist_json
 
 
 class CredentialsService(MashService):
@@ -106,8 +106,11 @@ class CredentialsService(MashService):
 
                 job_document['cloud_accounts'] += testing_accounts
 
-                job_document['job_file'] = self.persist_job_config(
-                    job_document
+                job_document['job_file'] = '{0}job-{1}.json'.format(
+                    self.job_directory, job_id
+                )
+                persist_json(
+                    job_document['job_file'], job_document
                 )
 
             self._send_control_response(
@@ -399,19 +402,6 @@ class CredentialsService(MashService):
             self.log.warning(
                 'Unable to delete account: {0}'.format(error)
             )
-
-    def persist_job_config(self, config):
-        """
-        Persist the job config file to disk for recoverability.
-        """
-        config['job_file'] = '{0}job-{1}.json'.format(
-            self.job_directory, config['id']
-        )
-
-        with open(config['job_file'], 'w') as config_file:
-            config_file.write(JsonFormat.json_message(config))
-
-        return config['job_file']
 
     def restart_jobs(self, callback):
         """

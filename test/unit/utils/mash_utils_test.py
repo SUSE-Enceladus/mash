@@ -27,7 +27,8 @@ from mash.utils.mash_utils import (
     get_key_from_file,
     create_ssh_key_pair,
     format_string_with_date,
-    remove_file
+    remove_file,
+    persist_json
 )
 
 
@@ -97,3 +98,13 @@ def test_remove_file(mock_remove):
     mock_remove.side_effect = FileNotFoundError('File not found.')
     remove_file('job-test.json')
     mock_remove.assert_called_once_with('job-test.json')
+
+
+def test_persist_json():
+    with patch('builtins.open', create=True) as mock_open:
+        mock_open.return_value = MagicMock(spec=io.IOBase)
+
+        persist_json('tmp-dir/job-1.json', {'id': '1'})
+
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.write.assert_called_with('{\n    "id": "1"\n}')

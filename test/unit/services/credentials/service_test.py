@@ -81,14 +81,14 @@ class TestCredentialsService(object):
         mock_start.assert_called_once_with()
 
     @patch.object(AccountDatastore, 'get_testing_accounts')
-    @patch.object(CredentialsService, 'persist_job_config')
+    @patch('mash.services.credentials.service.persist_json')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_add_job(
-        self, mock_send_control_response, mock_persist_job_config,
+        self, mock_send_control_response, mock_persist_json,
         mock_get_testing_accounts
     ):
-        mock_persist_job_config.return_value = 'temp-config.json'
         mock_get_testing_accounts.return_value = ['tester']
+        self.service.job_directory = 'tmp/'
 
         self.service._add_job({
             'id': '1',
@@ -98,11 +98,11 @@ class TestCredentialsService(object):
         })
 
         job_config = {
-            'id': '1', 'job_file': 'temp-config.json', 'cloud': 'ec2',
+            'id': '1', 'job_file': 'tmp/job-1.json', 'cloud': 'ec2',
             'cloud_accounts': ['test-gce', 'tester'],
             'requesting_user': 'user1'
         }
-        mock_persist_job_config.assert_called_once_with(job_config)
+        mock_persist_json.assert_called_once_with('tmp/job-1.json', job_config)
 
         mock_send_control_response.assert_called_once_with(
             'Job queued, awaiting credentials requests.',
@@ -545,22 +545,6 @@ class TestCredentialsService(object):
         self.service.log.warning.assert_called_once_with(
             'Unable to delete account: Forbidden!'
         )
-
-    def test_persist_job_config(self):
-        self.service.job_directory = 'tmp-dir/'
-
-        with patch('builtins.open', create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.service.persist_job_config({'id': '1'})
-            file_handle = mock_open.return_value.__enter__.return_value
-            # Dict is mutable, mock compares the final value of Dict
-            # not the initial value that was passed in.
-            file_handle.write.assert_called_with(
-                JsonFormat.json_message({
-                    "id": "1",
-                    "job_file": "tmp-dir/job-1.json"
-                })
-            )
 
     @patch('mash.services.credentials.service.json.load')
     @patch('mash.services.credentials.service.os.listdir')

@@ -36,7 +36,7 @@ from mash.services.job_factory import JobFactory
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
-from mash.utils.mash_utils import remove_file
+from mash.utils.mash_utils import remove_file, persist_json
 
 
 class PipelineService(MashService):
@@ -126,8 +126,11 @@ class PipelineService(MashService):
                 job.log_callback = self.log_job_message
 
                 if 'job_file' not in job_config:
-                    job_config['job_file'] = self.persist_job_config(
-                        job_config
+                    job_config['job_file'] = '{0}job-{1}.json'.format(
+                        self.job_directory, job_id
+                    )
+                    persist_json(
+                        job_config['job_file'], job_config
                     )
                     job.job_file = job_config['job_file']
 
@@ -593,19 +596,6 @@ class PipelineService(MashService):
             self.log.info(msg, extra=metadata)
         else:
             self.log.error(msg, extra=metadata)
-
-    def persist_job_config(self, config):
-        """
-        Persist the job config file to disk for recoverability.
-        """
-        config['job_file'] = '{0}job-{1}.json'.format(
-            self.job_directory, config['id']
-        )
-
-        with open(config['job_file'], 'w') as config_file:
-            config_file.write(JsonFormat.json_message(config))
-
-        return config['job_file']
 
     def restart_jobs(self, callback):
         """
