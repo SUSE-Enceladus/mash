@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.mash_exceptions import MashJobCreatorException
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
 
@@ -55,9 +56,19 @@ class GCEJob(BaseJob):
                 'bucket'
             ) or info.get('bucket')
 
-            testing_account = self.cloud_accounts[account].get(
-                'testing_account'
-            ) or info.get('testing_account')
+            testing_account = info.get('testing_account')
+            is_publishing_account = info.get('is_publishing_account')
+
+            if is_publishing_account and not self.family:
+                raise MashJobCreatorException(
+                    'Jobs using a GCE publishing account require a family.'
+                )
+
+            if is_publishing_account and not testing_account:
+                raise MashJobCreatorException(
+                    'Jobs using a GCE publishing account require'
+                    ' the use of a testing account.'
+                )
 
             self.target_account_info[region] = {
                 'account': account,
