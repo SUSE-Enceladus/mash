@@ -20,6 +20,7 @@ import copy
 
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
+from mash.mash_exceptions import MashJobCreatorException
 
 
 class EC2Job(BaseJob):
@@ -36,6 +37,7 @@ class EC2Job(BaseJob):
         self.share_with = self.kwargs.get('share_with', 'all')
         self.allow_copy = self.kwargs.get('allow_copy', True)
         self.billing_codes = self.kwargs.get('billing_codes')
+        self.use_root_swap = self.kwargs.get('use_root_swap', False)
 
     def get_account_info(self):
         """
@@ -71,10 +73,21 @@ class EC2Job(BaseJob):
                     helper_images[region['name']] = region['helper_image']
                     target_regions.append(region['name'])
 
+            if self.use_root_swap:
+                try:
+                    helper_image = self.cloud_accounts[account]['root_swap_ami']
+                except KeyError:
+                    raise MashJobCreatorException(
+                        'root_swap_ami is required for account {0},'
+                        ' when using root swap.'.format(account)
+                    )
+            else:
+                helper_image = helper_images[target_region]
+
             self.target_account_info[target_region] = {
                 'account': account,
                 'target_regions': target_regions,
-                'helper_image': helper_images[target_region]
+                'helper_image': helper_image
             }
 
     def _get_regions_for_partition(self, partition):
@@ -194,7 +207,8 @@ class EC2Job(BaseJob):
             target_regions[source_region] = {
                 'account': value['account'],
                 'helper_image': value['helper_image'],
-                'billing_codes': self.billing_codes
+                'billing_codes': self.billing_codes,
+                'use_root_swap': self.use_root_swap
             }
 
         return target_regions

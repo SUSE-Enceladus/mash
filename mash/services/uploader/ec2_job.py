@@ -103,6 +103,7 @@ class EC2UploaderJob(MashJob):
             account = info['account']
             credentials = self.credentials[account]
 
+            use_root_swap = info['use_root_swap']
             self.ec2_upload_parameters['launch_ami'] = info['helper_image']
             self.ec2_upload_parameters['billing_codes'] = \
                 info['billing_codes']
@@ -157,9 +158,15 @@ class EC2UploaderJob(MashJob):
 
                 ec2_upload.set_region(region)
 
-                ami_id = ec2_upload.create_image(
-                    self.image_file[0]
-                )
+                if use_root_swap:
+                    ami_id = ec2_upload.create_image_use_root_swap(
+                        self.image_file[0]
+                    )
+                else:
+                    ami_id = ec2_upload.create_image(
+                        self.image_file[0]
+                    )
+
                 self.source_regions[region] = ami_id
                 self.send_log(
                     'Uploaded image has ID: {0} in region {1}'.format(

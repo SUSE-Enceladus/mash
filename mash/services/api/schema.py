@@ -316,11 +316,13 @@ ec2_job_message['properties']['allow_copy'] = {'type': 'boolean'}
 ec2_job_message['properties']['billing_codes'] = {
     '$ref': '#/definitions/non_empty_string'
 }
+ec2_job_message['properties']['use_root_swap'] = {'type': 'boolean'}
 ec2_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {
         'name': {'$ref': '#/definitions/non_empty_string'},
-        'region': {'$ref': '#/definitions/non_empty_string'}
+        'region': {'$ref': '#/definitions/non_empty_string'},
+        'root_swap_ami': {'$ref': '#/definitions/non_empty_string'}
     },
     'additionalProperties': False,
     'required': ['name']
