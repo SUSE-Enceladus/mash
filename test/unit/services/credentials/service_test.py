@@ -185,7 +185,7 @@ class TestCredentialsService(object):
             )
         )
 
-    @patch.object(CredentialsService, 'remove_file')
+    @patch('mash.services.credentials.service.remove_file')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_delete_job(
         self, mock_send_control_response, mock_remove_file
@@ -545,12 +545,6 @@ class TestCredentialsService(object):
         self.service.log.warning.assert_called_once_with(
             'Unable to delete account: Forbidden!'
         )
-
-    @patch('mash.services.credentials.service.os.remove')
-    def test_remove_file(self, mock_remove):
-        mock_remove.side_effect = Exception('File not found.')
-        self.service.remove_file('job-test.json')
-        mock_remove.assert_called_once_with('job-test.json')
 
     def test_persist_job_config(self):
         self.service.job_directory = 'tmp-dir/'

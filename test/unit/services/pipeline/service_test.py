@@ -222,7 +222,7 @@ class TestPipelineService(object):
         )
 
     @patch.object(PipelineService, 'publish_credentials_delete')
-    @patch.object(PipelineService, 'remove_file')
+    @patch('mash.services.pipeline_service.remove_file')
     @patch.object(PipelineService, 'unbind_queue')
     def test_service_delete_job(
         self, mock_unbind_queue, mock_remove_file, mock_publish_creds_delete
@@ -822,12 +822,6 @@ class TestPipelineService(object):
             'Test error message',
             extra={'job_id': '1'}
         )
-
-    @patch('mash.services.pipeline_service.os.remove')
-    def test_remove_file(self, mock_remove):
-        mock_remove.side_effect = Exception('File not found.')
-        self.service.remove_file('job-test.json')
-        mock_remove.assert_called_once_with('job-test.json')
 
     def test_persist_job_config(self):
         self.service.job_directory = 'tmp-dir/'

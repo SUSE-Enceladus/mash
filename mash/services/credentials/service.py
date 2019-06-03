@@ -28,6 +28,7 @@ from mash.services.mash_service import MashService
 from mash.services.credentials import get_account_info
 from mash.services.credentials.account_datastore import AccountDatastore
 from mash.utils.json_format import JsonFormat
+from mash.utils.mash_utils import remove_file
 
 
 class CredentialsService(MashService):
@@ -177,7 +178,7 @@ class CredentialsService(MashService):
             )
 
             del self.jobs[job_id]
-            self.remove_file(job['job_file'])
+            remove_file(job['job_file'])
         else:
             self._send_control_response(
                 'Job deletion failed, job is not queued.',
@@ -398,15 +399,6 @@ class CredentialsService(MashService):
             self.log.warning(
                 'Unable to delete account: {0}'.format(error)
             )
-
-    def remove_file(self, config_file):
-        """
-        Remove file from disk if it exists.
-        """
-        try:
-            os.remove(config_file)
-        except Exception:
-            pass
 
     def persist_job_config(self, config):
         """

@@ -36,6 +36,7 @@ from mash.services.job_factory import JobFactory
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
+from mash.utils.mash_utils import remove_file
 
 
 class PipelineService(MashService):
@@ -178,7 +179,7 @@ class PipelineService(MashService):
                 self.publish_credentials_delete(job_id)
 
             del self.jobs[job_id]
-            self.remove_file(job.job_file)
+            remove_file(job.job_file)
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
@@ -592,15 +593,6 @@ class PipelineService(MashService):
             self.log.info(msg, extra=metadata)
         else:
             self.log.error(msg, extra=metadata)
-
-    def remove_file(self, config_file):
-        """
-        Remove file from disk if it exists.
-        """
-        try:
-            os.remove(config_file)
-        except Exception:
-            pass
 
     def persist_job_config(self, config):
         """

@@ -26,7 +26,8 @@ from mash.utils.mash_utils import (
     generate_name,
     get_key_from_file,
     create_ssh_key_pair,
-    format_string_with_date
+    format_string_with_date,
+    remove_file
 )
 
 
@@ -89,3 +90,10 @@ def test_create_ssh_key_pair(mock_rsa):
 def test_format_string_with_date_error():
     value = 'Name with a {timestamp}'
     format_string_with_date(value)
+
+
+@patch('mash.utils.mash_utils.os.remove')
+def test_remove_file(mock_remove):
+    mock_remove.side_effect = FileNotFoundError('File not found.')
+    remove_file('job-test.json')
+    mock_remove.assert_called_once_with('job-test.json')

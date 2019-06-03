@@ -102,3 +102,13 @@ def format_string_with_date(value, timestamp=None, date_format='%Y%m%d'):
         pass
 
     return value
+
+
+def remove_file(file_path):
+    """
+    Remove file from disk if it exists.
+    """
+    try:
+        os.remove(file_path)
+    except FileNotFoundError:
+        pass
