@@ -16,11 +16,13 @@ class TestGCETestingJob(object):
             'test_regions': {
                 'us-west1': {
                     'account': 'test-gce',
-                    'testing_account': 'testingacnt'
+                    'testing_account': 'testingacnt',
+                    'is_publishing_account': False
                 }
             },
             'tests': ['test_stuff'],
             'utctime': 'now',
+            'cleanup_images': True
         }
         self.config = Mock()
         self.config.get_ssh_private_key_file.return_value = \
@@ -33,6 +35,7 @@ class TestGCETestingJob(object):
         with pytest.raises(MashTestingException):
             GCETestingJob(self.job_config, self.config)
 
+    @patch('mash.services.testing.gce_job.cleanup_gce_image')
     @patch('mash.services.testing.gce_job.os')
     @patch('mash.services.testing.gce_job.create_ssh_key_pair')
     @patch('mash.services.testing.gce_job.random')
@@ -41,7 +44,7 @@ class TestGCETestingJob(object):
     @patch.object(GCETestingJob, 'send_log')
     def test_testing_run_gce_test(
         self, mock_send_log, mock_test_image, mock_temp_file, mock_random,
-        mock_create_ssh_key_pair, mock_os
+        mock_create_ssh_key_pair, mock_os, mock_cleanup_image
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -96,6 +99,7 @@ class TestGCETestingJob(object):
             timeout=None
         )
         mock_send_log.reset_mock()
+        mock_cleanup_image.side_effect = Exception('Unable to cleanup image!')
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')

@@ -55,7 +55,7 @@ class BaseJob(object):
         self.conditions = kwargs.get('conditions')
         self.instance_type = kwargs.get('instance_type')
         self.old_cloud_image_name = kwargs.get('old_cloud_image_name')
-        self.cleanup_images = kwargs.get('cleanup_images', True)
+        self.cleanup_images = kwargs.get('cleanup_images')
         self.cloud_architecture = kwargs.get('cloud_architecture', 'x86_64')
         self.cloud_accounts = self._get_accounts_data(
             kwargs.get('cloud_accounts')
@@ -213,6 +213,10 @@ class BaseJob(object):
         if self.instance_type:
             testing_message['testing_job']['instance_type'] = \
                 self.instance_type
+
+        if self.last_service == 'testing' and \
+                self.cleanup_images in [True, None]:
+            testing_message['testing_job']['cleanup_images'] = True
 
         testing_message['testing_job'].update(self.base_message)
 
