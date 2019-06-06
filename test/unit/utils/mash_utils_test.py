@@ -26,7 +26,12 @@ from mash.utils.mash_utils import (
     generate_name,
     get_key_from_file,
     create_ssh_key_pair,
-    format_string_with_date
+    format_string_with_date,
+    remove_file,
+    persist_json,
+    load_json,
+    restart_job,
+    restart_jobs
 )
 
 
@@ -89,3 +94,60 @@ def test_create_ssh_key_pair(mock_rsa):
 def test_format_string_with_date_error():
     value = 'Name with a {timestamp}'
     format_string_with_date(value)
+
+
+@patch('mash.utils.mash_utils.os.remove')
+def test_remove_file(mock_remove):
+    mock_remove.side_effect = FileNotFoundError('File not found.')
+    remove_file('job-test.json')
+    mock_remove.assert_called_once_with('job-test.json')
+
+
+def test_persist_json():
+    with patch('builtins.open', create=True) as mock_open:
+        mock_open.return_value = MagicMock(spec=io.IOBase)
+
+        persist_json('tmp-dir/job-1.json', {'id': '1'})
+
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.write.assert_called_with('{\n    "id": "1"\n}')
+
+
+@patch('mash.utils.mash_utils.json.load')
+def test_load_json(mock_load_json):
+    mock_load_json.return_value = {'id': '123'}
+
+    with patch('builtins.open', create=True) as mock_open:
+        mock_open.return_value = MagicMock(spec=io.IOBase)
+
+        data = load_json('tmp/job-123.json')
+
+        file_handle = mock_open.return_value.__enter__.return_value
+        file_handle.read.call_count == 1
+
+    assert data['id'] == '123'
+
+
+@patch('mash.utils.mash_utils.load_json')
+def test_restart_job(mock_json_load):
+    mock_json_load.return_value = {'id': '123'}
+    callback = MagicMock()
+
+    restart_job('tmp/job-123.json', callback)
+    mock_json_load.assert_called_once_with(
+        'tmp/job-123.json'
+    )
+    callback.assert_called_once_with({'id': '123'})
+
+
+@patch('mash.utils.mash_utils.restart_job')
+@patch('mash.utils.mash_utils.os.listdir')
+def test_restart_jobs(mock_os_listdir, mock_restart_job):
+    mock_os_listdir.return_value = ['job-123.json']
+    callback = MagicMock()
+
+    restart_jobs('tmp/', callback)
+    mock_restart_job.assert_called_once_with(
+        'tmp/job-123.json',
+        callback
+    )

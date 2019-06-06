@@ -16,7 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import json
 import logging
 import os
 import smtplib
@@ -27,14 +26,12 @@ from email.message import EmailMessage
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.log.handler import RabbitMQHandler
-from mash.services.base_defaults import Defaults
 from mash.services import get_configuration
 from mash.services.status_levels import SUCCESS
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
     MashLogSetupException
 )
-from mash.utils.json_format import JsonFormat
 
 
 class MashService(object):
@@ -55,10 +52,6 @@ class MashService(object):
 
         self.service_exchange = service_exchange
         self.custom_args = custom_args
-        self.service_queue = 'service'
-        self.listener_queue = 'listener'
-        self.job_document_key = 'job_document'
-        self.listener_msg_key = 'listener_msg'
 
         self.config = get_configuration(self.service_exchange)
 
@@ -75,19 +68,7 @@ class MashService(object):
         self.smtp_pass = self.config.get_smtp_pass()
         self.notification_subject = self.config.get_notification_subject()
 
-        # setup service data directory
-        self.job_directory = Defaults.get_job_directory(self.service_exchange)
-        os.makedirs(
-            self.job_directory, exist_ok=True
-        )
-
         self._open_connection()
-        self.bind_queue(
-            self.service_exchange, self.job_document_key, self.service_queue
-        )
-        self.bind_queue(
-            self.service_exchange, self.listener_msg_key, self.listener_queue
-        )
 
         logging.basicConfig()
         self.log = logging.getLogger(
@@ -209,70 +190,15 @@ class MashService(object):
         if self.connection and self.connection.is_open:
             self.connection.close()
 
-    def consume_queue(self, callback, queue_name=None):
+    def consume_queue(self, callback, queue_name):
         """
         Declare and consume queue.
-
-        If queue_name not provided use service_queue name attr.
         """
-        if not queue_name:
-            queue_name = self.service_queue
-
         queue = self._get_queue_name(self.service_exchange, queue_name)
         self._declare_queue(queue)
         self.channel.basic.consume(
             callback=callback, queue=queue
         )
-
-    def log_job_message(self, msg, metadata, success=True):
-        """
-        Callback for job instance to log given message.
-        """
-        if success:
-            self.log.info(msg, extra=metadata)
-        else:
-            self.log.error(msg, extra=metadata)
-
-    def persist_job_config(self, config):
-        """
-        Persist the job config file to disk for recoverability.
-        """
-        config['job_file'] = '{0}job-{1}.json'.format(
-            self.job_directory, config['id']
-        )
-
-        with open(config['job_file'], 'w') as config_file:
-            config_file.write(JsonFormat.json_message(config))
-
-        return config['job_file']
-
-    def publish_job_result(self, exchange, message):
-        """
-        Publish the result message to the listener queue on given exchange.
-        """
-        self._publish(exchange, self.listener_msg_key, message)
-
-    def remove_file(self, config_file):
-        """
-        Remove file from disk if it exists.
-        """
-        try:
-            os.remove(config_file)
-        except Exception:
-            pass
-
-    def restart_jobs(self, callback):
-        """
-        Restart jobs from config files.
-
-        Recover from service failure with existing jobs.
-        """
-        for job_file in os.listdir(self.job_directory):
-            with open(os.path.join(self.job_directory, job_file), 'r') \
-                    as conf_file:
-                job_config = json.load(conf_file)
-
-            callback(job_config)
 
     def set_logfile(self, logfile):
         """

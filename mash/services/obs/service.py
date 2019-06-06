@@ -20,10 +20,12 @@ import os
 import dateutil.parser
 
 # project
+from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
 from mash.services.status_levels import DELETE
+from mash.utils.mash_utils import persist_json, restart_jobs
 
 
 class OBSImageBuildResultService(MashService):
@@ -32,6 +34,10 @@ class OBSImageBuildResultService(MashService):
     service
     """
     def post_init(self):
+        self.job_document_key = 'job_document'
+        self.listener_msg_key = 'listener_msg'
+        self.service_queue = 'service'
+
         # setup service log file
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
@@ -40,12 +46,25 @@ class OBSImageBuildResultService(MashService):
 
         self.jobs = {}
 
+        # setup service job directory
+        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        os.makedirs(
+            self.job_directory, exist_ok=True
+        )
+
+        self.bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
+        )
+
         # read and launch open jobs
-        self.restart_jobs(self._start_job)
+        restart_jobs(self.job_directory, self._start_job)
 
         # consume on service queue
         atexit.register(lambda: os._exit(0))
-        self.consume_queue(self._process_message)
+        self.consume_queue(
+            self._process_message,
+            queue_name=self.service_queue
+        )
 
         try:
             self.channel.start_consuming()
@@ -60,8 +79,10 @@ class OBSImageBuildResultService(MashService):
         self.log.info(status_message, extra={'job_id': job_id})
 
     def _send_job_result_for_uploader(self, job_id, trigger_info):
-        self.publish_job_result(
-            'uploader', JsonFormat.json_message(trigger_info)
+        self._publish(
+            'uploader',
+            self.listener_msg_key,
+            JsonFormat.json_message(trigger_info)
         )
         if not self.jobs[job_id].job_nonstop:
             self._delete_job(job_id)
@@ -116,8 +137,10 @@ class OBSImageBuildResultService(MashService):
                     'status': DELETE
                 }
             }
-            self.publish_job_result(
-                'uploader', JsonFormat.json_message(message)
+            self._publish(
+                'uploader',
+                self.listener_msg_key,
+                JsonFormat.json_message(message)
             )
         else:
             result = {
@@ -154,7 +177,12 @@ class OBSImageBuildResultService(MashService):
         }
         """
         data = data['obs_job']
-        data['job_file'] = self.persist_job_config(data)
+        data['job_file'] = '{0}job-{1}.json'.format(
+            self.job_directory, data['id']
+        )
+        persist_json(
+            data['job_file'], data
+        )
         return self._start_job(data)
 
     def _delete_job(self, job_id):

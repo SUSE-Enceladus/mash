@@ -18,14 +18,17 @@
 
 import jwt
 import json
+import os
 
 from datetime import datetime, timedelta
 
 # project
+from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.credentials import get_account_info
 from mash.services.credentials.account_datastore import AccountDatastore
 from mash.utils.json_format import JsonFormat
+from mash.utils.mash_utils import remove_file, persist_json, restart_jobs
 
 
 class CredentialsService(MashService):
@@ -33,6 +36,11 @@ class CredentialsService(MashService):
     Implements CredentialsService based on web token technology
     """
     def post_init(self):
+        self.listener_queue = 'listener'
+        self.service_queue = 'service'
+        self.job_document_key = 'job_document'
+        self.listener_msg_key = 'listener_msg'
+
         self.set_logfile(self.config.get_log_file(self.service_exchange))
 
         self.encryption_keys_file = self.config.get_encryption_keys_file()
@@ -53,6 +61,12 @@ class CredentialsService(MashService):
 
         self.jobs = {}
 
+        # setup service job directory
+        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        os.makedirs(
+            self.job_directory, exist_ok=True
+        )
+
         self.add_account_key = 'add_account'
         self.delete_account_key = 'delete_account'
 
@@ -62,9 +76,12 @@ class CredentialsService(MashService):
         self.bind_queue(
             self.service_exchange, self.delete_account_key, self.listener_queue
         )
+        self.bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
+        )
         self._bind_credential_request_keys()
 
-        self.restart_jobs(self._add_job)
+        restart_jobs(self.job_directory, self._add_job)
         self.start()
 
     def _add_job(self, job_document):
@@ -89,8 +106,11 @@ class CredentialsService(MashService):
 
                 job_document['cloud_accounts'] += testing_accounts
 
-                job_document['job_file'] = self.persist_job_config(
-                    job_document
+                job_document['job_file'] = '{0}job-{1}.json'.format(
+                    self.job_directory, job_id
+                )
+                persist_json(
+                    job_document['job_file'], job_document
                 )
 
             self._send_control_response(
@@ -161,7 +181,7 @@ class CredentialsService(MashService):
             )
 
             del self.jobs[job_id]
-            self.remove_file(job['job_file'])
+            remove_file(job['job_file'])
         else:
             self._send_control_response(
                 'Job deletion failed, job is not queued.',
@@ -387,9 +407,13 @@ class CredentialsService(MashService):
         """
         Start credentials service.
         """
-        self.consume_queue(self._handle_job_documents)
         self.consume_queue(
-            self._handle_account_request, queue_name=self.listener_queue
+            self._handle_job_documents,
+            queue_name=self.service_queue
+        )
+        self.consume_queue(
+            self._handle_account_request,
+            queue_name=self.listener_queue
         )
         self.consume_queue(
             self._handle_credential_request,

@@ -9,6 +9,7 @@ from amqpstorm import AMQPError
 
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 
+from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.pipeline_service import PipelineService
 from mash.utils.json_format import JsonFormat
@@ -30,6 +31,8 @@ class TestPipelineService(object):
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
 
+        self.connection = Mock()
+
         self.tag = Mock()
         self.method = {'delivery_tag': self.tag}
 
@@ -37,6 +40,11 @@ class TestPipelineService(object):
             channel=self.channel,
             method=self.method,
         )
+
+        self.msg_properties = {
+            'content_type': 'application/json',
+            'delivery_mode': 2
+        }
 
         self.error_message = JsonFormat.json_message({
             "replication_result": {
@@ -79,19 +87,29 @@ class TestPipelineService(object):
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
 
+    @patch('mash.services.pipeline_service.os.makedirs')
+    @patch.object(Defaults, 'get_job_directory')
+    @patch.object(PipelineService, 'bind_queue')
     @patch.object(PipelineService, 'bind_credentials_queue')
-    @patch.object(PipelineService, 'restart_jobs')
+    @patch('mash.services.pipeline_service.restart_jobs')
     @patch.object(PipelineService, 'set_logfile')
     @patch.object(PipelineService, 'start')
     def test_service_post_init(
         self, mock_start,
-        mock_set_logfile, mock_restart_jobs, mock_bind_creds
+        mock_set_logfile, mock_restart_jobs, mock_bind_creds,
+        mock_bind_queue, mock_get_job_directory, mock_makedirs
     ):
+        mock_get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
         self.service.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/service_service.log'
 
         self.service.post_init()
+
+        mock_get_job_directory.assert_called_once_with('replication')
+        mock_makedirs.assert_called_once_with(
+            '/var/lib/mash/replication_jobs/', exist_ok=True
+        )
 
         self.config.get_encryption_keys_file.assert_called_once_with()
         self.config.get_jwt_secret.assert_called_once_with()
@@ -102,17 +120,29 @@ class TestPipelineService(object):
         )
 
         mock_bind_creds.assert_called_once_with()
-        mock_restart_jobs.assert_called_once_with(self.service._add_job)
+        mock_bind_queue.has_calls([
+            call('replication', 'job_document', 'service'),
+            call('replication', 'listener_msg', 'listener')
+        ])
+        mock_restart_jobs.assert_called_once_with(
+            '/var/lib/mash/replication_jobs/',
+            self.service._add_job
+        )
         mock_start.assert_called_once_with()
 
+    @patch('mash.services.pipeline_service.os.makedirs')
+    @patch.object(Defaults, 'get_job_directory')
+    @patch.object(PipelineService, 'bind_queue')
     @patch.object(PipelineService, 'bind_credentials_queue')
-    @patch.object(PipelineService, 'restart_jobs')
+    @patch('mash.services.pipeline_service.restart_jobs')
     @patch.object(PipelineService, 'set_logfile')
     @patch.object(PipelineService, 'start')
     def test_service_post_init_custom_args(
         self, mock_start,
-        mock_set_logfile, mock_restart_jobs, mock_bind_creds
+        mock_set_logfile, mock_restart_jobs, mock_bind_creds,
+        mock_bind_queue, mock_get_job_directory, mock_makedirs
     ):
+        mock_makedirs.return_value = True
         self.service.config = self.config
         self.service.custom_args = {
             'listener_msg_args': ['source_regions'],
@@ -161,22 +191,22 @@ class TestPipelineService(object):
         )
 
     @patch('mash.services.pipeline_service.JobFactory')
-    @patch.object(PipelineService, 'persist_job_config')
+    @patch('mash.services.pipeline_service.persist_json')
     def test_service_add_job(
-        self, mock_persist_config, mock_job_factory
+        self, mock_persist_json, mock_job_factory
     ):
-        mock_persist_config.return_value = 'temp-config.json'
-
         job = Mock()
         job.id = '1'
         job.get_job_id.return_value = {'job_id': '1'}
 
         mock_job_factory.create_job.return_value = job
+        self.service.job_directory = 'tmp-dir/'
+
         job_config = {'id': '1', 'cloud': 'ec2'}
         self.service._add_job(job_config)
 
         assert job.log_callback == self.service.log_job_message
-        assert job.job_file == 'temp-config.json'
+        assert job.job_file == 'tmp-dir/job-1.json'
         self.service.log.info.assert_called_once_with(
             'Job queued, awaiting listener message.',
             extra={'job_id': '1'}
@@ -195,7 +225,7 @@ class TestPipelineService(object):
         )
 
     @patch.object(PipelineService, 'publish_credentials_delete')
-    @patch.object(PipelineService, 'remove_file')
+    @patch('mash.services.pipeline_service.remove_file')
     @patch.object(PipelineService, 'unbind_queue')
     def test_service_delete_job(
         self, mock_unbind_queue, mock_remove_file, mock_publish_creds_delete
@@ -505,7 +535,10 @@ class TestPipelineService(object):
 
         self.channel.start_consuming.assert_called_once_with()
         mock_consume_queue.assert_has_calls([
-            call(self.service._handle_service_message),
+            call(
+                self.service._handle_service_message,
+                queue_name='service'
+            ),
             call(
                 self.service._handle_listener_message,
                 queue_name='listener'
@@ -765,6 +798,32 @@ class TestPipelineService(object):
             'Message not received: {0}'.format(
                 JsonFormat.json_message({"credentials_job_delete": "1"})
             )
+        )
+
+    @patch('mash.services.mash_service.Connection')
+    def test_publish_job_result(self, mock_connection):
+        mock_connection.return_value = self.connection
+        self.service.publish_job_result('exchange', 'message')
+        self.channel.basic.publish.assert_called_once_with(
+            body='message', exchange='exchange', mandatory=True,
+            properties=self.msg_properties, routing_key='listener_msg'
+        )
+
+    def test_log_job_message(self):
+        self.service.log_job_message('Test message', {'job_id': '1'})
+
+        self.service.log.info.assert_called_once_with(
+            'Test message',
+            extra={'job_id': '1'}
+        )
+
+        self.service.log_job_message(
+            'Test error message', {'job_id': '1'}, success=False
+        )
+
+        self.service.log.error.assert_called_once_with(
+            'Test error message',
+            extra={'job_id': '1'}
         )
 
     def test_service_start_job(self):

@@ -4,6 +4,7 @@ import json
 from pytest import raises
 from unittest.mock import call, MagicMock, Mock, patch
 
+from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.credentials.service import CredentialsService
 from mash.services.credentials.account_datastore import AccountDatastore
@@ -42,15 +43,20 @@ class TestCredentialsService(object):
         self.service.jobs = {}
         self.service.log = Mock()
 
+    @patch('mash.services.credentials.service.os.makedirs')
+    @patch.object(Defaults, 'get_job_directory')
     @patch('mash.services.credentials.service.AccountDatastore')
     @patch.object(CredentialsService, 'set_logfile')
     @patch.object(CredentialsService, 'start')
     @patch.object(CredentialsService, '_bind_credential_request_keys')
-    @patch.object(CredentialsService, 'restart_jobs')
+    @patch('mash.services.credentials.service.restart_jobs')
     def test_post_init(
         self, mock_restart_jobs, mock_bind_cred_req_keys, mock_start,
-        mock_set_logfile, mock_datastore
+        mock_set_logfile, mock_datastore, mock_get_job_directory,
+        mock_makedirs
     ):
+        mock_get_job_directory.return_value = \
+            '/var/lib/mash/credentials_jobs/'
         self.service.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/credentials_service.log'
@@ -65,19 +71,27 @@ class TestCredentialsService(object):
             '/var/log/mash/credentials_service.log'
         )
 
+        mock_get_job_directory.assert_called_once_with('credentials')
+        mock_makedirs.assert_called_once_with(
+            '/var/lib/mash/credentials_jobs/', exist_ok=True
+        )
+
         mock_bind_cred_req_keys.assert_called_once_with()
-        mock_restart_jobs.assert_called_once_with(self.service._add_job)
+        mock_restart_jobs.assert_called_once_with(
+            '/var/lib/mash/credentials_jobs/',
+            self.service._add_job
+        )
         mock_start.assert_called_once_with()
 
     @patch.object(AccountDatastore, 'get_testing_accounts')
-    @patch.object(CredentialsService, 'persist_job_config')
+    @patch('mash.services.credentials.service.persist_json')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_add_job(
-        self, mock_send_control_response, mock_persist_job_config,
+        self, mock_send_control_response, mock_persist_json,
         mock_get_testing_accounts
     ):
-        mock_persist_job_config.return_value = 'temp-config.json'
         mock_get_testing_accounts.return_value = ['tester']
+        self.service.job_directory = 'tmp/'
 
         self.service._add_job({
             'id': '1',
@@ -87,11 +101,11 @@ class TestCredentialsService(object):
         })
 
         job_config = {
-            'id': '1', 'job_file': 'temp-config.json', 'cloud': 'ec2',
+            'id': '1', 'job_file': 'tmp/job-1.json', 'cloud': 'ec2',
             'cloud_accounts': ['test-gce', 'tester'],
             'requesting_user': 'user1'
         }
-        mock_persist_job_config.assert_called_once_with(job_config)
+        mock_persist_json.assert_called_once_with('tmp/job-1.json', job_config)
 
         mock_send_control_response.assert_called_once_with(
             'Job queued, awaiting credentials requests.',
@@ -174,7 +188,7 @@ class TestCredentialsService(object):
             )
         )
 
-    @patch.object(CredentialsService, 'remove_file')
+    @patch('mash.services.credentials.service.remove_file')
     @patch.object(CredentialsService, '_send_control_response')
     def test_credentials_delete_job(
         self, mock_send_control_response, mock_remove_file

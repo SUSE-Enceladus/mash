@@ -17,6 +17,7 @@
 #
 
 import datetime
+import json
 import os
 import random
 
@@ -102,3 +103,47 @@ def format_string_with_date(value, timestamp=None, date_format='%Y%m%d'):
         pass
 
     return value
+
+
+def remove_file(file_path):
+    """
+    Remove file from disk if it exists.
+    """
+    try:
+        os.remove(file_path)
+    except FileNotFoundError:
+        pass
+
+
+def persist_json(file_path, data):
+    """
+    Persist the json data to a file on disk.
+    """
+    with open(file_path, 'w') as json_file:
+        json_file.write(JsonFormat.json_message(data))
+
+
+def load_json(file_path):
+    """
+    Load json from file and return dictionary.
+    """
+    with open(file_path, 'r') as json_file:
+        data = json.load(json_file)
+
+    return data
+
+
+def restart_job(job_file, callback):
+    """
+    Restart job from config file using callback.
+    """
+    job_config = load_json(job_file)
+    callback(job_config)
+
+
+def restart_jobs(job_dir, callback):
+    """
+    Restart all jobs in job_dir using callback.
+    """
+    for job_file in os.listdir(job_dir):
+        restart_job(os.path.join(job_dir, job_file), callback)

@@ -18,6 +18,7 @@
 
 import json
 import jwt
+import os
 
 from amqpstorm import AMQPError
 
@@ -30,10 +31,12 @@ from datetime import datetime, timedelta
 
 from pytz import utc
 
+from mash.services.base_defaults import Defaults
 from mash.services.job_factory import JobFactory
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
+from mash.utils.mash_utils import remove_file, persist_json, restart_jobs
 
 
 class PipelineService(MashService):
@@ -42,7 +45,18 @@ class PipelineService(MashService):
     """
     def post_init(self):
         """Initialize base service class and job scheduler."""
+        self.listener_queue = 'listener'
+        self.service_queue = 'service'
+        self.job_document_key = 'job_document'
+        self.listener_msg_key = 'listener_msg'
+
         self.jobs = {}
+
+        # setup service job directory
+        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        os.makedirs(
+            self.job_directory, exist_ok=True
+        )
 
         self.next_service = self._get_next_service()
         self.prev_service = self._get_previous_service()
@@ -71,6 +85,13 @@ class PipelineService(MashService):
             self.status_msg_args += self.custom_args['status_msg_args']
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
+
+        self.bind_queue(
+            self.service_exchange, self.job_document_key, self.service_queue
+        )
+        self.bind_queue(
+            self.service_exchange, self.listener_msg_key, self.listener_queue
+        )
         self.bind_credentials_queue()
 
         self.scheduler = BackgroundScheduler(timezone=utc)
@@ -79,7 +100,7 @@ class PipelineService(MashService):
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
         )
 
-        self.restart_jobs(self._add_job)
+        restart_jobs(self.job_directory, self._add_job)
         self.start()
 
     def _add_job(self, job_config):
@@ -105,8 +126,11 @@ class PipelineService(MashService):
                 job.log_callback = self.log_job_message
 
                 if 'job_file' not in job_config:
-                    job_config['job_file'] = self.persist_job_config(
-                        job_config
+                    job_config['job_file'] = '{0}job-{1}.json'.format(
+                        self.job_directory, job_id
+                    )
+                    persist_json(
+                        job_config['job_file'], job_config
                     )
                     job.job_file = job_config['job_file']
 
@@ -158,7 +182,7 @@ class PipelineService(MashService):
                 self.publish_credentials_delete(job_id)
 
             del self.jobs[job_id]
-            self.remove_file(job.job_file)
+            remove_file(job.job_file)
         else:
             self.log.warning(
                 'Job deletion failed, job is not queued.',
@@ -558,14 +582,33 @@ class PipelineService(MashService):
             self.get_credential_request(job_id)
         )
 
+    def publish_job_result(self, exchange, message):
+        """
+        Publish the result message to the listener queue on given exchange.
+        """
+        self._publish(exchange, self.listener_msg_key, message)
+
+    def log_job_message(self, msg, metadata, success=True):
+        """
+        Callback for job instance to log given message.
+        """
+        if success:
+            self.log.info(msg, extra=metadata)
+        else:
+            self.log.error(msg, extra=metadata)
+
     def start(self):
         """
         Start pipeline service.
         """
         self.scheduler.start()
-        self.consume_queue(self._handle_service_message)
         self.consume_queue(
-            self._handle_listener_message, queue_name=self.listener_queue
+            self._handle_service_message,
+            queue_name=self.service_queue
+        )
+        self.consume_queue(
+            self._handle_listener_message,
+            queue_name=self.listener_queue
         )
         self.consume_credentials_queue(self._handle_credentials_response)
 

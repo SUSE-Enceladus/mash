@@ -1,32 +1,22 @@
-import io
-
 from unittest.mock import patch
 from unittest.mock import call
 from unittest.mock import MagicMock, Mock
 from pytest import raises
 
 from mash.services.mash_service import MashService
-from mash.services.base_defaults import Defaults
 
 from mash.mash_exceptions import (
     MashRabbitConnectionException,
     MashLogSetupException
 )
-from mash.utils.json_format import JsonFormat
-
-open_name = "builtins.open"
 
 
 class TestBaseService(object):
     @patch('mash.services.mash_service.get_configuration')
-    @patch('mash.services.mash_service.os.makedirs')
-    @patch.object(Defaults, 'get_job_directory')
     @patch('mash.services.mash_service.Connection')
     def setup(
-        self, mock_connection, mock_get_job_directory, mock_makedirs,
-        mock_get_configuration
+        self, mock_connection, mock_get_configuration
     ):
-        mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
         self.connection = Mock()
         self.channel = Mock()
         self.msg_properties = {
@@ -52,10 +42,6 @@ class TestBaseService(object):
         self.service = MashService('obs')
 
         mock_get_configuration.assert_called_once_with('obs')
-        mock_get_job_directory.assert_called_once_with('obs')
-        mock_makedirs.assert_called_once_with(
-            '/var/lib/mash/obs_jobs/', exist_ok=True
-        )
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
@@ -94,18 +80,9 @@ class TestBaseService(object):
         with raises(MashLogSetupException):
             self.service.set_logfile('/some/log')
 
-    @patch('mash.services.mash_service.Connection')
-    def test_publish_job_result(self, mock_connection):
-        mock_connection.return_value = self.connection
-        self.service.publish_job_result('exchange', 'message')
-        self.channel.basic.publish.assert_called_once_with(
-            body='message', exchange='exchange', mandatory=True,
-            properties=self.msg_properties, routing_key='listener_msg'
-        )
-
     def test_consume_queue(self):
         callback = Mock()
-        self.service.consume_queue(callback)
+        self.service.consume_queue(callback, queue_name='service')
         self.channel.basic.consume.assert_called_once_with(
             callback=callback, queue='obs.service'
         )
@@ -116,62 +93,6 @@ class TestBaseService(object):
         self.service.close_connection()
         self.connection.close.assert_called_once_with()
         self.channel.close.assert_called_once_with()
-
-    def test_log_job_message(self):
-        self.service.log_job_message('Test message', {'job_id': '1'})
-
-        self.service.log.info.assert_called_once_with(
-            'Test message',
-            extra={'job_id': '1'}
-        )
-
-        self.service.log_job_message(
-            'Test error message', {'job_id': '1'}, success=False
-        )
-
-        self.service.log.error.assert_called_once_with(
-            'Test error message',
-            extra={'job_id': '1'}
-        )
-
-    def test_persist_job_config(self):
-        self.service.job_directory = 'tmp-dir/'
-
-        with patch(open_name, create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.service.persist_job_config({'id': '1'})
-            file_handle = mock_open.return_value.__enter__.return_value
-            # Dict is mutable, mock compares the final value of Dict
-            # not the initial value that was passed in.
-            file_handle.write.assert_called_with(
-                JsonFormat.json_message({
-                    "id": "1",
-                    "job_file": "tmp-dir/job-1.json"
-                })
-            )
-
-    @patch('mash.services.mash_service.os.remove')
-    def test_remove_file(self, mock_remove):
-        mock_remove.side_effect = Exception('File not found.')
-        self.service.remove_file('job-test.json')
-        mock_remove.assert_called_once_with('job-test.json')
-
-    @patch('mash.services.mash_service.json.load')
-    @patch('mash.services.mash_service.os.listdir')
-    def test_restart_jobs(self, mock_os_listdir, mock_json_load):
-        self.service.job_directory = 'tmp-dir'
-        mock_os_listdir.return_value = ['job-123.json']
-        mock_json_load.return_value = {'id': '1'}
-
-        with patch(open_name, create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            mock_callback = Mock()
-            self.service.restart_jobs(mock_callback)
-
-            file_handle = mock_open.return_value.__enter__.return_value
-            file_handle.read.call_count == 1
-
-        mock_callback.assert_called_once_with({'id': '1'})
 
     def test_unbind_queue(self):
         self.service.unbind_queue(
