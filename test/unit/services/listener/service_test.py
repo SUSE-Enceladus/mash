@@ -11,11 +11,11 @@ from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 
 from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
-from mash.services.pipeline_service import PipelineService
+from mash.services.listener_service import ListenerService
 from mash.utils.json_format import JsonFormat
 
 
-class TestPipelineService(object):
+class TestListenerService(object):
     @patch.object(MashService, '__init__')
     def setup(
         self, mock_base_init
@@ -60,7 +60,7 @@ class TestPipelineService(object):
             }
         })
 
-        self.service = PipelineService()
+        self.service = ListenerService()
         self.service.encryption_keys_file = 'encryption_keys.file'
         self.service.jwt_secret = 'a-secret'
         self.service.jwt_algorithm = 'HS256'
@@ -87,13 +87,13 @@ class TestPipelineService(object):
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
 
-    @patch('mash.services.pipeline_service.os.makedirs')
+    @patch('mash.services.listener_service.os.makedirs')
     @patch.object(Defaults, 'get_job_directory')
-    @patch.object(PipelineService, 'bind_queue')
-    @patch.object(PipelineService, 'bind_credentials_queue')
-    @patch('mash.services.pipeline_service.restart_jobs')
-    @patch.object(PipelineService, 'set_logfile')
-    @patch.object(PipelineService, 'start')
+    @patch.object(ListenerService, 'bind_queue')
+    @patch.object(ListenerService, 'bind_credentials_queue')
+    @patch('mash.services.listener_service.restart_jobs')
+    @patch.object(ListenerService, 'set_logfile')
+    @patch.object(ListenerService, 'start')
     def test_service_post_init(
         self, mock_start,
         mock_set_logfile, mock_restart_jobs, mock_bind_creds,
@@ -130,13 +130,13 @@ class TestPipelineService(object):
         )
         mock_start.assert_called_once_with()
 
-    @patch('mash.services.pipeline_service.os.makedirs')
+    @patch('mash.services.listener_service.os.makedirs')
     @patch.object(Defaults, 'get_job_directory')
-    @patch.object(PipelineService, 'bind_queue')
-    @patch.object(PipelineService, 'bind_credentials_queue')
-    @patch('mash.services.pipeline_service.restart_jobs')
-    @patch.object(PipelineService, 'set_logfile')
-    @patch.object(PipelineService, 'start')
+    @patch.object(ListenerService, 'bind_queue')
+    @patch.object(ListenerService, 'bind_credentials_queue')
+    @patch('mash.services.listener_service.restart_jobs')
+    @patch.object(ListenerService, 'set_logfile')
+    @patch.object(ListenerService, 'start')
     def test_service_post_init_custom_args(
         self, mock_start,
         mock_set_logfile, mock_restart_jobs, mock_bind_creds,
@@ -153,8 +153,8 @@ class TestPipelineService(object):
 
         self.service.post_init()
 
-    @patch.object(PipelineService, '_delete_job')
-    @patch.object(PipelineService, '_publish_message')
+    @patch.object(ListenerService, '_delete_job')
+    @patch.object(ListenerService, '_publish_message')
     def test_service_cleanup_job(
         self, mock_publish_message, mock_delete_job
     ):
@@ -190,8 +190,8 @@ class TestPipelineService(object):
             extra={'job_id': job.id}
         )
 
-    @patch('mash.services.pipeline_service.JobFactory')
-    @patch('mash.services.pipeline_service.persist_json')
+    @patch('mash.services.listener_service.JobFactory')
+    @patch('mash.services.listener_service.persist_json')
     def test_service_add_job(
         self, mock_persist_json, mock_job_factory
     ):
@@ -212,7 +212,7 @@ class TestPipelineService(object):
             extra={'job_id': '1'}
         )
 
-    @patch('mash.services.pipeline_service.JobFactory')
+    @patch('mash.services.listener_service.JobFactory')
     def test_service_add_job_exception(self, mock_job_factory):
         job_config = {'id': '1', 'cloud': 'ec2'}
 
@@ -224,9 +224,9 @@ class TestPipelineService(object):
             'Invalid job: Cannot create job.'
         )
 
-    @patch.object(PipelineService, 'publish_credentials_delete')
-    @patch('mash.services.pipeline_service.remove_file')
-    @patch.object(PipelineService, 'unbind_queue')
+    @patch.object(ListenerService, 'publish_credentials_delete')
+    @patch('mash.services.listener_service.remove_file')
+    @patch.object(ListenerService, 'unbind_queue')
     def test_service_delete_job(
         self, mock_unbind_queue, mock_remove_file, mock_publish_creds_delete
     ):
@@ -258,8 +258,8 @@ class TestPipelineService(object):
             extra={'job_id': '1'}
         )
 
-    @patch.object(PipelineService, '_schedule_job')
-    @patch.object(PipelineService, 'decode_credentials')
+    @patch.object(ListenerService, '_schedule_job')
+    @patch.object(ListenerService, 'decode_credentials')
     def test_service_handle_credentials_response(
         self, mock_decode_credentials, mock_schedule_job
     ):
@@ -277,7 +277,7 @@ class TestPipelineService(object):
         mock_schedule_job.assert_called_once_with('1')
         message.ack.assert_called_once_with()
 
-    @patch.object(PipelineService, 'decode_credentials')
+    @patch.object(ListenerService, 'decode_credentials')
     def test_service_handle_credentials_response_exceptions(
         self, mock_decode_credentials
     ):
@@ -302,8 +302,8 @@ class TestPipelineService(object):
 
         assert message.ack.call_count == 2
 
-    @patch.object(PipelineService, '_validate_listener_msg')
-    @patch.object(PipelineService, 'publish_credentials_request')
+    @patch.object(ListenerService, '_validate_listener_msg')
+    @patch.object(ListenerService, 'publish_credentials_request')
     def test_service_handle_listener_message(
         self, mock_publish_creds_request, mock_validate_listener_msg
     ):
@@ -321,8 +321,8 @@ class TestPipelineService(object):
         assert self.service.jobs['1'].listener_msg == self.message
         mock_publish_creds_request.assert_called_once_with('1')
 
-    @patch.object(PipelineService, '_validate_listener_msg')
-    @patch.object(PipelineService, '_schedule_job')
+    @patch.object(ListenerService, '_validate_listener_msg')
+    @patch.object(ListenerService, '_schedule_job')
     def test_service_handle_listener_message_creds(
         self, mock_schedule_job, mock_validate_listener_msg
     ):
@@ -340,7 +340,7 @@ class TestPipelineService(object):
         assert self.service.jobs['1'].listener_msg == self.message
         mock_schedule_job.assert_called_once_with('1')
 
-    @patch.object(PipelineService, '_validate_listener_msg')
+    @patch.object(ListenerService, '_validate_listener_msg')
     def test_service_handle_listener_msg_invalid(
         self, mock_validate_listener_msg
     ):
@@ -351,7 +351,7 @@ class TestPipelineService(object):
 
         self.message.ack.assert_called_once_with()
 
-    @patch.object(PipelineService, '_add_job')
+    @patch.object(ListenerService, '_add_job')
     def test_service_handle_service_message(self, mock_add_job):
         self.method['routing_key'] = 'job_document'
         self.message.body = '{"replication_job": {"id": "1", ' \
@@ -373,9 +373,9 @@ class TestPipelineService(object):
             ' line 1 column 1 (char 0).'
         )
 
-    @patch.object(PipelineService, 'send_email_notification')
-    @patch.object(PipelineService, '_delete_job')
-    @patch.object(PipelineService, '_publish_message')
+    @patch.object(ListenerService, 'send_email_notification')
+    @patch.object(ListenerService, '_delete_job')
+    @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result(
         self, mock_publish_message, mock_delete_job,
         mock_send_email_notification
@@ -405,9 +405,9 @@ class TestPipelineService(object):
         mock_publish_message.assert_called_once_with(job)
         msg.ack.assert_called_once_with()
 
-    @patch.object(PipelineService, 'send_email_notification')
-    @patch.object(PipelineService, '_delete_job')
-    @patch.object(PipelineService, '_publish_message')
+    @patch.object(ListenerService, 'send_email_notification')
+    @patch.object(ListenerService, '_delete_job')
+    @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result_exception(
         self, mock_publish_message, mock_delete_job,
         mock_send_email_notification
@@ -432,9 +432,9 @@ class TestPipelineService(object):
         )
         mock_publish_message.assert_called_once_with(job)
 
-    @patch.object(PipelineService, 'send_email_notification')
-    @patch.object(PipelineService, '_delete_job')
-    @patch.object(PipelineService, '_publish_message')
+    @patch.object(ListenerService, 'send_email_notification')
+    @patch.object(ListenerService, '_delete_job')
+    @patch.object(ListenerService, '_publish_message')
     def test_publishing_process_job_result_fail(
         self, mock_publish_message, mock_delete_job,
         mock_send_email_notification
@@ -460,8 +460,8 @@ class TestPipelineService(object):
         mock_delete_job('1')
         mock_publish_message.assert_called_once_with(job)
 
-    @patch.object(PipelineService, '_get_status_message')
-    @patch.object(PipelineService, 'publish_job_result')
+    @patch.object(ListenerService, '_get_status_message')
+    @patch.object(ListenerService, 'publish_job_result')
     def test_service_publish_message(
         self, mock_publish, mock_get_status_message
     ):
@@ -477,8 +477,8 @@ class TestPipelineService(object):
             self.status_message
         )
 
-    @patch.object(PipelineService, '_get_status_message')
-    @patch.object(PipelineService, '_publish')
+    @patch.object(ListenerService, '_get_status_message')
+    @patch.object(ListenerService, '_publish')
     def test_service_publish_message_exception(
         self, mock_publish, mock_get_status_message
     ):
@@ -496,7 +496,7 @@ class TestPipelineService(object):
             extra={'job_id': '1'}
         )
 
-    @patch.object(PipelineService, '_start_job')
+    @patch.object(ListenerService, '_start_job')
     def test_service_schedule_duplicate_job(
         self, mock_start_job
     ):
@@ -523,9 +523,9 @@ class TestPipelineService(object):
             coalesce=True
         )
 
-    @patch.object(PipelineService, 'consume_credentials_queue')
-    @patch.object(PipelineService, 'consume_queue')
-    @patch.object(PipelineService, 'close_connection')
+    @patch.object(ListenerService, 'consume_credentials_queue')
+    @patch.object(ListenerService, 'consume_queue')
+    @patch.object(ListenerService, 'close_connection')
     def test_service_start(
         self, mock_close_connection, mock_consume_queue,
         mock_consume_credentials_queue
@@ -549,8 +549,8 @@ class TestPipelineService(object):
         )
         mock_close_connection.assert_called_once_with()
 
-    @patch.object(PipelineService, 'consume_credentials_queue')
-    @patch.object(PipelineService, 'close_connection')
+    @patch.object(ListenerService, 'consume_credentials_queue')
+    @patch.object(ListenerService, 'close_connection')
     def test_service_start_exception(
         self, mock_close_connection, mock_consume_credentials_queue
     ):
@@ -603,7 +603,7 @@ class TestPipelineService(object):
         )
         assert result is False
 
-    @patch.object(PipelineService, '_cleanup_job')
+    @patch.object(ListenerService, '_cleanup_job')
     def test_service_validate_base_msg_failed(self, mock_cleanup_job):
         message = {
             'id': '1',
@@ -667,7 +667,7 @@ class TestPipelineService(object):
             callback=callback, queue='replication.credentials'
         )
 
-    @patch.object(PipelineService, 'bind_queue')
+    @patch.object(ListenerService, 'bind_queue')
     def test_bind_credentials_queue(self, mock_bind_queue):
         self.service.bind_credentials_queue()
 
@@ -704,8 +704,8 @@ class TestPipelineService(object):
         assert len(result) == 1
         assert type(result[0]).__name__ == 'Fernet'
 
-    @patch.object(PipelineService, 'decrypt_credentials')
-    @patch('mash.services.pipeline_service.jwt')
+    @patch.object(ListenerService, 'decrypt_credentials')
+    @patch('mash.services.listener_service.jwt')
     def test_decode_credentials(self, mock_jwt, mock_decrypt):
         self.service.jwt_algorithm = 'HS256'
         self.service.jwt_secret = 'super.secret'
@@ -765,8 +765,8 @@ class TestPipelineService(object):
         assert creds['access_key_id'] == '123456'
         assert creds['secret_access_key'] == '654321'
 
-    @patch.object(PipelineService, 'get_credential_request')
-    @patch.object(PipelineService, '_publish')
+    @patch.object(ListenerService, 'get_credential_request')
+    @patch.object(ListenerService, '_publish')
     def test_publish_credentials_request(
         self, mock_publish, mock_get_credential_request
     ):
@@ -780,7 +780,7 @@ class TestPipelineService(object):
             'credentials', 'request.replication', token
         )
 
-    @patch.object(PipelineService, '_publish')
+    @patch.object(ListenerService, '_publish')
     def test_publish_credentials_delete(self, mock_publish):
         self.service.publish_credentials_delete('1')
         mock_publish.assert_called_once_with(
@@ -789,7 +789,7 @@ class TestPipelineService(object):
             JsonFormat.json_message({"credentials_job_delete": "1"})
         )
 
-    @patch.object(PipelineService, '_publish')
+    @patch.object(ListenerService, '_publish')
     def test_publish_credentials_delete_exception(self, mock_publish):
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
 

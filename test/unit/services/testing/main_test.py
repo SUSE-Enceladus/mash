@@ -5,7 +5,7 @@ from mash.services.testing_service import main
 
 
 class TestImgProofTestingServiceMain(object):
-    @patch('mash.services.testing_service.PipelineService')
+    @patch('mash.services.testing_service.ListenerService')
     def test_main(self, mock_testing_service):
         main()
         mock_testing_service.assert_called_once_with(
@@ -16,7 +16,7 @@ class TestImgProofTestingServiceMain(object):
             }
         )
 
-    @patch('mash.services.testing_service.PipelineService')
+    @patch('mash.services.testing_service.ListenerService')
     @patch('sys.exit')
     def test_testing_main_mash_error(self, mock_exit, mock_testing_service):
         mock_testing_service.side_effect = MashTestingException('error')
@@ -32,7 +32,7 @@ class TestImgProofTestingServiceMain(object):
         )
         mock_exit.assert_called_once_with(1)
 
-    @patch('mash.services.testing_service.PipelineService')
+    @patch('mash.services.testing_service.ListenerService')
     @patch('sys.exit')
     def test_logger_main_keyboard_interrupt(
             self, mock_exit, mock_testing_service
@@ -42,7 +42,7 @@ class TestImgProofTestingServiceMain(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.testing_service.PipelineService')
+    @patch('mash.services.testing_service.ListenerService')
     @patch('sys.exit')
     def test_testing_main_system_exit(self, mock_exit, mock_testing_service):
         mock_testing_service.side_effect = SystemExit()
@@ -50,7 +50,7 @@ class TestImgProofTestingServiceMain(object):
         main()
         mock_exit.assert_called_once_with(mock_testing_service.side_effect)
 
-    @patch('mash.services.testing_service.PipelineService')
+    @patch('mash.services.testing_service.ListenerService')
     @patch('sys.exit')
     def test_testing_main_unexpected_error(
         self, mock_exit, mock_testing_service
