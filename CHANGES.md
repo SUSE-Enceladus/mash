@@ -1,3 +1,63 @@
+v3.0.0 (2019-06-06)
+===================
+
+- Refactor service job classes to use post_init workflow.
+  [\#431](https://github.com/SUSE-Enceladus/mash/pull/431)
+- Move account/credentials functions to new datastore class.
+  [\#435](https://github.com/SUSE-Enceladus/mash/pull/435)
+- Check each key in job creator tests.
+  [\#439](https://github.com/SUSE-Enceladus/mash/pull/439)
+- Remove unused uploader conventions classes.
+  [\#441](https://github.com/SUSE-Enceladus/mash/pull/441)
+- Rename test_deprecation_start_job.
+  [\#442](https://github.com/SUSE-Enceladus/mash/pull/442)
+- Create service classes as Pipeline instances.
+  [\#443](https://github.com/SUSE-Enceladus/mash/pull/443)
+- Remove azure deprecation functionality.
+  [\#444](https://github.com/SUSE-Enceladus/mash/pull/444)
+- Add new AWS region ap-east-1.
+  [\#445](https://github.com/SUSE-Enceladus/mash/pull/445)
+- Update layout diagram.
+  [\#446](https://github.com/SUSE-Enceladus/mash/pull/446)
+- Fix fetch index list href retrieval.
+  [\#447](https://github.com/SUSE-Enceladus/mash/pull/447)
+- Use service exchange name for log module name.
+  [\#448](https://github.com/SUSE-Enceladus/mash/pull/448)
+- Migrate uploader classes to pipeline workflow
+  [\#449](https://github.com/SUSE-Enceladus/mash/pull/449)
+- Handle any uncaught exceptions from datastore.
+  [\#450](https://github.com/SUSE-Enceladus/mash/pull/450)
+- Make run_job method public.
+  [\#451](https://github.com/SUSE-Enceladus/mash/pull/451)
+- GCE family is optional.
+  [\#452](https://github.com/SUSE-Enceladus/mash/pull/452)
+- Move credentials methods to pipeline service.
+  [\#453](https://github.com/SUSE-Enceladus/mash/pull/453)
+- Set image name as base attr.
+  [\#454](https://github.com/SUSE-Enceladus/mash/pull/454)
+- Move next/prev methods to pipeline service.
+  [\#455](https://github.com/SUSE-Enceladus/mash/pull/455)
+- Migrate job specific methods.
+  [\#459](https://github.com/SUSE-Enceladus/mash/pull/459)
+- Wait for gce create image to complete.
+  [\#460](https://github.com/SUSE-Enceladus/mash/pull/460)
+- Remove references to pint service.
+  [\#464](https://github.com/SUSE-Enceladus/mash/pull/464)
+- Add is_publishing_account option to gce jobs.
+  [\#466](https://github.com/SUSE-Enceladus/mash/pull/466)
+- Add use root swap option for ec2 upload.
+  [\#467](https://github.com/SUSE-Enceladus/mash/pull/467)
+- Make distro option an enum.
+  [\#469](https://github.com/SUSE-Enceladus/mash/pull/469)
+- Update dependencies and name for ipa.
+  [\#470](https://github.com/SUSE-Enceladus/mash/pull/470)
+- Add image cleanup for gce.
+  [\#472](https://github.com/SUSE-Enceladus/mash/pull/472)
+- Rename pipeline service to listener service.
+  [\#473](https://github.com/SUSE-Enceladus/mash/pull/473)
+- Remove F821 from ignore list in config.
+  [\#474](https://github.com/SUSE-Enceladus/mash/pull/474)
+
 v2.5.0 (2019-04-11)
 ===================
 
