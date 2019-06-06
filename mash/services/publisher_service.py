@@ -21,7 +21,7 @@ import sys
 import traceback
 
 from mash.mash_exceptions import MashException
-from mash.services.pipeline_service import PipelineService
+from mash.services.listener_service import ListenerService
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
         log.setLevel(logging.DEBUG)
 
         # run service, enter main loop
-        PipelineService(
+        ListenerService(
             service_exchange='publisher',
             custom_args={
                 'listener_msg_args': ['cloud_image_name']

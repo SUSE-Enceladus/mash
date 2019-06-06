@@ -39,9 +39,9 @@ from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import remove_file, persist_json, restart_jobs
 
 
-class PipelineService(MashService):
+class ListenerService(MashService):
     """
-    Base class for MASH services that live in the image pipeline.
+    Base class for MASH services that live in the image listener.
     """
     def post_init(self):
         """Initialize base service class and job scheduler."""
@@ -599,7 +599,7 @@ class PipelineService(MashService):
 
     def start(self):
         """
-        Start pipeline service.
+        Start listener service.
         """
         self.scheduler.start()
         self.consume_queue(

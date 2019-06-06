@@ -5,7 +5,7 @@ from mash.services.replication_service import main
 
 
 class TestReplicationServiceMain(object):
-    @patch('mash.services.replication_service.PipelineService')
+    @patch('mash.services.replication_service.ListenerService')
     def test_replication_main(self, mock_replication_service):
         main()
         mock_replication_service.assert_called_once_with(
@@ -15,7 +15,7 @@ class TestReplicationServiceMain(object):
             }
         )
 
-    @patch('mash.services.replication_service.PipelineService')
+    @patch('mash.services.replication_service.ListenerService')
     @patch('sys.exit')
     def test_replication_main_mash_error(
         self, mock_exit, mock_replication_service
@@ -33,7 +33,7 @@ class TestReplicationServiceMain(object):
         )
         mock_exit.assert_called_once_with(1)
 
-    @patch('mash.services.replication_service.PipelineService')
+    @patch('mash.services.replication_service.ListenerService')
     @patch('sys.exit')
     def test_main_keyboard_interrupt(
             self, mock_exit, mock_replication_ervice
@@ -42,7 +42,7 @@ class TestReplicationServiceMain(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.replication_service.PipelineService')
+    @patch('mash.services.replication_service.ListenerService')
     @patch('sys.exit')
     def test_replication_main_system_exit(
         self, mock_exit, mock_replication_service
@@ -54,7 +54,7 @@ class TestReplicationServiceMain(object):
             mock_replication_service.side_effect
         )
 
-    @patch('mash.services.replication_service.PipelineService')
+    @patch('mash.services.replication_service.ListenerService')
     @patch('sys.exit')
     def test_replication_main_unexpected_error(
         self, mock_exit, mock_replication_service
