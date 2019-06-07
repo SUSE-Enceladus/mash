@@ -57,25 +57,17 @@ class GCEJob(BaseJob):
             ) or info.get('bucket')
 
             testing_account = info.get('testing_account')
-            is_publishing_account = info.get('is_publishing_account')
 
-            if is_publishing_account and not self.family:
+            if testing_account and not self.family:
                 raise MashJobCreatorException(
                     'Jobs using a GCE publishing account require a family.'
-                )
-
-            if is_publishing_account and not testing_account:
-                raise MashJobCreatorException(
-                    'Jobs using a GCE publishing account require'
-                    ' the use of a testing account.'
                 )
 
             self.target_account_info[region] = {
                 'account': account,
                 'bucket': bucket,
                 'family': self.family,
-                'testing_account': testing_account,
-                'is_publishing_account': is_publishing_account
+                'testing_account': testing_account
             }
 
     def get_deprecation_message(self):
@@ -143,8 +135,7 @@ class GCEJob(BaseJob):
         for source_region, value in self.target_account_info.items():
             test_regions[source_region] = {
                 'account': value['account'],
-                'testing_account': value['testing_account'],
-                'is_publishing_account': value['is_publishing_account']
+                'testing_account': value['testing_account']
             }
 
         return test_regions

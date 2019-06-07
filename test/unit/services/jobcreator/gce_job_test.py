@@ -10,7 +10,7 @@ def test_gce_job_publish_acnt():
             'name': 'actn1',
             'bucket': 'test',
             'region': 'us-west1-a',
-            'is_publishing_account': True
+            'testing_account': 'acnt2'
         }
     }
 
@@ -28,24 +28,6 @@ def test_gce_job_publish_acnt():
                 'image_description': 'image description',
                 'distro': 'sles',
                 'download_url': 'https://download.here'
-            }
-        )
-
-    with pytest.raises(MashJobCreatorException):
-        GCEJob(
-            account_info, {}, {
-                'job_id': '123',
-                'cloud': 'gce',
-                'requesting_user': 'test-user',
-                'last_service': 'deprecation',
-                'utctime': 'now',
-                'image': 'test-image',
-                'cloud_image_name': 'test-cloud-image',
-                'cloud_accounts': [{'name': 'acnt1'}],
-                'image_description': 'image description',
-                'distro': 'sles',
-                'download_url': 'https://download.here',
-                'family': 'sles'
             }
         )
 

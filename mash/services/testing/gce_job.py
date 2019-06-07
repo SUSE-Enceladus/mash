@@ -116,7 +116,7 @@ class GCETestingJob(MashJob):
 
             if self.cleanup_images or \
                     status != SUCCESS and \
-                    self.test_regions[region]['is_publishing_account']:
+                    self.test_regions[region].get('testing_account'):
                 self.cleanup_image(region)
 
     def cleanup_image(self, region):

@@ -16,8 +16,7 @@ class TestGCETestingJob(object):
             'test_regions': {
                 'us-west1': {
                     'account': 'test-gce',
-                    'testing_account': 'testingacnt',
-                    'is_publishing_account': False
+                    'testing_account': 'testingacnt'
                 }
             },
             'tests': ['test_stuff'],
