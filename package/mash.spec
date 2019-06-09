@@ -32,7 +32,7 @@ BuildRequires:  python3-apache-libcloud
 BuildRequires:  python3-azure-mgmt-compute
 BuildRequires:  python3-azure-mgmt-resource
 BuildRequires:  python3-azure-mgmt-storage
-BuildRequires:  python3-azure-storage
+BuildRequires:  python3-azure-storage-blob
 BuildRequires:  python3-boto3
 BuildRequires:  python3-cryptography >= 3.0.0
 BuildRequires:  python3-jsonschema
@@ -54,7 +54,7 @@ Requires:       python3-apache-libcloud
 Requires:       python3-azure-mgmt-compute
 Requires:       python3-azure-mgmt-resource
 Requires:       python3-azure-mgmt-storage
-Requires:       python3-azure-storage
+Requires:       python3-azure-storage-blob
 Requires:       python3-boto3
 Requires:       python3-cryptography >= 3.0.0
 Requires:       python3-jsonschema
