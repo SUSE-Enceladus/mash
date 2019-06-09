@@ -1,3 +1,9 @@
+v3.0.1 (2019-06-09)
+===================
+
+- Update azure storage package requirements.
+  [\#475](https://github.com/SUSE-Enceladus/mash/pull/475)
+
 v3.0.0 (2019-06-06)
 ===================
 
