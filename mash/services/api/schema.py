@@ -28,32 +28,20 @@ non_empty_string = {
 add_account_azure = {
     'type': 'object',
     'properties': {
-        'account_name': {'$ref': '#/definitions/non_empty_string'},
+        'account_name': non_empty_string,
         'credentials': {
             'type': 'object',
             'properties': {
-                'clientId': {'$ref': '#/definitions/non_empty_string'},
-                'clientSecret': {'$ref': '#/definitions/non_empty_string'},
-                'subscriptionId': {'$ref': '#/definitions/non_empty_string'},
-                'tenantId': {'$ref': '#/definitions/non_empty_string'},
-                'activeDirectoryEndpointUrl': {
-                    '$ref': '#/definitions/non_empty_string'
-                },
-                'resourceManagerEndpointUrl': {
-                    '$ref': '#/definitions/non_empty_string'
-                },
-                'activeDirectoryGraphResourceId': {
-                    '$ref': '#/definitions/non_empty_string'
-                },
-                'sqlManagementEndpointUrl': {
-                    '$ref': '#/definitions/non_empty_string'
-                },
-                'galleryEndpointUrl': {
-                    '$ref': '#/definitions/non_empty_string'
-                },
-                'managementEndpointUrl': {
-                    '$ref': '#/definitions/non_empty_string'
-                }
+                'clientId': non_empty_string,
+                'clientSecret': non_empty_string,
+                'subscriptionId': non_empty_string,
+                'tenantId': non_empty_string,
+                'activeDirectoryEndpointUrl': non_empty_string,
+                'resourceManagerEndpointUrl': non_empty_string,
+                'activeDirectoryGraphResourceId': non_empty_string,
+                'sqlManagementEndpointUrl': non_empty_string,
+                'galleryEndpointUrl': non_empty_string,
+                'managementEndpointUrl': non_empty_string
             },
             'additionalProperties': True,
             'required': [
@@ -63,20 +51,16 @@ add_account_azure = {
                 'galleryEndpointUrl', 'managementEndpointUrl'
             ],
         },
-        'group': {'$ref': '#/definitions/non_empty_string'},
+        'group': non_empty_string,
         'cloud': {'enum': ['azure']},
-        'region': {'$ref': '#/definitions/non_empty_string'},
-        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
-        'source_container': {'$ref': '#/definitions/non_empty_string'},
-        'source_resource_group': {'$ref': '#/definitions/non_empty_string'},
-        'source_storage_account': {'$ref': '#/definitions/non_empty_string'},
-        'destination_container': {'$ref': '#/definitions/non_empty_string'},
-        'destination_resource_group': {
-            '$ref': '#/definitions/non_empty_string'
-        },
-        'destination_storage_account': {
-            '$ref': '#/definitions/non_empty_string'
-        }
+        'region': non_empty_string,
+        'requesting_user': non_empty_string,
+        'source_container': non_empty_string,
+        'source_resource_group': non_empty_string,
+        'source_storage_account': non_empty_string,
+        'destination_container': non_empty_string,
+        'destination_resource_group': non_empty_string,
+        'destination_storage_account': non_empty_string
     },
     'additionalProperties': False,
     'required': [
@@ -84,24 +68,21 @@ add_account_azure = {
         'source_container', 'source_resource_group', 'source_storage_account',
         'destination_container', 'destination_resource_group',
         'destination_storage_account'
-    ],
-    'definitions': {
-        'non_empty_string': non_empty_string
-    }
+    ]
 }
 
 
 add_account_ec2 = {
     'type': 'object',
     'properties': {
-        'account_name': {'$ref': '#/definitions/non_empty_string'},
+        'account_name': non_empty_string,
         'additional_regions': {
             'type': 'array',
             'items': {
                 'type': 'object',
                 'properties': {
-                    'name': {'$ref': '#/definitions/non_empty_string'},
-                    'helper_image': {'$ref': '#/definitions/non_empty_string'}
+                    'name': non_empty_string,
+                    'helper_image': non_empty_string
                 },
                 'required': ['name', 'helper_image'],
                 'additionalProperties': False
@@ -111,50 +92,43 @@ add_account_ec2 = {
         'credentials': {
             'type': 'object',
             'properties': {
-                'access_key_id': {'$ref': '#/definitions/non_empty_string'},
-                'secret_access_key': {'$ref': '#/definitions/non_empty_string'}
+                'access_key_id': non_empty_string,
+                'secret_access_key': non_empty_string
             },
             'additionalProperties': False,
             'required': ['access_key_id', 'secret_access_key']
         },
-        'group': {'$ref': '#/definitions/non_empty_string'},
-        'partition': {'$ref': '#/definitions/non_empty_string'},
-        'region': {'$ref': '#/definitions/non_empty_string'},
+        'group': non_empty_string,
+        'partition': non_empty_string,
+        'region': non_empty_string,
         'cloud': {'enum': ['ec2']},
-        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
+        'requesting_user': non_empty_string,
     },
     'additionalProperties': False,
     'required': [
         'account_name', 'credentials', 'cloud', 'requesting_user', 'region'
-    ],
-    'definitions': {
-        'non_empty_string': non_empty_string
-    }
+    ]
 }
 
 
 add_account_gce = {
     'type': 'object',
     'properties': {
-        'account_name': {'$ref': '#/definitions/non_empty_string'},
-        'bucket': {'$ref': '#/definitions/non_empty_string'},
+        'account_name': non_empty_string,
+        'bucket': non_empty_string,
         'credentials': {
             'type': 'object',
             'properties': {
-                'type': {'$ref': '#/definitions/non_empty_string'},
-                'project_id': {'$ref': '#/definitions/non_empty_string'},
-                'private_key_id': {'$ref': '#/definitions/non_empty_string'},
-                'private_key': {'$ref': '#/definitions/non_empty_string'},
-                'client_email': {'$ref': '#/definitions/non_empty_string'},
-                'client_id': {'$ref': '#/definitions/non_empty_string'},
-                'auth_uri': {'$ref': '#/definitions/non_empty_string'},
-                'token_uri': {'$ref': '#/definitions/non_empty_string'},
-                'auth_provider_x509_cert_url': {
-                    '$ref': '#/definitions/non_empty_string'
-                },
-                'client_x509_cert_url': {
-                    '$ref': '#/definitions/non_empty_string'
-                }
+                'type': non_empty_string,
+                'project_id': non_empty_string,
+                'private_key_id': non_empty_string,
+                'private_key': non_empty_string,
+                'client_email': non_empty_string,
+                'client_id': non_empty_string,
+                'auth_uri': non_empty_string,
+                'token_uri': non_empty_string,
+                'auth_provider_x509_cert_url': non_empty_string,
+                'client_x509_cert_url': non_empty_string
             },
             'additionalProperties': False,
             'required': [
@@ -163,36 +137,30 @@ add_account_gce = {
                 'auth_provider_x509_cert_url', 'client_x509_cert_url'
             ]
         },
-        'group': {'$ref': '#/definitions/non_empty_string'},
+        'group': non_empty_string,
         'cloud': {'enum': ['gce']},
-        'testing_account': {'$ref': '#/definitions/non_empty_string'},
-        'region': {'$ref': '#/definitions/non_empty_string'},
-        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
+        'testing_account': non_empty_string,
+        'region': non_empty_string,
+        'requesting_user': non_empty_string,
         'is_publishing_account': {'type': 'boolean'}
     },
     'additionalProperties': False,
     'required': [
         'account_name', 'bucket', 'credentials', 'cloud',
         'requesting_user', 'region'
-    ],
-    'definitions': {
-        'non_empty_string': non_empty_string
-    }
+    ]
 }
 
 
 delete_account = {
     'type': 'object',
     'properties': {
-        'account_name': {'$ref': '#/definitions/non_empty_string'},
+        'account_name': non_empty_string,
         'cloud': {'enum': ['azure', 'ec2', 'gce']},
-        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
+        'requesting_user': non_empty_string,
     },
     'additionalProperties': False,
-    'required': ['account_name', 'cloud', 'requesting_user'],
-    'definitions': {
-        'non_empty_string': non_empty_string
-    }
+    'required': ['account_name', 'cloud', 'requesting_user']
 }
 
 
@@ -206,11 +174,11 @@ base_job_message = {
         },
         'cloud_groups': {
             'type': 'array',
-            'items': {'$ref': '#/definitions/non_empty_string'},
+            'items': non_empty_string,
             'uniqueItems': True,
             'minItems': 1
         },
-        'requesting_user': {'$ref': '#/definitions/non_empty_string'},
+        'requesting_user': non_empty_string,
         'last_service': {
             'enum': [
                 'uploader', 'testing', 'replication',
@@ -221,7 +189,7 @@ base_job_message = {
             'anyOf': [
                 {'enum': ['always', 'now']},
                 {
-                    '$ref': '#/definitions/non_empty_string',
+                    'type': 'string',
                     'description': 'An RFC3339 date-time string'
                                    '(2019-04-28T06:44:50.142Z)',
                     'format': 'regex',
@@ -232,9 +200,9 @@ base_job_message = {
                 }
             ]
         },
-        'image': {'$ref': '#/definitions/non_empty_string'},
-        'cloud_image_name': {'$ref': '#/definitions/non_empty_string'},
-        'old_cloud_image_name': {'$ref': '#/definitions/non_empty_string'},
+        'image': non_empty_string,
+        'cloud_image_name': non_empty_string,
+        'old_cloud_image_name': non_empty_string,
         'conditions': {
             'type': 'array',
             'items': {
@@ -245,13 +213,13 @@ base_job_message = {
             },
             'minItems': 1
         },
-        'download_url': {'$ref': '#/definitions/non_empty_string'},
-        'image_description': {'$ref': '#/definitions/non_empty_string'},
+        'download_url': non_empty_string,
+        'image_description': non_empty_string,
         'distro': {'enum': ['opensuse_leap', 'sles']},
-        'instance_type': {'$ref': '#/definitions/non_empty_string'},
+        'instance_type': non_empty_string,
         'tests': {
             'type': 'array',
-            'items': {'$ref': '#/definitions/non_empty_string'},
+            'items': non_empty_string,
             'minItems': 1
         },
         'cleanup_images': {'type': 'boolean'},
@@ -259,7 +227,7 @@ base_job_message = {
             'enum': ['x86_64', 'aarch64']
         },
         'notification_email': {
-            '$ref': '#/definitions/non_empty_string',
+            'type': 'string',
             'format': 'regex',
             'pattern': r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
         },
@@ -279,17 +247,16 @@ base_job_message = {
     'definitions': {
         'image_conditions': {
             'properties': {
-                'image': {'$ref': '#/definitions/non_empty_string'}
+                'image': non_empty_string
             },
             'additionalProperties': False,
             'required': ['image']
         },
-        'non_empty_string': non_empty_string,
         'package_conditions': {
             'properties': {
-                'package_name': {'$ref': '#/definitions/non_empty_string'},
-                'version': {'$ref': '#/definitions/non_empty_string'},
-                'build_id': {'$ref': '#/definitions/non_empty_string'},
+                'package_name': non_empty_string,
+                'version': non_empty_string,
+                'build_id': non_empty_string,
                 'condition': {
                     'enum': ['>=', '==', '<=', '>', '<']
                 }
@@ -306,23 +273,21 @@ ec2_job_message['properties']['share_with'] = {
     'anyOf': [
         {'enum': ['all', 'none']},
         {
-            '$ref': '#/definitions/non_empty_string',
+            'type': 'string',
             'format': 'regex',
             'pattern': '^[0-9]{12}(,[0-9]{12})*$'
         }
     ]
 }
 ec2_job_message['properties']['allow_copy'] = {'type': 'boolean'}
-ec2_job_message['properties']['billing_codes'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
+ec2_job_message['properties']['billing_codes'] = non_empty_string
 ec2_job_message['properties']['use_root_swap'] = {'type': 'boolean'}
 ec2_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {
-        'name': {'$ref': '#/definitions/non_empty_string'},
-        'region': {'$ref': '#/definitions/non_empty_string'},
-        'root_swap_ami': {'$ref': '#/definitions/non_empty_string'}
+        'name': non_empty_string,
+        'region': non_empty_string,
+        'root_swap_ami': non_empty_string
     },
     'additionalProperties': False,
     'required': ['name']
@@ -331,24 +296,12 @@ ec2_job_message['definitions']['account'] = {
 
 azure_job_message = copy.deepcopy(base_job_message)
 azure_job_message['properties']['cloud'] = {'enum': ['azure']}
-azure_job_message['properties']['emails'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
-azure_job_message['properties']['label'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
-azure_job_message['properties']['offer_id'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
-azure_job_message['properties']['publisher_id'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
-azure_job_message['properties']['sku'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
-azure_job_message['properties']['vm_images_key'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
+azure_job_message['properties']['emails'] = non_empty_string
+azure_job_message['properties']['label'] = non_empty_string
+azure_job_message['properties']['offer_id'] = non_empty_string
+azure_job_message['properties']['publisher_id'] = non_empty_string
+azure_job_message['properties']['sku'] = non_empty_string
+azure_job_message['properties']['vm_images_key'] = non_empty_string
 azure_job_message['properties']['publish_offer'] = {'type': 'boolean'}
 azure_job_message['required'].append('emails')
 azure_job_message['required'].append('label')
@@ -358,18 +311,14 @@ azure_job_message['required'].append('sku')
 azure_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {
-        'name': {'$ref': '#/definitions/non_empty_string'},
-        'region': {'$ref': '#/definitions/non_empty_string'},
-        'source_container': {'$ref': '#/definitions/non_empty_string'},
-        'source_resource_group': {'$ref': '#/definitions/non_empty_string'},
-        'source_storage_account': {'$ref': '#/definitions/non_empty_string'},
-        'destination_container': {'$ref': '#/definitions/non_empty_string'},
-        'destination_resource_group': {
-            '$ref': '#/definitions/non_empty_string'
-        },
-        'destination_storage_account': {
-            '$ref': '#/definitions/non_empty_string'
-        }
+        'name': non_empty_string,
+        'region': non_empty_string,
+        'source_container': non_empty_string,
+        'source_resource_group': non_empty_string,
+        'source_storage_account': non_empty_string,
+        'destination_container': non_empty_string,
+        'destination_resource_group': non_empty_string,
+        'destination_storage_account': non_empty_string
     },
     'additionalProperties': False,
     'required': ['name']
@@ -378,22 +327,18 @@ azure_job_message['definitions']['account'] = {
 
 gce_job_message = copy.deepcopy(base_job_message)
 gce_job_message['properties']['cloud'] = {'enum': ['gce']}
-gce_job_message['properties']['family'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
+gce_job_message['properties']['family'] = non_empty_string
 gce_job_message['properties']['months_to_deletion'] = {
     'type': 'integer',
     'minimum': 0
 }
-gce_job_message['properties']['testing_account'] = {
-    '$ref': '#/definitions/non_empty_string'
-}
+gce_job_message['properties']['testing_account'] = non_empty_string
 gce_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {
-        'bucket': {'$ref': '#/definitions/non_empty_string'},
-        'name': {'$ref': '#/definitions/non_empty_string'},
-        'region': {'$ref': '#/definitions/non_empty_string'}
+        'bucket': non_empty_string,
+        'name': non_empty_string,
+        'region': non_empty_string
     },
     'additionalProperties': False,
     'required': ['name']
