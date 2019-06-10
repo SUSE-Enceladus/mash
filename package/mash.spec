@@ -35,7 +35,6 @@ BuildRequires:  python3-azure-mgmt-storage
 BuildRequires:  python3-azure-storage-blob
 BuildRequires:  python3-boto3
 BuildRequires:  python3-cryptography >= 2.2.0
-BuildRequires:  python3-jsonschema
 BuildRequires:  python3-PyYAML
 BuildRequires:  python3-PyJWT
 BuildRequires:  python3-amqpstorm >= 2.4.0
@@ -47,6 +46,7 @@ BuildRequires:  python3-img-proof>=4.0.0
 BuildRequires:  python3-img-proof-tests>=4.0.0
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
+BuildRequires:  python3-flask-restplus
 BuildRequires:  python3-requests
 BuildRequires:  python3-obs-img-utils <= 0.0.3
 Requires:       rabbitmq-server
@@ -58,7 +58,6 @@ Requires:       python3-azure-mgmt-storage
 Requires:       python3-azure-storage-blob
 Requires:       python3-boto3
 Requires:       python3-cryptography >= 2.2.0
-Requires:       python3-jsonschema
 Requires:       python3-PyYAML
 Requires:       python3-PyJWT
 Requires:       python3-amqpstorm >= 2.4.0
@@ -70,6 +69,7 @@ Requires:       python3-img-proof>=4.0.0
 Requires:       python3-img-proof-tests>=4.0.0
 Requires:       python3-lxml
 Requires:       python3-Flask
+Requires:       python3-flask-restplus
 Requires:       python3-requests
 Requires:       python3-obs-img-utils <= 0.0.3
 Requires:       apache2
@@ -96,7 +96,7 @@ mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 install -D -m 644 config/mash_config.yaml \
     %{buildroot}%{_sysconfdir}/%{name}/mash_config.yaml
 
-install -D -m 644 mash/wsgi.py \
+install -D -m 644 mash/services/api/wsgi.py \
     %{buildroot}%{_localstatedir}/lib/%{name}/wsgi.py
 
 install -D -m 644 config/mash.conf \

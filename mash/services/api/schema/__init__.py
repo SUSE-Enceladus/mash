@@ -37,3 +37,19 @@ non_empty_string = {
     'type': 'string',
     'minLength': 1
 }
+
+errors = {
+    'type': 'object',
+    'properties': {
+        'key': string_with_example('value')
+    }
+}
+
+validation_error = {
+    'type': 'object',
+    'properties': {
+        'errors': errors,
+        'message': non_empty_string
+    },
+    'additionalProperties': False
+}

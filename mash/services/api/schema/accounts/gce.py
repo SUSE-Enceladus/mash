@@ -26,7 +26,6 @@ gce_account = {
         'account_name': string_with_example('account1'),
         'bucket': string_with_example('image-bucket'),
         'group': string_with_example('group1'),
-        'cloud': {'enum': ['gce']},
         'testing_account': string_with_example('testing-account1'),
         'region': string_with_example('us-west1-a'),
         'requesting_user': string_with_example('user1'),
@@ -36,7 +35,6 @@ gce_account = {
     'required': [
         'account_name',
         'bucket',
-        'cloud',
         'requesting_user',
         'region'
     ]

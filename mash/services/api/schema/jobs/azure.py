@@ -38,7 +38,6 @@ azure_job_account = {
 }
 
 azure_job_message = copy.deepcopy(base_job_message)
-azure_job_message['properties']['cloud'] = {'enum': ['azure']}
 azure_job_message['properties']['emails'] = string_with_example(
     'test@fake.com'
 )

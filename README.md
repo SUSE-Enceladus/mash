@@ -77,12 +77,12 @@ $ zypper in mash
 - azure-mgmt-resource
 - azure-mgmt-storage
 - azure-storage
-- flask
+- Flask
+- flask-restplus
 - setuptools
 - idna<2.7
 - boto3
 - cryptography>=2.2.0
-- jsonschema
 - PyYAML
 - PyJWT
 - APScheduler

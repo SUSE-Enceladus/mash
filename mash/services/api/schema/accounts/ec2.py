@@ -49,13 +49,11 @@ ec2_account = {
         'partition': partition,
         'region': string_with_example('us-east-1'),
         'subnet': string_with_example('subnet-12345678'),
-        'cloud': {'enum': ['ec2']},
         'requesting_user': string_with_example('user1'),
     },
     'additionalProperties': False,
     'required': [
         'account_name',
-        'cloud',
         'requesting_user',
         'region'
     ]
