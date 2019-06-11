@@ -11,12 +11,12 @@ azure-mgmt-compute
 azure-mgmt-resource
 azure-mgmt-storage
 azure-storage-blob
-flask
+Flask
+flask-restplus
 setuptools
 idna<2.7
 boto3
 cryptography>=2.2.0
-jsonschema
 PyYAML
 PyJWT
 APScheduler

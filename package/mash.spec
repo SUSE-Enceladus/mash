@@ -35,7 +35,6 @@ BuildRequires:  python3-azure-mgmt-storage
 BuildRequires:  python3-azure-storage-blob
 BuildRequires:  python3-boto3
 BuildRequires:  python3-cryptography >= 3.0.1
-BuildRequires:  python3-jsonschema
 BuildRequires:  python3-PyYAML
 BuildRequires:  python3-PyJWT
 BuildRequires:  python3-amqpstorm >= 3.0.1
@@ -47,6 +46,7 @@ BuildRequires:  python3-img-proof>=4.0.0
 BuildRequires:  python3-img-proof-tests>=4.0.0
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
+BuildRequires:  python3-flask-restplus
 BuildRequires:  python3-requests
 Requires:       rabbitmq-server
 Requires:       python3-adal
@@ -57,7 +57,6 @@ Requires:       python3-azure-mgmt-storage
 Requires:       python3-azure-storage-blob
 Requires:       python3-boto3
 Requires:       python3-cryptography >= 3.0.1
-Requires:       python3-jsonschema
 Requires:       python3-PyYAML
 Requires:       python3-PyJWT
 Requires:       python3-amqpstorm >= 3.0.1
@@ -69,6 +68,7 @@ Requires:       python3-img-proof>=4.0.0
 Requires:       python3-img-proof-tests>=4.0.0
 Requires:       python3-lxml
 Requires:       python3-Flask
+Requires:       python3-flask-restplus
 Requires:       python3-requests
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
