@@ -1,165 +1,49 @@
-import json
-import sys
-import uuid
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+#
+# This file is part of mash.
+#
+# mash is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# mash is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with mash.  If not, see <http://www.gnu.org/licenses/>
+#
 
-from amqpstorm import Connection
-from flask import Flask, jsonify, request, make_response
-from jsonschema import validate
+from flask import Flask
+from flask_restplus import Api
 
-from mash.services.api.schema.accounts.base import delete_account
-from mash.services.api.schema.accounts.ec2 import add_account_ec2
-from mash.services.api.schema.accounts.gce import add_account_gce
-from mash.services.api.schema.accounts.azure import add_account_azure
-from mash.services.api.schema.jobs.ec2 import ec2_job_message
-from mash.services.api.schema.jobs.gce import gce_job_message
-from mash.services.api.schema.jobs.azure import azure_job_message
+from mash.services.api.accounts import api as accounts_api
+from mash.services.api.azure_accounts import api as azure_accounts_api
+from mash.services.api.gce_accounts import api as gce_accounts_api
+from mash.services.api.ec2_accounts import api as ec2_accounts_api
 
-from mash.services.base_config import BaseConfig
+from mash.services.api.jobs import api as jobs_api
+from mash.services.api.ec2_jobs import api as ec2_jobs_api
+from mash.services.api.gce_jobs import api as gce_jobs_api
+from mash.services.api.azure_jobs import api as azure_jobs_api
 
 app = Flask(__name__, static_url_path='/static')
-module = sys.modules[__name__]
+api = Api(
+    app,
+    version='1.0',
+    title='MASH API',
+    description='MASH API',
+    validate=True
+)
 
-connection = None
-channel = None
-config = None
+api.add_namespace(accounts_api, path='/accounts')
+api.add_namespace(azure_accounts_api, path='/accounts/azure')
+api.add_namespace(gce_accounts_api, path='/accounts/gce')
+api.add_namespace(ec2_accounts_api, path='/accounts/ec2')
 
-amqp_host = None
-amqp_user = None
-amqp_pass = None
-
-schemas = {
-    'add_account': {
-        'azure': add_account_azure,
-        'ec2': add_account_ec2,
-        'gce': add_account_gce
-    },
-    'delete_account': {
-        'azure': delete_account,
-        'ec2': delete_account,
-        'gce': delete_account
-    },
-    'add_job': {
-        'azure': azure_job_message,
-        'ec2': ec2_job_message,
-        'gce': gce_job_message
-    }
-}
-
-
-def connect():
-    module.connection = Connection(
-        amqp_host,
-        amqp_user,
-        amqp_pass,
-        kwargs={'heartbeat': 600}
-    )
-    module.channel = connection.channel()
-    channel.confirm_deliveries()
-
-
-def get_config():
-    module.config = BaseConfig()
-    module.amqp_host = config.get_amqp_host()
-    module.amqp_user = config.get_amqp_user()
-    module.amqp_pass = config.get_amqp_pass()
-
-
-def publish(exchange, routing_key, message):
-    """
-    Publish message to the provided exchange with the routing key.
-    """
-    if not config:
-        get_config()
-
-    if not channel or channel.is_closed:
-        connect()
-
-    channel.basic.publish(
-        body=message,
-        routing_key=routing_key,
-        exchange=exchange,
-        properties={
-            'content_type': 'application/json',
-            'delivery_mode': 2
-        },
-        mandatory=True
-    )
-
-
-def validate_request(flask_request, endpoint):
-    # Python 3.4 + 3.5 json module requires string not bytes
-    flask_request.data = flask_request.data.decode()
-    message = json.loads(flask_request.data)
-    cloud = message.get('cloud')
-
-    if cloud not in ['azure', 'ec2', 'gce']:
-        raise Exception('{} is not a valid cloud.'.format(cloud))
-
-    validate(message, schemas[endpoint][cloud])
-    return message
-
-
-def error_response(error):
-    return make_response(jsonify({'error': str(error)}), 400)
-
-
-def status_response(status_msg, status_code):
-    return make_response(jsonify({'status': status_msg}), status_code)
-
-
-@app.route("/add_account", methods=["POST"])
-def add_account():
-    try:
-        result = validate_request(request, 'add_account')
-    except Exception as error:
-        return error_response(error)
-
-    publish(
-        'jobcreator', 'add_account', json.dumps(result, sort_keys=True)
-    )
-    return status_response('Add account request submitted.', 200)
-
-
-@app.route("/delete_account", methods=["POST"])
-def delete_account():
-    try:
-        result = validate_request(request, 'delete_account')
-    except Exception as error:
-        return error_response(error)
-
-    publish(
-        'jobcreator', 'delete_account', json.dumps(result, sort_keys=True)
-    )
-    return status_response('Delete account request submitted.', 200)
-
-
-@app.route("/add_job", methods=["POST"])
-def add_job():
-    try:
-        result = validate_request(request, 'add_job')
-    except Exception as error:
-        return error_response(error)
-
-    job_id = str(uuid.uuid4())
-    result['job_id'] = job_id
-
-    publish(
-        'jobcreator', 'job_document', json.dumps(result, sort_keys=True)
-    )
-
-    msg = {
-        'job_id': job_id,
-        'status': 'Add job request submitted.'
-    }
-    # Cannot use jsonify with multiple keys, need sorted dump for py3.4
-    response = make_response(json.dumps(msg, sort_keys=True), 200)
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    response.headers['mimetype'] = 'application/json'
-    return response
-
-
-@app.route("/delete_job/<job_id>", methods=["POST"])
-def delete_job(job_id):
-    content = {'job_delete': job_id}
-    publish('jobcreator', 'job_document', json.dumps(content, sort_keys=True))
-    return status_response('Delete job request submitted.', 200)
+api.add_namespace(jobs_api, path='/jobs')
+api.add_namespace(ec2_jobs_api, path='/jobs/ec2')
+api.add_namespace(gce_jobs_api, path='/jobs/gce')
+api.add_namespace(azure_jobs_api, path='/jobs/azure')

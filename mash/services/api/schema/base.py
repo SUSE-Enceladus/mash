@@ -37,3 +37,20 @@ utctime = {
                r'([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]'
                r'([01][0-9]|2[0-3]):[0-5][0-9]))$'
 }
+
+errors = {
+    'type': 'object',
+    'properties': {
+        'example_key': non_empty_string
+    },
+    'additionalProperties': True
+}
+
+validation_error = {
+    'type': 'object',
+    'properties': {
+        'errors': errors,
+        'message': non_empty_string
+    },
+    'additionalProperties': False
+}

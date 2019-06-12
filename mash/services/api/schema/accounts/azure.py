@@ -25,7 +25,6 @@ azure_account = {
     'properties': {
         'account_name': non_empty_string,
         'group': non_empty_string,
-        'cloud': {'enum': ['azure']},
         'region': non_empty_string,
         'requesting_user': non_empty_string,
         'source_container': non_empty_string,
@@ -38,7 +37,6 @@ azure_account = {
     'additionalProperties': False,
     'required': [
         'account_name',
-        'cloud',
         'requesting_user',
         'source_container',
         'source_resource_group',

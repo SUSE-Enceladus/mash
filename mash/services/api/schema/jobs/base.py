@@ -105,7 +105,6 @@ base_job_message = {
         {'required': ['cloud_groups']}
     ],
     'required': [
-        'cloud',
         'requesting_user',
         'last_service',
         'utctime',

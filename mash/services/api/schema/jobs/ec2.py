@@ -39,7 +39,6 @@ ec2_job_account = {
 }
 
 ec2_job_message = copy.deepcopy(base_job_message)
-ec2_job_message['properties']['cloud'] = {'enum': ['ec2']}
 ec2_job_message['properties']['share_with'] = {
     'anyOf': [
         {'enum': ['all', 'none']},

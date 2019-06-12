@@ -16,14 +16,25 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.api.schema.base import non_empty_string
+from flask_restplus import fields, Namespace
 
-delete_account = {
-    'type': 'object',
-    'properties': {
-        'account_name': non_empty_string,
-        'requesting_user': non_empty_string,
-    },
-    'additionalProperties': False,
-    'required': ['account_name', 'requesting_user']
-}
+from mash.services.api.schema.base import validation_error
+from mash.services.api.schema.accounts.base import delete_account
+
+api = Namespace(
+    'accounts',
+    description='Account related operations'
+)
+delete_account_request = api.schema_model(
+    'delete_account_request',
+    delete_account
+)
+account_response = api.model(
+    'add_account_response', {
+        'name': fields.String
+    }
+)
+validation_error_response = api.schema_model(
+    'validation_error',
+    validation_error
+)

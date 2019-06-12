@@ -33,7 +33,6 @@ gce_job_account = {
 }
 
 gce_job_message = copy.deepcopy(base_job_message)
-gce_job_message['properties']['cloud'] = {'enum': ['gce']}
 gce_job_message['properties']['family'] = non_empty_string
 gce_job_message['properties']['months_to_deletion'] = {
     'type': 'integer',

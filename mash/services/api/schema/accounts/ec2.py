@@ -42,13 +42,11 @@ ec2_account = {
         'group': non_empty_string,
         'partition': non_empty_string,
         'region': non_empty_string,
-        'cloud': {'enum': ['ec2']},
         'requesting_user': non_empty_string,
     },
     'additionalProperties': False,
     'required': [
         'account_name',
-        'cloud',
         'requesting_user',
         'region'
     ]
