@@ -21,9 +21,8 @@ from mash.services.api.schema import non_empty_string
 delete_account = {
     'type': 'object',
     'properties': {
-        'account_name': non_empty_string,
-        'requesting_user': non_empty_string,
+        'requesting_user': non_empty_string
     },
     'additionalProperties': False,
-    'required': ['account_name', 'requesting_user']
+    'required': ['requesting_user']
 }

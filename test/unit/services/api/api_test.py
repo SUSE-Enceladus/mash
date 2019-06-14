@@ -191,11 +191,10 @@ def test_api_delete_account_ec2(mock_connection, mock_config, test_client):
     mock_config.return_value = config
 
     data = {
-        'account_name': 'test',
         'requesting_user': 'user1'
     }
     response = test_client.delete(
-        '/accounts/ec2/1',
+        '/accounts/ec2/test',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
@@ -230,11 +229,10 @@ def test_api_delete_account_gce(mock_connection, mock_config, test_client):
     mock_config.return_value = config
 
     data = {
-        'account_name': 'test',
         'requesting_user': 'user1'
     }
     response = test_client.delete(
-        '/accounts/gce/1',
+        '/accounts/gce/test',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
@@ -269,11 +267,10 @@ def test_api_delete_account_azure(mock_connection, mock_config, test_client):
     mock_config.return_value = config
 
     data = {
-        'account_name': 'test',
         'requesting_user': 'user1'
     }
     response = test_client.delete(
-        '/accounts/azure/1',
+        '/accounts/azure/test',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )

@@ -60,15 +60,15 @@ class EC2AccountCreateAndList(Resource):
         return make_response(jsonify({'name': data['account_name']}), 201)
 
 
-@api.route('/<int:id>')
+@api.route('/<string:name>')
 @api.response(400, 'Validation error', validation_error_response)
 class EC2Account(Resource):
     @api.doc('delete_ec2_account')
     @api.expect(delete_account_request)
     @api.response(200, 'EC2 account deleted', account_response)
-    def delete(self, id):
+    def delete(self, name):
         """
-        Delete EC2 account matching id.
+        Delete EC2 account matching name for requesting user.
         """
         data = json.loads(request.data.decode())
         data['cloud'] = 'ec2'
@@ -76,4 +76,4 @@ class EC2Account(Resource):
         publish(
             'jobcreator', 'delete_account', json.dumps(data, sort_keys=True)
         )
-        return make_response(jsonify({'name': data['account_name']}), 200)
+        return make_response(jsonify({'name': name}), 200)

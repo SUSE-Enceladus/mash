@@ -60,15 +60,15 @@ class GCEAccountCreateAndList(Resource):
         return make_response(jsonify({'name': data['account_name']}), 201)
 
 
-@api.route('/<int:id>')
+@api.route('/<string:name>')
 @api.response(400, 'Validation error', validation_error_response)
 class GCEAccount(Resource):
     @api.doc('delete_gce_account')
     @api.expect(delete_account_request)
     @api.response(200, 'GCE account deleted', account_response)
-    def delete(self, id):
+    def delete(self, name):
         """
-        Delete GCE account matching id.
+        Delete GCE account matching name for requesting user.
         """
         data = json.loads(request.data.decode())
         data['cloud'] = 'gce'
@@ -76,4 +76,4 @@ class GCEAccount(Resource):
         publish(
             'jobcreator', 'delete_account', json.dumps(data, sort_keys=True)
         )
-        return make_response(jsonify({'name': data['account_name']}), 200)
+        return make_response(jsonify({'name': name}), 200)
