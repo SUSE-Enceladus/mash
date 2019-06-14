@@ -20,33 +20,33 @@ import json
 from flask import jsonify, request, make_response
 from flask_restplus import Namespace, Resource
 
-from mash.services.api.accounts import (
+from mash.services.api.routes.accounts import (
     account_response,
     validation_error_response,
     delete_account_request
 )
-from mash.services.api.schema.accounts.ec2 import add_account_ec2
-from mash.services.api.utils import publish
+from mash.services.api.schema.accounts.azure import add_account_azure
+from mash.services.api.routes.utils import publish
 
 api = Namespace(
-    'EC2 Accounts',
-    description='EC2 account related operations'
+    'Azure Accounts',
+    description='Azure account related operations'
 )
-ec2_account = api.schema_model('ec2_account', add_account_ec2)
+azure_account = api.schema_model('azure_account', add_account_azure)
 
 
 @api.route('/')
 @api.response(400, 'Validation error', validation_error_response)
-class EC2AccountList(Resource):
-    @api.doc('create_ec2_account')
-    @api.expect(ec2_account)
-    @api.response(201, 'EC2 account created', account_response)
+class AzureAccountList(Resource):
+    @api.doc('create_azure_account')
+    @api.expect(azure_account)
+    @api.response(201, 'Azure account created', account_response)
     def post(self):
         """
-        Create a new EC2 account.
+        Create a new Azure account.
         """
         data = json.loads(request.data.decode())
-        data['cloud'] = 'ec2'
+        data['cloud'] = 'azure'
 
         publish(
             'jobcreator', 'add_account', json.dumps(data, sort_keys=True)
@@ -56,16 +56,16 @@ class EC2AccountList(Resource):
 
 @api.route('/<int:id>')
 @api.response(400, 'Validation error', validation_error_response)
-class EC2Account(Resource):
-    @api.doc('delete_ec2_account')
+class AzureAccount(Resource):
+    @api.doc('delete_azure_account')
     @api.expect(delete_account_request)
-    @api.response(200, 'EC2 account deleted', account_response)
+    @api.response(200, 'Azure account deleted', account_response)
     def delete(self, id):
         """
-        Delete EC2 account matching id.
+        Delete Azure account matching id.
         """
         data = json.loads(request.data.decode())
-        data['cloud'] = 'ec2'
+        data['cloud'] = 'azure'
 
         publish(
             'jobcreator', 'delete_account', json.dumps(data, sort_keys=True)

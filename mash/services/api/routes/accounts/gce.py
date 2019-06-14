@@ -20,13 +20,13 @@ import json
 from flask import jsonify, request, make_response
 from flask_restplus import Namespace, Resource
 
-from mash.services.api.accounts import (
+from mash.services.api.routes.accounts import (
     account_response,
     validation_error_response,
     delete_account_request
 )
 from mash.services.api.schema.accounts.gce import add_account_gce
-from mash.services.api.utils import publish
+from mash.services.api.routes.utils import publish
 
 api = Namespace(
     'GCE Accounts',

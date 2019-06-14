@@ -21,30 +21,30 @@ import json
 from flask import request
 from flask_restplus import Namespace, Resource
 
-from mash.services.api.jobs import (
+from mash.services.api.routes.jobs import (
     job_response,
     validation_error_response,
     process_job_add_request
 )
-from mash.services.api.schema.jobs.gce import gce_job_message
+from mash.services.api.schema.jobs.ec2 import ec2_job_message
 
 api = Namespace(
-    'GCE Jobs',
-    description='GCE Job related operations'
+    'EC2 Jobs',
+    description='EC2 Job related operations'
 )
-gce_job = api.schema_model('gce_job', gce_job_message)
+ec2_job = api.schema_model('ec2_job', ec2_job_message)
 
 
 @api.route('/')
 @api.response(400, 'Validation error', validation_error_response)
-class GCEJobList(Resource):
-    @api.doc('add_gce_job')
-    @api.expect(gce_job)
+class EC2JobList(Resource):
+    @api.doc('add_ec2_job')
+    @api.expect(ec2_job)
     @api.response(201, 'Job added', job_response)
     def post(self):
         """
-        Add GCE job.
+        Add EC2 job.
         """
         data = json.loads(request.data.decode())
-        data['cloud'] = 'gce'
+        data['cloud'] = 'ec2'
         return process_job_add_request(data)

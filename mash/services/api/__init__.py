@@ -19,15 +19,15 @@
 from flask import Flask
 from flask_restplus import Api
 
-from mash.services.api.accounts import api as accounts_api
-from mash.services.api.azure_accounts import api as azure_accounts_api
-from mash.services.api.gce_accounts import api as gce_accounts_api
-from mash.services.api.ec2_accounts import api as ec2_accounts_api
+from mash.services.api.routes.accounts import api as accounts_api
+from mash.services.api.routes.accounts.azure import api as azure_accounts_api
+from mash.services.api.routes.accounts.gce import api as gce_accounts_api
+from mash.services.api.routes.accounts.ec2 import api as ec2_accounts_api
 
-from mash.services.api.jobs import api as jobs_api
-from mash.services.api.ec2_jobs import api as ec2_jobs_api
-from mash.services.api.gce_jobs import api as gce_jobs_api
-from mash.services.api.azure_jobs import api as azure_jobs_api
+from mash.services.api.routes.jobs import api as jobs_api
+from mash.services.api.routes.jobs.ec2 import api as ec2_jobs_api
+from mash.services.api.routes.jobs.gce import api as gce_jobs_api
+from mash.services.api.routes.jobs.azure import api as azure_jobs_api
 
 app = Flask(__name__, static_url_path='/static')
 api = Api(

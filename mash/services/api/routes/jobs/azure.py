@@ -21,7 +21,7 @@ import json
 from flask import request
 from flask_restplus import Namespace, Resource
 
-from mash.services.api.jobs import (
+from mash.services.api.routes.jobs import (
     job_response,
     validation_error_response,
     process_job_add_request
