@@ -37,7 +37,7 @@ gce_job = api.schema_model('gce_job', gce_job_message)
 
 @api.route('/')
 @api.response(400, 'Validation error', validation_error_response)
-class GCEJobList(Resource):
+class GCEJobCreate(Resource):
     @api.doc('add_gce_job')
     @api.expect(gce_job)
     @api.response(201, 'Job added', job_response)

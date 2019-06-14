@@ -37,7 +37,7 @@ ec2_job = api.schema_model('ec2_job', ec2_job_message)
 
 @api.route('/')
 @api.response(400, 'Validation error', validation_error_response)
-class EC2JobList(Resource):
+class EC2JobCreate(Resource):
     @api.doc('add_ec2_job')
     @api.expect(ec2_job)
     @api.response(201, 'Job added', job_response)

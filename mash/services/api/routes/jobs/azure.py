@@ -37,7 +37,7 @@ azure_job = api.schema_model('azure_job', azure_job_message)
 
 @api.route('/')
 @api.response(400, 'Validation error', validation_error_response)
-class AzureJobList(Resource):
+class AzureJobCreate(Resource):
     @api.doc('add_azure_job')
     @api.expect(azure_job)
     @api.response(201, 'Job added', job_response)

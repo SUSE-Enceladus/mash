@@ -37,7 +37,13 @@ ec2_account = api.schema_model('ec2_account', add_account_ec2)
 
 @api.route('/')
 @api.response(400, 'Validation error', validation_error_response)
-class EC2AccountList(Resource):
+class EC2AccountCreateAndList(Resource):
+    """
+    Handles list accounts and create accounts for EC2.
+
+    TODO: List accounts (GET) endpoint will be implemented in the future.
+    """
+
     @api.doc('create_ec2_account')
     @api.expect(ec2_account)
     @api.response(201, 'EC2 account created', account_response)

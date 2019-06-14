@@ -37,7 +37,13 @@ azure_account = api.schema_model('azure_account', add_account_azure)
 
 @api.route('/')
 @api.response(400, 'Validation error', validation_error_response)
-class AzureAccountList(Resource):
+class AzureAccountCreateAndList(Resource):
+    """
+    Handles list accounts and create accounts for Azure.
+
+    TODO: List accounts (GET) endpoint will be implemented in the future.
+    """
+
     @api.doc('create_azure_account')
     @api.expect(azure_account)
     @api.response(201, 'Azure account created', account_response)

@@ -37,7 +37,13 @@ gce_account = api.schema_model('gce_account', add_account_gce)
 
 @api.route('/')
 @api.response(400, 'Validation error', validation_error_response)
-class GCEAccountList(Resource):
+class GCEAccountCreateAndList(Resource):
+    """
+    Handles list accounts and create accounts for GCE.
+
+    TODO: List accounts (GET) endpoint will be implemented in the future.
+    """
+
     @api.doc('create_gce_account')
     @api.expect(gce_account)
     @api.response(201, 'GCE account created', account_response)
