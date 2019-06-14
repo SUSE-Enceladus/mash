@@ -21,7 +21,7 @@ import uuid
 from flask import jsonify, make_response
 from flask_restplus import fields, Namespace, Resource
 
-from mash.services.api.schema.base import validation_error
+from mash.services.api.schema import validation_error
 from mash.services.api.utils import publish
 
 api = Namespace(

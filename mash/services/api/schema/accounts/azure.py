@@ -18,7 +18,7 @@
 
 import copy
 
-from mash.services.api.schema.base import non_empty_string
+from mash.services.api.schema import non_empty_string
 
 azure_account = {
     'type': 'object',

@@ -18,8 +18,8 @@
 
 from flask_restplus import fields, Namespace
 
-from mash.services.api.schema.base import validation_error
-from mash.services.api.schema.accounts.base import delete_account
+from mash.services.api.schema import validation_error
+from mash.services.api.schema.accounts import delete_account
 
 api = Namespace(
     'accounts',
