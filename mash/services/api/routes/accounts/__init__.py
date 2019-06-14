@@ -31,7 +31,7 @@ delete_account_request = api.schema_model(
 )
 account_response = api.model(
     'add_account_response', {
-        'name': fields.String
+        'name': fields.String(example='user1')
     }
 )
 validation_error_response = api.schema_model(

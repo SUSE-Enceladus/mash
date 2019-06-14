@@ -16,12 +16,12 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.api.schema import non_empty_string
+from mash.services.api.schema import string_with_example
 
 delete_account = {
     'type': 'object',
     'properties': {
-        'requesting_user': non_empty_string
+        'requesting_user': string_with_example('user1')
     },
     'additionalProperties': False,
     'required': ['requesting_user']

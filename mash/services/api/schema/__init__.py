@@ -16,10 +16,21 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+
+def string_with_example(example, description='', min_length=1):
+    return {
+        'type': 'string',
+        'description': description,
+        'minLength': min_length,
+        'example': example
+    }
+
+
 email = {
     'type': 'string',
     'format': 'regex',
-    'pattern': r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+    'pattern': r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$',
+    'example': 'test@fake.com'
 }
 
 non_empty_string = {
@@ -27,23 +38,11 @@ non_empty_string = {
     'minLength': 1
 }
 
-utctime = {
-    'type': 'string',
-    'description': 'An RFC3339 date-time string'
-                   '(2019-04-28T06:44:50.142Z)',
-    'format': 'regex',
-    'pattern': r'^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]'
-               r'|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):'
-               r'([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]'
-               r'([01][0-9]|2[0-3]):[0-5][0-9]))$'
-}
-
 errors = {
     'type': 'object',
     'properties': {
-        'example_key': non_empty_string
-    },
-    'additionalProperties': True
+        'key': string_with_example('value')
+    }
 }
 
 validation_error = {

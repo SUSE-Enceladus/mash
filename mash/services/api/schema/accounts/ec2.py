@@ -18,31 +18,37 @@
 
 import copy
 
-from mash.services.api.schema import non_empty_string
+from mash.services.api.schema import string_with_example
 
 additional_regions = {
     'type': 'array',
     'items': {
         'type': 'object',
         'properties': {
-            'name': non_empty_string,
-            'helper_image': non_empty_string
+            'name': string_with_example('us-east-44'),
+            'helper_image': string_with_example('ami-1234567890')
         },
         'required': ['name', 'helper_image'],
         'additionalProperties': False
     },
-    'minItems': 1
+    'minItems': 1,
+    'example': [{'name': 'us-east-44', 'helper_image': 'ami-1234567890'}]
+}
+
+partition = {
+    'type': 'string',
+    'enum': ['aws', 'aws-cn', 'aws-us-gov']
 }
 
 ec2_account = {
     'type': 'object',
     'properties': {
-        'account_name': non_empty_string,
+        'account_name': string_with_example('account1'),
         'additional_regions': additional_regions,
-        'group': non_empty_string,
-        'partition': non_empty_string,
-        'region': non_empty_string,
-        'requesting_user': non_empty_string,
+        'group': string_with_example('group1'),
+        'partition': partition,
+        'region': string_with_example('us-east-1'),
+        'requesting_user': string_with_example('user1'),
     },
     'additionalProperties': False,
     'required': [
@@ -55,8 +61,10 @@ ec2_account = {
 ec2_credentials = {
     'type': 'object',
     'properties': {
-        'access_key_id': non_empty_string,
-        'secret_access_key': non_empty_string
+        'access_key_id': string_with_example('AKIAIOSFODNN7EXAMPLE'),
+        'secret_access_key': string_with_example(
+            'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+        )
     },
     'additionalProperties': False,
     'required': ['access_key_id', 'secret_access_key']

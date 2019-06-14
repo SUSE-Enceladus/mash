@@ -18,21 +18,21 @@
 
 import copy
 
-from mash.services.api.schema import non_empty_string
+from mash.services.api.schema import string_with_example
 
 azure_account = {
     'type': 'object',
     'properties': {
-        'account_name': non_empty_string,
-        'group': non_empty_string,
-        'region': non_empty_string,
-        'requesting_user': non_empty_string,
-        'source_container': non_empty_string,
-        'source_resource_group': non_empty_string,
-        'source_storage_account': non_empty_string,
-        'destination_container': non_empty_string,
-        'destination_resource_group': non_empty_string,
-        'destination_storage_account': non_empty_string
+        'account_name': string_with_example('account1'),
+        'group': string_with_example('group1'),
+        'region': string_with_example('westus'),
+        'requesting_user': string_with_example('user1'),
+        'source_container': string_with_example('container1'),
+        'source_resource_group': string_with_example('res_group1'),
+        'source_storage_account': string_with_example('storage_account1'),
+        'destination_container': string_with_example('container2'),
+        'destination_resource_group': string_with_example('res_group2'),
+        'destination_storage_account': string_with_example('storage_account2')
     },
     'additionalProperties': False,
     'required': [
@@ -50,16 +50,36 @@ azure_account = {
 azure_credentials = {
     'type': 'object',
     'properties': {
-        'clientId': non_empty_string,
-        'clientSecret': non_empty_string,
-        'subscriptionId': non_empty_string,
-        'tenantId': non_empty_string,
-        'activeDirectoryEndpointUrl': non_empty_string,
-        'resourceManagerEndpointUrl': non_empty_string,
-        'activeDirectoryGraphResourceId': non_empty_string,
-        'sqlManagementEndpointUrl': non_empty_string,
-        'galleryEndpointUrl': non_empty_string,
-        'managementEndpointUrl': non_empty_string
+        'clientId': string_with_example(
+            '0f12f123-1234-4321-1234-f123456f1234'
+        ),
+        'clientSecret': string_with_example(
+            '0f12f123-1234-4321-1234-f123456f1234'
+        ),
+        'subscriptionId': string_with_example(
+            '0f12f123-1234-4321-1234-f123456f1234'
+        ),
+        'tenantId': string_with_example(
+            '0f12f123-1234-4321-1234-f123456f1234'
+        ),
+        'activeDirectoryEndpointUrl': string_with_example(
+            'https://login.microsoftonline.com'
+        ),
+        'resourceManagerEndpointUrl': string_with_example(
+            'https://management.azure.com/'
+        ),
+        'activeDirectoryGraphResourceId': string_with_example(
+            'https://graph.windows.net/'
+        ),
+        'sqlManagementEndpointUrl': string_with_example(
+            'https://management.core.windows.net:8443/'
+        ),
+        'galleryEndpointUrl': string_with_example(
+            'https://gallery.azure.com/'
+        ),
+        'managementEndpointUrl': string_with_example(
+            'https://management.core.windows.net/'
+        )
     },
     'additionalProperties': False,
     'required': [

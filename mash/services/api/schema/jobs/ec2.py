@@ -18,38 +18,38 @@
 
 import copy
 
-from mash.services.api.schema import non_empty_string
+from mash.services.api.schema import string_with_example
 from mash.services.api.schema.jobs import base_job_message
 
-account_numbers = {
+share_with = {
     'type': 'string',
     'format': 'regex',
-    'pattern': '^[0-9]{12}(,[0-9]{12})*$'
+    'pattern': '^[0-9]{12}(,[0-9]{12})*$|^(all|none)$',
+    'example': '123456789012,098765432109',
+    'examples': ['all', 'none', '123456789012,098765432109']
 }
 
 ec2_job_account = {
     'type': 'object',
     'properties': {
-        'name': non_empty_string,
-        'region': non_empty_string,
-        'root_swap_ami': non_empty_string
+        'name': string_with_example('account1'),
+        'region': string_with_example('us-east-1'),
+        'root_swap_ami': string_with_example('ami-1234567890')
     },
     'additionalProperties': False,
     'required': ['name']
 }
 
 ec2_job_message = copy.deepcopy(base_job_message)
-ec2_job_message['properties']['share_with'] = {
-    'anyOf': [
-        {'enum': ['all', 'none']},
-        account_numbers
-    ]
-}
+ec2_job_message['properties']['share_with'] = share_with
 ec2_job_message['properties']['allow_copy'] = {'type': 'boolean'}
-ec2_job_message['properties']['billing_codes'] = non_empty_string
+ec2_job_message['properties']['billing_codes'] = string_with_example(
+    '1234567890,0987654321'
+)
 ec2_job_message['properties']['use_root_swap'] = {'type': 'boolean'}
 ec2_job_message['properties']['cloud_accounts'] = {
     'type': 'array',
     'items': ec2_job_account,
-    'minItems': 1
+    'minItems': 1,
+    'example': [{'name': 'account1'}]
 }

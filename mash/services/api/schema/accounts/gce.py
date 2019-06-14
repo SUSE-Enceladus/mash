@@ -18,17 +18,17 @@
 
 import copy
 
-from mash.services.api.schema import non_empty_string
+from mash.services.api.schema import string_with_example
 
 gce_account = {
     'type': 'object',
     'properties': {
-        'account_name': non_empty_string,
-        'bucket': non_empty_string,
-        'group': non_empty_string,
-        'testing_account': non_empty_string,
-        'region': non_empty_string,
-        'requesting_user': non_empty_string,
+        'account_name': string_with_example('account1'),
+        'bucket': string_with_example('image-bucket'),
+        'group': string_with_example('group1'),
+        'testing_account': string_with_example('testing-account1'),
+        'region': string_with_example('us-west1-a'),
+        'requesting_user': string_with_example('user1'),
         'is_publishing_account': {'type': 'boolean'}
     },
     'additionalProperties': False,
@@ -43,16 +43,33 @@ gce_account = {
 gce_credentials = {
     'type': 'object',
     'properties': {
-        'type': non_empty_string,
-        'project_id': non_empty_string,
-        'private_key_id': non_empty_string,
-        'private_key': non_empty_string,
-        'client_email': non_empty_string,
-        'client_id': non_empty_string,
-        'auth_uri': non_empty_string,
-        'token_uri': non_empty_string,
-        'auth_provider_x509_cert_url': non_empty_string,
-        'client_x509_cert_url': non_empty_string
+        'type': string_with_example('service_account'),
+        'project_id': string_with_example('test'),
+        'private_key_id': string_with_example(
+            '1234567890123456789012345678901234567890'
+        ),
+        'private_key': string_with_example(
+            '-----BEGIN PRIVATE KEY-----{key content}'
+        ),
+        'client_email': string_with_example(
+            'test@test.iam.gserviceaccount.com'
+        ),
+        'client_id': string_with_example(
+            '123456789012345678901'
+        ),
+        'auth_uri': string_with_example(
+            'https://accounts.google.com/o/oauth2/auth'
+        ),
+        'token_uri': string_with_example(
+            'https://accounts.google.com/o/oauth2/auth'
+        ),
+        'auth_provider_x509_cert_url': string_with_example(
+            'https://www.googleapis.com/oauth2/v1/certs'
+        ),
+        'client_x509_cert_url': string_with_example(
+            'https://www.googleapis.com/robot/v1/metadata/x509/'
+            'test@test.iam.gserviceaccount.com'
+        )
     },
     'additionalProperties': False,
     'required': [

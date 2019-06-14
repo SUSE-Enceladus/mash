@@ -19,28 +19,43 @@
 from mash.services.api.schema import (
     email,
     non_empty_string,
-    utctime
+    string_with_example
 )
 
 image_conditions = {
+    'type': 'object',
     'properties': {
-        'image': non_empty_string
+        'image': string_with_example('1.42.1')
     },
     'additionalProperties': False,
     'required': ['image']
 }
 
 package_conditions = {
+    'type': 'object',
     'properties': {
-        'package_name': non_empty_string,
-        'version': non_empty_string,
-        'build_id': non_empty_string,
+        'package_name': string_with_example('kernel-default'),
+        'version': string_with_example('4.13.1'),
+        'build_id': string_with_example('1.1'),
         'condition': {
+            'type': 'string',
             'enum': ['>=', '==', '<=', '>', '<']
         }
     },
     'additionalProperties': False,
     'required': ['package_name']
+}
+
+utctime = {
+    'type': 'string',
+    'description': 'An RFC3339 date-time string, "now" or "always"',
+    'format': 'regex',
+    'pattern': r'^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]'
+               r'|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):'
+               r'([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]'
+               r'([01][0-9]|2[0-3]):[0-5][0-9]))$|^(now|always)$',
+    'example': '2019-04-28T06:44:50.142Z',
+    'examples': ['now', 'always', '2019-04-28T06:44:50.142Z']
 }
 
 base_job_message = {
@@ -50,10 +65,12 @@ base_job_message = {
             'type': 'array',
             'items': non_empty_string,
             'uniqueItems': True,
-            'minItems': 1
+            'minItems': 1,
+            'example': ['group1']
         },
-        'requesting_user': non_empty_string,
+        'requesting_user': string_with_example('user123'),
         'last_service': {
+            'type': 'string',
             'enum': [
                 'uploader',
                 'testing',
@@ -62,15 +79,14 @@ base_job_message = {
                 'deprecation'
             ]
         },
-        'utctime': {
-            'anyOf': [
-                {'enum': ['always', 'now']},
-                utctime
-            ]
-        },
-        'image': non_empty_string,
-        'cloud_image_name': non_empty_string,
-        'old_cloud_image_name': non_empty_string,
+        'utctime': utctime,
+        'image': string_with_example('openSUSE-Leap-15.0-EC2-HVM'),
+        'cloud_image_name': string_with_example(
+            'openSUSE-Leap-15.0-v{date}-hvm-ssd-x86_64'
+        ),
+        'old_cloud_image_name': string_with_example(
+            'openSUSE-Leap-15.0-v20190313-hvm-ssd-x86_64'
+        ),
         'conditions': {
             'type': 'array',
             'items': {
@@ -81,21 +97,32 @@ base_job_message = {
             },
             'minItems': 1
         },
-        'download_url': non_empty_string,
-        'image_description': non_empty_string,
-        'distro': {'enum': ['opensuse_leap', 'sles']},
-        'instance_type': non_empty_string,
+        'download_url': string_with_example(
+            'https://download.opensuse.org/repositories/'
+            'Cloud:/Images:/Leap_15.0/images/'
+        ),
+        'image_description': string_with_example(
+            'openSUSE Leap 15.0 (HVM, 64-bit, SSD-Backed)'
+        ),
+        'distro': {
+            'type': 'string',
+            'enum': ['opensuse_leap', 'sles']
+        },
+        'instance_type': string_with_example('t2.micro'),
         'tests': {
             'type': 'array',
             'items': non_empty_string,
-            'minItems': 1
+            'minItems': 1,
+            'example': ['test_sles']
         },
         'cleanup_images': {'type': 'boolean'},
         'cloud_architecture': {
+            'type': 'string',
             'enum': ['x86_64', 'aarch64']
         },
         'notification_email': email,
         'notification_type': {
+            'type': 'string',
             'enum': ['periodic', 'single']
         }
     },

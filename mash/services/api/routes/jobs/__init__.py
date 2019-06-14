@@ -31,7 +31,9 @@ api = Namespace(
 
 job_response = api.model(
     'job_response', {
-        'job_id': fields.String
+        'job_id': fields.String(
+            example='12345678-1234-1234-1234-123456789012'
+        )
     }
 )
 validation_error_response = api.schema_model(
