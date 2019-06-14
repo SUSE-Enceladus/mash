@@ -94,7 +94,7 @@ mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 install -D -m 644 config/mash_config.yaml \
     %{buildroot}%{_sysconfdir}/%{name}/mash_config.yaml
 
-install -D -m 644 mash/wsgi.py \
+install -D -m 644 mash/services/api/wsgi.py \
     %{buildroot}%{_localstatedir}/lib/%{name}/wsgi.py
 
 install -D -m 644 config/mash.conf \

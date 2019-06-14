@@ -3,7 +3,7 @@ import pytest
 
 from unittest.mock import MagicMock, patch
 
-from mash import wsgi
+from mash.services.api import wsgi
 
 
 @pytest.fixture(scope='module')
