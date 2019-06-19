@@ -3,7 +3,10 @@ import json
 from datetime import date
 from pytest import raises
 from unittest.mock import MagicMock, patch
+from collections import namedtuple
+from multiprocessing import SimpleQueue
 
+from azure.mgmt.storage import StorageManagementClient
 from mash.mash_exceptions import MashAzureUtilsException
 from mash.services.azure_utils import (
     acquire_access_token,
@@ -21,7 +24,8 @@ from mash.services.azure_utils import (
     put_cloud_partner_offer_doc,
     request_cloud_partner_offer_doc,
     update_cloud_partner_offer_doc,
-    wait_on_cloud_partner_operation
+    wait_on_cloud_partner_operation,
+    upload_azure_image
 )
 
 
@@ -539,3 +543,103 @@ def test_deprecate_image_in_offer_invalid():
         'Deprecation image name, new_image_20180909 does match the '
         'mediaName attribute, new_image.'
     )
+
+
+@patch('builtins.open')
+@patch('mash.services.azure_utils.create_json_file')
+@patch('mash.services.azure_utils.get_client_from_auth_file')
+@patch('mash.services.azure_utils.PageBlobService')
+@patch('mash.services.azure_utils.FileType')
+@patch('mash.services.azure_utils.lzma')
+def test_upload_azure_image(
+    mock_lzma,
+    mock_FileType,
+    mock_PageBlobService,
+    mock_get_client_from_auth_file,
+    mock_create_json_file,
+    mock_open
+):
+    creds_handle = MagicMock()
+    creds_handle.__enter__.return_value = 'tempfile'
+    mock_create_json_file.return_value = creds_handle
+
+    lzma_handle = MagicMock()
+    lzma_handle.__enter__.return_value = lzma_handle
+    mock_lzma.LZMAFile.return_value = lzma_handle
+
+    open_handle = MagicMock()
+    open_handle.__enter__.return_value = open_handle
+    mock_open.return_value = open_handle
+
+    client = MagicMock()
+    mock_get_client_from_auth_file.return_value = client
+
+    page_blob_service = MagicMock()
+    mock_PageBlobService.return_value = page_blob_service
+
+    key_type = namedtuple('key_type', ['value', 'key_name'])
+    async_create_image = MagicMock()
+    storage_key_list = MagicMock()
+    storage_key_list.keys = [
+        key_type(value='key', key_name='key_name')
+    ]
+
+    client.storage_accounts.list_keys.return_value = storage_key_list
+    client.images.create_or_update.return_value = async_create_image
+
+    system_image_file_type = MagicMock()
+    system_image_file_type.get_size.return_value = 1024
+    system_image_file_type.is_xz.return_value = True
+    mock_FileType.return_value = system_image_file_type
+
+    credentials = {
+        'clientId': 'a',
+        'clientSecret': 'b',
+        'subscriptionId': 'c',
+        'tenantId': 'd',
+        'activeDirectoryEndpointUrl': 'https://login.microsoftonline.com',
+        'resourceManagerEndpointUrl': 'https://management.azure.com/',
+        'activeDirectoryGraphResourceId': 'https://graph.windows.net/',
+        'sqlManagementEndpointUrl':
+            'https://management.core.windows.net:8443/',
+        'galleryEndpointUrl': 'https://gallery.azure.com/',
+        'managementEndpointUrl': 'https://management.core.windows.net/'
+    }
+
+    result = SimpleQueue()
+    args = (
+        'name.vhd',
+        'container',
+        credentials,
+        'file.vhdfixed.xz',
+        5,
+        8,
+        'group_name',
+        'storage',
+        result
+    )
+    upload_azure_image(*args)
+    assert result.empty()
+
+    mock_get_client_from_auth_file.assert_called_once_with(
+        StorageManagementClient,
+        auth_path='tempfile'
+    )
+    client.storage_accounts.list_keys.assert_called_once_with(
+        'group_name', 'storage'
+    )
+    mock_PageBlobService.assert_called_once_with(
+        account_key='key', account_name='storage'
+    )
+    mock_FileType.assert_called_once_with('file.vhdfixed.xz')
+    system_image_file_type.is_xz.assert_called_once_with()
+    page_blob_service.create_blob_from_stream.assert_called_once_with(
+        'container', 'name.vhd', lzma_handle, 1024,
+        max_connections=8
+    )
+
+    system_image_file_type.is_xz.return_value = False
+    page_blob_service.create_blob_from_stream.side_effect = Exception
+
+    upload_azure_image(*args)
+    assert result.empty() is False

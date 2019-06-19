@@ -18,6 +18,7 @@
 
 import adal
 import json
+import lzma
 import re
 import requests
 import time
@@ -30,6 +31,8 @@ from azure.mgmt.storage import StorageManagementClient
 from azure.storage.blob import ContainerPermissions, PageBlobService
 
 from mash.mash_exceptions import MashAzureUtilsException
+from mash.utils.filetype import FileType
+from mash.utils.mash_utils import create_json_file
 
 
 def acquire_access_token(credentials, cloud_partner=False):
@@ -530,3 +533,58 @@ def wait_on_cloud_partner_operation(
         else:
             log_operation_response_status(response, log_callback)
             time.sleep(wait_time)
+
+
+def upload_azure_image(
+    blob_name,
+    container,
+    credentials,
+    image_file,
+    max_retry_attempts,
+    max_workers,
+    resource_group,
+    storage_account,
+    result
+):
+    with create_json_file(credentials) as auth_file:
+        storage_client = get_client_from_auth_file(
+            StorageManagementClient, auth_path=auth_file
+        )
+        storage_key_list = storage_client.storage_accounts.list_keys(
+            resource_group,
+            storage_account
+        )
+
+    page_blob_service = PageBlobService(
+        account_name=storage_account,
+        account_key=storage_key_list.keys[0].value
+    )
+
+    system_image_file_type = FileType(image_file)
+    if system_image_file_type.is_xz():
+        open_image = lzma.LZMAFile
+    else:
+        open_image = open
+
+    msg = ''
+    while max_retry_attempts > 0:
+        with open_image(image_file, 'rb') as image_stream:
+            try:
+                page_blob_service.create_blob_from_stream(
+                    container,
+                    blob_name,
+                    image_stream,
+                    system_image_file_type.get_size(),
+                    max_connections=max_workers
+                )
+                return
+            except Exception as error:
+                msg = error
+                max_retry_attempts -= 1
+
+    result.put(
+        'Unable to upload image: {0} to Azure: {1}'.format(
+            image_file,
+            msg
+        )
+    )
