@@ -1,14 +1,12 @@
 from pytest import raises
 from unittest.mock import (
-    MagicMock, Mock, patch, call
+    MagicMock, Mock, patch
 )
-from collections import namedtuple
 
 from mash.services.uploader.azure_job import AzureUploaderJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.uploader.config import UploaderConfig
 
-from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 
 
@@ -74,24 +72,20 @@ class TestAzureUploaderJob(object):
         with raises(MashUploadException):
             AzureUploaderJob(job_doc, self.config)
 
+    @patch('mash.services.uploader.azure_job.upload_azure_image')
+    @patch('mash.services.uploader.azure_job.Process')
+    @patch('mash.services.uploader.azure_job.SimpleQueue')
     @patch('mash.services.uploader.azure_job.NamedTemporaryFile')
     @patch('mash.services.uploader.azure_job.get_client_from_auth_file')
-    @patch('mash.services.uploader.azure_job.PageBlobService')
-    @patch('mash.services.uploader.azure_job.FileType')
-    @patch('mash.services.uploader.azure_job.lzma')
     @patch('builtins.open')
     def test_upload(
-        self, mock_open, mock_lzma, mock_FileType,
-        mock_PageBlobService, mock_get_client_from_auth_file,
-        mock_NamedTemporaryFile
+        self, mock_open, mock_get_client_from_auth_file,
+        mock_NamedTemporaryFile, mock_queue, mock_process,
+        mock_upload_azure_image
     ):
         tempfile = Mock()
         tempfile.name = 'tempfile'
         mock_NamedTemporaryFile.return_value = tempfile
-
-        lzma_handle = MagicMock()
-        lzma_handle.__enter__.return_value = lzma_handle
-        mock_lzma.LZMAFile.return_value = lzma_handle
 
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
@@ -100,41 +94,32 @@ class TestAzureUploaderJob(object):
         client = MagicMock()
         mock_get_client_from_auth_file.return_value = client
 
-        page_blob_service = Mock()
-        mock_PageBlobService.return_value = page_blob_service
-
-        key_type = namedtuple('key_type', ['value', 'key_name'])
         async_create_image = Mock()
-        storage_key_list = Mock()
-        storage_key_list.keys = [
-            key_type(value='key', key_name='key_name')
-        ]
-
-        client.storage_accounts.list_keys.return_value = storage_key_list
         client.images.create_or_update.return_value = async_create_image
 
-        system_image_file_type = Mock()
-        system_image_file_type.get_size.return_value = 1024
-        system_image_file_type.is_xz.return_value = True
-        mock_FileType.return_value = system_image_file_type
+        queue = MagicMock()
+        queue.empty.return_value = True
+        mock_queue.return_value = queue
 
         self.job.run_job()
 
-        assert mock_get_client_from_auth_file.call_args_list == [
-            call(StorageManagementClient, auth_path='tempfile'),
-            call(ComputeManagementClient, auth_path='tempfile')
-        ]
-        client.storage_accounts.list_keys.assert_called_once_with(
-            'group_name', 'storage'
+        mock_process.assert_called_once_with(
+            target=mock_upload_azure_image,
+            args=(
+                'name.vhd',
+                'container',
+                self.credentials['test'],
+                'file.vhdfixed.xz',
+                5,
+                8,
+                'group_name',
+                'storage',
+                queue
+            )
         )
-        mock_PageBlobService.assert_called_once_with(
-            account_key='key', account_name='storage'
-        )
-        mock_FileType.assert_called_once_with('file.vhdfixed.xz')
-        system_image_file_type.is_xz.assert_called_once_with()
-        page_blob_service.create_blob_from_stream.assert_called_once_with(
-            'container', 'name.vhd', lzma_handle, 1024,
-            max_connections=8
+
+        mock_get_client_from_auth_file.assert_called_once_with(
+            ComputeManagementClient, auth_path='tempfile'
         )
         client.images.create_or_update.assert_called_once_with(
             'group_name', 'name', {
@@ -152,8 +137,7 @@ class TestAzureUploaderJob(object):
         )
         async_create_image.wait.assert_called_once_with()
 
-        system_image_file_type.is_xz.return_value = False
-        page_blob_service.create_blob_from_stream.side_effect = Exception
-
+        queue.empty.return_value = False
+        queue.get.return_value = 'Failed!'
         with raises(MashUploadException):
             self.job.run_job()

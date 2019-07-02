@@ -16,21 +16,19 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import lzma
+from multiprocessing import Process, SimpleQueue
 from tempfile import NamedTemporaryFile
 
 from azure.common.client_factory import get_client_from_auth_file
-from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.compute import ComputeManagementClient
-from azure.storage.blob.pageblobservice import PageBlobService
 
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.json_format import JsonFormat
-from mash.utils.filetype import FileType
 from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
+from mash.services.azure_utils import upload_azure_image
 
 
 class AzureUploaderJob(MashJob):
@@ -64,49 +62,31 @@ class AzureUploaderJob(MashJob):
         for region, info in self.target_regions.items():
             account = info['account']
             credentials = self.credentials[account]
-            self._create_auth_file(credentials)
-
-            system_image_file_type = FileType(
-                self.image_file[0]
-            )
-            storage_client = get_client_from_auth_file(
-                StorageManagementClient, auth_path=self.auth_file.name
-            )
-            storage_key_list = storage_client.storage_accounts.list_keys(
-                info['resource_group'], info['storage_account']
-            )
-            page_blob_service = PageBlobService(
-                account_name=info['storage_account'],
-                account_key=storage_key_list.keys[0].value
-            )
             blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
-            if system_image_file_type.is_xz():
-                open_image = lzma.LZMAFile
-            else:
-                open_image = open
+            result = SimpleQueue()
+            args = (
+                blob_name,
+                info['container'],
+                credentials,
+                self.image_file[0],
+                self.config.get_azure_max_retry_attempts(),
+                self.config.get_azure_max_workers(),
+                info['resource_group'],
+                info['storage_account'],
+                result
+            )
+            upload_process = Process(
+                target=upload_azure_image,
+                args=args
+            )
+            upload_process.start()
+            upload_process.join()
 
-            retries = self.config.get_azure_max_retry_attempts()
-            while True:
-                with open_image(self.image_file[0], 'rb') as image_stream:
-                    try:
-                        page_blob_service.create_blob_from_stream(
-                            info['container'], blob_name, image_stream,
-                            system_image_file_type.get_size(),
-                            max_connections=self.config.get_azure_max_workers()
-                        )
-                        break
-                    except Exception as error:
-                        msg = error
-                        retries -= 1
+            if result.empty() is False:
+                raise MashUploadException(result.get())
 
-                if retries < 1:
-                    raise MashUploadException(
-                        'Unable to upload image: {0} to Azure: {1}'.format(
-                            self.image_file[0],
-                            msg
-                        )
-                    )
+            self._create_auth_file(credentials)
 
             compute_client = get_client_from_auth_file(
                 ComputeManagementClient, auth_path=self.auth_file.name
