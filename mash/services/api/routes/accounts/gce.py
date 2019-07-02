@@ -30,7 +30,7 @@ from mash.services.api.routes.utils import publish
 
 api = Namespace(
     'GCE Accounts',
-    description='GCE account related operations'
+    description='GCE account operations'
 )
 gce_account = api.schema_model('gce_account', add_account_gce)
 

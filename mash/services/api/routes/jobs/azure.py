@@ -30,7 +30,7 @@ from mash.services.api.schema.jobs.azure import azure_job_message
 
 api = Namespace(
     'Azure Jobs',
-    description='Azure Job related operations'
+    description='Azure Job operations'
 )
 azure_job = api.schema_model('azure_job', azure_job_message)
 

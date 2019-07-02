@@ -44,7 +44,7 @@ ec2_job_message = copy.deepcopy(base_job_message)
 ec2_job_message['properties']['share_with'] = share_with
 ec2_job_message['properties']['allow_copy'] = {'type': 'boolean'}
 ec2_job_message['properties']['billing_codes'] = string_with_example(
-    '1234567890,0987654321'
+    'bp-1234567890,bp-0987654321'
 )
 ec2_job_message['properties']['use_root_swap'] = {'type': 'boolean'}
 ec2_job_message['properties']['cloud_accounts'] = {

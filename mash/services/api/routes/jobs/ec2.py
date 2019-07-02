@@ -30,7 +30,7 @@ from mash.services.api.schema.jobs.ec2 import ec2_job_message
 
 api = Namespace(
     'EC2 Jobs',
-    description='EC2 Job related operations'
+    description='EC2 Job operations'
 )
 ec2_job = api.schema_model('ec2_job', ec2_job_message)
 

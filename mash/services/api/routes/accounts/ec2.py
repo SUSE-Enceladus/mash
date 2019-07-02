@@ -30,7 +30,7 @@ from mash.services.api.routes.utils import publish
 
 api = Namespace(
     'EC2 Accounts',
-    description='EC2 account related operations'
+    description='EC2 account operations'
 )
 ec2_account = api.schema_model('ec2_account', add_account_ec2)
 

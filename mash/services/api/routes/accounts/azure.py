@@ -30,7 +30,7 @@ from mash.services.api.routes.utils import publish
 
 api = Namespace(
     'Azure Accounts',
-    description='Azure account related operations'
+    description='Azure account operations'
 )
 azure_account = api.schema_model('azure_account', add_account_azure)
 

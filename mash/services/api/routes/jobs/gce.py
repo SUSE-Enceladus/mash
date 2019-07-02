@@ -30,7 +30,7 @@ from mash.services.api.schema.jobs.gce import gce_job_message
 
 api = Namespace(
     'GCE Jobs',
-    description='GCE Job related operations'
+    description='GCE Job operations'
 )
 gce_job = api.schema_model('gce_job', gce_job_message)
 

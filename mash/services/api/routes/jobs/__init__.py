@@ -26,7 +26,7 @@ from mash.services.api.routes.utils import publish
 
 api = Namespace(
     'Jobs',
-    description='Job related operations'
+    description='Job operations'
 )
 
 job_response = api.model(
