@@ -36,7 +36,6 @@ instance_types = [
     'n1-highmem-2',
     'n1-highcpu-2',
     'f1-micro',
-    'n1-ultramem-40'
 ]
 
 
