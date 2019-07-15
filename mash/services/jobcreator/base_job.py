@@ -63,6 +63,7 @@ class BaseJob(object):
         self.cloud_groups = kwargs.get('cloud_groups', [])
         self.notification_email = kwargs.get('notification_email')
         self.notification_type = kwargs.get('notification_type', 'single')
+        self.profile = kwargs.get('profile')
         self.kwargs = kwargs
 
         self.base_message = {
@@ -155,6 +156,9 @@ class BaseJob(object):
 
         if self.conditions:
             obs_message['obs_job']['conditions'] = self.conditions
+
+        if self.profile:
+            obs_message['obs_job']['profile'] = self.profile
 
         return JsonFormat.json_message(obs_message)
 

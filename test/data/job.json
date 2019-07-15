@@ -24,5 +24,6 @@
   "tests": ["test_stuff"],
   "cleanup_images": true,
   "cloud_architecture": "aarch64",
-  "notification_email": "test@fake.com"
+  "notification_email": "test@fake.com",
+  "profile": "Proxy"
 }
