@@ -53,7 +53,7 @@ class TestAzureUploaderJob(object):
         )
 
         self.job = AzureUploaderJob(job_doc, self.config)
-        self.job.image_file = ['file.vhdfixed.xz']
+        self.job.image_file = 'file.vhdfixed.xz'
         self.job.credentials = self.credentials
 
     def test_post_init_incomplete_arguments(self):

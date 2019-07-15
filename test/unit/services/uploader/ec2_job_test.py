@@ -40,7 +40,7 @@ class TestAmazonUploaderJob(object):
             'image_description': 'description'
         }
         self.job = EC2UploaderJob(job_doc, self.config)
-        self.job.image_file = ['file']
+        self.job.image_file = 'file'
         self.job.credentials = self.credentials
 
     def test_post_init_incomplete_arguments(self):
@@ -172,7 +172,7 @@ class TestAmazonUploaderJob(object):
             'image_description': 'description'
         }
         self.job = EC2UploaderJob(job_doc, self.config)
-        self.job.image_file = ['file']
+        self.job.image_file = 'file'
         self.job.credentials = self.credentials
 
         open_context = context_manager()

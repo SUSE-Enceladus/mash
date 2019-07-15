@@ -48,6 +48,7 @@ BuildRequires:  python3-img-proof-tests>=4.0.0
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
 BuildRequires:  python3-requests
+BuildRequires:  python3-obs-img-utils >= 0.0.3
 Requires:       rabbitmq-server
 Requires:       python3-adal
 Requires:       python3-apache-libcloud
@@ -70,6 +71,7 @@ Requires:       python3-img-proof-tests>=4.0.0
 Requires:       python3-lxml
 Requires:       python3-Flask
 Requires:       python3-requests
+Requires:       python3-obs-img-utils >= 0.0.3
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
 Requires(pre):  pwdutils

@@ -91,7 +91,7 @@ class GCEUploaderJob(MashJob):
             object_name = ''.join([self.cloud_image_name, '.tar.gz'])
             container = storage_driver.get_container(info['bucket'])
 
-            with open(self.image_file[0], 'rb') as image_stream:
+            with open(self.image_file, 'rb') as image_stream:
                 storage_driver.upload_object_via_stream(
                     image_stream, container, object_name
                 )

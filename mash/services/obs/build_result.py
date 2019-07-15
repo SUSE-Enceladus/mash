@@ -17,33 +17,23 @@
 #
 
 import os
-import re
-import time
 import threading
 import logging
-import hashlib
 
-from distutils.dir_util import mkpath
 from datetime import datetime
-from pkg_resources import parse_version
 from pytz import utc
-from tempfile import NamedTemporaryFile
-from collections import namedtuple
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.events import (
     EVENT_JOB_MAX_INSTANCES,
     EVENT_JOB_SUBMITTED
 )
 
+from obs_img_utils.api import OBSImageUtil
+
 # project
-from mash.utils.web_content import WebContent
 from mash.services.obs.defaults import Defaults
 from mash.log.filter import SchedulerLoggingFilter
 from mash.services.status_levels import FAILED, SUCCESS
-from mash.mash_exceptions import (
-    MashImageDownloadException,
-    MashVersionExpressionException
-)
 
 
 class OBSImageBuildResult(object):
@@ -94,12 +84,16 @@ class OBSImageBuildResult(object):
 
     * :attr:`notification_type`
       The frequency of notification emails.
+
+    * :attr:`profile`
+      The multibuild profile name for the image.
     """
     def __init__(
         self, job_id, job_file, download_url, image_name, last_service,
-        conditions=None, arch='x86_64',
+        log_callback, conditions=None, arch='x86_64',
         download_directory=Defaults.get_download_dir(),
-        notification_email=None, notification_type='single'
+        notification_email=None, notification_type='single',
+        profile=None
     ):
         self.arch = arch
         self.job_id = job_id
@@ -120,10 +114,35 @@ class OBSImageBuildResult(object):
         self.iteration_count = 0
         self.notification_email = notification_email
         self.notification_type = notification_type
+        self.profile = profile
+        self.job_status = 'prepared'
+        self.progress_log = {}
+        self.log_callback = logging.LoggerAdapter(
+            log_callback,
+            {'job_id': self.job_id}
+        )
 
-        self.remote = WebContent(self.download_url)
+        # How often to update log callback with download progress.
+        # 25 updates every 25%. I.e. 25, 50, 75, 100.
+        self.download_progress_percent = 25
 
-        self.image_status = self._init_status()
+        kwargs = {
+            'conditions': self.conditions,
+            'arch': self.arch,
+            'target_directory': self.download_directory,
+            'conditions_wait_time': 900,
+            'log_callback': self.log_callback,
+            'report_callback': self.progress_callback
+        }
+
+        if self.profile:
+            kwargs['profile'] = self.profile
+
+        self.downloader = OBSImageUtil(
+            self.download_url,
+            self.image_name,
+            **kwargs
+        )
 
     def start_watchdog(
         self, interval_sec=5, nonstop=False, isotime=None
@@ -145,15 +164,18 @@ class OBSImageBuildResult(object):
         :param int interval_sec: interval for nonstop jobs
         """
         self.job_nonstop = nonstop
-        time = None
+        job_time = None
+
         if isotime:
-            time = datetime.strptime(isotime[:19], '%Y-%m-%dT%H:%M:%S')
+            job_time = datetime.strptime(isotime[:19], '%Y-%m-%dT%H:%M:%S')
+
         self.scheduler = BackgroundScheduler(timezone=utc)
+
         if nonstop:
             self.job = self.scheduler.add_job(
                 self._update_image_status, 'interval',
                 max_instances=1, seconds=interval_sec,
-                start_date=time, timezone='utc'
+                start_date=job_time, timezone='utc'
             )
             self.scheduler.add_listener(
                 self._job_skipped_event, EVENT_JOB_MAX_INSTANCES
@@ -164,7 +186,7 @@ class OBSImageBuildResult(object):
         else:
             self.job = self.scheduler.add_job(
                 self._update_image_status, 'date',
-                run_date=time, timezone='utc'
+                run_date=job_time, timezone='utc'
             )
         self.scheduler.add_listener(
             self._job_submit_event, EVENT_JOB_SUBMITTED
@@ -183,9 +205,6 @@ class OBSImageBuildResult(object):
         except Exception:
             pass
 
-    def set_log_handler(self, function):
-        self.log_callback = function
-
     def set_result_handler(self, function):
         self.result_callback = function
 
@@ -195,61 +214,15 @@ class OBSImageBuildResult(object):
     def call_result_handler(self):
         self._result_callback()
 
-    def get_image_status(self):
-        """
-        Return status of the image and condition states
-        """
-        return self.image_status
-
-    def get_image(self):
-        """
-        Download image and shasum to given file
-        """
-        mkpath(self.download_directory)
-        file_prefix = self.image_metadata_name.replace('.packages', '')
-        image_files = self.remote.fetch_files(
-            file_prefix,
-            ['.xz', 'xz.sha256', '.tar.gz', '.tar.gz.sha256'],
-            self.download_directory
-        )
-
-        if not image_files:
-            raise MashImageDownloadException(
-                'No images found that match the image file name {0}.'.format(
-                    file_prefix
-                )
-            )
-
-        return image_files
-
-    def _get_build_number(self, name):
-        build = re.search(
-            r'{0}-(\d+\.\d+\.\d+)-Build([0-9]+\.[0-9]+)'.format(self.arch),
-            name
-        ) or re.search(
-            r'{0}-(\d+\.\d+\.\d+)-Beta([0-9]+)'.format(self.arch),
-            name
-        )
-        if build:
-            return [build.group(1), build.group(2)]
-
-    def _log_callback(self, message):
-        if self.log_callback:
-            self.log_callback(
-                self.job_id, 'Pass[{0}]: {1}'.format(
-                    self.iteration_count, message
-                )
-            )
-
     def _result_callback(self):
-        job_status = self.image_status['job_status']
         if self.result_callback:
             self.result_callback(
                 self.job_id, {
                     'obs_result': {
                         'id': self.job_id,
-                        'image_file': self.image_status['image_source'],
-                        'status': job_status
+                        'image_file':
+                            self.downloader.image_status['image_source'],
+                        'status': self.job_status
                     }
                 }
             )
@@ -266,26 +239,11 @@ class OBSImageBuildResult(object):
                 error
             )
 
-    def _init_status(self):
-        image_status = {
-            'name': self.image_name,
-            'job_status': 'prepared',
-            'image_source': ['unknown'],
-            'packages_checksum': 'unknown',
-            'version': 'unknown',
-            'conditions': []
-        }
-        if self.conditions:
-            for condition in self.conditions:
-                condition['status'] = None
-            image_status['conditions'] = self.conditions
-        return image_status
-
     def _job_submit_event(self, event):
         if self.job_nonstop:
-            self._log_callback('Nonstop job submitted')
+            self.log_callback.info('Nonstop job submitted')
         else:
-            self._log_callback('Oneshot Job submitted')
+            self.log_callback.info('Oneshot Job submitted')
 
     def _job_skipped_event(self, event):
         # Job is still active while the next _update_image_status
@@ -294,219 +252,64 @@ class OBSImageBuildResult(object):
         pass
 
     def _wait_for_new_image(self):
-        osc_result_thread = threading.Thread(target=self._watch_obs_result)
+        osc_result_thread = threading.Thread(
+            target=self.downloader.wait_for_new_image
+        )
         osc_result_thread.start()
         osc_result_thread.join()
-
-    def _watch_obs_result(self, timeout=60):
-        checksum_file = NamedTemporaryFile()
-        checksum_current = None
-        checksum_latest = None
-        while not self.job_deleted:
-            time.sleep(timeout)
-            self._log_callback('Rechecking checksum for {0}'.format(
-                self.image_name)
-            )
-            try:
-                self.remote.fetch_file(
-                    ''.join([self.image_name, '.', self.arch]),
-                    '.sha256',
-                    checksum_file.name
-                )
-                with open(checksum_file.name) as checksum:
-                    checksum_latest = checksum.read()
-                if checksum_current and checksum_current != checksum_latest:
-                    return
-                checksum_current = checksum_latest
-            except Exception:
-                continue
-
-    def _image_conditions_complied(self):
-        for condition in self.image_status['conditions']:
-            if condition['status'] is not True:
-                return False
-        return True
-
-    def _log_error(self, message):
-        self.image_status['job_status'] = 'failed'
-        self._log_callback('Error: {0}'.format(message))
+        self._update_image_status()
 
     def _update_image_status(self):
+        self.iteration_count += 1
+
+        self.log_callback.extra = {
+            'job_id': self.job_id,
+            'iteration': self.iteration_count
+        }
+        self.log_callback.info('Job running')
+
         try:
-            self.iteration_count += 1
-            retries = 10
-            conditions_fail_logged = False
-            self._log_callback('Job running')
+            image_source = self.downloader.get_image()
+            self.log_callback.info(
+                'Downloaded: {0}'.format(image_source)
+            )
 
-            while True:
-                packages = self._lookup_image_packages_metadata()
-                for condition in self.image_status['conditions']:
-                    if 'image' in condition:
-                        if self.image_status['version'] == condition['image']:
-                            condition['status'] = True
-                        else:
-                            condition['status'] = False
-                    elif 'package_name' in condition:
-                        if self._lookup_package(
-                            packages, condition
-                        ):
-                            condition['status'] = True
-                        else:
-                            condition['status'] = False
-
-                if self._image_conditions_complied():
-                    packages_digest = hashlib.md5()
-                    packages_digest.update(format(packages).encode())
-                    packages_checksum = packages_digest.hexdigest()
-                    if packages_checksum != \
-                            self.image_status['packages_checksum']:
-                        self._log_callback('Downloading image...')
-                        self.image_status['packages_checksum'] = 'unknown'
-
-                        try:
-                            self.image_status['image_source'] = \
-                                self.get_image()
-                        except MashImageDownloadException:
-                            if retries > 0:
-                                retries -= 1
-                                self._log_callback(
-                                    'Image files not found, retrying...'
-                                )
-                                continue
-                            else:
-                                raise
-
-                        self._log_callback(
-                            'Downloaded: {0}'.format(
-                                self.image_status['image_source']
-                            )
-                        )
-                    self.image_status['packages_checksum'] = packages_checksum
-                    self.image_status['job_status'] = 'success'
-                    break
-                else:
-                    if not conditions_fail_logged:
-                        self._log_callback('Waiting for conditions to be met.')
-                        conditions_fail_logged = True
-
-                    time.sleep(300)
-
-            self._log_callback(
-                'Job status: {0}'.format(self.image_status['job_status'])
+            self.job_status = 'success'
+            self.log_callback.info(
+                'Job status: {0}'.format(self.job_status)
             )
             self._result_callback()
 
             if self.job_nonstop:
-                self._log_callback('Waiting for image update')
+                self.log_callback.info('Waiting for image update')
                 self._wait_for_new_image()
             else:
                 self._notification_callback(SUCCESS)
-                self._log_callback('Job done')
+                self.log_callback.info('Job done')
         except Exception as issue:
             msg = '{0}: {1}'.format(type(issue).__name__, issue)
 
-            self._log_error(msg)
+            self.job_status = 'failed'
+            self.log_callback.error(msg)
             self._notification_callback(FAILED, msg)
 
             if not self.job_nonstop:
                 self._result_callback()
 
-    def _lookup_image_packages_metadata(self):
-        packages_file = NamedTemporaryFile()
-        self.image_metadata_name = self.remote.fetch_file(
-            ''.join([self.image_name, '.', self.arch]),
-            '.packages',
-            packages_file.name
-        )
-
-        if not self.image_metadata_name:
-            raise MashImageDownloadException(
-                'No image metadata found for image name: {0}'.format(
-                    self.image_name
-                )
-            )
-
-        try:
-            # Extract image version information from .packages file name
-            self.image_status['version'] = \
-                self._get_build_number(self.image_metadata_name)[0]
-        except Exception:
-            # Naming conventions for image names in obs violated
-            self.image_status['version'] = 'unknown'
-            raise MashImageDownloadException(
-                'No image version found. '
-                'Unexpected image name format: {0}'.format(
-                    self.image_metadata_name
-                )
-            )
-
-        package_type = namedtuple(
-            'package_type', [
-                'version', 'release', 'arch', 'checksum'
-            ]
-        )
-
-        result_packages = {}
-        with open(packages_file.name) as packages:
-            for package in packages.readlines():
-                package_digest = hashlib.md5()
-                package_digest.update(package.encode())
-                package_info = package.split('|')
-                package_name = package_info[0]
-                package_result = package_type(
-                    version=package_info[2],
-                    release=package_info[3],
-                    arch=package_info[4],
-                    checksum=package_digest.hexdigest()
-                )
-                result_packages[package_name] = package_result
-        return result_packages
-
-    def _version_compare(self, current, expected, condition):
-        if condition == '>=':
-            return parse_version(current) >= parse_version(expected)
-        elif condition == '<=':
-            return parse_version(current) <= parse_version(expected)
-        elif condition == '==':
-            return parse_version(current) == parse_version(expected)
-        elif condition == '>':
-            return parse_version(current) > parse_version(expected)
-        elif condition == '<':
-            return parse_version(current) < parse_version(expected)
+    def progress_callback(self, block_num, read_size, total_size, done=False):
+        """
+        Update progress in log callback
+        """
+        if done:
+            self.log_callback.info('Image download finished.')
         else:
-            raise MashVersionExpressionException(
-                'Invalid version compare expression: "{0}"'.format(condition)
-            )
+            percent = int(((block_num * read_size) / total_size) * 100)
 
-    def _lookup_package(self, packages, condition):
-        package_name = condition['package_name']
-
-        if package_name not in packages:
-            return False
-
-        condition_eval = condition.get('condition', '>=')
-        package_data = packages[package_name]
-
-        if 'version' in condition:
-            # we want to lookup a specific version
-            match = self._version_compare(
-                package_data.version,
-                condition['version'],
-                condition_eval
-            )
-
-            if not match:
-                return False
-
-        if 'build_id' in condition:
-            # we want to lookup a specific build number
-            match = self._version_compare(
-                package_data.release,
-                condition['build_id'],
-                condition_eval
-            )
-
-            if not match:
-                return False
-
-        return True
+            if percent % self.download_progress_percent == 0 \
+                    and percent not in self.progress_log:
+                self.log_callback.info(
+                    'Image {progress}% downloaded.'.format(
+                        progress=str(percent)
+                    )
+                )
+                self.progress_log[percent] = True

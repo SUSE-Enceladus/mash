@@ -19,7 +19,6 @@ class TestOBSImageBuildResultService(object):
     @patch.object(Defaults, 'get_job_directory')
     @patch.object(OBSImageBuildResultService, 'set_logfile')
     @patch.object(OBSImageBuildResultService, '_process_message')
-    @patch.object(OBSImageBuildResultService, '_send_job_response')
     @patch.object(OBSImageBuildResultService, '_send_job_result_for_uploader')
     @patch('mash.services.obs.service.restart_jobs')
     @patch.object(MashService, '__init__')
@@ -29,7 +28,7 @@ class TestOBSImageBuildResultService(object):
     def setup(
         self, mock_register, mock_log, mock_listdir, mock_MashService,
         mock_restart_jobs, mock_send_job_result_for_uploader,
-        mock_send_job_response, mock_process_message,
+        mock_process_message,
         mock_set_logfile, mock_get_job_directory, mock_makedirs
     ):
         mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
@@ -79,12 +78,6 @@ class TestOBSImageBuildResultService(object):
 
         self.obs_result.channel.start_consuming.side_effect = KeyboardInterrupt()
         self.obs_result.post_init()
-
-    def test_send_job_response(self):
-        self.obs_result._send_job_response('815', {})
-        self.obs_result.log.info.assert_called_once_with(
-            {}, extra={'job_id': '815'}
-        )
 
     @patch.object(MashService, '_publish')
     @patch.object(OBSImageBuildResultService, '_delete_job')
@@ -246,18 +239,17 @@ class TestOBSImageBuildResultService(object):
             "image": "test-image-oem",
             "last_service": "publisher",
             "utctime": "now",
+            "log_callback": Mock(),
             "conditions": [
                 {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
                 {"image": "1.42.1"}
             ],
             "cloud_architecture": "aarch64",
             "notification_email": "test@fake.com",
-            "notification_type": "single"
+            "notification_type": "single",
+            "profile": "Proxy"
         }
         self.obs_result._start_job(data)
-        job_worker.set_log_handler.assert_called_once_with(
-            self.obs_result._send_job_response
-        )
         job_worker.set_result_handler.assert_called_once_with(
             self.obs_result._send_job_result_for_uploader
         )
