@@ -75,9 +75,6 @@ class OBSImageBuildResultService(MashService):
         finally:
             self.close_connection()
 
-    def _send_job_response(self, job_id, status_message):
-        self.log.info(status_message, extra={'job_id': job_id})
-
     def _send_job_result_for_uploader(self, job_id, trigger_info):
         self._publish(
             'uploader',
@@ -240,7 +237,8 @@ class OBSImageBuildResultService(MashService):
             'download_url': job['download_url'],
             'image_name': job['image'],
             'last_service': job['last_service'],
-            'download_directory': self.download_directory
+            'download_directory': self.download_directory,
+            'log_callback': self.log
         }
 
         if 'conditions' in job:
@@ -249,12 +247,14 @@ class OBSImageBuildResultService(MashService):
         if 'cloud_architecture' in job:
             kwargs['arch'] = job['cloud_architecture']
 
+        if 'profile' in job:
+            kwargs['profile'] = job['profile']
+
         if 'notification_email' in job:
             kwargs['notification_email'] = job['notification_email']
             kwargs['notification_type'] = job['notification_type']
 
         job_worker = OBSImageBuildResult(**kwargs)
-        job_worker.set_log_handler(self._send_job_response)
         job_worker.set_result_handler(self._send_job_result_for_uploader)
         job_worker.set_notification_handler(self.send_email_notification)
         job_worker.start_watchdog(

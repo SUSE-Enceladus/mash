@@ -160,11 +160,11 @@ class EC2UploaderJob(MashJob):
 
                 if use_root_swap:
                     ami_id = ec2_upload.create_image_use_root_swap(
-                        self.image_file[0]
+                        self.image_file
                     )
                 else:
                     ami_id = ec2_upload.create_image(
-                        self.image_file[0]
+                        self.image_file
                     )
 
                 self.source_regions[region] = ami_id

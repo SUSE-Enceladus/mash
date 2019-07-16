@@ -265,7 +265,8 @@ base_job_message = {
         },
         'notification_type': {
             'enum': ['periodic', 'single']
-        }
+        },
+        'profile': {'$ref': '#/definitions/non_empty_string'}
     },
     'additionalProperties': False,
     'anyOf': [

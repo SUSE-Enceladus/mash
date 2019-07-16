@@ -69,7 +69,7 @@ class AzureUploaderJob(MashJob):
                 blob_name,
                 info['container'],
                 credentials,
-                self.image_file[0],
+                self.image_file,
                 self.config.get_azure_max_retry_attempts(),
                 self.config.get_azure_max_workers(),
                 info['resource_group'],

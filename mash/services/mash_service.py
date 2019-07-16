@@ -86,7 +86,7 @@ class MashService(object):
         rabbit_handler.setFormatter(
             logging.Formatter(
                 '%(newline)s%(levelname)s %(asctime)s %(name)s%(newline)s'
-                '    %(job)s %(message)s%(newline)s'
+                '    %(job)s %(iteration)s %(message)s%(newline)s'
             )
         )
         self.log.addHandler(rabbit_handler)
