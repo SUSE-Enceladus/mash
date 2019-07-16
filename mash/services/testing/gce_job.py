@@ -107,7 +107,7 @@ class GCETestingJob(MashJob):
 
             self.send_log(
                 'Starting test in region: {0}.'.format(
-                   region
+                    region
                 )
             )
             process = create_testing_thread(results, img_proof_kwargs, region)
