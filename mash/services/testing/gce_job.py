@@ -50,6 +50,7 @@ class GCETestingJob(MashJob):
         """
         try:
             self.test_regions = self.job_config['test_regions']
+            self.test_fallback_regions = self.job_config['test_fallback_regions']
             self.tests = self.job_config['tests']
         except KeyError as error:
             raise MashTestingException(
@@ -83,6 +84,7 @@ class GCETestingJob(MashJob):
 
         self.status = SUCCESS
         self.send_log('Running img-proof tests against image.')
+        self.send_log('Test regions: {}'.format(self.test_regions))
 
         for region, info in self.test_regions.items():
             account = get_testing_account(info)
@@ -92,6 +94,7 @@ class GCETestingJob(MashJob):
                 'cloud': self.cloud,
                 'description': self.description,
                 'distro': self.distro,
+                'fallback_regions': self.test_fallback_regions,
                 'image_id': self.source_regions[region],
                 'instance_type': self.instance_type,
                 'img_proof_timeout': self.img_proof_timeout,
@@ -102,6 +105,11 @@ class GCETestingJob(MashJob):
                 'tests': self.tests
             }
 
+            self.send_log(
+                'Starting test in region: {0}.'.format(
+                   region
+                )
+            )
             process = create_testing_thread(results, img_proof_kwargs, region)
             jobs.append(process)
 
