@@ -1,3 +1,13 @@
+v3.1.0 (2019-07-17)
+===================
+
+- Run Azure upload in separate process.
+  [\#480](https://github.com/SUSE-Enceladus/mash/pull/480)
+- Remove very large instance from GCE.
+  [\#486](https://github.com/SUSE-Enceladus/mash/pull/486)
+- Migrate obs service to obs-img-utils.
+  [\#488](https://github.com/SUSE-Enceladus/mash/pull/488)
+
 v3.0.1 (2019-06-09)
 ===================
 
