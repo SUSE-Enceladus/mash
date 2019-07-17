@@ -18,4 +18,4 @@
 """
 Global version information used in mash and the package
 """
-__VERSION__ = '3.0.1'
+__VERSION__ = '3.1.0'
