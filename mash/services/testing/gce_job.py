@@ -30,6 +30,7 @@ from mash.services.testing.utils import (
 )
 from mash.utils.mash_utils import create_ssh_key_pair
 from mash.utils.gce import cleanup_gce_image
+from mash.utils.gce import get_region_list
 
 instance_types = [
     'n1-standard-1',
@@ -50,7 +51,6 @@ class GCETestingJob(MashJob):
         """
         try:
             self.test_regions = self.job_config['test_regions']
-            self.test_fallback_regions = self.job_config['test_fallback_regions']
             self.tests = self.job_config['tests']
         except KeyError as error:
             raise MashTestingException(
@@ -65,6 +65,7 @@ class GCETestingJob(MashJob):
         self.instance_type = self.job_config.get('instance_type')
         self.ssh_user = self.job_config.get('ssh_user', 'root')
         self.cleanup_images = self.job_config.get('cleanup_images', False)
+        self.test_fallback_regions = self.job_config.get('test_fallback_regions')
 
         if not self.instance_type:
             self.instance_type = random.choice(instance_types)
@@ -84,17 +85,27 @@ class GCETestingJob(MashJob):
 
         self.status = SUCCESS
         self.send_log('Running img-proof tests against image.')
-        self.send_log('Test regions: {}'.format(self.test_regions))
 
         for region, info in self.test_regions.items():
             account = get_testing_account(info)
             creds = self.credentials[account]
 
+            if self.test_fallback_regions == []:
+                # fallback testing explicitly disabled
+                fallback_regions = []
+            else:
+                if self.test_fallback_regions is None:
+                    fallback_regions = get_region_list(creds)
+                else:
+                    fallback_regions = self.test_fallback_regions.copy()
+                if region in fallback_regions:
+                    fallback_regions.remove(region)
+
             img_proof_kwargs = {
                 'cloud': self.cloud,
                 'description': self.description,
                 'distro': self.distro,
-                'fallback_regions': self.test_fallback_regions,
+                'fallback_regions': fallback_regions,
                 'image_id': self.source_regions[region],
                 'instance_type': self.instance_type,
                 'img_proof_timeout': self.img_proof_timeout,
@@ -105,11 +116,6 @@ class GCETestingJob(MashJob):
                 'tests': self.tests
             }
 
-            self.send_log(
-                'Starting test in region: {0}.'.format(
-                    region
-                )
-            )
             process = create_testing_thread(results, img_proof_kwargs, region)
             jobs.append(process)
 

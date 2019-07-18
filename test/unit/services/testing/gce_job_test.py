@@ -21,6 +21,7 @@ class TestGCETestingJob(object):
                 }
             },
             'tests': ['test_stuff'],
+            'test_fallback_regions': [ 'us-west1' ],
             'utctime': 'now',
             'cleanup_images': True
         }

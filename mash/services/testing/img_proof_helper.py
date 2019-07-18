@@ -20,6 +20,7 @@ import logging
 import os
 import threading
 import traceback
+import random
 
 from img_proof.ipa_controller import test_image
 from img_proof.ipa_exceptions import IpaRetryableError
@@ -99,7 +100,8 @@ def img_proof_test(
         )
     except IpaRetryableError as error:
         if fallback_regions:
-            retry_region = fallback_regions.pop(0)
+            retry_region = random.choice(fallback_regions)
+            fallback_regions.remove(retry_region)
         else:
             status = FAILED
             results[name] = {
