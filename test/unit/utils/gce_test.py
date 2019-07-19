@@ -44,7 +44,19 @@ def test_get_region_list(mock_get_driver):
     driver = Mock()
     mock_get_driver.return_value = compute_engine
     compute_engine.return_value = driver
-    driver.ex_list_regions.return_value = []
+
+    class MockGCERegion:
+        def __init__(self, name, status, zones):
+            self.name = name
+            self.status = status
+            self.zones = zones
+
+    class MockGCEZone:
+        def __init__(self, name):
+            self.name = name
+
+    driver.ex_list_regions.return_value = \
+        [MockGCERegion('us-west1', 'UP', [MockGCEZone('us-west1-c')])]
 
     creds = {
         'client_email': 'fake@fake.com',
