@@ -24,6 +24,7 @@
   "distro": "sles",
   "instance_type": "n1-standard-1",
   "family": "sles-15",
+  "guest_os_features": ["UEFI_COMPATIBLE"],
   "months_to_deletion": 5,
   "tests": ["test_stuff"],
   "notification_email": "test@fake.com"

@@ -389,6 +389,12 @@ gce_job_message['properties']['months_to_deletion'] = {
 gce_job_message['properties']['testing_account'] = {
     '$ref': '#/definitions/non_empty_string'
 }
+gce_job_message['properties']['guest_os_features'] = {
+    'type': 'array',
+    'items': {'$ref': '#/definitions/non_empty_string'},
+    'uniqueItems': True,
+    'minItems': 1
+}
 gce_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {

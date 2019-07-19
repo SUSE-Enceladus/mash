@@ -34,6 +34,7 @@ class GCEJob(BaseJob):
         self.months_to_deletion = self.kwargs.get(
             'months_to_deletion', 6
         )
+        self.guest_os_features = self.kwargs.get('guest_os_features')
 
     def get_account_info(self):
         """
@@ -75,6 +76,7 @@ class GCEJob(BaseJob):
                 'bucket': bucket,
                 'family': self.family,
                 'testing_account': testing_account,
+                'guest_os_features': self.guest_os_features,
                 'is_publishing_account': is_publishing_account
             }
 
