@@ -65,4 +65,4 @@ def test_get_region_list(mock_get_driver):
 
     get_region_list(creds)
 
-    driver.ex_list_regions.assert_called_once()
+    driver.ex_list_regions.assert_called_once_with()
