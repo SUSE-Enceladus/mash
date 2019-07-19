@@ -64,6 +64,7 @@ def test_gce_job_publish_acnt():
             'image_description': 'image description',
             'distro': 'sles',
             'download_url': 'https://download.here',
-            'family': 'sles'
+            'family': 'sles',
+            'guest_os_features': ['UEFI_COMPATIBLE']
         }
     )

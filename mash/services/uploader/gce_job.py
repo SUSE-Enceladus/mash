@@ -116,6 +116,9 @@ class GCEUploaderJob(MashJob):
             if info['family']:
                 kwargs['family'] = info['family']
 
+            if info['guest_os_features']:
+                kwargs['guest_os_features'] = info['guest_os_features']
+
             compute_driver.ex_create_image(
                 self.cloud_image_name,
                 uri,

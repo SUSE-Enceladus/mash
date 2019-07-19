@@ -41,7 +41,8 @@ class TestGCEUploaderJob(object):
                 'us-west1-a': {
                     'account': 'test',
                     'bucket': 'images',
-                    'family': 'sles-12'
+                    'family': 'sles-12',
+                    'guest_os_features': ['UEFI_COMPATIBLE']
                 }
             },
             'cloud_image_name': 'sles-12-sp4-v20180909',
@@ -113,5 +114,6 @@ class TestGCEUploaderJob(object):
             'sles-12-sp4-v20180909.tar.gz',
             description='description 20180909',
             wait_for_completion=True,
-            family='sles-12'
+            family='sles-12',
+            guest_os_features=['UEFI_COMPATIBLE']
         )

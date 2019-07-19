@@ -486,12 +486,14 @@ class TestJobCreatorService(object):
                 assert info['account'] == 'test-gce2'
                 assert info['bucket'] == 'images'
                 assert info['family'] == 'sles-15'
+                assert info['guest_os_features'] == ['UEFI_COMPATIBLE']
                 assert info['testing_account'] is None
             else:
                 assert region == 'us-west1'
                 assert info['account'] == 'test-gce'
                 assert info['bucket'] == 'images'
                 assert info['family'] == 'sles-15'
+                assert info['guest_os_features'] == ['UEFI_COMPATIBLE']
                 assert info['testing_account'] is None
 
         # Testing Job Doc
