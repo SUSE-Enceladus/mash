@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+import random
 
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
@@ -37,3 +38,28 @@ def cleanup_gce_image(credentials, cloud_image_name):
             project=credentials['project_id']
         )
         compute_driver.ex_delete_image(cloud_image_name)
+
+
+def get_region_list(credentials):
+    """
+    Returns a list of regions (with random zone suffix) in status UP.
+
+    Use the provided credentials dict data for authentication.
+    """
+    ComputeEngine = get_driver(Provider.GCE)
+
+    with create_json_file(credentials) as auth_file:
+        compute_driver = ComputeEngine(
+            credentials['client_email'],
+            auth_file,
+            project=credentials['project_id']
+        )
+        regions = compute_driver.ex_list_regions()
+
+    region_names = []
+    for region in regions:
+        if region.status == 'UP':
+            # we actually need a specifc zone not just the region, pick one
+            region_names.append(random.choice(region.zones).name)
+
+    return region_names

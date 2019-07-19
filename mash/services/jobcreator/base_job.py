@@ -52,6 +52,9 @@ class BaseJob(object):
             )
 
         self.tests = kwargs.get('tests', [])
+        self.test_fallback_regions = kwargs.get('test_fallback_regions', [])
+        self.test_fallback = 'test_fallback_regions' not in kwargs and not self.test_fallback_regions
+
         self.conditions = kwargs.get('conditions')
         self.instance_type = kwargs.get('instance_type')
         self.old_cloud_image_name = kwargs.get('old_cloud_image_name')
@@ -207,7 +210,7 @@ class BaseJob(object):
             'testing_job': {
                 'cloud': self.cloud,
                 'tests': self.tests,
-                'test_regions': self.get_testing_regions()
+                'test_regions': self.get_testing_regions(),
             }
         }
 
@@ -221,6 +224,10 @@ class BaseJob(object):
         if self.last_service == 'testing' and \
                 self.cleanup_images in [True, None]:
             testing_message['testing_job']['cleanup_images'] = True
+
+        if self.test_fallback_regions or self.test_fallback is False:
+            testing_message['testing_job']['test_fallback_regions'] = \
+                self.test_fallback_regions
 
         testing_message['testing_job'].update(self.base_message)
 

@@ -23,7 +23,8 @@ class TestJobCreatorBaseJob(object):
                 'image_description': 'image description',
                 'distro': 'sles',
                 'download_url': 'https://download.here',
-                'cleanup_images': True
+                'cleanup_images': True,
+                'test_fallback_regions': []
             }
         )
 

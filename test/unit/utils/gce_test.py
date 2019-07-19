@@ -18,6 +18,7 @@
 
 from unittest.mock import Mock, patch
 from mash.utils.gce import cleanup_gce_image
+from mash.utils.gce import get_region_list
 
 
 @patch('mash.utils.gce.get_driver')
@@ -35,3 +36,33 @@ def test_get_client(mock_get_driver):
     cleanup_gce_image(creds, 'image_123')
 
     driver.ex_delete_image.assert_called_once_with('image_123')
+
+
+@patch('mash.utils.gce.get_driver')
+def test_get_region_list(mock_get_driver):
+    compute_engine = Mock()
+    driver = Mock()
+    mock_get_driver.return_value = compute_engine
+    compute_engine.return_value = driver
+
+    class MockGCERegion:
+        def __init__(self, name, status, zones):
+            self.name = name
+            self.status = status
+            self.zones = zones
+
+    class MockGCEZone:
+        def __init__(self, name):
+            self.name = name
+
+    driver.ex_list_regions.return_value = \
+        [MockGCERegion('us-west1', 'UP', [MockGCEZone('us-west1-c')])]
+
+    creds = {
+        'client_email': 'fake@fake.com',
+        'project_id': '123'
+    }
+
+    get_region_list(creds)
+
+    driver.ex_list_regions.assert_called_once_with()

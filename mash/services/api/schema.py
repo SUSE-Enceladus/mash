@@ -395,6 +395,11 @@ gce_job_message['properties']['guest_os_features'] = {
     'uniqueItems': True,
     'minItems': 1
 }
+gce_job_message['properties']['test_fallback_regions'] = {
+    'type': 'array',
+    'items': {'$ref': '#/definitions/non_empty_string'},
+    'minItems': 0
+}
 gce_job_message['definitions']['account'] = {
     'type': 'object',
     'properties': {

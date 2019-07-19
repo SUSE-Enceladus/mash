@@ -20,8 +20,10 @@ import logging
 import os
 import threading
 import traceback
+import random
 
 from img_proof.ipa_controller import test_image
+from img_proof.ipa_exceptions import IpaRetryableError
 from tempfile import NamedTemporaryFile
 
 from mash.csp import CSP
@@ -36,14 +38,16 @@ def img_proof_test(
     results, cloud=None, access_key_id=None, description=None, distro=None,
     image_id=None, instance_type=None, img_proof_timeout=None, region=None,
     secret_access_key=None, service_account_credentials=None,
-    ssh_private_key_file=None, ssh_user=None, tests=None
+    ssh_private_key_file=None, ssh_user=None, tests=None, fallback_regions=None
 ):
+    saved_args = locals()
     name = threading.current_thread().getName()
     service_account_file = None
     key_name = None
     subnet_id = None
     security_group_id = None
     result = {}
+    retry_region = None
 
     try:
         if cloud == CSP.ec2:
@@ -94,6 +98,15 @@ def img_proof_test(
             tests=tests,
             timeout=img_proof_timeout
         )
+    except IpaRetryableError as error:
+        if fallback_regions:
+            retry_region = random.choice(fallback_regions)
+            fallback_regions.remove(retry_region)
+        else:
+            status = FAILED
+            results[name] = {
+                'status': EXCEPTION, 'msg': str(error)
+            }
     except Exception:
         results[name] = {
             'status': EXCEPTION, 'msg': str(traceback.format_exc())
@@ -105,6 +118,10 @@ def img_proof_test(
             'results_file': result['info']['results_file']
         }
     finally:
+        if retry_region:
+            saved_args['region'] = retry_region
+            img_proof_test(**saved_args)
+            return
         try:
             if cloud == CSP.ec2:
                 client.delete_key_pair(KeyName=key_name)

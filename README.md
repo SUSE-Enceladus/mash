@@ -89,7 +89,7 @@ $ zypper in mash
 - python-dateutil>=2.6.0,<3.0.0
 - amqpstorm
 - ec2imgutils
-- img-proof>=4.0.0
+- img-proof>=4.2.0
 - lxml
 - requests
 
