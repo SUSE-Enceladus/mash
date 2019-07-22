@@ -1,3 +1,11 @@
+v3.2.0 (2019-07-22)
+===================
+
+- Testing service: retry test in fallback region
+  [\#489](https://github.com/SUSE-Enceladus/mash/pull/489)
+- Add guest os features option for gce.
+  [\#490](https://github.com/SUSE-Enceladus/mash/pull/490)
+
 v3.1.0 (2019-07-17)
 ===================
 
