@@ -29,6 +29,7 @@ from tempfile import NamedTemporaryFile
 from mash.csp import CSP
 from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
 from mash.utils.ec2 import get_client
+from mash.utils.ec2 import get_vpc_id_from_subnet
 from mash.utils.mash_utils import generate_name, get_key_from_file
 
 from ec2imgutils.ec2setup import EC2Setup
@@ -37,15 +38,14 @@ from ec2imgutils.ec2setup import EC2Setup
 def img_proof_test(
     results, cloud=None, access_key_id=None, description=None, distro=None,
     image_id=None, instance_type=None, img_proof_timeout=None, region=None,
-    secret_access_key=None, service_account_credentials=None,
-    ssh_private_key_file=None, ssh_user=None, tests=None, fallback_regions=None
+    secret_access_key=None, security_group_id=None,
+    service_account_credentials=None, ssh_private_key_file=None, ssh_user=None,
+    subnet_id=None, tests=None, fallback_regions=None
 ):
     saved_args = locals()
     name = threading.current_thread().getName()
     service_account_file = None
     key_name = None
-    subnet_id = None
-    security_group_id = None
     result = {}
     retry_region = None
 
@@ -60,9 +60,9 @@ def img_proof_test(
                 KeyName=key_name, PublicKeyMaterial=ssh_public_key
             )
 
-            # Create a temporary vpc, subnet and security group for the
-            # test instance. This provides a security group with an open
-            # ssh port.
+            # Create a temporary vpc, subnet (unless specified) and security
+            # group for the test instance. This provides a security group with
+            # an open ssh port.
             ec2_setup = EC2Setup(
                 access_key_id,
                 region,
@@ -70,8 +70,12 @@ def img_proof_test(
                 None,
                 False
             )
-            subnet_id = ec2_setup.create_vpc_subnet()
-            security_group_id = ec2_setup.create_security_group()
+            if not subnet_id:
+                subnet_id = ec2_setup.create_vpc_subnet()
+                security_group_id = ec2_setup.create_security_group()
+            else:
+                vpc_id = get_vpc_id_from_subnet(client, subnet_id)
+                security_group_id = ec2_setup.create_security_group(vpc_id=vpc_id)
         else:
             temp_file = NamedTemporaryFile(delete=False, mode='w+')
             temp_file.write(service_account_credentials)

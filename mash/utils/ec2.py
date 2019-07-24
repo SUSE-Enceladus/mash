@@ -29,3 +29,8 @@ def get_client(service_name, access_key_id, secret_access_key, region_name):
         aws_secret_access_key=secret_access_key,
         region_name=region_name,
     )
+
+
+def get_vpc_id_from_subnet(ec2_client, subnet_id):
+    response = ec2_client.describe_subnets(SubnetIds=[subnet_id])
+    return response['Subnets'][0]['VpcId']

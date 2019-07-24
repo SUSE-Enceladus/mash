@@ -35,18 +35,20 @@ class TestEC2TestingJob(object):
     @patch('mash.services.testing.img_proof_helper.generate_name')
     @patch('mash.services.testing.img_proof_helper.get_client')
     @patch('mash.services.testing.img_proof_helper.get_key_from_file')
+    @patch('mash.services.testing.img_proof_helper.get_vpc_id_from_subnet')
     @patch('mash.services.testing.img_proof_helper.test_image')
     @patch.object(EC2TestingJob, 'send_log')
     def test_testing_run_test(
-        self, mock_send_log, mock_test_image, mock_get_key_from_file,
-        mock_get_client, mock_generate_name, mock_ec2_setup, mock_random,
-        mock_create_ssh_key_pair, mock_os
+        self, mock_send_log, mock_test_image, mock_get_vpc_id_from_subnet,
+        mock_get_key_from_file, mock_get_client, mock_generate_name,
+        mock_ec2_setup, mock_random, mock_create_ssh_key_pair, mock_os
     ):
         client = Mock()
         mock_get_client.return_value = client
         mock_generate_name.return_value = 'random_name'
         mock_get_key_from_file.return_value = 'fakekey'
         mock_random.choice.return_value = 't2.micro'
+        mock_get_vpc_id_from_subnet.return_value = 'vpc-123456789'
 
         ec2_setup = Mock()
         ec2_setup.create_vpc_subnet.return_value = 'subnet-123456789'
@@ -117,3 +119,7 @@ class TestEC2TestingJob(object):
         # Failed key cleanup
         client.delete_key_pair.side_effect = Exception('Cannot delete key!')
         job.run_job()
+
+    def test_testing_run_test_subnet(self):
+        self.job_config['test_regions']['us-east-1']['subnet'] = 'subnet-123456789'
+        self.test_testing_run_test()

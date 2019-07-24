@@ -65,6 +65,9 @@ class EC2Job(BaseJob):
             target_region = self.cloud_accounts[account].get('region') or \
                 info.get('region')
 
+            subnet = self.cloud_accounts[account].get('subnet') or \
+                info.get('subnet')
+
             # Add additional regions for account
             additional_regions = info.get('additional_regions')
 
@@ -87,7 +90,8 @@ class EC2Job(BaseJob):
             self.target_account_info[target_region] = {
                 'account': account,
                 'target_regions': target_regions,
-                'helper_image': helper_image
+                'helper_image': helper_image,
+                'subnet': subnet
             }
 
     def _get_regions_for_partition(self, partition):
@@ -192,7 +196,8 @@ class EC2Job(BaseJob):
 
         for source_region, value in self.target_account_info.items():
             test_regions[source_region] = {
-                'account': value['account']
+                'account': value['account'],
+                'subnet': value['subnet']
             }
 
         return test_regions
@@ -208,7 +213,8 @@ class EC2Job(BaseJob):
                 'account': value['account'],
                 'helper_image': value['helper_image'],
                 'billing_codes': self.billing_codes,
-                'use_root_swap': self.use_root_swap
+                'use_root_swap': self.use_root_swap,
+                'subnet': value['subnet']
             }
 
         return target_regions

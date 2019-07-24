@@ -33,7 +33,8 @@ class TestAmazonUploaderJob(object):
                     'account': 'test',
                     'helper_image': 'ami-bc5b48d0',
                     'billing_codes': None,
-                    'use_root_swap': False
+                    'use_root_swap': False,
+                    'subnet': 'subnet-123456789'
                 }
             },
             'cloud_image_name': 'name',
@@ -62,6 +63,7 @@ class TestAmazonUploaderJob(object):
         with raises(MashUploadException):
             EC2UploaderJob(job_doc, self.config)
 
+    @patch('mash.services.uploader.ec2_job.get_vpc_id_from_subnet')
     @patch('mash.services.uploader.ec2_job.EC2Setup')
     @patch('mash.services.uploader.ec2_job.get_client')
     @patch('mash.services.uploader.ec2_job.generate_name')
@@ -70,7 +72,8 @@ class TestAmazonUploaderJob(object):
     @patch_open
     def test_upload(
         self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
-        mock_generate_name, mock_get_client, mock_ec2_setup
+        mock_generate_name, mock_get_client, mock_ec2_setup,
+        mock_get_vpc_id_from_subnet
     ):
         open_context = context_manager()
         mock_open.return_value = open_context.context_manager_mock
@@ -98,6 +101,8 @@ class TestAmazonUploaderJob(object):
         ec2_setup.create_vpc_subnet.return_value = 'subnet-123456789'
         ec2_setup.create_security_group.return_value = 'sg-123456789'
         mock_ec2_setup.return_value = ec2_setup
+
+        mock_get_vpc_id_from_subnet.return_value = 'vpc-123456789'
 
         self.job.run_job()
         mock_get_client.assert_called_once_with(

@@ -104,6 +104,10 @@ class EC2TestingJob(MashJob):
                 'ssh_user': self.ssh_user,
                 'tests': self.tests
             }
+            subnet_id = info.get('subnet')
+            if subnet_id:
+                img_proof_kwargs['subnet_id'] = subnet_id
+                img_proof_kwargs['security_group_id'] = info.get('security_groups')
 
             process = create_testing_thread(results, img_proof_kwargs, region)
             jobs.append(process)
