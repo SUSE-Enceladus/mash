@@ -6,7 +6,14 @@ from amqpstorm import Connection
 from flask import Flask, jsonify, request, make_response
 from jsonschema import validate
 
-from mash.services.api import schema
+from mash.services.api.schema.accounts import delete_account
+from mash.services.api.schema.accounts.ec2 import add_account_ec2
+from mash.services.api.schema.accounts.gce import add_account_gce
+from mash.services.api.schema.accounts.azure import add_account_azure
+from mash.services.api.schema.jobs.ec2 import ec2_job_message
+from mash.services.api.schema.jobs.gce import gce_job_message
+from mash.services.api.schema.jobs.azure import azure_job_message
+
 from mash.services.base_config import BaseConfig
 
 app = Flask(__name__, static_url_path='/static')
@@ -22,19 +29,19 @@ amqp_pass = None
 
 schemas = {
     'add_account': {
-        'azure': schema.add_account_azure,
-        'ec2': schema.add_account_ec2,
-        'gce': schema.add_account_gce
+        'azure': add_account_azure,
+        'ec2': add_account_ec2,
+        'gce': add_account_gce
     },
     'delete_account': {
-        'azure': schema.delete_account,
-        'ec2': schema.delete_account,
-        'gce': schema.delete_account
+        'azure': delete_account,
+        'ec2': delete_account,
+        'gce': delete_account
     },
     'add_job': {
-        'azure': schema.azure_job_message,
-        'ec2': schema.ec2_job_message,
-        'gce': schema.gce_job_message
+        'azure': azure_job_message,
+        'ec2': ec2_job_message,
+        'gce': gce_job_message
     }
 }
 
