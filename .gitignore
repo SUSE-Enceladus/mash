@@ -24,3 +24,6 @@ Session.vim
 
 ### pycharm ###
 .idea/
+
+### sqlite ###
+*.db
