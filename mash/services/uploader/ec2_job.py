@@ -25,6 +25,7 @@ from ec2imgutils.ec2setup import EC2Setup
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.ec2 import get_client
+from mash.utils.ec2 import get_vpc_id_from_subnet
 from mash.utils.mash_utils import format_string_with_date, generate_name
 from mash.services.status_levels import SUCCESS
 
@@ -136,8 +137,8 @@ class EC2UploaderJob(MashJob):
                     ssh_key_pair.private_key_file.name
 
                 # Create a temporary vpc, subnet and security group for the
-                # helper image. This provides a security group with an open
-                # ssh port.
+                # helper image, unless a subnet was specificed.
+                # This provides a security group with an open ssh port.
                 ec2_setup = EC2Setup(
                     credentials['access_key_id'],
                     region,
@@ -145,10 +146,16 @@ class EC2UploaderJob(MashJob):
                     None,
                     False
                 )
-                vpc_subnet_id = ec2_setup.create_vpc_subnet()
-                security_group_id = ec2_setup.create_security_group()
 
-                self.ec2_upload_parameters['vpc_subnet_id'] = vpc_subnet_id
+                subnet_id = info.get('subnet')
+                if subnet_id:
+                    vpc_id = get_vpc_id_from_subnet(ec2_client, subnet_id)
+                    security_group_id = ec2_setup.create_security_group(vpc_id=vpc_id)
+                else:
+                    subnet_id = ec2_setup.create_vpc_subnet()
+                    security_group_id = ec2_setup.create_security_group()
+
+                self.ec2_upload_parameters['vpc_subnet_id'] = subnet_id
                 self.ec2_upload_parameters['security_group_ids'] = \
                     security_group_id
 

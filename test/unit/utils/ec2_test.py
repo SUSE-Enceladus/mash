@@ -18,6 +18,7 @@
 
 from unittest.mock import Mock, patch
 from mash.utils.ec2 import get_client
+from mash.utils.ec2 import get_vpc_id_from_subnet
 
 
 @patch('mash.utils.ec2.boto3')
@@ -34,3 +35,10 @@ def test_get_client(mock_boto3):
         aws_secret_access_key='abc123',
         region_name='us-east-1',
     )
+
+
+def test_get_vpc_id_from_subnet():
+    client = Mock()
+    client.describe_subnets.return_value = {'Subnets': [{'VpcId': 'vpc-123456789'}]}
+    assert get_vpc_id_from_subnet(client, 'subnet-123456789') == 'vpc-123456789'
+    client.describe_subnets.assert_called_once_with(SubnetIds=['subnet-123456789'])

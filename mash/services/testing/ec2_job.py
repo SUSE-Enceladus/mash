@@ -102,6 +102,7 @@ class EC2TestingJob(MashJob):
                 'secret_access_key': creds['secret_access_key'],
                 'ssh_private_key_file': self.ssh_private_key_file,
                 'ssh_user': self.ssh_user,
+                'subnet_id': info.get('subnet'),
                 'tests': self.tests
             }
 
