@@ -147,21 +147,17 @@ class EC2UploaderJob(MashJob):
                     False
                 )
 
-                subnet = info.get('subnet')
-                if subnet:
-                    vpc_id = get_vpc_id_from_subnet(ec2_client, subnet)
+                subnet_id = info.get('subnet')
+                if subnet_id:
+                    vpc_id = get_vpc_id_from_subnet(ec2_client, subnet_id)
                     security_group_id = ec2_setup.create_security_group(vpc_id=vpc_id)
-
-                    self.ec2_upload_parameters['vpc_subnet_id'] = subnet
-                    self.ec2_upload_parameters['security_group_ids'] = \
-                        security_group_id
                 else:
-                    vpc_subnet_id = ec2_setup.create_vpc_subnet()
+                    subnet_id = ec2_setup.create_vpc_subnet()
                     security_group_id = ec2_setup.create_security_group()
 
-                    self.ec2_upload_parameters['vpc_subnet_id'] = vpc_subnet_id
-                    self.ec2_upload_parameters['security_group_ids'] = \
-                        security_group_id
+                self.ec2_upload_parameters['vpc_subnet_id'] = subnet_id
+                self.ec2_upload_parameters['security_group_ids'] = \
+                    security_group_id
 
                 ec2_upload = EC2ImageUploader(
                     **self.ec2_upload_parameters

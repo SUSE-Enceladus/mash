@@ -38,12 +38,13 @@ from ec2imgutils.ec2setup import EC2Setup
 def img_proof_test(
     results, cloud=None, access_key_id=None, description=None, distro=None,
     image_id=None, instance_type=None, img_proof_timeout=None, region=None,
-    secret_access_key=None, security_group_id=None,
-    service_account_credentials=None, ssh_private_key_file=None, ssh_user=None,
-    subnet_id=None, tests=None, fallback_regions=None
+    secret_access_key=None, service_account_credentials=None,
+    ssh_private_key_file=None, ssh_user=None, subnet_id=None, tests=None,
+    fallback_regions=None
 ):
     saved_args = locals()
     name = threading.current_thread().getName()
+    security_group_id = None
     service_account_file = None
     key_name = None
     result = {}
