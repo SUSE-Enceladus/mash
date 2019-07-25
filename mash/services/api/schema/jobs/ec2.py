@@ -34,7 +34,8 @@ ec2_job_account = {
     'properties': {
         'name': string_with_example('account1'),
         'region': string_with_example('us-east-1'),
-        'root_swap_ami': string_with_example('ami-1234567890')
+        'root_swap_ami': string_with_example('ami-1234567890'),
+        'subnet': string_with_example('subnet-12345678')
     },
     'additionalProperties': False,
     'required': ['name']
