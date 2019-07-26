@@ -80,7 +80,12 @@ class EC2TestingJob(MashJob):
         jobs = []
 
         self.status = SUCCESS
-        self.send_log('Running img-proof tests against image.')
+        self.send_log(
+            'Running img-proof tests against image with '
+            'type: {inst_type}.'.format(
+                inst_type=self.instance_type
+            )
+        )
 
         for region, info in self.test_regions.items():
             account = get_testing_account(info)
