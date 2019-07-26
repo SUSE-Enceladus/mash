@@ -30,14 +30,10 @@ from mash.services.testing.utils import (
 from mash.utils.mash_utils import create_ssh_key_pair
 
 instance_types = [
-    'c5d.large',
-    'd2.xlarge',
+    'c5.large',
     'i3.8xlarge',
-    'i3.metal',
+    'i3.large',
     'm5.large',
-    'm5d.large',
-    'r5.24xlarge',
-    't2.micro',
     't3.small'
 ]
 
