@@ -30,14 +30,10 @@ from mash.services.testing.utils import (
 from mash.utils.mash_utils import create_ssh_key_pair
 
 instance_types = [
-    'c5d.large',
-    'd2.xlarge',
+    'c5.large',
     'i3.8xlarge',
-    'i3.metal',
+    'i3.large',
     'm5.large',
-    'm5d.large',
-    'r5.24xlarge',
-    't2.micro',
     't3.small'
 ]
 
@@ -84,7 +80,12 @@ class EC2TestingJob(MashJob):
         jobs = []
 
         self.status = SUCCESS
-        self.send_log('Running img-proof tests against image.')
+        self.send_log(
+            'Running img-proof tests against image with '
+            'type: {inst_type}.'.format(
+                inst_type=self.instance_type
+            )
+        )
 
         for region, info in self.test_regions.items():
             account = get_testing_account(info)
