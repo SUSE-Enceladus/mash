@@ -1,3 +1,21 @@
+v3.3.0 (2019-07-26)
+===================
+
+- Add .db sqlite extension to gitignore.
+  [\#491](https://github.com/SUSE-Enceladus/mash/pull/491)
+- Split up API schema.
+  [\#492](https://github.com/SUSE-Enceladus/mash/pull/492)
+- Fix version creep in spec.
+  [\#494](https://github.com/SUSE-Enceladus/mash/pull/494)
+- Add search/replace strings for spec version.
+  [\#495](https://github.com/SUSE-Enceladus/mash/pull/495)
+- Configurable subnet in EC2
+  [\#496](https://github.com/SUSE-Enceladus/mash/pull/496)
+- Add subnet option to accounts in ec2 job doc.
+  [\#497](https://github.com/SUSE-Enceladus/mash/pull/497)
+- Remove any instance types that are not everywhere.
+  [\#498](https://github.com/SUSE-Enceladus/mash/pull/498)
+
 v3.2.0 (2019-07-22)
 ===================
 
