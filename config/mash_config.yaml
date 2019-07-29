@@ -40,6 +40,7 @@ cloud:
         - eu-west-1
         - eu-west-2
         - eu-west-3
+        - me-south-1
         - sa-east-1
         - us-east-1
         - us-east-2
@@ -66,6 +67,7 @@ cloud:
       eu-west-1: ami-bff32ccc
       eu-west-2: ami-2a676d4
       eu-west-3: ami-7bc17406
+      me-south-1: ami-021eb13384ade48e3
       sa-east-1: ami-6817af04
       us-east-1: ami-4b814f22
       us-east-2: ami-71ca9114
