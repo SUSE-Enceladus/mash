@@ -71,6 +71,7 @@ class GCEAccount(Resource):
         Delete GCE account matching name for requesting user.
         """
         data = json.loads(request.data.decode())
+        data['account_name'] = name
         data['cloud'] = 'gce'
 
         publish(

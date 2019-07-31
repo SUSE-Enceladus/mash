@@ -200,6 +200,7 @@ def test_api_delete_account_ec2(mock_connection, mock_config, test_client):
     )
 
     data['cloud'] = 'ec2'
+    data['account_name'] = 'test'
     channel.basic.publish.assert_called_once_with(
         body=json.dumps(data, sort_keys=True),
         routing_key='delete_account',
@@ -238,6 +239,7 @@ def test_api_delete_account_gce(mock_connection, mock_config, test_client):
     )
 
     data['cloud'] = 'gce'
+    data['account_name'] = 'test'
     channel.basic.publish.assert_called_once_with(
         body=json.dumps(data, sort_keys=True),
         routing_key='delete_account',
@@ -276,6 +278,7 @@ def test_api_delete_account_azure(mock_connection, mock_config, test_client):
     )
 
     data['cloud'] = 'azure'
+    data['account_name'] = 'test'
     channel.basic.publish.assert_called_once_with(
         body=json.dumps(data, sort_keys=True),
         routing_key='delete_account',

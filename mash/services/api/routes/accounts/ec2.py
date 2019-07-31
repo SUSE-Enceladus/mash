@@ -71,6 +71,7 @@ class EC2Account(Resource):
         Delete EC2 account matching name for requesting user.
         """
         data = json.loads(request.data.decode())
+        data['account_name'] = name
         data['cloud'] = 'ec2'
 
         publish(
