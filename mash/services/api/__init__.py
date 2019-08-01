@@ -16,9 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import json
-
-from flask import Flask, render_template
+from flask import Flask
 from flask_restplus import Api
 
 from mash.services.api.routes.accounts import api as accounts_api
@@ -51,9 +49,3 @@ api.add_namespace(jobs_api, path='/jobs')
 api.add_namespace(ec2_jobs_api, path='/jobs/ec2')
 api.add_namespace(gce_jobs_api, path='/jobs/gce')
 api.add_namespace(azure_jobs_api, path='/jobs/azure')
-
-
-@app.route('/api/docs', methods=('GET', 'POST'))
-def api_doc():
-    api_spec = json.dumps(api.__schema__)
-    return render_template('api_doc.html', api_spec=api_spec)
