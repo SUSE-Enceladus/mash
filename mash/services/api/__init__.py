@@ -35,7 +35,7 @@ api = Api(
     version='3.3.0',
     title='MASH API',
     description='MASH provides a set of endpoints for Image Release '
-                'automation into the Public Cloud Frameworks.',
+                'automation into Public Cloud Frameworks.',
     validate=True,
     doc=False
 )
