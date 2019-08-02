@@ -24,12 +24,14 @@ from mash.utils.ec2 import get_vpc_id_from_subnet
 @patch('mash.utils.ec2.boto3')
 def test_get_client(mock_boto3):
     client = Mock()
+    session = Mock()
+    session.client.return_value = client
+    mock_boto3.session.Session.return_value = session
 
-    mock_boto3.client.return_value = client
     result = get_client('ec2', '123456', 'abc123', 'us-east-1')
 
     assert client == result
-    mock_boto3.client.assert_called_once_with(
+    session.client.assert_called_once_with(
         service_name='ec2',
         aws_access_key_id='123456',
         aws_secret_access_key='abc123',
