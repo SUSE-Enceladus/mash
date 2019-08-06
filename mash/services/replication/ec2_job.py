@@ -24,7 +24,7 @@ from collections import defaultdict
 from mash.mash_exceptions import MashReplicationException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
-from mash.utils.ec2 import get_client
+from mash.utils.ec2 import get_client, describe_images
 
 
 class EC2ReplicationJob(MashJob):
@@ -151,10 +151,7 @@ class EC2ReplicationJob(MashJob):
             )
 
             try:
-                images = client.describe_images(
-                    Owners=['self'],
-                    ImageIds=[image_id]
-                )['Images']
+                images = describe_images(client, [image_id])
                 state = images[0]['State']
             except (IndexError, KeyError, ClientError):
                 raise MashReplicationException(
@@ -179,7 +176,7 @@ class EC2ReplicationJob(MashJob):
         """
         Determine if image exists given image name.
         """
-        images = client.describe_images(Owners=['self'])['Images']
+        images = describe_images(client)
         for image in images:
             if cloud_image_name == image.get('Name'):
                 return True
