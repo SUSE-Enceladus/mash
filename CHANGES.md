@@ -1,3 +1,19 @@
+v3.4.0 (2019-08-06)
+===================
+
+- Add new AWS region me-south-1.
+  [\#499](https://github.com/SUSE-Enceladus/mash/pull/499)
+- Get new session for each boto3 client.
+  [\#502](https://github.com/SUSE-Enceladus/mash/pull/502)
+- Check ec2 image status in waiter. Instead of using waiter from boto3.
+  [\#505](https://github.com/SUSE-Enceladus/mash/pull/505)
+- Add copyright notice to api/routes init module.
+  [\#508](https://github.com/SUSE-Enceladus/mash/pull/508)
+- Use flask-restplus to serve class based api views.
+- Split up job add endpoints by cloud framework.
+- Split account delete endpoints by cloud framework.
+- Serve api specification json to api/spec.
+
 v3.3.0 (2019-07-26)
 ===================
 
