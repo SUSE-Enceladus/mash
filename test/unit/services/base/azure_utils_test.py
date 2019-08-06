@@ -8,7 +8,7 @@ from multiprocessing import SimpleQueue
 
 from azure.mgmt.storage import StorageManagementClient
 from mash.mash_exceptions import MashAzureUtilsException
-from mash.services.azure_utils import (
+from mash.utils.azure import (
     acquire_access_token,
     delete_image,
     delete_page_blob,
@@ -29,7 +29,7 @@ from mash.services.azure_utils import (
 )
 
 
-@patch('mash.services.azure_utils.adal')
+@patch('mash.utils.azure.adal')
 def test_acquire_access_token(mock_adal):
     context = MagicMock()
     context.acquire_token_with_client_credentials.return_value = {
@@ -53,7 +53,7 @@ def test_acquire_access_token(mock_adal):
     )
 
 
-@patch('mash.services.azure_utils.adal')
+@patch('mash.utils.azure.adal')
 def test_acquire_access_token_cloud_partner(mock_adal):
     context = MagicMock()
     context.acquire_token_with_client_credentials.return_value = {
@@ -77,8 +77,8 @@ def test_acquire_access_token_cloud_partner(mock_adal):
     )
 
 
-@patch('mash.services.azure_utils.acquire_access_token')
-@patch('mash.services.azure_utils.requests')
+@patch('mash.utils.azure.acquire_access_token')
+@patch('mash.utils.azure.requests')
 def test_get_classic_storage_account_keys(
     mock_requests, mock_acquire_access_token
 ):
@@ -113,8 +113,8 @@ def test_get_blob_url():
     )
 
 
-@patch('mash.services.azure_utils.get_client_from_auth_file')
-@patch('mash.services.azure_utils.PageBlobService')
+@patch('mash.utils.azure.get_client_from_auth_file')
+@patch('mash.utils.azure.PageBlobService')
 def test_get_page_blob_service(
     mock_page_blob_service, mock_get_client_from_auth
 ):
@@ -145,8 +145,8 @@ def test_get_page_blob_service(
     )
 
 
-@patch('mash.services.azure_utils.get_classic_storage_account_keys')
-@patch('mash.services.azure_utils.PageBlobService')
+@patch('mash.utils.azure.get_classic_storage_account_keys')
+@patch('mash.utils.azure.PageBlobService')
 def test_get_classic_page_blob_service(
     mock_page_blob_service, mock_get_classic_storage_account_keys
 ):
@@ -166,10 +166,10 @@ def test_get_classic_page_blob_service(
     )
 
 
-@patch('mash.services.azure_utils.get_blob_url')
-@patch('mash.services.azure_utils.get_page_blob_service')
-@patch('mash.services.azure_utils.get_classic_page_blob_service')
-@patch('mash.services.azure_utils.time.sleep')
+@patch('mash.utils.azure.get_blob_url')
+@patch('mash.utils.azure.get_page_blob_service')
+@patch('mash.utils.azure.get_classic_page_blob_service')
+@patch('mash.utils.azure.time.sleep')
 def test_copy_blob_to_classic_storage(
     mock_time, mock_get_classic_page_blob_service,
     mock_get_page_blob_service, mock_get_blob_url
@@ -199,9 +199,9 @@ def test_copy_blob_to_classic_storage(
     )
 
 
-@patch('mash.services.azure_utils.get_blob_url')
-@patch('mash.services.azure_utils.get_page_blob_service')
-@patch('mash.services.azure_utils.get_classic_page_blob_service')
+@patch('mash.utils.azure.get_blob_url')
+@patch('mash.utils.azure.get_page_blob_service')
+@patch('mash.utils.azure.get_classic_page_blob_service')
 def test_copy_blob_to_classic_storage_failed(
     mock_get_classic_page_blob_service, mock_get_page_blob_service,
     mock_get_blob_url
@@ -224,7 +224,7 @@ def test_copy_blob_to_classic_storage_failed(
     assert str(error.value) == 'Azure blob copy failed.'
 
 
-@patch('mash.services.azure_utils.get_page_blob_service')
+@patch('mash.utils.azure.get_page_blob_service')
 def test_delete_page_blob(mock_get_page_blob_service):
     page_blob_service = MagicMock()
     mock_get_page_blob_service.return_value = page_blob_service
@@ -239,7 +239,7 @@ def test_delete_page_blob(mock_get_page_blob_service):
     )
 
 
-@patch('mash.services.azure_utils.get_client_from_auth_file')
+@patch('mash.utils.azure.get_client_from_auth_file')
 def test_delete_image(mock_get_client):
     compute_client = MagicMock()
     async_wait = MagicMock()
@@ -255,8 +255,8 @@ def test_delete_image(mock_get_client):
     async_wait.wait.assert_called_once_with()
 
 
-@patch('mash.services.azure_utils.requests')
-@patch('mash.services.azure_utils.acquire_access_token')
+@patch('mash.utils.azure.requests')
+@patch('mash.utils.azure.acquire_access_token')
 def test_go_live_with_cloud_partner_offer(
     mock_acquire_access_token, mock_requests
 ):
@@ -277,8 +277,8 @@ def test_go_live_with_cloud_partner_offer(
     assert response == '/api/endpoint/url'
 
 
-@patch('mash.services.azure_utils.requests')
-@patch('mash.services.azure_utils.acquire_access_token')
+@patch('mash.utils.azure.requests')
+@patch('mash.utils.azure.acquire_access_token')
 def test_publish_cloud_partner_offer(
     mock_acquire_access_token, mock_requests
 ):
@@ -315,8 +315,8 @@ def test_log_operation_response_status():
     )
 
 
-@patch('mash.services.azure_utils.requests')
-@patch('mash.services.azure_utils.acquire_access_token')
+@patch('mash.utils.azure.requests')
+@patch('mash.utils.azure.acquire_access_token')
 def test_put_cloud_partner_offer_doc(
     mock_acquire_access_token, mock_requests
 ):
@@ -339,8 +339,8 @@ def test_put_cloud_partner_offer_doc(
     assert response['response'] == 'doc'
 
 
-@patch('mash.services.azure_utils.acquire_access_token')
-@patch('mash.services.azure_utils.requests')
+@patch('mash.utils.azure.acquire_access_token')
+@patch('mash.utils.azure.requests')
 def test_request_cloud_partner_offer_doc(
     mock_requests, mock_acquire_access_token
 ):
@@ -415,10 +415,10 @@ def test_update_cloud_partner_offer_doc_existing_date():
     assert label == 'New Image 123'
 
 
-@patch('mash.services.azure_utils.log_operation_response_status')
-@patch('mash.services.azure_utils.time')
-@patch('mash.services.azure_utils.acquire_access_token')
-@patch('mash.services.azure_utils.requests')
+@patch('mash.utils.azure.log_operation_response_status')
+@patch('mash.utils.azure.time')
+@patch('mash.utils.azure.acquire_access_token')
+@patch('mash.utils.azure.requests')
 def test_wait_on_cloud_partner_operation(
     mock_requests, mock_acquire_access_token, mock_time,
     mock_log_operation
@@ -440,9 +440,9 @@ def test_wait_on_cloud_partner_operation(
     )
 
 
-@patch('mash.services.azure_utils.time')
-@patch('mash.services.azure_utils.acquire_access_token')
-@patch('mash.services.azure_utils.requests')
+@patch('mash.utils.azure.time')
+@patch('mash.utils.azure.acquire_access_token')
+@patch('mash.utils.azure.requests')
 def test_wait_on_cloud_partner_operation_failed(
     mock_requests, mock_acquire_access_token, mock_time
 ):
@@ -546,11 +546,11 @@ def test_deprecate_image_in_offer_invalid():
 
 
 @patch('builtins.open')
-@patch('mash.services.azure_utils.create_json_file')
-@patch('mash.services.azure_utils.get_client_from_auth_file')
-@patch('mash.services.azure_utils.PageBlobService')
-@patch('mash.services.azure_utils.FileType')
-@patch('mash.services.azure_utils.lzma')
+@patch('mash.utils.azure.create_json_file')
+@patch('mash.utils.azure.get_client_from_auth_file')
+@patch('mash.utils.azure.PageBlobService')
+@patch('mash.utils.azure.FileType')
+@patch('mash.utils.azure.lzma')
 def test_upload_azure_image(
     mock_lzma,
     mock_FileType,
