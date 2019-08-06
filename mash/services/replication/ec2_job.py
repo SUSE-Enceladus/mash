@@ -134,7 +134,8 @@ class EC2ReplicationJob(MashJob):
 
         return new_image['ImageId']
 
-    def _wait_on_image(self, credential, image_id, region):
+    @staticmethod
+    def _wait_on_image(credential, image_id, region):
         """
         Wait on image to finish replicating in the given region.
         """
@@ -168,7 +169,8 @@ class EC2ReplicationJob(MashJob):
             elif state == 'pending':
                 time.sleep(60)
 
-    def image_exists(self, client, cloud_image_name):
+    @staticmethod
+    def image_exists(client, cloud_image_name):
         """
         Determine if image exists given image name.
         """
