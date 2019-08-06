@@ -34,7 +34,7 @@ from mash.services.api.routes.jobs.azure import api as azure_jobs_api
 app = Flask(__name__, static_url_path='/static')
 api = Api(
     app,
-    version='3.3.0',
+    version='3.4.0',
     title='MASH API',
     description='MASH provides a set of endpoints for Image Release '
                 'automation into Public Cloud Frameworks.',
