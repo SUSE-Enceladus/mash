@@ -35,3 +35,18 @@ def get_client(service_name, access_key_id, secret_access_key, region_name):
 def get_vpc_id_from_subnet(ec2_client, subnet_id):
     response = ec2_client.describe_subnets(SubnetIds=[subnet_id])
     return response['Subnets'][0]['VpcId']
+
+
+def describe_images(client, image_ids=None):
+    """
+    Return a list of custom images using provided client.
+
+    If image_ids list is provided use it to filter the results.
+    """
+    kwargs = {'Owners': ['self']}
+
+    if image_ids:
+        kwargs['ImageIds'] = image_ids
+
+    images = client.describe_images(**kwargs)['Images']
+    return images

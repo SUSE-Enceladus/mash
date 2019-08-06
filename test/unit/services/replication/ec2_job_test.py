@@ -1,5 +1,5 @@
 from pytest import raises
-from unittest.mock import Mock, patch
+from unittest.mock import call, Mock, patch
 
 from mash.mash_exceptions import MashReplicationException
 from mash.services.status_levels import FAILED
@@ -47,22 +47,30 @@ class TestEC2ReplicationJob(object):
         mock_wait_on_image, mock_time
     ):
         mock_replicate_to_region.return_value = 'ami-54321'
+        mock_wait_on_image.side_effect = Exception('Broken!')
 
         self.job.source_regions = {'us-east-1': 'ami-12345'}
         self.job.run_job()
 
-        mock_send_log.assert_called_once_with(
-            'Replicating source region: us-east-1 to the following regions: '
-            'us-east-2.'
-        )
+        mock_send_log.assert_has_calls([
+            call(
+                'Replicating source region: us-east-1 to the following '
+                'regions: us-east-2.'
+            ),
+            call('Replication to us-east-2 region failed: Broken!')
+        ])
 
         mock_replicate_to_region.assert_called_once_with(
             self.job.credentials['test-aws'], 'ami-12345',
             'us-east-1', 'us-east-2'
         )
         mock_wait_on_image.assert_called_once_with(
-            self.job.credentials['test-aws'], 'ami-54321', 'us-east-2'
+            self.job.credentials['test-aws']['access_key_id'],
+            self.job.credentials['test-aws']['secret_access_key'],
+            'ami-54321',
+            'us-east-2'
         )
+        assert self.job.status == FAILED
 
     @patch.object(EC2ReplicationJob, 'image_exists')
     @patch('mash.services.replication.ec2_job.get_client')
@@ -133,42 +141,55 @@ class TestEC2ReplicationJob(object):
     @patch('mash.services.replication.ec2_job.get_client')
     def test_replicate_wait_on_image(self, mock_get_client):
         client = Mock()
-        waiter = Mock()
-        client.get_waiter.return_value = waiter
+        client.describe_images.return_value = {
+            'Images': [{'State': 'available'}]
+        }
         mock_get_client.return_value = client
 
         self.job._wait_on_image(
-            self.job.credentials['test-aws'], 'ami-54321', 'us-east-2'
+            self.job.credentials['test-aws']['access_key_id'],
+            self.job.credentials['test-aws']['secret_access_key'],
+            'ami-54321',
+            'us-east-2'
         )
 
         mock_get_client.assert_called_once_with(
             'ec2', '123456', '654321', 'us-east-2'
         )
-        client.get_waiter.assert_called_once_with('image_available')
-        waiter.wait.assert_called_once_with(
-            ImageIds=['ami-54321'],
-            Filters=[{'Name': 'state', 'Values': ['available']}]
+        client.describe_images.assert_called_once_with(
+            Owners=['self'],
+            ImageIds=['ami-54321']
         )
 
+    @patch('mash.services.replication.ec2_job.time')
     @patch.object(EC2ReplicationJob, 'send_log')
     @patch('mash.services.replication.ec2_job.get_client')
     def test_replicate_wait_on_image_exception(
-        self, mock_get_client, mock_send_log
+        self, mock_get_client, mock_send_log, mock_sleep
     ):
         client = Mock()
-        client.get_waiter.side_effect = Exception('Error copying image!')
+        client.describe_images.side_effect = [
+            KeyError('Images'),
+            {'Images': [{'State': 'pending'}]},
+            {'Images': [{'State': 'failed'}]}
+        ]
         mock_get_client.return_value = client
 
-        self.job._wait_on_image(
-            self.job.credentials['test-aws'], 'awi-54321', 'us-east-2'
-        )
+        with raises(MashReplicationException):
+            self.job._wait_on_image(
+                self.job.credentials['test-aws']['access_key_id'],
+                self.job.credentials['test-aws']['secret_access_key'],
+                'ami-54321',
+                'us-east-2'
+            )
 
-        mock_send_log.assert_called_once_with(
-            'There was an error replicating image to us-east-2. '
-            'Error copying image!',
-            False
-        )
-        assert self.job.status == FAILED
+        with raises(MashReplicationException):
+            self.job._wait_on_image(
+                self.job.credentials['test-aws']['access_key_id'],
+                self.job.credentials['test-aws']['secret_access_key'],
+                'ami-54321',
+                'us-east-2'
+            )
 
     def test_replicate_image_exists(self):
         images = {'Images': []}

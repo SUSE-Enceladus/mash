@@ -18,12 +18,13 @@
 
 import time
 
+from botocore.exceptions import ClientError
 from collections import defaultdict
 
 from mash.mash_exceptions import MashReplicationException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
-from mash.utils.ec2 import get_client
+from mash.utils.ec2 import get_client, describe_images
 
 
 class EC2ReplicationJob(MashJob):
@@ -82,13 +83,27 @@ class EC2ReplicationJob(MashJob):
                         credential
 
         # Wait for images to replicate, this will take time.
-        time.sleep(600)
+        time.sleep(300)
 
         for target_region, reg_info in self.source_region_results.items():
             credential = reg_info['account']
-            self._wait_on_image(
-                credential, reg_info['image_id'], target_region
-            )
+
+            if reg_info['image_id']:
+                try:
+                    self._wait_on_image(
+                        credential['access_key_id'],
+                        credential['secret_access_key'],
+                        reg_info['image_id'],
+                        target_region
+                    )
+                except Exception as error:
+                    self.status = FAILED
+                    self.send_log(
+                        'Replication to {0} region failed: {1}'.format(
+                            target_region,
+                            error
+                        )
+                    )
 
     def _replicate_to_region(
         self, credential, image_id, source_region, target_region
@@ -122,36 +137,46 @@ class EC2ReplicationJob(MashJob):
 
         return new_image['ImageId']
 
-    def _wait_on_image(self, credential, image_id, region):
+    @staticmethod
+    def _wait_on_image(access_key_id, secret_access_key, image_id, region):
         """
         Wait on image to finish replicating in the given region.
         """
-        if image_id:
+        while True:
             client = get_client(
-                'ec2', credential['access_key_id'],
-                credential['secret_access_key'], region
+                'ec2',
+                access_key_id,
+                secret_access_key,
+                region
             )
 
             try:
-                waiter = client.get_waiter('image_available')
-                waiter.wait(
-                    ImageIds=[image_id],
-                    Filters=[{'Name': 'state', 'Values': ['available']}],
+                images = describe_images(client, [image_id])
+                state = images[0]['State']
+            except (IndexError, KeyError, ClientError):
+                raise MashReplicationException(
+                    'The image with ID: {0} was not found.'.format(
+                        image_id
+                    )
                 )
-            except Exception as e:
-                # Log all errors instead of exiting on first exception.
-                self.send_log(
-                    'There was an error replicating image to {0}. {1}'
-                    .format(region, e),
-                    False
-                )
-                self.status = FAILED
 
-    def image_exists(self, client, cloud_image_name):
+            if state == 'available':
+                break
+            elif state == 'failed':
+                raise MashReplicationException(
+                    'The image with ID: {0} reached a failed state.'.format(
+                        image_id
+                    )
+                )
+            elif state == 'pending':
+                time.sleep(60)
+
+    @staticmethod
+    def image_exists(client, cloud_image_name):
         """
         Determine if image exists given image name.
         """
-        images = client.describe_images(Owners=['self'])['Images']
+        images = describe_images(client)
         for image in images:
             if cloud_image_name == image.get('Name'):
                 return True
