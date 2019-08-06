@@ -65,7 +65,10 @@ class TestEC2ReplicationJob(object):
             'us-east-1', 'us-east-2'
         )
         mock_wait_on_image.assert_called_once_with(
-            self.job.credentials['test-aws'], 'ami-54321', 'us-east-2'
+            self.job.credentials['test-aws']['access_key_id'],
+            self.job.credentials['test-aws']['secret_access_key'],
+            'ami-54321',
+            'us-east-2'
         )
         assert self.job.status == FAILED
 
@@ -144,7 +147,10 @@ class TestEC2ReplicationJob(object):
         mock_get_client.return_value = client
 
         self.job._wait_on_image(
-            self.job.credentials['test-aws'], 'ami-54321', 'us-east-2'
+            self.job.credentials['test-aws']['access_key_id'],
+            self.job.credentials['test-aws']['secret_access_key'],
+            'ami-54321',
+            'us-east-2'
         )
 
         mock_get_client.assert_called_once_with(
@@ -171,12 +177,18 @@ class TestEC2ReplicationJob(object):
 
         with raises(MashReplicationException):
             self.job._wait_on_image(
-                self.job.credentials['test-aws'], 'awi-54321', 'us-east-2'
+                self.job.credentials['test-aws']['access_key_id'],
+                self.job.credentials['test-aws']['secret_access_key'],
+                'ami-54321',
+                'us-east-2'
             )
 
         with raises(MashReplicationException):
             self.job._wait_on_image(
-                self.job.credentials['test-aws'], 'awi-54321', 'us-east-2'
+                self.job.credentials['test-aws']['access_key_id'],
+                self.job.credentials['test-aws']['secret_access_key'],
+                'ami-54321',
+                'us-east-2'
             )
 
     def test_replicate_image_exists(self):

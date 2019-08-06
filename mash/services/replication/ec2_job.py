@@ -91,7 +91,10 @@ class EC2ReplicationJob(MashJob):
             if reg_info['image_id']:
                 try:
                     self._wait_on_image(
-                        credential, reg_info['image_id'], target_region
+                        credential['access_key_id'],
+                        credential['secret_access_key'],
+                        reg_info['image_id'],
+                        target_region
                     )
                 except Exception as error:
                     self.status = FAILED
@@ -135,14 +138,16 @@ class EC2ReplicationJob(MashJob):
         return new_image['ImageId']
 
     @staticmethod
-    def _wait_on_image(credential, image_id, region):
+    def _wait_on_image(access_key_id, secret_access_key, image_id, region):
         """
         Wait on image to finish replicating in the given region.
         """
         while True:
             client = get_client(
-                'ec2', credential['access_key_id'],
-                credential['secret_access_key'], region
+                'ec2',
+                access_key_id,
+                secret_access_key,
+                region
             )
 
             try:
