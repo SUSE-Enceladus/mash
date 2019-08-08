@@ -28,7 +28,7 @@ from mash.mash_exceptions import MashUploadException
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
-from mash.services.azure_utils import upload_azure_image
+from mash.utils.azure import upload_azure_image
 
 
 class AzureUploaderJob(MashJob):

@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.azure_utils import (
+from mash.utils.azure import (
     get_blob_url,
     get_classic_page_blob_service,
     publish_cloud_partner_offer,
