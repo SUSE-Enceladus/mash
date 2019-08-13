@@ -15,23 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+# flake8: noqa: E402
 
 import json
 
 from flask import Flask
 from flask_restplus import Api
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
-from mash.services.api.routes.accounts import api as accounts_api
-from mash.services.api.routes.accounts.azure import api as azure_accounts_api
-from mash.services.api.routes.accounts.gce import api as gce_accounts_api
-from mash.services.api.routes.accounts.ec2 import api as ec2_accounts_api
+from mash.services.api.config import Config
 
-from mash.services.api.routes.jobs import api as jobs_api
-from mash.services.api.routes.jobs.ec2 import api as ec2_jobs_api
-from mash.services.api.routes.jobs.gce import api as gce_jobs_api
-from mash.services.api.routes.jobs.azure import api as azure_jobs_api
-
-app = Flask(__name__, static_url_path='/static')
+app = Flask('MashAPIService', static_url_path='/static')
 api = Api(
     app,
     version='3.4.0',
@@ -41,6 +36,21 @@ api = Api(
     validate=True,
     doc=False
 )
+
+app.config.from_object(Config)
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Imports out of order to prevent circular dependencies
+from mash.services.api.routes.accounts import api as accounts_api
+from mash.services.api.routes.accounts.azure import api as azure_accounts_api
+from mash.services.api.routes.accounts.gce import api as gce_accounts_api
+from mash.services.api.routes.accounts.ec2 import api as ec2_accounts_api
+
+from mash.services.api.routes.jobs import api as jobs_api
+from mash.services.api.routes.jobs.ec2 import api as ec2_jobs_api
+from mash.services.api.routes.jobs.gce import api as gce_jobs_api
+from mash.services.api.routes.jobs.azure import api as azure_jobs_api
 
 api.add_namespace(accounts_api, path='/accounts')
 api.add_namespace(azure_accounts_api, path='/accounts/azure')

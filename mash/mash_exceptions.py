@@ -165,3 +165,9 @@ class MashJobException(MashException):
     """
     Exception raised if an error occurs in mash job class.
     """
+
+
+class MashDBException(MashException):
+    """
+    Exception raised if an error occurs accessing mash DB.
+    """

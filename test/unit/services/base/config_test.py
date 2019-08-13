@@ -120,3 +120,6 @@ class TestBaseConfig(object):
         mock_get_log_dir.return_value = '/var/log/mash/'
         assert self.empty_config.get_job_log_file('1234') == \
             '/var/log/mash/jobs/1234.log'
+
+    def test_get_database_uri(self):
+        assert self.config.get_database_uri() == 'sqlite:////var/lib/mash/app.db'
