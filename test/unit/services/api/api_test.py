@@ -9,6 +9,16 @@ with patch('mash.services.base_config.BaseConfig') as mock_config:
     config.get_amqp_user.return_value = 'guest'
     config.get_amqp_pass.return_value = 'guest'
     config.get_credentials_url.return_value = 'http://localhost:8080/'
+    config.get_cloud_data.return_value = {
+        'ec2': {
+            'regions': {
+                'aws': ['us-east-99']
+            },
+            'helper_images': {
+                'us-east-99': 'ami-789'
+            }
+        }
+    }
     mock_config.return_value = config
     from mash.services.api import wsgi
 

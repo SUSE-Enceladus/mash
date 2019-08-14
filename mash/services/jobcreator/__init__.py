@@ -23,9 +23,8 @@ from mash.services.jobcreator.ec2_job import EC2Job
 from mash.services.jobcreator.gce_job import GCEJob
 
 
-def create_job(job_doc, accounts_info, cloud_data):
+def create_job(job_doc):
     csp_name = job_doc.get('cloud')
-    cloud_data = cloud_data.get(csp_name)
 
     if csp_name == CSP.ec2:
         job_class = EC2Job
@@ -40,4 +39,4 @@ def create_job(job_doc, accounts_info, cloud_data):
             )
         )
 
-    return job_class(accounts_info, cloud_data, job_doc)
+    return job_class(job_doc)
