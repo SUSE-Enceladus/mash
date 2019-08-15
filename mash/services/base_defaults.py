@@ -87,3 +87,7 @@ class Defaults(object):
     @staticmethod
     def get_notification_subject():
         return '[MASH] Job Status Update'
+
+    @staticmethod
+    def get_credentials_url():
+        return 'http://localhost:8080/'

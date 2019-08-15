@@ -277,13 +277,31 @@ class BaseConfig(object):
 
         return notification_subject or Defaults.get_notification_subject()
 
+    def get_credentials_url(self):
+        """
+        Return the credentials API URL.
+
+        :rtype: string
+        """
+        credentials_url = self._get_attribute(
+            attribute='credentials_url'
+        )
+
+        return credentials_url or Defaults.get_credentials_url()
+
     def get_database_uri(self):
         """
         Return the database uri.
-         :rtype: string
+
+        :rtype: string
         """
         database_uri = self._get_attribute(
             attribute='database_uri'
         )
+
+        if not database_uri:
+            raise MashConfigException(
+                'database_uri is required in MASH configuration file.'
+            )
 
         return database_uri
