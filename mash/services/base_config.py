@@ -276,3 +276,14 @@ class BaseConfig(object):
         )
 
         return notification_subject or Defaults.get_notification_subject()
+
+    def get_database_uri(self):
+        """
+        Return the database uri.
+         :rtype: string
+        """
+        database_uri = self._get_attribute(
+            attribute='database_uri'
+        )
+
+        return database_uri

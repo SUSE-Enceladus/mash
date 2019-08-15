@@ -20,44 +20,29 @@ import sys
 
 from amqpstorm import Connection
 
-from mash.services.base_config import BaseConfig
+from mash.services.api import app
 
 module = sys.modules[__name__]
 
 connection = None
 channel = None
-config = None
-
-amqp_host = None
-amqp_user = None
-amqp_pass = None
 
 
 def connect():
     module.connection = Connection(
-        amqp_host,
-        amqp_user,
-        amqp_pass,
+        app.config['AMQP_HOST'],
+        app.config['AMQP_USER'],
+        app.config['AMQP_PASS'],
         kwargs={'heartbeat': 600}
     )
     module.channel = connection.channel()
     channel.confirm_deliveries()
 
 
-def get_config():
-    module.config = BaseConfig()
-    module.amqp_host = config.get_amqp_host()
-    module.amqp_user = config.get_amqp_user()
-    module.amqp_pass = config.get_amqp_pass()
-
-
 def publish(exchange, routing_key, message):
     """
     Publish message to the provided exchange with the routing key.
     """
-    if not config:
-        get_config()
-
     if not channel or channel.is_closed:
         connect()
 

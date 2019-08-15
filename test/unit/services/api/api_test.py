@@ -3,7 +3,13 @@ import pytest
 
 from unittest.mock import MagicMock, patch
 
-from mash.services.api import wsgi
+with patch('mash.services.base_config.BaseConfig') as mock_config:
+    config = MagicMock()
+    config.get_amqp_host.return_value = 'localhost'
+    config.get_amqp_user.return_value = 'guest'
+    config.get_amqp_pass.return_value = 'guest'
+    mock_config.return_value = config
+    from mash.services.api import wsgi
 
 
 @pytest.fixture(scope='module')
@@ -17,19 +23,12 @@ def test_client():
     ctx.pop()
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_add_account_ec2(mock_connection, mock_config, test_client):
+def test_api_add_account_ec2(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     request = {
         'account_name': 'test',
@@ -63,19 +62,12 @@ def test_api_add_account_ec2(mock_connection, mock_config, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_add_account_gce(mock_connection, mock_config, test_client):
+def test_api_add_account_gce(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     request = {
         'account_name': 'test',
@@ -117,19 +109,12 @@ def test_api_add_account_gce(mock_connection, mock_config, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_add_account_azure(mock_connection, mock_config, test_client):
+def test_api_add_account_azure(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     request = {
         'account_name': 'test',
@@ -176,19 +161,12 @@ def test_api_add_account_azure(mock_connection, mock_config, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_delete_account_ec2(mock_connection, mock_config, test_client):
+def test_api_delete_account_ec2(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     data = {
         'requesting_user': 'user1'
@@ -215,19 +193,12 @@ def test_api_delete_account_ec2(mock_connection, mock_config, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_delete_account_gce(mock_connection, mock_config, test_client):
+def test_api_delete_account_gce(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     data = {
         'requesting_user': 'user1'
@@ -254,19 +225,12 @@ def test_api_delete_account_gce(mock_connection, mock_config, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_delete_account_azure(mock_connection, mock_config, test_client):
+def test_api_delete_account_azure(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     data = {
         'requesting_user': 'user1'
@@ -293,20 +257,13 @@ def test_api_delete_account_azure(mock_connection, mock_config, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.jobs.uuid')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_add_job_ec2(mock_connection, mock_uuid, mock_config, test_client):
+def test_api_add_job_ec2(mock_connection, mock_uuid, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     uuid = '12345678-1234-1234-1234-123456789012'
     mock_uuid.uuid4.return_value = uuid
@@ -339,20 +296,13 @@ def test_api_add_job_ec2(mock_connection, mock_uuid, mock_config, test_client):
         b'{"job_id": "12345678-1234-1234-1234-123456789012"}'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.jobs.uuid')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_add_job_gce(mock_connection, mock_uuid, mock_config, test_client):
+def test_api_add_job_gce(mock_connection, mock_uuid, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     uuid = '12345678-1234-1234-1234-123456789012'
     mock_uuid.uuid4.return_value = uuid
@@ -385,20 +335,13 @@ def test_api_add_job_gce(mock_connection, mock_uuid, mock_config, test_client):
         b'{"job_id": "12345678-1234-1234-1234-123456789012"}'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.jobs.uuid')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_add_job_azure(mock_connection, mock_uuid, mock_config, test_client):
+def test_api_add_job_azure(mock_connection, mock_uuid, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     uuid = '12345678-1234-1234-1234-123456789012'
     mock_uuid.uuid4.return_value = uuid
@@ -431,19 +374,12 @@ def test_api_add_job_azure(mock_connection, mock_uuid, mock_config, test_client)
         b'{"job_id": "12345678-1234-1234-1234-123456789012"}'
 
 
-@patch('mash.services.api.routes.utils.BaseConfig')
 @patch('mash.services.api.routes.utils.Connection')
-def test_api_delete_job(mock_connection, mock_config, test_client):
+def test_api_delete_job(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
     connection.channel.return_value = channel
     mock_connection.return_value = connection
-
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
 
     response = test_client.delete(
         '/jobs/12345678-1234-1234-1234-123456789012'
