@@ -121,5 +121,14 @@ class TestBaseConfig(object):
         assert self.empty_config.get_job_log_file('1234') == \
             '/var/log/mash/jobs/1234.log'
 
+    def test_get_credentials_url(self):
+        assert self.config.get_credentials_url() == 'http://localhost:5000/'
+        assert self.empty_config.get_credentials_url() == \
+            'http://localhost:8080/'
+
     def test_get_database_uri(self):
-        assert self.config.get_database_uri() == 'sqlite:////var/lib/mash/app.db'
+        assert self.config.get_database_uri() == \
+            'sqlite:////var/lib/mash/app.db'
+
+        with raises(MashConfigException):
+            self.empty_config.get_database_uri()

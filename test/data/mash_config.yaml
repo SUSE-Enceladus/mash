@@ -6,6 +6,7 @@ amqp_user: guest
 amqp_pass: guest
 smtp_user: user@test.com
 smtp_pass: super.secret
+credentials_url: http://localhost:5000/
 database_uri: sqlite:////var/lib/mash/app.db
 services:
   - obs

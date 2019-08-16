@@ -30,3 +30,5 @@ class Config(object):
     AMQP_HOST = config.get_amqp_host()
     AMQP_USER = config.get_amqp_user()
     AMQP_PASS = config.get_amqp_pass()
+
+    CREDENTIALS_URL = config.get_credentials_url()
