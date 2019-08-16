@@ -20,6 +20,7 @@ import datetime
 import json
 import os
 import random
+import requests
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -29,6 +30,7 @@ from contextlib import contextmanager, suppress
 from string import ascii_lowercase
 from tempfile import NamedTemporaryFile
 
+from mash.mash_exceptions import MashException
 from mash.utils.json_format import JsonFormat
 
 
@@ -147,3 +149,29 @@ def restart_jobs(job_dir, callback):
     """
     for job_file in os.listdir(job_dir):
         restart_job(os.path.join(job_dir, job_file), callback)
+
+
+def handle_request(url, endpoint, method, job_data=None):
+    """
+    Post request based on endpoint and data.
+
+    If response is unsuccessful raise exception.
+    """
+    request_method = getattr(requests, method)
+    data = None if not job_data else JsonFormat.json_message(job_data)
+    uri = ''.join([url, endpoint])
+
+    response = request_method(uri, data=data)
+
+    if response.status_code not in (200, 201):
+        try:
+            msg = response.json()['msg']
+        except Exception:
+            msg = 'Request to {uri} failed: {reason}'.format(
+                uri=uri,
+                reason=response.reason
+            )
+
+        raise MashException(msg)
+
+    return response

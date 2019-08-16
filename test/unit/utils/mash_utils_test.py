@@ -18,8 +18,10 @@
 
 import io
 
+from pytest import raises
 from unittest.mock import call, MagicMock, patch
 
+from mash.mash_exceptions import MashException
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import (
     create_json_file,
@@ -31,7 +33,8 @@ from mash.utils.mash_utils import (
     persist_json,
     load_json,
     restart_job,
-    restart_jobs
+    restart_jobs,
+    handle_request
 )
 
 
@@ -151,3 +154,25 @@ def test_restart_jobs(mock_os_listdir, mock_restart_job):
         'tmp/job-123.json',
         callback
     )
+
+
+@patch('mash.utils.mash_utils.requests')
+def test_handle_request(mock_requests):
+    response = MagicMock()
+    response.status_code = 200
+    mock_requests.get.return_value = response
+
+    result = handle_request('localhost', '/jobs', 'get')
+    assert result == response
+
+
+@patch('mash.utils.mash_utils.requests')
+def test_handle_request_failed(mock_requests):
+    response = MagicMock()
+    response.status_code = 400
+    response.reason = 'Not Found'
+    response.json.return_value = {}
+    mock_requests.get.return_value = response
+
+    with raises(MashException):
+        handle_request('localhost', '/jobs', 'get')
