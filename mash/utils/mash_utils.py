@@ -167,9 +167,9 @@ def handle_request(url, endpoint, method, job_data=None):
         try:
             msg = response.json()['msg']
         except Exception:
-            msg = 'Request to {uri} failed with {code}'.format(
+            msg = 'Request to {uri} failed: {reason}'.format(
                 uri=uri,
-                code=str(response.status_code)
+                reason=response.reason
             )
 
         raise MashException(msg)

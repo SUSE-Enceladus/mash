@@ -170,6 +170,7 @@ def test_handle_request(mock_requests):
 def test_handle_request_failed(mock_requests):
     response = MagicMock()
     response.status_code = 400
+    response.reason = 'Not Found'
     response.json.return_value = {}
     mock_requests.get.return_value = response
 
