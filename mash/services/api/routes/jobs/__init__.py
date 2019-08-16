@@ -22,7 +22,7 @@ from flask import jsonify, make_response
 from flask_restplus import fields, Namespace, Resource
 
 from mash.services.api.schema import validation_error
-from mash.services.api.routes.utils import publish
+from mash.services.api.routes.amqp_utils import publish
 
 api = Namespace(
     'Jobs',
