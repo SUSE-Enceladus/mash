@@ -93,6 +93,16 @@ class BaseConfig(object):
         log_dir = self._get_attribute(attribute='log_dir')
         return log_dir or Defaults.get_log_directory()
 
+    def get_job_directory(self, service_name):
+        """
+        Return job directory path based on service name attribute.
+
+        :rtype: string
+        """
+        base_job_dir = self._get_attribute(attribute='base_job_dir')
+        base_job_dir = base_job_dir or Defaults.get_base_job_directory()
+        return os.path.join(base_job_dir, Defaults.get_job_directory(service_name))
+
     def get_log_file(self, service):
         """
         Return log file name based on log_dir attribute.

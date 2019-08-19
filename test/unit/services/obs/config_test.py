@@ -18,7 +18,7 @@ class TestOBSConfig(object):
 
     def test_get_log_file(self):
         assert self.config.get_log_file('obs') == \
-            '/var/log/mash/obs_service.log'
+            '/tmp/log/obs_service.log'
         assert self.config_defaults.get_log_file('obs') == \
             '/var/log/mash/obs_service.log'
 

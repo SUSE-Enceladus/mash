@@ -111,8 +111,14 @@ class TestBaseConfig(object):
         subject = self.empty_config.get_notification_subject()
         assert subject == '[MASH] Job Status Update'
 
+    def test_get_job_dir(self):
+        assert self.config.get_job_directory('testing') == \
+            '/tmp/jobs/testing_jobs/'
+        assert self.empty_config.get_job_directory('testing') == \
+            '/var/lib/mash/testing_jobs/'
+
     def test_get_log_dir(self):
-        assert self.config.get_log_directory() == '/var/log/mash/'
+        assert self.config.get_log_directory() == '/tmp/log/'
         assert self.empty_config.get_log_directory() == '/var/log/mash/'
 
     @patch.object(BaseConfig, 'get_log_directory')

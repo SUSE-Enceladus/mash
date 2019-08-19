@@ -12,4 +12,4 @@ class TestReplicationConfig(object):
 
     def test_get_log_file(self):
         assert self.config.get_log_file('replication') == \
-            '/var/log/mash/replication_service.log'
+            '/tmp/log/replication_service.log'
