@@ -114,6 +114,7 @@ class EC2Account(db.Model):
     name = db.Column(db.String(64), nullable=False)
     partition = db.Column(db.String(10), nullable=False)
     region = db.Column(db.String(32), nullable=False)
+    subnet = db.Column(db.String(32))
     additional_regions = db.relationship(
         'EC2Region',
         back_populates='account',
