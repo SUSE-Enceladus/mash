@@ -34,18 +34,6 @@ class CredentialsConfig(BaseConfig):
     def __init__(self, config_file=None):
         super(CredentialsConfig, self).__init__(config_file)
 
-    def get_accounts_file(self):
-        """
-        Return the path to the provider accounts key file.
-
-        :rtype: string
-        """
-        accounts_file = self._get_attribute(
-            attribute='accounts_file',
-            element='credentials'
-        )
-        return accounts_file or Defaults.get_accounts_file()
-
     def get_credentials_dir(self):
         """
         Return directory path for credentials directory.
