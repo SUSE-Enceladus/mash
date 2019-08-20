@@ -8,6 +8,7 @@ with patch('mash.services.base_config.BaseConfig') as mock_config:
     config.get_amqp_host.return_value = 'localhost'
     config.get_amqp_user.return_value = 'guest'
     config.get_amqp_pass.return_value = 'guest'
+    config.get_credentials_url.return_value = 'http://localhost:8080/'
     mock_config.return_value = config
     from mash.services.api import wsgi
 
