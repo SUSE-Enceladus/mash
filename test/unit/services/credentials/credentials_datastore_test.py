@@ -6,15 +6,15 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from tempfile import TemporaryDirectory
 from unittest.mock import call, MagicMock, Mock, patch
 
-from mash.mash_exceptions import MashAccountDatastoreException
-from mash.services.credentials.account_datastore import AccountDatastore
+from mash.mash_exceptions import MashCredentialsDatastoreException
+from mash.services.credentials.credentials_datastore import CredentialsDatastore
 from mash.utils.json_format import JsonFormat
 
 
 class TestAccountDatastore(object):
 
-    @patch('mash.services.credentials.account_datastore.BackgroundScheduler')
-    @patch('mash.services.credentials.account_datastore.os')
+    @patch('mash.services.credentials.credentials_datastore.BackgroundScheduler')
+    @patch('mash.services.credentials.credentials_datastore.os')
     def setup(self, mock_os, mock_scheduler):
         self.log_callback = Mock()
         self.scheduler = MagicMock(BackgroundScheduler)
@@ -24,14 +24,14 @@ class TestAccountDatastore(object):
 
         with patch('builtins.open', create=True) as mock_open:
             mock_open.return_value = MagicMock(spec=io.IOBase)
-            self.datastore = AccountDatastore(
+            self.datastore = CredentialsDatastore(
                 '../data/accounts.json', '/var/lib/mash/credentials/',
                 '../data/encryption_keys', self.log_callback
             )
             file_handle = mock_open.return_value.__enter__.return_value
             assert file_handle.write.call_count == 2
 
-    @patch('mash.services.credentials.account_datastore.os')
+    @patch('mash.services.credentials.credentials_datastore.os')
     def test_datastore_add_account(self, mock_os):
         mock_os.path.isdir.return_value = False
 
@@ -85,7 +85,7 @@ class TestAccountDatastore(object):
                 )
             ])
 
-    @patch('mash.services.credentials.account_datastore.os')
+    @patch('mash.services.credentials.credentials_datastore.os')
     def test_datastore_delete_account(self, mock_os):
         mock_os.path.join.return_value = 'creds_file.path'
 
@@ -158,8 +158,8 @@ class TestAccountDatastore(object):
                 )
             ])
 
-    @patch('mash.services.credentials.account_datastore.os')
-    @patch.object(AccountDatastore, '_get_accounts_from_file')
+    @patch('mash.services.credentials.credentials_datastore.os')
+    @patch.object(CredentialsDatastore, '_get_accounts_from_file')
     def test_check_job_accounts(self, mock_get_accounts, mock_os):
         mock_os.path.exists.return_value = True
 
@@ -186,7 +186,7 @@ class TestAccountDatastore(object):
         # Account does not exist for user
         mock_os.path.exists.return_value = False
 
-        with pytest.raises(MashAccountDatastoreException) as error:
+        with pytest.raises(MashCredentialsDatastoreException) as error:
             self.datastore.check_job_accounts(
                 'ec2', [{'name': 'test-aws'}], ['test'], 'user1'
             )
@@ -205,7 +205,7 @@ class TestAccountDatastore(object):
         )
         assert accounts == ['tester']
 
-    @patch.object(AccountDatastore, '_get_encrypted_credentials')
+    @patch.object(CredentialsDatastore, '_get_encrypted_credentials')
     def test_retrieve_credentials(self, mock_get_enc_creds):
         creds = b'gAAAAABbFapolPqpWrLf5rpEj2xyFLkXlwclSQH-' \
             b'_t3tuJnACyRvOxLdw9qR3kKMBlz3XIrGH9GJdiA9IJl9y' \
@@ -219,7 +219,7 @@ class TestAccountDatastore(object):
 
     # Private method tests
 
-    @patch.object(AccountDatastore, '_write_accounts_to_file')
+    @patch.object(CredentialsDatastore, '_write_accounts_to_file')
     def test_add_account_to_datastore_existing_user(
         self, mock_write_acnts_file
     ):
@@ -249,7 +249,7 @@ class TestAccountDatastore(object):
             'groups': {}
         }
 
-        with pytest.raises(MashAccountDatastoreException) as error:
+        with pytest.raises(MashCredentialsDatastoreException) as error:
             self.datastore._get_account_info(
                 'test-aws', 'user1', accounts
             )
@@ -263,7 +263,7 @@ class TestAccountDatastore(object):
             'groups': {}
         }
 
-        with pytest.raises(MashAccountDatastoreException) as error:
+        with pytest.raises(MashCredentialsDatastoreException) as error:
             self.datastore._get_accounts_in_group(
                 'test', 'user1', accounts_info
             )
@@ -284,7 +284,7 @@ class TestAccountDatastore(object):
 
         assert result == 'secret_stuff'
 
-    @patch.object(AccountDatastore, '_clean_old_keys')
+    @patch.object(CredentialsDatastore, '_clean_old_keys')
     def test_handle_key_rotation_result(self, mock_clean_old_keys):
         # Test exception case
         event = MagicMock()
@@ -345,7 +345,7 @@ class TestAccountDatastore(object):
                     '3kKMBlz3XIrGH9GJdiA9IJl9y_iQLeCfIAM_4ckDMcYHMLe0WWNnsn4zj9E='
                 )
 
-            with pytest.raises(MashAccountDatastoreException) as error:
+            with pytest.raises(MashCredentialsDatastoreException) as error:
                 self.datastore._rotate_key()
 
             assert str(error.value) == \
@@ -367,7 +367,7 @@ class TestAccountDatastore(object):
                 )
             ])
 
-    @patch('mash.services.credentials.account_datastore.os')
+    @patch('mash.services.credentials.credentials_datastore.os')
     def test_store_encrypted_credentials(self, mock_os):
         mock_os.isdir.return_value = True
 

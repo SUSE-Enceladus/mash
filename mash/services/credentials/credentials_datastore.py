@@ -25,12 +25,12 @@ from contextlib import suppress
 from cryptography.fernet import Fernet, MultiFernet
 from pytz import utc
 
-from mash.mash_exceptions import MashAccountDatastoreException
+from mash.mash_exceptions import MashCredentialsDatastoreException
 from mash.services.credentials.accounts import accounts_template
 from mash.utils.json_format import JsonFormat
 
 
-class AccountDatastore(object):
+class CredentialsDatastore(object):
     """Class for handling account data store and credentials files."""
 
     def __init__(
@@ -175,7 +175,7 @@ class AccountDatastore(object):
             )
 
             if not exists:
-                raise MashAccountDatastoreException(
+                raise MashCredentialsDatastoreException(
                     'The requesting user {0}, does not have '
                     'the following account: {1}'.format(
                         requesting_user, account
@@ -265,7 +265,7 @@ class AccountDatastore(object):
         try:
             account_info = accounts['accounts'][user][account]
         except KeyError:
-            raise MashAccountDatastoreException(
+            raise MashCredentialsDatastoreException(
                 'The requesting user {0}, does not have '
                 'the following account: {1}'.format(
                     user, account
@@ -293,7 +293,7 @@ class AccountDatastore(object):
         try:
             accounts = accounts_info['groups'][user][group]
         except KeyError:
-            raise MashAccountDatastoreException(
+            raise MashCredentialsDatastoreException(
                 'The requesting user: {0}, does not have the '
                 'following group: {1}'.format(
                     user, group
@@ -467,7 +467,7 @@ class AccountDatastore(object):
                         f.write(credentials)
 
         if not success:
-            raise MashAccountDatastoreException(
+            raise MashCredentialsDatastoreException(
                 'All credentials files have not been rotated.'
             )
 
