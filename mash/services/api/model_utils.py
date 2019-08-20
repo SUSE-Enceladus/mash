@@ -155,6 +155,7 @@ def create_ec2_account(
     partition,
     region_name,
     credentials,
+    subnet,
     group_name,
     additional_regions
 ):
@@ -176,6 +177,7 @@ def create_ec2_account(
         name=account_name,
         partition=partition,
         region=region_name,
+        subnet=subnet,
         user_id=user.id
     )
 

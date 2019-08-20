@@ -162,6 +162,7 @@ def test_create_ec2_account(
         'aws',
         'us-east-99',
         credentials,
+        'subnet-12345',
         'group1',
         [{'name': 'us-east-100', 'helper_image': 'ami-789'}]
     )
@@ -195,6 +196,7 @@ def test_create_ec2_account(
             'aws',
             'us-east-99',
             credentials,
+            'subnet-12345',
             'group1',
             [{'name': 'us-east-100', 'helper_image': 'ami-789'}]
         )
