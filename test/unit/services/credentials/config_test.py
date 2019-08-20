@@ -12,7 +12,7 @@ class TestCredentialsConfig(object):
 
     def test_get_log_file(self):
         assert self.config.get_log_file('credentials') == \
-            '/var/log/mash/credentials_service.log'
+            '/tmp/log/credentials_service.log'
 
     def test_get_credentials_dir(self):
         assert self.config.get_credentials_dir() == \

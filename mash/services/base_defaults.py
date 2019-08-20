@@ -30,8 +30,12 @@ class Defaults(object):
         return '/var/lib/mash/encryption_keys'
 
     @classmethod
+    def get_base_job_directory(self):
+        return '/var/lib/mash/'
+
+    @classmethod
     def get_job_directory(self, service_name):
-        return '/var/lib/mash/{0}_jobs/'.format(service_name)
+        return '{0}_jobs/'.format(service_name)
 
     @classmethod
     def get_jwt_algorithm(self):
