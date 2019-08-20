@@ -17,7 +17,6 @@
 #
 
 import json
-import jwt
 import os
 
 from amqpstorm import AMQPError
@@ -26,9 +25,6 @@ from apscheduler import events
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from cryptography.fernet import Fernet, MultiFernet
-from datetime import datetime, timedelta
-
 from pytz import utc
 
 from mash.services.base_defaults import Defaults
@@ -36,7 +32,12 @@ from mash.services.job_factory import JobFactory
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
-from mash.utils.mash_utils import remove_file, persist_json, restart_jobs
+from mash.utils.mash_utils import (
+    remove_file,
+    persist_json,
+    restart_jobs,
+    handle_request
+)
 
 
 class ListenerService(MashService):
@@ -61,17 +62,6 @@ class ListenerService(MashService):
         self.next_service = self._get_next_service()
         self.prev_service = self._get_previous_service()
 
-        # Credentials config
-        self.encryption_keys_file = self.config.get_encryption_keys_file()
-        self.jwt_secret = self.config.get_jwt_secret()
-        self.jwt_algorithm = self.config.get_jwt_algorithm()
-
-        self.credentials_queue = 'credentials'
-        self.credentials_response_key = 'response'
-        self.credentials_request_key = 'request.{0}'.format(
-            self.service_exchange
-        )
-
         if not self.custom_args:
             self.custom_args = {}
 
@@ -92,7 +82,6 @@ class ListenerService(MashService):
         self.bind_queue(
             self.service_exchange, self.listener_msg_key, self.listener_queue
         )
-        self.bind_credentials_queue()
 
         self.scheduler = BackgroundScheduler(timezone=utc)
         self.scheduler.add_listener(
@@ -177,7 +166,7 @@ class ListenerService(MashService):
             )
 
             if job.last_service == self.service_exchange:
-                # Send delete message to credentials
+                # Send delete request to credentials
                 # if this is the last service.
                 self.publish_credentials_delete(job_id)
 
@@ -237,32 +226,6 @@ class ListenerService(MashService):
 
         return JsonFormat.json_message(data)
 
-    def _handle_credentials_response(self, message):
-        """
-        Process credentials response JWT tokens.
-        """
-        try:
-            token = json.loads(message.body)
-        except Exception:
-            self.log.error(
-                'Invalid credentials response message: '
-                'Must be a json encoded message.'
-            )
-        else:
-            job_id, credentials = self.decode_credentials(token)
-            job = self.jobs.get(job_id)
-
-            if job:
-                job.credentials = credentials
-                self._schedule_job(job.id)
-            elif job_id:
-                self.log.error(
-                    'Credentials received for invalid job with ID:'
-                    ' {0}.'.format(job_id)
-                )
-
-        message.ack()
-
     def _handle_listener_message(self, message):
         """
         Callback for listener messages.
@@ -272,10 +235,10 @@ class ListenerService(MashService):
         if job:
             job.listener_msg = message
 
-            if job.credentials:
-                self._schedule_job(job.id)
-            else:
-                self.publish_credentials_request(job.id)
+            if not job.credentials:
+                self._request_credentials(job)
+
+            self._schedule_job(job.id)
         else:
             message.ack()
 
@@ -460,127 +423,35 @@ class ListenerService(MashService):
         """Set the arg on the job using setter method."""
         setattr(job, arg, listener_msg[arg])
 
-    def bind_credentials_queue(self):
-        """
-        Bind the response key to the credentials queue.
-        """
-        self.bind_queue(
-            self.service_exchange,
-            self.credentials_response_key,
-            self.credentials_queue
-        )
-
-    def consume_credentials_queue(self, callback):
-        """
-        Setup credentials attributes from configuration.
-
-        Then consume credentials response queue to receive credentials
-        tokens for jobs.
-        """
-        queue_name = self.credentials_queue
-        queue = self._get_queue_name(self.service_exchange, queue_name)
-        self.channel.basic.consume(callback=callback, queue=queue)
-
-    def decode_credentials(self, message):
-        """
-        Decode jwt credential response message.
-        """
-        decrypted_credentials = {}
-        try:
-            payload = jwt.decode(
-                message['jwt_token'], self.jwt_secret,
-                algorithm=self.jwt_algorithm, issuer='credentials',
-                audience=self.service_exchange
-            )
-            job_id = payload['id']
-            for account, credentials in payload['credentials'].items():
-                decrypted_credentials[account] = self.decrypt_credentials(
-                    credentials
-                )
-        except KeyError as error:
-            self.log.error(
-                'Invalid credentials response recieved: {0}'
-                ' key must be in credentials message.'.format(error)
-            )
-        except Exception as error:
-            self.log.error(
-                'Invalid credentials response token: {0}'.format(error)
-            )
-        else:
-            return job_id, decrypted_credentials
-
-        # If exception occurs decoding credentials return None.
-        return None, None
-
-    def decrypt_credentials(self, credentials):
-        """
-        Decrypt credentials string and load json to dictionary.
-        """
-        encryption_keys = self.get_encryption_keys_from_file(
-            self.encryption_keys_file
-        )
-        fernet_key = MultiFernet(encryption_keys)
-
-        try:
-            # Ensure string is encoded as bytes before decrypting.
-            credentials = credentials.encode()
-        except Exception:
-            pass
-
-        return json.loads(fernet_key.decrypt(credentials).decode())
-
-    def get_credential_request(self, job_id):
-        """
-        Return jwt encoded credentials request message.
-        """
-        request = {
-            'exp': datetime.utcnow() + timedelta(minutes=5),  # Expiration time
-            'iat': datetime.utcnow(),  # Issued at time
-            'sub': 'credentials_request',  # Subject
-            'iss': self.service_exchange,  # Issuer
-            'aud': 'credentials',  # audience
-            'id': job_id,
-        }
-        token = jwt.encode(
-            request, self.jwt_secret, algorithm=self.jwt_algorithm
-        )
-        message = json.dumps({'jwt_token': token.decode()})
-        return message
-
-    def get_encryption_keys_from_file(self, encryption_keys_file):
-        """
-        Returns a list of Fernet keys based on the provided keys file.
-        """
-        with open(encryption_keys_file, 'r') as keys_file:
-            keys = keys_file.readlines()
-
-        return [Fernet(key.strip()) for key in keys if key]
-
     def publish_credentials_delete(self, job_id):
         """
-        Publish delete message to credentials service.
+        Send delete request to credentials service.
         """
-        delete_message = JsonFormat.json_message(
-            {"credentials_job_delete": job_id}
-        )
-
         try:
-            self._publish(
-                'credentials', self.job_document_key, delete_message
+            handle_request(
+                self.config.get_credentials_url(),
+                'jobs/{job}'.format(job=job_id),
+                'delete'
             )
-        except AMQPError:
+        except Exception:
             self.log.warning(
-                'Message not received: {0}'.format(delete_message)
+                'Request to delete job failed',
+                extra={'job_id': job_id}
             )
 
-    def publish_credentials_request(self, job_id):
-        """
-        Publish credentials request message to the credentials exchange.
-        """
-        self._publish(
-            'credentials', self.credentials_request_key,
-            self.get_credential_request(job_id)
-        )
+    def _request_credentials(self, job):
+        try:
+            response = handle_request(
+                self.config.get_credentials_url(),
+                'credentials/{job}'.format(job=job.id),
+                'get'
+            )
+            job.credentials = response.json()
+        except Exception:
+            self.log.warning(
+                'Credentials request failed',
+                extra=job.get_job_id()
+            )
 
     def publish_job_result(self, exchange, message):
         """
@@ -610,7 +481,6 @@ class ListenerService(MashService):
             self._handle_listener_message,
             queue_name=self.listener_queue
         )
-        self.consume_credentials_queue(self._handle_credentials_response)
 
         try:
             self.channel.start_consuming()
