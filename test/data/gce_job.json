@@ -8,7 +8,6 @@
       "bucket": "images"
     }
   ],
-  "cloud_groups": ["test-gce-group"],
   "requesting_user": "user1",
   "last_service": "deprecation",
   "utctime": "now",

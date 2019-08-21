@@ -25,7 +25,6 @@ gce_account = {
     'properties': {
         'account_name': string_with_example('account1'),
         'bucket': string_with_example('image-bucket'),
-        'group': string_with_example('group1'),
         'testing_account': string_with_example('testing-account1'),
         'region': string_with_example('us-west1-a'),
         'requesting_user': string_with_example('user1'),

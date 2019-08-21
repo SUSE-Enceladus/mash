@@ -62,6 +62,7 @@ azure_job_message['properties']['cloud_accounts'] = {
     'minItems': 1,
     'example': [{'name': 'account1'}]
 }
+azure_job_message['required'].append('cloud_accounts')
 azure_job_message['properties']['image']['example'] = \
     'openSUSE-Leap-15.0-Azure'
 azure_job_message['properties']['cloud_image_name']['example'] = \

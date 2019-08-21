@@ -94,7 +94,6 @@ def test_api_add_account_gce(mock_connection, test_client):
             'auth_provider_x509_cert_url': 'string',
             'client_x509_cert_url': 'string'
         },
-        'group': 'group1',
         'bucket': 'bucket1',
         'region': 'us-east-1',
         'requesting_user': 'user1'
@@ -129,7 +128,6 @@ def test_api_add_account_azure(mock_connection, test_client):
 
     request = {
         'account_name': 'test',
-        'group': 'group1',
         'region': 'us-east-1',
         'requesting_user': 'user1',
         "source_container": "string",

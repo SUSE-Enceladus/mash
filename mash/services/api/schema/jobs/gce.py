@@ -59,6 +59,7 @@ gce_job_message['properties']['cloud_accounts'] = {
     'minItems': 1,
     'example': [{'name': 'account1'}]
 }
+gce_job_message['required'].append('cloud_accounts')
 gce_job_message['properties']['image']['example'] = 'openSUSE-Leap-15.0-GCE'
 gce_job_message['properties']['cloud_image_name']['example'] = \
     'opensuse-leap-15-v{date}'

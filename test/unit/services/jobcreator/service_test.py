@@ -245,7 +245,6 @@ class TestJobCreatorService(object):
             }
         }
         del job['cloud_accounts']
-        del job['cloud_groups']
 
         message = MagicMock()
         message.body = json.dumps(job)
@@ -395,7 +394,6 @@ class TestJobCreatorService(object):
             }
         }
         del job['cloud_accounts']
-        del job['cloud_groups']
 
         message = MagicMock()
         message.body = json.dumps(job)
