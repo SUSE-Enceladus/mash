@@ -17,7 +17,3 @@ class TestCredentialsConfig(object):
     def test_get_credentials_dir(self):
         assert self.config.get_credentials_dir() == \
             '/var/lib/mash/credentials/'
-
-    def test_job_creator_get_accounts_file(self):
-        assert self.config.get_accounts_file() == \
-            '/etc/mash/accounts.json'
