@@ -44,6 +44,12 @@ class User(db.Model):
         lazy='select',
         cascade='all, delete, delete-orphan'
     )
+    azure_accounts = db.relationship(
+        'AzureAccount',
+        back_populates='user',
+        lazy='select',
+        cascade='all, delete, delete-orphan'
+    )
     ec2_groups = db.relationship(
         'EC2Group',
         back_populates='user',
@@ -155,3 +161,24 @@ class GCEAccount(db.Model):
 
     def __repr__(self):
         return '<GCE Account {}>'.format(self.name)
+
+
+class AzureAccount(db.Model):
+    __tablename__ = 'azure_account'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    region = db.Column(db.String(32), nullable=False)
+    source_container = db.Column(db.String(64), nullable=False)
+    source_resource_group = db.Column(db.String(90), nullable=False)
+    source_storage_account = db.Column(db.String(24), nullable=False)
+    destination_container = db.Column(db.String(64), nullable=False)
+    destination_resource_group = db.Column(db.String(90), nullable=False)
+    destination_storage_account = db.Column(db.String(24), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', back_populates='azure_accounts')
+    __table_args__ = (
+        db.UniqueConstraint('name', 'user_id', name='_name_user_uc'),
+    )
+
+    def __repr__(self):
+        return '<Azure Account {}>'.format(self.name)

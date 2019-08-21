@@ -36,6 +36,7 @@ azure_account = {
     'additionalProperties': False,
     'required': [
         'account_name',
+        'region',
         'requesting_user',
         'source_container',
         'source_resource_group',
