@@ -47,6 +47,9 @@ BuildRequires:  python3-img-proof-tests>=4.0.0
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
 BuildRequires:  python3-flask-restplus
+BuildRequires:  python3-flask-sqlalchemy
+BuildRequires:  python3-flask-migrate
+BuildRequires:  python3-flask-jwt-extended
 BuildRequires:  python3-requests
 BuildRequires:  python3-obs-img-utils <= 0.0.3
 Requires:       rabbitmq-server
@@ -70,6 +73,9 @@ Requires:       python3-img-proof-tests>=4.0.0
 Requires:       python3-lxml
 Requires:       python3-Flask
 Requires:       python3-flask-restplus
+Requires:       python3-flask-sqlalchemy
+Requires:       python3-flask-migrate
+Requires:       python3-flask-jwt-extended
 Requires:       python3-requests
 Requires:       python3-obs-img-utils <= 0.0.3
 Requires:       apache2
