@@ -4,7 +4,7 @@ from unittest.mock import call, patch, Mock
 
 from sqlalchemy.exc import IntegrityError
 
-from mash.mash_exceptions import MashDBException
+from mash.mash_exceptions import MashDBException, MashJobException
 
 with patch('mash.services.base_config.BaseConfig') as mock_config:
     config = Mock()
@@ -12,6 +12,16 @@ with patch('mash.services.base_config.BaseConfig') as mock_config:
     config.get_amqp_user.return_value = 'guest'
     config.get_amqp_pass.return_value = 'guest'
     config.get_credentials_url.return_value = 'http://localhost:8080/'
+    config.get_cloud_data.return_value = {
+        'ec2': {
+            'regions': {
+                'aws': ['us-east-99']
+            },
+            'helper_images': {
+                'us-east-99': 'ami-789'
+            }
+        }
+    }
     mock_config.return_value = config
 
     from mash.services.api.models import EC2Account
@@ -27,7 +37,12 @@ with patch('mash.services.base_config.BaseConfig') as mock_config:
         get_ec2_accounts,
         get_ec2_account,
         get_ec2_account_by_id,
-        delete_ec2_account
+        delete_ec2_account,
+        get_ec2_regions_by_partition,
+        get_ec2_helper_images,
+        add_target_ec2_account,
+        convert_account_dict,
+        update_ec2_job_accounts
     )
 
 
@@ -274,3 +289,108 @@ def test_delete_ec2_account(mock_db, mock_get_account, mock_handle_request):
 
     mock_get_account.return_value = None
     assert delete_ec2_account('acnt2', 'user1') == 0
+
+
+def test_get_ec2_regions_by_partition():
+    assert get_ec2_regions_by_partition('aws') == ['us-east-99']
+
+
+def test_get_ec2_helper_images():
+    images = get_ec2_helper_images()
+    assert images['us-east-99'] == 'ami-789'
+
+
+@patch('mash.services.api.model_utils.get_ec2_regions_by_partition')
+def test_add_target_ec2_account(mock_get_regions):
+    account = Mock()
+    account.region = 'us-east-100'
+    account.name = 'acnt1'
+
+    region = Mock()
+    region.name = 'us-east-100'
+    region.helper_image = 'ami-987'
+
+    account.additional_regions = [region]
+    mock_get_regions.return_value = ['us-east-99']
+
+    cloud_accounts = {'acnt1': {'root_swap_ami': 'ami-456'}}
+    accounts = {}
+    helper_images = {'us-east-99': 'ami-789'}
+
+    add_target_ec2_account(
+        account,
+        accounts,
+        cloud_accounts,
+        helper_images,
+        use_root_swap=True
+    )
+
+    assert 'us-east-100' in accounts
+    assert accounts['us-east-100']['account'] == 'acnt1'
+    assert accounts['us-east-100']['helper_image'] == 'ami-456'
+    assert 'us-east-99' in accounts['us-east-100']['target_regions']
+    assert 'us-east-100' in accounts['us-east-100']['target_regions']
+
+    cloud_accounts = {'acnt1': {}}
+
+    with raises(MashJobException):
+        add_target_ec2_account(
+            account,
+            accounts,
+            cloud_accounts,
+            helper_images,
+            use_root_swap=True
+        )
+
+    add_target_ec2_account(
+        account,
+        accounts,
+        cloud_accounts,
+        helper_images
+    )
+
+    assert accounts['us-east-100']['helper_image'] == 'ami-987'
+
+
+def test_convert_account_dict():
+    accounts = [{'name': 'acnt1', 'data': 'more_stuff'}]
+    assert convert_account_dict(accounts)['acnt1']['data'] == 'more_stuff'
+
+
+@patch('mash.services.api.model_utils.add_target_ec2_account')
+@patch('mash.services.api.model_utils.get_ec2_account_by_id')
+@patch('mash.services.api.model_utils.get_ec2_group')
+@patch('mash.services.api.model_utils.get_ec2_helper_images')
+@patch('mash.services.api.model_utils.get_user_by_username')
+def test_update_ec2_job_accounts(
+    mock_get_user,
+    mock_get_helper_images,
+    mock_get_group,
+    mock_get_ec2_account,
+    mock_add_target_account
+):
+    user = Mock()
+    user.id = '1'
+    mock_get_user.return_value = user
+
+    account = Mock()
+    account.name = 'acnt1'
+    mock_get_ec2_account.return_value = account
+
+    group = Mock()
+    group.accounts = [account]
+    mock_get_group.return_value = group
+
+    mock_get_helper_images.return_value = {'us-east-99': 'ami-789'}
+
+    job_doc = {
+        'requesting_user': 'user1',
+        'cloud_accounts': [{'name': 'acnt1', 'data': 'more_stuff'}],
+        'cloud_groups': ['group1']
+    }
+
+    result = update_ec2_job_accounts(job_doc)
+
+    assert 'target_account_info' in result
+    assert 'cloud_accounts' not in result
+    assert 'cloud_groups' not in result

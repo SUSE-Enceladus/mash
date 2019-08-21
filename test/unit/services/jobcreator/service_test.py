@@ -1,7 +1,7 @@
 import json
 
 from pytest import raises
-from unittest.mock import call, MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from mash.services.mash_service import MashService
 from mash.services.jobcreator.service import JobCreatorService
@@ -30,10 +30,7 @@ class TestJobCreatorService(object):
 
         self.jobcreator = JobCreatorService()
         self.jobcreator.log = Mock()
-        self.jobcreator.add_account_key = 'add_account'
-        self.jobcreator.delete_account_key = 'delete_account'
         self.jobcreator.service_exchange = 'jobcreator'
-        self.jobcreator.listener_queue = 'listener'
         self.jobcreator.service_queue = 'service'
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
@@ -59,15 +56,15 @@ class TestJobCreatorService(object):
             '/var/log/mash/job_creator_service.log'
         )
 
-        mock_bind_queue.assert_has_calls([
-            call('jobcreator', 'add_account', 'listener'),
-            call('jobcreator', 'delete_account', 'listener')
-        ])
+        mock_bind_queue.assert_called_once_with(
+            'jobcreator', 'job_document', 'service'
+        )
         mock_start.assert_called_once_with()
 
+    @patch('mash.services.jobcreator.service.handle_request')
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message(
-            self, mock_publish
+        self, mock_publish, mock_handle_request
     ):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
@@ -79,65 +76,35 @@ class TestJobCreatorService(object):
             if cloud:
                 assert job_data['cloud'] == 'ec2'
 
-        self.jobcreator.jobs = {}
-        self.jobcreator.cloud_data = {
-            'ec2': {
-                'regions': {
-                    'aws': ['ap-northeast-1', 'ap-northeast-2'],
-                    'aws-cn': ['cn-north-1'],
-                    'aws-us-gov': ['us-gov-west-1']
-                },
-                'helper_images': {
-                    'ap-northeast-1': 'ami-383c1956',
-                    'ap-northeast-2': 'ami-249b554a',
-                    'cn-north-1': 'ami-bcc45885',
-                    'us-gov-west-1': 'ami-c2b5d7e1'
-                }
-            }
-        }
-        message = MagicMock()
-
         with open('../data/job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
-        self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
-
-        account_info = {
-            "test-aws-gov": {
-                "partition": "aws-us-gov",
-                "region": "us-gov-west-1"
+        job['target_account_info'] = {
+            'us-gov-west-1': {
+                'account': 'test-aws-gov',
+                'target_regions': ['us-gov-west-1'],
+                'helper_image': 'ami-c2b5d7e1',
+                'subnet': 'subnet-12345'
             },
-            "test-aws": {
-                "additional_regions": [
-                    {
-                        "name": "ap-northeast-3",
-                        "helper_image": "ami-82444aff"
-                    }
+            'ap-northeast-1': {
+                'account': 'test-aws',
+                'target_regions': [
+                    'ap-northeast-1', 'ap-northeast-2', 'ap-northeast-3'
                 ],
-                "partition": "aws",
-                "region": "ap-northeast-1"
+                'helper_image': 'ami-383c1956',
+                'subnet': 'subnet-54321'
             }
         }
+        del job['cloud_accounts']
+        del job['cloud_groups']
 
-        message.body = JsonFormat.json_message({
-            'start_job': {
-                'id': '12345678-1234-1234-1234-123456789012',
-                'accounts_info': account_info
-            }
-        })
+        message = MagicMock()
+        message.body = JsonFormat.json_message(job)
         self.jobcreator._handle_service_message(message)
-
-        # Credentials Job Doc
-
-        data = json.loads(mock_publish.mock_calls[0][1][2])['credentials_job']
-        check_base_attrs(data)
-        assert 'test-aws-gov' in data['cloud_accounts']
-        assert 'test-aws' in data['cloud_accounts']
-        assert data['requesting_user'] == 'user1'
 
         # OBS Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['obs_job']
+        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
         check_base_attrs(data, cloud=False)
         assert data['cloud_architecture'] == 'aarch64'
         assert data['download_url'] == \
@@ -155,7 +122,7 @@ class TestJobCreatorService(object):
 
         # Uploader Job Doc
 
-        data = json.loads(mock_publish.mock_calls[2][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
         check_base_attrs(data)
         assert data['cloud_architecture'] == 'aarch64'
         assert data['cloud_image_name'] == 'new_image_123'
@@ -174,7 +141,7 @@ class TestJobCreatorService(object):
 
         # Testing Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[2][1][2])['testing_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 't2.micro'
@@ -189,7 +156,7 @@ class TestJobCreatorService(object):
 
         # Replication Job Doc
 
-        data = json.loads(mock_publish.mock_calls[4][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['replication_job']
         check_base_attrs(data)
         assert data['image_description'] == 'New Image #123'
 
@@ -206,7 +173,7 @@ class TestJobCreatorService(object):
 
         # Publisher Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[4][1][2])['publisher_job']
         check_base_attrs(data)
         assert data['allow_copy'] is False
         assert data['share_with'] == 'all'
@@ -224,7 +191,7 @@ class TestJobCreatorService(object):
 
         # Deprecation Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['deprecation_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
 
@@ -239,9 +206,10 @@ class TestJobCreatorService(object):
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']
 
+    @patch('mash.services.jobcreator.service.handle_request')
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_azure(
-        self, mock_publish
+        self, mock_publish, mock_handle_request
     ):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
@@ -253,55 +221,39 @@ class TestJobCreatorService(object):
             if cloud:
                 assert job_data['cloud'] == 'azure'
 
-        self.jobcreator.jobs = {}
-        self.jobcreator.cloud_data = {'azure': {}}
-        message = MagicMock()
-
         with open('../data/azure_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
-        self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
-
-        account_info = {
-            "test-azure": {
-                "region": "southcentralus",
-                "source_resource_group": "sc_res_group1",
-                "source_container": "sccontainer1",
-                "source_storage_account": "scstorage1",
-                "destination_resource_group": "sc_res_group2",
-                "destination_container": "sccontainer2",
-                "destination_storage_account": "scstorage2"
+        job['target_account_info'] = {
+            'southcentralus': {
+                'account': 'test-azure',
+                'source_resource_group': 'rg-1',
+                'source_container': 'container1',
+                'source_storage_account': 'sa1',
+                'destination_resource_group': 'rg-2',
+                'destination_container': 'container2',
+                'destination_storage_account': 'sa2'
             },
-            "test-azure2": {
-                "region": "centralus",
-                "source_resource_group": "c_res_group1",
-                "source_container": "ccontainer1",
-                "source_storage_account": "cstorage1",
-                "destination_resource_group": "c_res_group2",
-                "destination_container": "ccontainer2",
-                "destination_storage_account": "cstorage2"
+            'centralus': {
+                'account': 'test-azure2',
+                'source_resource_group': 'c_res_group1',
+                'source_container': 'ccontainer1',
+                'source_storage_account': 'cstorage1',
+                'destination_resource_group': 'c_res_group2',
+                'destination_container': 'ccontainer2',
+                'destination_storage_account': 'cstorage2'
             }
         }
+        del job['cloud_accounts']
+        del job['cloud_groups']
 
-        message.body = json.dumps({
-            'start_job': {
-                'id': '12345678-1234-1234-1234-123456789012',
-                'accounts_info': account_info
-            }
-        })
+        message = MagicMock()
+        message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
-
-        # Credentials Job Doc
-
-        data = json.loads(mock_publish.mock_calls[0][1][2])['credentials_job']
-        check_base_attrs(data)
-        assert 'test-azure' in data['cloud_accounts']
-        assert 'test-azure2' in data['cloud_accounts']
-        assert data['requesting_user'] == 'user1'
 
         # OBS Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['obs_job']
+        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
         check_base_attrs(data, cloud=False)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['download_url'] == \
@@ -318,7 +270,7 @@ class TestJobCreatorService(object):
 
         # Uploader Job Doc
 
-        data = json.loads(mock_publish.mock_calls[2][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
         check_base_attrs(data)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['cloud_image_name'] == 'new_image_123'
@@ -339,7 +291,7 @@ class TestJobCreatorService(object):
 
         # Testing Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[2][1][2])['testing_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'Basic_A2'
@@ -354,7 +306,7 @@ class TestJobCreatorService(object):
 
         # Replication Job Doc
 
-        data = json.loads(mock_publish.mock_calls[4][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['replication_job']
         check_base_attrs(data)
         assert data['cleanup_images']
         assert data['image_description'] == 'New Image #123'
@@ -380,7 +332,7 @@ class TestJobCreatorService(object):
 
         # Publisher Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[4][1][2])['publisher_job']
         check_base_attrs(data)
         assert data['emails'] == 'jdoe@fake.com'
         assert data['image_description'] == 'New Image #123'
@@ -403,12 +355,13 @@ class TestJobCreatorService(object):
 
         # Deprecation Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['deprecation_job']
         check_base_attrs(data)
 
+    @patch('mash.services.jobcreator.service.handle_request')
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_gce(
-        self, mock_publish
+        self, mock_publish, mock_handle_request
     ):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
@@ -420,45 +373,37 @@ class TestJobCreatorService(object):
             if cloud:
                 assert job_data['cloud'] == 'gce'
 
-        self.jobcreator.jobs = {}
-        self.jobcreator.cloud_data = {'gce': {}}
-        message = MagicMock()
-
         with open('../data/gce_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
-        self.jobcreator.jobs['12345678-1234-1234-1234-123456789012'] = job
-
-        account_info = {
-            "test-gce": {
-                "region": "us-west1",
-                "bucket": "images"
+        job['target_account_info'] = {
+            'us-west1': {
+                'account': 'test-gce',
+                'bucket': 'images',
+                'family': 'sles-15',
+                'guest_os_features': ['UEFI_COMPATIBLE'],
+                'testing_account': None,
+                'is_publishing_account': False
             },
-            "test-gce2": {
-                "region": "us-west2",
-                "bucket": "images"
+            'us-west2': {
+                'account': 'test-gce2',
+                'bucket': 'images',
+                'family': 'sles-15',
+                'guest_os_features': ['UEFI_COMPATIBLE'],
+                'testing_account': None,
+                'is_publishing_account': False
             }
         }
+        del job['cloud_accounts']
+        del job['cloud_groups']
 
-        message.body = json.dumps({
-            'start_job': {
-                'id': '12345678-1234-1234-1234-123456789012',
-                'accounts_info': account_info
-            }
-        })
+        message = MagicMock()
+        message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
-
-        # Credentials Job Doc
-
-        data = json.loads(mock_publish.mock_calls[0][1][2])['credentials_job']
-        check_base_attrs(data)
-        assert 'test-gce' in data['cloud_accounts']
-        assert 'test-gce2' in data['cloud_accounts']
-        assert data['requesting_user'] == 'user1'
 
         # OBS Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['obs_job']
+        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
         check_base_attrs(data, cloud=False)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['download_url'] == \
@@ -475,7 +420,7 @@ class TestJobCreatorService(object):
 
         # Uploader Job Doc
 
-        data = json.loads(mock_publish.mock_calls[2][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
         check_base_attrs(data)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['cloud_image_name'] == 'new_image_123'
@@ -498,7 +443,7 @@ class TestJobCreatorService(object):
 
         # Testing Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[2][1][2])['testing_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'n1-standard-1'
@@ -515,26 +460,23 @@ class TestJobCreatorService(object):
 
         # Replication Job Doc
 
-        data = json.loads(mock_publish.mock_calls[4][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['replication_job']
         check_base_attrs(data)
 
         # Publisher Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[4][1][2])['publisher_job']
         check_base_attrs(data)
 
         # Deprecation Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['deprecation_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert 'test-gce' in data['deprecation_accounts']
         assert 'test-gce2' in data['deprecation_accounts']
 
-    @patch.object(JobCreatorService, 'send_email_notification')
-    def test_jobcreator_handle_invalid_service_message(
-        self, mock_send_email_notification
-    ):
+    def test_jobcreator_handle_invalid_service_message(self):
         message = MagicMock()
         message.body = 'invalid message'
 
@@ -549,198 +491,14 @@ class TestJobCreatorService(object):
             'Expecting value: line 1 column 1 (char 0).'
         )
 
-        # Invalid accounts
-        message.body = '{"invalid_job": "123"}'
-
-        self.jobcreator._handle_service_message(message)
-        self.jobcreator.log.warning.assert_called_once_with(
-            'Job failed, accounts do not exist.',
-            extra={'job_id': '123'}
-        )
-        mock_send_email_notification.assert_called_once_with(
-            '123', 'test@fake.com', None, 'failed', 'now', 'deprecation',
-            error=None
-        )
-
-    @patch.object(JobCreatorService, '_publish')
-    def test_jobcreator_handle_listener_message_add(
-        self, mock_publish
-    ):
-        message = MagicMock()
-
-        # Test add ec2 account message
-        message.method = {'routing_key': 'add_account'}
-        message.body = JsonFormat.json_message({
-            "account_name": "test-aws",
-            "credentials": {
-                "access_key_id": "123456",
-                "secret_access_key": "654321"
-            },
-            "group": "group1",
-            "partition": "aws",
-            "cloud": "ec2",
-            "requesting_user": "user1"
-        })
-
-        self.jobcreator._handle_listener_message(message)
-
-        mock_publish.assert_called_once_with(
-            'credentials', 'add_account',
-            JsonFormat.json_message(json.loads(message.body))
-        )
-        message.ack.assert_called_once_with()
-
-        message.ack.reset_mock()
-        mock_publish.reset_mock()
-
-        # Test add azure account message
-        message.method = {'routing_key': 'add_account'}
-        message.body = JsonFormat.json_message({
-            "account_name": "test-azure",
-            "container_name": "container1",
-            "credentials": {
-                "clientId": "123456",
-                "clientSecret": "654321",
-                "subscriptionId": "654321",
-                "tenantId": "654321"
-            },
-            "group": "group1",
-            "cloud": "azure",
-            "region": "southcentralus",
-            "requesting_user": "user1",
-            "resource_group": "rg_123",
-            "storage_account": "sa_1"
-        })
-
-        self.jobcreator._handle_listener_message(message)
-
-        mock_publish.assert_called_once_with(
-            'credentials', 'add_account',
-            JsonFormat.json_message(json.loads(message.body))
-        )
-        message.ack.assert_called_once_with()
-
-    @patch.object(JobCreatorService, '_publish')
-    def test_jobcreator_handle_listener_message_delete(
-        self, mock_publish
-    ):
-        message = MagicMock()
-        message.method = {'routing_key': 'delete_account'}
-        message.body = JsonFormat.json_message({
-            "account_name": "test-aws",
-            "cloud": "ec2",
-            "requesting_user": "user2"
-        })
-
-        self.jobcreator._handle_listener_message(message)
-
-        mock_publish.assert_called_once_with(
-            'credentials', 'delete_account',
-            JsonFormat.json_message(json.loads(message.body))
-        )
-        message.ack.assert_called_once_with()
-
-    def test_jobcreator_handle_listener_message_unkown(self):
-        message = MagicMock()
-        message.method = {'routing_key': 'add_user'}
-        message.body = '{}'
-        self.jobcreator._handle_listener_message(message)
-
-        self.jobcreator.log.warning.assert_called_once_with(
-            'Received unknown message type: add_user. '
-            'Message: {0}'.format(message.body)
-        )
-
-    def test_jobcreator_handle_invalid_listener_message(self):
-        message = MagicMock()
-        message.body = 'invalid message'
-
-        self.jobcreator._handle_listener_message(message)
-        self.jobcreator.log.warning.assert_called_once_with(
-            'Invalid message received: invalid message.'
-        )
-
-        message.ack.assert_called_once_with()
-
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_publish_delete_job_message(self, mock_publish):
         message = MagicMock()
         message.body = '{"job_delete": "1"}'
         self.jobcreator._handle_service_message(message)
-        mock_publish.assert_has_calls([
-            call(
-                'obs', 'job_document',
-                JsonFormat.json_message({"obs_job_delete": "1"})
-            )
-        ])
-
-    @patch.object(JobCreatorService, 'publish_job_doc')
-    def test_jobcreator_process_new_job(self, mock_publish_doc):
-        self.jobcreator.jobs = {}
-
-        with open('../data/job.json', 'r') as job_doc:
-            job = json.dumps(json.load(job_doc))
-
-        message = MagicMock()
-        message.body = job
-
-        self.jobcreator._handle_service_message(message)
-
-        assert self.jobcreator.jobs['12345678-1234-1234-1234-123456789012']
-        mock_publish_doc.assert_called_once_with(
-            'credentials',
-            JsonFormat.json_message({
-                "credentials_job_check": {
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "cloud": "ec2",
-                    "cloud_accounts": [
-                        {
-                            "name": "test-aws-gov"
-                        }
-                    ],
-                    "cloud_groups": ["test"],
-                    "requesting_user": "user1"
-                }
-            })
-        )
-
-    @patch.object(JobCreatorService, 'publish_job_doc')
-    def test_jobcreator_process_new_azure_job(
-        self, mock_publish_doc
-    ):
-        self.jobcreator.jobs = {}
-
-        with open('../data/azure_job.json', 'r') as job_doc:
-            job = json.dumps(json.load(job_doc))
-
-        message = MagicMock()
-        message.body = job
-
-        self.jobcreator._handle_service_message(message)
-
-        assert self.jobcreator.jobs['12345678-1234-1234-1234-123456789012']
-        mock_publish_doc.assert_called_once_with(
-            'credentials',
-            JsonFormat.json_message({
-                "credentials_job_check": {
-                    "id": "12345678-1234-1234-1234-123456789012",
-                    "cloud": "azure",
-                    "cloud_accounts": [
-                        {
-                            "name": "test-azure",
-                            "region": "southcentralus",
-                            "source_resource_group": "rg-1",
-                            "source_storage_account": "sa1",
-                            "source_container": "container1",
-                            "destination_resource_group": "rg-2",
-                            "destination_storage_account": "sa2",
-                            "destination_container": "container2"
-                        }
-                    ],
-                    "cloud_groups": ["test-azure-group"],
-                    "requesting_user": "user1"
-                }
-            })
+        mock_publish.assert_called_once_with(
+            'obs', 'job_document',
+            JsonFormat.json_message({"obs_job_delete": "1"})
         )
 
     @patch.object(JobCreatorService, 'consume_queue')
@@ -751,16 +509,10 @@ class TestJobCreatorService(object):
         self.jobcreator.start()
         self.channel.start_consuming.assert_called_once_with()
 
-        mock_consume_queue.assert_has_calls([
-            call(
-                self.jobcreator._handle_service_message,
-                queue_name='service'
-            ),
-            call(
-                self.jobcreator._handle_listener_message,
-                queue_name='listener'
-            )
-        ])
+        mock_consume_queue.assert_called_once_with(
+            self.jobcreator._handle_service_message,
+            queue_name='service'
+        )
         mock_stop.assert_called_once_with()
 
     @patch.object(JobCreatorService, 'consume_queue')

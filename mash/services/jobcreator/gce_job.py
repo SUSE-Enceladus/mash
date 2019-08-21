@@ -16,7 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.mash_exceptions import MashJobCreatorException
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
 
@@ -35,50 +34,6 @@ class GCEJob(BaseJob):
             'months_to_deletion', 6
         )
         self.guest_os_features = self.kwargs.get('guest_os_features')
-
-    def get_account_info(self):
-        """
-        Returns a dictionary of regions to accounts.
-
-        Example: {
-            'us-west1': {
-                'account': 'acnt1',
-                'bucket': 'images',
-                'family': 'sles-15'
-            }
-        }
-        """
-        for account, info in self.accounts_info.items():
-            region = self.cloud_accounts[account].get(
-                'region'
-            ) or info.get('region')
-
-            bucket = self.cloud_accounts[account].get(
-                'bucket'
-            ) or info.get('bucket')
-
-            testing_account = info.get('testing_account')
-            is_publishing_account = info.get('is_publishing_account')
-
-            if is_publishing_account and not self.family:
-                raise MashJobCreatorException(
-                    'Jobs using a GCE publishing account require a family.'
-                )
-
-            if is_publishing_account and not testing_account:
-                raise MashJobCreatorException(
-                    'Jobs using a GCE publishing account require'
-                    ' the use of a testing account.'
-                )
-
-            self.target_account_info[region] = {
-                'account': account,
-                'bucket': bucket,
-                'family': self.family,
-                'testing_account': testing_account,
-                'guest_os_features': self.guest_os_features,
-                'is_publishing_account': is_publishing_account
-            }
 
     def get_deprecation_message(self):
         """

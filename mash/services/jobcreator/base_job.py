@@ -16,8 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from collections import defaultdict
-
 from mash.mash_exceptions import MashJobCreatorException
 from mash.utils.json_format import JsonFormat
 
@@ -28,11 +26,7 @@ class BaseJob(object):
 
     Handles incoming job requests.
     """
-    def __init__(self, accounts_info, cloud_data, kwargs):
-        self.accounts_info = accounts_info
-        self.cloud_data = cloud_data
-        self.target_account_info = {}
-
+    def __init__(self, kwargs):
         try:
             self.id = kwargs['job_id']
             self.cloud = kwargs['cloud']
@@ -44,6 +38,7 @@ class BaseJob(object):
             self.image_description = kwargs['image_description']
             self.distro = kwargs['distro']
             self.download_url = kwargs['download_url']
+            self.target_account_info = kwargs['target_account_info']
         except KeyError as error:
             raise MashJobCreatorException(
                 'Jobs require a(n) {0} key in the job doc.'.format(
@@ -60,10 +55,6 @@ class BaseJob(object):
         self.old_cloud_image_name = kwargs.get('old_cloud_image_name')
         self.cleanup_images = kwargs.get('cleanup_images')
         self.cloud_architecture = kwargs.get('cloud_architecture', 'x86_64')
-        self.cloud_accounts = self._get_accounts_data(
-            kwargs.get('cloud_accounts')
-        )
-        self.cloud_groups = kwargs.get('cloud_groups', [])
         self.notification_email = kwargs.get('notification_email')
         self.notification_type = kwargs.get('notification_type', 'single')
         self.profile = kwargs.get('profile')
@@ -80,34 +71,6 @@ class BaseJob(object):
             self.base_message['notification_type'] = self.notification_type
 
         self.post_init()
-        self.get_account_info()
-
-    def get_account_info(self):
-        """
-        Parse dictionary of account data from accounts file.
-
-        Implementation in child class.
-        """
-        raise NotImplementedError(
-            'This {0} class does not implement the '
-            'get_account_info method.'.format(
-                self.__class__.__name__
-            )
-        )
-
-    def _get_accounts_data(self, cloud_accounts):
-        """
-        Convert cloud accounts from a list to dictionary.
-
-        This simplifies data lookup.
-        """
-        account_data = defaultdict(dict)
-
-        if cloud_accounts:
-            for account in cloud_accounts:
-                account_data[account['name']] = account
-
-        return account_data
 
     def get_credentials_message(self):
         """
@@ -126,7 +89,7 @@ class BaseJob(object):
         }
         credentials_message['credentials_job'].update(self.base_message)
 
-        return JsonFormat.json_message(credentials_message)
+        return credentials_message
 
     def get_deprecation_message(self):
         """

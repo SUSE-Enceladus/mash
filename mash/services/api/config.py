@@ -31,4 +31,5 @@ class Config(object):
     AMQP_USER = config.get_amqp_user()
     AMQP_PASS = config.get_amqp_pass()
 
+    CLOUD_DATA = config.get_cloud_data()
     CREDENTIALS_URL = config.get_credentials_url()

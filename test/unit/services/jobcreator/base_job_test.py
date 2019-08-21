@@ -9,30 +9,27 @@ from mash.utils.json_format import JsonFormat
 
 class TestJobCreatorBaseJob(object):
 
-    @patch.object(BaseJob, 'get_account_info')
-    def setup(self, mock_get_account_info):
-        self.job = BaseJob(
-            {}, {}, {
-                'job_id': '123',
-                'cloud': 'aws',
-                'requesting_user': 'test-user',
-                'last_service': 'testing',
-                'utctime': 'now',
-                'image': 'test-image',
-                'cloud_image_name': 'test-cloud-image',
-                'image_description': 'image description',
-                'distro': 'sles',
-                'download_url': 'https://download.here',
-                'cleanup_images': True,
-                'test_fallback_regions': []
-            }
-        )
+    def setup(self):
+        self.job = BaseJob({
+            'job_id': '123',
+            'cloud': 'aws',
+            'requesting_user': 'test-user',
+            'last_service': 'testing',
+            'utctime': 'now',
+            'image': 'test-image',
+            'cloud_image_name': 'test-cloud-image',
+            'image_description': 'image description',
+            'distro': 'sles',
+            'download_url': 'https://download.here',
+            'cleanup_images': True,
+            'test_fallback_regions': [],
+            'target_account_info': {}
+        })
 
     def test_base_job_post_init(self):
         self.job.post_init()
 
     @pytest.mark.parametrize('method', [
-        ('get_account_info'),
         ('get_deprecation_message'),
         ('get_publisher_message'),
         ('get_replication_message'),
@@ -46,19 +43,18 @@ class TestJobCreatorBaseJob(object):
 
     def test_base_job_init_missing_key(self):
         with pytest.raises(MashJobCreatorException):
-            BaseJob(
-                {}, {}, {
-                    'cloud': 'aws',
-                    'requesting_user': 'test-user',
-                    'last_service': 'deprecation',
-                    'utctime': 'now',
-                    'image': 'test-image',
-                    'cloud_image_name': 'test-cloud-image',
-                    'image_description': 'image description',
-                    'distro': 'sles',
-                    'download_url': 'https://download.here'
-                }
-            )
+            BaseJob({
+                'cloud': 'aws',
+                'requesting_user': 'test-user',
+                'last_service': 'deprecation',
+                'utctime': 'now',
+                'image': 'test-image',
+                'cloud_image_name': 'test-cloud-image',
+                'image_description': 'image description',
+                'distro': 'sles',
+                'download_url': 'https://download.here',
+                'target_account_info': {}
+            })
 
     @patch.object(BaseJob, 'get_testing_regions')
     def test_get_testing_message_cleanup(self, mock_get_testing_regions):

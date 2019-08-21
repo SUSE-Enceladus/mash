@@ -21,6 +21,7 @@ import json
 from mash.services.mash_service import MashService
 from mash.services.jobcreator import create_job
 from mash.utils.json_format import JsonFormat
+from mash.utils.mash_utils import handle_request
 
 
 class JobCreatorService(MashService):
@@ -34,56 +35,18 @@ class JobCreatorService(MashService):
         """
         Initialize job creator service class.
         """
-        self.listener_queue = 'listener'
         self.service_queue = 'service'
         self.job_document_key = 'job_document'
-        self.listener_msg_key = 'listener_msg'
 
         self.set_logfile(self.config.get_log_file(self.service_exchange))
-        self.cloud_data = self.config.get_cloud_data()
         self.services = self.config.get_service_names()
+        self.credentials_url = self.config.get_credentials_url()
 
-        self.add_account_key = 'add_account'
-        self.delete_account_key = 'delete_account'
-
-        self.bind_queue(
-            self.service_exchange, self.add_account_key, self.listener_queue
-        )
-        self.bind_queue(
-            self.service_exchange, self.delete_account_key, self.listener_queue
-        )
         self.bind_queue(
             self.service_exchange, self.job_document_key, self.service_queue
         )
 
-        self.jobs = {}
-
         self.start()
-
-    def _handle_listener_message(self, message):
-        """
-        Process add and delete account messages.
-        """
-        try:
-            account_message = json.loads(message.body)
-        except Exception:
-            self.log.warning(
-                'Invalid message received: {0}.'.format(message.body)
-            )
-        else:
-            if message.method['routing_key'] == 'add_account':
-                self.add_account(account_message)
-            elif message.method['routing_key'] == 'delete_account':
-                self.delete_account(account_message)
-            else:
-                self.log.warning(
-                    'Received unknown message type: {0}. Message: {1}'.format(
-                        message.method['routing_key'],
-                        message.body
-                    )
-                )
-
-        message.ack()
 
     def _handle_service_message(self, message):
         """
@@ -93,82 +56,14 @@ class JobCreatorService(MashService):
             job_doc = json.loads(message.body)
             if 'job_delete' in job_doc:
                 self.publish_delete_job_message(job_doc['job_delete'])
-            elif 'invalid_job' in job_doc:
-                self._notify_failed_job(job_doc)
-            elif 'start_job' in job_doc:
-                self.send_job(job_doc['start_job'])
             else:
-                self.process_new_job(job_doc)
+                self.send_job(job_doc)
         except Exception as error:
             self.log.error(
                 'Invalid message received: {0}.'.format(error)
             )
 
         message.ack()
-
-    def add_account(self, message):
-        """
-        Validate add account message and relay to credentials service.
-        """
-        self._publish(
-            'credentials', self.add_account_key,
-            JsonFormat.json_message(message)
-        )
-
-    def delete_account(self, message):
-        """
-        Validate delete account message and relay to credentials service.
-        """
-        self._publish(
-            'credentials', self.delete_account_key,
-            JsonFormat.json_message(message)
-        )
-
-    def _notify_failed_job(self, job_doc):
-        """
-        Log and send email notification for failed job.
-
-        Credentials accounts in job are invalid.
-        """
-        job_id = job_doc['invalid_job']
-
-        self.log.warning(
-            'Job failed, accounts do not exist.',
-            extra={'job_id': job_id}
-        )
-
-        job = self.jobs[job_id]
-
-        self.send_email_notification(
-            job_id, job.get('notification_email'),
-            job.get('notification_type'), 'failed',
-            job.get('utctime'), job.get('last_service'),
-            error=job_doc.get('error_msg')
-        )
-
-        del self.jobs[job_id]
-
-    def process_new_job(self, job_doc):
-        """
-        Validate job and send account check message to credentials service.
-        """
-        job_id = job_doc.get('job_id')
-        self.jobs[job_id] = job_doc
-
-        account_check_message = {
-            'credentials_job_check': {
-                'id': job_id,
-                'cloud': job_doc['cloud'],
-                'cloud_accounts': job_doc.get('cloud_accounts', []),
-                'cloud_groups': job_doc.get('cloud_groups', []),
-                'requesting_user': job_doc['requesting_user']
-            }
-        }
-
-        self.publish_job_doc(
-            'credentials',
-            JsonFormat.json_message(account_check_message)
-        )
 
     def publish_delete_job_message(self, job_id):
         """
@@ -194,17 +89,14 @@ class JobCreatorService(MashService):
         """
         self._publish(service, self.job_document_key, job_doc)
 
-    def send_job(self, message):
+    def send_job(self, job_doc):
         """
         Create instance of job and send to all services to initiate job.
 
         Message from credentials service contains account info for the
         cloud.
         """
-        job_id = message['id']
-        job_doc = self.jobs[job_id]
-        accounts_info = message['accounts_info']
-        job = create_job(job_doc, accounts_info, self.cloud_data)
+        job = create_job(job_doc)
 
         self.log.info(
             'Started a new job: {0}'.format(JsonFormat.json_message(job_doc)),
@@ -212,7 +104,19 @@ class JobCreatorService(MashService):
         )
 
         # Credentials job always sent for all jobs.
-        self.publish_job_doc('credentials', job.get_credentials_message())
+        try:
+            msg = job.get_credentials_message()
+            handle_request(
+                self.credentials_url,
+                'jobs',
+                'post',
+                msg
+            )
+        except Exception:
+            self.log.error(
+                'Failed to send job to credentials service.',
+                extra={'job_id': job.id}
+            )
 
         for service in self.services:
             if service == 'deprecation':
@@ -243,8 +147,6 @@ class JobCreatorService(MashService):
             if service == job.last_service:
                 break
 
-        del self.jobs[job_id]
-
     def start(self):
         """
         Start job creator service.
@@ -252,10 +154,6 @@ class JobCreatorService(MashService):
         self.consume_queue(
             self._handle_service_message,
             queue_name=self.service_queue
-        )
-        self.consume_queue(
-            self._handle_listener_message,
-            queue_name=self.listener_queue
         )
         try:
             self.channel.start_consuming()
