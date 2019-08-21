@@ -38,6 +38,12 @@ class User(db.Model):
         lazy='select',
         cascade='all, delete, delete-orphan'
     )
+    gce_accounts = db.relationship(
+        'GCEAccount',
+        back_populates='user',
+        lazy='select',
+        cascade='all, delete, delete-orphan'
+    )
     ec2_groups = db.relationship(
         'EC2Group',
         back_populates='user',
@@ -131,3 +137,21 @@ class EC2Account(db.Model):
 
     def __repr__(self):
         return '<EC2 Account {}>'.format(self.name)
+
+
+class GCEAccount(db.Model):
+    __tablename__ = 'gce_account'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    bucket = db.Column(db.String(222), nullable=False)
+    region = db.Column(db.String(32), nullable=False)
+    testing_account = db.Column(db.String(64))
+    is_publishing_account = db.Column(db.Boolean, default=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', back_populates='gce_accounts')
+    __table_args__ = (
+        db.UniqueConstraint('name', 'user_id', name='_name_user_uc'),
+    )
+
+    def __repr__(self):
+        return '<GCE Account {}>'.format(self.name)
