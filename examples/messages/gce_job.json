@@ -4,7 +4,6 @@
   "cloud_accounts": [
     {"name": "test-gce", "region": "us-west1", "bucket": "images"}
   ],
-  "cloud_groups": ["test"],
   "requesting_user": "user1",
   "last_service": "deprecation",
   "utctime": "now",

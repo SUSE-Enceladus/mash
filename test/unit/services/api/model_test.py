@@ -11,7 +11,9 @@ with patch('mash.services.base_config.BaseConfig') as mock_config:
         Token,
         EC2Account,
         EC2Group,
-        EC2Region
+        EC2Region,
+        GCEAccount,
+        AzureAccount
     )
 
 
@@ -60,3 +62,28 @@ def test_ec2_region_model():
         account_id='1'
     )
     assert region.__repr__() == '<EC2 Region us-east-99>'
+
+
+def test_gce_account_model():
+    account = GCEAccount(
+        name='acnt1',
+        bucket='images',
+        region='us-east1',
+        user_id='1'
+    )
+    assert account.__repr__() == '<GCE Account acnt1>'
+
+
+def test_azure_account_model():
+    account = AzureAccount(
+        name='acnt1',
+        region='us-east1',
+        source_container='sc1',
+        source_resource_group='srg1',
+        source_storage_account='ssa1',
+        destination_container='dc2',
+        destination_resource_group='drg2',
+        destination_storage_account='dsa2',
+        user_id='1'
+    )
+    assert account.__repr__() == '<Azure Account acnt1>'

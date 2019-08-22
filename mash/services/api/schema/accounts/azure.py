@@ -24,7 +24,6 @@ azure_account = {
     'type': 'object',
     'properties': {
         'account_name': string_with_example('account1'),
-        'group': string_with_example('group1'),
         'region': string_with_example('westus'),
         'requesting_user': string_with_example('user1'),
         'source_container': string_with_example('container1'),
@@ -37,6 +36,7 @@ azure_account = {
     'additionalProperties': False,
     'required': [
         'account_name',
+        'region',
         'requesting_user',
         'source_container',
         'source_resource_group',

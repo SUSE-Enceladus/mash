@@ -13,7 +13,6 @@
       "destination_storage_account": "sa2"
     }
   ],
-  "cloud_groups": ["test-azure-group"],
   "requesting_user": "user1",
   "last_service": "deprecation",
   "utctime": "now",
