@@ -21,7 +21,7 @@ import io
 from pytest import raises
 from unittest.mock import call, MagicMock, patch
 
-from mash.mash_exceptions import MashException
+from mash.mash_exceptions import MashException, MashLogSetupException
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import (
     create_json_file,
@@ -34,7 +34,9 @@ from mash.utils.mash_utils import (
     load_json,
     restart_job,
     restart_jobs,
-    handle_request
+    handle_request,
+    setup_logfile,
+    setup_rabbitmq_log_handler
 )
 
 
@@ -176,3 +178,39 @@ def test_handle_request_failed(mock_requests):
 
     with raises(MashException):
         handle_request('localhost', '/jobs', 'get')
+
+
+@patch('mash.utils.mash_utils.logging')
+@patch('mash.utils.mash_utils.os')
+def test_setup_logfile(mock_os, mock_logging):
+    mock_os.path.isdir.return_value = False
+    mock_os.path.dirname.return_value = '/file/dir'
+
+    setup_logfile('/file/dir/fake.path')
+    mock_os.makedirs.assert_called_once_with('/file/dir')
+    mock_logging.FileHandler.assert_called_once_with(
+        filename='/file/dir/fake.path', encoding='utf-8'
+    )
+
+    mock_os.makedirs.side_effect = Exception('Cannot create dir')
+    with raises(MashLogSetupException):
+        setup_logfile('fake.path')
+
+
+@patch('mash.utils.mash_utils.logging')
+@patch('mash.utils.mash_utils.RabbitMQHandler')
+def test_setup_rabbitmq_log_handler(mock_rabbit, mock_logging):
+    handler = MagicMock()
+    formatter = MagicMock()
+    mock_rabbit.return_value = handler
+    mock_logging.Formatter.return_value = formatter
+
+    setup_rabbitmq_log_handler('localhost', 'user1', 'pass')
+
+    mock_rabbit.assert_called_once_with(
+        host='localhost',
+        username='user1',
+        password='pass',
+        routing_key='mash.logger'
+    )
+    handler.setFormatter.assert_called_once_with(formatter)

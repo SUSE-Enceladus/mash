@@ -16,51 +16,9 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import logging
 import os
 
-from mash.log.handler import RabbitMQHandler
-from mash.mash_exceptions import MashLogSetupException
 from mash.utils.mash_utils import load_json, persist_json, remove_file
-
-
-def setup_logfile(logfile):
-    """
-    Create log dir and log file if either does not already exist.
-    """
-    try:
-        log_dir = os.path.dirname(logfile)
-        if not os.path.isdir(log_dir):
-            os.makedirs(log_dir)
-    except Exception as e:
-        raise MashLogSetupException(
-            'Log setup failed: {0}'.format(e)
-        )
-
-    logfile_handler = logging.FileHandler(
-        filename=logfile, encoding='utf-8'
-    )
-
-    return logfile_handler
-
-
-def get_logging_formatter():
-    return logging.Formatter(
-        '%(newline)s%(levelname)s %(asctime)s %(name)s%(newline)s'
-        '    %(job)s %(message)s'
-    )
-
-
-def setup_rabbitmq_log_handler(host, username, password):
-    rabbit_handler = RabbitMQHandler(
-        host=host,
-        username=username,
-        password=password,
-        routing_key='mash.logger'
-    )
-    rabbit_handler.setFormatter(get_logging_formatter())
-
-    return rabbit_handler
 
 
 def add_job_to_queue(job_doc, jobs):

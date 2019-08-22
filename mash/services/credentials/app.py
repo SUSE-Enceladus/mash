@@ -23,15 +23,10 @@ import os
 from flask import Flask
 from flask.logging import default_handler
 
+from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
 from mash.log.filter import BaseServiceFilter
-from mash.services.credentials.datastore import (
-    CredentialsDatastore
-)
-from mash.services.credentials.utils import (
-    restart_jobs,
-    setup_logfile,
-    setup_rabbitmq_log_handler
-)
+from mash.services.credentials.datastore import CredentialsDatastore
+from mash.services.credentials.utils import restart_jobs
 from mash.services.credentials.routes import credentials
 from mash.services.credentials.routes import jobs
 

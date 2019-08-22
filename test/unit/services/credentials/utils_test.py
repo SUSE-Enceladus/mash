@@ -1,11 +1,6 @@
-from pytest import raises
+from unittest.mock import patch
 
-from unittest.mock import Mock, patch
-
-from mash.mash_exceptions import MashLogSetupException
 from mash.services.credentials.utils import (
-    setup_logfile,
-    setup_rabbitmq_log_handler,
     add_job_to_queue,
     get_job_file,
     restart_jobs,
@@ -13,42 +8,6 @@ from mash.services.credentials.utils import (
     remove_job,
     remove_job_from_queue
 )
-
-
-@patch('mash.services.credentials.utils.logging')
-@patch('mash.services.credentials.utils.os')
-def test_setup_logfile(mock_os, mock_logging):
-    mock_os.path.isdir.return_value = False
-    mock_os.path.dirname.return_value = '/file/dir'
-
-    setup_logfile('/file/dir/fake.path')
-    mock_os.makedirs.assert_called_once_with('/file/dir')
-    mock_logging.FileHandler.assert_called_once_with(
-        filename='/file/dir/fake.path', encoding='utf-8'
-    )
-
-    mock_os.makedirs.side_effect = Exception('Cannot create dir')
-    with raises(MashLogSetupException):
-        setup_logfile('fake.path')
-
-
-@patch('mash.services.credentials.utils.logging')
-@patch('mash.services.credentials.utils.RabbitMQHandler')
-def test_setup_rabbitmq_log_handler(mock_rabbit, mock_logging):
-    handler = Mock()
-    formatter = Mock()
-    mock_rabbit.return_value = handler
-    mock_logging.Formatter.return_value = formatter
-
-    setup_rabbitmq_log_handler('localhost', 'user1', 'pass')
-
-    mock_rabbit.assert_called_once_with(
-        host='localhost',
-        username='user1',
-        password='pass',
-        routing_key='mash.logger'
-    )
-    handler.setFormatter.assert_called_once_with(formatter)
 
 
 def test_add_job_to_queue():

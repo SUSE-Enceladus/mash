@@ -17,7 +17,6 @@
 #
 
 import logging
-import os
 import smtplib
 
 from amqpstorm import Connection
@@ -25,13 +24,10 @@ from email.message import EmailMessage
 
 # project
 from mash.log.filter import BaseServiceFilter
-from mash.log.handler import RabbitMQHandler
 from mash.services import get_configuration
 from mash.services.status_levels import SUCCESS
-from mash.mash_exceptions import (
-    MashRabbitConnectionException,
-    MashLogSetupException
-)
+from mash.mash_exceptions import MashRabbitConnectionException
+from mash.utils.mash_utils import setup_rabbitmq_log_handler
 
 
 class MashService(object):
@@ -77,17 +73,10 @@ class MashService(object):
         self.log.setLevel(logging.DEBUG)
         self.log.propagate = False
 
-        rabbit_handler = RabbitMQHandler(
-            host=self.amqp_host,
-            username=self.amqp_user,
-            password=self.amqp_pass,
-            routing_key='mash.logger'
-        )
-        rabbit_handler.setFormatter(
-            logging.Formatter(
-                '%(newline)s%(levelname)s %(asctime)s %(name)s%(newline)s'
-                '    %(job)s %(iteration)s %(message)s%(newline)s'
-            )
+        rabbit_handler = setup_rabbitmq_log_handler(
+            self.amqp_host,
+            self.amqp_user,
+            self.amqp_pass
         )
         self.log.addHandler(rabbit_handler)
         self.log.addFilter(BaseServiceFilter())
@@ -199,24 +188,6 @@ class MashService(object):
         self.channel.basic.consume(
             callback=callback, queue=queue
         )
-
-    def set_logfile(self, logfile):
-        """
-        Allow to set a custom service log file
-        """
-        try:
-            log_dir = os.path.dirname(logfile)
-            if not os.path.isdir(log_dir):
-                os.makedirs(log_dir)
-
-            logfile_handler = logging.FileHandler(
-                filename=logfile, encoding='utf-8'
-            )
-            self.log.addHandler(logfile_handler)
-        except Exception as e:
-            raise MashLogSetupException(
-                'Log setup failed: {0}'.format(e)
-            )
 
     def unbind_queue(self, queue, exchange, routing_key):
         """

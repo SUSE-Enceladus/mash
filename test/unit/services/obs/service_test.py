@@ -17,7 +17,7 @@ class TestOBSImageBuildResultService(object):
 
     @patch('mash.services.obs.service.os.makedirs')
     @patch.object(Defaults, 'get_job_directory')
-    @patch.object(OBSImageBuildResultService, 'set_logfile')
+    @patch('mash.services.obs.service.setup_logfile')
     @patch.object(OBSImageBuildResultService, '_process_message')
     @patch.object(OBSImageBuildResultService, '_send_job_result_for_uploader')
     @patch('mash.services.obs.service.restart_jobs')
@@ -29,7 +29,7 @@ class TestOBSImageBuildResultService(object):
         self, mock_register, mock_log, mock_listdir, mock_MashService,
         mock_restart_jobs, mock_send_job_result_for_uploader,
         mock_process_message,
-        mock_set_logfile, mock_get_job_directory, mock_makedirs
+        mock_setup_logfile, mock_get_job_directory, mock_makedirs
     ):
         mock_get_job_directory.return_value = '/var/lib/mash/obs_jobs/'
         config = Mock()
@@ -60,7 +60,7 @@ class TestOBSImageBuildResultService(object):
             '/var/lib/mash/obs_jobs/', exist_ok=True
         )
 
-        mock_set_logfile.assert_called_once_with('logfile')
+        mock_setup_logfile.assert_called_once_with('logfile')
         mock_restart_jobs.assert_called_once_with(
             '/var/lib/mash/obs_jobs/',
             self.obs_result._start_job

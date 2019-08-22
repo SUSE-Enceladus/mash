@@ -21,7 +21,7 @@ import json
 from mash.services.mash_service import MashService
 from mash.services.jobcreator import create_job
 from mash.utils.json_format import JsonFormat
-from mash.utils.mash_utils import handle_request
+from mash.utils.mash_utils import handle_request, setup_logfile
 
 
 class JobCreatorService(MashService):
@@ -38,7 +38,10 @@ class JobCreatorService(MashService):
         self.service_queue = 'service'
         self.job_document_key = 'job_document'
 
-        self.set_logfile(self.config.get_log_file(self.service_exchange))
+        logfile_handler = setup_logfile(
+            self.config.get_log_file(self.service_exchange)
+        )
+        self.log.addHandler(logfile_handler)
         self.services = self.config.get_service_names()
         self.credentials_url = self.config.get_credentials_url()
 
