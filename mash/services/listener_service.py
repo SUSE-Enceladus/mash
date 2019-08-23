@@ -36,7 +36,8 @@ from mash.utils.mash_utils import (
     remove_file,
     persist_json,
     restart_jobs,
-    handle_request
+    handle_request,
+    setup_logfile
 )
 
 
@@ -74,7 +75,10 @@ class ListenerService(MashService):
         if self.custom_args.get('status_msg_args'):
             self.status_msg_args += self.custom_args['status_msg_args']
 
-        self.set_logfile(self.config.get_log_file(self.service_exchange))
+        logfile_handler = setup_logfile(
+            self.config.get_log_file(self.service_exchange)
+        )
+        self.log.addHandler(logfile_handler)
 
         self.bind_queue(
             self.service_exchange, self.job_document_key, self.service_queue

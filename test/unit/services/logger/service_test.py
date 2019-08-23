@@ -41,15 +41,16 @@ class TestLoggerService(object):
         )
 
         self.logger = LoggerService()
+        self.logger.log = MagicMock()
         self.logger.service_exchange = 'logger'
         self.logger.channel = self.channel
 
-    @patch.object(LoggerService, 'set_logfile')
+    @patch('mash.services.logger.service.setup_logfile')
     @patch.object(LoggerService, 'start')
     @patch.object(LoggerService, 'bind_queue')
     @patch.object(LoggerService, '_process_log')
     def test_logger_post_init(
-        self, mock_process_log, mock_bind_queue, mock_start, mock_set_logfile
+        self, mock_process_log, mock_bind_queue, mock_start, mock_setup_logfile
     ):
         config = Mock()
         config.get_log_file.return_value = '/var/log/mash/logger_service.log'
@@ -59,7 +60,7 @@ class TestLoggerService(object):
         self.logger.post_init()
 
         config.get_log_file.assert_called_once_with('logger')
-        mock_set_logfile.assert_called_once_with(
+        mock_setup_logfile.assert_called_once_with(
             '/var/log/mash/logger_service.log'
         )
         mock_bind_queue.assert_called_once_with(

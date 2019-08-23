@@ -38,12 +38,12 @@ class TestJobCreatorService(object):
             'publisher', 'deprecation'
         ]
 
-    @patch.object(JobCreatorService, 'set_logfile')
+    @patch('mash.services.jobcreator.service.setup_logfile')
     @patch.object(JobCreatorService, 'start')
     @patch.object(JobCreatorService, 'bind_queue')
     def test_jobcreator_post_init(
         self, mock_bind_queue,
-        mock_start, mock_set_logfile
+        mock_start, mock_setup_logfile
     ):
         self.jobcreator.config = self.config
         self.config.get_log_file.return_value = \
@@ -52,7 +52,7 @@ class TestJobCreatorService(object):
         self.jobcreator.post_init()
 
         self.config.get_log_file.assert_called_once_with('jobcreator')
-        mock_set_logfile.assert_called_once_with(
+        mock_setup_logfile.assert_called_once_with(
             '/var/log/mash/job_creator_service.log'
         )
 

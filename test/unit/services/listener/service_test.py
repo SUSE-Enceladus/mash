@@ -89,11 +89,11 @@ class TestListenerService(object):
     @patch.object(Defaults, 'get_job_directory')
     @patch.object(ListenerService, 'bind_queue')
     @patch('mash.services.listener_service.restart_jobs')
-    @patch.object(ListenerService, 'set_logfile')
+    @patch('mash.services.listener_service.setup_logfile')
     @patch.object(ListenerService, 'start')
     def test_service_post_init(
         self, mock_start,
-        mock_set_logfile, mock_restart_jobs,
+        mock_setup_logfile, mock_restart_jobs,
         mock_bind_queue, mock_get_job_directory, mock_makedirs
     ):
         mock_get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
@@ -109,7 +109,7 @@ class TestListenerService(object):
         )
 
         self.config.get_log_file.assert_called_once_with('replication')
-        mock_set_logfile.assert_called_once_with(
+        mock_setup_logfile.assert_called_once_with(
             '/var/log/mash/service_service.log'
         )
 
@@ -127,11 +127,11 @@ class TestListenerService(object):
     @patch.object(Defaults, 'get_job_directory')
     @patch.object(ListenerService, 'bind_queue')
     @patch('mash.services.listener_service.restart_jobs')
-    @patch.object(ListenerService, 'set_logfile')
+    @patch('mash.services.listener_service.setup_logfile')
     @patch.object(ListenerService, 'start')
     def test_service_post_init_custom_args(
         self, mock_start,
-        mock_set_logfile, mock_restart_jobs,
+        mock_setup_logfile, mock_restart_jobs,
         mock_bind_queue, mock_get_job_directory, mock_makedirs
     ):
         mock_makedirs.return_value = True

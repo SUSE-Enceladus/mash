@@ -25,7 +25,7 @@ from mash.services.mash_service import MashService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
 from mash.services.status_levels import DELETE
-from mash.utils.mash_utils import persist_json, restart_jobs
+from mash.utils.mash_utils import persist_json, restart_jobs, setup_logfile
 
 
 class OBSImageBuildResultService(MashService):
@@ -39,7 +39,10 @@ class OBSImageBuildResultService(MashService):
         self.service_queue = 'service'
 
         # setup service log file
-        self.set_logfile(self.config.get_log_file(self.service_exchange))
+        logfile_handler = setup_logfile(
+            self.config.get_log_file(self.service_exchange)
+        )
+        self.log.addHandler(logfile_handler)
 
         # setup service data directories
         self.download_directory = self.config.get_download_directory()
