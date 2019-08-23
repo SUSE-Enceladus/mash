@@ -66,6 +66,7 @@ base_job_message = {
             'enum': [
                 'uploader',
                 'testing',
+                'raw_image_uploader',
                 'replication',
                 'publisher',
                 'deprecation'
@@ -124,7 +125,10 @@ base_job_message = {
             'example': 900,
             'description': 'Time (in seconds) to wait before failing '
                            'on image conditions.'
-        }
+        },
+        'raw_image_upload_type': string_with_example('s3bucket'),
+        'raw_image_upload_location': string_with_example('my-bucket/prefix/'),
+        'raw_image_upload_account': string_with_example('my_aws_account')
     },
     'additionalProperties': False,
     'required': [

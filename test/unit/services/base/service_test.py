@@ -30,8 +30,8 @@ class TestBaseService(object):
 
         config = Mock()
         config.get_service_names.return_value = [
-            'obs', 'uploader', 'testing', 'replication', 'publisher',
-            'deprecation'
+            'obs', 'uploader', 'testing', 'raw_image_uploader' 'replication',
+            'publisher', 'deprecation'
         ]
         mock_get_configuration.return_value = config
 

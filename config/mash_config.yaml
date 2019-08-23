@@ -16,6 +16,7 @@ services:
   - obs
   - uploader
   - testing
+  - raw_image_uploader
   - replication
   - publisher
   - deprecation

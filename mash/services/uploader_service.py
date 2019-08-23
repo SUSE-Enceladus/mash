@@ -37,7 +37,7 @@ def main():
             service_exchange='uploader',
             custom_args={
                 'listener_msg_args': ['image_file'],
-                'status_msg_args': ['source_regions']
+                'status_msg_args': ['source_regions', 'image_file']
             }
         )
     except MashException as e:

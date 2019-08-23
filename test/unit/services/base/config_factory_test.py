@@ -8,6 +8,7 @@ from mash.services.jobcreator.config import JobCreatorConfig
 from mash.services.logger.config import LoggerConfig
 from mash.services.obs.config import OBSConfig
 from mash.services.publisher.config import PublisherConfig
+from mash.services.raw_image_uploader.config import RawImageUploaderConfig
 from mash.services.replication.config import ReplicationConfig
 from mash.services.testing.config import TestingConfig
 from mash.services.uploader.config import UploaderConfig
@@ -21,6 +22,7 @@ from mash.services.uploader.config import UploaderConfig
         ('logger', LoggerConfig),
         ('obs', OBSConfig),
         ('publisher', PublisherConfig),
+        ('raw_image_uploader', RawImageUploaderConfig),
         ('replication', ReplicationConfig),
         ('testing', TestingConfig),
         ('uploader', UploaderConfig)

@@ -23,6 +23,7 @@ from mash.services.deprecation.gce_job import GCEDeprecationJob
 from mash.services.publisher.azure_job import AzurePublisherJob
 from mash.services.publisher.ec2_job import EC2PublisherJob
 from mash.services.publisher.gce_job import GCEPublisherJob
+from mash.services.raw_image_uploader.s3bucket_job import S3BucketUploaderJob
 from mash.services.replication.azure_job import AzureReplicationJob
 from mash.services.replication.ec2_job import EC2ReplicationJob
 from mash.services.replication.gce_job import GCEReplicationJob
@@ -43,6 +44,9 @@ jobs = {
         'azure': AzurePublisherJob,
         'ec2': EC2PublisherJob,
         'gce': GCEPublisherJob
+    },
+    'raw_image_uploader': {
+        's3bucket': S3BucketUploaderJob
     },
     'replication': {
         'azure': AzureReplicationJob,
@@ -74,7 +78,12 @@ class JobFactory(object):
         Create new instance of job based on service exchange and cloud name,
         """
         try:
-            job_class = jobs[service_exchange][cloud]
+            if service_exchange == 'raw_image_uploader':
+                # raw image uploader job type depends on a separate parameter
+                # instead of the cloud framework
+                job_class = jobs['raw_image_uploader'][job_config['raw_image_upload_type']]
+            else:
+                job_class = jobs[service_exchange][cloud]
         except KeyError:
             raise MashJobException(
                 'Cloud {0} is not supported in {1} service.'.format(
