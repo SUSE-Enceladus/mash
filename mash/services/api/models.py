@@ -18,7 +18,7 @@
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from mash.services.api import db
+from mash.services.api.extensions import db
 
 
 class User(db.Model):

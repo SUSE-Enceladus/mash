@@ -18,10 +18,11 @@
 
 import copy
 
+from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 from mash.mash_exceptions import MashDBException, MashJobException
-from mash.services.api import app, db
+from mash.services.api.extensions import db
 from mash.services.api.models import (
     EC2Account,
     EC2Group,
@@ -197,7 +198,7 @@ def create_ec2_account(
 
     try:
         handle_request(
-            app.config['CREDENTIALS_URL'],
+            current_app.config['CREDENTIALS_URL'],
             'credentials',
             'post',
             job_data=data
@@ -263,7 +264,7 @@ def delete_ec2_account(name, username):
             db.session.delete(ec2_account)
             db.session.commit()
             handle_request(
-                app.config['CREDENTIALS_URL'],
+                current_app.config['CREDENTIALS_URL'],
                 'credentials',
                 'delete',
                 job_data=data
@@ -282,7 +283,7 @@ def get_ec2_regions_by_partition(partition):
     Get EC2 regions from config file based on partition.
     """
     regions = copy.deepcopy(
-        app.config['CLOUD_DATA']['ec2']['regions'][partition]
+        current_app.config['CLOUD_DATA']['ec2']['regions'][partition]
     )
     return regions
 
@@ -292,7 +293,7 @@ def get_ec2_helper_images():
     Get helper image data for EC2 from config file.
     """
     helper_images = copy.deepcopy(
-        app.config['CLOUD_DATA']['ec2']['helper_images']
+        current_app.config['CLOUD_DATA']['ec2']['helper_images']
     )
     return helper_images
 

@@ -23,13 +23,47 @@ class Config(object):
     """
     Flask API config.
     """
-    config = BaseConfig()
-    SQLALCHEMY_DATABASE_URI = config.get_database_uri()
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    AMQP_HOST = config.get_amqp_host()
-    AMQP_USER = config.get_amqp_user()
-    AMQP_PASS = config.get_amqp_pass()
+    def __init__(self, config_file=None, testing=False):
+        self.config = BaseConfig(config_file)
+        self.TESTING = testing
 
-    CLOUD_DATA = config.get_cloud_data()
-    CREDENTIALS_URL = config.get_credentials_url()
+    @property
+    def AMQP_HOST(self):
+        return self.config.get_amqp_host()
+
+    @property
+    def AMQP_USER(self):
+        return self.config.get_amqp_user()
+
+    @property
+    def AMQP_PASS(self):
+        return self.config.get_amqp_pass()
+
+    @property
+    def LOG_FILE(self):
+        return self.config.get_log_file('api')
+
+    @property
+    def CREDENTIALS_URL(self):
+        return self.config.get_credentials_url()
+
+    @property
+    def CLOUD_DATA(self):
+        return self.config.get_cloud_data()
+
+    @property
+    def JWT_BLACKLIST_ENABLED(self):
+        return True
+
+    @property
+    def JWT_SECRET_KEY(self):
+        return self.config.get_jwt_secret()
+
+    @property
+    def SQLALCHEMY_TRACK_MODIFICATIONS(self):
+        return False
+
+    @property
+    def SQLALCHEMY_DATABASE_URI(self):
+        return self.config.get_database_uri()

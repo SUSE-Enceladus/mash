@@ -15,3 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+import json
+
+from flask_restplus import Namespace, Resource
+
+from mash.services.api.extensions import api
+
+spec_api = Namespace(
+    'API Spec document',
+    description='API Specification'
+)
+
+
+@spec_api.route('/', doc=False)
+class APIDoc(Resource):
+    def post(self):
+        return json.dumps(api.__schema__)
+
+    def get(self):
+        return json.dumps(api.__schema__)

@@ -1,37 +1,6 @@
 import json
-import pytest
 
 from unittest.mock import MagicMock, patch
-
-with patch('mash.services.base_config.BaseConfig') as mock_config:
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    config.get_credentials_url.return_value = 'http://localhost:8080/'
-    config.get_cloud_data.return_value = {
-        'ec2': {
-            'regions': {
-                'aws': ['us-east-99']
-            },
-            'helper_images': {
-                'us-east-99': 'ami-789'
-            }
-        }
-    }
-    mock_config.return_value = config
-    from mash.services.api import wsgi
-
-
-@pytest.fixture(scope='module')
-def test_client():
-    testing_client = wsgi.application.test_client()
-
-    ctx = wsgi.application.app_context()
-    ctx.push()
-
-    yield testing_client
-    ctx.pop()
 
 
 @patch('mash.services.api.routes.amqp_utils.Connection')
@@ -413,6 +382,10 @@ def test_api_docs(test_client):
     api_desc = b'MASH provides a set of endpoints for Image Release ' \
                b'automation into Public Cloud Frameworks.'
 
-    response = test_client.get('/api/spec')
+    response = test_client.get('/api/spec/')
+    assert response.status_code == 200
+    assert api_desc in response.data
+
+    response = test_client.post('/api/spec/')
     assert response.status_code == 200
     assert api_desc in response.data
