@@ -62,6 +62,12 @@ class User(db.Model):
         lazy='select',
         cascade="all, delete, delete-orphan"
     )
+    jobs = db.relationship(
+        'Job',
+        back_populates='user',
+        lazy='select',
+        cascade="all, delete, delete-orphan"
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -97,7 +103,7 @@ class EC2Group(db.Model):
         back_populates='group'
     )
     __table_args__ = (
-        db.UniqueConstraint('name', 'user_id', name='_name_user_uc'),
+        db.UniqueConstraint('name', 'user_id', name='_ec2_group_user_uc'),
     )
 
     def __repr__(self):
@@ -138,7 +144,7 @@ class EC2Account(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', back_populates='ec2_accounts')
     __table_args__ = (
-        db.UniqueConstraint('name', 'user_id', name='_name_user_uc'),
+        db.UniqueConstraint('name', 'user_id', name='_ec2_account_user_uc'),
     )
 
     def __repr__(self):
@@ -156,7 +162,7 @@ class GCEAccount(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', back_populates='gce_accounts')
     __table_args__ = (
-        db.UniqueConstraint('name', 'user_id', name='_name_user_uc'),
+        db.UniqueConstraint('name', 'user_id', name='_gce_account_user_uc'),
     )
 
     def __repr__(self):
@@ -177,8 +183,25 @@ class AzureAccount(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', back_populates='azure_accounts')
     __table_args__ = (
-        db.UniqueConstraint('name', 'user_id', name='_name_user_uc'),
+        db.UniqueConstraint('name', 'user_id', name='_azure_account_user_uc'),
     )
 
     def __repr__(self):
         return '<Azure Account {}>'.format(self.name)
+
+
+class Job(db.Model):
+    __tablename__ = 'job'
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.String(40), nullable=False)
+    last_service = db.Column(db.String(16), nullable=False)
+    utctime = db.Column(db.String(32), nullable=False)
+    image = db.Column(db.String(128), nullable=False)
+    download_url = db.Column(db.String(128), nullable=False)
+    cloud_architecture = db.Column(db.String(8), default='x86_64')
+    profile = db.Column(db.String(32))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', back_populates='jobs')
+
+    def __repr__(self):
+        return '<Job {}>'.format(self.job_id)
