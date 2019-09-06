@@ -15,3 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+from sqlalchemy.orm.exc import NoResultFound
+
+from mash.services.api.models import Token
+
+
+def is_token_revoked(decoded_token):
+    """
+    Checks if the given token exists.
+    """
+    jti = decoded_token['jti']
+
+    try:
+        Token.query.filter_by(jti=jti).one()
+    except NoResultFound:
+        return True

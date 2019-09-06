@@ -19,8 +19,7 @@
 import sys
 
 from amqpstorm import Connection
-
-from mash.services.api import app
+from flask import current_app
 
 module = sys.modules[__name__]
 
@@ -30,9 +29,9 @@ channel = None
 
 def connect():
     module.connection = Connection(
-        app.config['AMQP_HOST'],
-        app.config['AMQP_USER'],
-        app.config['AMQP_PASS'],
+        current_app.config['AMQP_HOST'],
+        current_app.config['AMQP_USER'],
+        current_app.config['AMQP_PASS'],
         kwargs={'heartbeat': 600}
     )
     module.channel = connection.channel()

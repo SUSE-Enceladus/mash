@@ -6,44 +6,26 @@ from sqlalchemy.exc import IntegrityError
 
 from mash.mash_exceptions import MashDBException, MashJobException
 
-with patch('mash.services.base_config.BaseConfig') as mock_config:
-    config = Mock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    config.get_credentials_url.return_value = 'http://localhost:8080/'
-    config.get_cloud_data.return_value = {
-        'ec2': {
-            'regions': {
-                'aws': ['us-east-99']
-            },
-            'helper_images': {
-                'us-east-99': 'ami-789'
-            }
-        }
-    }
-    mock_config.return_value = config
-
-    from mash.services.api.models import EC2Account
-    from mash.services.api.model_utils import (
-        add_user,
-        verify_login,
-        get_user_by_username,
-        get_user_email,
-        delete_user,
-        get_ec2_group,
-        create_ec2_region,
-        create_ec2_account,
-        get_ec2_accounts,
-        get_ec2_account,
-        get_ec2_account_by_id,
-        delete_ec2_account,
-        get_ec2_regions_by_partition,
-        get_ec2_helper_images,
-        add_target_ec2_account,
-        convert_account_dict,
-        update_ec2_job_accounts
-    )
+from mash.services.api.models import EC2Account
+from mash.services.api.model_utils import (
+    add_user,
+    verify_login,
+    get_user_by_username,
+    get_user_email,
+    delete_user,
+    get_ec2_group,
+    create_ec2_region,
+    create_ec2_account,
+    get_ec2_accounts,
+    get_ec2_account,
+    get_ec2_account_by_id,
+    delete_ec2_account,
+    get_ec2_regions_by_partition,
+    get_ec2_helper_images,
+    add_target_ec2_account,
+    convert_account_dict,
+    update_ec2_job_accounts
+)
 
 
 @patch('mash.services.api.model_utils.db')
@@ -135,6 +117,7 @@ def test_create_ec2_region(mock_db):
     mock_db.session.add.assert_called_once_with(result)
 
 
+@patch('mash.services.api.model_utils.current_app')
 @patch('mash.services.api.model_utils.EC2Account')
 @patch('mash.services.api.model_utils.EC2Group')
 @patch('mash.services.api.model_utils.handle_request')
@@ -147,7 +130,8 @@ def test_create_ec2_account(
     mock_create_region,
     mock_handle_request,
     mock_ec2_group,
-    mock_ec2_account
+    mock_ec2_account,
+    mock_current_app
 ):
     user = Mock()
     user.id = '1'
@@ -162,6 +146,8 @@ def test_create_ec2_account(
 
     group = Mock()
     mock_ec2_group.return_value = group
+
+    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     credentials = {'super': 'secret'}
     data = {
@@ -190,7 +176,7 @@ def test_create_ec2_account(
     )
 
     mock_handle_request.assert_called_once_with(
-        'http://localhost:8080/',
+        'http://localhost:5000/',
         'credentials',
         'post',
         job_data=data
@@ -256,12 +242,20 @@ def test_get_ec2_account_by_id(mock_ec2_account):
         get_ec2_account_by_id('acnt1', '2')
 
 
+@patch('mash.services.api.model_utils.current_app')
 @patch('mash.services.api.model_utils.handle_request')
 @patch('mash.services.api.model_utils.get_ec2_account')
 @patch('mash.services.api.model_utils.db')
-def test_delete_ec2_account(mock_db, mock_get_account, mock_handle_request):
+def test_delete_ec2_account(
+    mock_db,
+    mock_get_account,
+    mock_handle_request,
+    mock_current_app
+):
     account = Mock()
     mock_get_account.return_value = account
+
+    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     data = {
         'cloud': 'ec2',
@@ -274,7 +268,7 @@ def test_delete_ec2_account(mock_db, mock_get_account, mock_handle_request):
     mock_db.session.delete.assert_called_once_with(account)
     mock_db.session.commit.assert_called_once_with()
     mock_handle_request.assert_called_once_with(
-        'http://localhost:8080/',
+        'http://localhost:5000/',
         'credentials',
         'delete',
         job_data=data
@@ -291,11 +285,23 @@ def test_delete_ec2_account(mock_db, mock_get_account, mock_handle_request):
     assert delete_ec2_account('acnt2', 'user1') == 0
 
 
-def test_get_ec2_regions_by_partition():
+@patch('mash.services.api.model_utils.current_app')
+def test_get_ec2_regions_by_partition(mock_current_app):
+    mock_current_app.config = {
+        'CLOUD_DATA': {
+            'ec2': {'regions': {'aws': ['us-east-99']}}
+        }
+    }
     assert get_ec2_regions_by_partition('aws') == ['us-east-99']
 
 
-def test_get_ec2_helper_images():
+@patch('mash.services.api.model_utils.current_app')
+def test_get_ec2_helper_images(mock_current_app):
+    mock_current_app.config = {
+        'CLOUD_DATA': {
+            'ec2': {'helper_images': {'us-east-99': 'ami-789'}}
+        }
+    }
     images = get_ec2_helper_images()
     assert images['us-east-99'] == 'ami-789'
 

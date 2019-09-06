@@ -15,3 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+from flask_restplus import Api
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
+
+authorizations = {
+    'apiKey': {
+        'type': 'apiKey',
+        'in': 'header',
+        'name': 'Authorization',
+        'example': 'Bearer {token}'
+    }
+}
+
+api = Api(
+    version='3.4.0',
+    contact='public-cloud-dev@susecloud.net',
+    title='MASH API',
+    description='MASH provides a set of endpoints for Image Release '
+                'automation into Public Cloud Frameworks.',
+    validate=True,
+    doc=False,
+    authorizations=authorizations
+)
+db = SQLAlchemy()
+migrate = Migrate()
+jwt = JWTManager()
