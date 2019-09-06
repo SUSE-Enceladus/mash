@@ -26,7 +26,7 @@ from mash.services.api.routes.accounts import (
     delete_account_request
 )
 from mash.services.api.schema.accounts.ec2 import add_account_ec2
-from mash.services.api.routes.amqp_utils import publish
+from mash.services.api.utils.amqp import publish
 
 api = Namespace(
     'EC2 Accounts',
