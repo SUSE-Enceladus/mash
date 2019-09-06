@@ -20,7 +20,7 @@ from flask import current_app
 
 from mash.mash_exceptions import MashDBException
 from mash.services.api.extensions import db
-from mash.services.api.model_utils import get_user_by_username
+from mash.services.api.utils.users import get_user_by_username
 from mash.services.api.models import EC2Group, EC2Region, EC2Account, User
 from mash.utils.mash_utils import handle_request
 

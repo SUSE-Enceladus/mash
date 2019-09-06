@@ -19,9 +19,7 @@
 from sqlalchemy.exc import IntegrityError
 
 from mash.services.api.extensions import db
-from mash.services.api.models import (
-    User
-)
+from mash.services.api.models import User
 
 
 def add_user(username, email, password):

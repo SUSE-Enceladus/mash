@@ -21,7 +21,7 @@ import copy
 from flask import current_app
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.model_utils import get_user_by_username
+from mash.services.api.utils.users import get_user_by_username
 from mash.services.api.utils.accounts.ec2 import get_ec2_group, get_ec2_account_by_id
 
 

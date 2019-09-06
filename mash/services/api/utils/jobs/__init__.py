@@ -21,8 +21,8 @@ import uuid
 
 from mash.services.api.extensions import db
 from mash.services.api.models import Job, User
-from mash.services.api.routes.amqp_utils import publish
-from mash.services.api.model_utils import get_user_by_username
+from mash.services.api.utils.amqp import publish
+from mash.services.api.utils.users import get_user_by_username
 
 
 def get_new_job_id():
