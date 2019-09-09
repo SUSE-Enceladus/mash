@@ -1,20 +1,13 @@
-from unittest.mock import MagicMock, patch
-
-with patch('mash.services.base_config.BaseConfig') as mock_config:
-    config = MagicMock()
-    config.get_amqp_host.return_value = 'localhost'
-    config.get_amqp_user.return_value = 'guest'
-    config.get_amqp_pass.return_value = 'guest'
-    mock_config.return_value = config
-    from mash.services.api.models import (
-        User,
-        Token,
-        EC2Account,
-        EC2Group,
-        EC2Region,
-        GCEAccount,
-        AzureAccount
-    )
+from mash.services.api.models import (
+    User,
+    Token,
+    EC2Account,
+    EC2Group,
+    EC2Region,
+    GCEAccount,
+    AzureAccount,
+    Job
+)
 
 
 def test_user_model():
@@ -87,3 +80,15 @@ def test_azure_account_model():
         user_id='1'
     )
     assert account.__repr__() == '<Azure Account acnt1>'
+
+
+def test_job_model():
+    job = Job(
+        job_id='12345678-1234-1234-1234-123456789012',
+        last_service='testing',
+        utctime='now',
+        image='test_image_oem',
+        download_url='http://download.opensuse.org/repositories/Cloud:Tools/images',
+        user_id='1'
+    )
+    assert job.__repr__() == '<Job 12345678-1234-1234-1234-123456789012>'
