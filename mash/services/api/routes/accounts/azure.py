@@ -26,7 +26,7 @@ from mash.services.api.routes.accounts import (
     delete_account_request
 )
 from mash.services.api.schema.accounts.azure import add_account_azure
-from mash.services.api.routes.amqp_utils import publish
+from mash.services.api.utils.amqp import publish
 
 api = Namespace(
     'Azure Accounts',

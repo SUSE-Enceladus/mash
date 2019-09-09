@@ -3,7 +3,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_add_account_ec2(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -42,7 +42,7 @@ def test_api_add_account_ec2(mock_connection, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_add_account_gce(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -88,7 +88,7 @@ def test_api_add_account_gce(mock_connection, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_add_account_azure(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -139,7 +139,7 @@ def test_api_add_account_azure(mock_connection, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_delete_account_ec2(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -171,7 +171,7 @@ def test_api_delete_account_ec2(mock_connection, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_delete_account_gce(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -203,7 +203,7 @@ def test_api_delete_account_gce(mock_connection, test_client):
     assert response.data == b'{"name":"test"}\n'
 
 
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_delete_account_azure(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -236,7 +236,7 @@ def test_api_delete_account_azure(mock_connection, test_client):
 
 
 @patch('mash.services.api.routes.jobs.uuid')
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_add_job_ec2(mock_connection, mock_uuid, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -275,7 +275,7 @@ def test_api_add_job_ec2(mock_connection, mock_uuid, test_client):
 
 
 @patch('mash.services.api.routes.jobs.uuid')
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_add_job_gce(mock_connection, mock_uuid, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -314,7 +314,7 @@ def test_api_add_job_gce(mock_connection, mock_uuid, test_client):
 
 
 @patch('mash.services.api.routes.jobs.uuid')
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_add_job_azure(mock_connection, mock_uuid, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -352,7 +352,7 @@ def test_api_add_job_azure(mock_connection, mock_uuid, test_client):
         b'{"job_id": "12345678-1234-1234-1234-123456789012"}'
 
 
-@patch('mash.services.api.routes.amqp_utils.Connection')
+@patch('mash.services.api.utils.amqp.Connection')
 def test_api_delete_job(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
