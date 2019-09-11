@@ -48,13 +48,11 @@ ec2_account = {
         'group': string_with_example('group1'),
         'partition': partition,
         'region': string_with_example('us-east-1'),
-        'subnet': string_with_example('subnet-12345678'),
-        'requesting_user': string_with_example('user1'),
+        'subnet': string_with_example('subnet-12345678')
     },
     'additionalProperties': False,
     'required': [
         'account_name',
-        'requesting_user',
         'region'
     ]
 }
