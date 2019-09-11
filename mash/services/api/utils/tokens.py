@@ -26,7 +26,7 @@ from mash.services.api.models import (
     User,
     Token
 )
-from mash.services.api.model_utils import get_user_by_username
+from mash.services.api.utils.users import get_user_by_username
 
 
 def _epoch_utc_to_datetime(epoch_utc):
