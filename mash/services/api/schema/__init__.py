@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from flask_restplus import fields, Model
+
 
 def string_with_example(example, description='', min_length=1):
     return {
@@ -38,6 +40,12 @@ non_empty_string = {
     'minLength': 1
 }
 
+default_response = Model(
+    'default_response', {
+        'msg': fields.String,
+    }
+)
+
 errors = {
     'type': 'object',
     'properties': {
@@ -52,4 +60,19 @@ validation_error = {
         'message': non_empty_string
     },
     'additionalProperties': False
+}
+
+add_account = {
+    'type': 'object',
+    'properties': {
+        'username': string_with_example('account1'),
+        'email': email,
+        'password': string_with_example('secretpassword123')
+    },
+    'additionalProperties': False,
+    'required': [
+        'username',
+        'email',
+        'password'
+    ]
 }

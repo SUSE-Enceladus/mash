@@ -29,6 +29,7 @@ from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
 from mash.services.api.utils.tokens import is_token_revoked
 
 from mash.services.api.routes.api_spec import spec_api
+from mash.services.api.routes.user import api as user_api
 
 from mash.services.api.routes.accounts import api as accounts_api
 from mash.services.api.routes.accounts.azure import api as azure_accounts_api
@@ -81,6 +82,7 @@ def configure_logger(app):
 def register_namespaces():
     """Register Flask restplus namespaces."""
     api.add_namespace(spec_api, path='/api/spec')
+    api.add_namespace(user_api, path='/user')
 
     api.add_namespace(accounts_api, path='/accounts')
     api.add_namespace(azure_accounts_api, path='/accounts/azure')
