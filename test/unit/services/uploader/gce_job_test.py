@@ -37,12 +37,12 @@ class TestGCEUploaderJob(object):
             'last_service': 'uploader',
             'cloud': 'gce',
             'utctime': 'now',
+            'family': 'sles-12',
+            'guest_os_features': ['UEFI_COMPATIBLE'],
             'target_regions': {
                 'us-west1-a': {
                     'account': 'test',
-                    'bucket': 'images',
-                    'family': 'sles-12',
-                    'guest_os_features': ['UEFI_COMPATIBLE']
+                    'bucket': 'images'
                 }
             },
             'cloud_image_name': 'sles-12-sp4-v20180909',

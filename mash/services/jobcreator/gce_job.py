@@ -35,6 +35,29 @@ class GCEJob(BaseJob):
         )
         self.guest_os_features = self.kwargs.get('guest_os_features')
 
+    def get_credentials_message(self):
+        """
+        Build credentials job message.
+        """
+        accounts = []
+        for source_region, value in self.target_account_info.items():
+            accounts.append(value['account'])
+
+            testing_account = value.get('testing_account')
+            if testing_account and testing_account not in accounts:
+                accounts.append(testing_account)
+
+        credentials_message = {
+            'credentials_job': {
+                'cloud': self.cloud,
+                'cloud_accounts': accounts,
+                'requesting_user': self.requesting_user
+            }
+        }
+        credentials_message['credentials_job'].update(self.base_message)
+
+        return credentials_message
+
     def get_deprecation_message(self):
         """
         Build deprecation job message.
@@ -100,11 +123,35 @@ class GCEJob(BaseJob):
         for source_region, value in self.target_account_info.items():
             test_regions[source_region] = {
                 'account': value['account'],
-                'testing_account': value['testing_account'],
                 'is_publishing_account': value['is_publishing_account']
             }
 
+            if value.get('testing_account'):
+                test_regions[source_region]['testing_account'] = value['testing_account']
+
         return test_regions
+
+    def get_uploader_message(self):
+        """
+        Build uploader job message.
+        """
+        uploader_message = {
+            'uploader_job': {
+                'cloud_image_name': self.cloud_image_name,
+                'cloud': self.cloud,
+                'image_description': self.image_description,
+                'family': self.family,
+                'guest_os_features': self.guest_os_features,
+                'target_regions': self.get_uploader_regions()
+            }
+        }
+        uploader_message['uploader_job'].update(self.base_message)
+
+        if self.cloud_architecture:
+            uploader_message['uploader_job']['cloud_architecture'] = \
+                self.cloud_architecture
+
+        return JsonFormat.json_message(uploader_message)
 
     def get_uploader_regions(self):
         """

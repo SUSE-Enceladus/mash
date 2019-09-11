@@ -244,7 +244,6 @@ class TestJobCreatorService(object):
                 'destination_storage_account': 'cstorage2'
             }
         }
-        del job['cloud_accounts']
 
         message = MagicMock()
         message.body = json.dumps(job)
@@ -381,8 +380,8 @@ class TestJobCreatorService(object):
                 'bucket': 'images',
                 'family': 'sles-15',
                 'guest_os_features': ['UEFI_COMPATIBLE'],
-                'testing_account': None,
-                'is_publishing_account': False
+                'testing_account': 'testacnt1',
+                'is_publishing_account': True
             },
             'us-west2': {
                 'account': 'test-gce2',
@@ -393,7 +392,6 @@ class TestJobCreatorService(object):
                 'is_publishing_account': False
             }
         }
-        del job['cloud_accounts']
 
         message = MagicMock()
         message.body = json.dumps(job)
@@ -437,7 +435,8 @@ class TestJobCreatorService(object):
                 assert info['bucket'] == 'images'
                 assert info['family'] == 'sles-15'
                 assert info['guest_os_features'] == ['UEFI_COMPATIBLE']
-                assert info['testing_account'] is None
+                assert info['testing_account'] == 'testacnt1'
+                assert info['is_publishing_account']
 
         # Testing Job Doc
 
@@ -450,11 +449,11 @@ class TestJobCreatorService(object):
         for region, info in data['test_regions'].items():
             if region == 'us-west2':
                 assert info['account'] == 'test-gce2'
-                assert info['testing_account'] is None
             else:
                 assert region == 'us-west1'
                 assert info['account'] == 'test-gce'
-                assert info['testing_account'] is None
+                assert info['testing_account'] == 'testacnt1'
+                assert info['is_publishing_account']
 
         # Replication Job Doc
 
