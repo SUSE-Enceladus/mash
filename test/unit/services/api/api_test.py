@@ -4,45 +4,6 @@ from unittest.mock import MagicMock, patch
 
 
 @patch('mash.services.api.utils.amqp.Connection')
-def test_api_add_account_ec2(mock_connection, test_client):
-    channel = MagicMock()
-    connection = MagicMock()
-    connection.channel.return_value = channel
-    mock_connection.return_value = connection
-
-    request = {
-        'account_name': 'test',
-        'credentials': {
-            'access_key_id': '123456',
-            'secret_access_key': '654321'
-        },
-        'group': 'group1',
-        'partition': 'aws',
-        'region': 'us-east-1',
-        'requesting_user': 'user1'
-    }
-    response = test_client.post(
-        '/accounts/ec2/',
-        content_type='application/json',
-        data=json.dumps(request, sort_keys=True)
-    )
-
-    request['cloud'] = 'ec2'
-    channel.basic.publish.assert_called_once_with(
-        body=json.dumps(request, sort_keys=True),
-        routing_key='add_account',
-        exchange='jobcreator',
-        properties={
-            'content_type': 'application/json',
-            'delivery_mode': 2
-        },
-        mandatory=True
-    )
-    assert response.status_code == 201
-    assert response.data == b'{"name":"test"}\n'
-
-
-@patch('mash.services.api.utils.amqp.Connection')
 def test_api_add_account_gce(mock_connection, test_client):
     channel = MagicMock()
     connection = MagicMock()
@@ -136,38 +97,6 @@ def test_api_add_account_azure(mock_connection, test_client):
         mandatory=True
     )
     assert response.status_code == 201
-    assert response.data == b'{"name":"test"}\n'
-
-
-@patch('mash.services.api.utils.amqp.Connection')
-def test_api_delete_account_ec2(mock_connection, test_client):
-    channel = MagicMock()
-    connection = MagicMock()
-    connection.channel.return_value = channel
-    mock_connection.return_value = connection
-
-    data = {
-        'requesting_user': 'user1'
-    }
-    response = test_client.delete(
-        '/accounts/ec2/test',
-        content_type='application/json',
-        data=json.dumps(data, sort_keys=True)
-    )
-
-    data['cloud'] = 'ec2'
-    data['account_name'] = 'test'
-    channel.basic.publish.assert_called_once_with(
-        body=json.dumps(data, sort_keys=True),
-        routing_key='delete_account',
-        exchange='jobcreator',
-        properties={
-            'content_type': 'application/json',
-            'delivery_mode': 2
-        },
-        mandatory=True
-    )
-    assert response.status_code == 200
     assert response.data == b'{"name":"test"}\n'
 
 
