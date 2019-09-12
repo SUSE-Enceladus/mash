@@ -27,14 +27,12 @@ gce_account = {
         'bucket': string_with_example('image-bucket'),
         'testing_account': string_with_example('testing-account1'),
         'region': string_with_example('us-west1-a'),
-        'requesting_user': string_with_example('user1'),
         'is_publishing_account': {'type': 'boolean'}
     },
     'additionalProperties': False,
     'required': [
         'account_name',
         'bucket',
-        'requesting_user',
         'region'
     ]
 }
