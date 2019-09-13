@@ -18,11 +18,16 @@
 
 from unittest.mock import patch, Mock
 
-from _pytest.python_api import raises
+from pytest import raises
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.utils.jobs.ec2 import get_ec2_regions_by_partition, get_ec2_helper_images, \
-    add_target_ec2_account, convert_account_dict, update_ec2_job_accounts
+from mash.services.api.utils.jobs.ec2 import (
+    get_ec2_regions_by_partition,
+    get_ec2_helper_images,
+    add_target_ec2_account,
+    convert_account_dict,
+    update_ec2_job_accounts
+)
 
 
 @patch('mash.services.api.utils.jobs.ec2.current_app')
