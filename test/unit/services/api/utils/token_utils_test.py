@@ -4,8 +4,15 @@ from unittest.mock import patch, Mock
 from sqlalchemy.orm.exc import NoResultFound
 
 from mash.services.api.app import check_if_token_in_blacklist
-from mash.services.api.utils.tokens import add_token_to_database, is_token_revoked, get_user_tokens, get_token_by_jti, \
-    revoke_token_by_jti, revoke_tokens, prune_expired_tokens
+from mash.services.api.utils.tokens import (
+    add_token_to_database,
+    is_token_revoked,
+    get_user_tokens,
+    get_token_by_jti,
+    revoke_token_by_jti,
+    revoke_tokens,
+    prune_expired_tokens
+)
 
 
 @patch('mash.services.api.utils.tokens.decode_token')
