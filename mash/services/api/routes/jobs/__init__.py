@@ -33,7 +33,15 @@ job_response = api.model(
     'job_response', {
         'job_id': fields.String(
             example='12345678-1234-1234-1234-123456789012'
-        )
+        ),
+        'last_service': fields.String(example='testing'),
+        'utctime': fields.String(example='now'),
+        'image': fields.String(example='test_image_oem'),
+        'download_url': fields.String(
+            example='http://download.opensuse.org/repositories/Cloud:Tools/images'
+        ),
+        'cloud_architecture': fields.String(example='x86_64'),
+        'profile': fields.String(example='Server')
     }
 )
 validation_error_response = api.schema_model(
