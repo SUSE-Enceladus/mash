@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import json
 
 from flask import jsonify, make_response
-from flask_restplus import fields, Namespace, Resource
+from flask_restplus import marshal, fields, Namespace, Resource
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from mash.services.api.schema import validation_error
-from mash.services.api.utils.amqp import publish
+from mash.services.api.schema import (
+    default_response,
+    validation_error
+)
+from mash.services.api.utils.jobs import delete_job, get_job, get_jobs
+
 
 api = Namespace(
     'Jobs',
@@ -44,20 +48,80 @@ job_response = api.model(
     }
 )
 validation_error_response = api.schema_model(
-    'validation_error',
-    validation_error
+    'validation_error', validation_error
 )
 
 
+@api.route('/')
+@api.doc(security='apiKey')
+@api.response(401, 'Unauthorized', default_response)
+@api.response(422, 'Not processable', default_response)
+class JobList(Resource):
+    """
+    Handles list jobs.
+    """
+
+    @api.doc('get_jobs')
+    @jwt_required
+    @api.marshal_list_with(job_response, skip_none=True)
+    @api.response(200, 'Success', default_response)
+    def get(self):
+        """
+        Get all jobs.
+        """
+        jobs = get_jobs(get_jwt_identity())
+        return jobs
+
+
 @api.route('/<string:job_id>')
+@api.doc(security='apiKey')
 @api.response(400, 'Validation error', validation_error_response)
+@api.response(401, 'Unauthorized', default_response)
+@api.response(422, 'Not processable', default_response)
 class Job(Resource):
     @api.doc('delete_job')
-    @api.response(200, 'Job deleted', job_response)
+    @jwt_required
+    @api.response(200, 'Job deleted', default_response)
     def delete(self, job_id):
         """
         Delete job matching job_id.
         """
-        content = {'job_delete': job_id}
-        publish('jobcreator', 'job_document', json.dumps(content, sort_keys=True))
-        return make_response(jsonify({'job_id': job_id}), 200)
+        try:
+            rows_deleted = delete_job(job_id, get_jwt_identity())
+        except Exception:
+            return make_response(
+                jsonify({'msg': 'Delete job failed'}),
+                400
+            )
+
+        if rows_deleted:
+            return make_response(
+                jsonify({'msg': 'Job deleted'}),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Job not found'}),
+                404
+            )
+
+    @api.doc('get_job')
+    @jwt_required
+    @api.response(200, 'Success', job_response)
+    @api.response(404, 'Not found', default_response)
+    def get(self, job_id):
+        """
+        Get job.
+        """
+        account = get_job(job_id, get_jwt_identity())
+
+        if account:
+            return make_response(
+                jsonify(marshal(account, job_response, skip_none=True)),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Job not found'}),
+                404
+            )

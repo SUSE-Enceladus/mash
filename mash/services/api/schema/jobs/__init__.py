@@ -61,7 +61,6 @@ utctime = {
 base_job_message = {
     'type': 'object',
     'properties': {
-        'requesting_user': string_with_example('user123'),
         'last_service': {
             'type': 'string',
             'enum': [
