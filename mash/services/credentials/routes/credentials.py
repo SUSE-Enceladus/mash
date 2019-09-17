@@ -42,24 +42,19 @@ def add_credentials():
     return make_response(jsonify({'msg': 'Credentials saved'}), 201)
 
 
-@blueprint.route('/<string:job_id>', methods=['GET'])
-def get_credentials(job_id):
-    if job_id not in current_app.jobs:
-        msg = 'Job does not exist'
-        current_app.logger.warning(msg, extra={'job_id': job_id})
-        return make_response(jsonify({'msg': msg}), 404)
-
-    job = current_app.jobs[job_id]
+@blueprint.route('/', methods=['GET'])
+def get_credentials():
+    data = json.loads(request.data.decode())
 
     try:
         credentials = current_app.credentials_datastore.retrieve_credentials(
-            job['cloud_accounts'],
-            job['cloud'],
-            job['requesting_user']
+            data['cloud_accounts'],
+            data['cloud'],
+            data['requesting_user']
         )
     except Exception as error:
         msg = 'Unable to retrieve credentials: {0}'.format(error)
-        current_app.logger.warning(msg, extra={'job_id': job_id})
+        current_app.logger.warning(msg)
         return make_response(jsonify({'msg': msg}), 400)
 
     return make_response(jsonify(credentials), 200)
