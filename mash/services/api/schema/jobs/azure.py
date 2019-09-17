@@ -21,22 +21,6 @@ import copy
 from mash.services.api.schema import string_with_example
 from mash.services.api.schema.jobs import base_job_message
 
-azure_job_account = {
-    'type': 'object',
-    'properties': {
-        'name': string_with_example('account1'),
-        'region': string_with_example('westus'),
-        'source_container': string_with_example('container1'),
-        'source_resource_group': string_with_example('res_group1'),
-        'source_storage_account': string_with_example('storage_account1'),
-        'destination_container': string_with_example('container2'),
-        'destination_resource_group': string_with_example('res_group2'),
-        'destination_storage_account': string_with_example('storage_account2')
-    },
-    'additionalProperties': False,
-    'required': ['name']
-}
-
 azure_job_message = copy.deepcopy(base_job_message)
 azure_job_message['properties']['emails'] = string_with_example(
     'test@fake.com'
@@ -51,18 +35,35 @@ azure_job_message['properties']['vm_images_key'] = string_with_example(
     'microsoft-azure-corevm.vmImagesPublicAzure'
 )
 azure_job_message['properties']['publish_offer'] = {'type': 'boolean'}
+azure_job_message['properties']['cloud_account'] = string_with_example(
+    'account1'
+)
+azure_job_message['properties']['source_container'] = string_with_example(
+    'container1'
+)
+azure_job_message['properties']['source_resource_group'] = string_with_example(
+    'res_group1'
+)
+azure_job_message['properties']['source_storage_account'] = string_with_example(
+    'storage_account1'
+)
+azure_job_message['properties']['destination_container'] = string_with_example(
+    'container2'
+)
+azure_job_message['properties']['destination_resource_group'] = string_with_example(
+    'res_group2'
+)
+azure_job_message['properties']['destination_storage_account'] = string_with_example(
+    'storage_account2'
+)
+azure_job_message['properties']['region'] = string_with_example('westus')
+
 azure_job_message['required'].append('emails')
 azure_job_message['required'].append('label')
 azure_job_message['required'].append('offer_id')
 azure_job_message['required'].append('publisher_id')
 azure_job_message['required'].append('sku')
-azure_job_message['properties']['cloud_accounts'] = {
-    'type': 'array',
-    'items': azure_job_account,
-    'minItems': 1,
-    'example': [{'name': 'account1'}]
-}
-azure_job_message['required'].append('cloud_accounts')
+azure_job_message['required'].append('cloud_account')
 azure_job_message['properties']['image']['example'] = \
     'openSUSE-Leap-15.0-Azure'
 azure_job_message['properties']['cloud_image_name']['example'] = \

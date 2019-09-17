@@ -16,7 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import json
-import uuid
 
 from flask import jsonify, make_response
 from flask_restplus import fields, Namespace, Resource
@@ -48,27 +47,6 @@ validation_error_response = api.schema_model(
     'validation_error',
     validation_error
 )
-
-
-def process_job_add_request(data):
-    job_id = str(uuid.uuid4())
-    data['job_id'] = job_id
-
-    publish(
-        'jobcreator', 'job_document', json.dumps(data, sort_keys=True)
-    )
-
-    # Cannot use jsonify with multiple keys, need sorted dump for py3.4
-    response = make_response(
-        json.dumps(
-            {'job_id': job_id},
-            sort_keys=True
-        ),
-        201
-    )
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    response.headers['mimetype'] = 'application/json'
-    return response
 
 
 @api.route('/<string:job_id>')
