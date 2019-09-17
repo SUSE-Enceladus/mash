@@ -72,25 +72,6 @@ class BaseJob(object):
 
         self.post_init()
 
-    def get_credentials_message(self):
-        """
-        Build credentials job message.
-        """
-        accounts = []
-        for source_region, value in self.target_account_info.items():
-            accounts.append(value['account'])
-
-        credentials_message = {
-            'credentials_job': {
-                'cloud': self.cloud,
-                'cloud_accounts': accounts,
-                'requesting_user': self.requesting_user
-            }
-        }
-        credentials_message['credentials_job'].update(self.base_message)
-
-        return credentials_message
-
     def get_deprecation_message(self):
         """
         Build deprecation job message.

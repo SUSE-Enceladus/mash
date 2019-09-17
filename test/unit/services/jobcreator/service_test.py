@@ -61,11 +61,8 @@ class TestJobCreatorService(object):
         )
         mock_start.assert_called_once_with()
 
-    @patch('mash.services.jobcreator.service.handle_request')
     @patch.object(JobCreatorService, '_publish')
-    def test_jobcreator_handle_service_message(
-        self, mock_publish, mock_handle_request
-    ):
+    def test_jobcreator_handle_service_message(self, mock_publish):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
@@ -206,11 +203,8 @@ class TestJobCreatorService(object):
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']
 
-    @patch('mash.services.jobcreator.service.handle_request')
     @patch.object(JobCreatorService, '_publish')
-    def test_jobcreator_handle_service_message_azure(
-        self, mock_publish, mock_handle_request
-    ):
+    def test_jobcreator_handle_service_message_azure(self, mock_publish):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
@@ -356,11 +350,8 @@ class TestJobCreatorService(object):
         data = json.loads(mock_publish.mock_calls[5][1][2])['deprecation_job']
         check_base_attrs(data)
 
-    @patch('mash.services.jobcreator.service.handle_request')
     @patch.object(JobCreatorService, '_publish')
-    def test_jobcreator_handle_service_message_gce(
-        self, mock_publish, mock_handle_request
-    ):
+    def test_jobcreator_handle_service_message_gce(self, mock_publish):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
