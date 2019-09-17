@@ -122,7 +122,6 @@ base_job_message = {
     },
     'additionalProperties': False,
     'required': [
-        'requesting_user',
         'last_service',
         'utctime',
         'image',
