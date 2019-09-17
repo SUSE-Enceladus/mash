@@ -36,7 +36,6 @@ from mash.utils.mash_utils import (
     remove_file,
     persist_json,
     restart_jobs,
-    handle_request,
     setup_logfile
 )
 
@@ -169,11 +168,6 @@ class ListenerService(MashService):
                 extra=job.get_job_id()
             )
 
-            if job.last_service == self.service_exchange:
-                # Send delete request to credentials
-                # if this is the last service.
-                self.publish_credentials_delete(job_id)
-
             del self.jobs[job_id]
             remove_file(job.job_file)
         else:
@@ -238,10 +232,6 @@ class ListenerService(MashService):
 
         if job:
             job.listener_msg = message
-
-            if not job.credentials:
-                self._request_credentials(job)
-
             self._schedule_job(job.id)
         else:
             message.ack()
@@ -426,36 +416,6 @@ class ListenerService(MashService):
     def _process_msg_arg(self, listener_msg, arg, job):
         """Set the arg on the job using setter method."""
         setattr(job, arg, listener_msg[arg])
-
-    def publish_credentials_delete(self, job_id):
-        """
-        Send delete request to credentials service.
-        """
-        try:
-            handle_request(
-                self.config.get_credentials_url(),
-                'jobs/{job}'.format(job=job_id),
-                'delete'
-            )
-        except Exception:
-            self.log.warning(
-                'Request to delete job failed',
-                extra={'job_id': job_id}
-            )
-
-    def _request_credentials(self, job):
-        try:
-            response = handle_request(
-                self.config.get_credentials_url(),
-                'credentials/{job}'.format(job=job.id),
-                'get'
-            )
-            job.credentials = response.json()
-        except Exception:
-            self.log.warning(
-                'Credentials request failed',
-                extra=job.get_job_id()
-            )
 
     def publish_job_result(self, exchange, message):
         """
