@@ -66,6 +66,7 @@ class AzureReplicationJob(MashJob):
         self.status = SUCCESS
 
         for source_region, reg_info in self.replication_source_regions.items():
+            self.request_credentials([reg_info['account']])
             credential = self.credentials[reg_info['account']]
             blob_name = ''.join([self.cloud_image_name, '.vhd'])
 

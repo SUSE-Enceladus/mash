@@ -87,6 +87,13 @@ class EC2TestingJob(MashJob):
             )
         )
 
+        # Get all account credentials in one request
+        accounts = []
+        for region, info in self.test_regions.items():
+            accounts.append(get_testing_account(info))
+
+        self.request_credentials(accounts)
+
         for region, info in self.test_regions.items():
             account = get_testing_account(info)
             creds = self.credentials[account]

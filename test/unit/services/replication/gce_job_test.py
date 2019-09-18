@@ -8,6 +8,7 @@ class TestGCEReplicationJob(object):
         self.job_config = {
             'id': '1',
             'last_service': 'replication',
+            'requesting_user': 'user1',
             'cloud': 'gce',
             'utctime': 'now'
         }

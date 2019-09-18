@@ -82,6 +82,7 @@ class GCEUploaderJob(MashJob):
 
         for region, info in self.target_regions.items():
             account = info['account']
+            self.request_credentials([account])
             credentials = self.credentials[account]
             self._create_auth_file(credentials)
 

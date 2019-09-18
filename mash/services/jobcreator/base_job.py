@@ -63,7 +63,8 @@ class BaseJob(object):
         self.base_message = {
             'id': self.id,
             'utctime': self.utctime,
-            'last_service': self.last_service
+            'last_service': self.last_service,
+            'requesting_user': self.requesting_user
         }
 
         if self.notification_email:

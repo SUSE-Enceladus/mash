@@ -64,6 +64,7 @@ class GCEDeprecationJob(MashJob):
             return
 
         for account in self.deprecation_accounts:
+            self.request_credentials([account])
             credential = self.credentials[account]
 
             with create_json_file(credential) as auth_file:

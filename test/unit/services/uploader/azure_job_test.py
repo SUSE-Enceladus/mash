@@ -36,6 +36,7 @@ class TestAzureUploaderJob(object):
             'id': '1',
             'last_service': 'uploader',
             'cloud': 'azure',
+            'requesting_user': 'user1',
             'utctime': 'now',
             'target_regions': {
                 'region': {
@@ -61,6 +62,7 @@ class TestAzureUploaderJob(object):
             'cloud_architecture': 'aarch64',
             'id': '1',
             'last_service': 'uploader',
+            'requesting_user': 'user1',
             'cloud': 'gce',
             'utctime': 'now'
         }
