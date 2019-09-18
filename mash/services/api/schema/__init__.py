@@ -76,3 +76,16 @@ add_account = {
         'password'
     ]
 }
+
+login_request_model = {
+    'type': 'object',
+    'properties': {
+        'username': string_with_example('account1'),
+        'password': string_with_example('secretpassword123')
+    },
+    'additionalProperties': False,
+    'required': [
+        'username',
+        'password'
+    ]
+}
