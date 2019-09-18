@@ -1,13 +1,10 @@
 {
   "job_id": "12345678-1234-1234-1234-123456789012",
   "cloud": "gce",
-  "cloud_accounts": [
-    {
-      "name": "test-gce",
-      "region": "us-west1",
-      "bucket": "images"
-    }
-  ],
+  "cloud_account": "test-gce",
+  "region": "us-west1",
+  "bucket": "images",
+  "testing_account": "testacnt1",
   "requesting_user": "user1",
   "last_service": "deprecation",
   "utctime": "now",
@@ -23,8 +20,6 @@
   "distro": "sles",
   "instance_type": "n1-standard-1",
   "family": "sles-15",
-  "guest_os_features": ["UEFI_COMPATIBLE"],
-  "months_to_deletion": 5,
   "tests": ["test_stuff"],
   "notification_email": "test@fake.com"
 }
