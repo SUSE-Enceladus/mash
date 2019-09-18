@@ -18,63 +18,169 @@
 import json
 
 from flask import jsonify, request, make_response
-from flask_restplus import Namespace, Resource
+from flask_restplus import fields, marshal, Model, Namespace, Resource
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_identity
+)
+from sqlalchemy.exc import IntegrityError
 
-from mash.services.api.routes.accounts import (
-    account_response,
-    validation_error_response,
-    delete_account_request
+from mash.mash_exceptions import MashException
+from mash.services.api.schema import (
+    default_response,
+    validation_error
 )
 from mash.services.api.schema.accounts.azure import add_account_azure
-from mash.services.api.utils.amqp import publish
+from mash.services.api.utils.accounts.azure import (
+    create_azure_account,
+    get_azure_account,
+    get_azure_accounts,
+    delete_azure_account
+)
 
 api = Namespace(
     'Azure Accounts',
-    description='Azure account operations'
+    description='azure account operations'
 )
-azure_account = api.schema_model('azure_account', add_account_azure)
+add_azure_account_request = api.schema_model('azure_account', add_account_azure)
+validation_error_response = api.schema_model(
+    'validation_error', validation_error
+)
+
+azure_account_response = Model(
+    'azure_account_response', {
+        'id': fields.String,
+        'name': fields.String,
+        'region': fields.String,
+        'source_container': fields.String,
+        'source_resource_group': fields.String,
+        'source_storage_account': fields.String,
+        'destination_container': fields.String,
+        'destination_resource_group': fields.String,
+        'destination_storage_account': fields.String
+    }
+)
+
+api.models['azure_account_response'] = azure_account_response
 
 
 @api.route('/')
-@api.response(400, 'Validation error', validation_error_response)
+@api.doc(security='apiKey')
+@api.response(401, 'Unauthorized', default_response)
+@api.response(422, 'Not processable', default_response)
 class AzureAccountCreateAndList(Resource):
     """
     Handles list accounts and create accounts for Azure.
-
-    TODO: List accounts (GET) endpoint will be implemented in the future.
     """
 
     @api.doc('create_azure_account')
-    @api.expect(azure_account)
-    @api.response(201, 'Azure account created', account_response)
+    @jwt_required
+    @api.expect(add_azure_account_request)
+    @api.response(201, 'Azure account created', azure_account_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(409, 'Duplicate account', default_response)
     def post(self):
         """
         Create a new Azure account.
         """
         data = json.loads(request.data.decode())
-        data['cloud'] = 'azure'
 
-        publish(
-            'jobcreator', 'add_account', json.dumps(data, sort_keys=True)
+        try:
+            account = create_azure_account(
+                get_jwt_identity(),
+                data['account_name'],
+                data['region'],
+                data['credentials'],
+                data['source_container'],
+                data['source_resource_group'],
+                data['source_storage_account'],
+                data['destination_container'],
+                data['destination_resource_group'],
+                data['destination_storage_account']
+            )
+        except MashException as error:
+            return make_response(
+                jsonify({'msg': str(error)}),
+                400
+            )
+        except IntegrityError:
+            return make_response(
+                jsonify({'msg': 'Account already exists'}),
+                409
+            )
+        except Exception:
+            return make_response(
+                jsonify({'msg': 'Failed to add Azure account'}),
+                400
+            )
+
+        return make_response(
+            jsonify(marshal(account, azure_account_response, skip_none=True)),
+            201
         )
-        return make_response(jsonify({'name': data['account_name']}), 201)
+
+    @api.doc('get_azure_accounts')
+    @jwt_required
+    @api.marshal_list_with(azure_account_response, skip_none=True)
+    @api.response(200, 'Success', default_response)
+    def get(self):
+        """
+        Get all Azure accounts.
+        """
+        azure_accounts = get_azure_accounts(get_jwt_identity())
+        return azure_accounts
 
 
 @api.route('/<string:name>')
-@api.response(400, 'Validation error', validation_error_response)
+@api.doc(security='apiKey')
+@api.response(401, 'Unauthorized', default_response)
+@api.response(422, 'Not processable', default_response)
 class AzureAccount(Resource):
     @api.doc('delete_azure_account')
-    @api.expect(delete_account_request)
-    @api.response(200, 'Azure account deleted', account_response)
+    @jwt_required
+    @api.response(200, 'Azure account deleted', default_response)
+    @api.response(400, 'Delete Azure account failed', default_response)
+    @api.response(404, 'Not found', default_response)
     def delete(self, name):
         """
         Delete Azure account matching name for requesting user.
         """
-        data = json.loads(request.data.decode())
-        data['account_name'] = name
-        data['cloud'] = 'azure'
+        try:
+            rows_deleted = delete_azure_account(name, get_jwt_identity())
+        except Exception:
+            return make_response(
+                jsonify({'msg': 'Delete Azure account failed'}),
+                400
+            )
 
-        publish(
-            'jobcreator', 'delete_account', json.dumps(data, sort_keys=True)
-        )
-        return make_response(jsonify({'name': name}), 200)
+        if rows_deleted:
+            return make_response(
+                jsonify({'msg': 'Azure account deleted'}),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Azure account not found'}),
+                404
+            )
+
+    @api.doc('get_azure_account')
+    @jwt_required
+    @api.response(200, 'Success', azure_account_response)
+    @api.response(404, 'Not found', default_response)
+    def get(self, name):
+        """
+        Get Azure account.
+        """
+        account = get_azure_account(name, get_jwt_identity())
+
+        if account:
+            return make_response(
+                jsonify(marshal(account, azure_account_response, skip_none=True)),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Azure account not found'}),
+                404
+            )
