@@ -70,22 +70,19 @@ def test_add_credentials(mock_app, test_client):
 
 @patch('mash.services.credentials.routes.credentials.current_app')
 def test_get_credentials(mock_app, test_client):
-    creds = {"test-aws": {"super": "secret"}}
-    mock_app.jobs = {
-        '123': {
-            "id": "123",
-            "cloud": "ec2",
-            "cloud_accounts": ["test-aws"],
-            "requesting_user": "user1",
-            "last_service": "deprecation",
-            "utctime": "now",
-            "notification_email": "test@fake.com",
-            "notification_type": "single"
-        }
+    creds = {'test-aws': {'super': 'secret'}}
+    data = {
+        'cloud': 'ec2',
+        'cloud_accounts': ['test-aws'],
+        'requesting_user': 'user1'
     }
     mock_app.credentials_datastore.retrieve_credentials.return_value = creds
 
-    response = test_client.get('/credentials/123')
+    response = test_client.get(
+        '/credentials/',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
 
     assert response.status_code == 200
     assert response.data == b'{"test-aws":{"super":"secret"}}\n'
@@ -94,28 +91,18 @@ def test_get_credentials(mock_app, test_client):
     mock_app.credentials_datastore.retrieve_credentials.side_effect = \
         Exception('Permission denied')
 
-    response = test_client.get('/credentials/123')
+    response = test_client.get(
+        '/credentials/',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
 
     mock_app.logger.warning.assert_called_once_with(
-        'Unable to retrieve credentials: Permission denied',
-        extra={'job_id': '123'}
+        'Unable to retrieve credentials: Permission denied'
     )
     assert response.status_code == 400
     assert response.data == \
         b'{"msg":"Unable to retrieve credentials: Permission denied"}\n'
-
-    # Job does not exist
-    mock_app.logger.warning.reset_mock()
-    mock_app.jobs = {}
-
-    response = test_client.get('/credentials/123')
-
-    mock_app.logger.warning.assert_called_once_with(
-        'Job does not exist',
-        extra={'job_id': '123'}
-    )
-    assert response.status_code == 404
-    assert response.data == b'{"msg":"Job does not exist"}\n'
 
 
 @patch('mash.services.credentials.routes.credentials.current_app')

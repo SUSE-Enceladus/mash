@@ -8,6 +8,7 @@ class TestGCEPublisherJob(object):
         self.job_config = {
             'id': '1',
             'last_service': 'publisher',
+            'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now'
         }

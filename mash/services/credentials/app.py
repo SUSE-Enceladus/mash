@@ -18,7 +18,6 @@
 
 import atexit
 import logging
-import os
 
 from flask import Flask
 from flask.logging import default_handler
@@ -26,23 +25,17 @@ from flask.logging import default_handler
 from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
 from mash.log.filter import BaseServiceFilter
 from mash.services.credentials.datastore import CredentialsDatastore
-from mash.services.credentials.utils import restart_jobs
 from mash.services.credentials.routes import credentials
-from mash.services.credentials.routes import jobs
 
 
 def setup_app(app):
-    """Setup credentials datastore and restart jobs."""
-    app.jobs = {}
+    """Setup credentials datastore."""
     app.credentials_datastore = CredentialsDatastore(
         app.config['CREDS_DIR'],
         app.config['ENC_KEYS_FILE'],
         app.logger
     )
     atexit.register(app.credentials_datastore.shutdown)
-
-    os.makedirs(app.config['JOB_DIR'], exist_ok=True)
-    restart_jobs(app.config['JOB_DIR'], app.jobs)
 
 
 def create_app(config_object):
@@ -80,4 +73,3 @@ def configure_logger(app):
 def register_blueprints(app):
     """Register Flask blueprints."""
     app.register_blueprint(credentials.blueprint)
-    app.register_blueprint(jobs.blueprint)

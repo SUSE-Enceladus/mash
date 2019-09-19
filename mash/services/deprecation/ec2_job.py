@@ -56,6 +56,13 @@ class EC2DeprecationJob(MashJob):
             # There is no old image that needs deprecation for the job.
             return
 
+        # Get all account credentials in one request
+        accounts = []
+        for region_info in self.deprecation_regions:
+            accounts.append(region_info['account'])
+
+        self.request_credentials(accounts)
+
         for region_info in self.deprecation_regions:
             credential = self.credentials[region_info['account']]
 

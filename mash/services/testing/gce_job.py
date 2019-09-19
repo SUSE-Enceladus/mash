@@ -93,6 +93,7 @@ class GCETestingJob(MashJob):
 
         for region, info in self.test_regions.items():
             account = get_testing_account(info)
+            self.request_credentials([account])
             creds = self.credentials[account]
 
             if self.test_fallback_regions == []:

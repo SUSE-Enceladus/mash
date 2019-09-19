@@ -11,6 +11,7 @@ class TestGCEDeprecationJob(object):
             'id': '1',
             'last_service': 'deprecation',
             'cloud': 'gce',
+            'requesting_user': 'user1',
             'old_cloud_image_name': 'old_image_123',
             'deprecation_accounts': ['test-gce'],
             'utctime': 'now'

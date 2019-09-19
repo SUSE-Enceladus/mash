@@ -21,7 +21,7 @@ import json
 from mash.services.mash_service import MashService
 from mash.services.jobcreator import create_job
 from mash.utils.json_format import JsonFormat
-from mash.utils.mash_utils import handle_request, setup_logfile
+from mash.utils.mash_utils import setup_logfile
 
 
 class JobCreatorService(MashService):
@@ -43,7 +43,6 @@ class JobCreatorService(MashService):
         )
         self.log.addHandler(logfile_handler)
         self.services = self.config.get_service_names()
-        self.credentials_url = self.config.get_credentials_url()
 
         self.bind_queue(
             self.service_exchange, self.job_document_key, self.service_queue
@@ -70,7 +69,7 @@ class JobCreatorService(MashService):
 
     def publish_delete_job_message(self, job_id):
         """
-        Publish delete job message to obs and credentials services.
+        Publish delete job message to obs service.
 
         This will flush the job with the given id out of the pipeline.
         """
@@ -95,9 +94,6 @@ class JobCreatorService(MashService):
     def send_job(self, job_doc):
         """
         Create instance of job and send to all services to initiate job.
-
-        Message from credentials service contains account info for the
-        cloud.
         """
         job = create_job(job_doc)
 
@@ -105,21 +101,6 @@ class JobCreatorService(MashService):
             'Started a new job: {0}'.format(JsonFormat.json_message(job_doc)),
             extra={'job_id': job.id}
         )
-
-        # Credentials job always sent for all jobs.
-        try:
-            msg = job.get_credentials_message()
-            handle_request(
-                self.credentials_url,
-                'jobs',
-                'post',
-                msg
-            )
-        except Exception:
-            self.log.error(
-                'Failed to send job to credentials service.',
-                extra={'job_id': job.id}
-            )
 
         for service in self.services:
             if service == 'deprecation':

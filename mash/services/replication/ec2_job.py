@@ -57,6 +57,13 @@ class EC2ReplicationJob(MashJob):
         self.status = SUCCESS
         self.source_region_results = defaultdict(dict)
 
+        # Get all account credentials in one request
+        accounts = []
+        for source_region, reg_info in self.replication_source_regions.items():
+            accounts.append(reg_info['account'])
+
+        self.request_credentials(accounts)
+
         for source_region, reg_info in self.replication_source_regions.items():
             credential = self.credentials[reg_info['account']]
 

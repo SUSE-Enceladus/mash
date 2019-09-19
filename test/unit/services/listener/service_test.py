@@ -24,7 +24,6 @@ class TestListenerService(object):
             'obs', 'uploader', 'testing', 'replication', 'publisher',
             'deprecation'
         ]
-        self.config.get_credentials_url.return_value = 'http://localhost:5000'
 
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
@@ -78,9 +77,6 @@ class TestListenerService(object):
         self.service.listener_msg_key = 'listener_msg'
         self.service.next_service = 'publisher'
         self.service.prev_service = 'testing'
-        self.service.credentials_queue = 'credentials'
-        self.service.credentials_response_key = 'response'
-        self.service.credentials_request_key = 'request.replication'
         self.service.custom_args = None
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
@@ -216,12 +212,9 @@ class TestListenerService(object):
             'Invalid job: Cannot create job.'
         )
 
-    @patch.object(ListenerService, 'publish_credentials_delete')
     @patch('mash.services.listener_service.remove_file')
     @patch.object(ListenerService, 'unbind_queue')
-    def test_service_delete_job(
-        self, mock_unbind_queue, mock_remove_file, mock_publish_creds_delete
-    ):
+    def test_service_delete_job(self, mock_unbind_queue, mock_remove_file):
         job = Mock()
         job.id = '1'
         job.job_file = 'job-test.json'
@@ -233,7 +226,6 @@ class TestListenerService(object):
         self.service.jobs['1'] = job
         self.service._delete_job('1')
 
-        mock_publish_creds_delete.assert_called_once_with('1')
         self.service.log.info.assert_called_once_with(
             'Deleting job.',
             extra={'job_id': '1'}
@@ -251,14 +243,12 @@ class TestListenerService(object):
         )
 
     @patch.object(ListenerService, '_validate_listener_msg')
-    @patch.object(ListenerService, '_request_credentials')
     def test_service_handle_listener_message(
-        self, mock_request_creds, mock_validate_listener_msg
+        self, mock_validate_listener_msg
     ):
         job = Mock()
         job.id = '1'
         job.utctime = 'always'
-        job.credentials = None
         self.service.jobs['1'] = job
 
         mock_validate_listener_msg.return_value = job
@@ -267,7 +257,6 @@ class TestListenerService(object):
         self.service._handle_listener_message(self.message)
 
         assert self.service.jobs['1'].listener_msg == self.message
-        mock_request_creds.assert_called_once_with(job)
 
     @patch.object(ListenerService, '_validate_listener_msg')
     @patch.object(ListenerService, '_schedule_job')
@@ -277,7 +266,6 @@ class TestListenerService(object):
         job = Mock()
         job.id = '1'
         job.utctime = 'always'
-        job.credentials = {'some': 'credentials'}
         self.service.jobs['1'] = job
 
         mock_validate_listener_msg.return_value = job
@@ -598,55 +586,6 @@ class TestListenerService(object):
         self.service.service_exchange = 'obs'
         prev_service = self.service._get_previous_service()
         assert prev_service is None
-
-    @patch('mash.services.listener_service.handle_request')
-    def test_request_creds(self, mock_handle_request):
-        job = Mock()
-        job.id = '1'
-        job.get_job_id.return_value = {'job_id': '1'}
-        job.credentials = None
-
-        response = Mock()
-        response.json.return_value = {'acnt1': {'super': 'secret'}}
-        mock_handle_request.return_value = response
-
-        self.service._request_credentials(job)
-
-        assert job.credentials['acnt1']['super'] == 'secret'
-        mock_handle_request.assert_called_once_with(
-            'http://localhost:5000',
-            'credentials/1',
-            'get'
-        )
-
-        mock_handle_request.side_effect = Exception('Failed')
-
-        self.service.service_exchange = 'obs'
-        self.service._request_credentials(job)
-
-        self.service.log.warning.assert_called_once_with(
-            'Credentials request failed',
-            extra={'job_id': '1'}
-        )
-
-    @patch('mash.services.listener_service.handle_request')
-    def test_publish_credentials_delete(self, mock_handle_request):
-        self.service.publish_credentials_delete('1')
-        mock_handle_request.assert_called_once_with(
-            'http://localhost:5000',
-            'jobs/1',
-            'delete'
-        )
-
-    @patch('mash.services.listener_service.handle_request')
-    def test_publish_credentials_delete_exception(self, mock_handle_request):
-        mock_handle_request.side_effect = Exception('Failed')
-
-        self.service.publish_credentials_delete('1')
-        self.service.log.warning.assert_called_once_with(
-            'Request to delete job failed',
-            extra={'job_id': '1'}
-        )
 
     @patch('mash.services.mash_service.Connection')
     def test_publish_job_result(self, mock_connection):

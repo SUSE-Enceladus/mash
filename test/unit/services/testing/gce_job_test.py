@@ -13,6 +13,7 @@ class TestGCETestingJob(object):
             'id': '1',
             'last_service': 'testing',
             'cloud': 'gce',
+            'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {
                 'us-west1': {

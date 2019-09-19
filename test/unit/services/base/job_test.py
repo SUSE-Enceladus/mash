@@ -10,10 +10,12 @@ class TestMashJob(object):
         self.job_config = {
             'id': '1',
             'last_service': 'testing',
+            'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now'
         }
         self.config = Mock()
+        self.config.get_credentials_url.return_value = 'http://localhost:5000'
 
     def test_missing_key(self):
         del self.job_config['cloud']
@@ -42,6 +44,42 @@ class TestMashJob(object):
             {'job_id': '1'},
             True
         )
+
+    @patch('mash.services.mash_job.handle_request')
+    def test_request_credentials(self, mock_handle_request):
+        callback = Mock()
+
+        job = MashJob(self.job_config, self.config)
+        job.log_callback = callback
+        job.iteration_count = 0
+
+        response = Mock()
+        response.json.return_value = {'acnt1': {'super': 'secret'}}
+        mock_handle_request.return_value = response
+
+        job.request_credentials(['acnt1'])
+
+        assert job.credentials['acnt1']['super'] == 'secret'
+        mock_handle_request.assert_called_once_with(
+            'http://localhost:5000',
+            'credentials/',
+            'get',
+            job_data={
+                'cloud': 'ec2',
+                'cloud_accounts': ['acnt1'],
+                'requesting_user': 'user1'
+            }
+        )
+
+        # Test credentials already exist
+        job.request_credentials(['acnt1'])
+
+        # Test request failed
+        mock_handle_request.side_effect = Exception('Failed')
+        job.credentials = None
+
+        with raises(MashJobException):
+            job.request_credentials(['acnt1'])
 
     def test_run_job(self):
         job = MashJob(self.job_config, self.config)

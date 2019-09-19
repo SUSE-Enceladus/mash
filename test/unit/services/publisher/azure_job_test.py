@@ -13,6 +13,7 @@ class TestAzurePublisherJob(object):
             'image_description': 'New image for v123',
             'label': 'New Image 123',
             'last_service': 'publisher',
+            'requesting_user': 'user1',
             'offer_id': 'sles',
             'cloud': 'azure',
             'publish_regions': [

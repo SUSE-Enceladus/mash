@@ -67,6 +67,7 @@ class AzurePublisherJob(MashJob):
         self.status = SUCCESS
 
         for region_info in self.publish_regions:
+            self.request_credentials([region_info['account']])
             credential = self.credentials[region_info['account']]
             blob_name = ''.join([self.cloud_image_name, '.vhd'])
 

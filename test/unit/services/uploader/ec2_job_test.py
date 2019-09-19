@@ -27,6 +27,7 @@ class TestAmazonUploaderJob(object):
             'id': '1',
             'last_service': 'uploader',
             'cloud': 'ec2',
+            'requesting_user': 'user1',
             'utctime': 'now',
             'target_regions': {
                 'us-east-1': {
@@ -48,6 +49,7 @@ class TestAmazonUploaderJob(object):
         job_doc = {
             'id': '1',
             'last_service': 'uploader',
+            'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now'
         }
@@ -164,6 +166,7 @@ class TestAmazonUploaderJob(object):
             'id': '1',
             'last_service': 'uploader',
             'cloud': 'ec2',
+            'requesting_user': 'user1',
             'utctime': 'now',
             'target_regions': {
                 'us-east-1': {

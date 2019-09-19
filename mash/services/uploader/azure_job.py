@@ -61,6 +61,7 @@ class AzureUploaderJob(MashJob):
 
         for region, info in self.target_regions.items():
             account = info['account']
+            self.request_credentials([account])
             credentials = self.credentials[account]
             blob_name = ''.join([self.cloud_image_name, '.vhd'])
 

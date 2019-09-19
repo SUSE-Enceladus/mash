@@ -51,6 +51,13 @@ class EC2PublisherJob(MashJob):
         """
         self.status = SUCCESS
 
+        # Get all account credentials in one request
+        accounts = []
+        for region_info in self.publish_regions:
+            accounts.append(region_info['account'])
+
+        self.request_credentials(accounts)
+
         for region_info in self.publish_regions:
             creds = self.credentials[region_info['account']]
 

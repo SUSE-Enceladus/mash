@@ -12,6 +12,7 @@ class TestEC2TestingJob(object):
             'id': '1',
             'last_service': 'testing',
             'cloud': 'ec2',
+            'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {'us-east-1': {'account': 'test-aws'}},
             'tests': ['test_stuff'],
