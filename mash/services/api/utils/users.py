@@ -20,6 +20,7 @@ from sqlalchemy.exc import IntegrityError
 
 from mash.services.api.extensions import db
 from mash.services.api.models import User
+from mash.mash_exceptions import MashDBException
 
 
 def add_user(username, email, password):
@@ -28,6 +29,11 @@ def add_user(username, email, password):
 
     If the user or email exists return None.
     """
+    if len(password) < 8:
+        raise MashDBException(
+            'Password too short. Minimum length is 8 characters.'
+        )
+
     user = User(
         username=username,
         email=email

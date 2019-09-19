@@ -2,6 +2,8 @@ import json
 
 from unittest.mock import patch, Mock
 
+from mash.mash_exceptions import MashDBException
+
 
 @patch('mash.services.api.routes.user.add_user')
 def test_api_create_user(mock_add_user, test_client):
@@ -45,6 +47,23 @@ def test_api_create_user(mock_add_user, test_client):
 
     assert response.status_code == 409
     assert response.data == b'{"msg":"Username or email already in use"}\n'
+
+    # Password too short
+    data['password'] = 'secret'
+    mock_add_user.side_effect = MashDBException(
+        'Password too short. Minimum length is 8 characters.'
+    )
+    response = test_client.post(
+        '/user/',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+
+    assert response.status_code == 400
+    assert response.data == \
+        b'{"errors":{"password":"Password too short. ' \
+        b'Minimum length is 8 characters."},"message":' \
+        b'"Input payload validation failed"}\n'
 
 
 @patch('mash.services.api.routes.user.get_user_by_username')

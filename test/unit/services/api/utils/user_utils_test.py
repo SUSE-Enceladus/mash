@@ -1,8 +1,16 @@
+from pytest import raises
 from unittest.mock import patch, Mock
 
 from sqlalchemy.exc import IntegrityError
 
-from mash.services.api.utils.users import add_user, verify_login, get_user_by_username, get_user_email, delete_user
+from mash.mash_exceptions import MashDBException
+from mash.services.api.utils.users import (
+    add_user,
+    verify_login,
+    get_user_by_username,
+    get_user_email,
+    delete_user
+)
 
 
 @patch('mash.services.api.utils.users.db')
@@ -19,6 +27,9 @@ def test_add_user(mock_db):
 
     assert user is None
     mock_db.session.rollback.assert_called_once_with()
+
+    with raises(MashDBException):
+        add_user('user1', 'user1@fake.com', 'pass')
 
 
 @patch('mash.services.api.utils.users.get_user_by_username')
