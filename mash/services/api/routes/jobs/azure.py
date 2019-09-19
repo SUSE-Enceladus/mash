@@ -18,27 +18,38 @@
 
 import json
 
-from flask import request
-from flask_restplus import Namespace, Resource
+from flask import jsonify, make_response, request
+from flask_restplus import marshal, Namespace, Resource
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from mash.services.api.routes.jobs import (
-    job_response,
-    validation_error_response,
-    process_job_add_request
+from mash.mash_exceptions import MashException
+from mash.services.api.schema import (
+    default_response,
+    validation_error
 )
+from mash.services.api.routes.jobs import job_response
 from mash.services.api.schema.jobs.azure import azure_job_message
+from mash.services.api.utils.jobs import create_job
+from mash.services.api.utils.jobs.azure import update_azure_job_accounts
 
 api = Namespace(
     'Azure Jobs',
     description='Azure Job operations'
 )
+validation_error_response = api.schema_model(
+    'validation_error', validation_error
+)
 azure_job = api.schema_model('azure_job', azure_job_message)
 
 
 @api.route('/')
+@api.doc(security='apiKey')
 @api.response(400, 'Validation error', validation_error_response)
+@api.response(401, 'Unauthorized', default_response)
+@api.response(422, 'Not processable', default_response)
 class AzureJobCreate(Resource):
     @api.doc('add_azure_job')
+    @jwt_required
     @api.expect(azure_job)
     @api.response(201, 'Job added', job_response)
     def post(self):
@@ -47,4 +58,23 @@ class AzureJobCreate(Resource):
         """
         data = json.loads(request.data.decode())
         data['cloud'] = 'azure'
-        return process_job_add_request(data)
+        data['requesting_user'] = get_jwt_identity()
+
+        try:
+            data = update_azure_job_accounts(data)
+            job = create_job(data)
+        except MashException as error:
+            return make_response(
+                jsonify({'msg': 'Job failed: {0}'.format(error)}),
+                400
+            )
+        except Exception:
+            return make_response(
+                jsonify({'msg': 'Failed to start job'}),
+                400
+            )
+
+        return make_response(
+            jsonify(marshal(job, job_response, skip_none=True)),
+            201
+        )
