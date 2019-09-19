@@ -53,7 +53,7 @@ validation_error_response = api.schema_model(
 
 region = Model(
     'region', {
-        'id': fields.Integer,
+        'id': fields.String,
         'name': fields.String,
         'helper_image': fields.String
     }
@@ -61,7 +61,7 @@ region = Model(
 
 group = Model(
     'group', {
-        'id': fields.Integer,
+        'id': fields.String,
         'name': fields.String
     }
 )
