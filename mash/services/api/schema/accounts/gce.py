@@ -86,3 +86,20 @@ gce_credentials = {
 add_account_gce = copy.deepcopy(gce_account)
 add_account_gce['properties']['credentials'] = gce_credentials
 add_account_gce['required'].append('credentials')
+
+gce_account_update = {
+    'type': 'object',
+    'properties': {
+        'bucket': string_with_example('image-bucket'),
+        'testing_account': string_with_example('testing-account1'),
+        'region': string_with_example('us-west1-a'),
+        'credentials': gce_credentials
+    },
+    'additionalProperties': False,
+    'anyOf': [
+        {'required': ['bucket']},
+        {'required': ['testing_account']},
+        {'required': ['region']},
+        {'required': ['credentials']}
+    ]
+}
