@@ -29,7 +29,8 @@ from mash.services.api.utils.accounts.ec2 import (
     get_ec2_accounts,
     get_ec2_account,
     get_ec2_account_by_id,
-    delete_ec2_account
+    delete_ec2_account,
+    update_ec2_account
 )
 
 
@@ -230,3 +231,114 @@ def test_delete_ec2_account(
 
     mock_get_account.return_value = None
     assert delete_ec2_account('acnt2', 'user1') == 0
+
+
+@patch('mash.services.api.utils.accounts.ec2.current_app')
+@patch('mash.services.api.utils.accounts.ec2.get_ec2_account')
+@patch('mash.services.api.utils.accounts.ec2._get_or_create_ec2_group')
+@patch('mash.services.api.utils.accounts.ec2.handle_request')
+@patch('mash.services.api.utils.accounts.ec2.create_ec2_region')
+@patch('mash.services.api.utils.accounts.ec2.get_user_by_username')
+@patch('mash.services.api.utils.accounts.ec2.db')
+def test_update_ec2_account(
+    mock_db,
+    mock_get_user,
+    mock_create_region,
+    mock_handle_request,
+    mock_get_create_group,
+    mock_get_ec2_account,
+    mock_current_app
+):
+    user = Mock()
+    user.id = '1'
+    mock_get_user.return_value = user
+
+    group = Mock()
+    group.id = '1'
+    mock_get_create_group.return_value = group
+
+    account = Mock()
+    mock_get_ec2_account.return_value = account
+
+    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+
+    credentials = {'super': 'secret'}
+    data = {
+        'cloud': 'ec2',
+        'account_name': 'acnt1',
+        'requesting_user': 'user1',
+        'credentials': credentials
+    }
+
+    result = update_ec2_account(
+        'acnt1',
+        'user1',
+        [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
+        credentials,
+        'group1',
+        'us-east-99',
+        'subnet-12345'
+    )
+
+    assert result == account
+    assert account.group == group
+
+    mock_create_region.assert_called_once_with(
+        'us-east-100', 'ami-789', account
+    )
+
+    mock_handle_request.assert_called_once_with(
+        'http://localhost:5000/',
+        'credentials/',
+        'post',
+        job_data=data
+    )
+
+    mock_db.session.add.assert_called_once_with(account)
+    mock_db.session.commit.assert_called_once_with()
+
+    # Account not found
+    mock_get_ec2_account.return_value = None
+
+    result = update_ec2_account(
+        'acnt1',
+        'user1',
+        [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
+        credentials,
+        'group1',
+        'us-east-99',
+        'subnet-12345'
+    )
+
+    assert result is None
+
+    # DB exception
+    mock_get_ec2_account.return_value = account
+    mock_db.session.commit.side_effect = Exception('Broken')
+
+    with raises(Exception):
+        update_ec2_account(
+            'acnt1',
+            'user1',
+            [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
+            credentials,
+            'group1',
+            'us-east-99',
+            'subnet-12345'
+        )
+
+    mock_db.session.rollback.assert_called_once_with()
+
+    # Credentials update exception
+    mock_handle_request.side_effect = Exception('Broken')
+
+    with raises(Exception):
+        update_ec2_account(
+            'acnt1',
+            'user1',
+            [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
+            credentials,
+            'group1',
+            'us-east-99',
+            'subnet-12345'
+        )

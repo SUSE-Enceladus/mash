@@ -31,13 +31,17 @@ from mash.services.api.utils.accounts.ec2 import (
     create_ec2_account,
     get_ec2_accounts,
     get_ec2_account,
-    delete_ec2_account
+    delete_ec2_account,
+    update_ec2_account
 )
 from mash.services.api.schema import (
     default_response,
     validation_error
 )
-from mash.services.api.schema.accounts.ec2 import add_account_ec2
+from mash.services.api.schema.accounts.ec2 import (
+    add_account_ec2,
+    ec2_account_update
+)
 
 api = Namespace(
     'EC2 Accounts',
@@ -46,6 +50,10 @@ api = Namespace(
 add_ec2_account_request = api.schema_model(
     'add_ec2_account_request',
     add_account_ec2
+)
+update_ec2_account_request = api.schema_model(
+    'ec2_account_update',
+    ec2_account_update
 )
 validation_error_response = api.schema_model(
     'validation_error', validation_error
@@ -193,6 +201,45 @@ class EC2Account(Resource):
         Get EC2 account.
         """
         account = get_ec2_account(name, get_jwt_identity())
+
+        if account:
+            return make_response(
+                jsonify(marshal(account, ec2_account_response, skip_none=True)),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'EC2 account not found'}),
+                404
+            )
+
+    @api.doc('update_ec2_account')
+    @jwt_required
+    @api.expect(update_ec2_account_request)
+    @api.response(200, 'Updated EC2 account', ec2_account_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(404, 'Not found', default_response)
+    def post(self, name):
+        """
+        Update EC2 account.
+        """
+        data = json.loads(request.data.decode())
+
+        try:
+            account = update_ec2_account(
+                name,
+                get_jwt_identity(),
+                data.get('additional_regions'),
+                data.get('credentials'),
+                data.get('group'),
+                data.get('region'),
+                data.get('subnet')
+            )
+        except Exception as error:
+            return make_response(
+                jsonify({'msg': str(error)}),
+                400
+            )
 
         if account:
             return make_response(

@@ -196,3 +196,66 @@ def delete_ec2_account(name, username):
             return 1
     else:
         return 0
+
+
+def update_ec2_account(
+    account_name,
+    username,
+    additional_regions=None,
+    credentials=None,
+    group=None,
+    region=None,
+    subnet=None
+):
+    """
+    Update an existing EC2 account.
+    """
+    ec2_account = get_ec2_account(account_name, username)
+    user = get_user_by_username(username)
+
+    if not ec2_account:
+        return None
+
+    if credentials:
+        data = {
+            'cloud': 'ec2',
+            'account_name': account_name,
+            'requesting_user': username,
+            'credentials': credentials
+        }
+
+        try:
+            handle_request(
+                current_app.config['CREDENTIALS_URL'],
+                'credentials/',
+                'post',
+                job_data=data
+            )
+        except Exception:
+            raise
+
+    if group:
+        ec2_account.group = _get_or_create_ec2_group(group, user.id)
+
+    if additional_regions:
+        for additional_region in additional_regions:
+            create_ec2_region(
+                additional_region['name'],
+                additional_region['helper_image'],
+                ec2_account
+            )
+
+    if region:
+        ec2_account.region = region
+
+    if subnet:
+        ec2_account.subnet = subnet
+
+    try:
+        db.session.add(ec2_account)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
+    return ec2_account
