@@ -26,7 +26,8 @@ from mash.services.api.utils.accounts.azure import (
     get_azure_accounts,
     get_azure_account,
     get_azure_account_by_id,
-    delete_azure_account
+    delete_azure_account,
+    update_azure_account
 )
 
 
@@ -183,3 +184,87 @@ def test_delete_azure_account(
 
     mock_get_account.return_value = None
     assert delete_azure_account('acnt2', 'user1') == 0
+
+
+@patch('mash.services.api.utils.accounts.azure.current_app')
+@patch('mash.services.api.utils.accounts.azure.handle_request')
+@patch('mash.services.api.utils.accounts.azure.get_azure_account')
+@patch('mash.services.api.utils.accounts.azure.db')
+def test_update_azure_account(
+    mock_db,
+    mock_get_azure_account,
+    mock_handle_request,
+    mock_current_app
+):
+    account = Mock()
+    account.id = '1'
+    mock_get_azure_account.return_value = account
+
+    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+
+    credentials = {'super': 'secret'}
+    data = {
+        'cloud': 'azure',
+        'account_name': 'acnt1',
+        'requesting_user': 'user1',
+        'credentials': credentials
+    }
+
+    result = update_azure_account(
+        'acnt1',
+        'user1',
+        region='westus',
+        credentials=credentials,
+        source_container='container1',
+        source_resource_group='group1',
+        source_storage_account='account1',
+        destination_container='container2',
+        destination_resource_group='group2',
+        destination_storage_account='account2'
+    )
+
+    assert result == account
+
+    mock_handle_request.assert_called_once_with(
+        'http://localhost:5000/',
+        'credentials/',
+        'post',
+        job_data=data
+    )
+
+    mock_db.session.add.assert_called_once_with(account)
+    mock_db.session.commit.assert_called_once_with()
+
+    # Exception in database
+    mock_db.session.commit.side_effect = Exception('Broken')
+
+    with raises(Exception):
+        update_azure_account(
+            'acnt1',
+            'user1',
+            region='westus'
+        )
+
+    mock_db.session.rollback.assert_called_once_with()
+
+    # Exception in handle request
+    mock_handle_request.side_effect = Exception('Broken')
+
+    with raises(Exception):
+        update_azure_account(
+            'acnt1',
+            'user1',
+            region='westus',
+            credentials=credentials
+        )
+
+    # Account not found
+    mock_get_azure_account.return_value = None
+
+    result = update_azure_account(
+        'acnt1',
+        'user1',
+        region='westus',
+    )
+
+    assert result is None

@@ -97,3 +97,28 @@ azure_credentials = {
 add_account_azure = copy.deepcopy(azure_account)
 add_account_azure['properties']['credentials'] = azure_credentials
 add_account_azure['required'].append('credentials')
+
+azure_account_update = {
+    'type': 'object',
+    'properties': {
+        'region': string_with_example('westus'),
+        'source_container': string_with_example('container1'),
+        'source_resource_group': string_with_example('res_group1'),
+        'source_storage_account': string_with_example('storage_account1'),
+        'destination_container': string_with_example('container2'),
+        'destination_resource_group': string_with_example('res_group2'),
+        'destination_storage_account': string_with_example('storage_account2'),
+        'credentials': azure_credentials
+    },
+    'additionalProperties': False,
+    'anyOf': [
+        {'required': ['region']},
+        {'required': ['source_container']},
+        {'required': ['source_resource_group']},
+        {'required': ['source_storage_account']},
+        {'required': ['destination_container']},
+        {'required': ['destination_resource_group']},
+        {'required': ['destination_storage_account']},
+        {'required': ['credentials']}
+    ]
+}
