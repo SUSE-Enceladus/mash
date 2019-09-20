@@ -18,10 +18,13 @@
 
 from unittest.mock import patch, Mock
 
-from _pytest.python_api import raises
+from pytest import raises
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.utils.jobs.gce import update_gce_job_accounts, add_target_gce_account
+from mash.services.api.utils.jobs.gce import (
+    update_gce_job_accounts,
+    add_target_gce_account
+)
 
 
 @patch('mash.services.api.utils.jobs.gce.add_target_gce_account')
