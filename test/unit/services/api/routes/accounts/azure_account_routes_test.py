@@ -214,3 +214,74 @@ def test_api_get_account_list_azure(
     assert response.json[0]['destination_container'] == "container2"
     assert response.json[0]['destination_resource_group'] == "group2"
     assert response.json[0]['destination_storage_account'] == "account2"
+
+
+@patch('mash.services.api.routes.accounts.azure.update_azure_account')
+@patch('mash.services.api.routes.accounts.azure.get_jwt_identity')
+@patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
+def test_api_update_account_gce(
+        mock_jwt_required,
+        mock_jwt_identity,
+        mock_update_azure_account,
+        test_client
+):
+    account = Mock()
+    account.id = '1'
+    account.name = 'test'
+    account.region = 'useast'
+    account.source_container = 'container1'
+    account.source_resource_group = 'group1'
+    account.source_storage_account = 'account1'
+    account.destination_container = 'container2'
+    account.destination_resource_group = 'group2'
+    account.destination_storage_account = 'account2'
+
+    mock_update_azure_account.return_value = account
+    mock_jwt_identity.return_value = 'user1'
+
+    request = {
+        'region': 'uswest'
+    }
+
+    response = test_client.post(
+        '/accounts/azure/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    mock_update_azure_account.assert_called_once_with(
+        'acnt1',
+        'user1',
+        'uswest',
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None
+    )
+
+    assert response.status_code == 200
+
+    # Mash Exception
+    mock_update_azure_account.side_effect = MashException('Broken')
+
+    response = test_client.post(
+        '/accounts/azure/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    assert response.status_code == 400
+    assert response.data == b'{"msg":"Broken"}\n'
+
+    # Account not found
+    mock_update_azure_account.side_effect = None
+    mock_update_azure_account.return_value = None
+
+    response = test_client.post(
+        '/accounts/azure/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    assert response.status_code == 404
+    assert response.data == b'{"msg":"Azure account not found"}\n'

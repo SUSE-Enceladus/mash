@@ -30,12 +30,16 @@ from mash.services.api.schema import (
     default_response,
     validation_error
 )
-from mash.services.api.schema.accounts.azure import add_account_azure
+from mash.services.api.schema.accounts.azure import (
+    add_account_azure,
+    azure_account_update
+)
 from mash.services.api.utils.accounts.azure import (
     create_azure_account,
     get_azure_account,
     get_azure_accounts,
-    delete_azure_account
+    delete_azure_account,
+    update_azure_account
 )
 
 api = Namespace(
@@ -43,6 +47,10 @@ api = Namespace(
     description='azure account operations'
 )
 add_azure_account_request = api.schema_model('azure_account', add_account_azure)
+update_azure_account_request = api.schema_model(
+    'azure_account_update',
+    azure_account_update
+)
 validation_error_response = api.schema_model(
     'validation_error', validation_error
 )
@@ -173,6 +181,48 @@ class AzureAccount(Resource):
         Get Azure account.
         """
         account = get_azure_account(name, get_jwt_identity())
+
+        if account:
+            return make_response(
+                jsonify(marshal(account, azure_account_response, skip_none=True)),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Azure account not found'}),
+                404
+            )
+
+    @api.doc('update_azure_account')
+    @jwt_required
+    @api.expect(update_azure_account_request)
+    @api.response(200, 'Azure account updated', azure_account_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(404, 'Not found', default_response)
+    def post(self, name):
+        """
+        Update an Azure account.
+        """
+        data = json.loads(request.data.decode())
+
+        try:
+            account = update_azure_account(
+                name,
+                get_jwt_identity(),
+                data.get('region'),
+                data.get('credentials'),
+                data.get('source_container'),
+                data.get('source_resource_group'),
+                data.get('source_storage_account'),
+                data.get('destination_container'),
+                data.get('destination_resource_group'),
+                data.get('destination_storage_account')
+            )
+        except Exception as error:
+            return make_response(
+                jsonify({'msg': str(error)}),
+                400
+            )
 
         if account:
             return make_response(

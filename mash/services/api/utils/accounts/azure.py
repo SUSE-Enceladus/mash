@@ -141,3 +141,72 @@ def delete_azure_account(name, username):
             return 1
     else:
         return 0
+
+
+def update_azure_account(
+    account_name,
+    username,
+    region=None,
+    credentials=None,
+    source_container=None,
+    source_resource_group=None,
+    source_storage_account=None,
+    destination_container=None,
+    destination_resource_group=None,
+    destination_storage_account=None
+):
+    """
+    Update Azure account for user.
+    """
+    account = get_azure_account(account_name, username)
+
+    if not account:
+        return None
+
+    if credentials:
+        data = {
+            'cloud': 'azure',
+            'account_name': account_name,
+            'requesting_user': username,
+            'credentials': credentials
+        }
+
+        try:
+            handle_request(
+                current_app.config['CREDENTIALS_URL'],
+                'credentials/',
+                'post',
+                job_data=data
+            )
+        except Exception:
+            raise
+
+    if region:
+        account.region = region
+
+    if source_container:
+        account.source_container = source_container
+
+    if source_resource_group:
+        account.source_resource_group = source_resource_group
+
+    if source_storage_account:
+        account.source_storage_account = source_storage_account
+
+    if destination_container:
+        account.destination_container = destination_container
+
+    if destination_resource_group:
+        account.destination_resource_group = destination_resource_group
+
+    if destination_storage_account:
+        account.destination_storage_account = destination_storage_account
+
+    try:
+        db.session.add(account)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
+    return account
