@@ -175,3 +175,70 @@ def test_api_get_account_list_ec2(
     assert response.json[0]['name'] == "user1"
     assert response.json[0]['partition'] == "aws"
     assert response.json[0]['region'] == "us-east-1"
+
+
+@patch('mash.services.api.routes.accounts.ec2.update_ec2_account')
+@patch('mash.services.api.routes.accounts.ec2.get_jwt_identity')
+@patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
+def test_api_update_account_ec2(
+        mock_jwt_required,
+        mock_jwt_identity,
+        mock_update_ec2_account,
+        test_client
+):
+    account = Mock()
+    account.id = '1'
+    account.name = 'user1'
+    account.partition = 'aws'
+    account.region = 'us-east-1'
+    account.subnet = None
+    account.additional_regions = None
+    account.group = None
+
+    mock_update_ec2_account.return_value = account
+    mock_jwt_identity.return_value = 'user1'
+
+    request = {
+        'group': 'group1',
+        'region': 'us-east-1'
+    }
+
+    response = test_client.post(
+        '/accounts/ec2/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    mock_update_ec2_account.assert_called_once_with(
+        'acnt1',
+        'user1',
+        None,
+        None,
+        'group1',
+        'us-east-1',
+        None
+    )
+
+    assert response.status_code == 200
+
+    # Mash Exception
+    mock_update_ec2_account.side_effect = MashException('Broken')
+
+    response = test_client.post(
+        '/accounts/ec2/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    assert response.status_code == 400
+    assert response.data == b'{"msg":"Broken"}\n'
+
+    # Account not found
+    mock_update_ec2_account.side_effect = None
+    mock_update_ec2_account.return_value = None
+
+    response = test_client.post(
+        '/accounts/ec2/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    assert response.status_code == 404
+    assert response.data == b'{"msg":"EC2 account not found"}\n'
