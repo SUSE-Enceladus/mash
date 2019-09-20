@@ -30,12 +30,16 @@ from mash.services.api.schema import (
     default_response,
     validation_error
 )
-from mash.services.api.schema.accounts.gce import add_account_gce
+from mash.services.api.schema.accounts.gce import (
+    add_account_gce,
+    gce_account_update
+)
 from mash.services.api.utils.accounts.gce import (
     create_gce_account,
     get_gce_account,
     get_gce_accounts,
-    delete_gce_account
+    delete_gce_account,
+    update_gce_account
 )
 
 api = Namespace(
@@ -43,6 +47,10 @@ api = Namespace(
     description='GCE account operations'
 )
 add_gce_account_request = api.schema_model('gce_account', add_account_gce)
+update_gce_account_request = api.schema_model(
+    'gce_account_update',
+    gce_account_update
+)
 validation_error_response = api.schema_model(
     'validation_error', validation_error
 )
@@ -167,6 +175,44 @@ class GCEAccount(Resource):
         Get GCE account.
         """
         account = get_gce_account(name, get_jwt_identity())
+
+        if account:
+            return make_response(
+                jsonify(marshal(account, gce_account_response, skip_none=True)),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'GCE account not found'}),
+                404
+            )
+
+    @api.doc('update_gce_account')
+    @jwt_required
+    @api.expect(update_gce_account_request)
+    @api.response(200, 'Success', gce_account_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(404, 'Not found', default_response)
+    def post(self, name):
+        """
+        Update GCE account.
+        """
+        data = json.loads(request.data.decode())
+
+        try:
+            account = update_gce_account(
+                name,
+                get_jwt_identity(),
+                data.get('bucket'),
+                data.get('region'),
+                data.get('credentials'),
+                data.get('testing_account')
+            )
+        except Exception as error:
+            return make_response(
+                jsonify({'msg': str(error)}),
+                400
+            )
 
         if account:
             return make_response(

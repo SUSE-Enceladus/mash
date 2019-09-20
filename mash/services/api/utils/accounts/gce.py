@@ -141,3 +141,56 @@ def delete_gce_account(name, username):
             return 1
     else:
         return 0
+
+
+def update_gce_account(
+    account_name,
+    username,
+    bucket=None,
+    region=None,
+    credentials=None,
+    testing_account=None
+):
+    """
+    Update an existing GCE account.
+    """
+    gce_account = get_gce_account(account_name, username)
+
+    if not gce_account:
+        return None
+
+    if credentials:
+        data = {
+            'cloud': 'gce',
+            'account_name': account_name,
+            'requesting_user': username,
+            'credentials': credentials
+        }
+
+        try:
+            handle_request(
+                current_app.config['CREDENTIALS_URL'],
+                'credentials/',
+                'post',
+                job_data=data
+            )
+        except Exception:
+            raise
+
+    if bucket:
+        gce_account.bucket = bucket
+
+    if region:
+        gce_account.region = region
+
+    if testing_account and gce_account.is_publishing_account:
+        gce_account.testing_account = testing_account
+
+    try:
+        db.session.add(gce_account)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+
+    return gce_account

@@ -26,7 +26,8 @@ from mash.services.api.utils.accounts.gce import (
     get_gce_accounts,
     get_gce_account,
     get_gce_account_by_id,
-    delete_gce_account
+    delete_gce_account,
+    update_gce_account
 )
 
 
@@ -190,3 +191,92 @@ def test_delete_gce_account(
 
     mock_get_account.return_value = None
     assert delete_gce_account('acnt2', 'user1') == 0
+
+
+@patch('mash.services.api.utils.accounts.gce.current_app')
+@patch('mash.services.api.utils.accounts.gce.handle_request')
+@patch('mash.services.api.utils.accounts.gce.get_gce_account')
+@patch('mash.services.api.utils.accounts.gce.db')
+def test_update_gce_account(
+    mock_db,
+    mock_get_gce_account,
+    mock_handle_request,
+    mock_current_app
+):
+    account = Mock()
+    account.id = '1'
+    account.is_publishing_account = True
+    mock_get_gce_account.return_value = account
+
+    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+
+    credentials = {'super': 'secret'}
+    data = {
+        'cloud': 'gce',
+        'account_name': 'acnt1',
+        'requesting_user': 'user1',
+        'credentials': credentials
+    }
+
+    result = update_gce_account(
+        'acnt1',
+        'user1',
+        bucket='images',
+        region='us-east1',
+        credentials=credentials,
+        testing_account='tester'
+    )
+
+    assert result == account
+
+    mock_handle_request.assert_called_once_with(
+        'http://localhost:5000/',
+        'credentials/',
+        'post',
+        job_data=data
+    )
+
+    mock_db.session.add.assert_called_once_with(account)
+    mock_db.session.commit.assert_called_once_with()
+
+    # Exception in database
+    mock_db.session.commit.side_effect = Exception('Broken')
+
+    with raises(Exception):
+        update_gce_account(
+            'acnt1',
+            'user1',
+            bucket='images',
+            region='us-east1',
+            credentials=credentials,
+            testing_account='tester'
+        )
+
+    mock_db.session.rollback.assert_called_once_with()
+
+    # Exception in handle request
+    mock_handle_request.side_effect = Exception('Broken')
+
+    with raises(Exception):
+        update_gce_account(
+            'acnt1',
+            'user1',
+            bucket='images',
+            region='us-east1',
+            credentials=credentials,
+            testing_account='tester'
+        )
+
+    # Account not found
+    mock_get_gce_account.return_value = None
+
+    result = update_gce_account(
+        'acnt1',
+        'user1',
+        bucket='images',
+        region='us-east1',
+        credentials=credentials,
+        testing_account='tester'
+    )
+
+    assert result is None

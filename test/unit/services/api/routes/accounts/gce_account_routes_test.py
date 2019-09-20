@@ -190,3 +190,68 @@ def test_api_get_account_list_gce(
     assert response.json[0]['name'] == "user1"
     assert response.json[0]['bucket'] == "images"
     assert response.json[0]['region'] == "us-east-1"
+
+
+@patch('mash.services.api.routes.accounts.gce.update_gce_account')
+@patch('mash.services.api.routes.accounts.gce.get_jwt_identity')
+@patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
+def test_api_update_account_gce(
+        mock_jwt_required,
+        mock_jwt_identity,
+        mock_update_gce_account,
+        test_client
+):
+    account = Mock()
+    account.id = '1'
+    account.name = 'user1'
+    account.bucket = 'images'
+    account.region = 'us-east-1'
+    account.testing_account = None
+    account.is_publishing_account = False
+
+    mock_update_gce_account.return_value = account
+    mock_jwt_identity.return_value = 'user1'
+
+    request = {
+        'bucket': 'bucket1',
+        'region': 'us-east-1'
+    }
+
+    response = test_client.post(
+        '/accounts/gce/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    mock_update_gce_account.assert_called_once_with(
+        'acnt1',
+        'user1',
+        'bucket1',
+        'us-east-1',
+        None,
+        None
+    )
+
+    assert response.status_code == 200
+
+    # Mash Exception
+    mock_update_gce_account.side_effect = MashException('Broken')
+
+    response = test_client.post(
+        '/accounts/gce/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    assert response.status_code == 400
+    assert response.data == b'{"msg":"Broken"}\n'
+
+    # Account not found
+    mock_update_gce_account.side_effect = None
+    mock_update_gce_account.return_value = None
+
+    response = test_client.post(
+        '/accounts/gce/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    assert response.status_code == 404
+    assert response.data == b'{"msg":"GCE account not found"}\n'
