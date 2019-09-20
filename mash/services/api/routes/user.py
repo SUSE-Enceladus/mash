@@ -26,6 +26,7 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
+from mash.mash_exceptions import MashDBException
 from mash.services.api.schema import (
     add_account,
     default_response,
@@ -66,7 +67,17 @@ class Account(Resource):
         Create a new MASH account.
         """
         data = json.loads(request.data.decode())
-        user = add_user(data['username'], data['email'], data['password'])
+
+        try:
+            user = add_user(data['username'], data['email'], data['password'])
+        except MashDBException as error:
+            return make_response(
+                jsonify({
+                    "errors": {"password": str(error)},
+                    "message": "Input payload validation failed"
+                }),
+                400
+            )
 
         if user:
             return make_response(
