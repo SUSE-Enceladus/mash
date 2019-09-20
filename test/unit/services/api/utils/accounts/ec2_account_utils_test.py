@@ -125,7 +125,7 @@ def test_create_ec2_account(
 
     mock_handle_request.assert_called_once_with(
         'http://localhost:5000/',
-        'credentials',
+        'credentials/',
         'post',
         job_data=data
     )
@@ -217,7 +217,7 @@ def test_delete_ec2_account(
     mock_db.session.commit.assert_called_once_with()
     mock_handle_request.assert_called_once_with(
         'http://localhost:5000/',
-        'credentials',
+        'credentials/',
         'delete',
         job_data=data
     )

@@ -119,7 +119,7 @@ def create_ec2_account(
     try:
         handle_request(
             current_app.config['CREDENTIALS_URL'],
-            'credentials',
+            'credentials/',
             'post',
             job_data=data
         )
@@ -185,7 +185,7 @@ def delete_ec2_account(name, username):
             db.session.commit()
             handle_request(
                 current_app.config['CREDENTIALS_URL'],
-                'credentials',
+                'credentials/',
                 'delete',
                 job_data=data
             )
