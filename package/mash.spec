@@ -108,6 +108,12 @@ install -D -m 644 mash/services/api/wsgi.py \
 install -D -m 644 config/mash.conf \
     %{buildroot}%{_sysconfdir}/apache2/vhosts.d/mash.conf
 
+install -D -m 644 mash/services/credentials/wsgi.py \
+    %{buildroot}%{_localstatedir}/lib/%{name}/credentials/wsgi.py
+
+install -D -m 644 config/credentials.conf \
+    %{buildroot}%{_sysconfdir}/apache2/vhosts.d/credentials.conf
+
 install -D -m 644 config/mash_obs.service \
     %{buildroot}%{_unitdir}/mash_obs.service
 
@@ -116,9 +122,6 @@ install -D -m 644 config/mash_uploader.service \
 
 install -D -m 644 config/mash_logger.service \
     %{buildroot}%{_unitdir}/mash_logger.service
-
-install -D -m 644 config/mash_credentials.service \
-    %{buildroot}%{_unitdir}/mash_credentials.service
 
 install -D -m 644 config/mash_job_creator.service \
     %{buildroot}%{_unitdir}/mash_job_creator.service
@@ -144,11 +147,14 @@ install -D -m 644 config/mash_deprecation.service \
 %{python3_sitelib}/*
 %dir %attr(755, mash, mash)%{_localstatedir}/log/mash
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/mash
+%dir %attr(755, mash, mash)%{_localstatedir}/lib/mash/credentials
 %dir %attr(755, mash, mash)%{_sysconfdir}/%{name}
 %attr(640, mash, mash)%{_localstatedir}/lib/%{name}/wsgi.py
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/credentials/wsgi.py
 %dir %{_sysconfdir}/apache2
 %dir %{_sysconfdir}/apache2/vhosts.d
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/mash.conf
+%config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/credentials.conf
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/%{name}/mash_config.yaml
 
 %{_bindir}/mash-obs-service
@@ -159,9 +165,6 @@ install -D -m 644 config/mash_deprecation.service \
 
 %{_bindir}/mash-logger-service
 %{_unitdir}/mash_logger.service
-
-%{_bindir}/mash-credentials-service
-%{_unitdir}/mash_credentials.service
 
 %{_bindir}/mash-job-creator-service
 %{_unitdir}/mash_job_creator.service
