@@ -27,7 +27,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from pytz import utc
 
-from mash.services.base_defaults import Defaults
 from mash.services.job_factory import JobFactory
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
@@ -54,7 +53,9 @@ class ListenerService(MashService):
         self.jobs = {}
 
         # setup service job directory
-        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        self.job_directory = self.config.get_job_directory(
+            self.service_exchange
+        )
         os.makedirs(
             self.job_directory, exist_ok=True
         )
