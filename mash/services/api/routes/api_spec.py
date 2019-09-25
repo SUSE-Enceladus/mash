@@ -16,8 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import json
-
+from flask import jsonify
 from flask_restplus import Namespace, Resource
 
 from mash.services.api.extensions import api
@@ -31,7 +30,7 @@ spec_api = Namespace(
 @spec_api.route('/', doc=False)
 class APIDoc(Resource):
     def post(self):
-        return json.dumps(api.__schema__)
+        return jsonify(api.__schema__)
 
     def get(self):
-        return json.dumps(api.__schema__)
+        return jsonify(api.__schema__)
