@@ -24,6 +24,7 @@ class TestListenerService(object):
             'obs', 'uploader', 'testing', 'replication', 'publisher',
             'deprecation'
         ]
+        self.config.get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
 
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
@@ -82,7 +83,6 @@ class TestListenerService(object):
         self.service.status_msg_args = ['cloud_image_name']
 
     @patch('mash.services.listener_service.os.makedirs')
-    @patch.object(Defaults, 'get_job_directory')
     @patch.object(ListenerService, 'bind_queue')
     @patch('mash.services.listener_service.restart_jobs')
     @patch('mash.services.listener_service.setup_logfile')
@@ -90,16 +90,15 @@ class TestListenerService(object):
     def test_service_post_init(
         self, mock_start,
         mock_setup_logfile, mock_restart_jobs,
-        mock_bind_queue, mock_get_job_directory, mock_makedirs
+        mock_bind_queue, mock_makedirs
     ):
-        mock_get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
         self.service.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/service_service.log'
 
         self.service.post_init()
 
-        mock_get_job_directory.assert_called_once_with('replication')
+        self.config.get_job_directory.assert_called_once_with('replication')
         mock_makedirs.assert_called_once_with(
             '/var/lib/mash/replication_jobs/', exist_ok=True
         )

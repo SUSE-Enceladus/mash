@@ -20,7 +20,6 @@ import os
 import dateutil.parser
 
 # project
-from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
@@ -50,7 +49,9 @@ class OBSImageBuildResultService(MashService):
         self.jobs = {}
 
         # setup service job directory
-        self.job_directory = Defaults.get_job_directory(self.service_exchange)
+        self.job_directory = self.config.get_job_directory(
+            self.service_exchange
+        )
         os.makedirs(
             self.job_directory, exist_ok=True
         )
