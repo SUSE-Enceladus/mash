@@ -105,6 +105,9 @@ install -D -m 644 config/mash_config.yaml \
 install -D -m 644 mash/services/api/wsgi.py \
     %{buildroot}%{_localstatedir}/lib/%{name}/wsgi.py
 
+install -d -m 755 %{buildroot}%{_localstatedir}/lib/%{name}/migrations
+cp -r migrations/* %{buildroot}%{_localstatedir}/lib/%{name}/migrations/
+
 install -D -m 644 config/mash.conf \
     %{buildroot}%{_sysconfdir}/apache2/vhosts.d/mash.conf
 
@@ -148,9 +151,16 @@ install -D -m 644 config/mash_deprecation.service \
 %dir %attr(755, mash, mash)%{_localstatedir}/log/mash
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/mash
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/mash/credentials
+%dir %attr(755, mash, mash)%{_localstatedir}/lib/mash/migrations
+%dir %attr(755, mash, mash)%{_localstatedir}/lib/mash/migrations/versions
 %dir %attr(755, mash, mash)%{_sysconfdir}/%{name}
 %attr(640, mash, mash)%{_localstatedir}/lib/%{name}/wsgi.py
 %attr(640, mash, mash)%{_localstatedir}/lib/%{name}/credentials/wsgi.py
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/versions/*
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/alembic.ini
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/env.py
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/README
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/script.py.mako
 %dir %{_sysconfdir}/apache2
 %dir %{_sysconfdir}/apache2/vhosts.d
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/mash.conf
