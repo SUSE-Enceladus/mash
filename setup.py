@@ -27,7 +27,6 @@ config = {
         'console_scripts': [
             'mash-obs-service=mash.services.obs_service:main',
             'mash-logger-service=mash.services.logger_service:main',
-            'mash-credentials-service=mash.services.credentials_service:main',
             'mash-job-creator-service=mash.services.job_creator_service:main',
             'mash-testing-service=mash.services.testing_service:main',
             'mash-uploader-service=mash.services.uploader_service:main',
