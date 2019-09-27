@@ -1,3 +1,9 @@
+v4.0.1 (2019-09-27)
+===================
+
+- Remove credentials service entry point. Credentials
+  service is not a systemd unit.
+
 v4.0.0 (2019-09-27)
 ===================
 
