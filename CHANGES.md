@@ -1,3 +1,19 @@
+v4.0.0 (2019-09-27)
+===================
+
+- API authentication and credentials service migration.
+- Add authentication to API.
+- Move Account handling from datastore to database.
+- Simplify credentials service, only stores/retrieves 
+  credentials as encrypted json files.
+- Convert credentials service to an API vs an AMQP based 
+  service.
+- Add full set of API endpoints for account, user, token 
+  and auth handling.
+- Setup simple API endpoints for job handling (to be 
+  built upon).
+- [\564](https://github.com/SUSE-Enceladus/mash/pull/564)
+
 v3.4.0 (2019-08-06)
 ===================
 
