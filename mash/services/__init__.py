@@ -17,7 +17,6 @@
 #
 
 from mash.mash_exceptions import MashConfigException
-from mash.services.credentials.config import CredentialsConfig
 from mash.services.deprecation.config import DeprecationConfig
 from mash.services.jobcreator.config import JobCreatorConfig
 from mash.services.logger.config import LoggerConfig
@@ -34,9 +33,7 @@ def get_configuration(service, config_file=None):
 
     Return instance of config based on service name.
     """
-    if service == 'credentials':
-        return CredentialsConfig(config_file=config_file)
-    elif service == 'deprecation':
+    if service == 'deprecation':
         return DeprecationConfig(config_file=config_file)
     elif service == 'jobcreator':
         return JobCreatorConfig(config_file=config_file)

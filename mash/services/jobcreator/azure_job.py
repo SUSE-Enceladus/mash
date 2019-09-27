@@ -46,54 +46,6 @@ class AzureJob(BaseJob):
         self.vm_images_key = self.kwargs.get('vm_images_key')
         self.publish_offer = self.kwargs.get('publish_offer', False)
 
-    def get_account_info(self):
-        """
-        Returns a dictionary of accounts and regions.
-
-        Example: {
-            'southcentralus': {
-                'account': 'acnt1',
-                'source_resource_group': 'rg-1',
-                'source_container': 'container1',
-                'source_storage_account': 'sa1',
-                'destination_resource_group': 'rg-2',
-                'destination_container': 'container2',
-                'destination_storage_account': 'sa2'
-            }
-        }
-        """
-        for account, info in self.accounts_info.items():
-            region = self.cloud_accounts[account].get('region') or \
-                info.get('region')
-            source_resource_group = self.cloud_accounts[account].get(
-                'source_resource_group'
-            ) or info.get('source_resource_group')
-            source_container = self.cloud_accounts[account].get(
-                'source_container'
-            ) or info.get('source_container')
-            source_storage_account = self.cloud_accounts[account].get(
-                'source_storage_account'
-            ) or info.get('source_storage_account')
-            destination_resource_group = self.cloud_accounts[account].get(
-                'destination_resource_group'
-            ) or info.get('destination_resource_group')
-            destination_container = self.cloud_accounts[account].get(
-                'destination_container'
-            ) or info.get('destination_container')
-            destination_storage_account = self.cloud_accounts[account].get(
-                'destination_storage_account'
-            ) or info.get('destination_storage_account')
-
-            self.target_account_info[region] = {
-                'account': account,
-                'source_resource_group': source_resource_group,
-                'source_container': source_container,
-                'source_storage_account': source_storage_account,
-                'destination_resource_group': destination_resource_group,
-                'destination_container': destination_container,
-                'destination_storage_account': destination_storage_account
-            }
-
     def get_deprecation_message(self):
         """
         Build deprecation job message.

@@ -93,6 +93,16 @@ class BaseConfig(object):
         log_dir = self._get_attribute(attribute='log_dir')
         return log_dir or Defaults.get_log_directory()
 
+    def get_job_directory(self, service_name):
+        """
+        Return job directory path based on service name attribute.
+
+        :rtype: string
+        """
+        base_job_dir = self._get_attribute(attribute='base_job_dir')
+        base_job_dir = base_job_dir or Defaults.get_base_job_directory()
+        return os.path.join(base_job_dir, Defaults.get_job_directory(service_name))
+
     def get_log_file(self, service):
         """
         Return log file name based on log_dir attribute.
@@ -276,3 +286,32 @@ class BaseConfig(object):
         )
 
         return notification_subject or Defaults.get_notification_subject()
+
+    def get_credentials_url(self):
+        """
+        Return the credentials API URL.
+
+        :rtype: string
+        """
+        credentials_url = self._get_attribute(
+            attribute='credentials_url'
+        )
+
+        return credentials_url or Defaults.get_credentials_url()
+
+    def get_database_uri(self):
+        """
+        Return the database uri.
+
+        :rtype: string
+        """
+        database_uri = self._get_attribute(
+            attribute='database_uri'
+        )
+
+        if not database_uri:
+            raise MashConfigException(
+                'database_uri is required in MASH configuration file.'
+            )
+
+        return database_uri

@@ -55,6 +55,9 @@ class GCEUploaderJob(MashJob):
                 )
             )
 
+        self.family = self.job_config.get('family')
+        self.guest_os_features = self.job_config.get('guest_os_features')
+
         # SLES 11 is EOL, however images remain available in the
         # build service and thus we need to continue to test for
         # this condition.
@@ -79,6 +82,7 @@ class GCEUploaderJob(MashJob):
 
         for region, info in self.target_regions.items():
             account = info['account']
+            self.request_credentials([account])
             credentials = self.credentials[account]
             self._create_auth_file(credentials)
 
@@ -113,11 +117,11 @@ class GCEUploaderJob(MashJob):
                 'wait_for_completion': True
             }
 
-            if info['family']:
-                kwargs['family'] = info['family']
+            if self.family:
+                kwargs['family'] = self.family
 
-            if info['guest_os_features']:
-                kwargs['guest_os_features'] = info['guest_os_features']
+            if self.guest_os_features:
+                kwargs['guest_os_features'] = self.guest_os_features
 
             compute_driver.ex_create_image(
                 self.cloud_image_name,

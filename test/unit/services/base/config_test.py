@@ -111,8 +111,14 @@ class TestBaseConfig(object):
         subject = self.empty_config.get_notification_subject()
         assert subject == '[MASH] Job Status Update'
 
+    def test_get_job_dir(self):
+        assert self.config.get_job_directory('testing') == \
+            '/tmp/jobs/testing_jobs/'
+        assert self.empty_config.get_job_directory('testing') == \
+            '/var/lib/mash/testing_jobs/'
+
     def test_get_log_dir(self):
-        assert self.config.get_log_directory() == '/var/log/mash/'
+        assert self.config.get_log_directory() == '/tmp/log/'
         assert self.empty_config.get_log_directory() == '/var/log/mash/'
 
     @patch.object(BaseConfig, 'get_log_directory')
@@ -120,3 +126,15 @@ class TestBaseConfig(object):
         mock_get_log_dir.return_value = '/var/log/mash/'
         assert self.empty_config.get_job_log_file('1234') == \
             '/var/log/mash/jobs/1234.log'
+
+    def test_get_credentials_url(self):
+        assert self.config.get_credentials_url() == 'http://localhost:5000/'
+        assert self.empty_config.get_credentials_url() == \
+            'http://localhost:8080/'
+
+    def test_get_database_uri(self):
+        assert self.config.get_database_uri() == \
+            'sqlite:////var/lib/mash/app.db'
+
+        with raises(MashConfigException):
+            self.empty_config.get_database_uri()

@@ -18,8 +18,10 @@
 
 import datetime
 import json
+import logging
 import os
 import random
+import requests
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -29,6 +31,8 @@ from contextlib import contextmanager, suppress
 from string import ascii_lowercase
 from tempfile import NamedTemporaryFile
 
+from mash.log.handler import RabbitMQHandler
+from mash.mash_exceptions import MashException, MashLogSetupException
 from mash.utils.json_format import JsonFormat
 
 
@@ -147,3 +151,68 @@ def restart_jobs(job_dir, callback):
     """
     for job_file in os.listdir(job_dir):
         restart_job(os.path.join(job_dir, job_file), callback)
+
+
+def handle_request(url, endpoint, method, job_data=None):
+    """
+    Post request based on endpoint and data.
+
+    If response is unsuccessful raise exception.
+    """
+    request_method = getattr(requests, method)
+    data = None if not job_data else JsonFormat.json_message(job_data)
+    uri = ''.join([url, endpoint])
+
+    response = request_method(uri, data=data)
+
+    if response.status_code not in (200, 201):
+        try:
+            msg = response.json()['msg']
+        except Exception:
+            msg = 'Request to {uri} failed: {reason}'.format(
+                uri=uri,
+                reason=response.reason
+            )
+
+        raise MashException(msg)
+
+    return response
+
+
+def setup_logfile(logfile):
+    """
+    Create log dir and log file if either does not already exist.
+    """
+    try:
+        log_dir = os.path.dirname(logfile)
+        if not os.path.isdir(log_dir):
+            os.makedirs(log_dir)
+    except Exception as e:
+        raise MashLogSetupException(
+            'Log setup failed: {0}'.format(e)
+        )
+
+    logfile_handler = logging.FileHandler(
+        filename=logfile, encoding='utf-8'
+    )
+
+    return logfile_handler
+
+
+def get_logging_formatter():
+    return logging.Formatter(
+        '%(newline)s%(levelname)s %(asctime)s %(name)s%(newline)s'
+        '    %(job)s %(message)s'
+    )
+
+
+def setup_rabbitmq_log_handler(host, username, password):
+    rabbit_handler = RabbitMQHandler(
+        host=host,
+        username=username,
+        password=password,
+        routing_key='mash.logger'
+    )
+    rabbit_handler.setFormatter(get_logging_formatter())
+
+    return rabbit_handler

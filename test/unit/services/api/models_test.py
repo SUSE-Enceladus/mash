@@ -1,0 +1,94 @@
+from mash.services.api.models import (
+    User,
+    Token,
+    EC2Account,
+    EC2Group,
+    EC2Region,
+    GCEAccount,
+    AzureAccount,
+    Job
+)
+
+
+def test_user_model():
+    user = User(
+        username='user1',
+        email='user1@fake.com'
+    )
+    user.set_password('password')
+    assert user.check_password('password')
+    assert user.__repr__() == '<User user1>'
+
+
+def test_token_model():
+    token = Token(
+        jti='12345',
+        token_type='access',
+        user_id='1',
+        expires=None
+    )
+    assert token.__repr__() == '<Token 12345>'
+
+
+def test_ec2_account_model():
+    account = EC2Account(
+        name='acnt1',
+        partition='aws',
+        region='us-east-1',
+        user_id='1'
+    )
+    assert account.__repr__() == '<EC2 Account acnt1>'
+
+
+def test_ec2_group_model():
+    group = EC2Group(
+        name='group1',
+        user_id='1'
+    )
+    assert group.__repr__() == '<EC2 Group group1>'
+
+
+def test_ec2_region_model():
+    region = EC2Region(
+        name='us-east-99',
+        helper_image='ami-1234567890',
+        account_id='1'
+    )
+    assert region.__repr__() == '<EC2 Region us-east-99>'
+
+
+def test_gce_account_model():
+    account = GCEAccount(
+        name='acnt1',
+        bucket='images',
+        region='us-east1',
+        user_id='1'
+    )
+    assert account.__repr__() == '<GCE Account acnt1>'
+
+
+def test_azure_account_model():
+    account = AzureAccount(
+        name='acnt1',
+        region='us-east1',
+        source_container='sc1',
+        source_resource_group='srg1',
+        source_storage_account='ssa1',
+        destination_container='dc2',
+        destination_resource_group='drg2',
+        destination_storage_account='dsa2',
+        user_id='1'
+    )
+    assert account.__repr__() == '<Azure Account acnt1>'
+
+
+def test_job_model():
+    job = Job(
+        job_id='12345678-1234-1234-1234-123456789012',
+        last_service='testing',
+        utctime='now',
+        image='test_image_oem',
+        download_url='http://download.opensuse.org/repositories/Cloud:Tools/images',
+        user_id='1'
+    )
+    assert job.__repr__() == '<Job 12345678-1234-1234-1234-123456789012>'

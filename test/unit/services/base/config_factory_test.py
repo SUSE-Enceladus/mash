@@ -3,7 +3,6 @@ import pytest
 from mash.mash_exceptions import MashConfigException
 from mash.services import get_configuration
 
-from mash.services.credentials.config import CredentialsConfig
 from mash.services.deprecation.config import DeprecationConfig
 from mash.services.jobcreator.config import JobCreatorConfig
 from mash.services.logger.config import LoggerConfig
@@ -17,7 +16,6 @@ from mash.services.uploader.config import UploaderConfig
 @pytest.mark.parametrize(
     'service,class_type',
     [
-        ('credentials', CredentialsConfig),
         ('deprecation', DeprecationConfig),
         ('jobcreator', JobCreatorConfig),
         ('logger', LoggerConfig),

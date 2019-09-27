@@ -18,27 +18,39 @@
 
 import json
 
-from flask import request
-from flask_restplus import Namespace, Resource
+from flask import jsonify, request, make_response
+from flask_restplus import marshal, Namespace, Resource
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from mash.services.api.routes.jobs import (
-    job_response,
-    validation_error_response,
-    process_job_add_request
+from mash.mash_exceptions import MashException
+from mash.services.api.schema import (
+    default_response,
+    validation_error
 )
+from mash.services.api.routes.jobs import job_response
+
 from mash.services.api.schema.jobs.ec2 import ec2_job_message
+from mash.services.api.utils.jobs.ec2 import update_ec2_job_accounts
+from mash.services.api.utils.jobs import create_job
 
 api = Namespace(
     'EC2 Jobs',
     description='EC2 Job operations'
 )
 ec2_job = api.schema_model('ec2_job', ec2_job_message)
+validation_error_response = api.schema_model(
+    'validation_error', validation_error
+)
 
 
 @api.route('/')
+@api.doc(security='apiKey')
 @api.response(400, 'Validation error', validation_error_response)
+@api.response(401, 'Unauthorized', default_response)
+@api.response(422, 'Not processable', default_response)
 class EC2JobCreate(Resource):
     @api.doc('add_ec2_job')
+    @jwt_required
     @api.expect(ec2_job)
     @api.response(201, 'Job added', job_response)
     def post(self):
@@ -47,4 +59,23 @@ class EC2JobCreate(Resource):
         """
         data = json.loads(request.data.decode())
         data['cloud'] = 'ec2'
-        return process_job_add_request(data)
+        data['requesting_user'] = get_jwt_identity()
+
+        try:
+            data = update_ec2_job_accounts(data)
+            job = create_job(data)
+        except MashException as error:
+            return make_response(
+                jsonify({'msg': 'Job failed: {0}'.format(error)}),
+                400
+            )
+        except Exception:
+            return make_response(
+                jsonify({'msg': 'Failed to start job'}),
+                400
+            )
+
+        return make_response(
+            jsonify(marshal(job, job_response, skip_none=True)),
+            201
+        )

@@ -48,13 +48,11 @@ ec2_account = {
         'group': string_with_example('group1'),
         'partition': partition,
         'region': string_with_example('us-east-1'),
-        'subnet': string_with_example('subnet-12345678'),
-        'requesting_user': string_with_example('user1'),
+        'subnet': string_with_example('subnet-12345678')
     },
     'additionalProperties': False,
     'required': [
         'account_name',
-        'requesting_user',
         'region'
     ]
 }
@@ -74,3 +72,22 @@ ec2_credentials = {
 add_account_ec2 = copy.deepcopy(ec2_account)
 add_account_ec2['properties']['credentials'] = ec2_credentials
 add_account_ec2['required'].append('credentials')
+
+ec2_account_update = {
+    'type': 'object',
+    'properties': {
+        'additional_regions': additional_regions,
+        'group': string_with_example('group1'),
+        'region': string_with_example('us-east-1'),
+        'subnet': string_with_example('subnet-12345678'),
+        'credentials': ec2_credentials
+    },
+    'additionalProperties': False,
+    'anyOf': [
+        {'required': ['additional_regions']},
+        {'required': ['group']},
+        {'required': ['region']},
+        {'required': ['subnet']},
+        {'required': ['credentials']}
+    ]
+}

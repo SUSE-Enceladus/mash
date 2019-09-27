@@ -16,9 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from flask_restplus import fields, Namespace
+from flask_restplus import Namespace
 
-from mash.services.api.schema import validation_error
 from mash.services.api.schema.accounts import delete_account
 
 api = Namespace(
@@ -28,13 +27,4 @@ api = Namespace(
 delete_account_request = api.schema_model(
     'delete_account_request',
     delete_account
-)
-account_response = api.model(
-    'add_account_response', {
-        'name': fields.String(example='user1')
-    }
-)
-validation_error_response = api.schema_model(
-    'validation_error',
-    validation_error
 )

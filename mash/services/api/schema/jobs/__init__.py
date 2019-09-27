@@ -61,14 +61,6 @@ utctime = {
 base_job_message = {
     'type': 'object',
     'properties': {
-        'cloud_groups': {
-            'type': 'array',
-            'items': non_empty_string,
-            'uniqueItems': True,
-            'minItems': 1,
-            'example': ['group1']
-        },
-        'requesting_user': string_with_example('user123'),
         'last_service': {
             'type': 'string',
             'enum': [
@@ -128,12 +120,7 @@ base_job_message = {
         'profile': string_with_example('Proxy')
     },
     'additionalProperties': False,
-    'anyOf': [
-        {'required': ['cloud_accounts']},
-        {'required': ['cloud_groups']}
-    ],
     'required': [
-        'requesting_user',
         'last_service',
         'utctime',
         'image',

@@ -18,63 +18,209 @@
 import json
 
 from flask import jsonify, request, make_response
-from flask_restplus import Namespace, Resource
-
-from mash.services.api.routes.accounts import (
-    account_response,
-    validation_error_response,
-    delete_account_request
+from flask_restplus import fields, marshal, Model, Namespace, Resource
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_identity
 )
-from mash.services.api.schema.accounts.gce import add_account_gce
-from mash.services.api.routes.utils import publish
+from sqlalchemy.exc import IntegrityError
+
+from mash.mash_exceptions import MashException
+from mash.services.api.schema import (
+    default_response,
+    validation_error
+)
+from mash.services.api.schema.accounts.gce import (
+    add_account_gce,
+    gce_account_update
+)
+from mash.services.api.utils.accounts.gce import (
+    create_gce_account,
+    get_gce_account,
+    get_gce_accounts,
+    delete_gce_account,
+    update_gce_account
+)
 
 api = Namespace(
     'GCE Accounts',
     description='GCE account operations'
 )
-gce_account = api.schema_model('gce_account', add_account_gce)
+add_gce_account_request = api.schema_model('gce_account', add_account_gce)
+update_gce_account_request = api.schema_model(
+    'gce_account_update',
+    gce_account_update
+)
+validation_error_response = api.schema_model(
+    'validation_error', validation_error
+)
+
+gce_account_response = Model(
+    'gce_account_response', {
+        'id': fields.String,
+        'name': fields.String,
+        'bucket': fields.String,
+        'region': fields.String,
+        'testing_account': fields.String,
+        'is_publishing_account': fields.String
+    }
+)
+
+api.models['gce_account_response'] = gce_account_response
 
 
 @api.route('/')
-@api.response(400, 'Validation error', validation_error_response)
+@api.doc(security='apiKey')
+@api.response(401, 'Unauthorized', default_response)
+@api.response(422, 'Not processable', default_response)
 class GCEAccountCreateAndList(Resource):
     """
     Handles list accounts and create accounts for GCE.
-
-    TODO: List accounts (GET) endpoint will be implemented in the future.
     """
 
     @api.doc('create_gce_account')
-    @api.expect(gce_account)
-    @api.response(201, 'GCE account created', account_response)
+    @jwt_required
+    @api.expect(add_gce_account_request)
+    @api.response(201, 'GCE account created', gce_account_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(409, 'Duplicate account', default_response)
     def post(self):
         """
         Create a new GCE account.
         """
         data = json.loads(request.data.decode())
-        data['cloud'] = 'gce'
 
-        publish(
-            'jobcreator', 'add_account', json.dumps(data, sort_keys=True)
+        try:
+            account = create_gce_account(
+                get_jwt_identity(),
+                data['account_name'],
+                data['bucket'],
+                data['region'],
+                data['credentials'],
+                data.get('testing_account'),
+                data.get('is_publishing_account', False)
+            )
+        except MashException as error:
+            return make_response(
+                jsonify({'msg': str(error)}),
+                400
+            )
+        except IntegrityError:
+            return make_response(
+                jsonify({'msg': 'Account already exists'}),
+                409
+            )
+        except Exception:
+            return make_response(
+                jsonify({'msg': 'Failed to add GCE account'}),
+                400
+            )
+
+        return make_response(
+            jsonify(marshal(account, gce_account_response, skip_none=True)),
+            201
         )
-        return make_response(jsonify({'name': data['account_name']}), 201)
+
+    @api.doc('get_gce_accounts')
+    @jwt_required
+    @api.marshal_list_with(gce_account_response, skip_none=True)
+    @api.response(200, 'Success', default_response)
+    def get(self):
+        """
+        Get all GCE accounts.
+        """
+        gce_accounts = get_gce_accounts(get_jwt_identity())
+        return gce_accounts
 
 
 @api.route('/<string:name>')
-@api.response(400, 'Validation error', validation_error_response)
+@api.doc(security='apiKey')
+@api.response(401, 'Unauthorized', default_response)
+@api.response(422, 'Not processable', default_response)
 class GCEAccount(Resource):
     @api.doc('delete_gce_account')
-    @api.expect(delete_account_request)
-    @api.response(200, 'GCE account deleted', account_response)
+    @jwt_required
+    @api.response(200, 'GCE account deleted', default_response)
+    @api.response(400, 'Delete GCE account failed', default_response)
+    @api.response(404, 'Not found', default_response)
     def delete(self, name):
         """
         Delete GCE account matching name for requesting user.
         """
-        data = json.loads(request.data.decode())
-        data['account_name'] = name
-        data['cloud'] = 'gce'
+        try:
+            rows_deleted = delete_gce_account(name, get_jwt_identity())
+        except Exception:
+            return make_response(
+                jsonify({'msg': 'Delete GCE account failed'}),
+                400
+            )
 
-        publish(
-            'jobcreator', 'delete_account', json.dumps(data, sort_keys=True)
-        )
-        return make_response(jsonify({'name': name}), 200)
+        if rows_deleted:
+            return make_response(
+                jsonify({'msg': 'GCE account deleted'}),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'GCE account not found'}),
+                404
+            )
+
+    @api.doc('get_gce_account')
+    @jwt_required
+    @api.response(200, 'Success', gce_account_response)
+    @api.response(404, 'Not found', default_response)
+    def get(self, name):
+        """
+        Get GCE account.
+        """
+        account = get_gce_account(name, get_jwt_identity())
+
+        if account:
+            return make_response(
+                jsonify(marshal(account, gce_account_response, skip_none=True)),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'GCE account not found'}),
+                404
+            )
+
+    @api.doc('update_gce_account')
+    @jwt_required
+    @api.expect(update_gce_account_request)
+    @api.response(200, 'Success', gce_account_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(404, 'Not found', default_response)
+    def post(self, name):
+        """
+        Update GCE account.
+        """
+        data = json.loads(request.data.decode())
+
+        try:
+            account = update_gce_account(
+                name,
+                get_jwt_identity(),
+                data.get('bucket'),
+                data.get('region'),
+                data.get('credentials'),
+                data.get('testing_account')
+            )
+        except Exception as error:
+            return make_response(
+                jsonify({'msg': str(error)}),
+                400
+            )
+
+        if account:
+            return make_response(
+                jsonify(marshal(account, gce_account_response, skip_none=True)),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'GCE account not found'}),
+                404
+            )

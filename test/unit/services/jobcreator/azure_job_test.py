@@ -10,20 +10,19 @@ from mash.services.jobcreator.azure_job import AzureJob
 def test_azure_job_missing_keys(mock_init):
     mock_init.return_value = None
 
-    job = AzureJob(
-        {}, {}, {
-            'job_id': '123',
-            'cloud': 'azure',
-            'requesting_user': 'test-user',
-            'last_service': 'deprecation',
-            'utctime': 'now',
-            'image': 'test-image',
-            'cloud_image_name': 'test-cloud-image',
-            'image_description': 'image description',
-            'distro': 'sles',
-            'download_url': 'https://download.here'
-        }
-    )
+    job = AzureJob({
+        'job_id': '123',
+        'cloud': 'azure',
+        'requesting_user': 'test-user',
+        'last_service': 'deprecation',
+        'utctime': 'now',
+        'image': 'test-image',
+        'cloud_image_name': 'test-cloud-image',
+        'image_description': 'image description',
+        'distro': 'sles',
+        'download_url': 'https://download.here',
+        'target_account_info': {}
+    })
     job.kwargs = {}
 
     with pytest.raises(MashJobCreatorException):

@@ -100,6 +100,13 @@ class EC2UploaderJob(MashJob):
             'billing_codes': None
         }
 
+        # Get all account credentials in one request
+        accounts = []
+        for region, info in self.target_regions.items():
+            accounts.append(info['account'])
+
+        self.request_credentials(accounts)
+
         for region, info in self.target_regions.items():
             account = info['account']
             credentials = self.credentials[account]

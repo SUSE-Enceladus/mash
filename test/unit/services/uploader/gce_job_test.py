@@ -36,13 +36,14 @@ class TestGCEUploaderJob(object):
             'id': '1',
             'last_service': 'uploader',
             'cloud': 'gce',
+            'requesting_user': 'user1',
             'utctime': 'now',
+            'family': 'sles-12',
+            'guest_os_features': ['UEFI_COMPATIBLE'],
             'target_regions': {
                 'us-west1-a': {
                     'account': 'test',
-                    'bucket': 'images',
-                    'family': 'sles-12',
-                    'guest_os_features': ['UEFI_COMPATIBLE']
+                    'bucket': 'images'
                 }
             },
             'cloud_image_name': 'sles-12-sp4-v20180909',
@@ -57,6 +58,7 @@ class TestGCEUploaderJob(object):
         job_doc = {
             'id': '1',
             'last_service': 'uploader',
+            'requesting_user': 'user1',
             'cloud': 'gce',
             'utctime': 'now'
         }

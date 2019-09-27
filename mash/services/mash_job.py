@@ -18,6 +18,7 @@
 
 from mash.mash_exceptions import MashJobException
 from mash.services.status_levels import UNKOWN
+from mash.utils.mash_utils import handle_request
 
 
 class MashJob(object):
@@ -41,6 +42,7 @@ class MashJob(object):
         try:
             self.id = job_config['id']
             self.last_service = job_config['last_service']
+            self.requesting_user = job_config['requesting_user']
             self.cloud = job_config['cloud']
             self.utctime = job_config['utctime']
         except KeyError as error:
@@ -73,6 +75,36 @@ class MashJob(object):
                 ),
                 self.get_job_id(),
                 success
+            )
+
+    def request_credentials(self, accounts):
+        """
+        Request credentials from credential service.
+
+        Only send request if credentials not already populated.
+        """
+        if self.credentials:
+            return
+
+        data = {
+            'cloud': self.cloud,
+            'cloud_accounts': accounts,
+            'requesting_user': self.requesting_user
+        }
+
+        try:
+            response = handle_request(
+                self.config.get_credentials_url(),
+                'credentials/',
+                'get',
+                job_data=data
+            )
+            self.credentials = response.json()
+        except Exception:
+            raise MashJobException(
+                'Credentials request failed for accounts: {accounts}'.format(
+                    accounts=', '.join(accounts)
+                )
             )
 
     def run_job(self):

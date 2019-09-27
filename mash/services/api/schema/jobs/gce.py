@@ -21,17 +21,6 @@ import copy
 from mash.services.api.schema import string_with_example
 from mash.services.api.schema.jobs import base_job_message
 
-gce_job_account = {
-    'type': 'object',
-    'properties': {
-        'bucket': string_with_example('image-bucket'),
-        'name': string_with_example('account1'),
-        'region': string_with_example('us-west1-a')
-    },
-    'additionalProperties': False,
-    'required': ['name']
-}
-
 gce_job_message = copy.deepcopy(base_job_message)
 gce_job_message['properties']['family'] = string_with_example('opensuse-leap')
 gce_job_message['properties']['months_to_deletion'] = {
@@ -53,12 +42,12 @@ gce_job_message['properties']['test_fallback_regions'] = {
 gce_job_message['properties']['testing_account'] = string_with_example(
     'testaccount1'
 )
-gce_job_message['properties']['cloud_accounts'] = {
-    'type': 'array',
-    'items': gce_job_account,
-    'minItems': 1,
-    'example': [{'name': 'account1'}]
-}
+gce_job_message['properties']['cloud_account'] = string_with_example(
+    'account1'
+)
+gce_job_message['properties']['bucket'] = string_with_example('images')
+gce_job_message['properties']['region'] = string_with_example('us-east1')
+gce_job_message['required'].append('cloud_account')
 gce_job_message['properties']['image']['example'] = 'openSUSE-Leap-15.0-GCE'
 gce_job_message['properties']['cloud_image_name']['example'] = \
     'opensuse-leap-15-v{date}'

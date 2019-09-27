@@ -18,7 +18,7 @@
 
 import copy
 
-from mash.services.api.schema import string_with_example
+from mash.services.api.schema import string_with_example, non_empty_string
 from mash.services.api.schema.jobs import base_job_message
 
 share_with = {
@@ -54,3 +54,14 @@ ec2_job_message['properties']['cloud_accounts'] = {
     'minItems': 1,
     'example': [{'name': 'account1'}]
 }
+ec2_job_message['properties']['cloud_groups'] = {
+    'type': 'array',
+    'items': non_empty_string,
+    'uniqueItems': True,
+    'minItems': 1,
+    'example': ['group1']
+}
+ec2_job_message['anyOf'] = [
+    {'required': ['cloud_accounts']},
+    {'required': ['cloud_groups']}
+]

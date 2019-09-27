@@ -16,11 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import copy
-
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
-from mash.mash_exceptions import MashJobCreatorException
 
 
 class EC2Job(BaseJob):
@@ -38,67 +35,6 @@ class EC2Job(BaseJob):
         self.allow_copy = self.kwargs.get('allow_copy', True)
         self.billing_codes = self.kwargs.get('billing_codes')
         self.use_root_swap = self.kwargs.get('use_root_swap', False)
-
-    def get_account_info(self):
-        """
-        Returns a dictionary mapping target region info.
-
-        For each target region there is a related account, a list
-        of available regions and a helper image.
-
-        Example: {
-            'us-east-1': {
-                'account': 'acnt1',
-                'target_regions': ['us-east-2', 'us-west-1', 'us-west-2'],
-                'helper_image': 'ami-123456789'
-            }
-        }
-        """
-        helper_images = self.cloud_data.get('helper_images')
-
-        for account, info in self.accounts_info.items():
-            # Get default list of all available regions for account
-            target_regions = self._get_regions_for_partition(
-                info['partition']
-            )
-
-            target_region = self.cloud_accounts[account].get('region') or \
-                info.get('region')
-
-            subnet = self.cloud_accounts[account].get('subnet') or \
-                info.get('subnet')
-
-            # Add additional regions for account
-            additional_regions = info.get('additional_regions')
-
-            if additional_regions:
-                for region in additional_regions:
-                    helper_images[region['name']] = region['helper_image']
-                    target_regions.append(region['name'])
-
-            if self.use_root_swap:
-                try:
-                    helper_image = self.cloud_accounts[account]['root_swap_ami']
-                except KeyError:
-                    raise MashJobCreatorException(
-                        'root_swap_ami is required for account {0},'
-                        ' when using root swap.'.format(account)
-                    )
-            else:
-                helper_image = helper_images[target_region]
-
-            self.target_account_info[target_region] = {
-                'account': account,
-                'target_regions': target_regions,
-                'helper_image': helper_image,
-                'subnet': subnet
-            }
-
-    def _get_regions_for_partition(self, partition):
-        """
-        Return a list of regions based on account name.
-        """
-        return copy.deepcopy(self.cloud_data['regions'][partition])
 
     def _get_target_regions_list(self):
         """

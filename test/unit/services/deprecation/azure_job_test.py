@@ -7,6 +7,7 @@ class TestAzureDeprecationJob(object):
         self.job_config = {
             'id': '1',
             'last_service': 'deprecation',
+            'requesting_user': 'user1',
             'cloud': 'azure',
             'utctime': 'now'
         }

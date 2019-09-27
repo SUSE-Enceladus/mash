@@ -13,6 +13,9 @@ azure-mgmt-storage
 azure-storage-blob
 Flask
 flask-restplus
+flask-sqlalchemy
+flask-migrate
+flask-jwt-extended
 setuptools
 idna<2.7
 boto3

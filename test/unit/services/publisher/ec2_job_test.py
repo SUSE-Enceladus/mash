@@ -11,6 +11,7 @@ class TestEC2PublisherJob(object):
             'allow_copy': False,
             'id': '1',
             'last_service': 'publisher',
+            'requesting_user': 'user1',
             'cloud': 'ec2',
             'publish_regions': [
                 {

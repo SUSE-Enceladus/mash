@@ -20,6 +20,7 @@ import json
 
 from mash.mash_exceptions import MashLoggerException
 from mash.services.mash_service import MashService
+from mash.utils.mash_utils import setup_logfile
 
 
 class LoggerService(MashService):
@@ -36,7 +37,10 @@ class LoggerService(MashService):
         Bind to logger exchange and consume with callback
         method to process log.
         """
-        self.set_logfile(self.config.get_log_file(self.service_exchange))
+        logfile_handler = setup_logfile(
+            self.config.get_log_file(self.service_exchange)
+        )
+        self.log.addHandler(logfile_handler)
 
         self.bind_queue(self.service_exchange, 'mash.logger', 'logging')
         self.start()

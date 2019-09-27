@@ -18,8 +18,10 @@
 
 import io
 
+from pytest import raises
 from unittest.mock import call, MagicMock, patch
 
+from mash.mash_exceptions import MashException, MashLogSetupException
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import (
     create_json_file,
@@ -31,7 +33,10 @@ from mash.utils.mash_utils import (
     persist_json,
     load_json,
     restart_job,
-    restart_jobs
+    restart_jobs,
+    handle_request,
+    setup_logfile,
+    setup_rabbitmq_log_handler
 )
 
 
@@ -151,3 +156,61 @@ def test_restart_jobs(mock_os_listdir, mock_restart_job):
         'tmp/job-123.json',
         callback
     )
+
+
+@patch('mash.utils.mash_utils.requests')
+def test_handle_request(mock_requests):
+    response = MagicMock()
+    response.status_code = 200
+    mock_requests.get.return_value = response
+
+    result = handle_request('localhost', '/jobs', 'get')
+    assert result == response
+
+
+@patch('mash.utils.mash_utils.requests')
+def test_handle_request_failed(mock_requests):
+    response = MagicMock()
+    response.status_code = 400
+    response.reason = 'Not Found'
+    response.json.return_value = {}
+    mock_requests.get.return_value = response
+
+    with raises(MashException):
+        handle_request('localhost', '/jobs', 'get')
+
+
+@patch('mash.utils.mash_utils.logging')
+@patch('mash.utils.mash_utils.os')
+def test_setup_logfile(mock_os, mock_logging):
+    mock_os.path.isdir.return_value = False
+    mock_os.path.dirname.return_value = '/file/dir'
+
+    setup_logfile('/file/dir/fake.path')
+    mock_os.makedirs.assert_called_once_with('/file/dir')
+    mock_logging.FileHandler.assert_called_once_with(
+        filename='/file/dir/fake.path', encoding='utf-8'
+    )
+
+    mock_os.makedirs.side_effect = Exception('Cannot create dir')
+    with raises(MashLogSetupException):
+        setup_logfile('fake.path')
+
+
+@patch('mash.utils.mash_utils.logging')
+@patch('mash.utils.mash_utils.RabbitMQHandler')
+def test_setup_rabbitmq_log_handler(mock_rabbit, mock_logging):
+    handler = MagicMock()
+    formatter = MagicMock()
+    mock_rabbit.return_value = handler
+    mock_logging.Formatter.return_value = formatter
+
+    setup_rabbitmq_log_handler('localhost', 'user1', 'pass')
+
+    mock_rabbit.assert_called_once_with(
+        host='localhost',
+        username='user1',
+        password='pass',
+        routing_key='mash.logger'
+    )
+    handler.setFormatter.assert_called_once_with(formatter)

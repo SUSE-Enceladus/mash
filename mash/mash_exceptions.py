@@ -155,13 +155,19 @@ class MashAzureUtilsException(MashException):
     """
 
 
-class MashAccountDatastoreException(MashException):
+class MashCredentialsDatastoreException(MashException):
     """
-    Base exception for account datastore class.
+    Base exception for credentials datastore class.
     """
 
 
 class MashJobException(MashException):
     """
     Exception raised if an error occurs in mash job class.
+    """
+
+
+class MashDBException(MashException):
+    """
+    Exception raised if an error occurs accessing mash DB.
     """

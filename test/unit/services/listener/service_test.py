@@ -1,6 +1,3 @@
-import io
-import json
-import jwt
 import pytest
 
 from unittest.mock import call, MagicMock, Mock, patch
@@ -27,6 +24,7 @@ class TestListenerService(object):
             'obs', 'uploader', 'testing', 'replication', 'publisher',
             'deprecation'
         ]
+        self.config.get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
 
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
@@ -80,46 +78,36 @@ class TestListenerService(object):
         self.service.listener_msg_key = 'listener_msg'
         self.service.next_service = 'publisher'
         self.service.prev_service = 'testing'
-        self.service.credentials_queue = 'credentials'
-        self.service.credentials_response_key = 'response'
-        self.service.credentials_request_key = 'request.replication'
         self.service.custom_args = None
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
 
     @patch('mash.services.listener_service.os.makedirs')
-    @patch.object(Defaults, 'get_job_directory')
     @patch.object(ListenerService, 'bind_queue')
-    @patch.object(ListenerService, 'bind_credentials_queue')
     @patch('mash.services.listener_service.restart_jobs')
-    @patch.object(ListenerService, 'set_logfile')
+    @patch('mash.services.listener_service.setup_logfile')
     @patch.object(ListenerService, 'start')
     def test_service_post_init(
         self, mock_start,
-        mock_set_logfile, mock_restart_jobs, mock_bind_creds,
-        mock_bind_queue, mock_get_job_directory, mock_makedirs
+        mock_setup_logfile, mock_restart_jobs,
+        mock_bind_queue, mock_makedirs
     ):
-        mock_get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
         self.service.config = self.config
         self.config.get_log_file.return_value = \
             '/var/log/mash/service_service.log'
 
         self.service.post_init()
 
-        mock_get_job_directory.assert_called_once_with('replication')
+        self.config.get_job_directory.assert_called_once_with('replication')
         mock_makedirs.assert_called_once_with(
             '/var/lib/mash/replication_jobs/', exist_ok=True
         )
 
-        self.config.get_encryption_keys_file.assert_called_once_with()
-        self.config.get_jwt_secret.assert_called_once_with()
-        self.config.get_jwt_algorithm.assert_called_once_with()
         self.config.get_log_file.assert_called_once_with('replication')
-        mock_set_logfile.assert_called_once_with(
+        mock_setup_logfile.assert_called_once_with(
             '/var/log/mash/service_service.log'
         )
 
-        mock_bind_creds.assert_called_once_with()
         mock_bind_queue.has_calls([
             call('replication', 'job_document', 'service'),
             call('replication', 'listener_msg', 'listener')
@@ -133,13 +121,12 @@ class TestListenerService(object):
     @patch('mash.services.listener_service.os.makedirs')
     @patch.object(Defaults, 'get_job_directory')
     @patch.object(ListenerService, 'bind_queue')
-    @patch.object(ListenerService, 'bind_credentials_queue')
     @patch('mash.services.listener_service.restart_jobs')
-    @patch.object(ListenerService, 'set_logfile')
+    @patch('mash.services.listener_service.setup_logfile')
     @patch.object(ListenerService, 'start')
     def test_service_post_init_custom_args(
         self, mock_start,
-        mock_set_logfile, mock_restart_jobs, mock_bind_creds,
+        mock_setup_logfile, mock_restart_jobs,
         mock_bind_queue, mock_get_job_directory, mock_makedirs
     ):
         mock_makedirs.return_value = True
@@ -224,12 +211,9 @@ class TestListenerService(object):
             'Invalid job: Cannot create job.'
         )
 
-    @patch.object(ListenerService, 'publish_credentials_delete')
     @patch('mash.services.listener_service.remove_file')
     @patch.object(ListenerService, 'unbind_queue')
-    def test_service_delete_job(
-        self, mock_unbind_queue, mock_remove_file, mock_publish_creds_delete
-    ):
+    def test_service_delete_job(self, mock_unbind_queue, mock_remove_file):
         job = Mock()
         job.id = '1'
         job.job_file = 'job-test.json'
@@ -241,7 +225,6 @@ class TestListenerService(object):
         self.service.jobs['1'] = job
         self.service._delete_job('1')
 
-        mock_publish_creds_delete.assert_called_once_with('1')
         self.service.log.info.assert_called_once_with(
             'Deleting job.',
             extra={'job_id': '1'}
@@ -258,59 +241,13 @@ class TestListenerService(object):
             extra={'job_id': '1'}
         )
 
-    @patch.object(ListenerService, '_schedule_job')
-    @patch.object(ListenerService, 'decode_credentials')
-    def test_service_handle_credentials_response(
-        self, mock_decode_credentials, mock_schedule_job
-    ):
-        job = Mock()
-        job.id = '1'
-        job.utctime = 'always'
-        self.service.jobs['1'] = job
-
-        message = Mock()
-        message.body = '{"jwt_token": "response"}'
-
-        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
-        self.service._handle_credentials_response(message)
-
-        mock_schedule_job.assert_called_once_with('1')
-        message.ack.assert_called_once_with()
-
-    @patch.object(ListenerService, 'decode_credentials')
-    def test_service_handle_credentials_response_exceptions(
-        self, mock_decode_credentials
-    ):
-        message = Mock()
-        message.body = '{"jwt_token": "response"}'
-
-        # Test job does not exist.
-        mock_decode_credentials.return_value = '1', {'fake': 'creds'}
-        self.service._handle_credentials_response(message)
-        self.service.log.error.assert_called_once_with(
-            'Credentials received for invalid job with ID: 1.'
-        )
-
-        # Invalid json string
-        self.service.log.error.reset_mock()
-        message.body = 'invalid json string'
-        self.service._handle_credentials_response(message)
-        self.service.log.error.assert_called_once_with(
-            'Invalid credentials response message: '
-            'Must be a json encoded message.'
-        )
-
-        assert message.ack.call_count == 2
-
     @patch.object(ListenerService, '_validate_listener_msg')
-    @patch.object(ListenerService, 'publish_credentials_request')
     def test_service_handle_listener_message(
-        self, mock_publish_creds_request, mock_validate_listener_msg
+        self, mock_validate_listener_msg
     ):
         job = Mock()
         job.id = '1'
         job.utctime = 'always'
-        job.credentials = None
         self.service.jobs['1'] = job
 
         mock_validate_listener_msg.return_value = job
@@ -319,7 +256,6 @@ class TestListenerService(object):
         self.service._handle_listener_message(self.message)
 
         assert self.service.jobs['1'].listener_msg == self.message
-        mock_publish_creds_request.assert_called_once_with('1')
 
     @patch.object(ListenerService, '_validate_listener_msg')
     @patch.object(ListenerService, '_schedule_job')
@@ -329,7 +265,6 @@ class TestListenerService(object):
         job = Mock()
         job.id = '1'
         job.utctime = 'always'
-        job.credentials = {'some': 'credentials'}
         self.service.jobs['1'] = job
 
         mock_validate_listener_msg.return_value = job
@@ -523,12 +458,10 @@ class TestListenerService(object):
             coalesce=True
         )
 
-    @patch.object(ListenerService, 'consume_credentials_queue')
     @patch.object(ListenerService, 'consume_queue')
     @patch.object(ListenerService, 'close_connection')
     def test_service_start(
-        self, mock_close_connection, mock_consume_queue,
-        mock_consume_credentials_queue
+        self, mock_close_connection, mock_consume_queue
     ):
         self.service.channel = self.channel
         self.service.start()
@@ -544,16 +477,10 @@ class TestListenerService(object):
                 queue_name='listener'
             )
         ])
-        mock_consume_credentials_queue.assert_called_once_with(
-            self.service._handle_credentials_response
-        )
         mock_close_connection.assert_called_once_with()
 
-    @patch.object(ListenerService, 'consume_credentials_queue')
     @patch.object(ListenerService, 'close_connection')
-    def test_service_start_exception(
-        self, mock_close_connection, mock_consume_credentials_queue
-    ):
+    def test_service_start_exception(self, mock_close_connection):
         self.service.channel = self.channel
 
         self.channel.start_consuming.side_effect = KeyboardInterrupt()
@@ -658,147 +585,6 @@ class TestListenerService(object):
         self.service.service_exchange = 'obs'
         prev_service = self.service._get_previous_service()
         assert prev_service is None
-
-    def test_consume_credentials_queue(self):
-        callback = Mock()
-
-        self.service.consume_credentials_queue(callback)
-        self.channel.basic.consume.assert_called_once_with(
-            callback=callback, queue='replication.credentials'
-        )
-
-    @patch.object(ListenerService, 'bind_queue')
-    def test_bind_credentials_queue(self, mock_bind_queue):
-        self.service.bind_credentials_queue()
-
-        mock_bind_queue.assert_called_once_with(
-            'replication', 'response', 'credentials'
-        )
-
-    def test_get_credentials_request(self):
-        self.service.jwt_algorithm = 'HS256'
-        self.service.jwt_secret = 'super.secret'
-        self.service_exchange = 'obs'
-        message = self.service.get_credential_request('1')
-
-        token = json.loads(message)['jwt_token']
-        payload = jwt.decode(
-            token, 'super.secret', algorithm='HS256',
-            issuer='replication', audience='credentials'
-        )
-
-        assert payload['id'] == '1'
-        assert payload['sub'] == 'credentials_request'
-
-    def test_get_encryption_keys_from_file(self):
-        with patch('builtins.open', create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=io.IOBase)
-            file_handle = mock_open.return_value.__enter__.return_value
-            file_handle.readlines.return_value = [
-                '1234567890123456789012345678901234567890123=\n'
-            ]
-            result = self.service.get_encryption_keys_from_file(
-                'test-keys.file'
-            )
-
-        assert len(result) == 1
-        assert type(result[0]).__name__ == 'Fernet'
-
-    @patch.object(ListenerService, 'decrypt_credentials')
-    @patch('mash.services.listener_service.jwt')
-    def test_decode_credentials(self, mock_jwt, mock_decrypt):
-        self.service.jwt_algorithm = 'HS256'
-        self.service.jwt_secret = 'super.secret'
-        self.service_exchange = 'obs'
-
-        message = {'jwt_token': 'secret_credentials'}
-        mock_jwt.decode.return_value = {
-            "id": "1",
-            "credentials": {
-                "test-aws": {"encrypted_creds"},
-                "test-aws-cn": {"encrypted_creds"}
-            }
-        }
-        mock_decrypt.return_value = {
-            "access_key_id": "123456",
-            "secret_access_key": "654321"
-        }
-
-        job_id, credentials = self.service.decode_credentials(message)
-
-        mock_jwt.decode.assert_called_once_with(
-            'secret_credentials', 'super.secret', algorithm='HS256',
-            issuer='credentials', audience='replication'
-        )
-
-        assert len(credentials.keys()) == 2
-        assert job_id == '1'
-        assert credentials['test-aws']['access_key_id'] == '123456'
-        assert credentials['test-aws']['secret_access_key'] == '654321'
-
-        # Missing credentials key
-        mock_jwt.decode.return_value = {"id": "1"}
-
-        job_id, credentials = self.service.decode_credentials(message)
-        self.service.log.error.assert_called_once_with(
-            "Invalid credentials response recieved: 'credentials'"
-            " key must be in credentials message."
-        )
-
-        # Credential exception
-        self.service.log.error.reset_mock()
-        mock_jwt.decode.side_effect = Exception('Token is broken!')
-
-        job_id, credentials = self.service.decode_credentials(message)
-        self.service.log.error.assert_called_once_with(
-            'Invalid credentials response token: Token is broken!'
-        )
-
-    def test_decrypt_credentials(self):
-        self.service.encryption_keys_file = '../data/encryption_keys'
-        msg = b'gAAAAABaxoqn6i-IJAUaVXd6NkVqdJ8GKRiEDT9TgFkdS9r2U8NHyBoG' \
-            b'M2Bc4sUsTVBd1a3S7XCESxXgOdrTH5vUvj26TqkIuDTxg4lw-IIT3D84pT' \
-            b'6wX2cSEifMYIcjUzQGPXWhU4oQgrwOYIdR9p9DxTw5GPMwTQ=='
-
-        creds = self.service.decrypt_credentials(msg)
-
-        assert creds['access_key_id'] == '123456'
-        assert creds['secret_access_key'] == '654321'
-
-    @patch.object(ListenerService, 'get_credential_request')
-    @patch.object(ListenerService, '_publish')
-    def test_publish_credentials_request(
-        self, mock_publish, mock_get_credential_request
-    ):
-        token = Mock()
-        mock_get_credential_request.return_value = token
-
-        self.service.service_exchange = 'obs'
-        self.service.publish_credentials_request('1')
-
-        mock_publish.assert_called_once_with(
-            'credentials', 'request.replication', token
-        )
-
-    @patch.object(ListenerService, '_publish')
-    def test_publish_credentials_delete(self, mock_publish):
-        self.service.publish_credentials_delete('1')
-        mock_publish.assert_called_once_with(
-            'credentials',
-            'job_document',
-            JsonFormat.json_message({"credentials_job_delete": "1"})
-        )
-
-    @patch.object(ListenerService, '_publish')
-    def test_publish_credentials_delete_exception(self, mock_publish):
-        mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
-
-        self.service.publish_credentials_delete('1')
-        self.service.log.warning.assert_called_once_with(
-            'Message not received: {0}'.format(
-                JsonFormat.json_message({"credentials_job_delete": "1"})
-            )
-        )
 
     @patch('mash.services.mash_service.Connection')
     def test_publish_job_result(self, mock_connection):

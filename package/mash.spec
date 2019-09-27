@@ -47,6 +47,9 @@ BuildRequires:  python3-img-proof-tests>=4.0.0
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
 BuildRequires:  python3-flask-restplus
+BuildRequires:  python3-flask-sqlalchemy
+BuildRequires:  python3-flask-migrate
+BuildRequires:  python3-flask-jwt-extended
 BuildRequires:  python3-requests
 BuildRequires:  python3-obs-img-utils <= 0.0.3
 Requires:       rabbitmq-server
@@ -70,6 +73,9 @@ Requires:       python3-img-proof-tests>=4.0.0
 Requires:       python3-lxml
 Requires:       python3-Flask
 Requires:       python3-flask-restplus
+Requires:       python3-flask-sqlalchemy
+Requires:       python3-flask-migrate
+Requires:       python3-flask-jwt-extended
 Requires:       python3-requests
 Requires:       python3-obs-img-utils <= 0.0.3
 Requires:       apache2
@@ -99,8 +105,17 @@ install -D -m 644 config/mash_config.yaml \
 install -D -m 644 mash/services/api/wsgi.py \
     %{buildroot}%{_localstatedir}/lib/%{name}/wsgi.py
 
+install -d -m 755 %{buildroot}%{_localstatedir}/lib/%{name}/migrations
+cp -r migrations/* %{buildroot}%{_localstatedir}/lib/%{name}/migrations/
+
 install -D -m 644 config/mash.conf \
     %{buildroot}%{_sysconfdir}/apache2/vhosts.d/mash.conf
+
+install -D -m 644 mash/services/credentials/wsgi.py \
+    %{buildroot}%{_localstatedir}/lib/%{name}/credentials/wsgi.py
+
+install -D -m 644 config/credentials.conf \
+    %{buildroot}%{_sysconfdir}/apache2/vhosts.d/credentials.conf
 
 install -D -m 644 config/mash_obs.service \
     %{buildroot}%{_unitdir}/mash_obs.service
@@ -110,9 +125,6 @@ install -D -m 644 config/mash_uploader.service \
 
 install -D -m 644 config/mash_logger.service \
     %{buildroot}%{_unitdir}/mash_logger.service
-
-install -D -m 644 config/mash_credentials.service \
-    %{buildroot}%{_unitdir}/mash_credentials.service
 
 install -D -m 644 config/mash_job_creator.service \
     %{buildroot}%{_unitdir}/mash_job_creator.service
@@ -138,11 +150,21 @@ install -D -m 644 config/mash_deprecation.service \
 %{python3_sitelib}/*
 %dir %attr(755, mash, mash)%{_localstatedir}/log/mash
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/mash
+%dir %attr(755, mash, mash)%{_localstatedir}/lib/mash/credentials
+%dir %attr(755, mash, mash)%{_localstatedir}/lib/mash/migrations
+%dir %attr(755, mash, mash)%{_localstatedir}/lib/mash/migrations/versions
 %dir %attr(755, mash, mash)%{_sysconfdir}/%{name}
 %attr(640, mash, mash)%{_localstatedir}/lib/%{name}/wsgi.py
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/credentials/wsgi.py
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/versions/*
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/alembic.ini
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/env.py
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/README
+%attr(640, mash, mash)%{_localstatedir}/lib/%{name}/migrations/script.py.mako
 %dir %{_sysconfdir}/apache2
 %dir %{_sysconfdir}/apache2/vhosts.d
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/mash.conf
+%config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/credentials.conf
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/%{name}/mash_config.yaml
 
 %{_bindir}/mash-obs-service
@@ -153,9 +175,6 @@ install -D -m 644 config/mash_deprecation.service \
 
 %{_bindir}/mash-logger-service
 %{_unitdir}/mash_logger.service
-
-%{_bindir}/mash-credentials-service
-%{_unitdir}/mash_credentials.service
 
 %{_bindir}/mash-job-creator-service
 %{_unitdir}/mash_job_creator.service

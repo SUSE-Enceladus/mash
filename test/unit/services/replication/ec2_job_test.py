@@ -12,6 +12,7 @@ class TestEC2ReplicationJob(object):
             'id': '1',
             'image_description': 'My image',
             'last_service': 'replication',
+            'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now',
             "replication_source_regions": {
