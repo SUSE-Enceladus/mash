@@ -42,13 +42,13 @@ BuildRequires:  python3-APScheduler >= 3.3.1
 BuildRequires:  python3-python-dateutil >= 2.6.0
 BuildRequires:  python3-python-dateutil < 3.0.0
 BuildRequires:  python3-ec2imgutils
-BuildRequires:  python3-img-proof>=4.0.0
-BuildRequires:  python3-img-proof-tests>=4.0.0
+BuildRequires:  python3-img-proof >= 4.0.0
+BuildRequires:  python3-img-proof-tests >= 4.0.0
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
 BuildRequires:  python3-flask-restplus
-BuildRequires:  python3-flask-sqlalchemy
-BuildRequires:  python3-flask-migrate
+BuildRequires:  python3-Flask-SQLAlchemy
+BuildRequires:  python3-Flask-Migrate
 BuildRequires:  python3-flask-jwt-extended
 BuildRequires:  python3-requests
 BuildRequires:  python3-obs-img-utils <= 0.0.3
@@ -68,13 +68,13 @@ Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil >= 2.6.0
 Requires:       python3-python-dateutil < 3.0.0
 Requires:       python3-ec2imgutils
-Requires:       python3-img-proof>=4.0.0
-Requires:       python3-img-proof-tests>=4.0.0
+Requires:       python3-img-proof >= 4.0.0
+Requires:       python3-img-proof-tests >= 4.0.0
 Requires:       python3-lxml
 Requires:       python3-Flask
 Requires:       python3-flask-restplus
-Requires:       python3-flask-sqlalchemy
-Requires:       python3-flask-migrate
+Requires:       python3-Flask-SQLAlchemy
+Requires:       python3-Flask-Migrate
 Requires:       python3-flask-jwt-extended
 Requires:       python3-requests
 Requires:       python3-obs-img-utils <= 0.0.3
@@ -106,7 +106,7 @@ install -D -m 644 mash/services/api/wsgi.py \
     %{buildroot}%{_localstatedir}/lib/%{name}/wsgi.py
 
 install -d -m 755 %{buildroot}%{_localstatedir}/lib/%{name}/migrations
-cp -r migrations/* %{buildroot}%{_localstatedir}/lib/%{name}/migrations/
+cp -r mash/services/api/migrations/* %{buildroot}%{_localstatedir}/lib/%{name}/migrations/
 
 install -D -m 644 config/mash.conf \
     %{buildroot}%{_sysconfdir}/apache2/vhosts.d/mash.conf
