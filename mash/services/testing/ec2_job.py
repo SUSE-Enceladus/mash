@@ -29,13 +29,19 @@ from mash.services.testing.utils import (
 )
 from mash.utils.mash_utils import create_ssh_key_pair
 
-instance_types = [
-    'c5.large',
-    'i3.8xlarge',
-    'i3.large',
-    'm5.large',
-    't3.small'
-]
+instance_types = {
+    'x86_64': [
+        'c5.large',
+        'i3.8xlarge',
+        'i3.large',
+        'm5.large',
+        't3.small'
+    ],
+    'aarch64': [
+        'a1.medium',
+        'a1.large'
+    ]
+}
 
 
 class EC2TestingJob(MashJob):
@@ -62,9 +68,14 @@ class EC2TestingJob(MashJob):
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
         self.ssh_user = self.job_config.get('ssh_user', 'ec2-user')
+        self.cloud_architecture = self.job_config.get(
+            'cloud_architecture', 'x86_64'
+        )
 
         if not self.instance_type:
-            self.instance_type = random.choice(instance_types)
+            self.instance_type = random.choice(
+                instance_types[self.cloud_architecture]
+            )
 
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
         self.img_proof_timeout = self.config.get_img_proof_timeout()

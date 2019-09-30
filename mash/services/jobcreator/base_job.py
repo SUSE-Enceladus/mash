@@ -174,6 +174,10 @@ class BaseJob(object):
             testing_message['testing_job']['test_fallback_regions'] = \
                 self.test_fallback_regions
 
+        if self.cloud_architecture:
+            testing_message['testing_job']['cloud_architecture'] = \
+                self.cloud_architecture
+
         testing_message['testing_job'].update(self.base_message)
 
         return JsonFormat.json_message(testing_message)
