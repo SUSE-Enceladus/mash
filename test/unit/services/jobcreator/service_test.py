@@ -108,6 +108,7 @@ class TestJobCreatorService(object):
             'http://download.opensuse.org/repositories/Cloud:Tools/images'
         assert data['image'] == 'test_image_oem'
         assert data['profile'] == 'Proxy'
+        assert data['conditions_wait_time'] == 500
 
         for condition in data['conditions']:
             if 'image' in condition:

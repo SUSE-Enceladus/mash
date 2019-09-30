@@ -55,6 +55,7 @@ class BaseJob(object):
         self.old_cloud_image_name = kwargs.get('old_cloud_image_name')
         self.cleanup_images = kwargs.get('cleanup_images')
         self.cloud_architecture = kwargs.get('cloud_architecture', 'x86_64')
+        self.conditions_wait_time = kwargs.get('conditions_wait_time')
         self.notification_email = kwargs.get('notification_email')
         self.notification_type = kwargs.get('notification_type', 'single')
         self.profile = kwargs.get('profile')
@@ -107,6 +108,10 @@ class BaseJob(object):
 
         if self.profile:
             obs_message['obs_job']['profile'] = self.profile
+
+        if self.conditions_wait_time:
+            obs_message['obs_job']['conditions_wait_time'] = \
+                self.conditions_wait_time
 
         return JsonFormat.json_message(obs_message)
 
