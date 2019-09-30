@@ -12,6 +12,7 @@ include README.md
 include LICENSE
 
 recursive-include doc *.py *.rst
+recursive-include test *
 
 global-exclude *.py[cod] __pycache__
 

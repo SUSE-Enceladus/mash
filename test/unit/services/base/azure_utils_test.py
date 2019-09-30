@@ -37,7 +37,7 @@ def test_acquire_access_token(mock_adal):
     }
     mock_adal.AuthenticationContext.return_value = context
 
-    with open('../data/azure_creds.json') as f:
+    with open('test/data/azure_creds.json') as f:
         credentials = json.load(f)
 
     acquire_access_token(credentials)
@@ -61,7 +61,7 @@ def test_acquire_access_token_cloud_partner(mock_adal):
     }
     mock_adal.AuthenticationContext.return_value = context
 
-    with open('../data/azure_creds.json') as f:
+    with open('test/data/azure_creds.json') as f:
         credentials = json.load(f)
 
     acquire_access_token(credentials, cloud_partner=True)
@@ -88,7 +88,7 @@ def test_get_classic_storage_account_keys(
     mock_requests.post.return_value = response
 
     keys = get_classic_storage_account_keys(
-        '../data/azure_creds.json', 'rg1', 'sa1'
+        'test/data/azure_creds.json', 'rg1', 'sa1'
     )
 
     assert keys['primaryKey'] == '123'
@@ -133,7 +133,7 @@ def test_get_page_blob_service(
     mock_page_blob_service.return_value = page_blob_service
 
     service = get_page_blob_service(
-        '../data/azure_creds.json', 'rg1', 'sa1'
+        'test/data/azure_creds.json', 'rg1', 'sa1'
     )
 
     assert service == page_blob_service
@@ -157,7 +157,7 @@ def test_get_classic_page_blob_service(
     mock_page_blob_service.return_value = page_blob_service
 
     service = get_classic_page_blob_service(
-        '../data/azure_creds.json', 'rg1', 'sa1'
+        'test/data/azure_creds.json', 'rg1', 'sa1'
     )
 
     assert service == page_blob_service
@@ -190,7 +190,7 @@ def test_copy_blob_to_classic_storage(
     mock_get_page_blob_service.return_value = page_blob_service
 
     copy_blob_to_classic_storage(
-        '../data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
+        'test/data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
         'dc2', 'drg2', 'dsa2'
     )
 
@@ -217,7 +217,7 @@ def test_copy_blob_to_classic_storage_failed(
 
     with raises(MashAzureUtilsException) as error:
         copy_blob_to_classic_storage(
-            '../data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
+            'test/data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
             'dc2', 'drg2', 'dsa2'
         )
 
@@ -230,7 +230,7 @@ def test_delete_page_blob(mock_get_page_blob_service):
     mock_get_page_blob_service.return_value = page_blob_service
 
     delete_page_blob(
-        '../data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
+        'test/data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
     )
 
     page_blob_service.delete_blob.assert_called_once_with(
@@ -247,7 +247,7 @@ def test_delete_image(mock_get_client):
     mock_get_client.return_value = compute_client
 
     delete_image(
-        '../data/azure_creds.json', 'rg1', 'image123'
+        'test/data/azure_creds.json', 'rg1', 'image123'
     )
     compute_client.images.delete.assert_called_once_with(
         'rg1', 'image123'
@@ -267,7 +267,7 @@ def test_go_live_with_cloud_partner_offer(
     response.headers = {'Location': '/api/endpoint/url'}
     mock_requests.post.return_value = response
 
-    with open('../data/azure_creds.json') as f:
+    with open('test/data/azure_creds.json') as f:
         credentials = json.load(f)
 
     response = go_live_with_cloud_partner_offer(
@@ -289,7 +289,7 @@ def test_publish_cloud_partner_offer(
     response.headers = {'Location': '/api/endpoint/url'}
     mock_requests.post.return_value = response
 
-    with open('../data/azure_creds.json') as f:
+    with open('test/data/azure_creds.json') as f:
         credentials = json.load(f)
 
     response = publish_cloud_partner_offer(
@@ -327,7 +327,7 @@ def test_put_cloud_partner_offer_doc(
     response.json.return_value = {'response': 'doc'}
     mock_requests.put.return_value = response
 
-    with open('../data/azure_creds.json') as f:
+    with open('test/data/azure_creds.json') as f:
         credentials = json.load(f)
 
     request_doc = {'test': 'doc'}
@@ -349,7 +349,7 @@ def test_request_cloud_partner_offer_doc(
     response.json.return_value = {'offer': 'doc'}
     mock_requests.get.return_value = response
 
-    with open('../data/azure_creds.json') as f:
+    with open('test/data/azure_creds.json') as f:
         credentials = json.load(f)
 
     request_cloud_partner_offer_doc(
@@ -432,7 +432,7 @@ def test_wait_on_cloud_partner_operation(
     ]
     mock_requests.get.return_value = response
 
-    with open('../data/azure_creds.json') as f:
+    with open('test/data/azure_creds.json') as f:
         credentials = json.load(f)
 
     wait_on_cloud_partner_operation(
@@ -452,7 +452,7 @@ def test_wait_on_cloud_partner_operation_failed(
     response.json.return_value = {'status': 'failed'}
     mock_requests.get.return_value = response
 
-    with open('../data/azure_creds.json') as f:
+    with open('test/data/azure_creds.json') as f:
         credentials = json.load(f)
 
     with raises(MashAzureUtilsException) as error:

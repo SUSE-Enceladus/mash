@@ -7,8 +7,8 @@ from pytest import raises
 
 class TestBaseConfig(object):
     def setup(self):
-        self.empty_config = BaseConfig('../data/empty_mash_config.yaml')
-        self.config = BaseConfig('../data/mash_config.yaml')
+        self.empty_config = BaseConfig('test/data/empty_mash_config.yaml')
+        self.config = BaseConfig('test/data/mash_config.yaml')
 
     def test_get_encryption_keys_file(self):
         enc_keys_file = self.empty_config.get_encryption_keys_file()

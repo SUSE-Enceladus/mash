@@ -4,7 +4,7 @@ from mash.services.publisher.config import PublisherConfig
 class TestPublisherConfig(object):
     def setup(self):
         self.config = PublisherConfig(
-            '../data/mash_config.yaml'
+            'test/data/mash_config.yaml'
         )
 
     def test_publisher_config_data(self):

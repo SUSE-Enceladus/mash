@@ -1,7 +1,7 @@
 jwt_secret: abc123
 log_dir: /tmp/log/
 base_job_dir: /tmp/jobs/
-encryption_keys_file: ../data/encryption_keys
+encryption_keys_file: test/data/encryption_keys
 ssh_private_key_file: /var/lib/mash/ssh_key
 amqp_host: localhost
 amqp_user: guest

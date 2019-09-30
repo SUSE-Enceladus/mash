@@ -50,7 +50,7 @@ class TestAzureUploaderJob(object):
         }
 
         self.config = UploaderConfig(
-            config_file='../data/mash_config.yaml'
+            config_file='test/data/mash_config.yaml'
         )
 
         self.job = AzureUploaderJob(job_doc, self.config)

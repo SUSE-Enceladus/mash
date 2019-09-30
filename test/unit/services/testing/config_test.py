@@ -3,8 +3,8 @@ from mash.services.testing.config import TestingConfig
 
 class TestTestingConfig(object):
     def setup(self):
-        self.empty_config = TestingConfig('../data/empty_mash_config.yaml')
-        self.config = TestingConfig('../data/mash_config.yaml')
+        self.empty_config = TestingConfig('test/data/empty_mash_config.yaml')
+        self.config = TestingConfig('test/data/mash_config.yaml')
 
     def test_get_log_file(self):
         assert self.empty_config.get_log_file('testing') == \

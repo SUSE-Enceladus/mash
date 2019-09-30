@@ -28,7 +28,7 @@ def test_api_add_job_ec2(
     mock_create_job.return_value = job
     mock_jwt_identity.return_value = 'user1'
 
-    with open('../data/job.json', 'r') as job_doc:
+    with open('test/data/job.json', 'r') as job_doc:
         data = json.load(job_doc)
 
     del data['requesting_user']

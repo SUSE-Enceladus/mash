@@ -28,7 +28,7 @@ def test_api_add_job_gce(
     mock_create_job.return_value = job
     mock_jwt_identity.return_value = 'user1'
 
-    with open('../data/gce_job.json', 'r') as job_doc:
+    with open('test/data/gce_job.json', 'r') as job_doc:
         data = json.load(job_doc)
 
     del data['requesting_user']
