@@ -7,14 +7,14 @@ from mash.services.obs.config import OBSConfig
 
 class TestOBSConfig(object):
     def setup(self):
-        self.config = OBSConfig('../data/mash_config.yaml')
-        self.config_defaults = OBSConfig('../data/empty_mash_config.yaml')
+        self.config = OBSConfig('test/data/mash_config.yaml')
+        self.config_defaults = OBSConfig('test/data/empty_mash_config.yaml')
 
     @patch_open
     def test_init_error(self, mock_open):
         mock_open.side_effect = Exception
         with raises(MashConfigException):
-            OBSConfig('../data/mash_config.yaml')
+            OBSConfig('test/data/mash_config.yaml')
 
     def test_get_log_file(self):
         assert self.config.get_log_file('obs') == \

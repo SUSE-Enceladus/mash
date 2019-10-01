@@ -11,7 +11,7 @@ from mash.services.uploader.config import UploaderConfig
 class TestGCEUploaderJob(object):
     def setup(self):
         self.config = UploaderConfig(
-            config_file='../data/mash_config.yaml'
+            config_file='test/data/mash_config.yaml'
         )
 
         self.credentials = {

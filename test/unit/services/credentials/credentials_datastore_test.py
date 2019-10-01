@@ -25,7 +25,7 @@ class TestCredentialsDatastore(object):
             mock_open.return_value = MagicMock(spec=io.IOBase)
             self.datastore = CredentialsDatastore(
                 '/var/lib/mash/credentials/',
-                '../data/encryption_keys',
+                'test/data/encryption_keys',
                 self.log_callback
             )
             file_handle = mock_open.return_value.__enter__.return_value
@@ -113,7 +113,7 @@ class TestCredentialsDatastore(object):
             self.datastore._clean_old_keys()
 
         self.log_callback.error.assert_called_once_with(
-            'Unable to clean old keys from ../data/encryption_keys:'
+            'Unable to clean old keys from test/data/encryption_keys:'
             ' unable to remove keys.'
         )
 

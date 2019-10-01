@@ -10,7 +10,7 @@ from mash.services.credentials.flask_config import Config
 @pytest.fixture(scope='module')
 def test_client():
     flask_config = Config(
-        config_file='../data/mash_config.yaml',
+        config_file='test/data/mash_config.yaml',
         testing=True
     )
     application = create_app(flask_config)

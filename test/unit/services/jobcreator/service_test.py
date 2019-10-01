@@ -73,7 +73,7 @@ class TestJobCreatorService(object):
             if cloud:
                 assert job_data['cloud'] == 'ec2'
 
-        with open('../data/job.json', 'r') as job_doc:
+        with open('test/data/job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
         job['target_account_info'] = {
@@ -216,7 +216,7 @@ class TestJobCreatorService(object):
             if cloud:
                 assert job_data['cloud'] == 'azure'
 
-        with open('../data/azure_job.json', 'r') as job_doc:
+        with open('test/data/azure_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
         job['target_account_info'] = {
@@ -363,7 +363,7 @@ class TestJobCreatorService(object):
             if cloud:
                 assert job_data['cloud'] == 'gce'
 
-        with open('../data/gce_job.json', 'r') as job_doc:
+        with open('test/data/gce_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
         job['target_account_info'] = {
@@ -469,7 +469,7 @@ class TestJobCreatorService(object):
         message = MagicMock()
         message.body = 'invalid message'
 
-        with open('../data/job.json', 'r') as job_doc:
+        with open('test/data/job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
         self.jobcreator.jobs = {'123': job}

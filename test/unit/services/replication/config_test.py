@@ -4,7 +4,7 @@ from mash.services.replication.config import ReplicationConfig
 class TestReplicationConfig(object):
     def setup(self):
         self.config = ReplicationConfig(
-            '../data/mash_config.yaml'
+            'test/data/mash_config.yaml'
         )
 
     def test_config_data(self):

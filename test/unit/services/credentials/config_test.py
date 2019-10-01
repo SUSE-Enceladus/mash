@@ -4,7 +4,7 @@ from mash.services.credentials.config import CredentialsConfig
 class TestCredentialsConfig(object):
     def setup(self):
         self.config = CredentialsConfig(
-            '../data/mash_config.yaml'
+            'test/data/mash_config.yaml'
         )
 
     def test_config_data(self):

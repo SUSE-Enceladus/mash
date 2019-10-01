@@ -3,7 +3,7 @@ from mash.utils.json_format import JsonFormat
 
 class TestJsonFormat(object):
     def test_json_load(self):
-        with open('../data/job1.json') as file_handle:
+        with open('test/data/job1.json') as file_handle:
             assert JsonFormat.json_load(
                 file_handle
             )['obsjob']['id'] == '123'

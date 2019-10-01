@@ -9,7 +9,7 @@ dist/
 .cache
 .env2
 .pytest_cache
-test/unit/.coverage
+.coverage
 htmlcov/
 
 ### Vim ###

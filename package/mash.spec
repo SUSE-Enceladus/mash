@@ -145,6 +145,9 @@ install -D -m 644 config/mash_deprecation.service \
 %{_bindir}/getent group mash > /dev/null || %{_sbindir}/groupadd mash
 %{_bindir}/getent passwd mash > /dev/null || %{_sbindir}/useradd -r -g mash -s %{_bindir}/false -c "User for MASH" -d %{_localstatedir}/lib/mash mash
 
+%check
+python3 -m pytest
+
 %files
 %defattr(-,root,root,-)
 %{python3_sitelib}/*
