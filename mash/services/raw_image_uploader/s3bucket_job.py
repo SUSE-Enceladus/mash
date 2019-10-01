@@ -31,6 +31,7 @@ class S3BucketUploaderJob(MashJob):
     """
 
     def post_init(self):
+        self.cloud = 'ec2'
         self.image_file = None
         self._image_size = 0
         self._total_bytes_transferred = 0
@@ -60,16 +61,12 @@ class S3BucketUploaderJob(MashJob):
                 progress=str(self._last_percentage_logged)
             ))
 
-    def _get_credentials(self):
-        # FIXME: get credentials from API
-        credentials = {'access_key_id': None, 'secret_access_key': None}
-        return credentials
-
     def run_job(self):
         self.status = SUCCESS
         self.send_log('Uploading raw image.')
 
-        credentials = self._get_credentials()
+        self.request_credentials([self.account])
+        credentials = self.credentials[self.account]
 
         bucket_name, key_name = str.split(self.location, '/', 1)
         if key_name[-1] == '/':
