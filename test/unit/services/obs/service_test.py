@@ -245,7 +245,8 @@ class TestOBSImageBuildResultService(object):
             "cloud_architecture": "aarch64",
             "notification_email": "test@fake.com",
             "notification_type": "single",
-            "profile": "Proxy"
+            "profile": "Proxy",
+            "conditions_wait_time": 500
         }
         self.obs_result._start_job(data)
         job_worker.set_result_handler.assert_called_once_with(

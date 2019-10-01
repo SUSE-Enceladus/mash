@@ -25,5 +25,6 @@
   "cleanup_images": true,
   "cloud_architecture": "aarch64",
   "notification_email": "test@fake.com",
-  "profile": "Proxy"
+  "profile": "Proxy",
+  "conditions_wait_time": 500
 }

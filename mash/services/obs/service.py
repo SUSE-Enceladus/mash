@@ -173,7 +173,8 @@ class OBSImageBuildResultService(MashService):
                   {"image": "1.42.1"}
               ],
               "notification_email": "test@fake.com",
-              "notification_type": "single"
+              "notification_type": "single",
+              "conditions_wait_time": 900
           }
         }
         """
@@ -257,6 +258,9 @@ class OBSImageBuildResultService(MashService):
         if 'notification_email' in job:
             kwargs['notification_email'] = job['notification_email']
             kwargs['notification_type'] = job['notification_type']
+
+        if 'conditions_wait_time' in job:
+            kwargs['conditions_wait_time'] = job['conditions_wait_time']
 
         job_worker = OBSImageBuildResult(**kwargs)
         job_worker.set_result_handler(self._send_job_result_for_uploader)

@@ -117,7 +117,14 @@ base_job_message = {
             'type': 'string',
             'enum': ['periodic', 'single']
         },
-        'profile': string_with_example('Proxy')
+        'profile': string_with_example('Proxy'),
+        'conditions_wait_time': {
+            'type': 'integer',
+            'minimum': 0,
+            'example': 900,
+            'description': 'Time (in seconds) to wait before failing '
+                           'on image conditions.'
+        }
     },
     'additionalProperties': False,
     'required': [

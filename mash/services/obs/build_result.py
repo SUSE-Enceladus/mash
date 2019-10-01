@@ -93,7 +93,7 @@ class OBSImageBuildResult(object):
         log_callback, conditions=None, arch='x86_64',
         download_directory=Defaults.get_download_dir(),
         notification_email=None, notification_type='single',
-        profile=None
+        profile=None, conditions_wait_time=900
     ):
         self.arch = arch
         self.job_id = job_id
@@ -117,6 +117,7 @@ class OBSImageBuildResult(object):
         self.profile = profile
         self.job_status = 'prepared'
         self.progress_log = {}
+        self.conditions_wait_time = conditions_wait_time
         self.log_callback = logging.LoggerAdapter(
             log_callback,
             {'job_id': self.job_id}
@@ -130,7 +131,7 @@ class OBSImageBuildResult(object):
             'conditions': self.conditions,
             'arch': self.arch,
             'target_directory': self.download_directory,
-            'conditions_wait_time': 900,
+            'conditions_wait_time': conditions_wait_time,
             'log_callback': self.log_callback,
             'report_callback': self.progress_callback
         }
