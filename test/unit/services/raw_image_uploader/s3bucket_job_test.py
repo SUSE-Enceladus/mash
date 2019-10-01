@@ -2,7 +2,7 @@ from pytest import raises
 from unittest.mock import Mock, patch
 
 from test.unit.test_helper import (
-    patch_open, context_manager
+    patch_open
 )
 
 from mash.services.raw_image_uploader.s3bucket_job import S3BucketUploaderJob

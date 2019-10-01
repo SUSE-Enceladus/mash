@@ -46,6 +46,7 @@ def test_job_factory_create(mock_job_init):
     )
     assert isinstance(value, SkipRawImageUploaderJob)
 
+
 def test_job_factory_create_invalid_cloud():
     service_config = Mock()
     job_config = {}
