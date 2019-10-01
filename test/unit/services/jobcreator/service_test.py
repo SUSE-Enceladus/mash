@@ -483,7 +483,7 @@ class TestJobCreatorService(object):
 
         # Deprecation Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert 'test-gce' in data['deprecation_accounts']
