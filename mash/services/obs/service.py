@@ -174,7 +174,7 @@ class OBSImageBuildResultService(MashService):
               ],
               "notification_email": "test@fake.com",
               "notification_type": "single",
-              "conditions_wait_time": 60
+              "conditions_wait_time": 900
           }
         }
         """

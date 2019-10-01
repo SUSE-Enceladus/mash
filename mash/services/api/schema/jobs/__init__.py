@@ -121,7 +121,7 @@ base_job_message = {
         'conditions_wait_time': {
             'type': 'integer',
             'minimum': 0,
-            'example': 60,
+            'example': 900,
             'description': 'Time (in seconds) to wait before failing '
                            'on image conditions.'
         }
