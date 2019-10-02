@@ -12,7 +12,7 @@ class TestImgProofTestingServiceMain(object):
             service_exchange='testing',
             custom_args={
                 'listener_msg_args': ['cloud_image_name', 'image_file', 'source_regions'],
-                'status_msg_args': ['source_regions', 'image_file', 'cloud_image_name']
+                'status_msg_args': ['source_regions', 'image_file']
             }
         )
 
@@ -27,7 +27,7 @@ class TestImgProofTestingServiceMain(object):
             service_exchange='testing',
             custom_args={
                 'listener_msg_args': ['cloud_image_name', 'image_file', 'source_regions'],
-                'status_msg_args': ['source_regions', 'image_file', 'cloud_image_name']
+                'status_msg_args': ['source_regions', 'image_file']
             }
         )
         mock_exit.assert_called_once_with(1)

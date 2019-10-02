@@ -37,7 +37,7 @@ def main():
             service_exchange='raw_image_uploader',
             custom_args={
                 'listener_msg_args': ['cloud_image_name', 'image_file'],
-                'status_msg_args': ['cloud_image_name', 'source_regions']
+                'status_msg_args': ['source_regions']
             }
         )
     except MashException as e:
