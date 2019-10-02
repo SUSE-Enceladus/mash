@@ -13,7 +13,7 @@ from mash.services.raw_image_uploader.config import RawImageUploaderConfig
 class TestS3BucketUploaderJob(object):
     def setup(self):
         self.config = RawImageUploaderConfig(
-            config_file='../data/mash_config.yaml'
+            config_file='test/data/mash_config.yaml'
         )
 
         self.credentials = {
