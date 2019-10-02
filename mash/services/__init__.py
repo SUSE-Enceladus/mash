@@ -22,6 +22,7 @@ from mash.services.jobcreator.config import JobCreatorConfig
 from mash.services.logger.config import LoggerConfig
 from mash.services.obs.config import OBSConfig
 from mash.services.publisher.config import PublisherConfig
+from mash.services.raw_image_uploader.config import RawImageUploaderConfig
 from mash.services.replication.config import ReplicationConfig
 from mash.services.testing.config import TestingConfig
 from mash.services.uploader.config import UploaderConfig
@@ -43,6 +44,8 @@ def get_configuration(service, config_file=None):
         return OBSConfig(config_file=config_file)
     elif service == 'publisher':
         return PublisherConfig(config_file=config_file)
+    elif service == 'raw_image_uploader':
+        return RawImageUploaderConfig(config_file=config_file)
     elif service == 'replication':
         return ReplicationConfig(config_file=config_file)
     elif service == 'testing':

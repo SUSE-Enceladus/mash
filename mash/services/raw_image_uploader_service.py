@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2019 SUSE Software Solutions Germany GmbH. All rights reserved.
 #
 # This file is part of mash.
 #
@@ -34,10 +34,10 @@ def main():
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
         ListenerService(
-            service_exchange='uploader',
+            service_exchange='raw_image_uploader',
             custom_args={
-                'listener_msg_args': ['image_file'],
-                'status_msg_args': ['source_regions', 'image_file']
+                'listener_msg_args': ['cloud_image_name', 'image_file'],
+                'status_msg_args': ['source_regions']
             }
         )
     except MashException as e:

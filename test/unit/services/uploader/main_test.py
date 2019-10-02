@@ -18,7 +18,7 @@ class TestUploader(object):
         mock_UploadImageService.assert_called_once_with(
             custom_args={
                 'listener_msg_args': ['image_file'],
-                'status_msg_args': ['source_regions']
+                'status_msg_args': ['source_regions', 'image_file']
             },
             service_exchange='uploader'
         )

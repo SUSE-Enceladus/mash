@@ -59,6 +59,9 @@ class BaseJob(object):
         self.notification_email = kwargs.get('notification_email')
         self.notification_type = kwargs.get('notification_type', 'single')
         self.profile = kwargs.get('profile')
+        self.raw_image_upload_type = kwargs.get('raw_image_upload_type')
+        self.raw_image_upload_location = kwargs.get('raw_image_upload_location')
+        self.raw_image_upload_account = kwargs.get('raw_image_upload_account')
         self.kwargs = kwargs
 
         self.base_message = {
@@ -219,6 +222,23 @@ class BaseJob(object):
                 self.cloud_architecture
 
         return JsonFormat.json_message(uploader_message)
+
+    def get_raw_image_uploader_message(self):
+        """
+        Build raw image uploader job message.
+        """
+        raw_image_uploader_message = {
+            'raw_image_uploader_job': {
+                'cloud_image_name': self.cloud_image_name,
+                'cloud': self.cloud,
+                'raw_image_upload_type': self.raw_image_upload_type,
+                'raw_image_upload_account': self.raw_image_upload_account,
+                'raw_image_upload_location': self.raw_image_upload_location
+            }
+        }
+        raw_image_uploader_message['raw_image_uploader_job'].update(self.base_message)
+
+        return JsonFormat.json_message(raw_image_uploader_message)
 
     def get_uploader_regions(self):
         """

@@ -83,6 +83,8 @@ class EC2TestingJob(MashJob):
         if not os.path.exists(self.ssh_private_key_file):
             create_ssh_key_pair(self.ssh_private_key_file)
 
+        self.image_file = None
+
     def run_job(self):
         """
         Tests image with img-proof and update status and results.

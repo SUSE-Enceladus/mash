@@ -21,5 +21,8 @@
   "instance_type": "n1-standard-1",
   "family": "sles-15",
   "tests": ["test_stuff"],
-  "notification_email": "test@fake.com"
+  "notification_email": "test@fake.com",
+  "raw_image_upload_type": "s3bucket",
+  "raw_image_upload_account": "account",
+  "raw_image_upload_location": "location"
 }

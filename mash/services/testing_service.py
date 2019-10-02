@@ -38,8 +38,8 @@ def main():
         ListenerService(
             service_exchange='testing',
             custom_args={
-                'listener_msg_args': ['cloud_image_name', 'source_regions'],
-                'status_msg_args': ['source_regions']
+                'listener_msg_args': ['cloud_image_name', 'image_file', 'source_regions'],
+                'status_msg_args': ['source_regions', 'image_file']
             }
         )
     except MashException as e:
