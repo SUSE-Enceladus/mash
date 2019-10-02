@@ -1,3 +1,17 @@
+v4.1.0 (2019-10-02)
+===================
+
+- Cleanup requirements names in spec.
+  [\#565](https://github.com/SUSE-Enceladus/mash/pull/565)
+- Add ARM instance types.
+  [\#567](https://github.com/SUSE-Enceladus/mash/pull/567)
+- Remove dependency on test dir.
+  [\#568](https://github.com/SUSE-Enceladus/mash/pull/568)
+- Add conditions wait time job option.
+  [\#569](https://github.com/SUSE-Enceladus/mash/pull/569)
+- Add raw image uploader service.
+  [\#570](https://github.com/SUSE-Enceladus/mash/pull/570)
+
 v4.0.1 (2019-09-27)
 ===================
 
