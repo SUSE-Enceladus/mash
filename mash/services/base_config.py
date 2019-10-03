@@ -315,3 +315,15 @@ class BaseConfig(object):
             )
 
         return database_uri
+
+    def get_email_whitelist(self):
+        """
+        Return the list of whitelisted emails if it's configured.
+
+        :rtype: list of strings
+        """
+        email_whitelist = self._get_attribute(
+            attribute='email_whitelist'
+        )
+
+        return email_whitelist or Defaults.get_email_whitelist()

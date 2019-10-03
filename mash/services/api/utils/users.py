@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 from mash.services.api.extensions import db
@@ -32,6 +33,12 @@ def add_user(username, email, password):
     if len(password) < 8:
         raise MashDBException(
             'Password too short. Minimum length is 8 characters.'
+        )
+
+    whitelist = current_app.config['EMAIL_WHITELIST']
+    if whitelist and email not in whitelist:
+        raise MashDBException(
+            'Cannot create a user with the provided email. Access denied.'
         )
 
     user = User(

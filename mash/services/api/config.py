@@ -67,3 +67,7 @@ class Config(object):
     @property
     def SQLALCHEMY_DATABASE_URI(self):
         return self.config.get_database_uri()
+
+    @property
+    def EMAIL_WHITELIST(self):
+        return self.config.get_email_whitelist()
