@@ -1,3 +1,9 @@
+v4.2.0 (2019-10-04)
+===================
+
+- Add email whitelist config option.
+  [\#571](https://github.com/SUSE-Enceladus/mash/pull/571)
+
 v4.1.0 (2019-10-02)
 ===================
 
