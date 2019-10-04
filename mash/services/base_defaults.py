@@ -95,3 +95,7 @@ class Defaults(object):
     @staticmethod
     def get_credentials_url():
         return 'http://localhost:8080/'
+
+    @staticmethod
+    def get_email_whitelist():
+        return []

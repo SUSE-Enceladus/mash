@@ -83,3 +83,5 @@ uploader:
   azure:
     max_retry_attempts: 5
     max_workers: 8
+email_whitelist:
+  emails@to.allow.com

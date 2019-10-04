@@ -13,8 +13,10 @@ from mash.services.api.utils.users import (
 )
 
 
+@patch('mash.services.api.utils.users.current_app')
 @patch('mash.services.api.utils.users.db')
-def test_add_user(mock_db):
+def test_add_user(mock_db, mock_current_app):
+    mock_current_app.config = {'EMAIL_WHITELIST': ['user1@fake.com']}
     user = add_user('user1', 'user1@fake.com', 'password123')
 
     assert user.username == 'user1'
@@ -30,6 +32,10 @@ def test_add_user(mock_db):
 
     with raises(MashDBException):
         add_user('user1', 'user1@fake.com', 'pass')
+
+    mock_current_app.config = {'EMAIL_WHITELIST': ['user2@fake.com']}
+    with raises(MashDBException):
+        add_user('user1', 'user1@fake.com', 'password123')
 
 
 @patch('mash.services.api.utils.users.get_user_by_username')
