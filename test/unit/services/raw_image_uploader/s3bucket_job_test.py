@@ -7,12 +7,12 @@ from test.unit.test_helper import (
 
 from mash.services.raw_image_uploader.s3bucket_job import S3BucketUploaderJob
 from mash.mash_exceptions import MashUploadException
-from mash.services.raw_image_uploader.config import RawImageUploaderConfig
+from mash.services.base_config import BaseConfig
 
 
 class TestS3BucketUploaderJob(object):
     def setup(self):
-        self.config = RawImageUploaderConfig(
+        self.config = BaseConfig(
             config_file='test/data/mash_config.yaml'
         )
 
