@@ -254,7 +254,7 @@ class MashService(object):
         return False
 
     def _create_notification_content(
-        self, job_id, status, utctime, last_service,
+        self, job_id, status, utctime, last_service, image_name,
         iteration_count=None, error=None
     ):
         """
@@ -262,6 +262,7 @@ class MashService(object):
         """
         msg = [
             'Job: {job_id}\n'
+            'Image Name: {image_name}\n'
             'Service: {service}\n'
             'Log: {job_log}\n\n'
         ]
@@ -288,13 +289,14 @@ class MashService(object):
             job_id=job_id,
             service=self.service_exchange,
             job_log=self.config.get_job_log_file(job_id),
+            image_name=image_name,
             iteration_count=str(iteration_count),
             error=error
         )
 
     def send_email_notification(
         self, job_id, notification_email, notification_type, status, utctime,
-        last_service, iteration_count=None, error=None
+        last_service, image_name, iteration_count=None, error=None
     ):
         """
         Send job notification email based on result of _should_notify.
@@ -306,7 +308,8 @@ class MashService(object):
 
         if notify:
             content = self._create_notification_content(
-                job_id, status, utctime, last_service, iteration_count, error
+                job_id, status, utctime, last_service, image_name,
+                iteration_count, error
             )
             email_msg = self._create_email_message(
                 msg=content,

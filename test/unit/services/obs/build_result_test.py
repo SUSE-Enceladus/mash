@@ -68,7 +68,7 @@ class TestOBSImageBuildResult(object):
         )
         self.obs_result.notification_callback.assert_called_once_with(
             '815', 'test@fake.com', 'single', 'success', 'now',
-            'publisher', 2, 'error!'
+            'publisher', 'obs_package', 2, 'error!'
         )
 
     @patch('mash.services.obs.build_result.BackgroundScheduler')

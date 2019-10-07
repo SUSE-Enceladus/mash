@@ -298,8 +298,8 @@ class ListenerService(MashService):
 
         self.send_email_notification(
             job.id, job.notification_email, job.notification_type, job.status,
-            job.utctime, job.last_service, job.iteration_count,
-            event.exception
+            job.utctime, job.last_service, job.cloud_image_name,
+            job.iteration_count, event.exception
         )
 
         job.listener_msg.ack()
