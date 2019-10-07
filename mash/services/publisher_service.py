@@ -21,6 +21,7 @@ import sys
 import traceback
 
 from mash.mash_exceptions import MashException
+from mash.services.base_config import BaseConfig
 from mash.services.listener_service import ListenerService
 
 
@@ -36,6 +37,7 @@ def main():
         # run service, enter main loop
         ListenerService(
             service_exchange='publisher',
+            config=BaseConfig(),
             custom_args={
                 'listener_msg_args': ['cloud_image_name']
             }
