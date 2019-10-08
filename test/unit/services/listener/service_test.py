@@ -308,7 +308,7 @@ class TestListenerService(object):
             ' line 1 column 1 (char 0).'
         )
 
-    @patch.object(ListenerService, 'send_email_notification')
+    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result(
@@ -340,7 +340,7 @@ class TestListenerService(object):
         mock_publish_message.assert_called_once_with(job)
         msg.ack.assert_called_once_with()
 
-    @patch.object(ListenerService, 'send_email_notification')
+    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result_exception(
@@ -367,7 +367,7 @@ class TestListenerService(object):
         )
         mock_publish_message.assert_called_once_with(job)
 
-    @patch.object(ListenerService, 'send_email_notification')
+    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_publishing_process_job_result_fail(

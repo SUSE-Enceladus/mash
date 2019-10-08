@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 from pytest import raises
 
 from mash.services.mash_service import MashService
@@ -8,8 +8,12 @@ from mash.mash_exceptions import MashRabbitConnectionException
 
 
 class TestBaseService(object):
+
+    @patch('mash.services.mash_service.EmailNotification')
     @patch('mash.services.mash_service.Connection')
-    def setup(self, mock_connection):
+    def setup(
+        self, mock_connection, mock_email_notif
+    ):
         self.connection = Mock()
         self.channel = Mock()
         self.msg_properties = {
@@ -33,6 +37,7 @@ class TestBaseService(object):
 
         self.service = MashService('obs', config=config)
 
+        assert mock_email_notif.call_count == 1
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
@@ -75,53 +80,48 @@ class TestBaseService(object):
         )
         assert result is False
 
+        result = self.service._should_notify(
+            'test@fake.com', 'periodic', 'now', 'success', 'publisher'
+        )
+        assert result is True
+
+        result = self.service._should_notify(
+            'test@fake.com', 'single', 'now', 'success', 'obs'
+        )
+        assert result is True
+
     def test_create_notification_content(self):
+        # Failed message
         msg = self.service._create_notification_content(
             '1', 'failed', 'always', 'deprecation', 'test_image', 3,
             'Invalid publish permissions!'
         )
 
-        assert msg
+        assert 'Job failed' in msg
 
-    @patch('mash.services.mash_service.smtplib')
-    def test_send_email_notification(self, mock_smtp):
+        # Job finished with success
+        msg = self.service._create_notification_content(
+            '1', 'success', 'now', 'obs', 'test_image', 3
+        )
+
+        assert 'Job finished successfully' in msg
+
+        # Service with success
+        msg = self.service._create_notification_content(
+            '1', 'success', 'now', 'publisher', 'test_image', 3
+        )
+
+        assert 'Job finished through the obs service' in msg
+
+    def test_send_email_notification(self):
         job_id = '12345678-1234-1234-1234-123456789012'
         to = 'test@fake.com'
 
-        self.service.smtp_ssl = False
-        self.service.smtp_host = 'localhost'
-        self.service.smtp_port = 25
-        self.service.smtp_user = to
-        self.service.smtp_pass = None
-        self.service.notification_subject = '[MASH] Job Status Update'
+        notif_class = Mock()
+        self.service.notification_class = notif_class
 
-        smtp_server = MagicMock()
-        mock_smtp.SMTP_SSL.return_value = smtp_server
-        mock_smtp.SMTP.return_value = smtp_server
-
-        # Send email without SSL
-        self.service.send_email_notification(
-            job_id, to, 'periodic', 'success', 'now', 'replication',
-            'test_image', 1
-        )
-        assert smtp_server.send_message.call_count == 1
-
-        self.service.smtp_ssl = True
-        self.service.smtp_pass = 'super.secret'
-
-        # Send email with SSL
-        self.service.send_email_notification(
+        self.service.send_notification(
             job_id, to, 'periodic', 'failed', 'now', 'replication',
             'test_image', 1
         )
-        assert smtp_server.send_message.call_count == 2
-
-        # Send error
-        self.service.service_exchange = 'testing'
-        smtp_server.send_message.side_effect = Exception('Broke!')
-        self.service.send_email_notification(
-            job_id, to, 'single', 'success', 'now', 'testing', 'test_image', 1
-        )
-        self.service.log.warning.assert_called_once_with(
-            'Unable to send notification email: Broke!'
-        )
+        assert notif_class.send_notification.call_count == 1
