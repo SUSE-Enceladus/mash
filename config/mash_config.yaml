@@ -85,3 +85,5 @@ uploader:
     max_workers: 8
 email_whitelist:
   emails@to.allow.com
+domain_whitelist:
+  suse.com

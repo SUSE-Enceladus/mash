@@ -35,8 +35,14 @@ def add_user(username, email, password):
             'Password too short. Minimum length is 8 characters.'
         )
 
-    whitelist = current_app.config['EMAIL_WHITELIST']
-    if whitelist and email not in whitelist:
+    email_whitelist = current_app.config['EMAIL_WHITELIST']
+    if email_whitelist and email not in email_whitelist:
+        raise MashDBException(
+            'Cannot create a user with the provided email. Access denied.'
+        )
+
+    domain_whitelist = current_app.config['DOMAIN_WHITELIST']
+    if domain_whitelist and email.split('@')[1].strip() not in domain_whitelist:
         raise MashDBException(
             'Cannot create a user with the provided email. Access denied.'
         )
