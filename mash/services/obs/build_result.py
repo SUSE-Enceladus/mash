@@ -236,8 +236,8 @@ class OBSImageBuildResult(object):
         if self.notification_callback:
             self.notification_callback(
                 self.job_id, self.notification_email, self.notification_type,
-                status, utctime, self.last_service, self.iteration_count,
-                error
+                status, utctime, self.last_service, self.image_name,
+                self.iteration_count, error
             )
 
     def _job_submit_event(self, event):

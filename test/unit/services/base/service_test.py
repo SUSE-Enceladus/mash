@@ -82,7 +82,7 @@ class TestBaseService(object):
 
     def test_create_notification_content(self):
         msg = self.service._create_notification_content(
-            '1', 'failed', 'always', 'deprecation', 3,
+            '1', 'failed', 'always', 'deprecation', 'test_image', 3,
             'Invalid publish permissions!'
         )
 
@@ -106,7 +106,8 @@ class TestBaseService(object):
 
         # Send email without SSL
         self.service.send_email_notification(
-            job_id, to, 'periodic', 'success', 'now', 'replication', 1
+            job_id, to, 'periodic', 'success', 'now', 'replication',
+            'test_image', 1
         )
         assert smtp_server.send_message.call_count == 1
 
@@ -115,7 +116,8 @@ class TestBaseService(object):
 
         # Send email with SSL
         self.service.send_email_notification(
-            job_id, to, 'periodic', 'failed', 'now', 'replication', 1
+            job_id, to, 'periodic', 'failed', 'now', 'replication',
+            'test_image', 1
         )
         assert smtp_server.send_message.call_count == 2
 
@@ -123,7 +125,7 @@ class TestBaseService(object):
         self.service.service_exchange = 'testing'
         smtp_server.send_message.side_effect = Exception('Broke!')
         self.service.send_email_notification(
-            job_id, to, 'single', 'success', 'now', 'testing', 1
+            job_id, to, 'single', 'success', 'now', 'testing', 'test_image', 1
         )
         self.service.log.warning.assert_called_once_with(
             'Unable to send notification email: Broke!'
