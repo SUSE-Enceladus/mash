@@ -296,7 +296,7 @@ class ListenerService(MashService):
                 and job.last_service != self.service_exchange:
             self._publish_message(job)
 
-        self.send_email_notification(
+        self.send_notification(
             job.id, job.notification_email, job.notification_type, job.status,
             job.utctime, job.last_service, job.cloud_image_name,
             job.iteration_count, event.exception

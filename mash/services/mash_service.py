@@ -17,16 +17,15 @@
 #
 
 import logging
-import smtplib
 
 from amqpstorm import Connection
-from email.message import EmailMessage
 
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.services.status_levels import SUCCESS
 from mash.mash_exceptions import MashRabbitConnectionException
 from mash.utils.mash_utils import setup_rabbitmq_log_handler
+from mash.utils.email_notification import EmailNotification
 
 
 class MashService(object):
@@ -54,14 +53,6 @@ class MashService(object):
         self.amqp_user = self.config.get_amqp_user()
         self.amqp_pass = self.config.get_amqp_pass()
 
-        # smtp settings
-        self.smtp_host = self.config.get_smtp_host()
-        self.smtp_port = self.config.get_smtp_port()
-        self.smtp_ssl = self.config.get_smtp_ssl()
-        self.smtp_user = self.config.get_smtp_user()
-        self.smtp_pass = self.config.get_smtp_pass()
-        self.notification_subject = self.config.get_notification_subject()
-
         self._open_connection()
 
         logging.basicConfig()
@@ -78,6 +69,17 @@ class MashService(object):
         )
         self.log.addHandler(rabbit_handler)
         self.log.addFilter(BaseServiceFilter())
+
+        # notification settings
+        self.notification_class = EmailNotification(
+            self.config.get_smtp_host(),
+            self.config.get_smtp_port(),
+            self.config.get_smtp_user(),
+            self.config.get_smtp_pass(),
+            self.config.get_notification_subject(),
+            self.config.get_smtp_ssl(),
+            log_callback=self.log
+        )
 
         self.post_init()
 
@@ -196,49 +198,12 @@ class MashService(object):
             queue=queue, exchange=exchange, routing_key=routing_key
         )
 
-    def _create_email_message(self, msg, subject, to_email, from_email):
-        """
-        Return notification email message object.
-        """
-        email_msg = EmailMessage()
-
-        email_msg['Subject'] = subject
-        email_msg['From'] = from_email
-        email_msg['To'] = to_email
-
-        email_msg.set_content(msg)
-
-        return email_msg
-
-    def send_email(self, email_msg):
-        """
-        Send email message using smtp server.
-
-        :param email_msg:  email.message.EmailMessage
-        """
-        if self.smtp_ssl:
-            smtp_class = smtplib.SMTP_SSL
-        else:
-            smtp_class = smtplib.SMTP
-
-        try:
-            smtp_server = smtp_class(self.smtp_host, self.smtp_port)
-
-            if self.smtp_user and self.smtp_pass:
-                smtp_server.login(self.smtp_user, self.smtp_pass)
-
-            smtp_server.send_message(email_msg)
-        except Exception as error:
-            self.log.warning(
-                'Unable to send notification email: {0}'.format(error)
-            )
-
     def _should_notify(
         self, notification_email, notification_type, utctime, status,
         last_service
     ):
         """
-        Return True if a notification email should be sent based on job info.
+        Return True if a notification should be sent based on job info.
         """
         if not notification_email:
             return False
@@ -256,7 +221,7 @@ class MashService(object):
         iteration_count=None, error=None
     ):
         """
-        Build content string for body of job notification email.
+        Build content string for job notification message.
         """
         msg = [
             'Job: {job_id}\n'
@@ -292,12 +257,12 @@ class MashService(object):
             error=error
         )
 
-    def send_email_notification(
+    def send_notification(
         self, job_id, notification_email, notification_type, status, utctime,
         last_service, image_name, iteration_count=None, error=None
     ):
         """
-        Send job notification email based on result of _should_notify.
+        Send job notification based on result of _should_notify.
         """
         notify = self._should_notify(
             notification_email, notification_type, utctime, status,
@@ -309,10 +274,6 @@ class MashService(object):
                 job_id, status, utctime, last_service, image_name,
                 iteration_count, error
             )
-            email_msg = self._create_email_message(
-                msg=content,
-                subject=self.notification_subject,
-                to_email=notification_email,
-                from_email=self.smtp_user
+            self.notification_class.send_notification(
+                content, notification_email
             )
-            self.send_email(email_msg)
