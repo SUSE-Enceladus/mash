@@ -71,3 +71,7 @@ class Config(object):
     @property
     def EMAIL_WHITELIST(self):
         return self.config.get_email_whitelist()
+
+    @property
+    def DOMAIN_WHITELIST(self):
+        return self.config.get_domain_whitelist()

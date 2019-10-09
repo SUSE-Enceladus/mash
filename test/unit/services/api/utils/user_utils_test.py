@@ -16,12 +16,16 @@ from mash.services.api.utils.users import (
 @patch('mash.services.api.utils.users.current_app')
 @patch('mash.services.api.utils.users.db')
 def test_add_user(mock_db, mock_current_app):
-    mock_current_app.config = {'EMAIL_WHITELIST': ['user1@fake.com']}
+    mock_current_app.config = {
+        'EMAIL_WHITELIST': ['user1@fake.com'],
+        'DOMAIN_WHITELIST': []
+    }
     user = add_user('user1', 'user1@fake.com', 'password123')
 
     assert user.username == 'user1'
     assert user.email == 'user1@fake.com'
 
+    # User duplicate
     mock_db.session.commit.side_effect = IntegrityError(
         'Duplicate', None, None
     )
@@ -30,10 +34,23 @@ def test_add_user(mock_db, mock_current_app):
     assert user is None
     mock_db.session.rollback.assert_called_once_with()
 
+    # Password too short
     with raises(MashDBException):
         add_user('user1', 'user1@fake.com', 'pass')
 
-    mock_current_app.config = {'EMAIL_WHITELIST': ['user2@fake.com']}
+    # Not in email whitelist
+    mock_current_app.config = {
+        'EMAIL_WHITELIST': ['user2@fake.com'],
+        'DOMAIN_WHITELIST': []
+    }
+    with raises(MashDBException):
+        add_user('user1', 'user1@fake.com', 'password123')
+
+    # Not in domain whitelist
+    mock_current_app.config = {
+        'EMAIL_WHITELIST': [],
+        'DOMAIN_WHITELIST': ['suse.com']
+    }
     with raises(MashDBException):
         add_user('user1', 'user1@fake.com', 'password123')
 

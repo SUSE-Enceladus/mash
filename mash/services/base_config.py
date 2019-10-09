@@ -327,3 +327,15 @@ class BaseConfig(object):
         )
 
         return email_whitelist or Defaults.get_email_whitelist()
+
+    def get_domain_whitelist(self):
+        """
+        Return the list of whitelisted domains if it's configured.
+
+        :rtype: list of strings
+        """
+        domain_whitelist = self._get_attribute(
+            attribute='domain_whitelist'
+        )
+
+        return domain_whitelist or Defaults.get_domain_whitelist()

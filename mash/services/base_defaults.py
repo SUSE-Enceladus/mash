@@ -99,3 +99,7 @@ class Defaults(object):
     @staticmethod
     def get_email_whitelist():
         return []
+
+    @staticmethod
+    def get_domain_whitelist():
+        return []
