@@ -21,6 +21,7 @@ import sys
 import traceback
 
 from mash.mash_exceptions import MashException
+from mash.services.base_config import BaseConfig
 from mash.services.jobcreator.service import JobCreatorService
 
 
@@ -33,7 +34,10 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        JobCreatorService(service_exchange='jobcreator')
+        JobCreatorService(
+            service_exchange='jobcreator',
+            config=BaseConfig()
+        )
     except MashException as e:
         # known exception
         log.error('{0}: {1}'.format(type(e).__name__, format(e)))

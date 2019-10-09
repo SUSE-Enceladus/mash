@@ -24,7 +24,6 @@ from email.message import EmailMessage
 
 # project
 from mash.log.filter import BaseServiceFilter
-from mash.services import get_configuration
 from mash.services.status_levels import SUCCESS
 from mash.mash_exceptions import MashRabbitConnectionException
 from mash.utils.mash_utils import setup_rabbitmq_log_handler
@@ -42,14 +41,13 @@ class MashService(object):
     * :attr:`service_exchange`
       Name of service exchange
     """
-    def __init__(self, service_exchange, custom_args=None):
+    def __init__(self, service_exchange, config, custom_args=None):
         self.channel = None
         self.connection = None
 
         self.service_exchange = service_exchange
         self.custom_args = custom_args
-
-        self.config = get_configuration(self.service_exchange)
+        self.config = config
 
         # amqp settings
         self.amqp_host = self.config.get_amqp_host()

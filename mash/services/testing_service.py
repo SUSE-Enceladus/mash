@@ -22,6 +22,7 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
+from mash.services.testing.config import TestingConfig
 from mash.services.listener_service import ListenerService
 
 
@@ -37,6 +38,7 @@ def main():
         # run service, enter main loop
         ListenerService(
             service_exchange='testing',
+            config=TestingConfig(),
             custom_args={
                 'listener_msg_args': ['cloud_image_name', 'image_file', 'source_regions'],
                 'status_msg_args': ['source_regions', 'image_file']

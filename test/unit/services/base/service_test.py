@@ -8,11 +8,8 @@ from mash.mash_exceptions import MashRabbitConnectionException
 
 
 class TestBaseService(object):
-    @patch('mash.services.mash_service.get_configuration')
     @patch('mash.services.mash_service.Connection')
-    def setup(
-        self, mock_connection, mock_get_configuration
-    ):
+    def setup(self, mock_connection):
         self.connection = Mock()
         self.channel = Mock()
         self.msg_properties = {
@@ -33,15 +30,13 @@ class TestBaseService(object):
             'obs', 'uploader', 'testing', 'raw_image_uploader' 'replication',
             'publisher', 'deprecation'
         ]
-        mock_get_configuration.return_value = config
 
-        self.service = MashService('obs')
+        self.service = MashService('obs', config=config)
 
-        mock_get_configuration.assert_called_once_with('obs')
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
-            MashService('obs')
+            MashService('obs', config=config)
         self.channel.reset_mock()
 
     def test_post_init(self):
