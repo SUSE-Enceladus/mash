@@ -108,9 +108,7 @@ def test_revoke_tokens(mock_db, mock_get_user):
 def test_prune_expired_tokens(mock_db, mock_token):
     queryset = Mock()
     queryset.delete.return_value = 1
-    queryset1 = Mock()
-    queryset1.all.return_value = queryset
-    mock_token.query.filter.return_value = queryset1
+    mock_token.query.filter.return_value = queryset
     mock_token.expires = datetime.now()
 
     assert prune_expired_tokens() == 1

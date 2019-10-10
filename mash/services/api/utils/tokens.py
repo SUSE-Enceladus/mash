@@ -122,7 +122,7 @@ def prune_expired_tokens():
     Delete tokens that have expired from the database.
     """
     now = datetime.now()
-    rows_deleted = Token.query.filter(Token.expires < now).all().delete()
+    rows_deleted = Token.query.filter(Token.expires < now).delete()
     db.session.commit()
 
     return rows_deleted
