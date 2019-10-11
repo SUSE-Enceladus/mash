@@ -17,7 +17,7 @@
 #
 import json
 
-from flask import jsonify, request, make_response
+from flask import jsonify, request, make_response, current_app
 from flask_restplus import fields, marshal, Model, Namespace, Resource
 from flask_jwt_extended import (
     jwt_required,
@@ -136,7 +136,8 @@ class EC2AccountCreateAndList(Resource):
                 jsonify({'msg': 'Account already exists'}),
                 409
             )
-        except Exception:
+        except Exception as error:
+            current_app.logger.warning(error)
             return make_response(
                 jsonify({'msg': 'Failed to add EC2 account'}),
                 400
@@ -175,7 +176,8 @@ class EC2Account(Resource):
         """
         try:
             rows_deleted = delete_ec2_account(name, get_jwt_identity())
-        except Exception:
+        except Exception as error:
+            current_app.logger.warning(error)
             return make_response(
                 jsonify({'msg': 'Delete EC2 account failed'}),
                 400
@@ -236,6 +238,7 @@ class EC2Account(Resource):
                 data.get('subnet')
             )
         except Exception as error:
+            current_app.logger.warning(error)
             return make_response(
                 jsonify({'msg': str(error)}),
                 400

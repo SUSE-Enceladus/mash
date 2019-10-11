@@ -18,7 +18,7 @@
 
 import json
 
-from flask import jsonify, request, make_response
+from flask import jsonify, request, make_response, current_app
 from flask_restplus import marshal, Namespace, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -69,7 +69,8 @@ class EC2JobCreate(Resource):
                 jsonify({'msg': 'Job failed: {0}'.format(error)}),
                 400
             )
-        except Exception:
+        except Exception as error:
+            current_app.logger.warning(error)
             return make_response(
                 jsonify({'msg': 'Failed to start job'}),
                 400
