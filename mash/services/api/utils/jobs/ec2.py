@@ -109,7 +109,7 @@ def update_ec2_job_accounts(job_doc):
     """
     user = get_user_by_username(job_doc['requesting_user'])
     helper_images = get_ec2_helper_images()
-    cloud_accounts = convert_account_dict(job_doc['cloud_accounts'])
+    cloud_accounts = convert_account_dict(job_doc.get('cloud_accounts', []))
 
     accounts = {}
     target_accounts = []

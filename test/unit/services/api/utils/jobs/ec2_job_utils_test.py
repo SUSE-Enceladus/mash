@@ -155,3 +155,19 @@ def test_update_ec2_job_accounts(
     assert 'target_account_info' in result
     assert 'cloud_accounts' not in result
     assert 'cloud_groups' not in result
+
+    # Test doc with no accounts
+    job_doc = {
+        'requesting_user': 'user1',
+        'cloud_groups': ['group1']
+    }
+
+    update_ec2_job_accounts(job_doc)
+
+    # Test doc with no groups
+    job_doc = {
+        'requesting_user': 'user1',
+        'cloud_accounts': [{'name': 'acnt1', 'data': 'more_stuff'}]
+    }
+
+    update_ec2_job_accounts(job_doc)
