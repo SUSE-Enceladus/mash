@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from flask import jsonify, make_response
+from flask import jsonify, make_response, current_app
 from flask_restplus import marshal, fields, Namespace, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -88,7 +88,8 @@ class Job(Resource):
         """
         try:
             rows_deleted = delete_job(job_id, get_jwt_identity())
-        except Exception:
+        except Exception as error:
+            current_app.logger.warning(error)
             return make_response(
                 jsonify({'msg': 'Delete job failed'}),
                 400

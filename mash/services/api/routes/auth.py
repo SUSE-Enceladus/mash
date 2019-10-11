@@ -18,7 +18,7 @@
 
 import json
 
-from flask import jsonify, request, make_response
+from flask import jsonify, request, make_response, current_app
 from flask_restplus import fields, Namespace, Resource
 
 from flask_jwt_extended import (
@@ -83,6 +83,11 @@ class Login(Resource):
             }
             return make_response(jsonify(response), 200)
         else:
+            current_app.logger.warning(
+                'Failed login attempt for user: {username}'.format(
+                    username=username
+                )
+            )
             return make_response(jsonify({'msg': 'Username or password is invalid'}), 401)
 
 
