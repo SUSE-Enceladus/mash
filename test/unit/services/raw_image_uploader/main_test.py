@@ -16,7 +16,9 @@ class TestRawImageUploader(object):
             service_exchange='raw_image_uploader',
             config=config,
             custom_args={
-                'listener_msg_args': ['cloud_image_name', 'image_file'],
+                'listener_msg_args': [
+                    'cloud_image_name', 'image_file', 'source_regions'
+                ],
                 'status_msg_args': ['source_regions']
             }
         )
