@@ -38,7 +38,9 @@ def main():
             service_exchange='raw_image_uploader',
             config=BaseConfig(),
             custom_args={
-                'listener_msg_args': ['cloud_image_name', 'image_file'],
+                'listener_msg_args': [
+                    'cloud_image_name', 'image_file', 'source_regions'
+                ],
                 'status_msg_args': ['source_regions']
             }
         )
