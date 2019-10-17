@@ -100,7 +100,8 @@ class GCEJob(BaseJob):
         for source_region, value in self.target_account_info.items():
             test_regions[source_region] = {
                 'account': value['account'],
-                'is_publishing_account': value['is_publishing_account']
+                'is_publishing_account': value['is_publishing_account'],
+                'bucket': value['bucket']
             }
 
             if value.get('testing_account'):

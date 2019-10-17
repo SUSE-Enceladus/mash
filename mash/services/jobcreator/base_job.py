@@ -178,6 +178,9 @@ class BaseJob(object):
                 self.cleanup_images in [True, None]:
             testing_message['testing_job']['cleanup_images'] = True
 
+        elif self.cleanup_images is False:
+            testing_message['testing_job']['cleanup_images'] = False
+
         if self.test_fallback_regions or self.test_fallback is False:
             testing_message['testing_job']['test_fallback_regions'] = \
                 self.test_fallback_regions
