@@ -64,7 +64,7 @@ class GCETestingJob(MashJob):
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
         self.ssh_user = self.job_config.get('ssh_user', 'root')
-        self.cleanup_images = self.job_config.get('cleanup_images', False)
+        self.cleanup_images = self.job_config.get('cleanup_images')
         self.test_fallback_regions = self.job_config.get('test_fallback_regions')
 
         if not self.instance_type:
@@ -134,12 +134,12 @@ class GCETestingJob(MashJob):
                 self.status = status
 
             if self.cleanup_images or \
-                    status != SUCCESS and \
-                    self.test_regions[region]['is_publishing_account']:
+                    (status != SUCCESS and self.cleanup_images is not False):
                 self.cleanup_image(region)
 
     def cleanup_image(self, region):
         account = self.test_regions[region]['account']
+        bucket = self.test_regions[region]['bucket']
         credentials = self.credentials[account]
         cloud_image_name = self.source_regions[region]
 
@@ -151,7 +151,7 @@ class GCETestingJob(MashJob):
         )
 
         try:
-            cleanup_gce_image(credentials, cloud_image_name)
+            cleanup_gce_image(credentials, cloud_image_name, bucket)
         except Exception as error:
             self.send_log(
                 'Failed to cleanup image: {0}'.format(error),

@@ -59,6 +59,11 @@ class TestJobCreatorBaseJob(object):
     @patch.object(BaseJob, 'get_testing_regions')
     def test_get_testing_message_cleanup(self, mock_get_testing_regions):
         mock_get_testing_regions.return_value = {}
-        message = self.job.get_testing_message()
 
+        message = self.job.get_testing_message()
         assert JsonFormat.json_loads(message)['testing_job']['cleanup_images']
+
+        # Explicit False for no cleanup even on failure
+        self.job.cleanup_images = False
+        message = self.job.get_testing_message()
+        assert JsonFormat.json_loads(message)['testing_job']['cleanup_images'] is False

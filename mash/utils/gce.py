@@ -19,25 +19,49 @@ import random
 
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
+from libcloud.storage.drivers.google_storage import GoogleStorageDriver
 
 from mash.utils.mash_utils import create_json_file
 
 
-def cleanup_gce_image(credentials, cloud_image_name):
+def cleanup_gce_image(credentials, cloud_image_name, bucket):
     """
-    Delete the image matching cloud_image_name.
+    Delete the image matching cloud_image_name and the associated tarball.
 
     Use the provided credentials dict data for authentication.
     """
+    with create_json_file(credentials) as auth_file:
+        delete_gce_image(credentials, auth_file, cloud_image_name)
+        delete_image_tarball(credentials, auth_file, cloud_image_name, bucket)
+
+
+def delete_image_tarball(credentials, auth_file, cloud_image_name, bucket):
+    """
+    Delete image tarball based on cloud_image_name from bucket.
+    """
+    storage_driver = GoogleStorageDriver(
+        credentials['client_email'],
+        secret=auth_file,
+        project=credentials['project_id']
+    )
+
+    object_name = ''.join([cloud_image_name, '.tar.gz'])
+    image_tarball = storage_driver.get_object(bucket, object_name)
+    storage_driver.delete_object(image_tarball)
+
+
+def delete_gce_image(credentials, auth_file, cloud_image_name):
+    """
+    Delete the image matching cloud_image_name.
+    """
     ComputeEngine = get_driver(Provider.GCE)
 
-    with create_json_file(credentials) as auth_file:
-        compute_driver = ComputeEngine(
-            credentials['client_email'],
-            auth_file,
-            project=credentials['project_id']
-        )
-        compute_driver.ex_delete_image(cloud_image_name)
+    compute_driver = ComputeEngine(
+        credentials['client_email'],
+        auth_file,
+        project=credentials['project_id']
+    )
+    compute_driver.ex_delete_image(cloud_image_name)
 
 
 def get_region_list(credentials):
