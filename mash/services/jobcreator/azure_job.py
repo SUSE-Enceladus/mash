@@ -133,14 +133,7 @@ class AzureJob(BaseJob):
         """
         Return a dictionary of target test regions.
         """
-        test_regions = {}
-
-        for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = {
-                'account': value['account']
-            }
-
-        return test_regions
+        return self.target_account_info
 
     def get_uploader_regions(self):
         """

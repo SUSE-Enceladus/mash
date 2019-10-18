@@ -28,7 +28,8 @@ from mash.services.testing.utils import (
     create_testing_thread,
     process_test_result
 )
-from mash.utils.mash_utils import create_ssh_key_pair
+from mash.utils.azure import delete_image, delete_page_blob
+from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
 
 instance_types = [
     'Basic_A2',
@@ -63,6 +64,7 @@ class AzureTestingJob(MashJob):
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
         self.ssh_user = self.job_config.get('ssh_user', 'azureuser')
+        self.cleanup_images = self.job_config.get('cleanup_images')
 
         if not self.instance_type:
             self.instance_type = random.choice(instance_types)
@@ -117,3 +119,39 @@ class AzureTestingJob(MashJob):
             status = process_test_result(result, self.send_log, region)
             if status != SUCCESS:
                 self.status = status
+
+            if self.cleanup_images or \
+                    (status != SUCCESS and self.cleanup_images is not False):
+                self.cleanup_image(region)
+
+    def cleanup_image(self, region):
+        reg_info = self.test_regions[region]
+        credentials = self.credentials[reg_info['account']]
+        blob_name = ''.join([self.cloud_image_name, '.vhd'])
+
+        self.send_log(
+            'Cleaning up image: {0} in region: {1}.'.format(
+                self.cloud_image_name,
+                region
+            )
+        )
+
+        with create_json_file(credentials) as auth_file:
+            try:
+                delete_image(
+                    auth_file,
+                    reg_info['source_resource_group'],
+                    self.cloud_image_name
+                )
+                delete_page_blob(
+                    auth_file,
+                    blob_name,
+                    reg_info['source_container'],
+                    reg_info['source_resource_group'],
+                    reg_info['source_storage_account']
+                )
+            except Exception as error:
+                self.send_log(
+                    'Failed to cleanup image: {0}'.format(error),
+                    success=False
+                )

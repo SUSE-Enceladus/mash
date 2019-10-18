@@ -96,6 +96,7 @@ class AzureUploaderJob(MashJob):
                 info['resource_group'],
                 self.cloud_image_name, {
                     'location': region,
+                    'hyper_vgeneration': 'V1',
                     'storage_profile': {
                         'os_disk': {
                             'os_type': 'Linux',

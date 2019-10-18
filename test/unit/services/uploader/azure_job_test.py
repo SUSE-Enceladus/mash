@@ -125,7 +125,9 @@ class TestAzureUploaderJob(object):
         )
         client.images.create_or_update.assert_called_once_with(
             'group_name', 'name', {
-                'location': 'region', 'storage_profile': {
+                'location': 'region',
+                'hyper_vgeneration': 'V1',
+                'storage_profile': {
                     'os_disk': {
                         'blob_uri':
                         'https://storage.blob.core.windows.net/'
