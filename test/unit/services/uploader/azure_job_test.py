@@ -7,8 +7,6 @@ from mash.services.uploader.azure_job import AzureUploaderJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.uploader.config import UploaderConfig
 
-from azure.mgmt.compute import ComputeManagementClient
-
 
 class TestAzureUploaderJob(object):
     def setup(self):
@@ -38,14 +36,11 @@ class TestAzureUploaderJob(object):
             'cloud': 'azure',
             'requesting_user': 'user1',
             'utctime': 'now',
-            'target_regions': {
-                'region': {
-                    'account': 'test',
-                    'resource_group': 'group_name',
-                    'container': 'container',
-                    'storage_account': 'storage',
-                }
-            },
+            'account': 'test',
+            'resource_group': 'group_name',
+            'container': 'container',
+            'storage_account': 'storage',
+            'region': 'region',
             'cloud_image_name': 'name'
         }
 
@@ -70,25 +65,15 @@ class TestAzureUploaderJob(object):
         with raises(MashUploadException):
             AzureUploaderJob(job_doc, self.config)
 
-        job_doc['target_regions'] = {'name': {'account': 'info'}}
-        with raises(MashUploadException):
-            AzureUploaderJob(job_doc, self.config)
-
     @patch('mash.services.uploader.azure_job.upload_azure_image')
     @patch('mash.services.uploader.azure_job.Process')
     @patch('mash.services.uploader.azure_job.SimpleQueue')
-    @patch('mash.services.uploader.azure_job.NamedTemporaryFile')
     @patch('mash.services.uploader.azure_job.get_client_from_auth_file')
     @patch('builtins.open')
     def test_upload(
         self, mock_open, mock_get_client_from_auth_file,
-        mock_NamedTemporaryFile, mock_queue, mock_process,
-        mock_upload_azure_image
+        mock_queue, mock_process, mock_upload_azure_image
     ):
-        tempfile = Mock()
-        tempfile.name = 'tempfile'
-        mock_NamedTemporaryFile.return_value = tempfile
-
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
@@ -120,9 +105,7 @@ class TestAzureUploaderJob(object):
             )
         )
 
-        mock_get_client_from_auth_file.assert_called_once_with(
-            ComputeManagementClient, auth_path='tempfile'
-        )
+        assert mock_get_client_from_auth_file.call_count == 1
         client.images.create_or_update.assert_called_once_with(
             'group_name', 'name', {
                 'location': 'region',

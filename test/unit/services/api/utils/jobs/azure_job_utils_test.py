@@ -18,32 +18,27 @@
 
 from unittest.mock import patch, Mock
 
-from mash.services.api.utils.jobs.azure import (
-    update_azure_job_accounts,
-    add_target_azure_account
-)
+from mash.services.api.utils.jobs.azure import update_azure_job_accounts
 
 
-@patch('mash.services.api.utils.jobs.azure.add_target_azure_account')
 @patch('mash.services.api.utils.jobs.azure.get_azure_account_by_id')
 @patch('mash.services.api.utils.jobs.azure.get_user_by_username')
 def test_update_azure_job_accounts(
     mock_get_user,
-    mock_get_azure_account,
-    mock_add_target_account
+    mock_get_azure_account
 ):
     user = Mock()
     user.id = '1'
     mock_get_user.return_value = user
 
     account = Mock()
+    account.region = 'southcentralus'
     account.name = 'acnt1'
     mock_get_azure_account.return_value = account
 
     job_doc = {
         'requesting_user': 'user1',
         'cloud_account': 'acnt1',
-        'region': 'southcentralus',
         'source_resource_group': 'rg-1',
         'source_container': 'container1',
         'source_storage_account': 'sa1',
@@ -54,39 +49,4 @@ def test_update_azure_job_accounts(
 
     result = update_azure_job_accounts(job_doc)
 
-    assert 'target_account_info' in result
-
-
-def test_add_target_azure_account():
-    account = Mock()
-    account.region = 'useast'
-    account.name = 'acnt1'
-    account.source_container = 'container1'
-    account.source_resource_group = 'group1'
-    account.source_storage_account = 'account1'
-    account.destination_container = 'container2'
-    account.destination_resource_group = 'group2'
-    account.destination_storage_account = 'account2'
-
-    accounts = {}
-
-    add_target_azure_account(
-        account,
-        accounts,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None
-    )
-
-    assert 'useast' in accounts
-    assert accounts['useast']['account'] == 'acnt1'
-    assert accounts['useast']['source_container'] == 'container1'
-    assert accounts['useast']['source_resource_group'] == 'group1'
-    assert accounts['useast']['source_storage_account'] == 'account1'
-    assert accounts['useast']['destination_container'] == 'container2'
-    assert accounts['useast']['destination_resource_group'] == 'group2'
-    assert accounts['useast']['destination_storage_account'] == 'account2'
+    assert result['region'] == 'southcentralus'

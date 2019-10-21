@@ -227,27 +227,6 @@ class TestJobCreatorService(object):
         with open('test/data/azure_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
-        job['target_account_info'] = {
-            'southcentralus': {
-                'account': 'test-azure',
-                'source_resource_group': 'rg-1',
-                'source_container': 'container1',
-                'source_storage_account': 'sa1',
-                'destination_resource_group': 'rg-2',
-                'destination_container': 'container2',
-                'destination_storage_account': 'sa2'
-            },
-            'centralus': {
-                'account': 'test-azure2',
-                'source_resource_group': 'c_res_group1',
-                'source_container': 'ccontainer1',
-                'source_storage_account': 'cstorage1',
-                'destination_resource_group': 'c_res_group2',
-                'destination_container': 'ccontainer2',
-                'destination_storage_account': 'cstorage2'
-            }
-        }
-
         message = MagicMock()
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
@@ -275,20 +254,10 @@ class TestJobCreatorService(object):
         check_base_attrs(data)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['cloud_image_name'] == 'new_image_123'
-        assert data['image_description'] == 'New Image #123'
-
-        for region, info in data['target_regions'].items():
-            if region == 'centralus':
-                assert info['account'] == 'test-azure2'
-                assert info['container'] == 'ccontainer1'
-                assert info['resource_group'] == 'c_res_group1'
-                assert info['storage_account'] == 'cstorage1'
-            else:
-                assert region == 'southcentralus'
-                assert info['account'] == 'test-azure'
-                assert info['container'] == 'container1'
-                assert info['resource_group'] == 'rg-1'
-                assert info['storage_account'] == 'sa1'
+        assert data['account'] == 'test-azure'
+        assert data['container'] == 'container1'
+        assert data['resource_group'] == 'rg-1'
+        assert data['storage_account'] == 'sa1'
 
         # Testing Job Doc
 
@@ -297,13 +266,11 @@ class TestJobCreatorService(object):
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'Basic_A2'
         assert data['tests'] == ['test_stuff']
-
-        for region, info in data['test_regions'].items():
-            if region == 'centralus':
-                assert info['account'] == 'test-azure2'
-            else:
-                assert region == 'southcentralus'
-                assert info['account'] == 'test-azure'
+        assert data['region'] == 'southcentralus'
+        assert data['account'] == 'test-azure'
+        assert data['container'] == 'container1'
+        assert data['resource_group'] == 'rg-1'
+        assert data['storage_account'] == 'sa1'
 
         # Raw Image Uploader Job Doc
 
@@ -318,26 +285,14 @@ class TestJobCreatorService(object):
         data = json.loads(mock_publish.mock_calls[4][1][2])['replication_job']
         check_base_attrs(data)
         assert data['cleanup_images']
-        assert data['image_description'] == 'New Image #123'
-
-        for region, info in data['replication_source_regions'].items():
-            if region == 'centralus':
-                assert info['account'] == 'test-azure2'
-                assert info['source_container'] == 'ccontainer1'
-                assert info['source_resource_group'] == 'c_res_group1'
-                assert info['source_storage_account'] == 'cstorage1'
-                assert info['destination_container'] == 'ccontainer2'
-                assert info['destination_resource_group'] == 'c_res_group2'
-                assert info['destination_storage_account'] == 'cstorage2'
-            else:
-                assert region == 'southcentralus'
-                assert info['account'] == 'test-azure'
-                assert info['source_container'] == 'container1'
-                assert info['source_resource_group'] == 'rg-1'
-                assert info['source_storage_account'] == 'sa1'
-                assert info['destination_container'] == 'container2'
-                assert info['destination_resource_group'] == 'rg-2'
-                assert info['destination_storage_account'] == 'sa2'
+        assert data['region'] == 'southcentralus'
+        assert data['account'] == 'test-azure'
+        assert data['source_container'] == 'container1'
+        assert data['source_resource_group'] == 'rg-1'
+        assert data['source_storage_account'] == 'sa1'
+        assert data['destination_container'] == 'container2'
+        assert data['destination_resource_group'] == 'rg-2'
+        assert data['destination_storage_account'] == 'sa2'
 
         # Publisher Job Doc
 
@@ -350,17 +305,10 @@ class TestJobCreatorService(object):
         assert data['publisher_id'] == 'suse'
         assert data['sku'] == '123'
         assert data['vm_images_key'] == 'key123'
-
-        for region in data['publish_regions']:
-            assert region['account'] in ('test-azure', 'test-azure2')
-            if region['account'] == 'test-azure':
-                assert region['destination_container'] == 'container2'
-                assert region['destination_resource_group'] == 'rg-2'
-                assert region['destination_storage_account'] == 'sa2'
-            else:
-                assert region['destination_container'] == 'ccontainer2'
-                assert region['destination_resource_group'] == 'c_res_group2'
-                assert region['destination_storage_account'] == 'cstorage2'
+        assert data['account'] == 'test-azure'
+        assert data['container'] == 'container2'
+        assert data['resource_group'] == 'rg-2'
+        assert data['storage_account'] == 'sa2'
 
         # Deprecation Job Doc
 

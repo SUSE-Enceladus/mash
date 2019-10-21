@@ -14,14 +14,11 @@ class TestAzureTestingJob(object):
             'cloud': 'azure',
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
-            'test_regions': {
-                'East US': {
-                    'account': 'test-azure',
-                    'source_resource_group': 'srg',
-                    'source_container': 'sc',
-                    'source_storage_account': 'ssa'
-                }
-            },
+            'account': 'test-azure',
+            'resource_group': 'srg',
+            'container': 'sc',
+            'storage_account': 'ssa',
+            'region': 'East US',
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
@@ -31,7 +28,7 @@ class TestAzureTestingJob(object):
         self.config.get_img_proof_timeout.return_value = None
 
     def test_testing_azure_missing_key(self):
-        del self.job_config['test_regions']
+        del self.job_config['account']
 
         with pytest.raises(MashTestingException):
             AzureTestingJob(self.job_config, self.config)

@@ -15,17 +15,14 @@ class TestAzureReplicationJob(object):
             'requesting_user': 'user1',
             'cloud': 'azure',
             'utctime': 'now',
-            "replication_source_regions": {
-                "westus": {
-                    'account': 'acnt1',
-                    'source_resource_group': 'rg-1',
-                    'source_container': 'container1',
-                    'source_storage_account': 'sa1',
-                    'destination_resource_group': 'rg-2',
-                    'destination_container': 'container2',
-                    'destination_storage_account': 'sa2'
-                }
-            },
+            'account': 'acnt1',
+            'source_resource_group': 'rg-1',
+            'source_container': 'container1',
+            'source_storage_account': 'sa1',
+            'region': 'East US',
+            'destination_resource_group': 'rg-2',
+            'destination_container': 'container2',
+            'destination_storage_account': 'sa2',
             "cleanup_images": True
         }
 
@@ -53,10 +50,12 @@ class TestAzureReplicationJob(object):
         self.job.cloud_image_name = 'image123'
 
     def test_replicate_ec2_missing_key(self):
-        del self.job_config['replication_source_regions']
+        del self.job_config['account']
 
         with raises(MashReplicationException):
             AzureReplicationJob(self.job_config, self.config)
+
+        self.job_config['account'] = 'acnt1'
 
     @patch('mash.services.replication.azure_job.delete_page_blob')
     @patch('mash.services.replication.azure_job.delete_image')

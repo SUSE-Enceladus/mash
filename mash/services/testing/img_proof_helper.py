@@ -18,7 +18,6 @@
 
 import logging
 import os
-import threading
 import traceback
 import random
 
