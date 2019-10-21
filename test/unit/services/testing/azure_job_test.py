@@ -14,7 +14,14 @@ class TestAzureTestingJob(object):
             'cloud': 'azure',
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
-            'test_regions': {'East US': {'account': 'test-azure'}},
+            'test_regions': {
+                'East US': {
+                    'account': 'test-azure',
+                    'source_resource_group': 'srg',
+                    'source_container': 'sc',
+                    'source_storage_account': 'ssa'
+                }
+            },
             'tests': ['test_stuff'],
             'utctime': 'now',
         }
@@ -29,6 +36,8 @@ class TestAzureTestingJob(object):
         with pytest.raises(MashTestingException):
             AzureTestingJob(self.job_config, self.config)
 
+    @patch('mash.services.testing.azure_job.delete_image')
+    @patch('mash.services.testing.azure_job.delete_page_blob')
     @patch('mash.services.testing.azure_job.os')
     @patch('mash.services.testing.azure_job.create_ssh_key_pair')
     @patch('mash.services.testing.azure_job.random')
@@ -37,7 +46,7 @@ class TestAzureTestingJob(object):
     @patch.object(AzureTestingJob, 'send_log')
     def test_testing_run_azure_test(
         self, mock_send_log, mock_test_image, mock_temp_file, mock_random,
-        mock_create_ssh_key_pair, mock_os
+        mock_create_ssh_key_pair, mock_os, mock_delete_blob, mock_delete_image
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -65,6 +74,7 @@ class TestAzureTestingJob(object):
             }
         }
         job.source_regions = {'East US': 'ami-123'}
+        job.cloud_image_name = 'test_image'
         job.run_job()
 
         mock_test_image.assert_called_once_with(
@@ -91,9 +101,14 @@ class TestAzureTestingJob(object):
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
+        mock_delete_blob.side_effect = Exception('Cleanup blob failed!')
+
         job.run_job()
+
         assert mock_send_log.mock_calls[1] == call(
             'Image tests failed in region: East US.', success=False
         )
         assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
         assert mock_send_log.mock_calls[2][2] == {'success': False}
+        assert mock_delete_image.call_count == 1
+        assert mock_delete_blob.call_count == 1
