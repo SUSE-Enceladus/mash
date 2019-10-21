@@ -18,8 +18,6 @@
 
 import re
 
-from tempfile import NamedTemporaryFile
-
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 from libcloud.storage.drivers.google_storage import GoogleStorageDriver
@@ -27,8 +25,7 @@ from libcloud.storage.drivers.google_storage import GoogleStorageDriver
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
-from mash.utils.mash_utils import format_string_with_date
-from mash.utils.json_format import JsonFormat
+from mash.utils.mash_utils import format_string_with_date, create_json_file
 from mash.services.status_levels import SUCCESS
 
 
@@ -43,7 +40,9 @@ class GCEUploaderJob(MashJob):
         self.cloud_image_description = ''
 
         try:
-            self.target_regions = self.job_config['target_regions']
+            self.account = self.job_config['account']
+            self.region = self.job_config['region']
+            self.bucket = self.job_config['bucket']
             self.base_cloud_image_name = self.job_config['cloud_image_name']
             self.base_cloud_image_description = \
                 self.job_config['image_description']
@@ -80,20 +79,18 @@ class GCEUploaderJob(MashJob):
             self.base_cloud_image_description, timestamp=timestamp
         )
 
-        for region, info in self.target_regions.items():
-            account = info['account']
-            self.request_credentials([account])
-            credentials = self.credentials[account]
-            self._create_auth_file(credentials)
+        self.request_credentials([self.account])
+        credentials = self.credentials[self.account]
 
+        with create_json_file(credentials) as auth_file:
             storage_driver = GoogleStorageDriver(
                 credentials['client_email'],
-                secret=self.auth_file.name,
+                secret=auth_file,
                 project=credentials['project_id']
             )
 
             object_name = ''.join([self.cloud_image_name, '.tar.gz'])
-            container = storage_driver.get_container(info['bucket'])
+            container = storage_driver.get_container(self.bucket)
 
             with open(self.image_file, 'rb') as image_stream:
                 storage_driver.upload_object_via_stream(
@@ -103,13 +100,15 @@ class GCEUploaderJob(MashJob):
             ComputeEngine = get_driver(Provider.GCE)
             compute_driver = ComputeEngine(
                 credentials['client_email'],
-                self.auth_file.name,
+                auth_file,
                 project=credentials['project_id']
             )
 
             uri = ''.join([
                 'https://www.googleapis.com/storage/v1/b/',
-                info['bucket'], '/o/', object_name
+                self.bucket,
+                '/o/',
+                object_name
             ])
 
             kwargs = {
@@ -128,17 +127,13 @@ class GCEUploaderJob(MashJob):
                 uri,
                 **kwargs
             )
-            self.source_regions[region] = self.cloud_image_name
-            self.send_log(
-                'Uploaded image has ID: {0}'.format(
-                    self.cloud_image_name
-                )
-            )
 
-    def _create_auth_file(self, credentials):
-        self.auth_file = NamedTemporaryFile()
-        with open(self.auth_file.name, 'w') as gce_auth:
-            gce_auth.write(JsonFormat.json_message(credentials))
+        self.source_regions[self.region] = self.cloud_image_name
+        self.send_log(
+            'Uploaded image has ID: {0}'.format(
+                self.cloud_image_name
+            )
+        )
 
     @property
     def image_file(self):

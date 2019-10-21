@@ -330,25 +330,6 @@ class TestJobCreatorService(object):
         with open('test/data/gce_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
-        job['target_account_info'] = {
-            'us-west1': {
-                'account': 'test-gce',
-                'bucket': 'images',
-                'family': 'sles-15',
-                'guest_os_features': ['UEFI_COMPATIBLE'],
-                'testing_account': 'testacnt1',
-                'is_publishing_account': True
-            },
-            'us-west2': {
-                'account': 'test-gce2',
-                'bucket': 'images',
-                'family': 'sles-15',
-                'guest_os_features': ['UEFI_COMPATIBLE'],
-                'testing_account': None,
-                'is_publishing_account': False
-            }
-        }
-
         message = MagicMock()
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
@@ -377,22 +358,11 @@ class TestJobCreatorService(object):
         assert data['cloud_architecture'] == 'x86_64'
         assert data['cloud_image_name'] == 'new_image_123'
         assert data['image_description'] == 'New Image #123'
-
-        for region, info in data['target_regions'].items():
-            if region == 'us-west2':
-                assert info['account'] == 'test-gce2'
-                assert info['bucket'] == 'images'
-                assert info['family'] == 'sles-15'
-                assert info['guest_os_features'] == ['UEFI_COMPATIBLE']
-                assert info['testing_account'] is None
-            else:
-                assert region == 'us-west1'
-                assert info['account'] == 'test-gce'
-                assert info['bucket'] == 'images'
-                assert info['family'] == 'sles-15'
-                assert info['guest_os_features'] == ['UEFI_COMPATIBLE']
-                assert info['testing_account'] == 'testacnt1'
-                assert info['is_publishing_account']
+        assert data['region'] == 'us-west1'
+        assert data['account'] == 'test-gce'
+        assert data['bucket'] == 'images'
+        assert data['family'] == 'sles-15'
+        assert data['guest_os_features'] == ['UEFI_COMPATIBLE']
 
         # Testing Job Doc
 
@@ -401,15 +371,9 @@ class TestJobCreatorService(object):
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'n1-standard-1'
         assert data['tests'] == ['test_stuff']
-
-        for region, info in data['test_regions'].items():
-            if region == 'us-west2':
-                assert info['account'] == 'test-gce2'
-            else:
-                assert region == 'us-west1'
-                assert info['account'] == 'test-gce'
-                assert info['testing_account'] == 'testacnt1'
-                assert info['is_publishing_account']
+        assert data['region'] == 'us-west1'
+        assert data['account'] == 'test-gce'
+        assert data['testing_account'] == 'testacnt1'
 
         # Raw Image Uploader Job Doc
 
@@ -434,8 +398,7 @@ class TestJobCreatorService(object):
         data = json.loads(mock_publish.mock_calls[6][1][2])['deprecation_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
-        assert 'test-gce' in data['deprecation_accounts']
-        assert 'test-gce2' in data['deprecation_accounts']
+        assert data['account'] == 'test-gce'
 
     def test_jobcreator_handle_invalid_service_message(self):
         message = MagicMock()

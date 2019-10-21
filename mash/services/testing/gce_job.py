@@ -23,14 +23,11 @@ import random
 from mash.mash_exceptions import MashTestingException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
-from mash.services.testing.utils import (
-    get_testing_account,
-    create_testing_thread,
-    process_test_result
-)
+from mash.services.testing.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair
 from mash.utils.gce import cleanup_gce_image
 from mash.utils.gce import get_region_list
+from mash.services.testing.img_proof_helper import img_proof_test
 
 instance_types = [
     'n1-standard-1',
@@ -50,7 +47,10 @@ class GCETestingJob(MashJob):
         Post initialization method.
         """
         try:
-            self.test_regions = self.job_config['test_regions']
+            self.account = self.job_config['account']
+            self.region = self.job_config['region']
+            self.bucket = self.job_config['bucket']
+            self.testing_account = self.job_config['testing_account']
             self.tests = self.job_config['tests']
         except KeyError as error:
             raise MashTestingException(
@@ -81,8 +81,6 @@ class GCETestingJob(MashJob):
         Tests image with img-proof and update status and results.
         """
         results = {}
-        jobs = []
-
         self.status = SUCCESS
         self.send_log(
             'Running img-proof tests against image with '
@@ -91,67 +89,64 @@ class GCETestingJob(MashJob):
             )
         )
 
-        for region, info in self.test_regions.items():
-            account = get_testing_account(info)
-            self.request_credentials([account])
-            creds = self.credentials[account]
+        accounts = [self.account]
+        if self.testing_account:
+            # Get both sets of credentials in case cleanup method is run.
+            accounts.append(self.testing_account)
 
-            if self.test_fallback_regions == []:
-                # fallback testing explicitly disabled
-                fallback_regions = []
+        self.request_credentials(accounts)
+        creds = self.credentials[self.testing_account or self.account]
+
+        if self.test_fallback_regions == []:
+            # fallback testing explicitly disabled
+            fallback_regions = []
+        else:
+            if self.test_fallback_regions is None:
+                fallback_regions = get_region_list(creds)
             else:
-                if self.test_fallback_regions is None:
-                    fallback_regions = get_region_list(creds)
-                else:
-                    fallback_regions = self.test_fallback_regions.copy()
-                if region in fallback_regions:
-                    fallback_regions.remove(region)
+                fallback_regions = self.test_fallback_regions.copy()
+            if self.region in fallback_regions:
+                fallback_regions.remove(self.region)
 
-            img_proof_kwargs = {
-                'cloud': self.cloud,
-                'description': self.description,
-                'distro': self.distro,
-                'fallback_regions': fallback_regions,
-                'image_id': self.source_regions[region],
-                'instance_type': self.instance_type,
-                'img_proof_timeout': self.img_proof_timeout,
-                'region': region,
-                'service_account_credentials': json.dumps(creds),
-                'ssh_private_key_file': self.ssh_private_key_file,
-                'ssh_user': self.ssh_user,
-                'tests': self.tests
-            }
+        img_proof_test(
+            results,
+            cloud=self.cloud,
+            description=self.description,
+            distro=self.distro,
+            fallback_regions=fallback_regions,
+            image_id=self.source_regions[self.region],
+            instance_type=self.instance_type,
+            img_proof_timeout=self.img_proof_timeout,
+            region=self.region,
+            service_account_credentials=json.dumps(creds),
+            ssh_private_key_file=self.ssh_private_key_file,
+            ssh_user=self.ssh_user,
+            tests=self.tests
+        )
 
-            process = create_testing_thread(results, img_proof_kwargs)
-            jobs.append(process)
+        self.status = process_test_result(
+            results[self.region],
+            self.send_log,
+            self.region
+        )
 
-        for job in jobs:
-            job.join()
+        if self.cleanup_images or \
+                (self.status != SUCCESS and self.cleanup_images is not False):
+            self.cleanup_image()
 
-        for region, result in results.items():
-            status = process_test_result(result, self.send_log, region)
-            if status != SUCCESS:
-                self.status = status
-
-            if self.cleanup_images or \
-                    (status != SUCCESS and self.cleanup_images is not False):
-                self.cleanup_image(region)
-
-    def cleanup_image(self, region):
-        account = self.test_regions[region]['account']
-        bucket = self.test_regions[region]['bucket']
-        credentials = self.credentials[account]
-        cloud_image_name = self.source_regions[region]
+    def cleanup_image(self):
+        credentials = self.credentials[self.account]
+        cloud_image_name = self.source_regions[self.region]
 
         self.send_log(
             'Cleaning up image: {0} in region: {1}.'.format(
                 cloud_image_name,
-                region
+                self.region
             )
         )
 
         try:
-            cleanup_gce_image(credentials, cloud_image_name, bucket)
+            cleanup_gce_image(credentials, cloud_image_name, self.bucket)
         except Exception as error:
             self.send_log(
                 'Failed to cleanup image: {0}'.format(error),

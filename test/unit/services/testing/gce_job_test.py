@@ -15,20 +15,10 @@ class TestGCETestingJob(object):
             'cloud': 'gce',
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
-            'test_regions': {
-                'us-west1': {
-                    'account': 'test-gce',
-                    'testing_account': 'testingacnt',
-                    'is_publishing_account': False,
-                    'bucket': 'bucket'
-                },
-                'us-central1-c': {
-                    'account': 'test-gce',
-                    'testing_account': 'testingacnt',
-                    'is_publishing_account': False,
-                    'bucket': 'bucket'
-                }
-            },
+            'region': 'us-west1-c',
+            'account': 'test-gce',
+            'testing_account': 'testingacnt',
+            'bucket': 'bucket',
             'tests': ['test_stuff'],
             'utctime': 'now',
             'cleanup_images': True
@@ -39,10 +29,12 @@ class TestGCETestingJob(object):
         self.config.get_img_proof_timeout.return_value = None
 
     def test_testing_gce_missing_key(self):
-        del self.job_config['test_regions']
+        del self.job_config['account']
 
         with pytest.raises(MashTestingException):
             GCETestingJob(self.job_config, self.config)
+
+        self.job_config['account'] = 'test-gce'
 
     @patch('mash.services.testing.gce_job.get_region_list')
     @patch('mash.services.testing.gce_job.cleanup_gce_image')
@@ -72,7 +64,7 @@ class TestGCETestingJob(object):
         )
         mock_random.choice.return_value = 'n1-standard-1'
         mock_os.path.exists.return_value = False
-        mock_get_region_list.return_value = ['us-west1']
+        mock_get_region_list.return_value = ['us-west1-c']
 
         if 'test_fallback_regions' in self.job_config:
             mock_test_image.side_effect = IpaRetryableError('quota exceeded')
@@ -89,57 +81,31 @@ class TestGCETestingJob(object):
                 'credentials': '321'
             }
         }
-        job.source_regions = {
-            'us-west1': 'ami-123',
-            'us-central1-c': 'ami-123'
-        }
+        job.source_regions = {'us-west1-c': 'ami-123'}
         job.run_job()
 
-        test_image_calls = [call(
-            'gce',
-            access_key_id=None,
-            cleanup=True,
-            description=job.description,
-            distro='sles',
-            image_id='ami-123',
-            instance_type='n1-standard-1',
-            log_level=30,
-            region='us-west1',
-            secret_access_key=None,
-            security_group_id=None,
-            service_account_file='/tmp/acnt.file',
-            ssh_key_name=None,
-            ssh_private_key_file='private_ssh_key.file',
-            ssh_user='root',
-            subnet_id=None,
-            tests=['test_stuff'],
-            timeout=None)
-        ]
-
-        if 'test_fallback_regions' in self.job_config:
-            for fallback_region in self.job_config['test_fallback_regions']:
-                test_image_calls.append(call(
-                    'gce',
-                    access_key_id=None,
-                    cleanup=True,
-                    description=job.description,
-                    distro='sles',
-                    image_id='ami-123',
-                    instance_type='n1-standard-1',
-                    log_level=30,
-                    region=fallback_region,
-                    secret_access_key=None,
-                    security_group_id=None,
-                    service_account_file='/tmp/acnt.file',
-                    ssh_key_name=None,
-                    ssh_private_key_file='private_ssh_key.file',
-                    ssh_user='root',
-                    subnet_id=None,
-                    tests=['test_stuff'],
-                    timeout=None)
-                )
-
-        mock_test_image.assert_has_calls(test_image_calls)
+        mock_test_image.assert_has_calls([
+            call(
+                'gce',
+                access_key_id=None,
+                cleanup=True,
+                description=job.description,
+                distro='sles',
+                image_id='ami-123',
+                instance_type='n1-standard-1',
+                log_level=30,
+                region='us-west1-c',
+                secret_access_key=None,
+                security_group_id=None,
+                service_account_file='/tmp/acnt.file',
+                ssh_key_name=None,
+                ssh_private_key_file='private_ssh_key.file',
+                ssh_user='root',
+                subnet_id=None,
+                tests=['test_stuff'],
+                timeout=None
+            )
+        ])
         mock_send_log.reset_mock()
         mock_cleanup_image.side_effect = Exception('Unable to cleanup image!')
 
@@ -155,5 +121,5 @@ class TestGCETestingJob(object):
         self.test_testing_run_gce_test()
 
     def test_testing_run_gce_test_explicit_fallback_region(self):
-        self.job_config['test_fallback_regions'] = ['us-central1-c']
+        self.job_config['test_fallback_regions'] = ['us-west1-c']
         self.test_testing_run_gce_test()

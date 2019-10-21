@@ -39,7 +39,7 @@ class GCEDeprecationJob(MashJob):
         Post initialization method.
         """
         try:
-            self.deprecation_accounts = self.job_config['deprecation_accounts']
+            self.account = self.job_config['account']
         except KeyError as error:
             raise MashDeprecationException(
                 'GCE deprecation Jobs require a(n) {0} '
@@ -63,41 +63,41 @@ class GCEDeprecationJob(MashJob):
             # There is no old image that needs deprecation for the job.
             return
 
-        for account in self.deprecation_accounts:
-            self.request_credentials([account])
-            credential = self.credentials[account]
+        self.request_credentials([self.account])
+        credential = self.credentials[self.account]
 
-            with create_json_file(credential) as auth_file:
-                try:
-                    ComputeEngine = get_driver(Provider.GCE)
-                    compute_driver = ComputeEngine(
-                        credential['client_email'],
-                        auth_file,
-                        project=credential['project_id']
-                    )
+        with create_json_file(credential) as auth_file:
+            try:
+                ComputeEngine = get_driver(Provider.GCE)
+                compute_driver = ComputeEngine(
+                    credential['client_email'],
+                    auth_file,
+                    project=credential['project_id']
+                )
 
-                    delete_on = datetime.date.today() + relativedelta(
-                        months=int(self.months_to_deletion)
-                    )
-                    delete_timestamp = delete_on.isoformat()
-                    delete_timestamp += 'T00:00:00.000-00:00'
+                delete_on = datetime.date.today() + relativedelta(
+                    months=int(self.months_to_deletion)
+                )
+                delete_timestamp = delete_on.isoformat()
+                delete_timestamp += 'T00:00:00.000-00:00'
 
-                    compute_driver.ex_deprecate_image(
-                        self.old_cloud_image_name,
-                        self.cloud_image_name,
-                        deleted=delete_timestamp
+                compute_driver.ex_deprecate_image(
+                    self.old_cloud_image_name,
+                    self.cloud_image_name,
+                    deleted=delete_timestamp
+                )
+                self.send_log(
+                    'Deprecated image {0}.'.format(
+                        self.old_cloud_image_name
                     )
-                    self.send_log(
-                        'Deprecated image {0}.'.format(
-                            self.old_cloud_image_name
-                        )
-                    )
-                except Exception as error:
-                    self.send_log(
-                        'There was an error deprecating image in {0}:'
-                        ' {1}'.format(
-                            account, error
-                        ),
-                        False
-                    )
-                    self.status = FAILED
+                )
+            except Exception as error:
+                self.send_log(
+                    'There was an error deprecating image in {0}:'
+                    ' {1}'.format(
+                        self.account,
+                        error
+                    ),
+                    False
+                )
+                self.status = FAILED
