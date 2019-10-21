@@ -21,6 +21,12 @@ class TestGCETestingJob(object):
                     'testing_account': 'testingacnt',
                     'is_publishing_account': False,
                     'bucket': 'bucket'
+                },
+                'us-central1-c': {
+                    'account': 'test-gce',
+                    'testing_account': 'testingacnt',
+                    'is_publishing_account': False,
+                    'bucket': 'bucket'
                 }
             },
             'tests': ['test_stuff'],
@@ -83,7 +89,10 @@ class TestGCETestingJob(object):
                 'credentials': '321'
             }
         }
-        job.source_regions = {'us-west1': 'ami-123'}
+        job.source_regions = {
+            'us-west1': 'ami-123',
+            'us-central1-c': 'ami-123'
+        }
         job.run_job()
 
         test_image_calls = [call(
@@ -137,9 +146,7 @@ class TestGCETestingJob(object):
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
         job.run_job()
-        assert mock_send_log.mock_calls[1] == call(
-            'Image tests failed in region: us-west1.', success=False
-        )
+        assert 'Image tests failed' in mock_send_log.mock_calls[1][1][0]
         assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
         assert mock_send_log.mock_calls[2][2] == {'success': False}
 

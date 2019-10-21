@@ -23,13 +23,10 @@ import random
 from mash.mash_exceptions import MashTestingException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
-from mash.services.testing.utils import (
-    get_testing_account,
-    create_testing_thread,
-    process_test_result
-)
+from mash.services.testing.utils import process_test_result
 from mash.utils.azure import delete_image, delete_page_blob
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
+from mash.services.testing.img_proof_helper import img_proof_test
 
 instance_types = [
     'Basic_A2',
@@ -50,7 +47,11 @@ class AzureTestingJob(MashJob):
         Post initialization method.
         """
         try:
-            self.test_regions = self.job_config['test_regions']
+            self.account = self.job_config['account']
+            self.region = self.job_config['region']
+            self.container = self.job_config['container']
+            self.resource_group = self.job_config['resource_group']
+            self.storage_account = self.job_config['storage_account']
             self.tests = self.job_config['tests']
         except KeyError as error:
             raise MashTestingException(
@@ -80,7 +81,6 @@ class AzureTestingJob(MashJob):
         Tests image with img-proof and update status and results.
         """
         results = {}
-        jobs = []
 
         self.status = SUCCESS
         self.send_log(
@@ -90,49 +90,42 @@ class AzureTestingJob(MashJob):
             )
         )
 
-        for region, info in self.test_regions.items():
-            account = get_testing_account(info)
-            self.request_credentials([account])
-            creds = self.credentials[account]
+        self.request_credentials([self.account])
+        creds = self.credentials[self.account]
 
-            img_proof_kwargs = {
-                'cloud': self.cloud,
-                'description': self.description,
-                'distro': self.distro,
-                'image_id': self.source_regions[region],
-                'instance_type': self.instance_type,
-                'img_proof_timeout': self.img_proof_timeout,
-                'region': region,
-                'service_account_credentials': json.dumps(creds),
-                'ssh_private_key_file': self.ssh_private_key_file,
-                'ssh_user': self.ssh_user,
-                'tests': self.tests
-            }
+        img_proof_test(
+            results,
+            cloud=self.cloud,
+            description=self.description,
+            distro=self.distro,
+            image_id=self.source_regions[self.region],
+            instance_type=self.instance_type,
+            img_proof_timeout=self.img_proof_timeout,
+            region=self.region,
+            service_account_credentials=json.dumps(creds),
+            ssh_private_key_file=self.ssh_private_key_file,
+            ssh_user=self.ssh_user,
+            tests=self.tests
+        )
 
-            process = create_testing_thread(results, img_proof_kwargs, region)
-            jobs.append(process)
+        self.status = process_test_result(
+            results[self.region],
+            self.send_log,
+            self.region
+        )
 
-        for job in jobs:
-            job.join()
+        if self.cleanup_images or \
+                (self.status != SUCCESS and self.cleanup_images is not False):
+            self.cleanup_image()
 
-        for region, result in results.items():
-            status = process_test_result(result, self.send_log, region)
-            if status != SUCCESS:
-                self.status = status
-
-            if self.cleanup_images or \
-                    (status != SUCCESS and self.cleanup_images is not False):
-                self.cleanup_image(region)
-
-    def cleanup_image(self, region):
-        reg_info = self.test_regions[region]
-        credentials = self.credentials[reg_info['account']]
+    def cleanup_image(self):
+        credentials = self.credentials[self.account]
         blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
         self.send_log(
             'Cleaning up image: {0} in region: {1}.'.format(
                 self.cloud_image_name,
-                region
+                self.region
             )
         )
 
@@ -140,15 +133,15 @@ class AzureTestingJob(MashJob):
             try:
                 delete_image(
                     auth_file,
-                    reg_info['source_resource_group'],
+                    self.resource_group,
                     self.cloud_image_name
                 )
                 delete_page_blob(
                     auth_file,
                     blob_name,
-                    reg_info['source_container'],
-                    reg_info['source_resource_group'],
-                    reg_info['source_storage_account']
+                    self.container,
+                    self.resource_group,
+                    self.storage_account
                 )
             except Exception as error:
                 self.send_log(

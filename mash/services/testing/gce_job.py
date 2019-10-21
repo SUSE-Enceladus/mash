@@ -122,7 +122,7 @@ class GCETestingJob(MashJob):
                 'tests': self.tests
             }
 
-            process = create_testing_thread(results, img_proof_kwargs, region)
+            process = create_testing_thread(results, img_proof_kwargs)
             jobs.append(process)
 
         for job in jobs:
