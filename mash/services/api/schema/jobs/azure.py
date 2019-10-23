@@ -58,11 +58,6 @@ azure_job_message['properties']['destination_storage_account'] = string_with_exa
 )
 azure_job_message['properties']['region'] = string_with_example('westus')
 
-azure_job_message['required'].append('emails')
-azure_job_message['required'].append('label')
-azure_job_message['required'].append('offer_id')
-azure_job_message['required'].append('publisher_id')
-azure_job_message['required'].append('sku')
 azure_job_message['required'].append('cloud_account')
 azure_job_message['properties']['image']['example'] = \
     'openSUSE-Leap-15.0-Azure'

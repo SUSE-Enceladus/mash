@@ -32,11 +32,6 @@ class AzureJob(BaseJob):
         """
         try:
             self.cloud_account = self.kwargs['cloud_account']
-            self.emails = self.kwargs['emails']
-            self.label = self.kwargs['label']
-            self.offer_id = self.kwargs['offer_id']
-            self.publisher_id = self.kwargs['publisher_id']
-            self.sku = self.kwargs['sku']
         except KeyError as error:
             raise MashJobCreatorException(
                 'Azure jobs require a(n) {0} key in the job doc.'.format(
@@ -53,6 +48,11 @@ class AzureJob(BaseJob):
         self.destination_container = self.kwargs.get('destination_container')
         self.destination_resource_group = self.kwargs.get('destination_resource_group')
         self.destination_storage_account = self.kwargs.get('destination_storage_account')
+        self.emails = self.kwargs.get('emails')
+        self.label = self.kwargs.get('label')
+        self.offer_id = self.kwargs.get('offer_id')
+        self.publisher_id = self.kwargs.get('publisher_id')
+        self.sku = self.kwargs.get('sku')
 
     def get_deprecation_message(self):
         """

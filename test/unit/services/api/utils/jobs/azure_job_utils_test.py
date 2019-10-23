@@ -16,8 +16,10 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from pytest import raises
 from unittest.mock import patch, Mock
 
+from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.jobs.azure import update_azure_job_accounts
 
 
@@ -37,6 +39,7 @@ def test_update_azure_job_accounts(
     mock_get_azure_account.return_value = account
 
     job_doc = {
+        'last_service': 'deprecation',
         'requesting_user': 'user1',
         'cloud_account': 'acnt1',
         'source_resource_group': 'rg-1',
@@ -44,9 +47,18 @@ def test_update_azure_job_accounts(
         'source_storage_account': 'sa1',
         'destination_resource_group': 'rg-2',
         'destination_container': 'container2',
-        'destination_storage_account': 'sa2'
+        'destination_storage_account': 'sa2',
+        'emails': 'jdoe@fake.com',
+        'label': 'New Image 123',
+        'offer_id': 'sles',
+        'publisher_id': 'suse'
     }
 
+    # Missing args causes exception
+    with raises(MashJobException):
+        update_azure_job_accounts(job_doc)
+
+    job_doc['sku'] = '123'
     result = update_azure_job_accounts(job_doc)
 
     assert result['region'] == 'southcentralus'
