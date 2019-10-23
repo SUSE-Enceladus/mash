@@ -20,63 +20,25 @@ from mash.services.api.utils.users import get_user_by_username
 from mash.services.api.utils.accounts.azure import get_azure_account_by_id
 
 
-def add_target_azure_account(
-    account,
-    accounts,
-    region,
-    source_container,
-    source_resource_group,
-    source_storage_account,
-    destination_container,
-    destination_resource_group,
-    destination_storage_account
-):
-    """
-    Update job with account information.
-    """
-    region = region or account.region
-    source_container = source_container or account.source_container
-    source_resource_group = \
-        source_resource_group or account.source_resource_group
-    source_storage_account = \
-        source_storage_account or account.source_storage_account
-    destination_container = destination_container or account.destination_container
-    destination_resource_group = \
-        destination_resource_group or account.destination_resource_group
-    destination_storage_account = \
-        destination_storage_account or account.destination_storage_account
-
-    accounts[region] = {
-        'account': account.name,
-        'source_container': source_container,
-        'source_resource_group': source_resource_group,
-        'source_storage_account': source_storage_account,
-        'destination_container': destination_container,
-        'destination_resource_group': destination_resource_group,
-        'destination_storage_account': destination_storage_account
-    }
-
-
 def update_azure_job_accounts(job_doc):
     """
     Update target_account_info for given job doc.
     """
     user = get_user_by_username(job_doc['requesting_user'])
     cloud_account = get_azure_account_by_id(job_doc['cloud_account'], user.id)
-    accounts = {}
 
-    add_target_azure_account(
-        cloud_account,
-        accounts,
-        job_doc.get('region'),
-        job_doc.get('source_container'),
-        job_doc.get('source_resource_group'),
-        job_doc.get('source_storage_account'),
-        job_doc.get('destination_container'),
-        job_doc.get('destination_resource_group'),
-        job_doc.get('destination_storage_account')
-    )
+    attrs = [
+        'region',
+        'source_container',
+        'source_resource_group',
+        'source_storage_account',
+        'destination_container',
+        'destination_resource_group',
+        'destination_storage_account'
+    ]
 
-    job_doc['target_account_info'] = accounts
+    for attr in attrs:
+        if attr not in job_doc:
+            job_doc[attr] = getattr(cloud_account, attr)
 
     return job_doc

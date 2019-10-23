@@ -18,7 +18,6 @@
 
 import logging
 import os
-import threading
 import traceback
 import random
 
@@ -43,7 +42,6 @@ def img_proof_test(
     fallback_regions=None
 ):
     saved_args = locals()
-    name = threading.current_thread().getName()
     security_group_id = None
     service_account_file = None
     key_name = None
@@ -109,16 +107,16 @@ def img_proof_test(
             fallback_regions.remove(retry_region)
         else:
             status = FAILED
-            results[name] = {
+            results[region] = {
                 'status': EXCEPTION, 'msg': str(error)
             }
     except Exception:
-        results[name] = {
+        results[region] = {
             'status': EXCEPTION, 'msg': str(traceback.format_exc())
         }
     else:
         status = SUCCESS if status == 0 else FAILED
-        results[name] = {
+        results[region] = {
             'status': status,
             'results_file': result['info']['results_file']
         }

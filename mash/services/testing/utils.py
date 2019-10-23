@@ -26,10 +26,11 @@ def get_testing_account(account_info):
     return account_info.get('testing_account', account_info['account'])
 
 
-def create_testing_thread(results, img_proof_kwargs, region):
+def create_testing_thread(results, img_proof_kwargs):
     process = Thread(
-        name=region, target=img_proof_test,
-        args=(results,), kwargs=img_proof_kwargs
+        target=img_proof_test,
+        args=(results,),
+        kwargs=img_proof_kwargs
     )
     process.start()
 

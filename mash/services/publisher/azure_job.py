@@ -47,8 +47,12 @@ class AzurePublisherJob(MashJob):
             self.label = self.job_config['label']
             self.offer_id = self.job_config['offer_id']
             self.publisher_id = self.job_config['publisher_id']
-            self.publish_regions = self.job_config['publish_regions']
             self.sku = self.job_config['sku']
+            self.account = self.job_config['account']
+            self.region = self.job_config['region']
+            self.container = self.job_config['container']
+            self.resource_group = self.job_config['resource_group']
+            self.storage_account = self.job_config['storage_account']
         except KeyError as error:
             raise MashPublisherException(
                 'Azure publisher Jobs require a(n) {0} '
@@ -66,88 +70,85 @@ class AzurePublisherJob(MashJob):
         """
         self.status = SUCCESS
 
-        for region_info in self.publish_regions:
-            self.request_credentials([region_info['account']])
-            credential = self.credentials[region_info['account']]
-            blob_name = ''.join([self.cloud_image_name, '.vhd'])
+        self.request_credentials([self.account])
+        credential = self.credentials[self.account]
+        blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
-            with create_json_file(credential) as auth_file:
+        with create_json_file(credential) as auth_file:
+            self.send_log(
+                'Publishing image for account: {},'
+                ' using cloud partner API.'.format(
+                    self.account
+                )
+            )
+
+            try:
+                blob_url = self._get_blob_url(
+                    auth_file,
+                    blob_name,
+                    self.container,
+                    self.resource_group,
+                    self.storage_account
+                )
+                offer_doc = request_cloud_partner_offer_doc(
+                    credential,
+                    self.offer_id,
+                    self.publisher_id
+                )
+
+                if self.vm_images_key:
+                    kwargs = {'vm_images_key': self.vm_images_key}
+                else:
+                    kwargs = {}
+
+                offer_doc = update_cloud_partner_offer_doc(
+                    offer_doc,
+                    blob_url,
+                    self.image_description,
+                    self.cloud_image_name,
+                    self.label,
+                    self.sku,
+                    **kwargs
+                )
+                put_cloud_partner_offer_doc(
+                    credential,
+                    offer_doc,
+                    self.offer_id,
+                    self.publisher_id
+                )
                 self.send_log(
-                    'Publishing image for account: {},'
-                    ' using cloud partner API.'.format(
-                        region_info['account']
+                    'Updated cloud partner offer doc for account: {}.'.format(
+                        self.account
                     )
                 )
 
-                try:
-                    blob_url = self._get_blob_url(
-                        auth_file,
-                        blob_name,
-                        region_info['destination_container'],
-                        region_info['destination_resource_group'],
-                        region_info['destination_storage_account']
-                    )
-                    offer_doc = request_cloud_partner_offer_doc(
+                if self.publish_offer:
+                    operation = publish_cloud_partner_offer(
                         credential,
+                        self.emails,
                         self.offer_id,
                         self.publisher_id
                     )
-
-                    if self.vm_images_key:
-                        kwargs = {'vm_images_key': self.vm_images_key}
-                    else:
-                        kwargs = {}
-
-                    offer_doc = update_cloud_partner_offer_doc(
-                        offer_doc,
-                        blob_url,
-                        self.image_description,
-                        self.cloud_image_name,
-                        self.label,
-                        self.sku,
-                        **kwargs
-                    )
-                    put_cloud_partner_offer_doc(
+                    wait_on_cloud_partner_operation(
                         credential,
-                        offer_doc,
-                        self.offer_id,
-                        self.publisher_id
-                    )
-                    self.send_log(
-                        'Updated cloud partner offer doc for account: '
-                        '{}.'.format(
-                            region_info['account']
-                        )
+                        operation,
+                        self.send_log
                     )
 
-                    if self.publish_offer:
-                        operation = publish_cloud_partner_offer(
-                            credential,
-                            self.emails,
-                            self.offer_id,
-                            self.publisher_id
-                        )
-                        wait_on_cloud_partner_operation(
-                            credential,
-                            operation,
-                            self.send_log
-                        )
-
-                    self.send_log(
-                        'Publishing finished for account: '
-                        '{}.'.format(
-                            region_info['account']
-                        )
+                self.send_log(
+                    'Publishing finished for account: {}.'.format(
+                        self.account
                     )
-                except Exception as error:
-                    self.send_log(
-                        'There was an error publishing image in {0}:'
-                        ' {1}'.format(
-                            region_info['account'], error
-                        ),
-                        False
-                    )
-                    self.status = FAILED
+                )
+            except Exception as error:
+                self.send_log(
+                    'There was an error publishing image in {0}: {1}'.format(
+                        self.account,
+                        error
+                    ),
+                    False
+                )
+                self.status = FAILED
 
     @staticmethod
     def _get_blob_url(

@@ -16,14 +16,11 @@ class TestAzurePublisherJob(object):
             'requesting_user': 'user1',
             'offer_id': 'sles',
             'cloud': 'azure',
-            'publish_regions': [
-                {
-                    'account': 'acnt1',
-                    'destination_resource_group': 'rg-2',
-                    'destination_container': 'container2',
-                    'destination_storage_account': 'sa2'
-                }
-            ],
+            'account': 'acnt1',
+            'resource_group': 'rg-2',
+            'container': 'container2',
+            'storage_account': 'sa2',
+            'region': 'East US',
             'publisher_id': 'suse',
             'sku': '123',
             'utctime': 'now',
@@ -54,7 +51,7 @@ class TestAzurePublisherJob(object):
         self.job.cloud_image_name = 'New Image'
 
     def test_publish_ec2_missing_key(self):
-        del self.job_config['publish_regions']
+        del self.job_config['account']
 
         with raises(MashPublisherException):
             AzurePublisherJob(self.job_config, self.config)

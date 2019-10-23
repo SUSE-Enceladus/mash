@@ -38,9 +38,14 @@ class AzureReplicationJob(MashJob):
         Post initialization method.
         """
         try:
-            self.image_description = self.job_config['image_description']
-            self.replication_source_regions = \
-                self.job_config['replication_source_regions']
+            self.account = self.job_config['account']
+            self.region = self.job_config['region']
+            self.source_container = self.job_config['source_container']
+            self.source_resource_group = self.job_config['source_resource_group']
+            self.source_storage_account = self.job_config['source_storage_account']
+            self.destination_container = self.job_config['destination_container']
+            self.destination_resource_group = self.job_config['destination_resource_group']
+            self.destination_storage_account = self.job_config['destination_storage_account']
         except KeyError as error:
             raise MashReplicationException(
                 'Azure replication Jobs require a(n) {0} '
@@ -65,56 +70,54 @@ class AzureReplicationJob(MashJob):
         """
         self.status = SUCCESS
 
-        for source_region, reg_info in self.replication_source_regions.items():
-            self.request_credentials([reg_info['account']])
-            credential = self.credentials[reg_info['account']]
-            blob_name = ''.join([self.cloud_image_name, '.vhd'])
+        self.request_credentials([self.account])
+        credential = self.credentials[self.account]
+        blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
-            with create_json_file(credential) as auth_file:
-                self.send_log(
-                    'Copying image for account: {},'
-                    ' to classic storage container.'.format(
-                        reg_info['account']
-                    )
+        with create_json_file(credential) as auth_file:
+            self.send_log(
+                'Copying image for account: {},'
+                ' to classic storage container.'.format(
+                    self.account
+                )
+            )
+
+            try:
+                copy_blob_to_classic_storage(
+                    auth_file,
+                    blob_name,
+                    self.source_container,
+                    self.source_resource_group,
+                    self.source_storage_account,
+                    self.destination_container,
+                    self.destination_resource_group,
+                    self.destination_storage_account
                 )
 
-                try:
-                    copy_blob_to_classic_storage(
+                if self.cleanup_images:
+                    self.send_log(
+                        'Removing ARM image and page blob for account: {}.'.format(
+                            self.account
+                        )
+                    )
+                    delete_image(
+                        auth_file,
+                        self.source_resource_group,
+                        self.cloud_image_name
+                    )
+                    delete_page_blob(
                         auth_file,
                         blob_name,
-                        reg_info['source_container'],
-                        reg_info['source_resource_group'],
-                        reg_info['source_storage_account'],
-                        reg_info['destination_container'],
-                        reg_info['destination_resource_group'],
-                        reg_info['destination_storage_account']
+                        self.source_container,
+                        self.source_resource_group,
+                        self.source_storage_account
                     )
-
-                    if self.cleanup_images:
-                        self.send_log(
-                            'Removing ARM image and page blob for account:'
-                            ' {}.'.format(
-                                reg_info['account']
-                            )
-                        )
-                        delete_image(
-                            auth_file,
-                            reg_info['source_resource_group'],
-                            self.cloud_image_name
-                        )
-                        delete_page_blob(
-                            auth_file,
-                            blob_name,
-                            reg_info['source_container'],
-                            reg_info['source_resource_group'],
-                            reg_info['source_storage_account']
-                        )
-                except Exception as error:
-                    self.send_log(
-                        'There was an error copying image blob in {0}:'
-                        ' {1}'.format(
-                            reg_info['account'], error
-                        ),
-                        False
-                    )
-                    self.status = FAILED
+            except Exception as error:
+                self.send_log(
+                    'There was an error copying image blob in {0}: {1}'.format(
+                        self.account,
+                        error
+                    ),
+                    False
+                )
+                self.status = FAILED

@@ -31,6 +31,7 @@ class AzureJob(BaseJob):
         Post initialization method.
         """
         try:
+            self.cloud_account = self.kwargs['cloud_account']
             self.emails = self.kwargs['emails']
             self.label = self.kwargs['label']
             self.offer_id = self.kwargs['offer_id']
@@ -45,6 +46,13 @@ class AzureJob(BaseJob):
 
         self.vm_images_key = self.kwargs.get('vm_images_key')
         self.publish_offer = self.kwargs.get('publish_offer', False)
+        self.region = self.kwargs.get('region')
+        self.source_container = self.kwargs.get('source_container')
+        self.source_resource_group = self.kwargs.get('source_resource_group')
+        self.source_storage_account = self.kwargs.get('source_storage_account')
+        self.destination_container = self.kwargs.get('destination_container')
+        self.destination_resource_group = self.kwargs.get('destination_resource_group')
+        self.destination_storage_account = self.kwargs.get('destination_storage_account')
 
     def get_deprecation_message(self):
         """
@@ -70,10 +78,14 @@ class AzureJob(BaseJob):
                 'label': self.label,
                 'offer_id': self.offer_id,
                 'cloud': self.cloud,
-                'publish_regions': self.get_publisher_regions(),
                 'publisher_id': self.publisher_id,
                 'sku': self.sku,
-                'publish_offer': self.publish_offer
+                'publish_offer': self.publish_offer,
+                'account': self.cloud_account,
+                'region': self.region,
+                'container': self.destination_container,
+                'resource_group': self.destination_resource_group,
+                'storage_account': self.destination_storage_account
             }
         }
 
@@ -85,34 +97,22 @@ class AzureJob(BaseJob):
 
         return JsonFormat.json_message(publisher_message)
 
-    def get_publisher_regions(self):
-        """
-        Return a list of publisher region info.
-        """
-        publish_regions = []
-
-        for source_region, value in self.target_account_info.items():
-            publish_regions.append({
-                'account': value['account'],
-                'destination_container': value['destination_container'],
-                'destination_resource_group':
-                    value['destination_resource_group'],
-                'destination_storage_account':
-                    value['destination_storage_account']
-            })
-
-        return publish_regions
-
     def get_replication_message(self):
         """
         Build replication job message and publish to replication exchange.
         """
         replication_message = {
             'replication_job': {
-                'image_description': self.image_description,
                 'cloud': self.cloud,
-                'replication_source_regions':
-                    self.get_replication_source_regions()
+                'account': self.cloud_account,
+                'region': self.region,
+                'source_container': self.source_container,
+                'source_resource_group': self.source_resource_group,
+                'source_storage_account': self.source_storage_account,
+                'destination_container': self.destination_container,
+                'destination_resource_group': self.destination_resource_group,
+                'destination_storage_account':
+                    self.destination_storage_account
             }
         }
         replication_message['replication_job'].update(self.base_message)
@@ -123,32 +123,63 @@ class AzureJob(BaseJob):
 
         return JsonFormat.json_message(replication_message)
 
-    def get_replication_source_regions(self):
+    def get_testing_message(self):
         """
-        Return a dictionary of replication source regions.
+        Build testing job message.
         """
-        return self.target_account_info
+        testing_message = {
+            'testing_job': {
+                'cloud': self.cloud,
+                'tests': self.tests,
+                'account': self.cloud_account,
+                'region': self.region,
+                'container': self.source_container,
+                'resource_group': self.source_resource_group,
+                'storage_account': self.source_storage_account
+            }
+        }
 
-    def get_testing_regions(self):
-        """
-        Return a dictionary of target test regions.
-        """
-        return self.target_account_info
+        if self.distro:
+            testing_message['testing_job']['distro'] = self.distro
 
-    def get_uploader_regions(self):
-        """
-        Return a dictionary of target uploader regions.
-        """
-        target_regions = {}
+        if self.instance_type:
+            testing_message['testing_job']['instance_type'] = \
+                self.instance_type
 
-        for source_region, value in self.target_account_info.items():
-            target_regions[source_region] = {}
-            target_regions[source_region]['account'] = value['account']
-            target_regions[source_region]['container'] = \
-                value['source_container']
-            target_regions[source_region]['storage_account'] = \
-                value['source_storage_account']
-            target_regions[source_region]['resource_group'] = \
-                value['source_resource_group']
+        if self.last_service == 'testing' and \
+                self.cleanup_images in [True, None]:
+            testing_message['testing_job']['cleanup_images'] = True
 
-        return target_regions
+        elif self.cleanup_images is False:
+            testing_message['testing_job']['cleanup_images'] = False
+
+        if self.cloud_architecture:
+            testing_message['testing_job']['cloud_architecture'] = \
+                self.cloud_architecture
+
+        testing_message['testing_job'].update(self.base_message)
+
+        return JsonFormat.json_message(testing_message)
+
+    def get_uploader_message(self):
+        """
+        Build uploader job message.
+        """
+        uploader_message = {
+            'uploader_job': {
+                'cloud_image_name': self.cloud_image_name,
+                'cloud': self.cloud,
+                'account': self.cloud_account,
+                'region': self.region,
+                'container': self.source_container,
+                'resource_group': self.source_resource_group,
+                'storage_account': self.source_storage_account
+            }
+        }
+        uploader_message['uploader_job'].update(self.base_message)
+
+        if self.cloud_architecture:
+            uploader_message['uploader_job']['cloud_architecture'] = \
+                self.cloud_architecture
+
+        return JsonFormat.json_message(uploader_message)

@@ -38,7 +38,6 @@ class BaseJob(object):
             self.image_description = kwargs['image_description']
             self.distro = kwargs['distro']
             self.download_url = kwargs['download_url']
-            self.target_account_info = kwargs['target_account_info']
         except KeyError as error:
             raise MashJobCreatorException(
                 'Jobs require a(n) {0} key in the job doc.'.format(
@@ -62,6 +61,7 @@ class BaseJob(object):
         self.raw_image_upload_type = kwargs.get('raw_image_upload_type')
         self.raw_image_upload_location = kwargs.get('raw_image_upload_location')
         self.raw_image_upload_account = kwargs.get('raw_image_upload_account')
+        self.target_account_info = kwargs.get('target_account_info')
         self.kwargs = kwargs
 
         self.base_message = {
