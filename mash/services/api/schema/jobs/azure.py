@@ -57,6 +57,13 @@ azure_job_message['properties']['destination_storage_account'] = string_with_exa
     'storage_account2'
 )
 azure_job_message['properties']['region'] = string_with_example('westus')
+azure_job_message['properties']['sas_token'] = string_with_example(
+    'sv=2015-07-08&sr=b&sig=123456789&se=2016-10-18T21&sp=row'
+)
+azure_job_message['properties']['sas_container'] = string_with_example('container1')
+azure_job_message['properties']['sas_storage_account'] = string_with_example(
+    'storage_account1'
+)
 
 azure_job_message['required'].append('cloud_account')
 azure_job_message['properties']['image']['example'] = \

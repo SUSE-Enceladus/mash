@@ -39,10 +39,7 @@ class AzureUploaderJob(MashJob):
         self.cloud_image_name = ''
 
         try:
-            self.account = self.job_config['account']
-            self.region = self.job_config['region']
             self.container = self.job_config['container']
-            self.resource_group = self.job_config['resource_group']
             self.storage_account = self.job_config['storage_account']
             self.base_cloud_image_name = self.job_config['cloud_image_name']
         except KeyError as error:
@@ -53,6 +50,11 @@ class AzureUploaderJob(MashJob):
                 )
             )
 
+        self.account = self.job_config.get('account')
+        self.region = self.job_config.get('region')
+        self.resource_group = self.job_config.get('resource_group')
+        self.sas_token = self.job_config.get('sas_token')
+
     def run_job(self):
         self.status = SUCCESS
         self.send_log('Uploading image.')
@@ -61,21 +63,63 @@ class AzureUploaderJob(MashJob):
             self.base_cloud_image_name
         )
 
-        self.request_credentials([self.account])
-        credentials = self.credentials[self.account]
         blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
+        if self.sas_token:
+            # Jobs with sas_tokens are upload only
+            self._upload_image(blob_name)
+            self.send_log(
+                'Uploaded blob: {blob} using sas token.'.format(
+                    blob=blob_name
+                )
+            )
+        else:
+            self.request_credentials([self.account])
+            credentials = self.credentials[self.account]
+
+            self._upload_image(blob_name, credentials)
+            self._create_image(blob_name, credentials)
+
+            self.source_regions[self.region] = self.cloud_image_name
+            self.send_log(
+                'Uploaded image has ID: {0} in region {1}'.format(
+                    self.cloud_image_name,
+                    self.region
+                )
+            )
+
+    @property
+    def image_file(self):
+        """System image file property."""
+        return self._image_file
+
+    @image_file.setter
+    def image_file(self, system_image_file):
+        """
+        Setter for image_file list.
+        """
+        self._image_file = system_image_file
+
+    def _upload_image(self, blob_name, credentials=None):
+        """
+        Upload image as a page blob to an ARM container.
+
+        Run upload in a separate process as zero page check
+        is CPU intensive. Raise exception if result queue
+        is not empty.
+        """
         result = SimpleQueue()
         args = (
             blob_name,
             self.container,
-            credentials,
             self.image_file,
             self.config.get_azure_max_retry_attempts(),
             self.config.get_azure_max_workers(),
-            self.resource_group,
             self.storage_account,
-            result
+            result,
+            credentials,
+            self.resource_group,
+            self.sas_token
         )
         upload_process = Process(
             target=upload_azure_image,
@@ -87,6 +131,10 @@ class AzureUploaderJob(MashJob):
         if result.empty() is False:
             raise MashUploadException(result.get())
 
+    def _create_image(self, blob_name, credentials):
+        """
+        Create image in ARM from existing page blob.
+        """
         with create_json_file(credentials) as auth_file:
             compute_client = get_client_from_auth_file(
                 ComputeManagementClient, auth_path=auth_file
@@ -112,23 +160,3 @@ class AzureUploaderJob(MashJob):
                 }
             )
             async_create_image.wait()
-
-        self.source_regions[self.region] = self.cloud_image_name
-        self.send_log(
-            'Uploaded image has ID: {0} in region {1}'.format(
-                self.cloud_image_name,
-                self.region
-            )
-        )
-
-    @property
-    def image_file(self):
-        """System image file property."""
-        return self._image_file
-
-    @image_file.setter
-    def image_file(self, system_image_file):
-        """
-        Setter for image_file list.
-        """
-        self._image_file = system_image_file

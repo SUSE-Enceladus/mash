@@ -62,3 +62,14 @@ def test_update_azure_job_accounts(
     result = update_azure_job_accounts(job_doc)
 
     assert result['region'] == 'southcentralus'
+
+    # Not all sas args
+    job_doc['sas_token'] = 'sas_token'
+    with raises(MashJobException):
+        update_azure_job_accounts(job_doc)
+
+    # SAS with last_service not uploader
+    job_doc['sas_container'] = 'sas_container'
+    job_doc['sas_storage_account'] = 'sas_storage_account'
+    with raises(MashJobException):
+        update_azure_job_accounts(job_doc)
