@@ -35,7 +35,7 @@ class BaseConfig(object):
         self.config_data = None
         try:
             with open(config_file, 'r') as config:
-                self.config_data = yaml.load(config)
+                self.config_data = yaml.safe_load(config)
         except Exception as e:
             raise MashConfigException(
                 'Failed reading config file: {config}: {error}'.format(
