@@ -22,6 +22,7 @@
   "family": "sles-15",
   "tests": ["test_stuff"],
   "notification_email": "test@fake.com",
+  "guest_os_features": ["UEFI_COMPATIBLE"],
   "raw_image_upload_type": "s3bucket",
   "raw_image_upload_account": "account",
   "raw_image_upload_location": "location"

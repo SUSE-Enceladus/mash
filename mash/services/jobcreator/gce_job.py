@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.mash_exceptions import MashJobCreatorException
 from mash.services.jobcreator.base_job import BaseJob
 from mash.utils.json_format import JsonFormat
 
@@ -29,6 +30,18 @@ class GCEJob(BaseJob):
         """
         Post initialization method.
         """
+        try:
+            self.cloud_account = self.kwargs['cloud_account']
+            self.region = self.kwargs['region']
+            self.bucket = self.kwargs['bucket']
+            self.testing_account = self.kwargs['testing_account']
+        except KeyError as error:
+            raise MashJobCreatorException(
+                'GCE jobs require a(n) {0} key in the job doc.'.format(
+                    error
+                )
+            )
+
         self.family = self.kwargs.get('family')
         self.months_to_deletion = self.kwargs.get(
             'months_to_deletion', 6
@@ -42,7 +55,7 @@ class GCEJob(BaseJob):
         deprecation_message = {
             'deprecation_job': {
                 'cloud': self.cloud,
-                'deprecation_accounts': self.get_deprecation_accounts(),
+                'account': self.cloud_account,
                 'months_to_deletion': self.months_to_deletion
             }
         }
@@ -53,17 +66,6 @@ class GCEJob(BaseJob):
                 self.old_cloud_image_name
 
         return JsonFormat.json_message(deprecation_message)
-
-    def get_deprecation_accounts(self):
-        """
-        Return list of deprecation account info.
-        """
-        deprecation_accounts = []
-
-        for source_region, value in self.target_account_info.items():
-            deprecation_accounts.append(value['account'])
-
-        return deprecation_accounts
 
     def get_publisher_message(self):
         """
@@ -91,23 +93,37 @@ class GCEJob(BaseJob):
 
         return JsonFormat.json_message(replication_message)
 
-    def get_testing_regions(self):
+    def get_testing_message(self):
         """
-        Return a dictionary of target test regions.
+        Build testing job message.
         """
-        test_regions = {}
-
-        for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = {
-                'account': value['account'],
-                'is_publishing_account': value['is_publishing_account'],
-                'bucket': value['bucket']
+        testing_message = {
+            'testing_job': {
+                'cloud': self.cloud,
+                'tests': self.tests,
+                'account': self.cloud_account,
+                'bucket': self.bucket,
+                'region': self.region,
+                'testing_account': self.testing_account,
+                'distro': self.distro,
+                'instance_type': self.instance_type
             }
+        }
 
-            if value.get('testing_account'):
-                test_regions[source_region]['testing_account'] = value['testing_account']
+        if self.last_service == 'testing' and \
+                self.cleanup_images in [True, None]:
+            testing_message['testing_job']['cleanup_images'] = True
 
-        return test_regions
+        elif self.cleanup_images is False:
+            testing_message['testing_job']['cleanup_images'] = False
+
+        if self.test_fallback_regions or self.test_fallback is False:
+            testing_message['testing_job']['test_fallback_regions'] = \
+                self.test_fallback_regions
+
+        testing_message['testing_job'].update(self.base_message)
+
+        return JsonFormat.json_message(testing_message)
 
     def get_uploader_message(self):
         """
@@ -120,7 +136,9 @@ class GCEJob(BaseJob):
                 'image_description': self.image_description,
                 'family': self.family,
                 'guest_os_features': self.guest_os_features,
-                'target_regions': self.get_uploader_regions()
+                'account': self.cloud_account,
+                'bucket': self.bucket,
+                'region': self.region
             }
         }
         uploader_message['uploader_job'].update(self.base_message)
@@ -130,9 +148,3 @@ class GCEJob(BaseJob):
                 self.cloud_architecture
 
         return JsonFormat.json_message(uploader_message)
-
-    def get_uploader_regions(self):
-        """
-        Return a dictionary of target uploader regions.
-        """
-        return self.target_account_info

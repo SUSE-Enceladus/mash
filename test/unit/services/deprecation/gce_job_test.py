@@ -13,7 +13,7 @@ class TestGCEDeprecationJob(object):
             'cloud': 'gce',
             'requesting_user': 'user1',
             'old_cloud_image_name': 'old_image_123',
-            'deprecation_accounts': ['test-gce'],
+            'account': 'test-gce',
             'utctime': 'now'
         }
 
@@ -27,10 +27,12 @@ class TestGCEDeprecationJob(object):
         }
 
     def test_deprecation_gce_missing_key(self):
-        del self.job_config['deprecation_accounts']
+        del self.job_config['account']
 
         with raises(MashDeprecationException):
             GCEDeprecationJob(self.job_config, self.config)
+
+        self.job_config['account'] = 'test-gce'
 
     @patch.object(GCEDeprecationJob, 'send_log')
     @patch('mash.services.deprecation.gce_job.Provider')

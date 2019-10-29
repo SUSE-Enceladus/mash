@@ -21,59 +21,32 @@ from mash.services.api.utils.users import get_user_by_username
 from mash.services.api.utils.accounts.gce import get_gce_account_by_id
 
 
-def add_target_gce_account(
-    account,
-    accounts,
-    bucket=None,
-    region=None,
-    testing_account=None,
-    family=None
-):
-    """
-    Update job with account information.
-    """
-    testing_account = testing_account or account.testing_account
-    region = region or account.region
-    bucket = bucket or account.bucket
-
-    if account.is_publishing_account and not family:
-        raise MashJobException(
-            'Jobs using a GCE publishing account require a family.'
-        )
-
-    if account.is_publishing_account and not testing_account:
-        raise MashJobException(
-            'Jobs using a GCE publishing account require'
-            ' the use of a testing account.'
-        )
-
-    accounts[region] = {
-        'account': account.name,
-        'bucket': bucket,
-        'is_publishing_account': account.is_publishing_account
-    }
-
-    if testing_account:
-        accounts[region]['testing_account'] = testing_account
-
-
 def update_gce_job_accounts(job_doc):
     """
     Update target_account_info for given job doc.
     """
     user = get_user_by_username(job_doc['requesting_user'])
     cloud_account = get_gce_account_by_id(job_doc['cloud_account'], user.id)
-    accounts = {}
 
-    add_target_gce_account(
-        cloud_account,
-        accounts,
-        job_doc.get('bucket'),
-        job_doc.get('region'),
-        job_doc.get('testing_account'),
-        job_doc.get('family')
-    )
+    attrs = [
+        'region',
+        'bucket',
+        'testing_account'
+    ]
 
-    job_doc['target_account_info'] = accounts
+    for attr in attrs:
+        if attr not in job_doc:
+            job_doc[attr] = getattr(cloud_account, attr)
+
+    if cloud_account.is_publishing_account and not job_doc.get('family'):
+        raise MashJobException(
+            'Jobs using a GCE publishing account require a family.'
+        )
+
+    if cloud_account.is_publishing_account and not job_doc['testing_account']:
+        raise MashJobException(
+            'Jobs using a GCE publishing account require'
+            ' the use of a testing account.'
+        )
 
     return job_doc

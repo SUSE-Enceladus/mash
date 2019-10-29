@@ -40,12 +40,9 @@ class TestGCEUploaderJob(object):
             'utctime': 'now',
             'family': 'sles-12',
             'guest_os_features': ['UEFI_COMPATIBLE'],
-            'target_regions': {
-                'us-west1-a': {
-                    'account': 'test',
-                    'bucket': 'images'
-                }
-            },
+            'region': 'us-west1-a',
+            'account': 'test',
+            'bucket': 'images',
             'cloud_image_name': 'sles-12-sp4-v20180909',
             'image_description': 'description 20180909'
         }
@@ -66,27 +63,31 @@ class TestGCEUploaderJob(object):
         with raises(MashUploadException):
             GCEUploaderJob(job_doc, self.config)
 
-        job_doc['target_regions'] = {'us-west1-a': {'account': 'test'}}
+    def test_post_init_sles_11(self):
+        job_doc = {
+            'id': '1',
+            'last_service': 'uploader',
+            'cloud': 'gce',
+            'requesting_user': 'user1',
+            'utctime': 'now',
+            'family': 'sles-11',
+            'guest_os_features': ['UEFI_COMPATIBLE'],
+            'region': 'us-west1-a',
+            'account': 'test',
+            'bucket': 'images',
+            'cloud_image_name': 'sles-11-sp4-v20180909',
+            'image_description': 'description 20180909'
+        }
+
         with raises(MashUploadException):
             GCEUploaderJob(job_doc, self.config)
 
-        job_doc['cloud_image_name'] = 'test image 123'
-        with raises(MashUploadException):
-            GCEUploaderJob(job_doc, self.config)
-
-        job_doc['cloud_image_name'] = 'sles-11'
-        job_doc['image_description'] = 'test image description'
-        with raises(MashUploadException):
-            GCEUploaderJob(job_doc, self.config)
-
-    @patch('mash.services.uploader.gce_job.NamedTemporaryFile')
     @patch('mash.services.uploader.gce_job.Provider')
     @patch('mash.services.uploader.gce_job.get_driver')
     @patch('mash.services.uploader.gce_job.GoogleStorageDriver')
     @patch('builtins.open')
     def test_upload(
-        self, mock_open, mock_storage_driver, mock_get_driver, mock_provider,
-        mock_NamedTemporaryFile
+        self, mock_open, mock_storage_driver, mock_get_driver, mock_provider
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
@@ -100,10 +101,6 @@ class TestGCEUploaderJob(object):
 
         storage_driver = Mock()
         mock_storage_driver.return_value = storage_driver
-
-        tempfile = Mock()
-        tempfile.name = 'tempfile'
-        mock_NamedTemporaryFile.return_value = tempfile
 
         self.job.run_job()
 
