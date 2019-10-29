@@ -41,7 +41,7 @@ class TestGCETestingJob(object):
     @patch('mash.services.testing.gce_job.os')
     @patch('mash.services.testing.gce_job.create_ssh_key_pair')
     @patch('mash.services.testing.gce_job.random')
-    @patch('mash.services.testing.img_proof_helper.NamedTemporaryFile')
+    @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.testing.img_proof_helper.test_image')
     @patch.object(GCETestingJob, 'send_log')
     def test_testing_run_gce_test(

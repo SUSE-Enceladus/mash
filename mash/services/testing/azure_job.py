@@ -16,7 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import json
 import os
 import random
 
@@ -91,22 +90,23 @@ class AzureTestingJob(MashJob):
         )
 
         self.request_credentials([self.account])
-        creds = self.credentials[self.account]
+        credentials = self.credentials[self.account]
 
-        img_proof_test(
-            results,
-            cloud=self.cloud,
-            description=self.description,
-            distro=self.distro,
-            image_id=self.source_regions[self.region],
-            instance_type=self.instance_type,
-            img_proof_timeout=self.img_proof_timeout,
-            region=self.region,
-            service_account_credentials=json.dumps(creds),
-            ssh_private_key_file=self.ssh_private_key_file,
-            ssh_user=self.ssh_user,
-            tests=self.tests
-        )
+        with create_json_file(credentials) as auth_file:
+            img_proof_test(
+                results,
+                cloud=self.cloud,
+                description=self.description,
+                distro=self.distro,
+                image_id=self.source_regions[self.region],
+                instance_type=self.instance_type,
+                img_proof_timeout=self.img_proof_timeout,
+                region=self.region,
+                service_account_file=auth_file,
+                ssh_private_key_file=self.ssh_private_key_file,
+                ssh_user=self.ssh_user,
+                tests=self.tests
+            )
 
         self.status = process_test_result(
             results[self.region],

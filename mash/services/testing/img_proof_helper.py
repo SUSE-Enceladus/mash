@@ -17,13 +17,11 @@
 #
 
 import logging
-import os
 import traceback
 import random
 
 from img_proof.ipa_controller import test_image
 from img_proof.ipa_exceptions import IpaRetryableError
-from tempfile import NamedTemporaryFile
 
 from mash.csp import CSP
 from mash.services.status_levels import EXCEPTION, FAILED, SUCCESS
@@ -37,13 +35,12 @@ from ec2imgutils.ec2setup import EC2Setup
 def img_proof_test(
     results, cloud=None, access_key_id=None, description=None, distro=None,
     image_id=None, instance_type=None, img_proof_timeout=None, region=None,
-    secret_access_key=None, service_account_credentials=None,
+    secret_access_key=None, service_account_file=None,
     ssh_private_key_file=None, ssh_user=None, subnet_id=None, tests=None,
     fallback_regions=None
 ):
     saved_args = locals()
     security_group_id = None
-    service_account_file = None
     key_name = None
     result = {}
     retry_region = None
@@ -75,11 +72,6 @@ def img_proof_test(
             else:
                 vpc_id = get_vpc_id_from_subnet(client, subnet_id)
                 security_group_id = ec2_setup.create_security_group(vpc_id=vpc_id)
-        else:
-            temp_file = NamedTemporaryFile(delete=False, mode='w+')
-            temp_file.write(service_account_credentials)
-            temp_file.close()
-            service_account_file = temp_file.name
 
         status, result = test_image(
             cloud,
@@ -141,7 +133,5 @@ def img_proof_test(
                     waiter.wait(InstanceIds=[instance_id])
 
                 ec2_setup.clean_up()
-            else:
-                os.remove(service_account_file)
         except Exception:
             pass
