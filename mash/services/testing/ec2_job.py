@@ -18,10 +18,11 @@
 
 import os
 import random
+import traceback
 
 from mash.mash_exceptions import MashTestingException
 from mash.services.mash_job import MashJob
-from mash.services.status_levels import SUCCESS
+from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.utils import (
     get_testing_account,
     process_test_result
@@ -93,8 +94,6 @@ class EC2TestingJob(MashJob):
         """
         Tests image with img-proof and update status and results.
         """
-        results = {}
-
         self.status = SUCCESS
         self.send_log(
             'Running img-proof tests against image with '
@@ -121,26 +120,30 @@ class EC2TestingJob(MashJob):
                 self.ssh_private_key_file,
                 subnet_id=info.get('subnet')
             ) as network_details:
-                img_proof_test(
-                    results,
-                    access_key_id=credentials['access_key_id'],
-                    cloud=self.cloud,
-                    description=self.description,
-                    distro=self.distro,
-                    image_id=self.source_regions[region],
-                    instance_type=self.instance_type,
-                    img_proof_timeout=self.img_proof_timeout,
-                    region=region,
-                    secret_access_key=credentials['secret_access_key'],
-                    security_group_id=network_details['security_group_id'],
-                    ssh_key_name=network_details['ssh_key_name'],
-                    ssh_private_key_file=self.ssh_private_key_file,
-                    ssh_user=self.ssh_user,
-                    subnet_id=network_details['subnet_id'],
-                    tests=self.tests
-                )
+                try:
+                    result = img_proof_test(
+                        access_key_id=credentials['access_key_id'],
+                        cloud=self.cloud,
+                        description=self.description,
+                        distro=self.distro,
+                        image_id=self.source_regions[region],
+                        instance_type=self.instance_type,
+                        img_proof_timeout=self.img_proof_timeout,
+                        region=region,
+                        secret_access_key=credentials['secret_access_key'],
+                        security_group_id=network_details['security_group_id'],
+                        ssh_key_name=network_details['ssh_key_name'],
+                        ssh_private_key_file=self.ssh_private_key_file,
+                        ssh_user=self.ssh_user,
+                        subnet_id=network_details['subnet_id'],
+                        tests=self.tests
+                    )
+                except Exception:
+                    result = {
+                        'status': EXCEPTION,
+                        'msg': str(traceback.format_exc())
+                    }
 
-                result = results[region]
                 status = process_test_result(result, self.send_log, region)
                 if status != SUCCESS:
                     self.status = status

@@ -80,10 +80,10 @@ def get_region_list(credentials):
         )
         regions = compute_driver.ex_list_regions()
 
-    region_names = []
+    region_names = set()
     for region in regions:
         if region.status == 'UP':
             # we actually need a specifc zone not just the region, pick one
-            region_names.append(random.choice(region.zones).name)
+            region_names.add(random.choice(region.zones).name)
 
     return region_names

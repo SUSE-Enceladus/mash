@@ -2,4 +2,3 @@
 omit =
     */version.py
     */wsgi.py
-    */img_proof_helper.py
