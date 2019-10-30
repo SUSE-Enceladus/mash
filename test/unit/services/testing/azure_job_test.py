@@ -55,7 +55,8 @@ class TestAzureTestingJob(object):
                 'summary': '...',
                 'info': {
                     'log_file': 'test.log',
-                    'results_file': 'test.results'
+                    'results_file': 'test.results',
+                    'instance': 'instance-abc'
                 }
             }
         )
