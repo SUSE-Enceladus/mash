@@ -16,13 +16,13 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import json
 import os
 import random
+import traceback
 
 from mash.mash_exceptions import MashTestingException
 from mash.services.mash_job import MashJob
-from mash.services.status_levels import SUCCESS
+from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.utils import process_test_result
 from mash.utils.azure import delete_image, delete_page_blob
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
@@ -80,8 +80,6 @@ class AzureTestingJob(MashJob):
         """
         Tests image with img-proof and update status and results.
         """
-        results = {}
-
         self.status = SUCCESS
         self.send_log(
             'Running img-proof tests against image with '
@@ -91,25 +89,31 @@ class AzureTestingJob(MashJob):
         )
 
         self.request_credentials([self.account])
-        creds = self.credentials[self.account]
+        credentials = self.credentials[self.account]
 
-        img_proof_test(
-            results,
-            cloud=self.cloud,
-            description=self.description,
-            distro=self.distro,
-            image_id=self.source_regions[self.region],
-            instance_type=self.instance_type,
-            img_proof_timeout=self.img_proof_timeout,
-            region=self.region,
-            service_account_credentials=json.dumps(creds),
-            ssh_private_key_file=self.ssh_private_key_file,
-            ssh_user=self.ssh_user,
-            tests=self.tests
-        )
+        with create_json_file(credentials) as auth_file:
+            try:
+                result = img_proof_test(
+                    cloud=self.cloud,
+                    description=self.description,
+                    distro=self.distro,
+                    image_id=self.source_regions[self.region],
+                    instance_type=self.instance_type,
+                    img_proof_timeout=self.img_proof_timeout,
+                    region=self.region,
+                    service_account_file=auth_file,
+                    ssh_private_key_file=self.ssh_private_key_file,
+                    ssh_user=self.ssh_user,
+                    tests=self.tests
+                )
+            except Exception:
+                result = {
+                    'status': EXCEPTION,
+                    'msg': str(traceback.format_exc())
+                }
 
         self.status = process_test_result(
-            results[self.region],
+            result,
             self.send_log,
             self.region
         )

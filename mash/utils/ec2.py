@@ -18,6 +18,10 @@
 
 import boto3
 
+from contextlib import contextmanager, suppress
+from mash.utils.mash_utils import generate_name, get_key_from_file
+from ec2imgutils.ec2setup import EC2Setup
+
 
 def get_client(service_name, access_key_id, secret_access_key, region_name):
     """
@@ -50,3 +54,73 @@ def describe_images(client, image_ids=None):
 
     images = client.describe_images(**kwargs)['Images']
     return images
+
+
+@contextmanager
+def setup_ec2_networking(
+    access_key_id,
+    region,
+    secret_access_key,
+    ssh_private_key_file,
+    subnet_id=None
+):
+    """
+    Create a temporary vpc, subnet (unless specified) and security group.
+
+    This provides a security group with an open ssh port.
+    """
+    try:
+        ssh_key_name = generate_name()
+        ssh_public_key = get_key_from_file(ssh_private_key_file + '.pub')
+
+        client = get_client(
+            'ec2',
+            access_key_id,
+            secret_access_key,
+            region
+        )
+        client.import_key_pair(
+            KeyName=ssh_key_name,
+            PublicKeyMaterial=ssh_public_key
+        )
+
+        ec2_setup = EC2Setup(
+            access_key_id,
+            region,
+            secret_access_key,
+            None,
+            False
+        )
+
+        if not subnet_id:
+            subnet_id = ec2_setup.create_vpc_subnet()
+            security_group_id = ec2_setup.create_security_group()
+        else:
+            vpc_id = get_vpc_id_from_subnet(client, subnet_id)
+            security_group_id = ec2_setup.create_security_group(vpc_id=vpc_id)
+
+        yield {
+            'ssh_key_name': ssh_key_name,
+            'subnet_id': subnet_id,
+            'security_group_id': security_group_id
+        }
+    finally:
+        with suppress(Exception):
+            client.delete_key_pair(KeyName=ssh_key_name)
+            ec2_setup.clean_up()
+
+
+def wait_for_instance_termination(
+    access_key_id,
+    instance_id,
+    region,
+    secret_access_key
+):
+    client = get_client(
+        'ec2',
+        access_key_id,
+        secret_access_key,
+        region
+    )
+    waiter = client.get_waiter('instance_terminated')
+    waiter.wait(InstanceIds=[instance_id])

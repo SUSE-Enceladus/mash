@@ -16,18 +16,20 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import json
 import os
 import random
+import traceback
 
 from mash.mash_exceptions import MashTestingException
 from mash.services.mash_job import MashJob
-from mash.services.status_levels import SUCCESS
+from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.utils import process_test_result
-from mash.utils.mash_utils import create_ssh_key_pair
+from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
 from mash.utils.gce import cleanup_gce_image
 from mash.utils.gce import get_region_list
 from mash.services.testing.img_proof_helper import img_proof_test
+
+from img_proof.ipa_exceptions import IpaRetryableError
 
 instance_types = [
     'n1-standard-1',
@@ -80,7 +82,6 @@ class GCETestingJob(MashJob):
         """
         Tests image with img-proof and update status and results.
         """
-        results = {}
         self.status = SUCCESS
         self.send_log(
             'Running img-proof tests against image with '
@@ -95,37 +96,55 @@ class GCETestingJob(MashJob):
             accounts.append(self.testing_account)
 
         self.request_credentials(accounts)
-        creds = self.credentials[self.testing_account or self.account]
+        credentials = self.credentials[self.testing_account or self.account]
 
         if self.test_fallback_regions == []:
             # fallback testing explicitly disabled
-            fallback_regions = []
+            fallback_regions = set()
+        elif self.test_fallback_regions is None:
+            fallback_regions = get_region_list(credentials)
         else:
-            if self.test_fallback_regions is None:
-                fallback_regions = get_region_list(creds)
-            else:
-                fallback_regions = self.test_fallback_regions.copy()
-            if self.region in fallback_regions:
-                fallback_regions.remove(self.region)
+            fallback_regions = set(self.test_fallback_regions)
 
-        img_proof_test(
-            results,
-            cloud=self.cloud,
-            description=self.description,
-            distro=self.distro,
-            fallback_regions=fallback_regions,
-            image_id=self.source_regions[self.region],
-            instance_type=self.instance_type,
-            img_proof_timeout=self.img_proof_timeout,
-            region=self.region,
-            service_account_credentials=json.dumps(creds),
-            ssh_private_key_file=self.ssh_private_key_file,
-            ssh_user=self.ssh_user,
-            tests=self.tests
-        )
+        fallback_regions.add(self.region)
+
+        with create_json_file(credentials) as auth_file:
+            retry_region = self.region
+            while fallback_regions:
+                try:
+                    result = img_proof_test(
+                        cloud=self.cloud,
+                        description=self.description,
+                        distro=self.distro,
+                        image_id=self.source_regions[self.region],
+                        instance_type=self.instance_type,
+                        img_proof_timeout=self.img_proof_timeout,
+                        region=retry_region,
+                        service_account_file=auth_file,
+                        ssh_private_key_file=self.ssh_private_key_file,
+                        ssh_user=self.ssh_user,
+                        tests=self.tests
+                    )
+                except IpaRetryableError as error:
+                    result = {
+                        'status': EXCEPTION,
+                        'msg': str(error)
+                    }
+                    fallback_regions.remove(retry_region)
+
+                    if fallback_regions:
+                        retry_region = random.choice(fallback_regions)
+                except Exception:
+                    result = {
+                        'status': EXCEPTION,
+                        'msg': str(traceback.format_exc())
+                    }
+                    break
+                else:
+                    break
 
         self.status = process_test_result(
-            results[self.region],
+            result,
             self.send_log,
             self.region
         )

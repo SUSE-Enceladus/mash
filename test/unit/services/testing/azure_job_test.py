@@ -38,7 +38,7 @@ class TestAzureTestingJob(object):
     @patch('mash.services.testing.azure_job.os')
     @patch('mash.services.testing.azure_job.create_ssh_key_pair')
     @patch('mash.services.testing.azure_job.random')
-    @patch('mash.services.testing.img_proof_helper.NamedTemporaryFile')
+    @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.testing.img_proof_helper.test_image')
     @patch.object(AzureTestingJob, 'send_log')
     def test_testing_run_azure_test(
@@ -55,7 +55,8 @@ class TestAzureTestingJob(object):
                 'summary': '...',
                 'info': {
                     'log_file': 'test.log',
-                    'results_file': 'test.results'
+                    'results_file': 'test.results',
+                    'instance': 'instance-abc'
                 }
             }
         )

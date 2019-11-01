@@ -41,7 +41,7 @@ class TestGCETestingJob(object):
     @patch('mash.services.testing.gce_job.os')
     @patch('mash.services.testing.gce_job.create_ssh_key_pair')
     @patch('mash.services.testing.gce_job.random')
-    @patch('mash.services.testing.img_proof_helper.NamedTemporaryFile')
+    @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.testing.img_proof_helper.test_image')
     @patch.object(GCETestingJob, 'send_log')
     def test_testing_run_gce_test(
@@ -58,13 +58,14 @@ class TestGCETestingJob(object):
                 'summary': '...',
                 'info': {
                     'log_file': 'test.log',
-                    'results_file': 'test.results'
+                    'results_file': 'test.results',
+                    'instance': 'instance-abc'
                 }
             }
         )
         mock_random.choice.return_value = 'n1-standard-1'
         mock_os.path.exists.return_value = False
-        mock_get_region_list.return_value = ['us-west1-c']
+        mock_get_region_list.return_value = set('us-west1-c')
 
         if 'test_fallback_regions' in self.job_config:
             mock_test_image.side_effect = IpaRetryableError('quota exceeded')
@@ -115,6 +116,84 @@ class TestGCETestingJob(object):
         assert 'Image tests failed' in mock_send_log.mock_calls[1][1][0]
         assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
         assert mock_send_log.mock_calls[2][2] == {'success': False}
+
+    @patch('mash.services.testing.gce_job.get_region_list')
+    @patch('mash.services.testing.gce_job.cleanup_gce_image')
+    @patch('mash.services.testing.gce_job.os')
+    @patch('mash.services.testing.gce_job.create_ssh_key_pair')
+    @patch('mash.services.testing.gce_job.random')
+    @patch('mash.utils.mash_utils.NamedTemporaryFile')
+    @patch('mash.services.testing.img_proof_helper.test_image')
+    @patch.object(GCETestingJob, 'send_log')
+    def test_testing_run_default_fallback(
+            self, mock_send_log, mock_test_image, mock_temp_file, mock_random,
+            mock_create_ssh_key_pair, mock_os, mock_cleanup_image, mock_get_region_list
+    ):
+        tmp_file = Mock()
+        tmp_file.name = '/tmp/acnt.file'
+        mock_temp_file.return_value = tmp_file
+        mock_random.choice.side_effect = ['n1-standard-1', 'us-east1-c']
+        mock_os.path.exists.return_value = False
+        mock_get_region_list.return_value = set(['us-west1-c', 'us-east1-c'])
+        mock_test_image.side_effect = IpaRetryableError('quota exceeded')
+
+        job = GCETestingJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
+        job.credentials = {
+            'test-gce': {
+                'fake': '123',
+                'credentials': '321'
+            },
+            'testingacnt': {
+                'fake': '123',
+                'credentials': '321'
+            }
+        }
+        job.source_regions = {'us-west1-c': 'ami-123'}
+        job.run_job()
+
+        mock_test_image.assert_has_calls([
+            call(
+                'gce',
+                access_key_id=None,
+                cleanup=True,
+                description=job.description,
+                distro='sles',
+                image_id='ami-123',
+                instance_type='n1-standard-1',
+                log_level=30,
+                region='us-west1-c',
+                secret_access_key=None,
+                security_group_id=None,
+                service_account_file='/tmp/acnt.file',
+                ssh_key_name=None,
+                ssh_private_key_file='private_ssh_key.file',
+                ssh_user='root',
+                subnet_id=None,
+                tests=['test_stuff'],
+                timeout=None
+            ),
+            call(
+                'gce',
+                access_key_id=None,
+                cleanup=True,
+                description=job.description,
+                distro='sles',
+                image_id='ami-123',
+                instance_type='n1-standard-1',
+                log_level=30,
+                region='us-east1-c',
+                secret_access_key=None,
+                security_group_id=None,
+                service_account_file='/tmp/acnt.file',
+                ssh_key_name=None,
+                ssh_private_key_file='private_ssh_key.file',
+                ssh_user='root',
+                subnet_id=None,
+                tests=['test_stuff'],
+                timeout=None
+            )
+        ])
 
     def test_testing_run_gce_test_no_fallback_region(self):
         self.job_config['test_fallback_regions'] = []
