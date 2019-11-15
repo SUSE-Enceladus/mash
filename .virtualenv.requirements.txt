@@ -10,7 +10,7 @@ apache-libcloud
 azure-mgmt-compute<5.0.0
 azure-mgmt-resource
 azure-mgmt-storage
-azure-storage-blob
+azure-storage-blob<12.0.0
 Flask
 flask-restplus
 flask-sqlalchemy
