@@ -167,7 +167,7 @@ class OBSImageBuildResultService(MashService):
                   {
                     "package_name": "kernel-default",
                     "version": "4.13.1",
-                    "build_id": "1.1",
+                    "release": "1.1",
                     "condition": ">="
                   },
                   {"image": "1.42.1"}

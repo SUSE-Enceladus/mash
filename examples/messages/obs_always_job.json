@@ -9,7 +9,7 @@
             {
                 "package_name": "kernel-default",
                 "version": "3.12.61",
-                "build_id": "52.136",
+                "release": "52.136",
                 "condition": ">="
             },
             {"image": "0.2.4"}
