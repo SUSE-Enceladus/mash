@@ -29,7 +29,7 @@ BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-adal
 BuildRequires:  python3-apache-libcloud
-BuildRequires:  python3-azure-mgmt-compute
+BuildRequires:  python3-azure-mgmt-compute < 5.0.0
 BuildRequires:  python3-azure-mgmt-resource
 BuildRequires:  python3-azure-mgmt-storage
 BuildRequires:  python3-azure-storage-blob
@@ -55,7 +55,7 @@ BuildRequires:  python3-obs-img-utils < 0.1.0
 Requires:       rabbitmq-server
 Requires:       python3-adal
 Requires:       python3-apache-libcloud
-Requires:       python3-azure-mgmt-compute
+Requires:       python3-azure-mgmt-compute < 5.0.0
 Requires:       python3-azure-mgmt-resource
 Requires:       python3-azure-mgmt-storage
 Requires:       python3-azure-storage-blob

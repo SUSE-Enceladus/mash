@@ -7,7 +7,7 @@
 
 adal
 apache-libcloud
-azure-mgmt-compute
+azure-mgmt-compute<5.0.0
 azure-mgmt-resource
 azure-mgmt-storage
 azure-storage-blob
