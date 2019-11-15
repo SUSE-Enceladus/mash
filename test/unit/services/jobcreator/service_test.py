@@ -111,12 +111,12 @@ class TestJobCreatorService(object):
         assert data['conditions_wait_time'] == 500
 
         for condition in data['conditions']:
-            if 'image' in condition:
-                assert condition['image'] == 'version'
-            else:
+            if 'package_name' in condition:
                 assert condition['release'] == '1.1'
                 assert condition['package_name'] == 'openssl'
                 assert condition['version'] == '13.4.3'
+            else:
+                assert condition['version'] == '8.13.21'
 
         # Uploader Job Doc
 
@@ -241,12 +241,12 @@ class TestJobCreatorService(object):
         assert data['image'] == 'test_image_oem'
 
         for condition in data['conditions']:
-            if 'image' in condition:
-                assert condition['image'] == 'version'
-            else:
+            if 'package_name' in condition:
                 assert condition['release'] == '1.1'
                 assert condition['package_name'] == 'openssl'
                 assert condition['version'] == '13.4.3'
+            else:
+                assert condition['version'] == '8.13.21'
 
         # Uploader Job Doc
 
@@ -344,12 +344,12 @@ class TestJobCreatorService(object):
         assert data['image'] == 'test_image_oem'
 
         for condition in data['conditions']:
-            if 'image' in condition:
-                assert condition['image'] == 'version'
-            else:
+            if 'package_name' in condition:
                 assert condition['release'] == '1.1'
                 assert condition['package_name'] == 'openssl'
                 assert condition['version'] == '13.4.3'
+            else:
+                assert condition['version'] == '8.13.21'
 
         # Uploader Job Doc
 

@@ -5,8 +5,8 @@
     "image": "test-image-oem",
     "utctime": "now",
     "conditions": [
-      {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
-      {"image": "1.42.1"}
+      {"package_name": "openssl", "version": "13.4.3", "release": "1.1"},
+      {"version": "8.13.21"}
     ],
     "notification_email": "test@fake.com",
     "notification_type": "single"

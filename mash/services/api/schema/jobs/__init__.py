@@ -25,15 +25,6 @@ from mash.services.api.schema import (
 image_conditions = {
     'type': 'object',
     'properties': {
-        'image': string_with_example('1.42.1')
-    },
-    'additionalProperties': False,
-    'required': ['image']
-}
-
-package_conditions = {
-    'type': 'object',
-    'properties': {
         'package_name': string_with_example('kernel-default'),
         'version': string_with_example('4.13.1'),
         'release': string_with_example('1.1'),
@@ -43,7 +34,11 @@ package_conditions = {
         }
     },
     'additionalProperties': False,
-    'required': ['package_name']
+    'anyOf': [
+        {'required': ['package_name']},
+        {'required': ['version']},
+        {'required': ['release']}
+    ]
 }
 
 utctime = {
@@ -82,12 +77,7 @@ base_job_message = {
         ),
         'conditions': {
             'type': 'array',
-            'items': {
-                'anyOf': [
-                    image_conditions,
-                    package_conditions
-                ]
-            },
+            'items': image_conditions,
             'minItems': 1
         },
         'download_url': string_with_example(
