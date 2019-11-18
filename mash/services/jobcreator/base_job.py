@@ -36,7 +36,6 @@ class BaseJob(object):
             self.image = kwargs['image']
             self.cloud_image_name = kwargs['cloud_image_name']
             self.image_description = kwargs['image_description']
-            self.distro = kwargs['distro']
             self.download_url = kwargs['download_url']
         except KeyError as error:
             raise MashJobCreatorException(
@@ -50,6 +49,7 @@ class BaseJob(object):
         self.test_fallback = 'test_fallback_regions' not in kwargs and not self.test_fallback_regions
 
         self.conditions = kwargs.get('conditions')
+        self.distro = kwargs.get('distro')
         self.instance_type = kwargs.get('instance_type')
         self.old_cloud_image_name = kwargs.get('old_cloud_image_name')
         self.cleanup_images = kwargs.get('cleanup_images')
