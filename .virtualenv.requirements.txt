@@ -7,10 +7,10 @@
 
 adal
 apache-libcloud
-azure-mgmt-compute
+azure-mgmt-compute<5.0.0
 azure-mgmt-resource
 azure-mgmt-storage
-azure-storage-blob
+azure-storage-blob<12.0.0
 Flask
 flask-restplus
 flask-sqlalchemy
@@ -23,7 +23,7 @@ cryptography>=2.2.0
 PyYAML
 PyJWT
 APScheduler
-python-dateutil>=2.6.0,<3.0.0
+python-dateutil>=2.6.0,<2.8.1
 amqpstorm
 ec2imgutils
 img-proof>=4.2.0
