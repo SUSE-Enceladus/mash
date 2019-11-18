@@ -36,7 +36,7 @@ package_conditions = {
     'properties': {
         'package_name': string_with_example('kernel-default'),
         'version': string_with_example('4.13.1'),
-        'build_id': string_with_example('1.1'),
+        'release': string_with_example('1.1'),
         'condition': {
             'type': 'string',
             'enum': ['>=', '==', '<=', '>', '<']

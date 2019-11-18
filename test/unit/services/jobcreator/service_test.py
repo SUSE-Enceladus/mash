@@ -114,7 +114,7 @@ class TestJobCreatorService(object):
             if 'image' in condition:
                 assert condition['image'] == 'version'
             else:
-                assert condition['build_id'] == '1.1'
+                assert condition['release'] == '1.1'
                 assert condition['package_name'] == 'openssl'
                 assert condition['version'] == '13.4.3'
 
@@ -244,7 +244,7 @@ class TestJobCreatorService(object):
             if 'image' in condition:
                 assert condition['image'] == 'version'
             else:
-                assert condition['build_id'] == '1.1'
+                assert condition['release'] == '1.1'
                 assert condition['package_name'] == 'openssl'
                 assert condition['version'] == '13.4.3'
 
@@ -347,7 +347,7 @@ class TestJobCreatorService(object):
             if 'image' in condition:
                 assert condition['image'] == 'version'
             else:
-                assert condition['build_id'] == '1.1'
+                assert condition['release'] == '1.1'
                 assert condition['package_name'] == 'openssl'
                 assert condition['version'] == '13.4.3'
 

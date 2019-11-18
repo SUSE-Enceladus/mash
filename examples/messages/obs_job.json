@@ -9,7 +9,7 @@
             {
                 "package_name": "kernel-default",
                 "version": "4.4.1",
-                "build_id": "1.1",
+                "release": "1.1",
                 "condition": ">="
             },
             {"image": "15.1.0"}
