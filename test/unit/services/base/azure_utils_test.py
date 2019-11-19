@@ -375,7 +375,7 @@ def test_update_cloud_partner_offer_doc():
             'plans': [
                 {
                     'planId': 'gen1',
-                    'diskGenerations': [{'planId': 'gen2'}]
+                    'diskGenerations': [{'planId': 'image-gen2'}]
                 }
             ]
         }
@@ -388,7 +388,8 @@ def test_update_cloud_partner_offer_doc():
         'new-image',
         'New Image 123',
         'gen1',
-        generation_id='gen2'
+        generation_id='image-gen2',
+        cloud_image_name_generation_suffix='gen2'
     )
 
     plan = doc['definition']['plans'][0]
