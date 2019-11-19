@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.users import get_user_by_username
 from mash.services.api.utils.accounts.azure import get_azure_account_by_id
 
@@ -27,7 +28,7 @@ def update_azure_job_accounts(job_doc):
     user = get_user_by_username(job_doc['requesting_user'])
     cloud_account = get_azure_account_by_id(job_doc['cloud_account'], user.id)
 
-    attrs = [
+    attrs = (
         'region',
         'source_container',
         'source_resource_group',
@@ -35,10 +36,44 @@ def update_azure_job_accounts(job_doc):
         'destination_container',
         'destination_resource_group',
         'destination_storage_account'
-    ]
+    )
+    publisher_args = (
+        'emails',
+        'label',
+        'offer_id',
+        'publisher_id',
+        'sku'
+    )
+    sas_args = (
+        job_doc.get('sas_token'),
+        job_doc.get('sas_container'),
+        job_doc.get('sas_storage_account')
+    )
 
-    for attr in attrs:
-        if attr not in job_doc:
-            job_doc[attr] = getattr(cloud_account, attr)
+    if any(sas_args) and not all(sas_args):
+        raise MashJobException(
+            'sas_token, sas_storage_account and sas_container are all '
+            'required for an Azure SAS upload job.'
+        )
+
+    if job_doc.get('sas_token'):
+        if job_doc['last_service'] != 'uploader':
+            raise MashJobException(
+                'Azure uploads using SAS token expect a last service of uploader.'
+            )
+    else:
+        for attr in attrs:
+            if attr not in job_doc:
+                job_doc[attr] = getattr(cloud_account, attr)
+
+        if job_doc['last_service'] in ('publisher', 'deprecation'):
+            for arg in publisher_args:
+                if arg not in job_doc:
+                    raise MashJobException(
+                        'Azure publishing jobs require a(n) '
+                        ' {arg} argument in the job document.'.format(
+                            arg=arg
+                        )
+                    )
 
     return job_doc

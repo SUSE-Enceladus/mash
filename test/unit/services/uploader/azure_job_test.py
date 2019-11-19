@@ -95,13 +95,14 @@ class TestAzureUploaderJob(object):
             args=(
                 'name.vhd',
                 'container',
-                self.credentials['test'],
                 'file.vhdfixed.xz',
                 5,
                 8,
-                'group_name',
                 'storage',
-                queue
+                queue,
+                self.credentials['test'],
+                'group_name',
+                None
             )
         )
 
@@ -123,6 +124,27 @@ class TestAzureUploaderJob(object):
             }
         )
         async_create_image.wait.assert_called_once_with()
+
+        # Test sas upload route
+        self.job.sas_token = 'sas_token'
+        mock_process.reset_mock()
+
+        self.job.run_job()
+        mock_process.assert_called_once_with(
+            target=mock_upload_azure_image,
+            args=(
+                'name.vhd',
+                'container',
+                'file.vhdfixed.xz',
+                5,
+                8,
+                'storage',
+                queue,
+                None,
+                'group_name',
+                'sas_token'
+            )
+        )
 
         queue.empty.return_value = False
         queue.get.return_value = 'Failed!'

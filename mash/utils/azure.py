@@ -71,8 +71,8 @@ def copy_blob_to_classic_storage(
     """
     Copy a blob from ARM based storage account to a classic storage account.
     """
-    source_page_blob_service = get_page_blob_service(
-        auth_file, source_resource_group, source_storage_account
+    source_page_blob_service = get_page_blob_service_with_account_keys(
+        auth_file, source_storage_account, source_resource_group
     )
 
     source_blob_url = get_blob_url(
@@ -110,8 +110,8 @@ def delete_page_blob(
     """
     Delete page blob in container.
     """
-    page_blob_service = get_page_blob_service(
-        auth_file, resource_group, storage_account
+    page_blob_service = get_page_blob_service_with_account_keys(
+        auth_file, storage_account, resource_group
     )
     page_blob_service.delete_blob(container, blob)
 
@@ -154,23 +154,41 @@ def get_blob_url(
     return source_blob_url
 
 
-def get_page_blob_service(auth_file, resource_group, storage_account):
+def get_page_blob_service_with_account_keys(
+    auth_file,
+    storage_account,
+    resource_group
+):
     """
     Return authenticated page blob service instance for the storage account.
+
+    Using storage account keys.
     """
     storage_client = get_client_from_auth_file(
         StorageManagementClient,
         auth_path=auth_file
     )
     storage_key_list = storage_client.storage_accounts.list_keys(
-        resource_group, storage_account
+        resource_group,
+        storage_account
     )
-    page_blob_service = PageBlobService(
+
+    return PageBlobService(
         account_name=storage_account,
         account_key=storage_key_list.keys[0].value
     )
 
-    return page_blob_service
+
+def get_page_blob_service_with_sas_token(storage_account, sas_token):
+    """
+    Return authenticated page blob service instance for the storage account.
+
+    Using an sas token.
+    """
+    return PageBlobService(
+        account_name=storage_account,
+        sas_token=sas_token
+    )
 
 
 def get_classic_page_blob_service(auth_file, resource_group, storage_account):
@@ -538,27 +556,32 @@ def wait_on_cloud_partner_operation(
 def upload_azure_image(
     blob_name,
     container,
-    credentials,
     image_file,
     max_retry_attempts,
     max_workers,
-    resource_group,
     storage_account,
-    result
+    result,
+    credentials=None,
+    resource_group=None,
+    sas_token=None
 ):
-    with create_json_file(credentials) as auth_file:
-        storage_client = get_client_from_auth_file(
-            StorageManagementClient, auth_path=auth_file
+    if sas_token:
+        page_blob_service = get_page_blob_service_with_sas_token(
+            storage_account,
+            sas_token
         )
-        storage_key_list = storage_client.storage_accounts.list_keys(
-            resource_group,
-            storage_account
+    elif credentials and resource_group:
+        with create_json_file(credentials) as auth_file:
+            page_blob_service = get_page_blob_service_with_account_keys(
+                auth_file,
+                storage_account,
+                resource_group
+            )
+    else:
+        raise MashAzureUtilsException(
+            'Either an sas_token or credentials and resource_group '
+            ' is required to upload an azure image to a page blob.'
         )
-
-    page_blob_service = PageBlobService(
-        account_name=storage_account,
-        account_key=storage_key_list.keys[0].value
-    )
 
     system_image_file_type = FileType(image_file)
     if system_image_file_type.is_xz():

@@ -32,11 +32,6 @@ class AzureJob(BaseJob):
         """
         try:
             self.cloud_account = self.kwargs['cloud_account']
-            self.emails = self.kwargs['emails']
-            self.label = self.kwargs['label']
-            self.offer_id = self.kwargs['offer_id']
-            self.publisher_id = self.kwargs['publisher_id']
-            self.sku = self.kwargs['sku']
         except KeyError as error:
             raise MashJobCreatorException(
                 'Azure jobs require a(n) {0} key in the job doc.'.format(
@@ -53,6 +48,14 @@ class AzureJob(BaseJob):
         self.destination_container = self.kwargs.get('destination_container')
         self.destination_resource_group = self.kwargs.get('destination_resource_group')
         self.destination_storage_account = self.kwargs.get('destination_storage_account')
+        self.emails = self.kwargs.get('emails')
+        self.label = self.kwargs.get('label')
+        self.offer_id = self.kwargs.get('offer_id')
+        self.publisher_id = self.kwargs.get('publisher_id')
+        self.sku = self.kwargs.get('sku')
+        self.sas_token = self.kwargs.get('sas_token')
+        self.sas_container = self.kwargs.get('sas_container')
+        self.sas_storage_account = self.kwargs.get('sas_storage_account')
 
     def get_deprecation_message(self):
         """
@@ -165,17 +168,29 @@ class AzureJob(BaseJob):
         """
         Build uploader job message.
         """
-        uploader_message = {
-            'uploader_job': {
-                'cloud_image_name': self.cloud_image_name,
-                'cloud': self.cloud,
-                'account': self.cloud_account,
-                'region': self.region,
-                'container': self.source_container,
-                'resource_group': self.source_resource_group,
-                'storage_account': self.source_storage_account
+        if self.sas_token:
+            uploader_message = {
+                'uploader_job': {
+                    'cloud_image_name': self.cloud_image_name,
+                    'cloud': self.cloud,
+                    'container': self.sas_container,
+                    'storage_account': self.sas_storage_account,
+                    'sas_token': self.sas_token
+                }
             }
-        }
+        else:
+            uploader_message = {
+                'uploader_job': {
+                    'cloud_image_name': self.cloud_image_name,
+                    'cloud': self.cloud,
+                    'account': self.cloud_account,
+                    'region': self.region,
+                    'container': self.source_container,
+                    'resource_group': self.source_resource_group,
+                    'storage_account': self.source_storage_account
+                }
+            }
+
         uploader_message['uploader_job'].update(self.base_message)
 
         if self.cloud_architecture:
