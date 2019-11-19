@@ -304,6 +304,8 @@ class TestJobCreatorService(object):
         assert data['offer_id'] == 'sles'
         assert data['publisher_id'] == 'suse'
         assert data['sku'] == '123'
+        assert data['generation_id'] == 'gen2'
+        assert data['cloud_image_name_generation_suffix'] == 'gen2'
         assert data['vm_images_key'] == 'key123'
         assert data['account'] == 'test-azure'
         assert data['container'] == 'container2'

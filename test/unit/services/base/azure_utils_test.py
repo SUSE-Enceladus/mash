@@ -373,7 +373,10 @@ def test_update_cloud_partner_offer_doc():
     doc = {
         'definition': {
             'plans': [
-                {'planId': '123'}
+                {
+                    'planId': 'gen1',
+                    'diskGenerations': [{'planId': 'gen2'}]
+                }
             ]
         }
     }
@@ -382,13 +385,16 @@ def test_update_cloud_partner_offer_doc():
         doc,
         'blob/url/.vhd',
         'New image for v123',
-        'New Image',
+        'new-image',
         'New Image 123',
-        '123'
+        'gen1',
+        generation_id='gen2'
     )
 
-    assert doc['definition']['plans'][0][vm_images_key][release]['label'] == \
-        'New Image 123'
+    plan = doc['definition']['plans'][0]
+    assert plan[vm_images_key][release]['label'] == 'New Image 123'
+    assert plan['diskGenerations'][0][vm_images_key][release]['mediaName'] == \
+        'new-image-gen2'
 
 
 def test_update_cloud_partner_offer_doc_existing_date():

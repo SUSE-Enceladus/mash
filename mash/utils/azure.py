@@ -17,6 +17,7 @@
 #
 
 import adal
+import copy
 import json
 import lzma
 import re
@@ -451,7 +452,8 @@ def request_cloud_partner_offer_doc(credentials, offer_id, publisher_id):
 
 def update_cloud_partner_offer_doc(
     doc, blob_url, description, image_name, label, sku,
-    vm_images_key='microsoft-azure-corevm.vmImagesPublicAzure'
+    vm_images_key='microsoft-azure-corevm.vmImagesPublicAzure',
+    generation_id=None, cloud_image_name_generation_suffix=None
 ):
     """
     Update the cloud partner offer doc with a new version of the given sku.
@@ -482,6 +484,22 @@ def update_cloud_partner_offer_doc(
                 doc_sku[vm_images_key] = {}
 
             doc_sku[vm_images_key][release] = version
+
+            if generation_id:
+                for plan in doc_sku['diskGenerations']:
+                    if plan['planId'] == generation_id:
+                        generation_version = copy.deepcopy(version)
+                        generation_version['mediaName'] = '-'.join([
+                            image_name,
+                            cloud_image_name_generation_suffix or generation_id
+                        ])
+
+                        if vm_images_key not in plan:
+                            plan[vm_images_key] = {}
+
+                        plan[vm_images_key][release] = generation_version
+                        break
+
             break
 
     return doc

@@ -31,6 +31,10 @@ azure_job_message['properties']['label'] = string_with_example(
 azure_job_message['properties']['offer_id'] = string_with_example('leap')
 azure_job_message['properties']['publisher_id'] = string_with_example('suse')
 azure_job_message['properties']['sku'] = string_with_example('15')
+azure_job_message['properties']['generation_id'] = string_with_example('gen2')
+azure_job_message['properties']['cloud_image_name_generation_suffix'] = string_with_example(
+    'gen2'
+)
 azure_job_message['properties']['vm_images_key'] = string_with_example(
     'microsoft-azure-corevm.vmImagesPublicAzure'
 )

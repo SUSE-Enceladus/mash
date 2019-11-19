@@ -63,6 +63,10 @@ class AzurePublisherJob(MashJob):
 
         self.vm_images_key = self.job_config.get('vm_images_key')
         self.publish_offer = self.job_config.get('publish_offer', False)
+        self.generation_id = self.job_config.get('generation_id')
+        self.cloud_image_name_generation_suffix = self.job_config.get(
+            'cloud_image_name_generation_suffix'
+        )
 
     def run_job(self):
         """
@@ -96,10 +100,13 @@ class AzurePublisherJob(MashJob):
                     self.publisher_id
                 )
 
+                kwargs = {
+                    'generation_id': self.generation_id,
+                    'cloud_image_name_generation_suffix': self.cloud_image_name_generation_suffix
+                }
+
                 if self.vm_images_key:
-                    kwargs = {'vm_images_key': self.vm_images_key}
-                else:
-                    kwargs = {}
+                    kwargs['vm_images_key'] = self.vm_images_key
 
                 offer_doc = update_cloud_partner_offer_doc(
                     offer_doc,
