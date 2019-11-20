@@ -29,6 +29,8 @@
   "publisher_id": "suse",
   "label": "New Image 123",
   "sku": "123",
+  "generation_id": "image-gen2",
+  "cloud_image_name_generation_suffix": "gen2",
   "vm_images_key": "key123",
   "notification_email": "test@fake.com",
   "publish_offer": true,

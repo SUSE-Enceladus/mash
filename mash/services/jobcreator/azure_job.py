@@ -53,6 +53,10 @@ class AzureJob(BaseJob):
         self.offer_id = self.kwargs.get('offer_id')
         self.publisher_id = self.kwargs.get('publisher_id')
         self.sku = self.kwargs.get('sku')
+        self.generation_id = self.kwargs.get('generation_id')
+        self.cloud_image_name_generation_suffix = self.kwargs.get(
+            'cloud_image_name_generation_suffix'
+        )
         self.sas_token = self.kwargs.get('sas_token')
         self.sas_container = self.kwargs.get('sas_container')
         self.sas_storage_account = self.kwargs.get('sas_storage_account')
@@ -95,6 +99,14 @@ class AzureJob(BaseJob):
         if self.vm_images_key:
             publisher_message['publisher_job']['vm_images_key'] = \
                 self.vm_images_key
+
+        if self.generation_id:
+            publisher_message['publisher_job']['generation_id'] = \
+                self.generation_id
+
+        if self.cloud_image_name_generation_suffix:
+            publisher_message['publisher_job']['cloud_image_name_generation_suffix'] = \
+                self.cloud_image_name_generation_suffix
 
         publisher_message['publisher_job'].update(self.base_message)
 
