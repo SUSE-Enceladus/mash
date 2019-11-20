@@ -70,7 +70,7 @@ class OBSImageBuildResult(object):
            'release': '1.1'
           },
           # a image version condition
-          {'image': '1.42.1'}
+          {"version": "8.13.21"}
       ]
 
     * :attr:`arch`

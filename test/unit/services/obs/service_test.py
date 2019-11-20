@@ -191,8 +191,13 @@ class TestOBSImageBuildResultService(object):
                 "last_service": "publisher",
                 "utctime": "now",
                 "conditions": [
-                    {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
-                    {"image": "1.42.1"}
+                    {
+                        "package_name": "openssl",
+                        "version": "4.13.1",
+                        "release": "1.1",
+                        "condition": ">="
+                    },
+                    {"version": "1.42.1"}
                 ]
             }
         }
@@ -239,8 +244,13 @@ class TestOBSImageBuildResultService(object):
             "utctime": "now",
             "log_callback": Mock(),
             "conditions": [
-                {"package": ["kernel-default", ">=4.13.1", ">=1.1"]},
-                {"image": "1.42.1"}
+                {
+                    "package_name": "openssl",
+                    "version": "4.13.1",
+                    "release": "1.1",
+                    "condition": ">="
+                },
+                {"version": "1.42.1"}
             ],
             "cloud_architecture": "aarch64",
             "notification_email": "test@fake.com",

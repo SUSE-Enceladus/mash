@@ -170,7 +170,7 @@ class OBSImageBuildResultService(MashService):
                     "release": "1.1",
                     "condition": ">="
                   },
-                  {"image": "1.42.1"}
+                  {"version": "8.13.21"}
               ],
               "notification_email": "test@fake.com",
               "notification_type": "single",
