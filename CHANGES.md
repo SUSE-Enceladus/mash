@@ -1,3 +1,47 @@
+v4.3.0 (2019-11-23)
+===================
+
+- Add image name to email notification template.
+  [\#572](https://github.com/SUSE-Enceladus/mash/pull/572)
+- Inject configuration into services.
+  [\#573](https://github.com/SUSE-Enceladus/mash/pull/573)
+- Move send email methods to new class.
+  [\#575](https://github.com/SUSE-Enceladus/mash/pull/575)
+- Add flask mgmt command for cleanup tokens.
+  [\#577](https://github.com/SUSE-Enceladus/mash/pull/577)
+- Log unhandled exceptions in API.
+  [\#578](https://github.com/SUSE-Enceladus/mash/pull/578)
+- Handle ec2 job doc without cloud accounts.
+  [\#579](https://github.com/SUSE-Enceladus/mash/pull/579)
+- Add source regions to raw image uploader args.
+  [\#580](https://github.com/SUSE-Enceladus/mash/pull/580)
+- Fix GCE cleanup integration.
+  [\#582](https://github.com/SUSE-Enceladus/mash/pull/582)
+- Cleanup azure image and blob on test failure.
+  [\#583](https://github.com/SUSE-Enceladus/mash/pull/583)
+- Azure remove account list
+  [\#585](https://github.com/SUSE-Enceladus/mash/pull/585)
+- Implement Azure SAS URL upload.
+  [\#586](https://github.com/SUSE-Enceladus/mash/pull/586)
+- Use yaml safe load instead of load.
+  [\#587](https://github.com/SUSE-Enceladus/mash/pull/587)
+- Remove account list handling from GCE.
+  [\#588](https://github.com/SUSE-Enceladus/mash/pull/588)
+- Fix retry region testing.
+  [\#589](https://github.com/SUSE-Enceladus/mash/pull/589)
+- Update the version for obs-img-utils.
+  [\#591](https://github.com/SUSE-Enceladus/mash/pull/591)
+- Fix upper version requirements for dependencies.
+  [\#597](https://github.com/SUSE-Enceladus/mash/pull/597)
+- Fix typo in job conditions schema.
+  [\#598](https://github.com/SUSE-Enceladus/mash/pull/598)
+- Distro is an optional argument.
+  [\#599](https://github.com/SUSE-Enceladus/mash/pull/599)
+- Add disk generation option for Azure publish.
+  [\#600](https://github.com/SUSE-Enceladus/mash/pull/600)
+- Handle image conditions changes from obs-img-utils.
+  [\#601](https://github.com/SUSE-Enceladus/mash/pull/601)
+
 v4.2.0 (2019-10-04)
 ===================
 
