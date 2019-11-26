@@ -151,6 +151,7 @@ install -D -m 644 config/mash_deprecation.service \
 %{_bindir}/getent passwd mash > /dev/null || %{_sbindir}/useradd -r -g mash -s %{_bindir}/false -c "User for MASH" -d %{_localstatedir}/lib/mash mash
 
 %check
+export LANG=en_US.UTF-8
 python3 -m pytest
 
 %files
