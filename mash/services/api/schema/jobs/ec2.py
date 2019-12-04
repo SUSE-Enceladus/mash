@@ -65,7 +65,7 @@ ec2_job_message['properties']['cloud_groups'] = {
     'example': ['group1']
 }
 ec2_job_message['anyOf'] = [
-    {'required': ['cloud_accounts']},
+    {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},
     {'required': ['cloud_groups']}
 ]
