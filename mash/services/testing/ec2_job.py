@@ -20,6 +20,8 @@ import os
 import random
 import traceback
 
+from ec2imgutils.ec2removeimg import EC2RemoveImage
+
 from mash.mash_exceptions import MashTestingException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
@@ -69,6 +71,7 @@ class EC2TestingJob(MashJob):
                 )
             )
 
+        self.cleanup_images = self.job_config.get('cleanup_images')
         self.description = self.job_config.get('description')
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
@@ -158,3 +161,38 @@ class EC2TestingJob(MashJob):
                         region,
                         credentials['secret_access_key']
                     )
+
+        if self.cleanup_images or (self.status != SUCCESS and self.cleanup_images is not False):  # noqa
+            for region, info in self.test_regions.items():
+                credentials = self.credentials[info['account']]
+
+                self.cleanup_ec2_image(
+                    credentials,
+                    region,
+                    self.source_regions[region]
+                )
+
+    def cleanup_ec2_image(self, credentials, region, image_id):
+        self.send_log(
+            'Cleaning up image: {0} in region: {1}.'.format(
+                image_id,
+                region
+            )
+        )
+
+        try:
+            ec2_remove_img = EC2RemoveImage(
+                access_key=credentials['access_key_id'],
+                image_id=image_id,
+                no_confirm=True,
+                remove_all=True,
+                secret_key=credentials['secret_access_key'],
+            )
+
+            ec2_remove_img.set_region(region)
+            ec2_remove_img.remove_images()
+        except Exception as error:
+            self.send_log(
+                'Failed to cleanup image: {0}'.format(error),
+                success=False
+            )

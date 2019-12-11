@@ -17,6 +17,7 @@ class TestEC2TestingJob(object):
             'test_regions': {'us-east-1': {'account': 'test-aws'}},
             'tests': ['test_stuff'],
             'utctime': 'now',
+            'cleanup_images': True
         }
         self.config = Mock()
         self.config.get_ssh_private_key_file.return_value = \
@@ -29,6 +30,7 @@ class TestEC2TestingJob(object):
         with pytest.raises(MashTestingException):
             EC2TestingJob(self.job_config, self.config)
 
+    @patch.object(EC2TestingJob, 'cleanup_ec2_image')
     @patch('mash.services.testing.ec2_job.os')
     @patch('mash.services.testing.ec2_job.create_ssh_key_pair')
     @patch('mash.services.testing.ec2_job.random')
@@ -42,7 +44,8 @@ class TestEC2TestingJob(object):
     def test_testing_run_test(
         self, mock_send_log, mock_test_image, mock_get_vpc_id_from_subnet,
         mock_get_key_from_file, mock_get_client, mock_generate_name,
-        mock_ec2_setup, mock_random, mock_create_ssh_key_pair, mock_os
+        mock_ec2_setup, mock_random, mock_create_ssh_key_pair, mock_os,
+        mock_cleanup_image
     ):
         client = Mock()
         mock_get_client.return_value = client
@@ -105,6 +108,11 @@ class TestEC2TestingJob(object):
             timeout=None
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
+        mock_cleanup_image.assert_called_once_with(
+            job.credentials['test-aws'],
+            'us-east-1',
+            'ami-123'
+        )
         mock_send_log.reset_mock()
 
         # Failed job test
@@ -124,3 +132,33 @@ class TestEC2TestingJob(object):
     def test_testing_run_test_subnet(self):
         self.job_config['test_regions']['us-east-1']['subnet'] = 'subnet-123456789'
         self.test_testing_run_test()
+
+    @patch('mash.services.testing.ec2_job.os')
+    @patch('mash.services.testing.ec2_job.random')
+    @patch('mash.services.testing.ec2_job.EC2RemoveImage')
+    @patch.object(EC2TestingJob, 'send_log')
+    def test_cleanup_images(
+        self, mock_send_log, mock_rm_img, mock_random, mock_os
+    ):
+        rm_img = Mock()
+        rm_img.remove_images.side_effect = Exception('image not found!')
+
+        mock_rm_img.return_value = rm_img
+        mock_random.choice.return_value = 't2.micro'
+        mock_os.path.exists.return_value = True
+
+        job = EC2TestingJob(self.job_config, self.config)
+
+        credentials = {
+            'access_key_id': '123',
+            'secret_access_key': '321'
+        }
+
+        job.cleanup_ec2_image(credentials, 'us-east-1', 'ami-123')
+
+        mock_send_log.assert_has_calls([
+            call('Cleaning up image: ami-123 in region: us-east-1.'),
+            call('Failed to cleanup image: image not found!', success=False)
+        ])
+        rm_img.set_region.assert_called_once_with('us-east-1')
+        rm_img.remove_images.assert_called_once_with()
