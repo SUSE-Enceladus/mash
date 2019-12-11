@@ -97,7 +97,7 @@ class Job(Resource):
 
         if rows_deleted:
             return make_response(
-                jsonify({'msg': 'Job deleted'}),
+                jsonify({'msg': 'Job deletion request submitted'}),
                 200
             )
         else:
