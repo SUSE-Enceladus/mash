@@ -171,3 +171,15 @@ class MashDBException(MashException):
     """
     Exception raised if an error occurs accessing mash DB.
     """
+
+
+class MashListenerServiceException(MashException):
+    """
+    Exception raised if an error occurs in listener service.
+    """
+
+
+class MashCreateException(MashException):
+    """
+    Base exception for create service.
+    """

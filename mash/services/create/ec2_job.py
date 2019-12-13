@@ -30,9 +30,9 @@ from mash.utils.mash_utils import format_string_with_date, generate_name
 from mash.services.status_levels import SUCCESS
 
 
-class EC2UploaderJob(MashJob):
+class EC2CreateJob(MashJob):
     """
-    Implements system image upload to Amazon
+    Implements system image upload/create to Amazon.
 
     Amazon specific custom arguments:
 
@@ -43,7 +43,6 @@ class EC2UploaderJob(MashJob):
 
     def post_init(self):
         self._image_file = None
-        self.source_regions = {}
         self.cloud_image_name = ''
 
         try:
@@ -53,7 +52,7 @@ class EC2UploaderJob(MashJob):
                 self.job_config['image_description']
         except KeyError as error:
             raise MashUploadException(
-                'EC2 uploader jobs require a(n) {0} '
+                'EC2 create jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -66,7 +65,7 @@ class EC2UploaderJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Uploading image.')
+        self.send_log('Creating image.')
 
         self.cloud_image_name = format_string_with_date(
             self.base_cloud_image_name
@@ -181,15 +180,15 @@ class EC2UploaderJob(MashJob):
                         self.image_file
                     )
 
-                self.source_regions[region] = ami_id
+                self.source_regions = {region: ami_id}
                 self.send_log(
-                    'Uploaded image has ID: {0} in region {1}'.format(
+                    'Created image has ID: {0} in region {1}'.format(
                         ami_id, region
                     )
                 )
             except Exception as e:
                 raise MashUploadException(
-                    'Upload to Amazon EC2 failed with: {0}'.format(e)
+                    'Image creation in Amazon EC2 failed with: {0}'.format(e)
                 )
             finally:
                 self._delete_key_pair(

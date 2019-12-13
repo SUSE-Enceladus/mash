@@ -1,66 +1,63 @@
 from pytest import raises
 from unittest.mock import Mock, patch
-from mash.services.job_factory import JobFactory
+from mash.services.job_factory import BaseJobFactory
 from mash.mash_exceptions import MashJobException
 from mash.services.testing.gce_job import GCETestingJob
-from mash.services.raw_image_uploader.s3bucket_job import S3BucketUploaderJob
-from mash.services.raw_image_uploader.skip_raw_image_uploader_job import SkipRawImageUploaderJob
 
 
 @patch.object(GCETestingJob, '__init__')
 def test_job_factory_create(mock_job_init):
     service_config = Mock()
-    job_config = {}
+    job_config = {'cloud': 'gce'}
 
     mock_job_init.return_value = None
 
-    value = JobFactory.create_job(
-        'gce', 'testing', job_config, service_config
+    job_factory = BaseJobFactory(
+        service_name='testing',
+        job_types={'gce': GCETestingJob}
     )
+
+    value = job_factory.create_job(job_config, service_config)
     assert isinstance(value, GCETestingJob)
 
-    job_config = {
-        'raw_image_upload_type': 's3bucket',
-        'raw_image_upload_account': 'account',
-        'raw_image_upload_location': 'location',
-        'id': '123',
-        'requesting_user': 'user1',
-        'last_service': 'raw_image_uploader',
-        'cloud': 'gce',
-        'utctime': 'now'
-    }
-    value = JobFactory.create_job(
-        'gce', 'raw_image_uploader', job_config, service_config
-    )
-    assert isinstance(value, S3BucketUploaderJob)
 
-    job_config = {
-        'id': '123',
-        'requesting_user': 'user1',
-        'last_service': 'raw_image_uploader',
-        'cloud': 'gce',
-        'utctime': 'now'
-    }
-    value = JobFactory.create_job(
-        'gce', 'raw_image_uploader', job_config, service_config
+def test_job_factory_create_no_type():
+    service_config = Mock()
+    job_config = {}
+
+    job_factory = BaseJobFactory(
+        service_name='testing',
+        job_types={'gce': GCETestingJob}
     )
-    assert isinstance(value, SkipRawImageUploaderJob)
+
+    with raises(MashJobException):
+        job_factory.create_job(job_config, service_config)
 
 
 def test_job_factory_create_invalid_cloud():
     service_config = Mock()
-    job_config = {}
+    job_config = {'cloud': 'fake'}
+
+    job_factory = BaseJobFactory(
+        service_name='testing',
+        job_types={'gce': GCETestingJob}
+    )
 
     with raises(MashJobException):
-        JobFactory.create_job('fake', 'testing', job_config, service_config)
+        job_factory.create_job(job_config, service_config)
 
 
 @patch.object(GCETestingJob, '__init__')
 def test_job_factory_create_invalid_config(mock_job_init):
     service_config = Mock()
-    job_config = {}
+    job_config = {'cloud': 'gce'}
 
     mock_job_init.side_effect = Exception('Invalid parameters')
 
+    job_factory = BaseJobFactory(
+        service_name='testing',
+        job_types={'gce': GCETestingJob}
+    )
+
     with raises(MashJobException):
-        JobFactory.create_job('gce', 'testing', job_config, service_config)
+        job_factory.create_job(job_config, service_config)

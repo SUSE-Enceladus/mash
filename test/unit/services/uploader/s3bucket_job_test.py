@@ -5,7 +5,7 @@ from test.unit.test_helper import (
     patch_open
 )
 
-from mash.services.raw_image_uploader.s3bucket_job import S3BucketUploaderJob
+from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.base_config import BaseConfig
 
@@ -25,7 +25,7 @@ class TestS3BucketUploaderJob(object):
         job_doc = {
             'cloud_architecture': 'x86_64',
             'id': '1',
-            'last_service': 'raw_image_uploader',
+            'last_service': 'uploader',
             'cloud': 'ec2',
             'requesting_user': 'user1',
             'utctime': 'now',
@@ -52,7 +52,7 @@ class TestS3BucketUploaderJob(object):
     def test_post_init_incomplete_arguments(self):
         job_doc = {
             'id': '1',
-            'last_service': 'raw_image_uploader',
+            'last_service': 'uploader',
             'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now'
@@ -65,8 +65,8 @@ class TestS3BucketUploaderJob(object):
         with raises(MashUploadException):
             S3BucketUploaderJob(job_doc, self.config)
 
-    @patch('mash.services.raw_image_uploader.s3bucket_job.stat')
-    @patch('mash.services.raw_image_uploader.s3bucket_job.get_client')
+    @patch('mash.services.uploader.s3bucket_job.stat')
+    @patch('mash.services.uploader.s3bucket_job.get_client')
     @patch_open
     def test_upload(
         self, mock_request_credentials, mock_get_client, mock_stat

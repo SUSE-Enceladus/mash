@@ -5,11 +5,15 @@ from mash.services.uploader_service import main
 
 
 class TestUploader(object):
+    @patch('mash.services.uploader_service.BaseJobFactory')
     @patch('mash.services.uploader_service.UploaderConfig')
     @patch('mash.services.uploader_service.ListenerService')
-    def test_main(self, mock_UploadImageService, mock_config):
+    def test_main(self, mock_UploadImageService, mock_config, mock_factory):
         config = Mock()
         mock_config.return_value = config
+
+        factory = Mock()
+        mock_factory.return_value = factory
 
         main()
         mock_UploadImageService.assert_called_once_with(
@@ -17,7 +21,8 @@ class TestUploader(object):
             config=config,
             custom_args={
                 'listener_msg_args': ['image_file'],
-                'status_msg_args': ['source_regions', 'image_file']
+                'status_msg_args': ['source_regions', 'image_file'],
+                'job_factory': factory
             }
         )
 

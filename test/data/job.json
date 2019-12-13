@@ -26,8 +26,5 @@
   "cloud_architecture": "aarch64",
   "notification_email": "test@fake.com",
   "profile": "Proxy",
-  "conditions_wait_time": 500,
-  "raw_image_upload_type": "s3bucket",
-  "raw_image_upload_account": "account",
-  "raw_image_upload_location": "location"
+  "conditions_wait_time": 500
 }

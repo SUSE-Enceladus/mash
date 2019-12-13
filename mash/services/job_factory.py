@@ -17,82 +17,35 @@
 #
 
 from mash.mash_exceptions import MashJobException
-from mash.services.deprecation.azure_job import AzureDeprecationJob
-from mash.services.deprecation.ec2_job import EC2DeprecationJob
-from mash.services.deprecation.gce_job import GCEDeprecationJob
-from mash.services.publisher.azure_job import AzurePublisherJob
-from mash.services.publisher.ec2_job import EC2PublisherJob
-from mash.services.publisher.gce_job import GCEPublisherJob
-from mash.services.raw_image_uploader.s3bucket_job import S3BucketUploaderJob
-from mash.services.raw_image_uploader.skip_raw_image_uploader_job import SkipRawImageUploaderJob
-from mash.services.replication.azure_job import AzureReplicationJob
-from mash.services.replication.ec2_job import EC2ReplicationJob
-from mash.services.replication.gce_job import GCEReplicationJob
-from mash.services.testing.azure_job import AzureTestingJob
-from mash.services.testing.ec2_job import EC2TestingJob
-from mash.services.testing.gce_job import GCETestingJob
-from mash.services.uploader.azure_job import AzureUploaderJob
-from mash.services.uploader.ec2_job import EC2UploaderJob
-from mash.services.uploader.gce_job import GCEUploaderJob
-
-jobs = {
-    'deprecation': {
-        'azure': AzureDeprecationJob,
-        'ec2': EC2DeprecationJob,
-        'gce': GCEDeprecationJob
-    },
-    'publisher': {
-        'azure': AzurePublisherJob,
-        'ec2': EC2PublisherJob,
-        'gce': GCEPublisherJob
-    },
-    'raw_image_uploader': {
-        's3bucket': S3BucketUploaderJob
-    },
-    'replication': {
-        'azure': AzureReplicationJob,
-        'ec2': EC2ReplicationJob,
-        'gce': GCEReplicationJob
-    },
-    'testing': {
-        'azure': AzureTestingJob,
-        'ec2': EC2TestingJob,
-        'gce': GCETestingJob
-    },
-    'uploader': {
-        'azure': AzureUploaderJob,
-        'ec2': EC2UploaderJob,
-        'gce': GCEUploaderJob
-    }
-}
 
 
-class JobFactory(object):
+class BaseJobFactory(object):
     """
-    Service Job Factory class.
+    Base Job Factory.
     """
-    @staticmethod
-    def create_job(
-        cloud, service_exchange, job_config, service_config
+    def __init__(
+        self, service_name, job_types, job_type_key=None
     ):
+        self.service_name = service_name
+        self.job_types = job_types
+        self.job_type_key = job_type_key or 'cloud'
+
+    def create_job(self, job_config, service_config):
         """
-        Create new instance of job based on service exchange and cloud name,
+        Create new instance of job based on type,
         """
+        job_type = job_config.get(self.job_type_key)
+
+        if not job_type:
+            raise MashJobException('No job type provided, cannot create job.')
+
         try:
-            if service_exchange == 'raw_image_uploader':
-                # raw image uploader job type depends on a separate parameter
-                # instead of the cloud framework
-                if job_config.get('raw_image_upload_type'):
-                    job_class = jobs['raw_image_uploader'][job_config['raw_image_upload_type']]
-                else:
-                    job_class = SkipRawImageUploaderJob
-            else:
-                job_class = jobs[service_exchange][cloud]
+            job_class = self.job_types[job_type]
         except KeyError:
             raise MashJobException(
-                'Cloud {0} is not supported in {1} service.'.format(
-                    cloud,
-                    service_exchange
+                'Job type {0} is not supported in {1} service.'.format(
+                    job_type,
+                    self.service_name
                 )
             )
 

@@ -9,6 +9,7 @@ from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
 from mash.services.listener_service import ListenerService
+from mash.mash_exceptions import MashListenerServiceException
 from mash.utils.json_format import JsonFormat
 
 
@@ -96,6 +97,17 @@ class TestListenerService(object):
         self.config.get_log_file.return_value = \
             '/var/log/mash/service_service.log'
 
+        with pytest.raises(MashListenerServiceException):
+            self.service.post_init()
+
+        self.service.custom_args = {
+            'listener_msg_args': ['source_regions'],
+            'status_msg_args': ['source_regions'],
+            'job_factory': Mock()
+        }
+        self.config.get_job_directory.reset_mock()
+        mock_makedirs.reset_mock()
+
         self.service.post_init()
 
         self.config.get_job_directory.assert_called_once_with('replication')
@@ -133,7 +145,8 @@ class TestListenerService(object):
         self.service.config = self.config
         self.service.custom_args = {
             'listener_msg_args': ['source_regions'],
-            'status_msg_args': ['source_regions']
+            'status_msg_args': ['source_regions'],
+            'job_factory': Mock()
         }
         self.config.get_log_file.return_value = \
             '/var/log/mash/service_service.log'
@@ -177,16 +190,16 @@ class TestListenerService(object):
             extra={'job_id': job.id}
         )
 
-    @patch('mash.services.listener_service.JobFactory')
     @patch('mash.services.listener_service.persist_json')
-    def test_service_add_job(
-        self, mock_persist_json, mock_job_factory
-    ):
+    def test_service_add_job(self, mock_persist_json):
         job = Mock()
         job.id = '1'
         job.get_job_id.return_value = {'job_id': '1'}
 
-        mock_job_factory.create_job.return_value = job
+        factory = Mock()
+        factory.create_job.return_value = job
+
+        self.service.job_factory = factory
         self.service.job_directory = 'tmp-dir/'
 
         job_config = {'id': '1', 'cloud': 'ec2'}
@@ -199,13 +212,13 @@ class TestListenerService(object):
             extra={'job_id': '1'}
         )
 
-    @patch('mash.services.listener_service.JobFactory')
-    def test_service_add_job_exception(self, mock_job_factory):
+    def test_service_add_job_exception(self):
         job_config = {'id': '1', 'cloud': 'ec2'}
-
-        mock_job_factory.create_job.side_effect = Exception(
+        factory = Mock()
+        factory.create_job.side_effect = Exception(
             'Cannot create job'
         )
+        self.service.job_factory = factory
         self.service._add_job(job_config)
         self.service.log.error.assert_called_once_with(
             'Invalid job: Cannot create job.'

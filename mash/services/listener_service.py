@@ -27,7 +27,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from pytz import utc
 
-from mash.services.job_factory import JobFactory
+from mash.mash_exceptions import MashListenerServiceException
 from mash.services.mash_service import MashService
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
@@ -66,6 +66,13 @@ class ListenerService(MashService):
         if not self.custom_args:
             self.custom_args = {}
 
+        if 'job_factory' not in self.custom_args:
+            raise MashListenerServiceException(
+                'Job factory is required as a custom arg in listener service.'
+            )
+        else:
+            self.job_factory = self.custom_args['job_factory']
+
         self.listener_msg_args = []
         self.status_msg_args = ['cloud_image_name']
 
@@ -103,13 +110,10 @@ class ListenerService(MashService):
         Job config is persisted to disk if not already done.
         """
         job_id = job_config['id']
-        cloud = job_config['cloud']
 
         if job_id not in self.jobs:
             try:
-                job = JobFactory.create_job(
-                    cloud, self.service_exchange, job_config, self.config
-                )
+                job = self.job_factory.create_job(job_config, self.config)
             except Exception as error:
                 self.log.error(
                     'Invalid job: {0}.'.format(error)
@@ -374,7 +378,11 @@ class ListenerService(MashService):
             listener_msg = json.loads(message)[key]
         except Exception:
             self.log.error(
-                'Invalid listener message: {0}'.format(message)
+                'Invalid listener message: {0}, '
+                'missing key: {1}'.format(
+                    message,
+                    key
+                )
             )
             listener_msg = None
 

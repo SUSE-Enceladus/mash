@@ -103,5 +103,6 @@ def test_azure_uploader_message(mock_init):
     job.cloud_image_name = 'cloud image 123'
     job.cloud = 'azure'
     job.cloud_architecture = 'x86_64'
+    job.raw_image_upload_type = 'azure'
     job.base_message = {}
     job.get_uploader_message()

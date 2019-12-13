@@ -3,14 +3,14 @@ from unittest.mock import (
     MagicMock, Mock, patch
 )
 
-from mash.services.uploader.gce_job import GCEUploaderJob
-from mash.mash_exceptions import MashUploadException
-from mash.services.uploader.config import UploaderConfig
+from mash.services.create.gce_job import GCECreateJob
+from mash.mash_exceptions import MashCreateException
+from mash.services.base_config import BaseConfig
 
 
-class TestGCEUploaderJob(object):
+class TestGCECreateJob(object):
     def setup(self):
-        self.config = UploaderConfig(
+        self.config = BaseConfig(
             config_file='test/data/mash_config.yaml'
         )
 
@@ -34,7 +34,7 @@ class TestGCEUploaderJob(object):
         }
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'create',
             'cloud': 'gce',
             'requesting_user': 'user1',
             'utctime': 'now',
@@ -47,8 +47,7 @@ class TestGCEUploaderJob(object):
             'image_description': 'description 20180909'
         }
 
-        self.job = GCEUploaderJob(job_doc, self.config)
-        self.job.image_file = ['sles-12-sp4-v20180909.tar.gz']
+        self.job = GCECreateJob(job_doc, self.config)
         self.job.credentials = self.credentials
 
     def test_post_init_incomplete_arguments(self):
@@ -60,41 +59,34 @@ class TestGCEUploaderJob(object):
             'utctime': 'now'
         }
 
-        with raises(MashUploadException):
-            GCEUploaderJob(job_doc, self.config)
+        with raises(MashCreateException):
+            GCECreateJob(job_doc, self.config)
 
-    def test_post_init_sles_11(self):
-        job_doc = {
-            'id': '1',
-            'last_service': 'uploader',
-            'cloud': 'gce',
-            'requesting_user': 'user1',
-            'utctime': 'now',
-            'family': 'sles-11',
-            'guest_os_features': ['UEFI_COMPATIBLE'],
-            'region': 'us-west1-a',
-            'account': 'test',
-            'bucket': 'images',
-            'cloud_image_name': 'sles-11-sp4-v20180909',
-            'image_description': 'description 20180909'
-        }
-
-        with raises(MashUploadException):
-            GCEUploaderJob(job_doc, self.config)
-
-    @patch('mash.services.uploader.gce_job.GoogleStorageDriver')
+    @patch('mash.services.create.gce_job.Provider')
+    @patch('mash.services.create.gce_job.get_driver')
     @patch('builtins.open')
-    def test_upload(
-        self, mock_open, mock_storage_driver
+    def test_create(
+        self, mock_open, mock_get_driver, mock_provider
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
 
-        storage_driver = Mock()
-        mock_storage_driver.return_value = storage_driver
+        compute_engine = MagicMock()
+        mock_get_driver.return_value = compute_engine
 
+        compute_driver = Mock()
+        compute_engine.return_value = compute_driver
+
+        self.job.source_regions = {'us-west1-a': 'sles-12-sp4-v20180909'}
         self.job.run_job()
 
-        storage_driver.get_container.assert_called_once_with('images')
-        assert storage_driver.upload_object_via_stream.call_count == 1
+        compute_driver.ex_create_image.assert_called_once_with(
+            'sles-12-sp4-v20180909',
+            'https://www.googleapis.com/storage/v1/b/images/o/'
+            'sles-12-sp4-v20180909.tar.gz',
+            description='description 20180909',
+            wait_for_completion=True,
+            family='sles-12',
+            guest_os_features=['UEFI_COMPATIBLE']
+        )

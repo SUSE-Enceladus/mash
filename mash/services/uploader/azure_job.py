@@ -18,13 +18,10 @@
 
 from multiprocessing import Process, SimpleQueue
 
-from azure.common.client_factory import get_client_from_auth_file
-from azure.mgmt.compute import ComputeManagementClient
-
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
-from mash.utils.mash_utils import format_string_with_date, create_json_file
+from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
 from mash.utils.azure import upload_azure_image
 
@@ -78,13 +75,12 @@ class AzureUploaderJob(MashJob):
             credentials = self.credentials[self.account]
 
             self._upload_image(blob_name, credentials)
-            self._create_image(blob_name, credentials)
 
             self.source_regions[self.region] = self.cloud_image_name
             self.send_log(
-                'Uploaded image has ID: {0} in region {1}'.format(
-                    self.cloud_image_name,
-                    self.region
+                'Uploaded image: {0}, to the container: {1}'.format(
+                    blob_name,
+                    self.container
                 )
             )
 
@@ -130,33 +126,3 @@ class AzureUploaderJob(MashJob):
 
         if result.empty() is False:
             raise MashUploadException(result.get())
-
-    def _create_image(self, blob_name, credentials):
-        """
-        Create image in ARM from existing page blob.
-        """
-        with create_json_file(credentials) as auth_file:
-            compute_client = get_client_from_auth_file(
-                ComputeManagementClient, auth_path=auth_file
-            )
-            async_create_image = compute_client.images.create_or_update(
-                self.resource_group,
-                self.cloud_image_name, {
-                    'location': self.region,
-                    'hyper_vgeneration': 'V1',
-                    'storage_profile': {
-                        'os_disk': {
-                            'os_type': 'Linux',
-                            'os_state': 'Generalized',
-                            'caching': 'ReadWrite',
-                            'blob_uri': 'https://{0}.{1}/{2}/{3}'.format(
-                                self.storage_account,
-                                'blob.core.windows.net',
-                                self.container,
-                                blob_name
-                            )
-                        }
-                    }
-                }
-            )
-            async_create_image.wait()

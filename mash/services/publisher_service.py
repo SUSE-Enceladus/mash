@@ -23,6 +23,11 @@ import traceback
 from mash.mash_exceptions import MashException
 from mash.services.base_config import BaseConfig
 from mash.services.listener_service import ListenerService
+from mash.services.job_factory import BaseJobFactory
+
+from mash.services.publisher.azure_job import AzurePublisherJob
+from mash.services.publisher.ec2_job import EC2PublisherJob
+from mash.services.no_op_job import NoOpJob
 
 
 def main():
@@ -34,12 +39,25 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
 
+        service_name = 'publisher'
+
+        # Create job factory
+        job_factory = BaseJobFactory(
+            service_name=service_name,
+            job_types={
+                'azure': AzurePublisherJob,
+                'ec2': EC2PublisherJob,
+                'gce': NoOpJob
+            }
+        )
+
         # run service, enter main loop
         ListenerService(
-            service_exchange='publisher',
+            service_exchange=service_name,
             config=BaseConfig(),
             custom_args={
-                'listener_msg_args': ['cloud_image_name']
+                'listener_msg_args': ['cloud_image_name'],
+                'job_factory': job_factory
             }
         )
     except MashException as e:

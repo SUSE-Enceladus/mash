@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -23,25 +23,42 @@ import traceback
 from mash.mash_exceptions import MashException
 from mash.services.base_config import BaseConfig
 from mash.services.listener_service import ListenerService
+from mash.services.job_factory import BaseJobFactory
+
+from mash.services.create.azure_job import AzureCreateJob
+from mash.services.create.ec2_job import EC2CreateJob
+from mash.services.create.gce_job import GCECreateJob
 
 
 def main():
     """
-    mash - uploader service application entry point
+    mash - create service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
+
+        service_name = 'create'
+
+        # Create job factory
+        job_factory = BaseJobFactory(
+            service_name=service_name,
+            job_types={
+                'azure': AzureCreateJob,
+                'ec2': EC2CreateJob,
+                'gce': GCECreateJob
+            }
+        )
+
         # run service, enter main loop
         ListenerService(
-            service_exchange='raw_image_uploader',
+            service_exchange=service_name,
             config=BaseConfig(),
             custom_args={
-                'listener_msg_args': [
-                    'cloud_image_name', 'image_file', 'source_regions'
-                ],
-                'status_msg_args': ['source_regions']
+                'listener_msg_args': ['image_file', 'source_regions'],
+                'status_msg_args': ['source_regions'],
+                'job_factory': job_factory
             }
         )
     except MashException as e:

@@ -23,6 +23,12 @@ import traceback
 from mash.mash_exceptions import MashException
 from mash.services.uploader.config import UploaderConfig
 from mash.services.listener_service import ListenerService
+from mash.services.job_factory import BaseJobFactory
+
+from mash.services.uploader.azure_job import AzureUploaderJob
+from mash.services.uploader.gce_job import GCEUploaderJob
+from mash.services.no_op_job import NoOpJob
+from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
 
 
 def main():
@@ -33,13 +39,29 @@ def main():
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
+
+        service_name = 'uploader'
+
+        # Create job factory
+        job_factory = BaseJobFactory(
+            service_name=service_name,
+            job_types={
+                'azure': AzureUploaderJob,
+                'ec2': NoOpJob,
+                's3bucket': S3BucketUploaderJob,
+                'gce': GCEUploaderJob
+            },
+            job_type_key='raw_image_upload_type'
+        )
+
         # run service, enter main loop
         ListenerService(
-            service_exchange='uploader',
+            service_exchange=service_name,
             config=UploaderConfig(),
             custom_args={
                 'listener_msg_args': ['image_file'],
-                'status_msg_args': ['source_regions', 'image_file']
+                'status_msg_args': ['source_regions', 'image_file'],
+                'job_factory': job_factory
             }
         )
     except MashException as e:
