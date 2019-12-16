@@ -18,7 +18,7 @@ def test_api_delete_job(
     )
 
     assert response.status_code == 200
-    assert response.data == b'{"msg":"Job deleted"}\n'
+    assert response.data == b'{"msg":"Job deletion request submitted"}\n'
 
     # Not found
     mock_delete_job.return_value = 0
