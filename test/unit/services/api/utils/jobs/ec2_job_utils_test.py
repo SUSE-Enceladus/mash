@@ -171,3 +171,13 @@ def test_update_ec2_job_accounts(
     }
 
     update_ec2_job_accounts(job_doc)
+
+    # Test doc using cloud_account
+    job_doc = {
+        'requesting_user': 'user1',
+        'cloud_account': 'acnt1'
+    }
+
+    result = update_ec2_job_accounts(job_doc)
+
+    assert 'cloud_account' not in result

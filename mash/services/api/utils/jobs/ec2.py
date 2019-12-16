@@ -113,6 +113,12 @@ def update_ec2_job_accounts(job_doc):
 
     accounts = {}
     target_accounts = []
+
+    if job_doc.get('cloud_account'):
+        account_name = job_doc['cloud_account']
+        cloud_account = get_ec2_account_by_id(account_name, user.id)
+        target_accounts.append(cloud_account)
+
     for group_name in job_doc.get('cloud_groups', []):
         group = get_ec2_group(group_name, user.id)
         target_accounts += group.accounts
@@ -133,6 +139,9 @@ def update_ec2_job_accounts(job_doc):
 
     if 'cloud_groups' in job_doc:
         del job_doc['cloud_groups']
+
+    if 'cloud_account' in job_doc:
+        del job_doc['cloud_account']
 
     if 'cloud_accounts' in job_doc:
         del job_doc['cloud_accounts']
