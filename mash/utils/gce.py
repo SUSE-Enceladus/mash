@@ -82,7 +82,7 @@ def get_region_list(credentials):
 
     region_names = set()
     for region in regions:
-        if region.status == 'UP':
+        if region.status == 'UP' and region.zones:
             # we actually need a specifc zone not just the region, pick one
             region_names.add(random.choice(region.zones).name)
 
