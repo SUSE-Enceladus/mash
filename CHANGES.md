@@ -1,3 +1,17 @@
+v4.4.0 (2019-12-20)
+===================
+
+- Add utf encoding to spec check section.
+  [\#602](https://github.com/SUSE-Enceladus/mash/pull/602)
+- Add app context to cli runner for cli tests.
+  [\#603](https://github.com/SUSE-Enceladus/mash/pull/603)
+- Add cloud account option for ec2 jobs.
+  [\#604](https://github.com/SUSE-Enceladus/mash/pull/604)
+- Add image cleanup to ec2 testing class.
+  [\#605](https://github.com/SUSE-Enceladus/mash/pull/605)
+- Update job deletion message.
+  [\#606](https://github.com/SUSE-Enceladus/mash/pull/606)
+
 v4.3.0 (2019-11-23)
 ===================
 
