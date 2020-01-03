@@ -81,7 +81,10 @@ class GCEUploaderJob(MashJob):
                     image_stream, container, object_name
                 )
 
-        self.source_regions[self.region] = self.cloud_image_name
+        self.source_regions[self.region] = {
+            'cloud_image_name': self.cloud_image_name,
+            'object_name': object_name
+        }
         self.send_log(
             'Uploaded image: {0}, to the bucket named: {1}'.format(
                 object_name,

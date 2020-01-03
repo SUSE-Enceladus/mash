@@ -78,7 +78,12 @@ class TestGCECreateJob(object):
         compute_driver = Mock()
         compute_engine.return_value = compute_driver
 
-        self.job.source_regions = {'us-west1-a': 'sles-12-sp4-v20180909'}
+        self.job.source_regions = {
+            'us-west1-a': {
+                'cloud_image_name': 'sles-12-sp4-v20180909',
+                'object_name': 'sles-12-sp4-v20180909.tar.gz'
+            }
+        }
         self.job.run_job()
 
         compute_driver.ex_create_image.assert_called_once_with(

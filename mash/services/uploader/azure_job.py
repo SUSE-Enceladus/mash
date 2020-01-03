@@ -59,7 +59,6 @@ class AzureUploaderJob(MashJob):
         self.cloud_image_name = format_string_with_date(
             self.base_cloud_image_name
         )
-
         blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
         if self.sas_token:
@@ -76,7 +75,10 @@ class AzureUploaderJob(MashJob):
 
             self._upload_image(blob_name, credentials)
 
-            self.source_regions[self.region] = self.cloud_image_name
+            self.source_regions[self.region] = {
+                'cloud_image_name': self.cloud_image_name,
+                'blob_name': blob_name
+            }
             self.send_log(
                 'Uploaded image: {0}, to the container: {1}'.format(
                     blob_name,

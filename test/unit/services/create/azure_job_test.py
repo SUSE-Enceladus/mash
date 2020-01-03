@@ -79,7 +79,12 @@ class TestAzureCreateJob(object):
         async_create_image = Mock()
         client.images.create_or_update.return_value = async_create_image
 
-        self.job.source_regions = {'region': 'name'}
+        self.job.source_regions = self.job.source_regions = {
+            'region': {
+                'cloud_image_name': 'name',
+                'blob_name': 'name.vhd'
+            }
+        }
         self.job.run_job()
 
         assert mock_get_client_from_auth_file.call_count == 1

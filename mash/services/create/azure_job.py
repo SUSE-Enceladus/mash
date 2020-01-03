@@ -52,13 +52,14 @@ class AzureCreateJob(MashJob):
         self.status = SUCCESS
         self.send_log('Creating image.')
 
-        self.cloud_image_name = self.source_regions[self.region]
-        blob_name = ''.join([self.cloud_image_name, '.vhd'])
+        region_info = self.source_regions[self.region]
+        self.cloud_image_name = region_info['cloud_image_name']
+        self.blob_name = region_info['blob_name']
 
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        self._create_image(blob_name, credentials)
+        self._create_image(self.blob_name, credentials)
 
         self.send_log(
             'Image has ID: {0} in region {1}'.format(
