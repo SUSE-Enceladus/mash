@@ -30,7 +30,7 @@ from mash.services.status_levels import SUCCESS
 
 class GCECreateJob(MashJob):
     """
-    Implements create system image in GCE.
+    Implements create VM image in GCE.
     """
     def post_init(self):
         self.source_regions = {}

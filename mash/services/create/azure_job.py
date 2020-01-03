@@ -28,7 +28,7 @@ from mash.services.status_levels import SUCCESS
 
 class AzureCreateJob(MashJob):
     """
-    Implements Azure system image creation.
+    Implements Azure VM image creation.
     """
     def post_init(self):
         self.source_regions = {}

@@ -32,7 +32,7 @@ from mash.services.status_levels import SUCCESS
 
 class EC2CreateJob(MashJob):
     """
-    Implements system image upload/create to Amazon.
+    Implements VM image upload/create to Amazon.
 
     Amazon specific custom arguments:
 
