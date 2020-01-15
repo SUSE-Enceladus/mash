@@ -74,7 +74,7 @@ class ListenerService(MashService):
             self.job_factory = self.custom_args['job_factory']
 
         self.listener_msg_args = []
-        self.status_msg_args = ['cloud_image_name']
+        self.status_msg_args = []
 
         if self.custom_args.get('listener_msg_args'):
             self.listener_msg_args += self.custom_args['listener_msg_args']

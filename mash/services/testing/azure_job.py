@@ -97,7 +97,7 @@ class AzureTestingJob(MashJob):
                     cloud=self.cloud,
                     description=self.description,
                     distro=self.distro,
-                    image_id=self.source_regions[self.region],
+                    image_id=self.source_regions[self.region]['cloud_image_name'],
                     instance_type=self.instance_type,
                     img_proof_timeout=self.img_proof_timeout,
                     region=self.region,

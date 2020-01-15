@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -15,48 +15,48 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-
 import logging
 import sys
 import traceback
 
+# project
 from mash.mash_exceptions import MashException
-from mash.services.base_config import BaseConfig
+from mash.services.uploader.config import UploaderConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
-from mash.services.publisher.azure_job import AzurePublisherJob
-from mash.services.publisher.ec2_job import EC2PublisherJob
-from mash.services.no_op_job import NoOpJob
+from mash.services.uploader.azure_sas_job import AzureSASUploaderJob
+from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
 
 
 def main():
     """
-    mash - publisher service application entry point
+    mash - raw image uploader service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
 
-        service_name = 'publisher'
+        service_name = 'raw_image_uploader'
 
         # Create job factory
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
-                'azure': AzurePublisherJob,
-                'ec2': EC2PublisherJob,
-                'gce': NoOpJob
-            }
+                'azure_sas': AzureSASUploaderJob,
+                's3bucket': S3BucketUploaderJob
+            },
+            job_type_key='raw_image_upload_type',
+            can_skip=True
         )
 
         # run service, enter main loop
         ListenerService(
             service_exchange=service_name,
-            config=BaseConfig(),
+            config=UploaderConfig(),
             custom_args={
-                'listener_msg_args': ['source_regions'],
+                'listener_msg_args': ['image_file', 'source_regions'],
                 'status_msg_args': ['source_regions'],
                 'job_factory': job_factory
             }

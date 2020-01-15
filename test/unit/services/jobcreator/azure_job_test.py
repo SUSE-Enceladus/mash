@@ -78,31 +78,3 @@ def test_azure_job_cleanup(mock_init):
 
     testing_message = json.loads(job.get_testing_message())
     assert testing_message['testing_job']['cleanup_images'] is True
-
-
-@patch.object(AzureJob, '__init__')
-def test_azure_uploader_message(mock_init):
-    mock_init.return_value = None
-
-    job = AzureJob({
-        'job_id': '123',
-        'cloud': 'azure',
-        'requesting_user': 'test-user',
-        'last_service': 'deprecation',
-        'utctime': 'now',
-        'image': 'test-image',
-        'cloud_image_name': 'test-cloud-image',
-        'image_description': 'image description',
-        'distro': 'sles',
-        'download_url': 'https://download.here',
-        'sas_token': 'sas_token'
-    })
-    job.sas_token = 'sas_token'
-    job.sas_container = 'sas_container'
-    job.sas_storage_account = 'sas_storage_account'
-    job.cloud_image_name = 'cloud image 123'
-    job.cloud = 'azure'
-    job.cloud_architecture = 'x86_64'
-    job.raw_image_upload_type = 'azure'
-    job.base_message = {}
-    job.get_uploader_message()

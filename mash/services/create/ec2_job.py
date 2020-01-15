@@ -42,9 +42,6 @@ class EC2CreateJob(MashJob):
     """
 
     def post_init(self):
-        self._image_file = None
-        self.cloud_image_name = ''
-
         try:
             self.target_regions = self.job_config['target_regions']
             self.base_cloud_image_name = self.job_config['cloud_image_name']
@@ -70,6 +67,7 @@ class EC2CreateJob(MashJob):
         self.cloud_image_name = format_string_with_date(
             self.base_cloud_image_name
         )
+        self.source_regions['cloud_image_name'] = self.cloud_image_name
 
         self.ec2_upload_parameters = {
             'image_name': self.cloud_image_name,
@@ -180,7 +178,7 @@ class EC2CreateJob(MashJob):
                         self.image_file
                     )
 
-                self.source_regions = {region: ami_id}
+                self.source_regions[region] = ami_id
                 self.send_log(
                     'Created image has ID: {0} in region {1}'.format(
                         ami_id, region
@@ -214,15 +212,3 @@ class EC2CreateJob(MashJob):
         ec2_client.delete_key_pair(KeyName=ssh_key_pair.name)
         private_key_file = ssh_key_pair.private_key_file
         del private_key_file
-
-    @property
-    def image_file(self):
-        """System image file property."""
-        return self._image_file
-
-    @image_file.setter
-    def image_file(self, system_image_file):
-        """
-        Setter for image_file list.
-        """
-        self._image_file = system_image_file

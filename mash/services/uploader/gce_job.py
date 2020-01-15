@@ -30,10 +30,6 @@ class GCEUploaderJob(MashJob):
     Implements system image upload to GCE
     """
     def post_init(self):
-        self._image_file = None
-        self.source_regions = {}
-        self.cloud_image_name = ''
-
         try:
             self.account = self.job_config['account']
             self.region = self.job_config['region']

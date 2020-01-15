@@ -76,7 +76,10 @@ class AzurePublisherJob(MashJob):
 
         self.request_credentials([self.account])
         credential = self.credentials[self.account]
-        blob_name = ''.join([self.cloud_image_name, '.vhd'])
+
+        region_info = self.source_regions[self.region]
+        self.cloud_image_name = region_info['cloud_image_name']
+        self.blob_name = region_info['blob_name']
 
         with create_json_file(credential) as auth_file:
             self.send_log(
@@ -89,7 +92,7 @@ class AzurePublisherJob(MashJob):
             try:
                 blob_url = self._get_blob_url(
                     auth_file,
-                    blob_name,
+                    self.blob_name,
                     self.container,
                     self.resource_group,
                     self.storage_account

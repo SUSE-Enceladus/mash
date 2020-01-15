@@ -31,9 +31,6 @@ class AzureCreateJob(MashJob):
     Implements Azure VM image creation.
     """
     def post_init(self):
-        self.source_regions = {}
-        self.cloud_image_name = ''
-
         try:
             self.container = self.job_config['container']
             self.storage_account = self.job_config['storage_account']

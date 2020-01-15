@@ -21,7 +21,7 @@ class TestUploader(object):
             config=config,
             custom_args={
                 'listener_msg_args': ['image_file'],
-                'status_msg_args': ['source_regions', 'image_file'],
+                'status_msg_args': ['image_file', 'source_regions'],
                 'job_factory': factory
             }
         )

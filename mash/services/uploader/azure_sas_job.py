@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import re
+
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
@@ -24,56 +26,54 @@ from mash.services.status_levels import SUCCESS
 from mash.utils.azure import upload_azure_image
 
 
-class AzureUploaderJob(MashJob):
+# https://[storage-account].[maangement-url]/[container]?[SAS token]
+sas_url_match = r'^https://([A-Za-z]+).+/([A-Za-z|-]+)\?(.+)$'
+
+
+class AzureSASUploaderJob(MashJob):
     """
-    Implements VM image upload to Azure
+    Implements VM image upload to Azure via SAS token.
     """
     def post_init(self):
         try:
-            self.container = self.job_config['container']
-            self.storage_account = self.job_config['storage_account']
-            self.base_cloud_image_name = self.job_config['cloud_image_name']
-            self.account = self.job_config.get('account')
-            self.region = self.job_config.get('region')
-            self.resource_group = self.job_config.get('resource_group')
+            self.raw_image_upload_location = self.job_config['raw_image_upload_location']
         except KeyError as error:
             raise MashUploadException(
-                'Azure uploader jobs require a(n) {0} '
+                'Azure SAS uploader jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
             )
 
+        self.cloud_image_name = self.job_config.get('cloud_image_name')
+
     def run_job(self):
         self.status = SUCCESS
         self.send_log('Uploading image.')
 
-        self.cloud_image_name = format_string_with_date(
-            self.base_cloud_image_name
-        )
-        blob_name = ''.join([self.cloud_image_name, '.vhd'])
+        if self.cloud_image_name:
+            self.cloud_image_name = format_string_with_date(
+                self.cloud_image_name
+            )
+            self.blob_name = ''.join([self.cloud_image_name, '.vhd'])
+        else:
+            region_info = self.source_regions[self.region]
+            self.cloud_image_name = region_info['cloud_image_name']
+            self.blob_name = region_info['blob_name']
 
-        self.request_credentials([self.account])
-        credentials = self.credentials[self.account]
+        build = re.search(sas_url_match, self.raw_image_upload_location)
 
         upload_azure_image(
-            blob_name,
-            self.container,
+            self.blob_name,
+            build.group(2),
             self.image_file,
             self.config.get_azure_max_retry_attempts(),
             self.config.get_azure_max_workers(),
-            self.storage_account,
-            credentials=credentials,
-            resource_group=self.resource_group
+            build.group(1),
+            sas_token=build.group(3)
         )
-
-        self.source_regions[self.region] = {
-            'cloud_image_name': self.cloud_image_name,
-            'blob_name': blob_name
-        }
         self.send_log(
-            'Uploaded image: {0}, to the container: {1}'.format(
-                blob_name,
-                self.container
+            'Uploaded blob: {blob} using sas token.'.format(
+                blob=self.blob_name
             )
         )

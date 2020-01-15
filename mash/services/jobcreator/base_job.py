@@ -64,13 +64,8 @@ class BaseJob(object):
         self.target_account_info = kwargs.get('target_account_info')
         self.kwargs = kwargs
 
-        if not self.raw_image_upload_type:
-            self.raw_image_upload_type = self.cloud
-        elif self.raw_image_upload_type == 's3bucket' and self.last_service != 'uploader':
-            raise MashJobCreatorException(
-                'Cannot process image past uploader service '
-                'when uploading to an S3 bucket.'
-            )
+        if self.raw_image_upload_type and self.last_service == 'uploader':
+            self.cloud = self.raw_image_upload_type
 
         self.base_message = {
             'id': self.id,
@@ -182,6 +177,22 @@ class BaseJob(object):
                 self.__class__.__name__
             )
         )
+
+    def get_raw_image_uploader_message(self):
+        """
+        Build raw image uploader job message.
+        """
+        raw_image_uploader_message = {
+            'raw_image_uploader_job': {
+                'cloud': self.cloud,
+                'raw_image_upload_type': self.raw_image_upload_type,
+                'raw_image_upload_account': self.raw_image_upload_account,
+                'raw_image_upload_location': self.raw_image_upload_location
+            }
+        }
+        raw_image_uploader_message['raw_image_uploader_job'].update(self.base_message)
+
+        return JsonFormat.json_message(raw_image_uploader_message)
 
     def post_init(self):
         """

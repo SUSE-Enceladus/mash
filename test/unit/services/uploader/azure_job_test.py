@@ -67,60 +67,23 @@ class TestAzureUploaderJob(object):
             AzureUploaderJob(job_doc, self.config)
 
     @patch('mash.services.uploader.azure_job.upload_azure_image')
-    @patch('mash.services.uploader.azure_job.Process')
-    @patch('mash.services.uploader.azure_job.SimpleQueue')
     @patch('builtins.open')
     def test_upload(
-        self, mock_open, mock_queue, mock_process, mock_upload_azure_image
+        self, mock_open, mock_upload_azure_image
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
 
-        queue = MagicMock()
-        queue.empty.return_value = True
-        mock_queue.return_value = queue
-
         self.job.run_job()
 
-        mock_process.assert_called_once_with(
-            target=mock_upload_azure_image,
-            args=(
-                'name.vhd',
-                'container',
-                'file.vhdfixed.xz',
-                5,
-                8,
-                'storage',
-                queue,
-                self.credentials['test'],
-                'group_name',
-                None
-            )
+        mock_upload_azure_image.assert_called_once_with(
+            'name.vhd',
+            'container',
+            'file.vhdfixed.xz',
+            5,
+            8,
+            'storage',
+            credentials=self.credentials['test'],
+            resource_group='group_name'
         )
-
-        # Test sas upload route
-        self.job.sas_token = 'sas_token'
-        mock_process.reset_mock()
-
-        self.job.run_job()
-        mock_process.assert_called_once_with(
-            target=mock_upload_azure_image,
-            args=(
-                'name.vhd',
-                'container',
-                'file.vhdfixed.xz',
-                5,
-                8,
-                'storage',
-                queue,
-                None,
-                'group_name',
-                'sas_token'
-            )
-        )
-
-        queue.empty.return_value = False
-        queue.get.return_value = 'Failed!'
-        with raises(MashUploadException):
-            self.job.run_job()

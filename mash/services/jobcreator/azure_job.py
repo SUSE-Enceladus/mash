@@ -57,9 +57,6 @@ class AzureJob(BaseJob):
         self.cloud_image_name_generation_suffix = self.kwargs.get(
             'cloud_image_name_generation_suffix'
         )
-        self.sas_token = self.kwargs.get('sas_token')
-        self.sas_container = self.kwargs.get('sas_container')
-        self.sas_storage_account = self.kwargs.get('sas_storage_account')
 
     def get_deprecation_message(self):
         """
@@ -180,30 +177,20 @@ class AzureJob(BaseJob):
         """
         Build uploader job message.
         """
-        if self.sas_token:
-            uploader_message = {
-                'uploader_job': {
-                    'cloud_image_name': self.cloud_image_name,
-                    'cloud': self.cloud,
-                    'raw_image_upload_type': self.raw_image_upload_type,
-                    'container': self.sas_container,
-                    'storage_account': self.sas_storage_account,
-                    'sas_token': self.sas_token
-                }
+        uploader_message = {
+            'uploader_job': {
+                'cloud_image_name': self.cloud_image_name,
+                'cloud': self.cloud,
+                'account': self.cloud_account,
+                'region': self.region,
+                'container': self.source_container,
+                'resource_group': self.source_resource_group,
+                'storage_account': self.source_storage_account,
+                'raw_image_upload_type': self.raw_image_upload_type,
+                'raw_image_upload_account': self.raw_image_upload_account,
+                'raw_image_upload_location': self.raw_image_upload_location
             }
-        else:
-            uploader_message = {
-                'uploader_job': {
-                    'cloud_image_name': self.cloud_image_name,
-                    'cloud': self.cloud,
-                    'raw_image_upload_type': self.raw_image_upload_type,
-                    'account': self.cloud_account,
-                    'region': self.region,
-                    'container': self.source_container,
-                    'resource_group': self.source_resource_group,
-                    'storage_account': self.source_storage_account
-                }
-            }
+        }
 
         uploader_message['uploader_job'].update(self.base_message)
 

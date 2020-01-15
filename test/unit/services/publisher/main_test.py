@@ -22,7 +22,7 @@ class TestPublisherServiceMain(object):
             service_exchange='publisher',
             config=config,
             custom_args={
-                'listener_msg_args': ['cloud_image_name'],
+                'listener_msg_args': ['source_regions'],
                 'job_factory': factory
             }
         )
@@ -46,7 +46,7 @@ class TestPublisherServiceMain(object):
             service_exchange='publisher',
             config=config,
             custom_args={
-                'listener_msg_args': ['cloud_image_name'],
+                'listener_msg_args': ['source_regions'],
                 'job_factory': factory
             }
         )

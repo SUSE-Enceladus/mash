@@ -20,7 +20,7 @@ class TestReplicationServiceMain(object):
             service_exchange='replication',
             config=config,
             custom_args={
-                'listener_msg_args': ['cloud_image_name', 'source_regions'],
+                'listener_msg_args': ['source_regions'],
                 'job_factory': factory
             }
         )
@@ -46,7 +46,7 @@ class TestReplicationServiceMain(object):
             service_exchange='replication',
             config=config,
             custom_args={
-                'listener_msg_args': ['cloud_image_name', 'source_regions'],
+                'listener_msg_args': ['source_regions'],
                 'job_factory': factory
             }
         )

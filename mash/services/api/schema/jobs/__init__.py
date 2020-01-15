@@ -62,6 +62,7 @@ base_job_message = {
                 'uploader',
                 'create',
                 'testing',
+                'raw_image_uploader',
                 'replication',
                 'publisher',
                 'deprecation'

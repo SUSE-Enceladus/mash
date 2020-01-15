@@ -108,6 +108,8 @@ class GCETestingJob(MashJob):
 
         fallback_regions.add(self.region)
 
+        self.cloud_image_name = self.source_regions[self.region]['cloud_image_name']
+
         with create_json_file(credentials) as auth_file:
             retry_region = self.region
             while fallback_regions:
@@ -116,7 +118,7 @@ class GCETestingJob(MashJob):
                         cloud=self.cloud,
                         description=self.description,
                         distro=self.distro,
-                        image_id=self.source_regions[self.region],
+                        image_id=self.cloud_image_name,
                         instance_type=self.instance_type,
                         img_proof_timeout=self.img_proof_timeout,
                         region=retry_region,
@@ -155,17 +157,16 @@ class GCETestingJob(MashJob):
 
     def cleanup_image(self):
         credentials = self.credentials[self.account]
-        cloud_image_name = self.source_regions[self.region]
 
         self.send_log(
             'Cleaning up image: {0} in region: {1}.'.format(
-                cloud_image_name,
+                self.cloud_image_name,
                 self.region
             )
         )
 
         try:
-            cleanup_gce_image(credentials, cloud_image_name, self.bucket)
+            cleanup_gce_image(credentials, self.cloud_image_name, self.bucket)
         except Exception as error:
             self.send_log(
                 'Failed to cleanup image: {0}'.format(error),

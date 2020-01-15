@@ -44,36 +44,19 @@ def update_azure_job_accounts(job_doc):
         'publisher_id',
         'sku'
     )
-    sas_args = (
-        job_doc.get('sas_token'),
-        job_doc.get('sas_container'),
-        job_doc.get('sas_storage_account')
-    )
 
-    if any(sas_args) and not all(sas_args):
-        raise MashJobException(
-            'sas_token, sas_storage_account and sas_container are all '
-            'required for an Azure SAS upload job.'
-        )
+    for attr in attrs:
+        if attr not in job_doc:
+            job_doc[attr] = getattr(cloud_account, attr)
 
-    if job_doc.get('sas_token'):
-        if job_doc['last_service'] != 'uploader':
-            raise MashJobException(
-                'Azure uploads using SAS token expect a last service of uploader.'
-            )
-    else:
-        for attr in attrs:
-            if attr not in job_doc:
-                job_doc[attr] = getattr(cloud_account, attr)
-
-        if job_doc['last_service'] in ('publisher', 'deprecation'):
-            for arg in publisher_args:
-                if arg not in job_doc:
-                    raise MashJobException(
-                        'Azure publishing jobs require a(n) '
-                        ' {arg} argument in the job document.'.format(
-                            arg=arg
-                        )
+    if job_doc['last_service'] in ('publisher', 'deprecation'):
+        for arg in publisher_args:
+            if arg not in job_doc:
+                raise MashJobException(
+                    'Azure publishing jobs require a(n) '
+                    ' {arg} argument in the job document.'.format(
+                        arg=arg
                     )
+                )
 
     return job_doc

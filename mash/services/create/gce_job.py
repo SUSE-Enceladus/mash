@@ -33,8 +33,6 @@ class GCECreateJob(MashJob):
     Implements create VM image in GCE.
     """
     def post_init(self):
-        self.source_regions = {}
-        self.cloud_image_name = ''
         self.cloud_image_description = ''
 
         try:

@@ -133,10 +133,12 @@ class GCEJob(BaseJob):
             'uploader_job': {
                 'cloud_image_name': self.cloud_image_name,
                 'cloud': self.cloud,
-                'raw_image_upload_type': self.raw_image_upload_type,
                 'account': self.cloud_account,
                 'bucket': self.bucket,
-                'region': self.region
+                'region': self.region,
+                'raw_image_upload_type': self.raw_image_upload_type,
+                'raw_image_upload_account': self.raw_image_upload_account,
+                'raw_image_upload_location': self.raw_image_upload_location
             }
         }
         uploader_message['uploader_job'].update(self.base_message)

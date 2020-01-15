@@ -105,7 +105,3 @@ class TestAzureCreateJob(object):
             }
         )
         async_create_image.wait.assert_called_once_with()
-
-        # Test sas upload route
-        self.job.sas_token = 'sas_token'
-        self.job.run_job()

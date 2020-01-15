@@ -131,6 +131,10 @@ class JobCreatorService(MashService):
                 self.publish_job_doc(
                     'uploader', job.get_uploader_message()
                 )
+            elif service == 'raw_image_uploader':
+                self.publish_job_doc(
+                    'raw_image_uploader', job.get_raw_image_uploader_message()
+                )
 
             if service == job.last_service:
                 break

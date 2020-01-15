@@ -72,7 +72,10 @@ class AzureReplicationJob(MashJob):
 
         self.request_credentials([self.account])
         credential = self.credentials[self.account]
-        blob_name = ''.join([self.cloud_image_name, '.vhd'])
+
+        region_info = self.source_regions[self.region]
+        self.cloud_image_name = region_info['cloud_image_name']
+        self.blob_name = region_info['blob_name']
 
         with create_json_file(credential) as auth_file:
             self.send_log(
@@ -85,7 +88,7 @@ class AzureReplicationJob(MashJob):
             try:
                 copy_blob_to_classic_storage(
                     auth_file,
-                    blob_name,
+                    self.blob_name,
                     self.source_container,
                     self.source_resource_group,
                     self.source_storage_account,
@@ -107,7 +110,7 @@ class AzureReplicationJob(MashJob):
                     )
                     delete_page_blob(
                         auth_file,
-                        blob_name,
+                        self.blob_name,
                         self.source_container,
                         self.source_resource_group,
                         self.source_storage_account

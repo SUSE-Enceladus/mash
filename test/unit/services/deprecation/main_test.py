@@ -20,7 +20,7 @@ class TestDeprecationServiceMain(object):
             service_exchange='deprecation',
             config=config,
             custom_args={
-                'listener_msg_args': ['cloud_image_name'],
+                'listener_msg_args': ['source_regions'],
                 'job_factory': factory
             }
         )
@@ -48,7 +48,7 @@ class TestDeprecationServiceMain(object):
             service_exchange='deprecation',
             config=config,
             custom_args={
-                'listener_msg_args': ['cloud_image_name'],
+                'listener_msg_args': ['source_regions'],
                 'job_factory': factory
             }
         )

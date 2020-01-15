@@ -66,6 +66,8 @@ class GCEDeprecationJob(MashJob):
         self.request_credentials([self.account])
         credential = self.credentials[self.account]
 
+        self.cloud_image_name = self.source_regions[self.region]['cloud_image_name']
+
         with create_json_file(credential) as auth_file:
             try:
                 ComputeEngine = get_driver(Provider.GCE)

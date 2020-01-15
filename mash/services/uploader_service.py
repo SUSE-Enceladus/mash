@@ -26,6 +26,7 @@ from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
 from mash.services.uploader.azure_job import AzureUploaderJob
+from mash.services.uploader.azure_sas_job import AzureSASUploaderJob
 from mash.services.uploader.gce_job import GCEUploaderJob
 from mash.services.no_op_job import NoOpJob
 from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
@@ -47,11 +48,11 @@ def main():
             service_name=service_name,
             job_types={
                 'azure': AzureUploaderJob,
+                'azure_sas': AzureSASUploaderJob,
                 'ec2': NoOpJob,
                 's3bucket': S3BucketUploaderJob,
                 'gce': GCEUploaderJob
-            },
-            job_type_key='raw_image_upload_type'
+            }
         )
 
         # run service, enter main loop
@@ -60,7 +61,7 @@ def main():
             config=UploaderConfig(),
             custom_args={
                 'listener_msg_args': ['image_file'],
-                'status_msg_args': ['source_regions', 'image_file'],
+                'status_msg_args': ['image_file', 'source_regions'],
                 'job_factory': job_factory
             }
         )

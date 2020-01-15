@@ -32,7 +32,7 @@ class MashJob(object):
         self._cloud_image_name = None
         self._credentials = None
         self._log_callback = None
-        self._source_regions = None
+        self._source_regions = {}
         self._job_file = job_config.get('job_file')
 
         self.config = config
@@ -180,6 +180,18 @@ class MashJob(object):
         Setter for source_regions dictionary.
         """
         self._source_regions = regions
+
+    @property
+    def image_file(self):
+        """VM image file property."""
+        return self._image_file
+
+    @image_file.setter
+    def image_file(self, system_image_file):
+        """
+        Setter for image_file list.
+        """
+        self._image_file = system_image_file
 
     def post_init(self):
         """

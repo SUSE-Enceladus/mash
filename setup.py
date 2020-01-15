@@ -34,6 +34,7 @@ config = {
             'mash-replication-service=mash.services.replication_service:main',
             'mash-publisher-service=mash.services.publisher_service:main',
             'mash-deprecation-service=mash.services.deprecation_service:main',
+            'mash-raw-image-uploader-service=mash.services.raw_image_uploader_service:main'
         ]
     },
     'include_package_data': True,

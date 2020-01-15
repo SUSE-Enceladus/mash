@@ -17,6 +17,7 @@
 #
 
 from mash.mash_exceptions import MashJobException
+from mash.services.no_op_job import NoOpJob
 
 
 class BaseJobFactory(object):
@@ -24,11 +25,12 @@ class BaseJobFactory(object):
     Base Job Factory.
     """
     def __init__(
-        self, service_name, job_types, job_type_key=None
+        self, service_name, job_types, job_type_key=None, can_skip=False
     ):
         self.service_name = service_name
         self.job_types = job_types
         self.job_type_key = job_type_key or 'cloud'
+        self.can_skip = can_skip
 
     def create_job(self, job_config, service_config):
         """
@@ -36,18 +38,20 @@ class BaseJobFactory(object):
         """
         job_type = job_config.get(self.job_type_key)
 
-        if not job_type:
+        if not job_type and self.can_skip:
+            job_class = NoOpJob
+        elif not job_type:
             raise MashJobException('No job type provided, cannot create job.')
-
-        try:
-            job_class = self.job_types[job_type]
-        except KeyError:
-            raise MashJobException(
-                'Job type {0} is not supported in {1} service.'.format(
-                    job_type,
-                    self.service_name
+        else:
+            try:
+                job_class = self.job_types[job_type]
+            except KeyError:
+                raise MashJobException(
+                    'Job type {0} is not supported in {1} service.'.format(
+                        job_type,
+                        self.service_name
+                    )
                 )
-            )
 
         try:
             job = job_class(job_config, service_config)

@@ -21,7 +21,7 @@ class TestCreate(object):
             config=config,
             custom_args={
                 'listener_msg_args': ['image_file', 'source_regions'],
-                'status_msg_args': ['source_regions'],
+                'status_msg_args': ['image_file', 'source_regions'],
                 'job_factory': factory
             }
         )

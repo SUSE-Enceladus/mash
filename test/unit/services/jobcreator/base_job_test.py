@@ -53,19 +53,18 @@ class TestJobCreatorBaseJob(object):
                 'target_account_info': {}
             })
 
-    def test_base_job_init_invalid_upload_type(self):
-        with pytest.raises(MashJobCreatorException):
-            BaseJob({
-                'job_id': '123',
-                'cloud': 'aws',
-                'requesting_user': 'test-user',
-                'last_service': 'deprecation',
-                'utctime': 'now',
-                'image': 'test-image',
-                'cloud_image_name': 'test-cloud-image',
-                'image_description': 'image description',
-                'distro': 'sles',
-                'download_url': 'https://download.here',
-                'target_account_info': {},
-                'raw_image_upload_type': 's3bucket'
-            })
+    def test_base_job_raw_upload_only(self):
+        BaseJob({
+            'job_id': '123',
+            'cloud': 'aws',
+            'requesting_user': 'test-user',
+            'last_service': 'uploader',
+            'utctime': 'now',
+            'image': 'test-image',
+            'cloud_image_name': 'test-cloud-image',
+            'image_description': 'image description',
+            'distro': 'sles',
+            'download_url': 'https://download.here',
+            'target_account_info': {},
+            'raw_image_upload_type': 's3bucket'
+        })
