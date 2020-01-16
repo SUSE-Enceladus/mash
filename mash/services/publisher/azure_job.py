@@ -77,9 +77,8 @@ class AzurePublisherJob(MashJob):
         self.request_credentials([self.account])
         credential = self.credentials[self.account]
 
-        region_info = self.source_regions[self.region]
-        self.cloud_image_name = region_info['cloud_image_name']
-        self.blob_name = region_info['blob_name']
+        self.cloud_image_name = self.source_regions['cloud_image_name']
+        self.blob_name = self.source_regions['blob_name']
 
         with create_json_file(credential) as auth_file:
             self.send_log(

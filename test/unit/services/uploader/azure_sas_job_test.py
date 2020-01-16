@@ -18,7 +18,7 @@ class TestAzureSASUploaderJob(object):
             'requesting_user': 'user1',
             'utctime': 'now',
             'cloud_image_name': 'name',
-
+            'raw_image_upload_location': 'https://storage.[maangement-url]/container?sas_token'
         }
 
         self.config = UploaderConfig(
@@ -42,7 +42,7 @@ class TestAzureSASUploaderJob(object):
 
     @patch('mash.services.uploader.azure_sas_job.upload_azure_image')
     @patch('builtins.open')
-    def test_sas_upload(
+    def test_sas_upload_only(
         self, mock_open, mock_upload_azure_image
     ):
         open_handle = MagicMock()
@@ -60,5 +60,28 @@ class TestAzureSASUploaderJob(object):
             sas_token='sas_token'
         )
 
-        with raises(MashUploadException):
-            self.job.run_job()
+    @patch('mash.services.uploader.azure_sas_job.upload_azure_image')
+    @patch('builtins.open')
+    def test_sas_upload(
+        self, mock_open, mock_upload_azure_image
+    ):
+        open_handle = MagicMock()
+        open_handle.__enter__.return_value = open_handle
+        mock_open.return_value = open_handle
+
+        self.job.source_regions = self.job.source_regions = {
+            'cloud_image_name': 'name',
+            'blob_name': 'name.vhd'
+        }
+        self.job.cloud_image_name = ''
+
+        self.job.run_job()
+        mock_upload_azure_image.assert_called_once_with(
+            'name.vhd',
+            'container',
+            'file.vhdfixed.xz',
+            5,
+            8,
+            'storage',
+            sas_token='sas_token'
+        )

@@ -108,7 +108,7 @@ class GCETestingJob(MashJob):
 
         fallback_regions.add(self.region)
 
-        self.cloud_image_name = self.source_regions[self.region]['cloud_image_name']
+        self.cloud_image_name = self.source_regions['cloud_image_name']
 
         with create_json_file(credentials) as auth_file:
             retry_region = self.region

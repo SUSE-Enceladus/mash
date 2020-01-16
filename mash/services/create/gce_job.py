@@ -56,9 +56,8 @@ class GCECreateJob(MashJob):
         self.status = SUCCESS
         self.send_log('Creating image.')
 
-        region_info = self.source_regions[self.region]
-        self.cloud_image_name = region_info['cloud_image_name']
-        object_name = region_info['object_name']
+        self.cloud_image_name = self.source_regions['cloud_image_name']
+        object_name = self.source_regions['object_name']
 
         timestamp = re.findall(r'\d{8}', self.cloud_image_name)[0]
         self.cloud_image_description = format_string_with_date(

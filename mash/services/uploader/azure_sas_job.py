@@ -57,9 +57,8 @@ class AzureSASUploaderJob(MashJob):
             )
             self.blob_name = ''.join([self.cloud_image_name, '.vhd'])
         else:
-            region_info = self.source_regions[self.region]
-            self.cloud_image_name = region_info['cloud_image_name']
-            self.blob_name = region_info['blob_name']
+            self.cloud_image_name = self.source_regions['cloud_image_name']
+            self.blob_name = self.source_regions['blob_name']
 
         build = re.search(sas_url_match, self.raw_image_upload_location)
 

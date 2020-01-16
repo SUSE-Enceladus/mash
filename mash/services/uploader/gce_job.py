@@ -77,7 +77,7 @@ class GCEUploaderJob(MashJob):
                     image_stream, container, object_name
                 )
 
-        self.source_regions[self.region] = {
+        self.source_regions = {
             'cloud_image_name': self.cloud_image_name,
             'object_name': object_name
         }

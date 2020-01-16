@@ -67,7 +67,7 @@ class AzureUploaderJob(MashJob):
             resource_group=self.resource_group
         )
 
-        self.source_regions[self.region] = {
+        self.source_regions = {
             'cloud_image_name': self.cloud_image_name,
             'blob_name': blob_name
         }

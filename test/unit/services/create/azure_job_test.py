@@ -80,10 +80,8 @@ class TestAzureCreateJob(object):
         client.images.create_or_update.return_value = async_create_image
 
         self.job.source_regions = self.job.source_regions = {
-            'region': {
-                'cloud_image_name': 'name',
-                'blob_name': 'name.vhd'
-            }
+            'cloud_image_name': 'name',
+            'blob_name': 'name.vhd'
         }
         self.job.run_job()
 
