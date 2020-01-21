@@ -5,27 +5,38 @@ from mash.services.deprecation_service import main
 
 
 class TestDeprecationServiceMain(object):
+    @patch('mash.services.deprecation_service.BaseJobFactory')
     @patch('mash.services.deprecation_service.BaseConfig')
     @patch('mash.services.deprecation_service.ListenerService')
-    def test_main(self, mock_deprecation_service, mock_config):
+    def test_main(self, mock_deprecation_service, mock_config, mock_factory):
         config = Mock()
         mock_config.return_value = config
+
+        factory = Mock()
+        mock_factory.return_value = factory
 
         main()
         mock_deprecation_service.assert_called_once_with(
             service_exchange='deprecation',
             config=config,
-            custom_args={'listener_msg_args': ['cloud_image_name']}
+            custom_args={
+                'listener_msg_args': ['source_regions'],
+                'job_factory': factory
+            }
         )
 
+    @patch('mash.services.deprecation_service.BaseJobFactory')
     @patch('mash.services.deprecation_service.BaseConfig')
     @patch('mash.services.deprecation_service.ListenerService')
     @patch('sys.exit')
     def test_deprecation_main_mash_error(
-        self, mock_exit, mock_deprecation_service, mock_config
+        self, mock_exit, mock_deprecation_service, mock_config, mock_factory
     ):
         config = Mock()
         mock_config.return_value = config
+
+        factory = Mock()
+        mock_factory.return_value = factory
 
         mock_deprecation_service.side_effect = MashDeprecationException(
             'error'
@@ -36,7 +47,10 @@ class TestDeprecationServiceMain(object):
         mock_deprecation_service.assert_called_once_with(
             service_exchange='deprecation',
             config=config,
-            custom_args={'listener_msg_args': ['cloud_image_name']}
+            custom_args={
+                'listener_msg_args': ['source_regions'],
+                'job_factory': factory
+            }
         )
         mock_exit.assert_called_once_with(1)
 

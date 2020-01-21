@@ -30,6 +30,10 @@ class TestEC2DeprecationJob(object):
                 'secret_access_key': '654321'
             }
         }
+        self.job.source_regions = {
+            'cloud_image_name': 'image_123',
+            'us-east-2': 'ami-123456'
+        }
 
     def test_deprecation_ec2_missing_key(self):
         del self.job_config['deprecation_regions']
@@ -42,12 +46,11 @@ class TestEC2DeprecationJob(object):
         deprecation = Mock()
         mock_ec2_deprecate_image.return_value = deprecation
 
-        self.job.source_regions = {'us-east-2': 'ami-123456'}
         self.job.run_job()
 
         mock_ec2_deprecate_image.assert_called_once_with(
             access_key='123456', deprecation_image_name='old_image_123',
-            replacement_image_name=None, secret_key='654321',
+            replacement_image_name='image_123', secret_key='654321',
             verbose=False
         )
 
@@ -70,8 +73,6 @@ class TestEC2DeprecationJob(object):
         deprecation = Mock()
         deprecation.deprecate_images.return_value = False
         mock_ec2_deprecate_image.return_value = deprecation
-
-        self.job.source_regions = {'us-east-2': 'ami-123456'}
 
         msg = 'Error deprecating image old_image_123 in us-east-2.' \
             ' No images to deprecate.'

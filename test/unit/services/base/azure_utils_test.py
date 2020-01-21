@@ -4,7 +4,6 @@ from datetime import date
 from pytest import raises
 from unittest.mock import MagicMock, patch
 from collections import namedtuple
-from multiprocessing import SimpleQueue
 
 from azure.mgmt.storage import StorageManagementClient
 from mash.mash_exceptions import MashAzureUtilsException
@@ -613,20 +612,16 @@ def test_upload_azure_image(
         'managementEndpointUrl': 'https://management.core.windows.net/'
     }
 
-    result = SimpleQueue()
-    args = (
+    upload_azure_image(
         'name.vhd',
         'container',
         'file.vhdfixed.xz',
         5,
         8,
         'storage',
-        result,
-        credentials,
-        'group_name'
+        credentials=credentials,
+        resource_group='group_name'
     )
-    upload_azure_image(*args)
-    assert result.empty()
 
     mock_get_client_from_auth_file.assert_called_once_with(
         StorageManagementClient,
@@ -654,10 +649,7 @@ def test_upload_azure_image(
         5,
         8,
         'storage',
-        result,
-        None,
-        None,
-        'sas_token'
+        sas_token='sas_token'
     )
     mock_PageBlobService.assert_called_once_with(
         account_name='storage',
@@ -668,8 +660,18 @@ def test_upload_azure_image(
     system_image_file_type.is_xz.return_value = False
     page_blob_service.create_blob_from_stream.side_effect = Exception
 
-    upload_azure_image(*args)
-    assert result.empty() is False
+    # Assert raises exception if create blob fails
+    with raises(MashAzureUtilsException):
+        upload_azure_image(
+            'name.vhd',
+            'container',
+            'file.vhdfixed.xz',
+            5,
+            8,
+            'storage',
+            credentials=credentials,
+            resource_group='group_name'
+        )
 
     # Assert raises exception if missing required args
     with raises(MashAzureUtilsException):
@@ -679,6 +681,5 @@ def test_upload_azure_image(
             'file.vhdfixed.xz',
             5,
             8,
-            'storage',
-            result
+            'storage'
         )

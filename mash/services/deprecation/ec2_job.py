@@ -62,6 +62,7 @@ class EC2DeprecationJob(MashJob):
             accounts.append(region_info['account'])
 
         self.request_credentials(accounts)
+        cloud_image_name = self.source_regions['cloud_image_name']
 
         for region_info in self.deprecation_regions:
             credential = self.credentials[region_info['account']]
@@ -70,7 +71,7 @@ class EC2DeprecationJob(MashJob):
                 access_key=credential['access_key_id'],
                 secret_key=credential['secret_access_key'],
                 deprecation_image_name=self.old_cloud_image_name,
-                replacement_image_name=self.cloud_image_name,
+                replacement_image_name=cloud_image_name,
                 verbose=False
             )
 

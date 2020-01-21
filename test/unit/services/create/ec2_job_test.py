@@ -5,14 +5,14 @@ from test.unit.test_helper import (
     patch_open, context_manager
 )
 
-from mash.services.uploader.ec2_job import EC2UploaderJob
+from mash.services.create.ec2_job import EC2CreateJob
 from mash.mash_exceptions import MashUploadException
-from mash.services.uploader.config import UploaderConfig
+from mash.services.base_config import BaseConfig
 
 
-class TestAmazonUploaderJob(object):
+class TestAmazonCreateJob(object):
     def setup(self):
-        self.config = UploaderConfig(
+        self.config = BaseConfig(
             config_file='test/data/mash_config.yaml'
         )
 
@@ -25,7 +25,7 @@ class TestAmazonUploaderJob(object):
         job_doc = {
             'cloud_architecture': 'aarch64',
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'create',
             'cloud': 'ec2',
             'requesting_user': 'user1',
             'utctime': 'now',
@@ -41,38 +41,38 @@ class TestAmazonUploaderJob(object):
             'cloud_image_name': 'name',
             'image_description': 'description'
         }
-        self.job = EC2UploaderJob(job_doc, self.config)
+        self.job = EC2CreateJob(job_doc, self.config)
         self.job.image_file = 'file'
         self.job.credentials = self.credentials
 
     def test_post_init_incomplete_arguments(self):
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'create',
             'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now'
         }
 
         with raises(MashUploadException):
-            EC2UploaderJob(job_doc, self.config)
+            EC2CreateJob(job_doc, self.config)
 
         job_doc['target_regions'] = {'name': {'account': 'info'}}
         with raises(MashUploadException):
-            EC2UploaderJob(job_doc, self.config)
+            EC2CreateJob(job_doc, self.config)
 
         job_doc['cloud_image_name'] = 'name'
         with raises(MashUploadException):
-            EC2UploaderJob(job_doc, self.config)
+            EC2CreateJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.ec2_job.get_vpc_id_from_subnet')
-    @patch('mash.services.uploader.ec2_job.EC2Setup')
-    @patch('mash.services.uploader.ec2_job.get_client')
-    @patch('mash.services.uploader.ec2_job.generate_name')
-    @patch('mash.services.uploader.ec2_job.NamedTemporaryFile')
-    @patch('mash.services.uploader.ec2_job.EC2ImageUploader')
+    @patch('mash.services.create.ec2_job.get_vpc_id_from_subnet')
+    @patch('mash.services.create.ec2_job.EC2Setup')
+    @patch('mash.services.create.ec2_job.get_client')
+    @patch('mash.services.create.ec2_job.generate_name')
+    @patch('mash.services.create.ec2_job.NamedTemporaryFile')
+    @patch('mash.services.create.ec2_job.EC2ImageUploader')
     @patch_open
-    def test_upload(
+    def test_create(
         self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
         mock_generate_name, mock_get_client, mock_ec2_setup,
         mock_get_vpc_id_from_subnet
@@ -151,13 +151,13 @@ class TestAmazonUploaderJob(object):
         with raises(MashUploadException):
             self.job.run_job()
 
-    @patch('mash.services.uploader.ec2_job.EC2Setup')
-    @patch('mash.services.uploader.ec2_job.get_client')
-    @patch('mash.services.uploader.ec2_job.generate_name')
-    @patch('mash.services.uploader.ec2_job.NamedTemporaryFile')
-    @patch('mash.services.uploader.ec2_job.EC2ImageUploader')
+    @patch('mash.services.create.ec2_job.EC2Setup')
+    @patch('mash.services.create.ec2_job.get_client')
+    @patch('mash.services.create.ec2_job.generate_name')
+    @patch('mash.services.create.ec2_job.NamedTemporaryFile')
+    @patch('mash.services.create.ec2_job.EC2ImageUploader')
     @patch_open
-    def test_upload_root_swap(
+    def test_create_root_swap(
         self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
         mock_generate_name, mock_get_client, mock_ec2_setup
     ):
@@ -179,7 +179,7 @@ class TestAmazonUploaderJob(object):
             'cloud_image_name': 'name',
             'image_description': 'description'
         }
-        self.job = EC2UploaderJob(job_doc, self.config)
+        self.job = EC2CreateJob(job_doc, self.config)
         self.job.image_file = 'file'
         self.job.credentials = self.credentials
 

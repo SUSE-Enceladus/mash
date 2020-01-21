@@ -60,6 +60,7 @@ base_job_message = {
             'type': 'string',
             'enum': [
                 'uploader',
+                'create',
                 'testing',
                 'raw_image_uploader',
                 'replication',

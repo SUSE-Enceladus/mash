@@ -15,6 +15,7 @@ database_uri: sqlite:////var/lib/mash/app.db
 services:
   - obs
   - uploader
+  - create
   - testing
   - raw_image_uploader
   - replication

@@ -578,7 +578,6 @@ def upload_azure_image(
     max_retry_attempts,
     max_workers,
     storage_account,
-    result,
     credentials=None,
     resource_group=None,
     sas_token=None
@@ -623,7 +622,7 @@ def upload_azure_image(
                 msg = error
                 max_retry_attempts -= 1
 
-    result.put(
+    raise MashAzureUtilsException(
         'Unable to upload image: {0} to Azure: {1}'.format(
             image_file,
             msg

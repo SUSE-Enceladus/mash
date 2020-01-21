@@ -125,6 +125,9 @@ install -D -m 644 config/mash_obs.service \
 install -D -m 644 config/mash_uploader.service \
     %{buildroot}%{_unitdir}/mash_uploader.service
 
+install -D -m 644 config/mash_create.service \
+    %{buildroot}%{_unitdir}/mash_create.service
+
 install -D -m 644 config/mash_logger.service \
     %{buildroot}%{_unitdir}/mash_logger.service
 
@@ -181,6 +184,9 @@ python3 -m pytest
 
 %{_bindir}/mash-uploader-service
 %{_unitdir}/mash_uploader.service
+
+%{_bindir}/mash-create-service
+%{_unitdir}/mash_create.service
 
 %{_bindir}/mash-logger-service
 %{_unitdir}/mash_logger.service

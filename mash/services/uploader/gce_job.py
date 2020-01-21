@@ -16,10 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import re
-
-from libcloud.compute.types import Provider
-from libcloud.compute.providers import get_driver
 from libcloud.storage.drivers.google_storage import GoogleStorageDriver
 
 # project
@@ -34,18 +30,11 @@ class GCEUploaderJob(MashJob):
     Implements system image upload to GCE
     """
     def post_init(self):
-        self._image_file = None
-        self.source_regions = {}
-        self.cloud_image_name = ''
-        self.cloud_image_description = ''
-
         try:
             self.account = self.job_config['account']
             self.region = self.job_config['region']
             self.bucket = self.job_config['bucket']
             self.base_cloud_image_name = self.job_config['cloud_image_name']
-            self.base_cloud_image_description = \
-                self.job_config['image_description']
         except KeyError as error:
             raise MashUploadException(
                 'GCE uploader jobs require a(n) {0} '
@@ -53,9 +42,6 @@ class GCEUploaderJob(MashJob):
                     error
                 )
             )
-
-        self.family = self.job_config.get('family')
-        self.guest_os_features = self.job_config.get('guest_os_features')
 
         # SLES 11 is EOL, however images remain available in the
         # build service and thus we need to continue to test for
@@ -71,12 +57,6 @@ class GCEUploaderJob(MashJob):
 
         self.cloud_image_name = format_string_with_date(
             self.base_cloud_image_name
-        )
-
-        timestamp = re.findall(r'\d{8}', self.cloud_image_name)[0]
-
-        self.cloud_image_description = format_string_with_date(
-            self.base_cloud_image_description, timestamp=timestamp
         )
 
         self.request_credentials([self.account])
@@ -97,41 +77,14 @@ class GCEUploaderJob(MashJob):
                     image_stream, container, object_name
                 )
 
-            ComputeEngine = get_driver(Provider.GCE)
-            compute_driver = ComputeEngine(
-                credentials['client_email'],
-                auth_file,
-                project=credentials['project_id']
-            )
-
-            uri = ''.join([
-                'https://www.googleapis.com/storage/v1/b/',
-                self.bucket,
-                '/o/',
-                object_name
-            ])
-
-            kwargs = {
-                'description': self.cloud_image_description,
-                'wait_for_completion': True
-            }
-
-            if self.family:
-                kwargs['family'] = self.family
-
-            if self.guest_os_features:
-                kwargs['guest_os_features'] = self.guest_os_features
-
-            compute_driver.ex_create_image(
-                self.cloud_image_name,
-                uri,
-                **kwargs
-            )
-
-        self.source_regions[self.region] = self.cloud_image_name
+        self.source_regions = {
+            'cloud_image_name': self.cloud_image_name,
+            'object_name': object_name
+        }
         self.send_log(
-            'Uploaded image has ID: {0}'.format(
-                self.cloud_image_name
+            'Uploaded image: {0}, to the bucket named: {1}'.format(
+                object_name,
+                self.bucket
             )
         )
 

@@ -24,6 +24,11 @@ import traceback
 from mash.mash_exceptions import MashException
 from mash.services.testing.config import TestingConfig
 from mash.services.listener_service import ListenerService
+from mash.services.job_factory import BaseJobFactory
+
+from mash.services.testing.azure_job import AzureTestingJob
+from mash.services.testing.ec2_job import EC2TestingJob
+from mash.services.testing.gce_job import GCETestingJob
 
 
 def main():
@@ -35,13 +40,26 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.INFO)
 
+        service_name = 'testing'
+
+        # Create job factory
+        job_factory = BaseJobFactory(
+            service_name=service_name,
+            job_types={
+                'azure': AzureTestingJob,
+                'ec2': EC2TestingJob,
+                'gce': GCETestingJob
+            }
+        )
+
         # run service, enter main loop
         ListenerService(
-            service_exchange='testing',
+            service_exchange=service_name,
             config=TestingConfig(),
             custom_args={
-                'listener_msg_args': ['cloud_image_name', 'image_file', 'source_regions'],
-                'status_msg_args': ['source_regions', 'image_file']
+                'listener_msg_args': ['image_file', 'source_regions'],
+                'status_msg_args': ['image_file', 'source_regions'],
+                'job_factory': job_factory
             }
         )
     except MashException as e:

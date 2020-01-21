@@ -1,19 +1,19 @@
 from unittest.mock import Mock
 
-from mash.services.replication.gce_job import GCEReplicationJob
+from mash.services.no_op_job import NoOpJob
 
 
-class TestGCEReplicationJob(object):
+class TestNoOpJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'last_service': 'replication',
+            'last_service': 'deprecation',
             'requesting_user': 'user1',
             'cloud': 'gce',
             'utctime': 'now'
         }
         self.config = Mock()
-        self.job = GCEReplicationJob(self.job_config, self.config)
+        self.job = NoOpJob(self.job_config, self.config)
 
-    def test_replicate(self):
+    def test_run_job(self):
         self.job.run_job()

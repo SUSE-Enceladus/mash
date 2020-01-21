@@ -20,20 +20,24 @@ from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 
 
-class AzureDeprecationJob(MashJob):
+class NoOpJob(MashJob):
     """
-    Class for an Azure deprecation job.
+    Class for no op jobs in mash that perform no actions.
     """
 
     def post_init(self):
         """
         Post initialization method.
         """
-        # Skip credential request since there is no deprecation in Azure
-        self.credentials = {'status': 'no deprecation'}
+        pass
 
     def run_job(self):
         """
-        There is no deprecation process in Azure.
+        Do nothing and be successful.
         """
         self.status = SUCCESS
+        self.send_log(
+            'Skip {0} cloud framework, has no implementation.'.format(
+                self.cloud
+            )
+        )

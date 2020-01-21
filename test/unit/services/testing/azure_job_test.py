@@ -71,7 +71,10 @@ class TestAzureTestingJob(object):
                 'credentials': '321'
             }
         }
-        job.source_regions = {'East US': 'ami-123'}
+        job.source_regions = {
+            'cloud_image_name': 'name',
+            'blob_name': 'name.vhd'
+        }
         job.cloud_image_name = 'test_image'
         job.run_job()
 
@@ -81,7 +84,7 @@ class TestAzureTestingJob(object):
             cleanup=True,
             description=job.description,
             distro='sles',
-            image_id='ami-123',
+            image_id='name',
             instance_type='Standard_A0',
             log_level=30,
             region='East US',

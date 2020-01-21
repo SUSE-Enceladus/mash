@@ -47,7 +47,10 @@ class TestAzureReplicationJob(object):
                     "https://management.core.windows.net/"
             }
         }
-        self.job.cloud_image_name = 'image123'
+        self.job.source_regions = {
+            'cloud_image_name': 'image123',
+            'blob_name': 'image123.vhd'
+        }
 
     def test_replicate_ec2_missing_key(self):
         del self.job_config['account']

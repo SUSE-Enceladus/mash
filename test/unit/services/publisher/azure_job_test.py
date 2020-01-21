@@ -48,7 +48,10 @@ class TestAzurePublisherJob(object):
                     "https://management.core.windows.net/"
             }
         }
-        self.job.cloud_image_name = 'New Image'
+        self.job.source_regions = {
+            'cloud_image_name': 'New Image',
+            'blob_name': 'New Image.vhd'
+        }
 
     def test_publish_ec2_missing_key(self):
         del self.job_config['account']

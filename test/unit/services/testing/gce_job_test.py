@@ -82,7 +82,7 @@ class TestGCETestingJob(object):
                 'credentials': '321'
             }
         }
-        job.source_regions = {'us-west1-c': 'ami-123'}
+        job.source_regions = {'cloud_image_name': 'ami-123'}
         job.run_job()
 
         mock_test_image.assert_has_calls([
@@ -149,7 +149,7 @@ class TestGCETestingJob(object):
                 'credentials': '321'
             }
         }
-        job.source_regions = {'us-west1-c': 'ami-123'}
+        job.source_regions = {'cloud_image_name': 'ami-123'}
         job.run_job()
 
         mock_test_image.assert_has_calls([

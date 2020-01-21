@@ -33,6 +33,11 @@ class TestEC2ReplicationJob(object):
             }
         }
 
+        self.job.source_regions = {
+            'cloud_image_name': 'My image',
+            'us-east-1': 'ami-12345'
+        }
+
     def test_replicate_ec2_missing_key(self):
         del self.job_config['replication_source_regions']
 
@@ -50,7 +55,6 @@ class TestEC2ReplicationJob(object):
         mock_replicate_to_region.return_value = 'ami-54321'
         mock_wait_on_image.side_effect = Exception('Broken!')
 
-        self.job.source_regions = {'us-east-1': 'ami-12345'}
         self.job.run_job()
 
         mock_send_log.assert_has_calls([
@@ -94,11 +98,12 @@ class TestEC2ReplicationJob(object):
             'ec2', '123456', '654321', 'us-east-2'
         )
         mock_image_exists.assert_called_once_with(
-            client, self.job.cloud_image_name
+            client,
+            'My image'
         )
         client.copy_image.assert_called_once_with(
             Description=self.job.image_description,
-            Name=self.job.cloud_image_name,
+            Name='My image',
             SourceImageId='ami-12345',
             SourceRegion='us-east-1',
         )

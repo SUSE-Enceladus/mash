@@ -107,6 +107,10 @@ class JobCreatorService(MashService):
                 self.publish_job_doc(
                     'deprecation', job.get_deprecation_message()
                 )
+            elif service == 'create':
+                self.publish_job_doc(
+                    'create', job.get_create_message()
+                )
             elif service == 'obs':
                 self.publish_job_doc(
                     'obs', job.get_obs_message()

@@ -31,8 +31,8 @@ class TestBaseService(object):
 
         config = Mock()
         config.get_service_names.return_value = [
-            'obs', 'uploader', 'testing', 'raw_image_uploader' 'replication',
-            'publisher', 'deprecation'
+            'obs', 'uploader', 'create', 'raw_image_uploader', 'testing',
+            'replication', 'publisher', 'deprecation'
         ]
 
         self.service = MashService('obs', config=config)

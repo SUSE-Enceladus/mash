@@ -33,6 +33,7 @@ class TestEC2PublisherJob(object):
                 'ssh_private_key': 'key123'
             }
         }
+        self.job.source_regions = {'cloud_image_name': 'image_name_123'}
 
     def test_publish_ec2_missing_key(self):
         del self.job_config['publish_regions']
@@ -44,7 +45,6 @@ class TestEC2PublisherJob(object):
     def test_publish(self, mock_ec2_publish_image):
         publisher = Mock()
         mock_ec2_publish_image.return_value = publisher
-        self.job.cloud_image_name = 'image_name_123'
         self.job.run_job()
 
         mock_ec2_publish_image.assert_called_once_with(
@@ -65,8 +65,6 @@ class TestEC2PublisherJob(object):
         publisher = Mock()
         publisher.publish_images.side_effect = Exception('Failed to publish.')
         mock_ec2_publish_image.return_value = publisher
-
-        self.job.cloud_image_name = 'image_name_123'
 
         msg = 'An error publishing image image_name_123 in us-east-2.' \
             ' Failed to publish.'

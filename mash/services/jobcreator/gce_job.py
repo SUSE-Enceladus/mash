@@ -133,6 +133,25 @@ class GCEJob(BaseJob):
             'uploader_job': {
                 'cloud_image_name': self.cloud_image_name,
                 'cloud': self.cloud,
+                'account': self.cloud_account,
+                'bucket': self.bucket,
+                'region': self.region,
+                'raw_image_upload_type': self.raw_image_upload_type,
+                'raw_image_upload_account': self.raw_image_upload_account,
+                'raw_image_upload_location': self.raw_image_upload_location
+            }
+        }
+        uploader_message['uploader_job'].update(self.base_message)
+
+        return JsonFormat.json_message(uploader_message)
+
+    def get_create_message(self):
+        """
+        Build create job message.
+        """
+        create_message = {
+            'create_job': {
+                'cloud': self.cloud,
                 'image_description': self.image_description,
                 'family': self.family,
                 'guest_os_features': self.guest_os_features,
@@ -141,10 +160,6 @@ class GCEJob(BaseJob):
                 'region': self.region
             }
         }
-        uploader_message['uploader_job'].update(self.base_message)
+        create_message['create_job'].update(self.base_message)
 
-        if self.cloud_architecture:
-            uploader_message['uploader_job']['cloud_architecture'] = \
-                self.cloud_architecture
-
-        return JsonFormat.json_message(uploader_message)
+        return JsonFormat.json_message(create_message)

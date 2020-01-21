@@ -124,6 +124,44 @@ class EC2Job(BaseJob):
 
         return replication_source_regions
 
+    def get_testing_message(self):
+        """
+        Build testing job message.
+        """
+        testing_message = {
+            'testing_job': {
+                'cloud': self.cloud,
+                'tests': self.tests,
+                'test_regions': self.get_testing_regions(),
+            }
+        }
+
+        if self.distro:
+            testing_message['testing_job']['distro'] = self.distro
+
+        if self.instance_type:
+            testing_message['testing_job']['instance_type'] = \
+                self.instance_type
+
+        if self.last_service == 'testing' and \
+                self.cleanup_images in [True, None]:
+            testing_message['testing_job']['cleanup_images'] = True
+
+        elif self.cleanup_images is False:
+            testing_message['testing_job']['cleanup_images'] = False
+
+        if self.test_fallback_regions or self.test_fallback is False:
+            testing_message['testing_job']['test_fallback_regions'] = \
+                self.test_fallback_regions
+
+        if self.cloud_architecture:
+            testing_message['testing_job']['cloud_architecture'] = \
+                self.cloud_architecture
+
+        testing_message['testing_job'].update(self.base_message)
+
+        return JsonFormat.json_message(testing_message)
+
     def get_testing_regions(self):
         """
         Return a dictionary of target test regions.
@@ -138,9 +176,29 @@ class EC2Job(BaseJob):
 
         return test_regions
 
-    def get_uploader_regions(self):
+    def get_create_message(self):
         """
-        Return a dictionary of target uploader regions.
+        Build create job message.
+        """
+        create_message = {
+            'create_job': {
+                'cloud_image_name': self.cloud_image_name,
+                'cloud': self.cloud,
+                'image_description': self.image_description,
+                'target_regions': self.get_create_regions()
+            }
+        }
+        create_message['create_job'].update(self.base_message)
+
+        if self.cloud_architecture:
+            create_message['create_job']['cloud_architecture'] = \
+                self.cloud_architecture
+
+        return JsonFormat.json_message(create_message)
+
+    def get_create_regions(self):
+        """
+        Return a dictionary of target create regions.
         """
         target_regions = {}
 
@@ -154,3 +212,20 @@ class EC2Job(BaseJob):
             }
 
         return target_regions
+
+    def get_uploader_message(self):
+        """
+        Build uploader job message.
+        """
+        uploader_message = {
+            'uploader_job': {
+                'cloud_image_name': self.cloud_image_name,
+                'cloud': self.cloud,
+                'raw_image_upload_type': self.raw_image_upload_type,
+                'raw_image_upload_account': self.raw_image_upload_account,
+                'raw_image_upload_location': self.raw_image_upload_location
+            }
+        }
+        uploader_message['uploader_job'].update(self.base_message)
+
+        return JsonFormat.json_message(uploader_message)

@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE Software Solutions Germany GmbH. All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -21,27 +21,44 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.base_config import BaseConfig
+from mash.services.uploader.config import UploaderConfig
 from mash.services.listener_service import ListenerService
+from mash.services.job_factory import BaseJobFactory
+
+from mash.services.uploader.azure_sas_job import AzureSASUploaderJob
+from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
 
 
 def main():
     """
-    mash - uploader service application entry point
+    mash - raw image uploader service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
+
+        service_name = 'raw_image_uploader'
+
+        # Create job factory
+        job_factory = BaseJobFactory(
+            service_name=service_name,
+            job_types={
+                'azure_sas': AzureSASUploaderJob,
+                's3bucket': S3BucketUploaderJob
+            },
+            job_type_key='raw_image_upload_type',
+            can_skip=True
+        )
+
         # run service, enter main loop
         ListenerService(
-            service_exchange='raw_image_uploader',
-            config=BaseConfig(),
+            service_exchange=service_name,
+            config=UploaderConfig(),
             custom_args={
-                'listener_msg_args': [
-                    'cloud_image_name', 'image_file', 'source_regions'
-                ],
-                'status_msg_args': ['source_regions']
+                'listener_msg_args': ['image_file', 'source_regions'],
+                'status_msg_args': ['source_regions'],
+                'job_factory': job_factory
             }
         )
     except MashException as e:

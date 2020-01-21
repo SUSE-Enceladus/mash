@@ -1,10 +1,7 @@
 import pytest
 
-from unittest.mock import patch
-
 from mash.mash_exceptions import MashJobCreatorException
 from mash.services.jobcreator.base_job import BaseJob
-from mash.utils.json_format import JsonFormat
 
 
 class TestJobCreatorBaseJob(object):
@@ -33,9 +30,9 @@ class TestJobCreatorBaseJob(object):
         ('get_deprecation_message'),
         ('get_publisher_message'),
         ('get_replication_message'),
-        ('get_replication_source_regions'),
-        ('get_testing_regions'),
-        ('get_uploader_regions')
+        ('get_uploader_message'),
+        ('get_testing_message'),
+        ('get_create_message')
     ])
     def test_base_job_not_impl_methods(self, method):
         with pytest.raises(NotImplementedError):
@@ -56,14 +53,18 @@ class TestJobCreatorBaseJob(object):
                 'target_account_info': {}
             })
 
-    @patch.object(BaseJob, 'get_testing_regions')
-    def test_get_testing_message_cleanup(self, mock_get_testing_regions):
-        mock_get_testing_regions.return_value = {}
-
-        message = self.job.get_testing_message()
-        assert JsonFormat.json_loads(message)['testing_job']['cleanup_images']
-
-        # Explicit False for no cleanup even on failure
-        self.job.cleanup_images = False
-        message = self.job.get_testing_message()
-        assert JsonFormat.json_loads(message)['testing_job']['cleanup_images'] is False
+    def test_base_job_raw_upload_only(self):
+        BaseJob({
+            'job_id': '123',
+            'cloud': 'aws',
+            'requesting_user': 'test-user',
+            'last_service': 'uploader',
+            'utctime': 'now',
+            'image': 'test-image',
+            'cloud_image_name': 'test-cloud-image',
+            'image_description': 'image description',
+            'distro': 'sles',
+            'download_url': 'https://download.here',
+            'target_account_info': {},
+            'raw_image_upload_type': 's3bucket'
+        })

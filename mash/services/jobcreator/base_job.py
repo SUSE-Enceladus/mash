@@ -64,6 +64,9 @@ class BaseJob(object):
         self.target_account_info = kwargs.get('target_account_info')
         self.kwargs = kwargs
 
+        if self.raw_image_upload_type and self.last_service == 'uploader':
+            self.cloud = self.raw_image_upload_type
+
         self.base_message = {
             'id': self.id,
             'utctime': self.utctime,
@@ -142,15 +145,13 @@ class BaseJob(object):
             )
         )
 
-    def get_replication_source_regions(self):
+    def get_uploader_message(self):
         """
-        Return a dictionary of replication source regions.
-
-        Implementation in child class.
+        Build uploader job message.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_replication_source_regions method.'.format(
+            'get_uploader_message method.'.format(
                 self.__class__.__name__
             )
         )
@@ -159,72 +160,23 @@ class BaseJob(object):
         """
         Build testing job message.
         """
-        testing_message = {
-            'testing_job': {
-                'cloud': self.cloud,
-                'tests': self.tests,
-                'test_regions': self.get_testing_regions(),
-            }
-        }
-
-        if self.distro:
-            testing_message['testing_job']['distro'] = self.distro
-
-        if self.instance_type:
-            testing_message['testing_job']['instance_type'] = \
-                self.instance_type
-
-        if self.last_service == 'testing' and \
-                self.cleanup_images in [True, None]:
-            testing_message['testing_job']['cleanup_images'] = True
-
-        elif self.cleanup_images is False:
-            testing_message['testing_job']['cleanup_images'] = False
-
-        if self.test_fallback_regions or self.test_fallback is False:
-            testing_message['testing_job']['test_fallback_regions'] = \
-                self.test_fallback_regions
-
-        if self.cloud_architecture:
-            testing_message['testing_job']['cloud_architecture'] = \
-                self.cloud_architecture
-
-        testing_message['testing_job'].update(self.base_message)
-
-        return JsonFormat.json_message(testing_message)
-
-    def get_testing_regions(self):
-        """
-        Return a dictionary of target test regions.
-
-        Implementation in child class.
-        """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_testing_regions method.'.format(
+            'get_testing_message method.'.format(
                 self.__class__.__name__
             )
         )
 
-    def get_uploader_message(self):
+    def get_create_message(self):
         """
-        Build uploader job message.
+        Build create job message.
         """
-        uploader_message = {
-            'uploader_job': {
-                'cloud_image_name': self.cloud_image_name,
-                'cloud': self.cloud,
-                'image_description': self.image_description,
-                'target_regions': self.get_uploader_regions()
-            }
-        }
-        uploader_message['uploader_job'].update(self.base_message)
-
-        if self.cloud_architecture:
-            uploader_message['uploader_job']['cloud_architecture'] = \
-                self.cloud_architecture
-
-        return JsonFormat.json_message(uploader_message)
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_create_message method.'.format(
+                self.__class__.__name__
+            )
+        )
 
     def get_raw_image_uploader_message(self):
         """
@@ -232,7 +184,6 @@ class BaseJob(object):
         """
         raw_image_uploader_message = {
             'raw_image_uploader_job': {
-                'cloud_image_name': self.cloud_image_name,
                 'cloud': self.cloud,
                 'raw_image_upload_type': self.raw_image_upload_type,
                 'raw_image_upload_account': self.raw_image_upload_account,
@@ -242,19 +193,6 @@ class BaseJob(object):
         raw_image_uploader_message['raw_image_uploader_job'].update(self.base_message)
 
         return JsonFormat.json_message(raw_image_uploader_message)
-
-    def get_uploader_regions(self):
-        """
-        Return a dictionary of target uploader regions.
-
-        Implementation in child class.
-        """
-        raise NotImplementedError(
-            'This {0} class does not implement the '
-            'get_uploader_regions method.'.format(
-                self.__class__.__name__
-            )
-        )
 
     def post_init(self):
         """
