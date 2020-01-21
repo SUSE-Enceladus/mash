@@ -1,3 +1,9 @@
+v5.0.0 (2020-1-21)
+===================
+
+- Add upload consistency to all cloud frameworks.
+  [\#609](https://github.com/SUSE-Enceladus/mash/pull/609)
+
 v4.4.0 (2019-12-20)
 ===================
 
