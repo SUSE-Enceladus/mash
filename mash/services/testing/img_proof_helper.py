@@ -28,25 +28,32 @@ def img_proof_test(
     image_id=None, instance_type=None, img_proof_timeout=None, region=None,
     secret_access_key=None, security_group_id=None, service_account_file=None,
     ssh_key_name=None, ssh_private_key_file=None, ssh_user=None, subnet_id=None,
-    tests=None
+    tests=None, availability_domain=None, compartment_id=None, tenancy=None,
+    oci_user_id=None, signing_key_file=None, signing_key_fingerprint=None
 ):
     status, result = test_image(
         cloud,
         access_key_id=access_key_id,
+        availability_domain=availability_domain,
         cleanup=True,
+        compartment_id=compartment_id,
         description=description,
         distro=distro,
         image_id=image_id,
         instance_type=instance_type,
         log_level=logging.WARNING,
+        oci_user_id=oci_user_id,
         region=region,
         secret_access_key=secret_access_key,
         security_group_id=security_group_id,
         service_account_file=service_account_file,
+        signing_key_file=signing_key_file,
+        signing_key_fingerprint=signing_key_fingerprint,
         ssh_key_name=ssh_key_name,
         ssh_private_key_file=ssh_private_key_file,
         ssh_user=ssh_user,
         subnet_id=subnet_id,
+        tenancy=tenancy,
         tests=tests,
         timeout=img_proof_timeout
     )
