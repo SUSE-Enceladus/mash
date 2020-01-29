@@ -29,6 +29,7 @@ from mash.services.job_factory import BaseJobFactory
 from mash.services.testing.azure_job import AzureTestingJob
 from mash.services.testing.ec2_job import EC2TestingJob
 from mash.services.testing.gce_job import GCETestingJob
+from mash.services.testing.oci_job import OCITestingJob
 
 
 def main():
@@ -48,7 +49,8 @@ def main():
             job_types={
                 'azure': AzureTestingJob,
                 'ec2': EC2TestingJob,
-                'gce': GCETestingJob
+                'gce': GCETestingJob,
+                'oci': OCITestingJob
             }
         )
 
