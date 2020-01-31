@@ -50,6 +50,12 @@ class User(db.Model):
         lazy='select',
         cascade='all, delete, delete-orphan'
     )
+    oci_accounts = db.relationship(
+        'OCIAccount',
+        back_populates='user',
+        lazy='select',
+        cascade='all, delete, delete-orphan'
+    )
     ec2_groups = db.relationship(
         'EC2Group',
         back_populates='user',
@@ -188,6 +194,26 @@ class AzureAccount(db.Model):
 
     def __repr__(self):
         return '<Azure Account {}>'.format(self.name)
+
+
+class OCIAccount(db.Model):
+    __tablename__ = 'oci_account'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    region = db.Column(db.String(32), nullable=False)
+    availability_domain = db.Column(db.String(32), nullable=False)
+    compartment_id = db.Column(db.String(255), nullable=False)
+    oci_user_id = db.Column(db.String(255), nullable=False)
+    tenancy = db.Column(db.String(255), nullable=False)
+    bucket = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', back_populates='oci_accounts')
+    __table_args__ = (
+        db.UniqueConstraint('name', 'user_id', name='_oci_account_user_uc'),
+    )
+
+    def __repr__(self):
+        return '<OCI Account {}>'.format(self.name)
 
 
 class Job(db.Model):
