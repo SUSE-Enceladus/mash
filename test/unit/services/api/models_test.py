@@ -6,7 +6,8 @@ from mash.services.api.models import (
     EC2Region,
     GCEAccount,
     AzureAccount,
-    Job
+    Job,
+    OCIAccount
 )
 
 
@@ -92,3 +93,17 @@ def test_job_model():
         user_id='1'
     )
     assert job.__repr__() == '<Job 12345678-1234-1234-1234-123456789012>'
+
+
+def test_oci_account_model():
+    account = OCIAccount(
+        name='acnt1',
+        bucket='images',
+        region='us-phoenix-1',
+        user_id='1',
+        availability_domain='Omic:PHX-AD-1',
+        compartment_id='ocid1.compartment.oc1..',
+        oci_user_id='ocid1.user.oc1..',
+        tenancy='ocid1.tenancy.oc1..'
+    )
+    assert account.__repr__() == '<OCI Account acnt1>'
