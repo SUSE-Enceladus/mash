@@ -43,6 +43,7 @@ from mash.services.api.routes.jobs import api as jobs_api
 from mash.services.api.routes.jobs.ec2 import api as ec2_jobs_api
 from mash.services.api.routes.jobs.gce import api as gce_jobs_api
 from mash.services.api.routes.jobs.azure import api as azure_jobs_api
+from mash.services.api.routes.jobs.oci import api as oci_jobs_api
 
 from mash.services.api.commands import tokens_cli
 
@@ -102,6 +103,7 @@ def register_namespaces():
     api.add_namespace(ec2_jobs_api, path='/jobs/ec2')
     api.add_namespace(gce_jobs_api, path='/jobs/gce')
     api.add_namespace(azure_jobs_api, path='/jobs/azure')
+    api.add_namespace(oci_jobs_api, path='/jobs/oci')
 
 
 def register_extensions(app):
