@@ -22,6 +22,7 @@ import logging
 import os
 import random
 import requests
+import hashlib
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -216,3 +217,25 @@ def setup_rabbitmq_log_handler(host, username, password):
     rabbit_handler.setFormatter(get_logging_formatter())
 
     return rabbit_handler
+
+
+def get_fingerprint_from_private_key(private_key_value):
+    try:
+        private_key_value = private_key_value.encode()
+    except AttributeError:
+        pass
+
+    private_key = serialization.load_pem_private_key(
+        private_key_value,
+        password=None,
+        backend=default_backend()
+    )
+    public_key = private_key.public_key()
+
+    ssh_public_key = public_key.public_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    digest = hashlib.md5(ssh_public_key).hexdigest()
+
+    return ':'.join(a + b for a, b in zip(digest[::2], digest[1::2]))
