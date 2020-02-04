@@ -48,7 +48,8 @@ def main():
             job_types={
                 'azure': AzureReplicationJob,
                 'ec2': EC2ReplicationJob,
-                'gce': NoOpJob
+                'gce': NoOpJob,
+                'oci': NoOpJob
             }
         )
 
