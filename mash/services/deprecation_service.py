@@ -47,7 +47,8 @@ def main():
             job_types={
                 'azure': NoOpJob,
                 'ec2': EC2DeprecationJob,
-                'gce': GCEDeprecationJob
+                'gce': GCEDeprecationJob,
+                'oci': NoOpJob
             }
         )
 
