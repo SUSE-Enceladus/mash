@@ -37,6 +37,7 @@ from mash.services.api.routes.accounts import api as accounts_api
 from mash.services.api.routes.accounts.azure import api as azure_accounts_api
 from mash.services.api.routes.accounts.gce import api as gce_accounts_api
 from mash.services.api.routes.accounts.ec2 import api as ec2_accounts_api
+from mash.services.api.routes.accounts.oci import api as oci_accounts_api
 
 from mash.services.api.routes.jobs import api as jobs_api
 from mash.services.api.routes.jobs.ec2 import api as ec2_jobs_api
@@ -95,6 +96,7 @@ def register_namespaces():
     api.add_namespace(azure_accounts_api, path='/accounts/azure')
     api.add_namespace(gce_accounts_api, path='/accounts/gce')
     api.add_namespace(ec2_accounts_api, path='/accounts/ec2')
+    api.add_namespace(oci_accounts_api, path='/accounts/oci')
 
     api.add_namespace(jobs_api, path='/jobs')
     api.add_namespace(ec2_jobs_api, path='/jobs/ec2')
