@@ -47,7 +47,8 @@ def main():
             job_types={
                 'azure': AzurePublisherJob,
                 'ec2': EC2PublisherJob,
-                'gce': NoOpJob
+                'gce': NoOpJob,
+                'oci': NoOpJob
             }
         )
 
