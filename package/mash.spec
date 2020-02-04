@@ -53,6 +53,7 @@ BuildRequires:  python3-flask-jwt-extended
 BuildRequires:  python3-requests
 BuildRequires:  python3-obs-img-utils >= 0.1.0
 BuildRequires:  python3-obs-img-utils < 0.2.0
+BuildRequires:  python3-oci-sdk
 Requires:       rabbitmq-server
 Requires:       python3-adal
 Requires:       python3-apache-libcloud
@@ -80,6 +81,7 @@ Requires:       python3-flask-jwt-extended
 Requires:       python3-requests
 Requires:       python3-obs-img-utils >= 0.1.0
 Requires:       python3-obs-img-utils < 0.2.0
+Requires:       python3-oci-sdk
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
 Requires(pre):  pwdutils
