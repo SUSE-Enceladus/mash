@@ -34,6 +34,8 @@ def test_api_add_job_oci(
     del data['requesting_user']
     del data['job_id']
     del data['cloud']
+    del data['oci_user_id']
+    del data['tenancy']
 
     response = test_client.post(
         '/jobs/oci/',
