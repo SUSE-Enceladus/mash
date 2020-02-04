@@ -20,12 +20,13 @@ from collections import namedtuple
 
 class CSP(object):
     Constants = namedtuple(
-        'Constants', ['azure', 'ec2', 'gce']
+        'Constants', ['azure', 'ec2', 'gce', 'oci']
     )
     constants = Constants(
-        'azure', 'ec2', 'gce'
+        'azure', 'ec2', 'gce', 'oci'
     )
 
     azure = constants.azure
     ec2 = constants.ec2
     gce = constants.gce
+    oci = constants.oci
