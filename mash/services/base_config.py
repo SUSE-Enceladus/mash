@@ -339,3 +339,34 @@ class BaseConfig(object):
         )
 
         return domain_whitelist or Defaults.get_domain_whitelist()
+
+    def get_max_oci_attempts(self):
+        """
+        Return the max number of attempts for OCI requests.
+
+        :return: int
+        """
+        max_oci_attempts = self._get_attribute(attribute='max_oci_attempts')
+        return max_oci_attempts or Defaults.get_max_oci_attempts()
+
+    def get_max_oci_wait_seconds(self):
+        """
+        Return the max seconds to wait for OCI requests.
+
+        :return: int
+        """
+        max_oci_wait_seconds = self._get_attribute(
+            attribute='max_oci_wait_seconds'
+        )
+        return max_oci_wait_seconds or Defaults.get_max_oci_wait_seconds()
+
+    def get_oci_upload_process_count(self):
+        """
+        Return the process count for OCI parallel image uploads..
+
+        :return: int
+        """
+        oci_upload_process_count = self._get_attribute(
+            attribute='oci_upload_process_count'
+        )
+        return oci_upload_process_count or Defaults.get_oci_upload_process_count()
