@@ -103,3 +103,15 @@ class Defaults(object):
     @staticmethod
     def get_domain_whitelist():
         return []
+
+    @staticmethod
+    def get_max_oci_attempts():
+        return 100
+
+    @staticmethod
+    def get_max_oci_wait_seconds():
+        return 2400
+
+    @staticmethod
+    def get_oci_upload_process_count():
+        return 3

@@ -138,3 +138,15 @@ class TestBaseConfig(object):
 
         with raises(MashConfigException):
             self.empty_config.get_database_uri()
+
+    def test_get_max_oci_attempts(self):
+        assert self.config.get_max_oci_attempts() == 500
+        assert self.empty_config.get_max_oci_attempts() == 100
+
+    def test_get_max_oci_wait_seconds(self):
+        assert self.config.get_max_oci_wait_seconds() == 1000
+        assert self.empty_config.get_max_oci_wait_seconds() == 2400
+
+    def test_get_oci_upload_process_count(self):
+        assert self.config.get_oci_upload_process_count() == 2
+        assert self.empty_config.get_oci_upload_process_count() == 3
