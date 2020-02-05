@@ -10,6 +10,9 @@ smtp_user: user@test.com
 smtp_pass: super.secret
 credentials_url: http://localhost:5000/
 database_uri: sqlite:////var/lib/mash/app.db
+max_oci_attempts: 500
+max_oci_wait_seconds: 1000
+oci_upload_process_count: 2
 services:
   - obs
   - uploader
