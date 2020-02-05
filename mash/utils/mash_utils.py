@@ -49,6 +49,18 @@ def create_json_file(data):
             os.remove(temp_file.name)
 
 
+@contextmanager
+def create_key_file(data):
+    try:
+        temp_file = NamedTemporaryFile(delete=False)
+        with open(temp_file.name, 'w') as key_file:
+            key_file.write(data)
+        yield temp_file.name
+    finally:
+        with suppress(OSError):
+            os.remove(temp_file.name)
+
+
 def generate_name(length=8):
     """
     Generate a random lowercase string of the given length: Default of 8.
