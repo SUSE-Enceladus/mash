@@ -21,6 +21,7 @@ from mash.mash_exceptions import MashJobCreatorException
 from mash.services.jobcreator.azure_job import AzureJob
 from mash.services.jobcreator.ec2_job import EC2Job
 from mash.services.jobcreator.gce_job import GCEJob
+from mash.services.jobcreator.oci_job import OCIJob
 
 
 def create_job(job_doc):
@@ -32,6 +33,8 @@ def create_job(job_doc):
         job_class = AzureJob
     elif csp_name == CSP.gce:
         job_class = GCEJob
+    elif csp_name == CSP.oci:
+        job_class = OCIJob
     else:
         raise MashJobCreatorException(
             'Support for {csp} Cloud Service not implemented'.format(
