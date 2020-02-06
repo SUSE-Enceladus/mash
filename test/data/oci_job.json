@@ -20,5 +20,7 @@
   "tenancy": "ocid1.tenancy.oc1..",
   "operating_system": "SLES",
   "operating_system_version": "12SP1",
+  "image_type": "QCOW2",
+  "launch_mode": "NATIVE",
   "tests": ["test_stuff"]
 }

@@ -422,6 +422,86 @@ class TestJobCreatorService(object):
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert data['account'] == 'test-gce'
 
+    @patch.object(JobCreatorService, '_publish')
+    def test_jobcreator_handle_service_message_oci(self, mock_publish):
+        def check_base_attrs(job_data, cloud=True):
+            assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
+            assert job_data['utctime'] == 'now'
+            assert job_data['last_service'] == 'deprecation'
+
+            if cloud:
+                assert job_data['cloud'] == 'oci'
+
+        with open('test/data/oci_job.json', 'r') as job_doc:
+            job = json.load(job_doc)
+
+        message = MagicMock()
+        message.body = json.dumps(job)
+        self.jobcreator._handle_service_message(message)
+
+        # OBS Job Doc
+
+        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
+        check_base_attrs(data, cloud=False)
+        assert data['cloud_architecture'] == 'x86_64'
+        assert data['download_url'] == \
+            'http://download.opensuse.org/repositories/Cloud:Tools/images'
+        assert data['image'] == 'test_image_oem'
+
+        # Uploader Job Doc
+
+        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        check_base_attrs(data)
+        assert data['cloud_image_name'] == 'new_image_123'
+        assert data['region'] == 'us-phoenix-1'
+        assert data['account'] == 'test-oci'
+        assert data['bucket'] == 'images2'
+        assert data['availability_domain'] == 'Omic:PHX-AD-1'
+        assert data['compartment_id'] == 'ocid1.compartment.oc1..'
+        assert data['oci_user_id'] == 'ocid1.user.oc1..'
+        assert data['tenancy'] == 'ocid1.tenancy.oc1..'
+
+        # create Job Doc
+
+        data = json.loads(mock_publish.mock_calls[2][1][2])['create_job']
+        check_base_attrs(data)
+        assert data['image_description'] == 'New Image #123'
+        assert data['region'] == 'us-phoenix-1'
+        assert data['account'] == 'test-oci'
+        assert data['bucket'] == 'images2'
+
+        # Testing Job Doc
+
+        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        check_base_attrs(data)
+        assert data['distro'] == 'sles'
+        assert data['instance_type'] == 'VM.Standard2.1'
+        assert data['tests'] == ['test_stuff']
+        assert data['region'] == 'us-phoenix-1'
+        assert data['account'] == 'test-oci'
+
+        # Raw Image Uploader Job Doc
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        check_base_attrs(data)
+        assert data['raw_image_upload_type'] is None
+
+        # Replication Job Doc
+
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        check_base_attrs(data)
+
+        # Publisher Job Doc
+
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        check_base_attrs(data)
+
+        # Deprecation Job Doc
+
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        check_base_attrs(data)
+        assert data['old_cloud_image_name'] == 'old_new_image_123'
+        assert data['account'] == 'test-oci'
+
     def test_jobcreator_handle_invalid_service_message(self):
         message = MagicMock()
         message.body = 'invalid message'
