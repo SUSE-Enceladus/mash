@@ -30,6 +30,7 @@ from mash.services.uploader.azure_sas_job import AzureSASUploaderJob
 from mash.services.uploader.gce_job import GCEUploaderJob
 from mash.services.no_op_job import NoOpJob
 from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
+from mash.services.uploader.oci_job import OCIUploaderJob
 
 
 def main():
@@ -51,7 +52,8 @@ def main():
                 'azure_sas': AzureSASUploaderJob,
                 'ec2': NoOpJob,
                 's3bucket': S3BucketUploaderJob,
-                'gce': GCEUploaderJob
+                'gce': GCEUploaderJob,
+                'oci': OCIUploaderJob
             }
         )
 
