@@ -258,8 +258,10 @@ class CredentialsDatastore(object):
         # Rotate all credentials files
         for root, dirs, files in os.walk(self.credentials_directory):
             for credentials_file in files:
-                path = os.path.join(root, credentials_file)
+                if credentials_file == 'wsgi.py':
+                    continue
 
+                path = os.path.join(root, credentials_file)
                 with open(path, 'r+b') as f:
                     credentials = f.read().strip()
 
