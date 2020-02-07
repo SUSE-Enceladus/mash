@@ -31,3 +31,4 @@ lxml
 requests
 urllib3<1.25,>=1.20
 obs-img-utils<0.2.0,>=0.1.0
+werkzeug<1.0.0

@@ -133,6 +133,9 @@ class TestCredentialsDatastore(object):
             # Create an empty invalid cred file
             open(os.path.join(creds_dir, 'invalid.creds'), 'a').close()
 
+            # Create an empty wsgi.py file
+            open(os.path.join(creds_dir, 'wsgi.py'), 'a').close()
+
             # Create a valid cred file
             with open(os.path.join(creds_dir, 'valid.creds'), 'w') as cred_file:
                 cred_file.write(
