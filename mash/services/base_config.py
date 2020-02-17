@@ -339,3 +339,83 @@ class BaseConfig(object):
         )
 
         return domain_whitelist or Defaults.get_domain_whitelist()
+
+    def get_auth_methods(self):
+        """
+        Return the list of allowed authentication methods.
+
+        :rtype: list of strings
+        """
+        auth_methods = self._get_attribute(
+            attribute='auth_methods'
+        )
+
+        return auth_methods or Defaults.get_auth_methods()
+
+    def get_oauth2_client_id(self):
+        """
+        Return the OAuth2 client ID.
+
+        :rtype: string
+        """
+        client_id = self._get_attribute(
+            attribute='oauth2_client_id'
+        )
+
+        if not client_id:
+            raise MashConfigException(
+                'oauth2_client_id is required in MASH configuration file if OAuth2 login is enabled.'
+            )
+
+        return client_id
+
+    def get_oauth2_client_secret(self):
+        """
+        Return the OAuth2 client secret.
+
+        :rtype: string
+        """
+        client_secret = self._get_attribute(
+            attribute='oauth2_client_secret'
+        )
+
+        if not client_secret:
+            raise MashConfigException(
+                'oauth2_secret_id is required in MASH configuration file if OAuth2 login is enabled.'
+            )
+
+        return client_secret
+
+    def get_oauth2_provider_url(self):
+        """
+        Return the OAuth2 provider URL.
+
+        :rtype: string
+        """
+        provider_url = self._get_attribute(
+            attribute='oauth2_provider_url'
+        )
+
+        if not provider_url:
+            raise MashConfigException(
+                'oauth2_provider_url is required in MASH configuration file if OAuth2 login is enabled.'
+            )
+
+        return provider_url
+
+    def get_oauth2_redirect_port(self):
+        """
+        Return the OAuth2 redirect port.
+
+        :rtype: int
+        """
+        redirect_port = self._get_attribute(
+            attribute='oauth2_redirect_port'
+        )
+
+        if not redirect_port:
+            raise MashConfigException(
+                'oauth2_redirect_port is required in MASH configuration file if OAuth2 login is enabled.'
+            )
+
+        return redirect_port

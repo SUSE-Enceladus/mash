@@ -89,3 +89,29 @@ login_request_model = {
         'password'
     ]
 }
+
+oauth2_request_model = {
+    'type': 'object',
+    'properties': {
+        'username': string_with_example('account1')
+    },
+    'additionalProperties': False,
+    'required': [
+        'username'
+    ]
+}
+
+oauth2_login_model = {
+    'type': 'object',
+    'properties': {
+        'username': string_with_example('account1'),
+        'auth_code': string_with_example('codefromauthprovider'),
+        'state': string_with_example('statefromoauth2req')
+    },
+    'additionalProperties': False,
+    'required': [
+        'username',
+        'auth_code',
+        'state'
+    ]
+}

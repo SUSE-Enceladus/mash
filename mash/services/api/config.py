@@ -75,3 +75,23 @@ class Config(object):
     @property
     def DOMAIN_WHITELIST(self):
         return self.config.get_domain_whitelist()
+
+    @property
+    def AUTH_METHODS(self):
+        return self.config.get_auth_methods()
+
+    @property
+    def OAUTH2_CLIENT_ID(self):
+        return self.config.get_oauth2_client_id()
+
+    @property
+    def OAUTH2_CLIENT_SECRET(self):
+        return self.config.get_oauth2_client_secret()
+
+    @property
+    def OAUTH2_PROVIDER_URL(self):
+        return self.config.get_oauth2_provider_url()
+
+    @property
+    def OAUTH2_REDIRECT_PORT(self):
+        return self.config.get_oauth2_redirect_port()

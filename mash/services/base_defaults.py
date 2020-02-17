@@ -103,3 +103,7 @@ class Defaults(object):
     @staticmethod
     def get_domain_whitelist():
         return []
+
+    @staticmethod
+    def get_default_methods():
+        return ['password']

@@ -17,6 +17,7 @@
 #
 
 import json
+import jwt
 
 from flask import jsonify, request, make_response, current_app
 from flask_restplus import fields, Namespace, Resource
@@ -29,15 +30,23 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
+from requests_oauthlib import OAuth2Session
+
 from mash.services.api.schema import (
     default_response,
-    login_request_model
+    login_request_model,
+    oauth2_request_model,
+    oauth2_login_model
 )
 from mash.services.api.utils.tokens import (
     add_token_to_database,
     revoke_token_by_jti
 )
-from mash.services.api.utils.users import verify_login
+from mash.services.api.utils.users import (
+    get_user_by_username,
+    verify_login,
+    verify_email,
+)
 
 api = Namespace(
     'Auth',
@@ -53,6 +62,26 @@ login_response = api.model(
         'refresh_token': fields.String
     }
 )
+oauth2_req_request = api.schema_model(
+    'oauth2_req_request', oauth2_request_model
+)
+oauth2_req_response = api.model(
+    'oauth2_req_response', {
+        'msg': fields.String,
+        'auth_url': fields.String,
+        'state': fields.String,
+        'redirect_port': fields.Integer
+    }
+)
+oauth2_login_request = api.schema_model(
+    'oauth2_login_request', oauth2_login_model
+)
+oauth2_login_response = api.model(
+    'oauth2_login_response', {
+        'access_token': fields.String,
+        'refresh_token': fields.String
+    }
+)
 
 api.models['default_response'] = default_response
 
@@ -63,12 +92,16 @@ class Login(Resource):
     @api.expect(login_request)
     @api.response(200, 'Logged in', login_response)
     @api.response(401, 'Unauthorized', default_response)
+    @api.response(403, 'Forbidden', default_response)
     def post(self):
         """
         Get access and refresh tokens for new session.
         """
         data = json.loads(request.data.decode())
         username = data['username']
+
+        if 'password' not in current_app.config['AUTH_METHODS']:
+            return make_response(jsonify({'msg': 'Password based login is disabled'}), 403)
 
         if verify_login(username, data['password']):
             access_token = create_access_token(identity=username)
@@ -117,3 +150,107 @@ class Logout(Resource):
                 jsonify({'msg': 'Logout failed'}),
                 400
             )
+
+
+@api.route('/oauth2_req')
+class OAuth2Req(Resource):
+    @api.doc('oauth2_req')
+    @api.expect(oauth2_req_request)
+    @api.response(200, 'Login request', oauth2_req_response)
+    @api.response(401, 'Unauthorized', default_response)
+    @api.response(403, 'Forbidden', default_response)
+    def post(self):
+        """
+        Request oauth2 login URL.
+        """
+        data = json.loads(request.data.decode())
+        username = data['username']
+
+        if 'oauth2' not in current_app.config['AUTH_METHODS']:
+            return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
+
+        if not get_user_by_username(username):
+            return make_response(jsonify({'msg': 'Username is invalid'}), 401)
+
+        oauth2_auth_url = '{}/authorize'.format(
+            current_app.config['OAUTH2_PROVIDER_URL'],
+        )
+        oauth2_redirect_url = 'http://localhost:{}'.format(
+            current_app.config['OAUTH2_REDIRECT_PORT']
+        )
+        oauth2_client_id = current_app.config['OAUTH2_CLIENT_ID']
+
+        oauth2 = OAuth2Session(
+            client_id=oauth2_client_id,
+            redirect_uri=oauth2_redirect_url,
+            scope="openid email"
+        )
+        auth_url, state = oauth2.authorization_url(oauth2_auth_url)
+        return make_response(
+            jsonify({
+                'msg': 'Please open the following URL and log in',
+                'auth_url': auth_url,
+                'state': state,
+                'redirect_port': 9000}),
+            200
+        )
+
+
+@api.route('/oauth2_login')
+class OAuth2Login(Resource):
+    @api.doc('oauth2_login')
+    @api.expect(oauth2_login_request)
+    @api.response(200, 'Logged in', oauth2_login_response)
+    @api.response(401, 'Unauthorized', default_response)
+    @api.response(403, 'Forbidden', default_response)
+    def post(self):
+        data = json.loads(request.data.decode())
+        username = data['username']
+        auth_code = data['auth_code']
+        state = data['state']
+
+        if 'oauth2' not in current_app.config['AUTH_METHODS']:
+            return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
+
+        oauth2_redirect_url = 'http://localhost:{}'.format(
+            current_app.config['OAUTH2_REDIRECT_PORT']
+        )
+        oauth2_client_id = current_app.config['OAUTH2_CLIENT_ID']
+        oauth2_client_secret = current_app.config['OAUTH2_CLIENT_SECRET']
+        oauth2_token_url = '{}/token'.format(
+            current_app.config['OAUTH2_PROVIDER_URL'],
+        )
+
+        oauth2 = OAuth2Session(
+            client_id=oauth2_client_id,
+            redirect_uri=oauth2_redirect_url,
+            scope="openid email",
+            state=state
+        )
+        token = oauth2.fetch_token(
+            oauth2_token_url,
+            client_secret=oauth2_client_secret,
+            code=auth_code
+        )
+
+        # FIXME: verify signature
+        user_email = jwt.decode(token['id_token'], verify=False)['email']
+        if verify_email(username, user_email):
+            access_token = create_access_token(identity=username)
+            refresh_token = create_refresh_token(identity=username)
+
+            add_token_to_database(access_token, username)
+            add_token_to_database(refresh_token, username)
+
+            response = {
+                'access_token': access_token,
+                'refresh_token': refresh_token
+            }
+            return make_response(jsonify(response), 200)
+        else:
+            current_app.logger.warning(
+                'Failed login attempt for user: {username}'.format(
+                    username=username
+                )
+            )
+            return make_response(jsonify({'msg': 'Username or email is invalid'}), 401)
