@@ -17,6 +17,7 @@
 #
 
 import json
+import jwt
 
 from flask import jsonify, request, make_response, current_app
 from flask_restplus import fields, Namespace, Resource
