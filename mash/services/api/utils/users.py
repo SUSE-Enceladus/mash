@@ -96,21 +96,6 @@ def verify_login(username, password):
         return None
 
 
-def verify_email(username, email):
-    """
-    Compare stored and given email address.
-
-    If addresses match the user is authenticated
-    and user instance is returned.
-    """
-    user = get_user_by_username(username)
-
-    if user and user.email == email:
-        return user
-    else:
-        return None
-
-
 def get_user_by_username(username):
     """
     Retrieve user from database if a match exists.
@@ -118,6 +103,19 @@ def get_user_by_username(username):
     Otherwise None is returned.
     """
     user = User.query.filter_by(username=username).first()
+    return user
+
+
+def get_user_by_email(email, create=False):
+    """
+    Retrieve user from database if a match exists.
+
+    If the user does not exist and create is True, the user
+    is created on the fly. Otherwise None is returned.
+    """
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = add_user(email, email)
     return user
 
 
