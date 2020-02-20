@@ -18,31 +18,28 @@
 
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
+from random import choice
+import string
 
 from mash.services.api.extensions import db
 from mash.services.api.models import User
 from mash.mash_exceptions import MashDBException
 
 
-def add_user(username, email, password):
+def add_user(username, email, password=None):
     """
     Add new user to database and set password hash.
 
     If the user or email exists return None.
+    If password is None, a random password is created, in effect creating
+    an account that can only be used with oidc authentication.
     """
-    if len(password) < 8:
+    if password and len(password) < 8:
         raise MashDBException(
             'Password too short. Minimum length is 8 characters.'
         )
 
-    email_whitelist = current_app.config['EMAIL_WHITELIST']
-    if email_whitelist and email not in email_whitelist:
-        raise MashDBException(
-            'Cannot create a user with the provided email. Access denied.'
-        )
-
-    domain_whitelist = current_app.config['DOMAIN_WHITELIST']
-    if domain_whitelist and email.split('@')[1].strip() not in domain_whitelist:
+    if not email_in_whitelist(email):
         raise MashDBException(
             'Cannot create a user with the provided email. Access denied.'
         )
@@ -51,16 +48,36 @@ def add_user(username, email, password):
         username=username,
         email=email
     )
+    if not password:
+        password = ''.join(
+            [choice(string.ascii_letters + string.digits) for n in range(64)]
+        )
     user.set_password(password)
 
     try:
         db.session.add(user)
         db.session.commit()
-    except IntegrityError:
+    except IntegrityError as ie:
+        current_app.logger.warning(ie)
         db.session.rollback()
         return None
 
     return user
+
+
+def email_in_whitelist(email):
+    """
+    Check if given email address is in whitelist.
+    """
+    email_whitelist = current_app.config['EMAIL_WHITELIST']
+    if email_whitelist and email in email_whitelist:
+        return True
+
+    domain_whitelist = current_app.config['DOMAIN_WHITELIST']
+    if domain_whitelist and email.split('@')[1].strip() not in domain_whitelist:
+        return True
+
+    return False
 
 
 def verify_login(username, password):
@@ -78,21 +95,6 @@ def verify_login(username, password):
         return None
 
 
-def verify_email(username, email):
-    """
-    Compare stored and given email address.
-
-    If addresses match the user is authenticated
-    and user instance is returned.
-    """
-    user = get_user_by_username(username)
-
-    if user and user.email == email:
-        return user
-    else:
-        return None
-
-
 def get_user_by_username(username):
     """
     Retrieve user from database if a match exists.
@@ -100,6 +102,19 @@ def get_user_by_username(username):
     Otherwise None is returned.
     """
     user = User.query.filter_by(username=username).first()
+    return user
+
+
+def get_user_by_email(email, create=False):
+    """
+    Retrieve user from database if a match exists.
+
+    If the user does not exist and create is True, the user
+    is created on the fly. Otherwise None is returned.
+    """
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = add_user(email, email)
     return user
 
 

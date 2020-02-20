@@ -403,19 +403,19 @@ class BaseConfig(object):
 
         return provider_url
 
-    def get_oauth2_redirect_port(self):
+    def get_oauth2_redirect_ports(self):
         """
-        Return the OAuth2 redirect port.
+        Return the OAuth2 redirect ports.
 
         :rtype: int
         """
         redirect_port = self._get_attribute(
-            attribute='oauth2_redirect_port'
+            attribute='oauth2_redirect_ports'
         )
 
         if not redirect_port:
             raise MashConfigException(
-                'oauth2_redirect_port is required in MASH configuration file if OAuth2 login is enabled.'
+                'oauth2_redirect_ports is required in MASH configuration file if OAuth2 login is enabled.'
             )
 
         return redirect_port
