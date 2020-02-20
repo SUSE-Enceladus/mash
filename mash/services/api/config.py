@@ -93,5 +93,5 @@ class Config(object):
         return self.config.get_oauth2_provider_url()
 
     @property
-    def OAUTH2_REDIRECT_PORT(self):
-        return self.config.get_oauth2_redirect_port()
+    def OAUTH2_REDIRECT_PORTS(self):
+        return self.config.get_oauth2_redirect_ports()

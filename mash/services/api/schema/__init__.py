@@ -27,6 +27,12 @@ def string_with_example(example, description='', min_length=1):
         'example': example
     }
 
+def integer_with_example(example, description=''):
+    return {
+        'type': 'integer',
+        'description': description,
+        'example': example
+    }
 
 email = {
     'type': 'string',
@@ -92,26 +98,20 @@ login_request_model = {
 
 oauth2_request_model = {
     'type': 'object',
-    'properties': {
-        'username': string_with_example('account1')
-    },
-    'additionalProperties': False,
-    'required': [
-        'username'
-    ]
+    'additionalProperties': False
 }
 
 oauth2_login_model = {
     'type': 'object',
     'properties': {
-        'username': string_with_example('account1'),
         'auth_code': string_with_example('codefromauthprovider'),
-        'state': string_with_example('statefromoauth2req')
+        'state': string_with_example('statefromoauth2req'),
+        'redirect_port': integer_with_example(9000)
     },
     'additionalProperties': False,
     'required': [
-        'username',
         'auth_code',
-        'state'
+        'state',
+        'redirect_port'
     ]
 }
