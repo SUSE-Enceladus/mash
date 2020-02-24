@@ -187,13 +187,13 @@ class OAuth2Req(Resource):
     @api.expect(oauth2_login_request)
     @api.response(200, 'Logged in', oauth2_login_response)
     def post(self):
+        if 'oauth2' not in current_app.config['AUTH_METHODS']:
+            return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
+
         data = json.loads(request.data.decode())
         auth_code = data['auth_code']
         state = data['state']
         redirect_port = data['redirect_port']
-
-        if 'oauth2' not in current_app.config['AUTH_METHODS']:
-            return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
 
         oauth2_redirect_uri = 'http://localhost:{}'.format(redirect_port)
         oauth2_client_id = current_app.config['OAUTH2_CLIENT_ID']
