@@ -1,3 +1,13 @@
+v5.1.0 (2020-02-24)
+===================
+
+- Integrate OCI cloud framework to the image pipeline.
+- Add utility for generating fingerprint.
+  [\#610](https://github.com/SUSE-Enceladus/mash/pull/610)
+- Add temporary version requirement on werkzeug.
+- Ignore wsgi.py file in credentials dir.
+  [\#626](https://github.com/SUSE-Enceladus/mash/pull/626)
+
 v5.0.1 (2020-1-21)
 ===================
 
