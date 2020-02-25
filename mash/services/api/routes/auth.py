@@ -94,11 +94,11 @@ class Login(Resource):
         """
         Get access and refresh tokens for new session.
         """
+        if current_app.config['AUTH_METHOD'] != 'password':
+            return make_response(jsonify({'msg': 'Password based login is disabled'}), 403)
+
         data = json.loads(request.data.decode())
         username = data['username']
-
-        if 'password' not in current_app.config['AUTH_METHODS']:
-            return make_response(jsonify({'msg': 'Password based login is disabled'}), 403)
 
         if verify_login(username, data['password']):
             access_token = create_access_token(identity=username)
@@ -160,7 +160,7 @@ class OAuth2Req(Resource):
         """
         Request oauth2 login URL.
         """
-        if 'oauth2' not in current_app.config['AUTH_METHODS']:
+        if current_app.config['AUTH_METHOD'] != 'oauth2':
             return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
 
         oauth2_auth_url = '{}/authorize'.format(
@@ -187,7 +187,7 @@ class OAuth2Req(Resource):
     @api.expect(oauth2_login_request)
     @api.response(200, 'Logged in', oauth2_login_response)
     def post(self):
-        if 'oauth2' not in current_app.config['AUTH_METHODS']:
+        if current_app.config['AUTH_METHOD'] != 'oauth2':
             return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
 
         data = json.loads(request.data.decode())
