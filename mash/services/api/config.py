@@ -77,8 +77,8 @@ class Config(object):
         return self.config.get_domain_whitelist()
 
     @property
-    def AUTH_METHODS(self):
-        return self.config.get_auth_methods()
+    def AUTH_METHOD(self):
+        return self.config.get_auth_method()
 
     @property
     def OAUTH2_CLIENT_ID(self):
