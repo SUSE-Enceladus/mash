@@ -393,17 +393,17 @@ class BaseConfig(object):
         )
         return publisher_thread_pool_count or Defaults.get_publisher_thread_pool_count()
 
-    def get_auth_methods(self):
+    def get_auth_method(self):
         """
         Return the list of allowed authentication methods.
 
-        :rtype: list of strings
+        :rtype: strings
         """
         auth_methods = self._get_attribute(
-            attribute='auth_methods'
+            attribute='auth_method'
         )
 
-        return auth_methods or Defaults.get_auth_methods()
+        return auth_methods or Defaults.get_auth_method()
 
     def get_oauth2_client_id(self):
         """
