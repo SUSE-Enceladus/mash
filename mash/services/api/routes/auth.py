@@ -35,7 +35,6 @@ from requests_oauthlib import OAuth2Session
 from mash.services.api.schema import (
     default_response,
     login_request_model,
-    oauth2_request_model,
     oauth2_login_model
 )
 from mash.services.api.utils.tokens import (
@@ -181,7 +180,6 @@ class OAuth2Req(Resource):
                 'redirect_ports': oauth2_redirect_ports}),
             200
         )
-
 
     @api.expect(oauth2_login_request)
     @api.response(200, 'Logged in', oauth2_login_response)

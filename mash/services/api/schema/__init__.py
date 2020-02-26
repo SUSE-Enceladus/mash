@@ -27,12 +27,14 @@ def string_with_example(example, description='', min_length=1):
         'example': example
     }
 
+
 def integer_with_example(example, description=''):
     return {
         'type': 'integer',
         'description': description,
         'example': example
     }
+
 
 email = {
     'type': 'string',
