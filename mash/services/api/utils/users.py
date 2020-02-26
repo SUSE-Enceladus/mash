@@ -70,14 +70,14 @@ def email_in_whitelist(email):
     Check if given email address is in whitelist.
     """
     email_whitelist = current_app.config['EMAIL_WHITELIST']
-    if email_whitelist and email in email_whitelist:
-        return True
+    if email_whitelist and email not in email_whitelist:
+        return False
 
     domain_whitelist = current_app.config['DOMAIN_WHITELIST']
     if domain_whitelist and email.split('@')[1].strip() not in domain_whitelist:
-        return True
+        return False
 
-    return False
+    return True
 
 
 def verify_login(username, password):
