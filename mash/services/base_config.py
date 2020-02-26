@@ -415,7 +415,7 @@ class BaseConfig(object):
             attribute='oauth2_client_id'
         )
 
-        if not client_id:
+        if not client_id and self.get_auth_method == 'oauth2':
             raise MashConfigException(
                 'oauth2_client_id is required in MASH configuration file if OAuth2 login is enabled.'
             )
@@ -432,7 +432,7 @@ class BaseConfig(object):
             attribute='oauth2_client_secret'
         )
 
-        if not client_secret:
+        if not client_secret and self.get_auth_method() == 'oauth2':
             raise MashConfigException(
                 'oauth2_secret_id is required in MASH configuration file if OAuth2 login is enabled.'
             )
@@ -449,7 +449,7 @@ class BaseConfig(object):
             attribute='oauth2_provider_url'
         )
 
-        if not provider_url:
+        if not provider_url and self.get_auth_method() == 'oauth2':
             raise MashConfigException(
                 'oauth2_provider_url is required in MASH configuration file if OAuth2 login is enabled.'
             )
@@ -466,7 +466,7 @@ class BaseConfig(object):
             attribute='oauth2_redirect_ports'
         )
 
-        if not redirect_port:
+        if not redirect_port and self.get_auth_method() == 'oauth2':
             raise MashConfigException(
                 'oauth2_redirect_ports is required in MASH configuration file if OAuth2 login is enabled.'
             )
