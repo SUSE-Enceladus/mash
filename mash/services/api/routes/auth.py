@@ -215,7 +215,6 @@ class OAuth2Req(Resource):
 
         # FIXME: verify signature
         user_email = jwt.decode(token['id_token'], verify=False)['email']
-        current_app.logger.info(jwt.decode(token['id_token'], verify=False))
         if email_in_whitelist(user_email):
             user = get_user_by_email(user_email, create=True)
             access_token = create_access_token(identity=user.username)
