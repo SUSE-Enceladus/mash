@@ -111,8 +111,7 @@ class Login(Resource):
                 'access_token': access_token,
                 'refresh_token': refresh_token
             }
-            tokens = create_tokens_from_username(username)
-            return make_response(jsonify(tokens), 200)
+            return make_response(jsonify(response), 200)
         else:
             current_app.logger.warning(
                 'Failed login attempt for user: {username}'.format(
