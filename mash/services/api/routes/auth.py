@@ -152,7 +152,7 @@ class Logout(Resource):
 @api.doc('oauth2')
 @api.response(401, 'Unauthorized', default_response)
 @api.response(403, 'Forbidden', default_response)
-class OAuth2Req(Resource):
+class OAuth2Request(Resource):
     @api.response(200, 'Login request', oauth2_req_response)
     def get(self):
         """
@@ -228,8 +228,8 @@ class OAuth2Req(Resource):
             return make_response(jsonify(response), 200)
         else:
             current_app.logger.warning(
-                'Failed login attempt for user: {username}'.format(
-                    username=user_email
+                'Failed login attempt for user: {email}'.format(
+                    email=user_email
                 )
             )
             return make_response(jsonify({'msg': 'Email is invalid'}), 401)
