@@ -236,3 +236,10 @@ class TestCredentialsDatastore(object):
             )
 
             assert result['super'] == 'secret'
+
+    @patch('mash.services.credentials.datastore.shutil')
+    def test_remove_user(self, mock_shutil):
+        self.datastore.remove_user('fakeuser101')
+        mock_shutil.rmtree.assert_called_once_with(
+            '/var/lib/mash/credentials/fakeuser101'
+        )

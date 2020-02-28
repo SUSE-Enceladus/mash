@@ -139,3 +139,24 @@ def test_delete_credentials(mock_app, test_client):
     assert response.status_code == 400
     assert response.data == \
         b'{"msg":"Unable to delete credentials: Permission denied"}\n'
+
+
+@patch('mash.services.credentials.routes.credentials.current_app')
+def test_delete_user(mock_app, test_client):
+    response = test_client.delete('credentials/fakeuser101')
+
+    assert response.status_code == 200
+    assert response.data == b'{"msg":"User removed"}\n'
+
+    # Error
+    mock_app.credentials_datastore.remove_user.side_effect = Exception(
+        'Permission denied'
+    )
+    response = test_client.delete('credentials/fakeuser101')
+
+    mock_app.logger.warning.assert_called_once_with(
+        'Unable to remove all credentials for user: Permission denied'
+    )
+    assert response.status_code == 400
+    assert response.data == \
+        b'{"msg":"Unable to remove all credentials for user: Permission denied"}\n'
