@@ -18,7 +18,7 @@
 
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
-from random import choice
+from secrets import choice
 import string
 
 from mash.services.api.extensions import db
