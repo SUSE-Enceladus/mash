@@ -22,6 +22,7 @@ from sqlalchemy.exc import IntegrityError
 from mash.services.api.extensions import db
 from mash.services.api.models import User
 from mash.mash_exceptions import MashDBException
+from mash.utils.mash_utils import handle_request
 
 
 def add_user(username, email, password):
@@ -109,6 +110,11 @@ def delete_user(username):
     if user:
         db.session.delete(user)
         db.session.commit()
+        handle_request(
+            current_app.config['CREDENTIALS_URL'],
+            'credentials/{user}'.format(user=username),
+            'delete'
+        )
         return 1
     else:
         return 0
