@@ -18,6 +18,7 @@
 
 import json
 import os
+import shutil
 
 from apscheduler import events
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -162,6 +163,12 @@ class CredentialsDatastore(object):
         )
         return path
 
+    def _get_user_credentials_path(self, user):
+        """
+        Return the string path to the user's credentials dir.
+        """
+        return os.path.join(self.credentials_directory, user)
+
     def _get_decrypted_credentials(self, account, cloud, user):
         """
         Return decrypted credentials string from file.
@@ -214,6 +221,19 @@ class CredentialsDatastore(object):
 
         with suppress(Exception):
             os.remove(path)
+
+    def remove_user(self, user):
+        """
+        Attempt to remove the user's credentials dir.
+        """
+        self.log_callback.info(
+            'Deleting credentials for user: {0}'.format(user)
+        )
+
+        path = self._get_user_credentials_path(user)
+
+        with suppress(Exception):
+            shutil.rmtree(path)
 
     def retrieve_credentials(self, cloud_accounts, cloud, requesting_user):
         """

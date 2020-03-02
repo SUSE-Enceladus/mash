@@ -76,3 +76,15 @@ def delete_credentials():
         return make_response(jsonify({'msg': msg}), 400)
 
     return make_response(jsonify({'msg': 'Credentials deleted'}), 200)
+
+
+@blueprint.route('/<string:user>', methods=['DELETE'])
+def remove_user(user):
+    try:
+        current_app.credentials_datastore.remove_user(user)
+    except Exception as error:
+        msg = 'Unable to remove all credentials for user: {0}'.format(error)
+        current_app.logger.warning(msg)
+        return make_response(jsonify({'msg': msg}), 400)
+
+    return make_response(jsonify({'msg': 'User removed'}), 200)
