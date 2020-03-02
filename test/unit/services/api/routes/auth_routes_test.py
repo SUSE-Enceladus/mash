@@ -127,13 +127,13 @@ def test_api_oauth2_get(
 @patch('mash.services.api.routes.auth.create_access_token')
 @patch('mash.services.api.routes.auth.get_user_by_email')
 @patch('mash.services.api.routes.auth.email_in_whitelist')
-@patch('mash.services.api.routes.auth.jwt')
+@patch('mash.services.api.routes.auth.decode_token')
 @patch('mash.services.api.routes.auth.OAuth2Session')
 @patch('mash.services.api.routes.auth.current_app')
 def test_oauth2_login(
         mock_current_app,
         mock_oauth2_session,
-        mock_jwt,
+        mock_decode_token,
         mock_email_in_whitelist,
         mock_get_user_by_email,
         mock_create_access_token,
@@ -162,7 +162,7 @@ def test_oauth2_login(
         'refresh_token': 'refresh_token_value',
         'id_token': 'id_token_value'
     }
-    mock_jwt.decode.return_value = {'email': 'user1@fake.com'}
+    mock_decode_token.return_value = {'email': 'user1@fake.com'}
     mock_email_in_whitelist.return_value = False
     user = Mock()
     user.username = 'user1'
@@ -200,6 +200,16 @@ def test_oauth2_login(
     assert response.json['access_token'] == '54321'
     assert response.json['refresh_token'] == '12345'
 
+    # Fail with token error
+    mock_decode_token.side_effect = Exception('token error')
+    response = test_client.post(
+        '/auth/oauth2',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+    assert response.status_code == 500
+
+    # Fail with auth method denied
     mock_current_app.config = {'AUTH_METHOD': 'password'}
 
     response = test_client.post(

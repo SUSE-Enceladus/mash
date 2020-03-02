@@ -45,7 +45,7 @@ from mash.services.api.utils.users import (
     email_in_whitelist,
     get_user_by_email
 )
-from mash.services.api.utils.oauth2 import decode_token
+from mash.services.api.utils.jwt import decode_token
 
 api = Namespace(
     'Auth',
@@ -211,7 +211,6 @@ class OAuth2Request(Resource):
             client_secret=oauth2_client_secret,
             code=auth_code
         )
-
 
         try:
             user_email = decode_token(

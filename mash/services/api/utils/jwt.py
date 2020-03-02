@@ -33,8 +33,11 @@ def decode_token(provider_url, token, audience):
         response.raise_for_status()
 
     jwks = response.json()
+    keys = jwks.get('keys')
+    if not keys:
+        raise Exception('no keys retrieved from authentication provider')
 
-    for jwk in jwks['keys']:
+    for jwk in keys:
         public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
         pem = public_key.public_bytes(
             encoding=serialization.Encoding.PEM,
