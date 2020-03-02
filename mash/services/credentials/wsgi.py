@@ -22,4 +22,4 @@ from mash.services.credentials.flask_config import Config
 application = create_app(Config())
 
 if __name__ == '__main__':
-    application.run(port=5001)
+    application.run(port=5006)

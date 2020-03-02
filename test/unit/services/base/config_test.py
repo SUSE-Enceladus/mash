@@ -128,7 +128,7 @@ class TestBaseConfig(object):
             '/var/log/mash/jobs/1234.log'
 
     def test_get_credentials_url(self):
-        assert self.config.get_credentials_url() == 'http://localhost:5000/'
+        assert self.config.get_credentials_url() == 'http://localhost:5006/'
         assert self.empty_config.get_credentials_url() == \
             'http://localhost:8080/'
 
