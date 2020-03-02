@@ -17,7 +17,6 @@
 #
 
 import json
-import jwt
 
 from flask import jsonify, request, make_response, current_app
 from flask_restplus import fields, Namespace, Resource
@@ -46,6 +45,7 @@ from mash.services.api.utils.users import (
     email_in_whitelist,
     get_user_by_email
 )
+from mash.services.api.utils.oauth2 import decode_token
 
 api = Namespace(
     'Auth',
@@ -183,6 +183,7 @@ class OAuth2Request(Resource):
 
     @api.expect(oauth2_login_request)
     @api.response(200, 'Logged in', oauth2_login_response)
+    @api.response(500, 'Login failed', default_response)
     def post(self):
         if current_app.config['AUTH_METHOD'] != 'oauth2':
             return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
@@ -211,8 +212,21 @@ class OAuth2Request(Resource):
             code=auth_code
         )
 
-        # FIXME: verify signature
-        user_email = jwt.decode(token['id_token'], verify=False)['email']
+
+        try:
+            user_email = decode_token(
+                current_app.config['OAUTH2_PROVIDER_URL'],
+                token['id_token'],
+                audience=current_app.config['OAUTH2_CLIENT_ID']
+            )['email']
+        except Exception as e:
+            msg = 'ERROR decoding JWT: {}'.format(str(e))
+            current_app.logger.warning(msg)
+            return make_response(
+                jsonify({'msg': 'Login failed ({})'.format(msg)}),
+                500
+            )
+
         if email_in_whitelist(user_email):
             user = get_user_by_email(user_email, create=True)
             access_token = create_access_token(identity=user.username)
