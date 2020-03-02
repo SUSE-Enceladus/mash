@@ -24,6 +24,7 @@ from amqpstorm import AMQPError
 from apscheduler import events
 from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor
 
 from pytz import utc
 
@@ -94,10 +95,21 @@ class ListenerService(MashService):
             self.service_exchange, self.listener_msg_key, self.listener_queue
         )
 
-        self.scheduler = BackgroundScheduler(timezone=utc)
+        thread_pool_count = self.custom_args.get(
+            'thread_pool_count',
+            self.config.get_base_thread_pool_count()
+        )
+        executors = {
+            'default': ThreadPoolExecutor(thread_pool_count)
+        }
+        self.scheduler = BackgroundScheduler(executors=executors, timezone=utc)
         self.scheduler.add_listener(
             self._process_job_result,
             events.EVENT_JOB_EXECUTED | events.EVENT_JOB_ERROR
+        )
+        self.scheduler.add_listener(
+            self._process_job_missed,
+            events.EVENT_JOB_MISSED
         )
 
         restart_jobs(self.job_directory, self._add_job)
@@ -307,6 +319,24 @@ class ListenerService(MashService):
         )
 
         job.listener_msg.ack()
+
+    def _process_job_missed(self, event):
+        """
+        Callback when job background process misses execution.
+
+        This should not happen as no jobs are scheduled, log any occurrences.
+        """
+        job_id = event.job_id
+        job = self.jobs[job_id]
+        metadata = job.get_job_id()
+
+        self.log.warning(
+            'Pass[{0}]: Job missed during {1}.'.format(
+                job.iteration_count,
+                self.service_exchange
+            ),
+            extra=metadata
+        )
 
     def _publish_message(self, job):
         """

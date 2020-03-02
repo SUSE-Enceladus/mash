@@ -150,3 +150,11 @@ class TestBaseConfig(object):
     def test_get_oci_upload_process_count(self):
         assert self.config.get_oci_upload_process_count() == 2
         assert self.empty_config.get_oci_upload_process_count() == 3
+
+    def test_get_base_thread_pool_count(self):
+        assert self.config.get_base_thread_pool_count() == 20
+        assert self.empty_config.get_base_thread_pool_count() == 10
+
+    def test_get_publisher_thread_pool_count(self):
+        assert self.config.get_publisher_thread_pool_count() == 60
+        assert self.empty_config.get_publisher_thread_pool_count() == 50

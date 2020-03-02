@@ -26,6 +26,7 @@ class TestListenerService(object):
             'deprecation'
         ]
         self.config.get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
+        self.config.get_base_thread_pool_count.return_value = 10
 
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
@@ -407,6 +408,29 @@ class TestListenerService(object):
         )
         mock_delete_job('1')
         mock_publish_message.assert_called_once_with(job)
+
+    def test_service_process_job_missed(self):
+        event = Mock()
+        event.job_id = '1'
+        event.code = 2 ** 14
+
+        msg = Mock()
+
+        job = Mock()
+        job.id = '1'
+        job.utctime = 'now'
+        job.status = 'success'
+        job.iteration_count = 1
+        job.listener_msg = msg
+        job.get_job_id.return_value = {'job_id': '1'}
+
+        self.service.jobs['1'] = job
+        self.service._process_job_missed(event)
+
+        self.service.log.warning.assert_called_once_with(
+            'Pass[1]: Job missed during replication.',
+            extra={'job_id': '1'}
+        )
 
     @patch.object(ListenerService, '_get_status_message')
     @patch.object(ListenerService, 'publish_job_result')

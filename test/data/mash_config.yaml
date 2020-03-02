@@ -13,6 +13,8 @@ database_uri: sqlite:////var/lib/mash/app.db
 max_oci_attempts: 500
 max_oci_wait_seconds: 1000
 oci_upload_process_count: 2
+base_thread_pool_count: 20
+publisher_thread_pool_count: 60
 services:
   - obs
   - uploader
