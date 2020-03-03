@@ -87,7 +87,7 @@ class TestOCITestingJob(object):
             distro='sles',
             image_id='ocid1.image.oc1..',
             instance_type='VM.Standard2.1',
-            log_level=30,
+            log_level=10,
             oci_user_id='ocid1.user.oc1..',
             region='us-phoenix-1',
             secret_access_key=None,

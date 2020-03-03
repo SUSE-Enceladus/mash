@@ -41,7 +41,7 @@ def img_proof_test(
         distro=distro,
         image_id=image_id,
         instance_type=instance_type,
-        log_level=logging.WARNING,
+        log_level=logging.DEBUG,
         oci_user_id=oci_user_id,
         region=region,
         secret_access_key=secret_access_key,
