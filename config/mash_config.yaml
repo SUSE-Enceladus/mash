@@ -10,7 +10,7 @@ smtp_host: localhost
 smtp_port: 25
 smtp_ssl: False
 smtp_user: test@fake.com
-credentials_url: http://localhost:5000/
+credentials_url: http://localhost:5006/
 database_uri: sqlite:////var/lib/mash/app.db
 services:
   - obs
