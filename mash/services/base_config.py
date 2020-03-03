@@ -370,3 +370,25 @@ class BaseConfig(object):
             attribute='oci_upload_process_count'
         )
         return oci_upload_process_count or Defaults.get_oci_upload_process_count()
+
+    def get_base_thread_pool_count(self):
+        """
+        Return the thread pool count for listener services background scheduler.
+
+        :return: int
+        """
+        base_thread_pool_count = self._get_attribute(
+            attribute='base_thread_pool_count'
+        )
+        return base_thread_pool_count or Defaults.get_base_thread_pool_count()
+
+    def get_publisher_thread_pool_count(self):
+        """
+        Return the thread pool count for publisher background scheduler.
+
+        :return: int
+        """
+        publisher_thread_pool_count = self._get_attribute(
+            attribute='publisher_thread_pool_count'
+        )
+        return publisher_thread_pool_count or Defaults.get_publisher_thread_pool_count()

@@ -115,3 +115,11 @@ class Defaults(object):
     @staticmethod
     def get_oci_upload_process_count():
         return 3
+
+    @staticmethod
+    def get_base_thread_pool_count():
+        return 10
+
+    @staticmethod
+    def get_publisher_thread_pool_count():
+        return 50

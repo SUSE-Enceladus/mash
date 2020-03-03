@@ -12,6 +12,7 @@ class TestPublisherServiceMain(object):
         self, mock_publisher_service, mock_config, mock_factory
     ):
         config = Mock()
+        config.get_publisher_thread_pool_count.return_value = 50
         mock_config.return_value = config
 
         factory = Mock()
@@ -24,7 +25,8 @@ class TestPublisherServiceMain(object):
             custom_args={
                 'listener_msg_args': ['source_regions'],
                 'status_msg_args': ['source_regions'],
-                'job_factory': factory
+                'job_factory': factory,
+                'thread_pool_count': 50
             }
         )
 
@@ -36,6 +38,7 @@ class TestPublisherServiceMain(object):
         self, mock_exit, mock_publisher_service, mock_config, mock_factory
     ):
         config = Mock()
+        config.get_publisher_thread_pool_count.return_value = 50
         mock_config.return_value = config
         mock_publisher_service.side_effect = MashPublisherException('error')
 
@@ -49,7 +52,8 @@ class TestPublisherServiceMain(object):
             custom_args={
                 'listener_msg_args': ['source_regions'],
                 'status_msg_args': ['source_regions'],
-                'job_factory': factory
+                'job_factory': factory,
+                'thread_pool_count': 50
             }
         )
         mock_exit.assert_called_once_with(1)
