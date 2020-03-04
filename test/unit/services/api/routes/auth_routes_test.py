@@ -16,7 +16,7 @@ def test_api_login(
         mock_add_token_to_database,
         test_client
 ):
-    mock_current_app.config = {'AUTH_METHODS': 'password'}
+    mock_current_app.config = {'AUTH_METHODS': ['password']}
     mock_verify_login.return_value = False
     data = {'username': 'user1', 'password': 'super-secret'}
 
@@ -52,7 +52,7 @@ def test_api_login(
     assert response.json['access_token'] == '54321'
     assert response.json['refresh_token'] == '12345'
 
-    mock_current_app.config = {'AUTH_METHODS': 'oauth2'}
+    mock_current_app.config = {'AUTH_METHODS': ['oauth2']}
 
     response = test_client.post(
         '/auth/login',
@@ -99,7 +99,7 @@ def test_api_oauth2_get(
         test_client
 ):
     mock_current_app.config = {
-        'AUTH_METHODS': 'oauth2',
+        'AUTH_METHODS': ['oauth2'],
         'OAUTH2_CLIENT_ID': 'oauth2_client_id',
         'OAUTH2_CLIENT_SECRET': 'oauth2_client_secret',
         'OAUTH2_PROVIDER_URL': 'https://oauth2.prodvider/authorize',
@@ -112,7 +112,7 @@ def test_api_oauth2_get(
     assert response.json['msg'] == 'Please open the following URL and log in'
     assert response.json['redirect_ports'] == [9000]
 
-    mock_current_app.config = {'AUTH_METHODS': 'password'}
+    mock_current_app.config = {'AUTH_METHODS': ['password']}
 
     response = test_client.get(
         '/auth/oauth2',
@@ -142,7 +142,7 @@ def test_oauth2_login(
         test_client
 ):
     mock_current_app.config = {
-        'AUTH_METHODS': 'oauth2',
+        'AUTH_METHODS': ['oauth2'],
         'OAUTH2_CLIENT_ID': 'oauth2_client_id',
         'OAUTH2_CLIENT_SECRET': 'oauth2_client_secret',
         'OAUTH2_PROVIDER_URL': 'https://oauth2.prodvider/authorize',
@@ -210,7 +210,7 @@ def test_oauth2_login(
     assert response.status_code == 500
 
     # Fail with auth method denied
-    mock_current_app.config = {'AUTH_METHODS': 'password'}
+    mock_current_app.config = {'AUTH_METHODS': ['password']}
 
     response = test_client.post(
         '/auth/oauth2',
