@@ -26,7 +26,6 @@ from mash.services.api.models import (
     User,
     Token
 )
-from mash.services.api.utils.users import get_user_by_username
 
 
 def _epoch_utc_to_datetime(epoch_utc):
@@ -36,7 +35,7 @@ def _epoch_utc_to_datetime(epoch_utc):
     return datetime.fromtimestamp(epoch_utc)
 
 
-def add_token_to_database(encoded_token, username):
+def add_token_to_database(encoded_token, user):
     """
     Add a new token to the database.
     """
@@ -48,8 +47,6 @@ def add_token_to_database(encoded_token, username):
         expires = _epoch_utc_to_datetime(decoded_token['exp'])
     else:
         expires = None
-
-    user = get_user_by_username(username)
 
     token = Token(
         jti=jti,
@@ -73,30 +70,29 @@ def is_token_revoked(decoded_token):
         return True
 
 
-def get_user_tokens(username):
+def get_user_tokens(user):
     """
     Returns all of the tokens for given user.
     """
-    user = get_user_by_username(username)
     return user.tokens
 
 
-def get_token_by_jti(token_jti, username):
+def get_token_by_jti(token_jti, user):
     """
     Get token by jti identifier.
     """
     token = Token.query.filter(
-        User.username == username
+        User.id == user.id
     ).filter_by(jti=token_jti).first()
 
     return token
 
 
-def revoke_token_by_jti(jti, username):
+def revoke_token_by_jti(jti, user):
     """
     Revoke token by jti identifier.
     """
-    token = get_token_by_jti(jti, username)
+    token = get_token_by_jti(jti, user)
 
     if token:
         db.session.delete(token)
@@ -106,11 +102,10 @@ def revoke_token_by_jti(jti, username):
         return 0
 
 
-def revoke_tokens(username):
+def revoke_tokens(user):
     """
-    Revokes (deletes) all tokens for given username.
+    Revokes (deletes) all tokens for given user.
     """
-    user = get_user_by_username(username)
     rows_deleted = len(user.tokens)
     user.tokens = []
     db.session.commit()

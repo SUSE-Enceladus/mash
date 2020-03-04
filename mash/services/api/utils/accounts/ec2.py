@@ -20,8 +20,8 @@ from flask import current_app
 
 from mash.mash_exceptions import MashDBException
 from mash.services.api.extensions import db
-from mash.services.api.utils.users import get_user_by_username
-from mash.services.api.models import EC2Group, EC2Region, EC2Account, User
+from mash.services.api.utils.users import get_user_by_id
+from mash.services.api.models import EC2Group, EC2Region, EC2Account
 from mash.utils.mash_utils import handle_request
 
 
@@ -73,7 +73,7 @@ def create_ec2_region(region_name, helper_image, account):
 
 
 def create_ec2_account(
-    username,
+    user_id,
     account_name,
     partition,
     region_name,
@@ -90,22 +90,20 @@ def create_ec2_account(
     data = {
         'cloud': 'ec2',
         'account_name': account_name,
-        'requesting_user': username,
+        'requesting_user': user_id,
         'credentials': credentials
     }
-
-    user = get_user_by_username(username)
 
     account = EC2Account(
         name=account_name,
         partition=partition,
         region=region_name,
         subnet=subnet,
-        user_id=user.id
+        user_id=user_id
     )
 
     if group_name:
-        group = _get_or_create_ec2_group(group_name, user.id)
+        group = _get_or_create_ec2_group(group_name, user_id)
         account.group = group
 
     if additional_regions:
@@ -132,26 +130,15 @@ def create_ec2_account(
     return account
 
 
-def get_ec2_accounts(username):
+def get_ec2_accounts(user_id):
     """
     Retrieve all EC2 accounts for user.
     """
-    user = get_user_by_username(username)
+    user = get_user_by_id(user_id)
     return user.ec2_accounts
 
 
-def get_ec2_account(name, username):
-    """
-    Get EC2 account for given user.
-    """
-    ec2_account = EC2Account.query.filter(
-        User.username == username
-    ).filter_by(name=name).first()
-
-    return ec2_account
-
-
-def get_ec2_account_by_id(name, user_id):
+def get_ec2_account(name, user_id):
     """
     Get EC2 account for given user.
     """
@@ -167,17 +154,17 @@ def get_ec2_account_by_id(name, user_id):
     return ec2_account
 
 
-def delete_ec2_account(name, username):
+def delete_ec2_account(name, user_id):
     """
     Delete EC2 account for user.
     """
     data = {
         'cloud': 'ec2',
         'account_name': name,
-        'requesting_user': username
+        'requesting_user': user_id
     }
 
-    ec2_account = get_ec2_account(name, username)
+    ec2_account = get_ec2_account(name, user_id)
 
     if ec2_account:
         try:
@@ -200,7 +187,7 @@ def delete_ec2_account(name, username):
 
 def update_ec2_account(
     account_name,
-    username,
+    user_id,
     additional_regions=None,
     credentials=None,
     group=None,
@@ -210,8 +197,7 @@ def update_ec2_account(
     """
     Update an existing EC2 account.
     """
-    ec2_account = get_ec2_account(account_name, username)
-    user = get_user_by_username(username)
+    ec2_account = get_ec2_account(account_name, user_id)
 
     if not ec2_account:
         return None
@@ -220,7 +206,7 @@ def update_ec2_account(
         data = {
             'cloud': 'ec2',
             'account_name': account_name,
-            'requesting_user': username,
+            'requesting_user': user_id,
             'credentials': credentials
         }
 
@@ -235,7 +221,7 @@ def update_ec2_account(
             raise
 
     if group:
-        ec2_account.group = _get_or_create_ec2_group(group, user.id)
+        ec2_account.group = _get_or_create_ec2_group(group, user_id)
 
     if additional_regions:
         for additional_region in additional_regions:

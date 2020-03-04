@@ -36,6 +36,7 @@ from mash.services.api.utils.tokens import (
     revoke_tokens,
     revoke_token_by_jti
 )
+from mash.services.api.utils.users import get_user_by_id
 
 api = Namespace(
     'Token',
@@ -71,10 +72,10 @@ class RefreshToken(Resource):
         """
         Get new access token based on refresh token in header.
         """
-        username = get_jwt_identity()
+        user_id = get_jwt_identity()
 
-        access_token = create_access_token(identity=username)
-        add_token_to_database(access_token, username)
+        access_token = create_access_token(identity=user_id)
+        add_token_to_database(access_token, get_user_by_id(user_id))
 
         return make_response(jsonify({'access_token': access_token}), 200)
 
@@ -127,8 +128,8 @@ class Token(Resource):
         """
         Revoke token based on jti.
         """
-        username = get_jwt_identity()
-        rows_deleted = revoke_token_by_jti(jti, username)
+        user_id = get_jwt_identity()
+        rows_deleted = revoke_token_by_jti(jti, user_id)
 
         if rows_deleted:
             return make_response(

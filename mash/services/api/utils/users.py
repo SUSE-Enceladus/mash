@@ -27,7 +27,7 @@ from mash.mash_exceptions import MashDBException
 from mash.utils.mash_utils import handle_request
 
 
-def add_user(username, email, password=None):
+def add_user(email, password=None):
     """
     Add new user to database and set password hash.
 
@@ -46,7 +46,6 @@ def add_user(username, email, password=None):
         )
 
     user = User(
-        username=username,
         email=email
     )
     if not password:
@@ -81,14 +80,14 @@ def email_in_whitelist(email):
     return True
 
 
-def verify_login(username, password):
+def verify_login(email, password):
     """
     Compare password hashes.
 
     If hashes match the user is authenticated
     and user instance is returned.
     """
-    user = get_user_by_username(username)
+    user = get_user_by_email(email)
 
     if user and user.check_password(password):
         return user
@@ -96,16 +95,6 @@ def verify_login(username, password):
         return None
 
 
-def get_user_by_username(username):
-    """
-    Retrieve user from database if a match exists.
-
-    Otherwise None is returned.
-    """
-    user = User.query.filter_by(username=username).first()
-    return user
-
-
 def get_user_by_email(email, create=False):
     """
     Retrieve user from database if a match exists.
@@ -115,40 +104,27 @@ def get_user_by_email(email, create=False):
     """
     user = User.query.filter_by(email=email).first()
     if not user:
-        user = add_user(email, email)
+        user = add_user(email)
     return user
 
 
-def get_user_by_email(email, create=False):
+def get_user_by_id(user_id):
     """
     Retrieve user from database if a match exists.
 
-    If the user does not exist and create is True, the user
-    is created on the fly. Otherwise None is returned.
+    If user does not exist return None.
     """
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        user = add_user(email, email)
+    user = User.query.filter_by(id=user_id).first()
     return user
 
 
-def get_user_email(username):
+def delete_user(user_id):
     """
-    Retrieve user email if user exists.
-    """
-    user = get_user_by_username(username)
-
-    if user:
-        return user.email
-
-
-def delete_user(username):
-    """
-    Delete user by username.
+    Delete user by id.
 
     If user does not exist return 0.
     """
-    user = get_user_by_username(username)
+    user = get_user_by_id(user_id)
 
     if user:
         db.session.delete(user)

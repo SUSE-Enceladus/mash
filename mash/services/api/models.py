@@ -24,12 +24,6 @@ from mash.services.api.extensions import db
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(
-        db.String(64),
-        index=True,
-        unique=True,
-        nullable=False
-    )
     email = db.Column(db.String(120), index=True, unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     ec2_accounts = db.relationship(
@@ -82,7 +76,7 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return '<User {}>'.format(self.id)
 
 
 class Token(db.Model):
