@@ -5,14 +5,16 @@ from unittest.mock import patch, Mock
 from mash.mash_exceptions import MashDBException
 
 
+@patch('mash.services.api.routes.user.current_app')
 @patch('mash.services.api.routes.user.add_user')
-def test_api_create_user(mock_add_user, test_client):
+def test_api_create_user(mock_add_user, mock_current_app, test_client):
     user = Mock()
     user.id = '1'
     user.username = 'user1'
     user.email = 'user1@fake.com'
 
     mock_add_user.return_value = user
+    mock_current_app.config = {'AUTH_METHODS': ['password']}
 
     data = {
         'username': 'user1',
@@ -64,6 +66,16 @@ def test_api_create_user(mock_add_user, test_client):
         b'{"errors":{"password":"Password too short. ' \
         b'Minimum length is 8 characters."},"message":' \
         b'"Input payload validation failed"}\n'
+
+    # Fail with forbidden auth method
+    mock_current_app.config = {'AUTH_METHODS': ['oauth2']}
+
+    response = test_client.post(
+        '/user/',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+    assert response.status_code == 403
 
 
 @patch('mash.services.api.routes.user.get_user_by_username')
