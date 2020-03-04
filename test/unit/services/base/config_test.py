@@ -139,22 +139,22 @@ class TestBaseConfig(object):
         with raises(MashConfigException):
             self.empty_config.get_database_uri()
 
-    @patch.object(BaseConfig, 'get_auth_method', lambda x: 'oauth2')
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
     def test_get_oauth2_client_id(self):
         with raises(MashConfigException):
             self.config.get_oauth2_client_id()
 
-    @patch.object(BaseConfig, 'get_auth_method', lambda x: 'oauth2')
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
     def test_get_oauth2_client_secret(self):
         with raises(MashConfigException):
             self.config.get_oauth2_client_secret()
 
-    @patch.object(BaseConfig, 'get_auth_method', lambda x: 'oauth2')
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
     def test_get_oauth2_provider_url(self):
         with raises(MashConfigException):
             self.config.get_oauth2_provider_url()
 
-    @patch.object(BaseConfig, 'get_auth_method', lambda x: 'oauth2')
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
     def test_get_oauth2_redirect_ports(self):
         with raises(MashConfigException):
             self.config.get_oauth2_redirect_ports()

@@ -105,5 +105,5 @@ class Defaults(object):
         return []
 
     @staticmethod
-    def get_default_methods():
+    def get_auth_methods():
         return ['password']
