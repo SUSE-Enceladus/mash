@@ -18,7 +18,7 @@
 
 import json
 
-from flask import jsonify, request, make_response
+from flask import jsonify, request, make_response, current_app
 from flask_restplus import fields, marshal, Namespace, Resource
 
 from flask_jwt_extended import (
@@ -61,11 +61,15 @@ class Account(Resource):
     @api.expect(add_account_request)
     @api.response(201, 'Created account', get_account_response)
     @api.response(400, 'Validation error', validation_error_response)
+    @api.response(403, 'Forbidden', default_response)
     @api.response(409, 'Already in use', default_response)
     def post(self):
         """
         Create a new MASH account.
         """
+        if 'password' not in current_app.config['AUTH_METHODS']:
+            return make_response(jsonify({'msg': 'Password based login is disabled'}), 403)
+
         data = json.loads(request.data.decode())
 
         try:
