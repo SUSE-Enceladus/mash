@@ -340,17 +340,17 @@ class BaseConfig(object):
 
         return domain_whitelist or Defaults.get_domain_whitelist()
 
-    def get_auth_method(self):
+    def get_auth_methods(self):
         """
         Return the list of allowed authentication methods.
 
-        :rtype: strings
+        :rtype: list of strings
         """
         auth_methods = self._get_attribute(
-            attribute='auth_method'
+            attribute='auth_methods'
         )
 
-        return auth_methods or Defaults.get_auth_method()
+        return auth_methods or Defaults.get_auth_methods()
 
     def get_oauth2_client_id(self):
         """
