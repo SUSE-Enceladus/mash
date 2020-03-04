@@ -88,7 +88,7 @@ class TestAzureTestingJob(object):
             distro='sles',
             image_id='name',
             instance_type='Standard_A0',
-            log_level=30,
+            log_level=10,
             oci_user_id=None,
             region='East US',
             secret_access_key=None,

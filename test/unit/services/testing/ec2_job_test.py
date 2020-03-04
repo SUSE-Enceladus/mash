@@ -97,7 +97,7 @@ class TestEC2TestingJob(object):
             distro='sles',
             image_id='ami-123',
             instance_type='t2.micro',
-            log_level=30,
+            log_level=10,
             oci_user_id=None,
             region='us-east-1',
             secret_access_key='321',
