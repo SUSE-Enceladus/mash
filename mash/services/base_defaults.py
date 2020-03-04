@@ -127,3 +127,7 @@ class Defaults(object):
     @staticmethod
     def get_auth_method():
         return 'password'
+
+    @staticmethod
+    def get_default_methods():
+        return ['password']

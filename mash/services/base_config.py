@@ -340,6 +340,7 @@ class BaseConfig(object):
 
         return domain_whitelist or Defaults.get_domain_whitelist()
 
+<<<<<<< HEAD
     def get_max_oci_attempts(self):
         """
         Return the max number of attempts for OCI requests.
@@ -393,17 +394,17 @@ class BaseConfig(object):
         )
         return publisher_thread_pool_count or Defaults.get_publisher_thread_pool_count()
 
-    def get_auth_method(self):
+    def get_auth_methods(self):
         """
         Return the list of allowed authentication methods.
 
-        :rtype: strings
+        :rtype: list of strings
         """
         auth_methods = self._get_attribute(
-            attribute='auth_method'
+            attribute='auth_methods'
         )
 
-        return auth_methods or Defaults.get_auth_method()
+        return auth_methods or Defaults.get_auth_methods()
 
     def get_oauth2_client_id(self):
         """
