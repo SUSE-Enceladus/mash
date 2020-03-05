@@ -105,8 +105,8 @@ class Login(Resource):
             access_token = create_access_token(identity=user.id)
             refresh_token = create_refresh_token(identity=user.id)
 
-            add_token_to_database(access_token, user)
-            add_token_to_database(refresh_token, user)
+            add_token_to_database(access_token, user.id)
+            add_token_to_database(refresh_token, user.id)
 
             response = {
                 'access_token': access_token,
@@ -234,8 +234,8 @@ class OAuth2Request(Resource):
             access_token = create_access_token(identity=user.id)
             refresh_token = create_refresh_token(identity=user.id)
 
-            add_token_to_database(access_token, user)
-            add_token_to_database(refresh_token, user)
+            add_token_to_database(access_token, user.id)
+            add_token_to_database(refresh_token, user.id)
 
             response = {
                 'access_token': access_token,
