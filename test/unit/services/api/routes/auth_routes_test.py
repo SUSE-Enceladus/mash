@@ -17,8 +17,8 @@ def test_api_login(
         test_client
 ):
     mock_current_app.config = {'AUTH_METHODS': ['password']}
+    data = {'email': 'user1@fake.com', 'password': 'super-secret'}
     mock_verify_login.return_value = False
-    data = {'username': 'user1', 'password': 'super-secret'}
 
     response = test_client.post(
         '/auth/login',
@@ -27,10 +27,12 @@ def test_api_login(
     )
 
     assert response.status_code == 401
-    assert response.data == b'{"msg":"Username or password is invalid"}\n'
+    assert response.data == b'{"msg":"Email or password is invalid"}\n'
 
     # Success
-    mock_verify_login.return_value = True
+    user = Mock()
+    user.id = 1
+    mock_verify_login.return_value = user
     access_token = '54321'
     refresh_token = '12345'
 
@@ -44,8 +46,8 @@ def test_api_login(
     )
 
     mock_add_token_to_database.assert_has_calls([
-        call(access_token, 'user1'),
-        call(refresh_token, 'user1')
+        call(access_token, 1),
+        call(refresh_token, 1)
     ])
 
     assert response.status_code == 200
@@ -165,7 +167,7 @@ def test_oauth2_login(
     mock_decode_token.return_value = {'email': 'user1@fake.com'}
     mock_email_in_whitelist.return_value = False
     user = Mock()
-    user.username = 'user1'
+    user.id = 1
     mock_get_user_by_email.return_value = user
 
     response = test_client.post(
@@ -192,8 +194,8 @@ def test_oauth2_login(
     )
 
     mock_add_token_to_database.assert_has_calls([
-        call(access_token, 'user1'),
-        call(refresh_token, 'user1')
+        call(access_token, 1),
+        call(refresh_token, 1)
     ])
 
     assert response.status_code == 200

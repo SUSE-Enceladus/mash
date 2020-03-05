@@ -24,16 +24,10 @@ from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.jobs.gce import update_gce_job_accounts
 
 
-@patch('mash.services.api.utils.jobs.gce.get_gce_account_by_id')
-@patch('mash.services.api.utils.jobs.gce.get_user_by_username')
+@patch('mash.services.api.utils.jobs.gce.get_gce_account')
 def test_update_gce_job_accounts(
-    mock_get_user,
     mock_get_gce_account
 ):
-    user = Mock()
-    user.id = '1'
-    mock_get_user.return_value = user
-
     account = Mock()
     account.name = 'acnt1'
     account.region = 'us-east1'
@@ -43,7 +37,7 @@ def test_update_gce_job_accounts(
     mock_get_gce_account.return_value = account
 
     job_doc = {
-        'requesting_user': 'user1',
+        'requesting_user': '1',
         'cloud_account': 'acnt1',
         'bucket': 'images2',
         'family': 'sles'
