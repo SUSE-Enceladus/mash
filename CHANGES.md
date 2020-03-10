@@ -1,3 +1,15 @@
+v5.2.0 (2020-03-10)
+===================
+
+- Delete all user credentials when user deleted.
+  [\#634](https://github.com/SUSE-Enceladus/mash/pull/634)
+- Update default development port for credentials.
+  [\#635](https://github.com/SUSE-Enceladus/mash/pull/635)
+- Add configuration options for thread pool count.
+  [\#636](https://github.com/SUSE-Enceladus/mash/pull/636)
+- Use debug level in img-proof testing.
+  [\#637](https://github.com/SUSE-Enceladus/mash/pull/637)
+
 v5.1.0 (2020-02-24)
 ===================
 
