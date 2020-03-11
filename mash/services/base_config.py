@@ -340,7 +340,6 @@ class BaseConfig(object):
 
         return domain_whitelist or Defaults.get_domain_whitelist()
 
-<<<<<<< HEAD
     def get_max_oci_attempts(self):
         """
         Return the max number of attempts for OCI requests.
