@@ -17,7 +17,6 @@
 #
 
 import json
-import jwt
 
 from flask import jsonify, request, make_response, current_app
 from flask_restplus import fields, Namespace, Resource
@@ -112,8 +111,7 @@ class Login(Resource):
                 'access_token': access_token,
                 'refresh_token': refresh_token
             }
-            tokens = create_tokens_from_username(username)
-            return make_response(jsonify(tokens), 200)
+            return make_response(jsonify(response), 200)
         else:
             current_app.logger.warning(
                 'Failed login attempt for user: {email}'.format(
@@ -161,7 +159,7 @@ class OAuth2Request(Resource):
         """
         Request oauth2 login URL.
         """
-        if current_app.config['AUTH_METHOD'] != 'oauth2':
+        if 'oauth2' not in current_app.config['AUTH_METHODS']:
             return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
 
         oauth2_auth_url = '{}/authorize'.format(
@@ -188,7 +186,7 @@ class OAuth2Request(Resource):
     @api.response(200, 'Logged in', oauth2_login_response)
     @api.response(500, 'Login failed', default_response)
     def post(self):
-        if current_app.config['AUTH_METHOD'] != 'oauth2':
+        if 'oauth2' not in current_app.config['AUTH_METHODS']:
             return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
 
         data = json.loads(request.data.decode())

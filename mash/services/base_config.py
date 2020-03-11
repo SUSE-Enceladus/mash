@@ -403,7 +403,7 @@ class BaseConfig(object):
             attribute='auth_method'
         )
 
-        return auth_methods or Defaults.get_auth_method()
+        return auth_methods or Defaults.get_auth_methods()
 
     def get_oauth2_client_id(self):
         """
