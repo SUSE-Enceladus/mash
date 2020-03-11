@@ -16,16 +16,15 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from mash.services.api.utils.users import get_user_by_username
-from mash.services.api.utils.accounts.oci import get_oci_account_by_id
+from mash.services.api.utils.accounts.oci import get_oci_account
 
 
 def update_oci_job_accounts(job_doc):
     """
     Update target_account_info for given job doc.
     """
-    user = get_user_by_username(job_doc['requesting_user'])
-    cloud_account = get_oci_account_by_id(job_doc['cloud_account'], user.id)
+    user_id = job_doc['requesting_user']
+    cloud_account = get_oci_account(job_doc['cloud_account'], user_id)
 
     attrs = [
         'region',

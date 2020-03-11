@@ -25,7 +25,6 @@ from mash.services.api.utils.accounts.oci import (
     create_oci_account,
     get_oci_accounts,
     get_oci_account,
-    get_oci_account_by_id,
     delete_oci_account,
     update_oci_account
 )
@@ -35,7 +34,7 @@ from mash.services.api.utils.accounts.oci import (
 @patch('mash.services.api.utils.accounts.oci.current_app')
 @patch('mash.services.api.utils.accounts.oci.OCIAccount')
 @patch('mash.services.api.utils.accounts.oci.handle_request')
-@patch('mash.services.api.utils.accounts.oci.get_user_by_username')
+@patch('mash.services.api.utils.accounts.oci.get_user_by_id')
 @patch('mash.services.api.utils.accounts.oci.db')
 def test_create_oci_account(
     mock_db,
@@ -46,7 +45,7 @@ def test_create_oci_account(
     mock_fingerprint
 ):
     user = Mock()
-    user.id = '1'
+    user.id = 1
     mock_get_user.return_value = user
 
     account = Mock()
@@ -62,12 +61,12 @@ def test_create_oci_account(
     data = {
         'cloud': 'oci',
         'account_name': 'acnt1',
-        'requesting_user': 'user1',
+        'requesting_user': 1,
         'credentials': credentials
     }
 
     result = create_oci_account(
-        'user1',
+        1,
         'acnt1',
         'images',
         'us-phoenix-1',
@@ -96,7 +95,7 @@ def test_create_oci_account(
 
     with raises(Exception):
         create_oci_account(
-            'user1',
+            1,
             'acnt1',
             'images',
             'us-phoenix-1',
@@ -110,7 +109,7 @@ def test_create_oci_account(
     mock_db.session.rollback.assert_called_once_with()
 
 
-@patch('mash.services.api.utils.accounts.oci.get_user_by_username')
+@patch('mash.services.api.utils.accounts.oci.get_user_by_id')
 def test_get_oci_accounts(mock_get_user):
     account = Mock()
     user = Mock()
@@ -124,27 +123,15 @@ def test_get_oci_accounts(mock_get_user):
 def test_get_oci_account(mock_oci_account):
     account = Mock()
     queryset = Mock()
-    queryset2 = Mock()
-    queryset2.first.return_value = account
-    queryset.filter_by.return_value = queryset2
-    mock_oci_account.query.filter.return_value = queryset
-
-    assert get_oci_account('acnt1', 'user1') == account
-
-
-@patch('mash.services.api.utils.accounts.oci.OCIAccount')
-def test_get_oci_account_by_id(mock_oci_account):
-    account = Mock()
-    queryset = Mock()
     queryset.one.return_value = account
     mock_oci_account.query.filter_by.return_value = queryset
 
-    assert get_oci_account_by_id('acnt1', '1') == account
+    assert get_oci_account('acnt1', 1) == account
 
     mock_oci_account.query.filter_by.side_effect = Exception('Broken')
 
     with raises(MashDBException):
-        get_oci_account_by_id('acnt1', '2')
+        get_oci_account('acnt1', 2)
 
 
 @patch('mash.services.api.utils.accounts.oci.current_app')
@@ -165,10 +152,10 @@ def test_delete_oci_account(
     data = {
         'cloud': 'oci',
         'account_name': 'acnt1',
-        'requesting_user': 'user1'
+        'requesting_user': 1
     }
 
-    assert delete_oci_account('acnt1', 'user1') == 1
+    assert delete_oci_account('acnt1', 1) == 1
 
     mock_db.session.delete.assert_called_once_with(account)
     mock_db.session.commit.assert_called_once_with()
@@ -182,12 +169,12 @@ def test_delete_oci_account(
     mock_db.session.commit.side_effect = Exception('Broken')
 
     with raises(Exception):
-        delete_oci_account('acnt1', 'user1')
+        delete_oci_account('acnt1', 1)
 
     mock_db.session.rollback.assert_called_once_with()
 
     mock_get_account.return_value = None
-    assert delete_oci_account('acnt2', 'user1') == 0
+    assert delete_oci_account('acnt2', 1) == 0
 
 
 @patch('mash.services.api.utils.accounts.oci.get_fingerprint_from_private_key')
@@ -203,7 +190,7 @@ def test_update_oci_account(
     mock_fingerprint
 ):
     account = Mock()
-    account.id = '1'
+    account.id = 1
     account.is_publishing_account = True
     mock_get_oci_account.return_value = account
 
@@ -217,12 +204,12 @@ def test_update_oci_account(
     data = {
         'cloud': 'oci',
         'account_name': 'acnt1',
-        'requesting_user': 'user1',
+        'requesting_user': 1,
         'credentials': credentials
     }
 
     result = update_oci_account(
-        'user1',
+        1,
         'acnt1',
         bucket='images',
         region='us-phoenix-1',
@@ -262,7 +249,7 @@ def test_update_oci_account(
 
     with raises(Exception):
         update_oci_account(
-            'user1',
+            1,
             'acnt1',
             signing_key='signing key',
         )
@@ -271,7 +258,7 @@ def test_update_oci_account(
     mock_get_oci_account.return_value = None
 
     result = update_oci_account(
-        'user1',
+        1,
         'acnt1',
         bucket='images',
     )
