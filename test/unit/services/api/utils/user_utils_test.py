@@ -99,19 +99,22 @@ def test_get_user_by_email(mock_user, mock_add_user):
 @patch('mash.services.api.utils.users.handle_request')
 @patch('mash.services.api.utils.users.db')
 @patch('mash.services.api.utils.users.get_user_by_id')
-def test_delete_user(mock_get_user, mock_db):
+def test_delete_user(
+    mock_get_user, mock_db, mock_handle_request, mock_current_app
+):
     user = Mock()
+    user.id = 1
     mock_get_user.return_value = user
     mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
-    assert delete_user('user1@fake.com') == 1
+    assert delete_user(1) == 1
     mock_db.session.delete.assert_called_once_with(user)
 
     mock_handle_request.assert_called_once_with(
         'http://localhost:5000/',
-        'credentials/user1',
+        'credentials/1',
         'delete'
     )
 
     mock_get_user.return_value = None
-    assert delete_user('user1@fake.com') == 0
+    assert delete_user(1) == 0

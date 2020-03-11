@@ -131,7 +131,7 @@ def delete_user(user_id):
         db.session.commit()
         handle_request(
             current_app.config['CREDENTIALS_URL'],
-            'credentials/{user}'.format(user=username),
+            'credentials/{user}'.format(user=user_id),
             'delete'
         )
         return 1
