@@ -52,7 +52,7 @@ def add_token_to_database(encoded_token, user_id):
     token = Token(
         jti=jti,
         token_type=token_type,
-        user_id=1,
+        user_id=user_id,
         expires=expires
     )
     db.session.add(token)
