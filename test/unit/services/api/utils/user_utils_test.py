@@ -90,7 +90,7 @@ def test_get_user_by_email(mock_user, mock_add_user):
     assert get_user_by_email('user1@fake.com') == user
 
     queryset.first.return_value = None
-    get_user_by_email('user1@fake.com')
+    get_user_by_email('user1@fake.com', create=True)
 
     mock_add_user.assert_called_once_with('user1@fake.com')
 
