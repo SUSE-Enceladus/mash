@@ -103,7 +103,7 @@ def get_user_by_email(email, create=False):
     is created on the fly. Otherwise None is returned.
     """
     user = User.query.filter_by(email=email).first()
-    if not user:
+    if not user and create is True:
         user = add_user(email)
     return user
 
