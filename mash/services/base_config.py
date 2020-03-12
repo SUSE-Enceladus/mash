@@ -400,7 +400,7 @@ class BaseConfig(object):
         :rtype: strings
         """
         auth_methods = self._get_attribute(
-            attribute='auth_method'
+            attribute='auth_methods'
         )
 
         return auth_methods or Defaults.get_auth_methods()
