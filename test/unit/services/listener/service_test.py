@@ -496,9 +496,8 @@ class TestListenerService(object):
         )
 
     @patch.object(ListenerService, 'consume_queue')
-    @patch.object(ListenerService, 'close_connection')
     def test_service_start(
-        self, mock_close_connection, mock_consume_queue
+        self, mock_consume_queue
     ):
         self.service.channel = self.channel
         self.service.start()
@@ -514,17 +513,10 @@ class TestListenerService(object):
                 queue_name='listener'
             )
         ])
-        mock_close_connection.assert_called_once_with()
 
     @patch.object(ListenerService, 'close_connection')
     def test_service_start_exception(self, mock_close_connection):
         self.service.channel = self.channel
-
-        self.channel.start_consuming.side_effect = KeyboardInterrupt()
-        self.service.start()
-
-        mock_close_connection.assert_called_once_with()
-        mock_close_connection.reset_mock()
         self.channel.start_consuming.side_effect = Exception(
             'Cannot start consuming.'
         )
@@ -532,6 +524,7 @@ class TestListenerService(object):
         with pytest.raises(Exception) as error:
             self.service.start()
 
+        mock_close_connection.assert_called_once_with()
         assert 'Cannot start consuming.' == str(error.value)
 
     def test_service_validate_listener_msg(self):
@@ -666,3 +659,12 @@ class TestListenerService(object):
 
         data = self.service._get_status_message(job)
         assert data == self.status_message
+
+    @patch.object(ListenerService, 'close_connection')
+    def test_service_stop(self, mock_close_connection):
+        frame = Mock()
+        self.service.stop(signum=15, frame=frame)
+        self.service.log.info.assert_called_once_with(
+            'Got a TERM/INTERRUPT signal, shutting down gracefully.'
+        )
+        mock_close_connection.assert_called_once_with()
