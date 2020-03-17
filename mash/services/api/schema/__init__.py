@@ -73,13 +73,11 @@ validation_error = {
 add_account = {
     'type': 'object',
     'properties': {
-        'username': string_with_example('account1'),
         'email': email,
         'password': string_with_example('secretpassword123')
     },
     'additionalProperties': False,
     'required': [
-        'username',
         'email',
         'password'
     ]
@@ -88,12 +86,12 @@ add_account = {
 login_request_model = {
     'type': 'object',
     'properties': {
-        'username': string_with_example('account1'),
+        'email': email,
         'password': string_with_example('secretpassword123')
     },
     'additionalProperties': False,
     'required': [
-        'username',
+        'email',
         'password'
     ]
 }

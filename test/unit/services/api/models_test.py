@@ -13,12 +13,11 @@ from mash.services.api.models import (
 
 def test_user_model():
     user = User(
-        username='user1',
         email='user1@fake.com'
     )
     user.set_password('password')
     assert user.check_password('password')
-    assert user.__repr__() == '<User user1>'
+    assert user.__repr__() == '<User user1@fake.com>'
 
 
 def test_token_model():

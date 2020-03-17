@@ -93,18 +93,19 @@ class Login(Resource):
         """
         Get access and refresh tokens for new session.
         """
-        data = json.loads(request.data.decode())
-        username = data['username']
-
         if 'password' not in current_app.config['AUTH_METHODS']:
             return make_response(jsonify({'msg': 'Password based login is disabled'}), 403)
 
-        if verify_login(username, data['password']):
-            access_token = create_access_token(identity=username)
-            refresh_token = create_refresh_token(identity=username)
+        data = json.loads(request.data.decode())
+        email = data['email']
 
-            add_token_to_database(access_token, username)
-            add_token_to_database(refresh_token, username)
+        user = verify_login(email, data['password'])
+        if user:
+            access_token = create_access_token(identity=user.id)
+            refresh_token = create_refresh_token(identity=user.id)
+
+            add_token_to_database(access_token, user.id)
+            add_token_to_database(refresh_token, user.id)
 
             response = {
                 'access_token': access_token,
@@ -113,11 +114,11 @@ class Login(Resource):
             return make_response(jsonify(response), 200)
         else:
             current_app.logger.warning(
-                'Failed login attempt for user: {username}'.format(
-                    username=username
+                'Failed login attempt for user: {email}'.format(
+                    email=email
                 )
             )
-            return make_response(jsonify({'msg': 'Username or password is invalid'}), 401)
+            return make_response(jsonify({'msg': 'Email or password is invalid'}), 401)
 
 
 @api.route('/logout')
@@ -132,9 +133,9 @@ class Logout(Resource):
         """
         Revoke current refresh token.
         """
-        username = get_jwt_identity()
+        user_id = get_jwt_identity()
         token = get_raw_jwt()
-        rows_deleted = revoke_token_by_jti(token['jti'], username)
+        rows_deleted = revoke_token_by_jti(token['jti'], user_id)
 
         if rows_deleted:
             return make_response(
@@ -228,11 +229,11 @@ class OAuth2Request(Resource):
 
         if email_in_whitelist(user_email):
             user = get_user_by_email(user_email, create=True)
-            access_token = create_access_token(identity=user.username)
-            refresh_token = create_refresh_token(identity=user.username)
+            access_token = create_access_token(identity=user.id)
+            refresh_token = create_refresh_token(identity=user.id)
 
-            add_token_to_database(access_token, user.username)
-            add_token_to_database(refresh_token, user.username)
+            add_token_to_database(access_token, user.id)
+            add_token_to_database(refresh_token, user.id)
 
             response = {
                 'access_token': access_token,

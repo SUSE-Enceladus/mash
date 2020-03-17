@@ -21,8 +21,7 @@ import copy
 from flask import current_app
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.utils.users import get_user_by_username
-from mash.services.api.utils.accounts.ec2 import get_ec2_group, get_ec2_account_by_id
+from mash.services.api.utils.accounts.ec2 import get_ec2_group, get_ec2_account
 
 
 def get_ec2_regions_by_partition(partition):
@@ -107,7 +106,8 @@ def update_ec2_job_accounts(job_doc):
     Once accounts dictionary is built remove cloud_groups
     and cloud_accounts keys from job_doc.
     """
-    user = get_user_by_username(job_doc['requesting_user'])
+    user_id = job_doc['requesting_user']
+
     helper_images = get_ec2_helper_images()
     cloud_accounts = convert_account_dict(job_doc.get('cloud_accounts', []))
 
@@ -116,15 +116,15 @@ def update_ec2_job_accounts(job_doc):
 
     if job_doc.get('cloud_account'):
         account_name = job_doc['cloud_account']
-        cloud_account = get_ec2_account_by_id(account_name, user.id)
+        cloud_account = get_ec2_account(account_name, user_id)
         target_accounts.append(cloud_account)
 
     for group_name in job_doc.get('cloud_groups', []):
-        group = get_ec2_group(group_name, user.id)
+        group = get_ec2_group(group_name, user_id)
         target_accounts += group.accounts
 
     for account_name in cloud_accounts:
-        cloud_account = get_ec2_account_by_id(account_name, user.id)
+        cloud_account = get_ec2_account(account_name, user_id)
         target_accounts.append(cloud_account)
 
     for account in target_accounts:

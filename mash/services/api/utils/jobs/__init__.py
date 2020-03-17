@@ -22,7 +22,7 @@ import uuid
 from mash.services.api.extensions import db
 from mash.services.api.models import Job, User
 from mash.services.api.utils.amqp import publish
-from mash.services.api.utils.users import get_user_by_username
+from mash.services.api.utils.users import get_user_by_id
 
 
 def get_new_job_id():
@@ -36,7 +36,7 @@ def create_job(data):
     job_id = get_new_job_id()
     data['job_id'] = job_id
 
-    user = get_user_by_username(data['requesting_user'])
+    user_id = data['requesting_user']
 
     kwargs = {
         'job_id': job_id,
@@ -44,7 +44,7 @@ def create_job(data):
         'utctime': data['utctime'],
         'image': data['image'],
         'download_url': data['download_url'],
-        'user_id': user.id
+        'user_id': user_id
     }
 
     if data.get('cloud_architecture'):
@@ -68,28 +68,28 @@ def create_job(data):
     return job
 
 
-def get_job(job_id, username):
+def get_job(job_id, user_id):
     """
     Get job for given user.
     """
     job = Job.query.filter(
-        User.username == username
+        User.id == user_id
     ).filter_by(job_id=job_id).first()
 
     return job
 
 
-def get_jobs(username):
+def get_jobs(user_id):
     """
     Retrieve all jobs for user.
     """
-    user = get_user_by_username(username)
+    user = get_user_by_id(user_id)
     return user.jobs
 
 
-def delete_job(job_id, username):
+def delete_job(job_id, user_id):
     """Delete job for user."""
-    job = get_job(job_id, username)
+    job = get_job(job_id, user_id)
 
     if job:
         try:

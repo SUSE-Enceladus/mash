@@ -14,7 +14,7 @@ from mash.services.api.utils.jobs import (
 @patch('mash.services.api.utils.jobs.Job')
 @patch('mash.services.api.utils.jobs.publish')
 @patch('mash.services.api.utils.jobs.db')
-@patch('mash.services.api.utils.jobs.get_user_by_username')
+@patch('mash.services.api.utils.jobs.get_user_by_id')
 @patch('mash.services.api.utils.jobs.uuid')
 def test_create_job(mock_uuid, mock_get_user, mock_db, mock_publish, mock_job):
     job = Mock()
@@ -32,7 +32,7 @@ def test_create_job(mock_uuid, mock_get_user, mock_db, mock_publish, mock_job):
         'download_url': 'http://download.opensuse.org/repositories/Cloud:Tools/images',
         'cloud_architecture': 'x86_64',
         'profile': 'Server',
-        'requesting_user': 'user1'
+        'requesting_user': '1'
     }
 
     result = create_job(data)
@@ -66,17 +66,17 @@ def test_get_job(mock_job):
     queryset.filter_by.return_value = queryset1
     mock_job.query.filter.return_value = queryset
 
-    assert get_job('12345678-1234-1234-1234-123456789012', 'user1') == job
+    assert get_job('12345678-1234-1234-1234-123456789012', '1') == job
 
 
-@patch('mash.services.api.utils.jobs.get_user_by_username')
+@patch('mash.services.api.utils.jobs.get_user_by_id')
 def test_get_jobs(mock_get_user):
     job = Mock()
     user = Mock()
     user.jobs = [job]
     mock_get_user.return_value = user
 
-    assert get_jobs('user1') == [job]
+    assert get_jobs('1') == [job]
 
 
 @patch('mash.services.api.utils.jobs.publish')
@@ -86,7 +86,7 @@ def test_delete_jobs(mock_get_job, mock_db, mock_publish):
     job = Mock()
     mock_get_job.return_value = job
 
-    assert delete_job('12345678-1234-1234-1234-123456789012', 'user1') == 1
+    assert delete_job('12345678-1234-1234-1234-123456789012', '1') == 1
     mock_db.session.delete.assert_called_once_with(job)
     mock_db.session.commit.assert_called_once_with()
     mock_publish.assert_called_once_with(
@@ -99,10 +99,10 @@ def test_delete_jobs(mock_get_job, mock_db, mock_publish):
     mock_db.session.delete.side_effect = Exception("Unable to delete job!")
 
     with raises(Exception):
-        delete_job('12345678-1234-1234-1234-123456789012', 'user1')
+        delete_job('12345678-1234-1234-1234-123456789012', '1')
 
     mock_db.session.rollback.assert_called_once_with()
 
     # Not found
     mock_get_job.return_value = None
-    assert delete_job('12345678-1234-1234-1234-123456789012', 'user1') == 0
+    assert delete_job('12345678-1234-1234-1234-123456789012', '1') == 0

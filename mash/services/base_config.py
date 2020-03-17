@@ -397,7 +397,7 @@ class BaseConfig(object):
         """
         Return the list of allowed authentication methods.
 
-        :rtype: list of strings
+        :rtype: strings
         """
         auth_methods = self._get_attribute(
             attribute='auth_methods'
