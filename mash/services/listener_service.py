@@ -18,6 +18,7 @@
 
 import json
 import os
+import signal
 
 from amqpstorm import AMQPError
 
@@ -111,6 +112,9 @@ class ListenerService(MashService):
             self._process_job_missed,
             events.EVENT_JOB_MISSED
         )
+
+        signal.signal(signal.SIGINT, self.stop)
+        signal.signal(signal.SIGTERM, self.stop)
 
         restart_jobs(self.job_directory, self._add_job)
         self.start()
@@ -487,10 +491,26 @@ class ListenerService(MashService):
 
         try:
             self.channel.start_consuming()
-        except KeyboardInterrupt:
-            pass
         except Exception:
+            self.stop()
             raise
-        finally:
-            self.scheduler.shutdown()
-            self.close_connection()
+
+    def stop(self, signum=None, frame=None):
+        """
+        Gracefully stop the service.
+
+        Shutdown scheduler and wait for running jobs to finish.
+        Close AMQP connection.
+        """
+        if signum:
+            self.log.info(
+                'Got a TERM/INTERRUPT signal, shutting down gracefully.'
+            )
+        else:
+            self.log.info(
+                'An unhandled Exception occurred in event loop, '
+                'shutting down gracefully.'
+            )
+
+        self.scheduler.shutdown()
+        self.close_connection()
