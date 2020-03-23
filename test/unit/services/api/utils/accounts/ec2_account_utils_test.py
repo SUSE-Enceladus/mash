@@ -28,7 +28,6 @@ from mash.services.api.utils.accounts.ec2 import (
     create_ec2_account,
     get_ec2_accounts,
     get_ec2_account,
-    get_ec2_account_by_id,
     delete_ec2_account,
     update_ec2_account
 )
@@ -41,12 +40,12 @@ def test_get_ec2_group(mock_ec2_group):
     queryset.first.return_value = group
     mock_ec2_group.query.filter_by.return_value = queryset
 
-    assert get_ec2_group('group1', '1') == group
+    assert get_ec2_group('group1', 1) == group
 
     queryset.first.return_value = None
 
     with raises(MashDBException):
-        get_ec2_group('group2', '1')
+        get_ec2_group('group2', 1)
 
 
 @patch('mash.services.api.utils.accounts.ec2.db')
@@ -55,7 +54,7 @@ def test_create_ec2_region(mock_db):
         name='acnt1',
         partition='aws',
         region='us-east-99',
-        user_id='1'
+        user_id=1
     )
     result = create_ec2_region('us-east-99', 'ami-987654', account)
 
@@ -70,7 +69,7 @@ def test_create_ec2_region(mock_db):
 @patch('mash.services.api.utils.accounts.ec2.EC2Group')
 @patch('mash.services.api.utils.accounts.ec2.handle_request')
 @patch('mash.services.api.utils.accounts.ec2.create_ec2_region')
-@patch('mash.services.api.utils.accounts.ec2.get_user_by_username')
+@patch('mash.services.api.utils.accounts.ec2.get_user_by_id')
 @patch('mash.services.api.utils.accounts.ec2.db')
 def test_create_ec2_account(
     mock_db,
@@ -82,7 +81,7 @@ def test_create_ec2_account(
     mock_current_app
 ):
     user = Mock()
-    user.id = '1'
+    user.id = 1
     mock_get_user.return_value = user
 
     queryset = Mock()
@@ -101,12 +100,12 @@ def test_create_ec2_account(
     data = {
         'cloud': 'ec2',
         'account_name': 'acnt1',
-        'requesting_user': 'user1',
+        'requesting_user': 1,
         'credentials': credentials
     }
 
     result = create_ec2_account(
-        'user1',
+        1,
         'acnt1',
         'aws',
         'us-east-99',
@@ -140,7 +139,7 @@ def test_create_ec2_account(
 
     with raises(Exception):
         create_ec2_account(
-            'user1',
+            1,
             'acnt1',
             'aws',
             'us-east-99',
@@ -153,41 +152,29 @@ def test_create_ec2_account(
     mock_db.session.rollback.assert_called_once_with()
 
 
-@patch('mash.services.api.utils.accounts.ec2.get_user_by_username')
+@patch('mash.services.api.utils.accounts.ec2.get_user_by_id')
 def test_get_ec2_accounts(mock_get_user):
     account = Mock()
     user = Mock()
     user.ec2_accounts = [account]
     mock_get_user.return_value = user
 
-    assert get_ec2_accounts('user1') == [account]
+    assert get_ec2_accounts(1) == [account]
 
 
 @patch('mash.services.api.utils.accounts.ec2.EC2Account')
 def test_get_ec2_account(mock_ec2_account):
     account = Mock()
     queryset = Mock()
-    queryset2 = Mock()
-    queryset2.first.return_value = account
-    queryset.filter_by.return_value = queryset2
-    mock_ec2_account.query.filter.return_value = queryset
-
-    assert get_ec2_account('acnt1', 'user1') == account
-
-
-@patch('mash.services.api.utils.accounts.ec2.EC2Account')
-def test_get_ec2_account_by_id(mock_ec2_account):
-    account = Mock()
-    queryset = Mock()
     queryset.one.return_value = account
     mock_ec2_account.query.filter_by.return_value = queryset
 
-    assert get_ec2_account_by_id('acnt1', '1') == account
+    assert get_ec2_account('acnt1', 1) == account
 
     mock_ec2_account.query.filter_by.side_effect = Exception('Broken')
 
     with raises(MashDBException):
-        get_ec2_account_by_id('acnt1', '2')
+        get_ec2_account('acnt1', 2)
 
 
 @patch('mash.services.api.utils.accounts.ec2.current_app')
@@ -208,10 +195,10 @@ def test_delete_ec2_account(
     data = {
         'cloud': 'ec2',
         'account_name': 'acnt1',
-        'requesting_user': 'user1'
+        'requesting_user': 1
     }
 
-    assert delete_ec2_account('acnt1', 'user1') == 1
+    assert delete_ec2_account('acnt1', 1) == 1
 
     mock_db.session.delete.assert_called_once_with(account)
     mock_db.session.commit.assert_called_once_with()
@@ -225,12 +212,12 @@ def test_delete_ec2_account(
     mock_db.session.commit.side_effect = Exception('Broken')
 
     with raises(Exception):
-        delete_ec2_account('acnt1', 'user1')
+        delete_ec2_account('acnt1', 1)
 
     mock_db.session.rollback.assert_called_once_with()
 
     mock_get_account.return_value = None
-    assert delete_ec2_account('acnt2', 'user1') == 0
+    assert delete_ec2_account('acnt2', 1) == 0
 
 
 @patch('mash.services.api.utils.accounts.ec2.current_app')
@@ -238,7 +225,7 @@ def test_delete_ec2_account(
 @patch('mash.services.api.utils.accounts.ec2._get_or_create_ec2_group')
 @patch('mash.services.api.utils.accounts.ec2.handle_request')
 @patch('mash.services.api.utils.accounts.ec2.create_ec2_region')
-@patch('mash.services.api.utils.accounts.ec2.get_user_by_username')
+@patch('mash.services.api.utils.accounts.ec2.get_user_by_id')
 @patch('mash.services.api.utils.accounts.ec2.db')
 def test_update_ec2_account(
     mock_db,
@@ -250,11 +237,11 @@ def test_update_ec2_account(
     mock_current_app
 ):
     user = Mock()
-    user.id = '1'
+    user.id = 1
     mock_get_user.return_value = user
 
     group = Mock()
-    group.id = '1'
+    group.id = 1
     mock_get_create_group.return_value = group
 
     account = Mock()
@@ -266,13 +253,13 @@ def test_update_ec2_account(
     data = {
         'cloud': 'ec2',
         'account_name': 'acnt1',
-        'requesting_user': 'user1',
+        'requesting_user': 1,
         'credentials': credentials
     }
 
     result = update_ec2_account(
         'acnt1',
-        'user1',
+        1,
         [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
         credentials,
         'group1',
@@ -302,7 +289,7 @@ def test_update_ec2_account(
 
     result = update_ec2_account(
         'acnt1',
-        'user1',
+        1,
         [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
         credentials,
         'group1',
@@ -319,7 +306,7 @@ def test_update_ec2_account(
     with raises(Exception):
         update_ec2_account(
             'acnt1',
-            'user1',
+            1,
             [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
             credentials,
             'group1',
@@ -335,7 +322,7 @@ def test_update_ec2_account(
     with raises(Exception):
         update_ec2_account(
             'acnt1',
-            'user1',
+            1,
             [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
             credentials,
             'group1',

@@ -28,6 +28,14 @@ def string_with_example(example, description='', min_length=1):
     }
 
 
+def integer_with_example(example, description=''):
+    return {
+        'type': 'integer',
+        'description': description,
+        'example': example
+    }
+
+
 email = {
     'type': 'string',
     'format': 'regex',
@@ -65,13 +73,11 @@ validation_error = {
 add_account = {
     'type': 'object',
     'properties': {
-        'username': string_with_example('account1'),
         'email': email,
         'password': string_with_example('secretpassword123')
     },
     'additionalProperties': False,
     'required': [
-        'username',
         'email',
         'password'
     ]
@@ -80,12 +86,32 @@ add_account = {
 login_request_model = {
     'type': 'object',
     'properties': {
-        'username': string_with_example('account1'),
+        'email': email,
         'password': string_with_example('secretpassword123')
     },
     'additionalProperties': False,
     'required': [
-        'username',
+        'email',
         'password'
+    ]
+}
+
+oauth2_request_model = {
+    'type': 'object',
+    'additionalProperties': False
+}
+
+oauth2_login_model = {
+    'type': 'object',
+    'properties': {
+        'auth_code': string_with_example('codefromauthprovider'),
+        'state': string_with_example('statefromoauth2req'),
+        'redirect_port': integer_with_example(9000)
+    },
+    'additionalProperties': False,
+    'required': [
+        'auth_code',
+        'state',
+        'redirect_port'
     ]
 }

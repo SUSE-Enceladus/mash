@@ -20,13 +20,13 @@ from flask import current_app
 
 from mash.mash_exceptions import MashDBException
 from mash.services.api.extensions import db
-from mash.services.api.utils.users import get_user_by_username
-from mash.services.api.models import OCIAccount, User
+from mash.services.api.utils.users import get_user_by_id
+from mash.services.api.models import OCIAccount
 from mash.utils.mash_utils import handle_request, get_fingerprint_from_private_key
 
 
 def create_oci_account(
-    username,
+    user_id,
     account_name,
     bucket,
     region_name,
@@ -42,14 +42,12 @@ def create_oci_account(
     data = {
         'cloud': 'oci',
         'account_name': account_name,
-        'requesting_user': username,
+        'requesting_user': user_id,
         'credentials': {
             'signing_key': signing_key,
             'fingerprint': get_fingerprint_from_private_key(signing_key)
         }
     }
-
-    user = get_user_by_username(username)
 
     account = OCIAccount(
         name=account_name,
@@ -59,7 +57,7 @@ def create_oci_account(
         compartment_id=compartment_id,
         oci_user_id=oci_user_id,
         tenancy=tenancy,
-        user_id=user.id
+        user_id=user_id
     )
 
     try:
@@ -78,26 +76,15 @@ def create_oci_account(
     return account
 
 
-def get_oci_account(name, username):
-    """
-    Get OCI account for given user.
-    """
-    oci_account = OCIAccount.query.filter(
-        User.username == username
-    ).filter_by(name=name).first()
-
-    return oci_account
-
-
-def get_oci_accounts(username):
+def get_oci_accounts(user_id):
     """
     Retrieve all OCI accounts for user.
     """
-    user = get_user_by_username(username)
+    user = get_user_by_id(user_id)
     return user.oci_accounts
 
 
-def get_oci_account_by_id(name, user_id):
+def get_oci_account(name, user_id):
     """
     Get OCI account for given user.
     """
@@ -113,17 +100,17 @@ def get_oci_account_by_id(name, user_id):
     return oci_account
 
 
-def delete_oci_account(name, username):
+def delete_oci_account(name, user_id):
     """
     Delete OCI account for user.
     """
     data = {
         'cloud': 'oci',
         'account_name': name,
-        'requesting_user': username
+        'requesting_user': user_id
     }
 
-    oci_account = get_oci_account(name, username)
+    oci_account = get_oci_account(name, user_id)
 
     if oci_account:
         try:
@@ -145,7 +132,7 @@ def delete_oci_account(name, username):
 
 
 def update_oci_account(
-    username,
+    user_id,
     account_name,
     bucket=None,
     region=None,
@@ -158,7 +145,7 @@ def update_oci_account(
     """
     Update an existing OCI account.
     """
-    oci_account = get_oci_account(account_name, username)
+    oci_account = get_oci_account(account_name, user_id)
 
     if not oci_account:
         return None
@@ -167,7 +154,7 @@ def update_oci_account(
         data = {
             'cloud': 'oci',
             'account_name': account_name,
-            'requesting_user': username,
+            'requesting_user': user_id,
             'credentials': {
                 'signing_key': signing_key,
                 'fingerprint': get_fingerprint_from_private_key(signing_key)

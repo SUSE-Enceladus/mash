@@ -119,21 +119,15 @@ def test_convert_account_dict():
 
 
 @patch('mash.services.api.utils.jobs.ec2.add_target_ec2_account')
-@patch('mash.services.api.utils.jobs.ec2.get_ec2_account_by_id')
+@patch('mash.services.api.utils.jobs.ec2.get_ec2_account')
 @patch('mash.services.api.utils.jobs.ec2.get_ec2_group')
 @patch('mash.services.api.utils.jobs.ec2.get_ec2_helper_images')
-@patch('mash.services.api.utils.jobs.ec2.get_user_by_username')
 def test_update_ec2_job_accounts(
-    mock_get_user,
     mock_get_helper_images,
     mock_get_group,
     mock_get_ec2_account,
     mock_add_target_account
 ):
-    user = Mock()
-    user.id = '1'
-    mock_get_user.return_value = user
-
     account = Mock()
     account.name = 'acnt1'
     mock_get_ec2_account.return_value = account
@@ -145,7 +139,7 @@ def test_update_ec2_job_accounts(
     mock_get_helper_images.return_value = {'us-east-99': 'ami-789'}
 
     job_doc = {
-        'requesting_user': 'user1',
+        'requesting_user': '1',
         'cloud_accounts': [{'name': 'acnt1', 'data': 'more_stuff'}],
         'cloud_groups': ['group1']
     }
@@ -158,7 +152,7 @@ def test_update_ec2_job_accounts(
 
     # Test doc with no accounts
     job_doc = {
-        'requesting_user': 'user1',
+        'requesting_user': '1',
         'cloud_groups': ['group1']
     }
 
@@ -166,7 +160,7 @@ def test_update_ec2_job_accounts(
 
     # Test doc with no groups
     job_doc = {
-        'requesting_user': 'user1',
+        'requesting_user': '1',
         'cloud_accounts': [{'name': 'acnt1', 'data': 'more_stuff'}]
     }
 
@@ -174,7 +168,7 @@ def test_update_ec2_job_accounts(
 
     # Test doc using cloud_account
     job_doc = {
-        'requesting_user': 'user1',
+        'requesting_user': '1',
         'cloud_account': 'acnt1'
     }
 

@@ -123,3 +123,7 @@ class Defaults(object):
     @staticmethod
     def get_publisher_thread_pool_count():
         return 50
+
+    @staticmethod
+    def get_auth_methods():
+        return ['password']

@@ -25,7 +25,6 @@ from mash.services.api.utils.accounts.gce import (
     create_gce_account,
     get_gce_accounts,
     get_gce_account,
-    get_gce_account_by_id,
     delete_gce_account,
     update_gce_account
 )
@@ -34,19 +33,13 @@ from mash.services.api.utils.accounts.gce import (
 @patch('mash.services.api.utils.accounts.gce.current_app')
 @patch('mash.services.api.utils.accounts.gce.GCEAccount')
 @patch('mash.services.api.utils.accounts.gce.handle_request')
-@patch('mash.services.api.utils.accounts.gce.get_user_by_username')
 @patch('mash.services.api.utils.accounts.gce.db')
 def test_create_gce_account(
     mock_db,
-    mock_get_user,
     mock_handle_request,
     mock_gce_account,
     mock_current_app
 ):
-    user = Mock()
-    user.id = '1'
-    mock_get_user.return_value = user
-
     account = Mock()
     mock_gce_account.return_value = account
 
@@ -56,12 +49,12 @@ def test_create_gce_account(
     data = {
         'cloud': 'gce',
         'account_name': 'acnt1',
-        'requesting_user': 'user1',
+        'requesting_user': 1,
         'credentials': credentials
     }
 
     result = create_gce_account(
-        'user1',
+        1,
         'acnt1',
         'images',
         'us-east1',
@@ -88,7 +81,7 @@ def test_create_gce_account(
 
     with raises(Exception):
         create_gce_account(
-            'user1',
+            1,
             'acnt1',
             'images',
             'us-east1',
@@ -103,7 +96,7 @@ def test_create_gce_account(
 
     with raises(MashDBException):
         create_gce_account(
-            'user1',
+            1,
             'acnt1',
             'images',
             'us-east1',
@@ -113,41 +106,29 @@ def test_create_gce_account(
         )
 
 
-@patch('mash.services.api.utils.accounts.gce.get_user_by_username')
+@patch('mash.services.api.utils.accounts.gce.get_user_by_id')
 def test_get_gce_accounts(mock_get_user):
     account = Mock()
     user = Mock()
     user.gce_accounts = [account]
     mock_get_user.return_value = user
 
-    assert get_gce_accounts('user1') == [account]
+    assert get_gce_accounts(1) == [account]
 
 
 @patch('mash.services.api.utils.accounts.gce.GCEAccount')
 def test_get_gce_account(mock_gce_account):
     account = Mock()
     queryset = Mock()
-    queryset2 = Mock()
-    queryset2.first.return_value = account
-    queryset.filter_by.return_value = queryset2
-    mock_gce_account.query.filter.return_value = queryset
-
-    assert get_gce_account('acnt1', 'user1') == account
-
-
-@patch('mash.services.api.utils.accounts.gce.GCEAccount')
-def test_get_gce_account_by_id(mock_gce_account):
-    account = Mock()
-    queryset = Mock()
     queryset.one.return_value = account
     mock_gce_account.query.filter_by.return_value = queryset
 
-    assert get_gce_account_by_id('acnt1', '1') == account
+    assert get_gce_account('acnt1', 1) == account
 
     mock_gce_account.query.filter_by.side_effect = Exception('Broken')
 
     with raises(MashDBException):
-        get_gce_account_by_id('acnt1', '2')
+        get_gce_account('acnt1', 2)
 
 
 @patch('mash.services.api.utils.accounts.gce.current_app')
@@ -168,10 +149,10 @@ def test_delete_gce_account(
     data = {
         'cloud': 'gce',
         'account_name': 'acnt1',
-        'requesting_user': 'user1'
+        'requesting_user': 1
     }
 
-    assert delete_gce_account('acnt1', 'user1') == 1
+    assert delete_gce_account('acnt1', 1) == 1
 
     mock_db.session.delete.assert_called_once_with(account)
     mock_db.session.commit.assert_called_once_with()
@@ -185,12 +166,12 @@ def test_delete_gce_account(
     mock_db.session.commit.side_effect = Exception('Broken')
 
     with raises(Exception):
-        delete_gce_account('acnt1', 'user1')
+        delete_gce_account('acnt1', 1)
 
     mock_db.session.rollback.assert_called_once_with()
 
     mock_get_account.return_value = None
-    assert delete_gce_account('acnt2', 'user1') == 0
+    assert delete_gce_account('acnt2', 1) == 0
 
 
 @patch('mash.services.api.utils.accounts.gce.current_app')
@@ -204,7 +185,7 @@ def test_update_gce_account(
     mock_current_app
 ):
     account = Mock()
-    account.id = '1'
+    account.id = 1
     account.is_publishing_account = True
     mock_get_gce_account.return_value = account
 
@@ -214,13 +195,13 @@ def test_update_gce_account(
     data = {
         'cloud': 'gce',
         'account_name': 'acnt1',
-        'requesting_user': 'user1',
+        'requesting_user': 1,
         'credentials': credentials
     }
 
     result = update_gce_account(
         'acnt1',
-        'user1',
+        1,
         bucket='images',
         region='us-east1',
         credentials=credentials,
@@ -245,7 +226,7 @@ def test_update_gce_account(
     with raises(Exception):
         update_gce_account(
             'acnt1',
-            'user1',
+            1,
             bucket='images',
             region='us-east1',
             credentials=credentials,
@@ -260,7 +241,7 @@ def test_update_gce_account(
     with raises(Exception):
         update_gce_account(
             'acnt1',
-            'user1',
+            1,
             bucket='images',
             region='us-east1',
             credentials=credentials,
@@ -272,7 +253,7 @@ def test_update_gce_account(
 
     result = update_gce_account(
         'acnt1',
-        'user1',
+        1,
         bucket='images',
         region='us-east1',
         credentials=credentials,

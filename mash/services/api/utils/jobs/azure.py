@@ -17,16 +17,17 @@
 #
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.utils.users import get_user_by_username
-from mash.services.api.utils.accounts.azure import get_azure_account_by_id
+from mash.services.api.utils.accounts.azure import get_azure_account
 
 
 def update_azure_job_accounts(job_doc):
     """
     Update target_account_info for given job doc.
     """
-    user = get_user_by_username(job_doc['requesting_user'])
-    cloud_account = get_azure_account_by_id(job_doc['cloud_account'], user.id)
+    cloud_account = get_azure_account(
+        job_doc['cloud_account'],
+        job_doc['requesting_user']
+    )
 
     attrs = (
         'region',

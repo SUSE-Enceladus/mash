@@ -18,7 +18,7 @@
 
 import json
 
-from flask import jsonify, request, make_response
+from flask import jsonify, request, make_response, current_app
 from flask_restplus import fields, marshal, Namespace, Resource
 
 from flask_jwt_extended import (
@@ -32,7 +32,7 @@ from mash.services.api.schema import (
     default_response,
     validation_error
 )
-from mash.services.api.utils.users import add_user, get_user_by_username, delete_user
+from mash.services.api.utils.users import add_user, delete_user, get_user_by_id
 
 api = Namespace(
     'User',
@@ -41,7 +41,6 @@ api = Namespace(
 get_account_response = api.model(
     'get_account_response', {
         'id': fields.String,
-        'username': fields.String,
         'email': fields.String
     }
 )
@@ -61,15 +60,19 @@ class Account(Resource):
     @api.expect(add_account_request)
     @api.response(201, 'Created account', get_account_response)
     @api.response(400, 'Validation error', validation_error_response)
+    @api.response(403, 'Forbidden', default_response)
     @api.response(409, 'Already in use', default_response)
     def post(self):
         """
         Create a new MASH account.
         """
+        if 'password' not in current_app.config['AUTH_METHODS']:
+            return make_response(jsonify({'msg': 'Password based login is disabled'}), 403)
+
         data = json.loads(request.data.decode())
 
         try:
-            user = add_user(data['username'], data['email'], data['password'])
+            user = add_user(data['email'], data['password'])
         except MashDBException as error:
             return make_response(
                 jsonify({
@@ -86,7 +89,7 @@ class Account(Resource):
             )
         else:
             return make_response(
-                jsonify({'msg': 'Username or email already in use'}),
+                jsonify({'msg': 'Email already in use'}),
                 409
             )
 
@@ -100,7 +103,7 @@ class Account(Resource):
         """
         Returns MASH account.
         """
-        user = get_user_by_username(get_jwt_identity())
+        user = get_user_by_id(get_jwt_identity())
         return user
 
     @api.doc('delete_mash_account')

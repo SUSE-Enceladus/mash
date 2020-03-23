@@ -392,3 +392,83 @@ class BaseConfig(object):
             attribute='publisher_thread_pool_count'
         )
         return publisher_thread_pool_count or Defaults.get_publisher_thread_pool_count()
+
+    def get_auth_methods(self):
+        """
+        Return the list of allowed authentication methods.
+
+        :rtype: strings
+        """
+        auth_methods = self._get_attribute(
+            attribute='auth_methods'
+        )
+
+        return auth_methods or Defaults.get_auth_methods()
+
+    def get_oauth2_client_id(self):
+        """
+        Return the OAuth2 client ID.
+
+        :rtype: string
+        """
+        client_id = self._get_attribute(
+            attribute='oauth2_client_id'
+        )
+
+        if not client_id and 'oauth2' in self.get_auth_methods():
+            raise MashConfigException(
+                'oauth2_client_id is required in MASH configuration file if OAuth2 login is enabled.'
+            )
+
+        return client_id
+
+    def get_oauth2_client_secret(self):
+        """
+        Return the OAuth2 client secret.
+
+        :rtype: string
+        """
+        client_secret = self._get_attribute(
+            attribute='oauth2_client_secret'
+        )
+
+        if not client_secret and 'oauth2' in self.get_auth_methods():
+            raise MashConfigException(
+                'oauth2_secret_id is required in MASH configuration file if OAuth2 login is enabled.'
+            )
+
+        return client_secret
+
+    def get_oauth2_provider_url(self):
+        """
+        Return the OAuth2 provider URL.
+
+        :rtype: string
+        """
+        provider_url = self._get_attribute(
+            attribute='oauth2_provider_url'
+        )
+
+        if not provider_url and 'oauth2' in self.get_auth_methods():
+            raise MashConfigException(
+                'oauth2_provider_url is required in MASH configuration file if OAuth2 login is enabled.'
+            )
+
+        return provider_url
+
+    def get_oauth2_redirect_ports(self):
+        """
+        Return the OAuth2 redirect ports.
+
+        :rtype: int
+        """
+        redirect_port = self._get_attribute(
+            attribute='oauth2_redirect_ports'
+        )
+
+        if not redirect_port and 'oauth2' in self.get_auth_methods():
+            raise MashConfigException(
+                'oauth2_redirect_ports is required in MASH configuration file if OAuth2 login is enabled.'
+            )
+
+        return redirect_port

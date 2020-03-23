@@ -21,16 +21,10 @@ from unittest.mock import patch, Mock
 from mash.services.api.utils.jobs.oci import update_oci_job_accounts
 
 
-@patch('mash.services.api.utils.jobs.oci.get_oci_account_by_id')
-@patch('mash.services.api.utils.jobs.oci.get_user_by_username')
+@patch('mash.services.api.utils.jobs.oci.get_oci_account')
 def test_update_oci_job_accounts(
-    mock_get_user,
     mock_get_oci_account
 ):
-    user = Mock()
-    user.id = '1'
-    mock_get_user.return_value = user
-
     account = Mock()
     account.name = 'acnt1'
     account.region = 'us-phoenix-1'
@@ -42,7 +36,7 @@ def test_update_oci_job_accounts(
     mock_get_oci_account.return_value = account
 
     job_doc = {
-        'requesting_user': 'user1',
+        'requesting_user': 1,
         'cloud_account': 'acnt1',
         'bucket': 'images2'
     }

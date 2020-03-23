@@ -20,13 +20,13 @@ from flask import current_app
 
 from mash.mash_exceptions import MashDBException
 from mash.services.api.extensions import db
-from mash.services.api.utils.users import get_user_by_username
-from mash.services.api.models import GCEAccount, User
+from mash.services.api.utils.users import get_user_by_id
+from mash.services.api.models import GCEAccount
 from mash.utils.mash_utils import handle_request
 
 
 def create_gce_account(
-    username,
+    user_id,
     account_name,
     bucket,
     region_name,
@@ -46,11 +46,9 @@ def create_gce_account(
     data = {
         'cloud': 'gce',
         'account_name': account_name,
-        'requesting_user': username,
+        'requesting_user': user_id,
         'credentials': credentials
     }
-
-    user = get_user_by_username(username)
 
     account = GCEAccount(
         name=account_name,
@@ -58,7 +56,7 @@ def create_gce_account(
         region=region_name,
         testing_account=testing_account,
         is_publishing_account=is_publishing_account,
-        user_id=user.id
+        user_id=user_id
     )
 
     try:
@@ -77,26 +75,15 @@ def create_gce_account(
     return account
 
 
-def get_gce_account(name, username):
-    """
-    Get GCE account for given user.
-    """
-    gce_account = GCEAccount.query.filter(
-        User.username == username
-    ).filter_by(name=name).first()
-
-    return gce_account
-
-
-def get_gce_accounts(username):
+def get_gce_accounts(user_id):
     """
     Retrieve all GCE accounts for user.
     """
-    user = get_user_by_username(username)
+    user = get_user_by_id(user_id)
     return user.gce_accounts
 
 
-def get_gce_account_by_id(name, user_id):
+def get_gce_account(name, user_id):
     """
     Get GCE account for given user.
     """
@@ -112,17 +99,17 @@ def get_gce_account_by_id(name, user_id):
     return gce_account
 
 
-def delete_gce_account(name, username):
+def delete_gce_account(name, user_id):
     """
     Delete GCE account for user.
     """
     data = {
         'cloud': 'gce',
         'account_name': name,
-        'requesting_user': username
+        'requesting_user': user_id
     }
 
-    gce_account = get_gce_account(name, username)
+    gce_account = get_gce_account(name, user_id)
 
     if gce_account:
         try:
@@ -145,7 +132,7 @@ def delete_gce_account(name, username):
 
 def update_gce_account(
     account_name,
-    username,
+    user_id,
     bucket=None,
     region=None,
     credentials=None,
@@ -154,7 +141,7 @@ def update_gce_account(
     """
     Update an existing GCE account.
     """
-    gce_account = get_gce_account(account_name, username)
+    gce_account = get_gce_account(account_name, user_id)
 
     if not gce_account:
         return None
@@ -163,7 +150,7 @@ def update_gce_account(
         data = {
             'cloud': 'gce',
             'account_name': account_name,
-            'requesting_user': username,
+            'requesting_user': user_id,
             'credentials': credentials
         }
 

@@ -159,7 +159,7 @@ class CredentialsDatastore(object):
         Based on user, cloud and account name.
         """
         path = os.path.join(
-            self.credentials_directory, user, cloud, account
+            self.credentials_directory, str(user), cloud, account
         )
         return path
 

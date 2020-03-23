@@ -16,7 +16,7 @@ from mash.services.api.utils.tokens import (
 
 
 @patch('mash.services.api.utils.tokens.decode_token')
-@patch('mash.services.api.utils.tokens.get_user_by_username')
+@patch('mash.services.api.utils.tokens.get_user_by_id')
 @patch('mash.services.api.utils.tokens.db')
 def test_add_token_to_database(mock_db, mock_get_user, mock_decode_token):
     user = Mock()
@@ -30,7 +30,7 @@ def test_add_token_to_database(mock_db, mock_get_user, mock_decode_token):
     }
     mock_decode_token.return_value = decoded_token
 
-    add_token_to_database(Mock(), 'user1')
+    add_token_to_database(Mock(), '1')
 
     assert mock_db.session.add.call_count == 1
     assert mock_db.session.commit.call_count == 1
@@ -39,7 +39,7 @@ def test_add_token_to_database(mock_db, mock_get_user, mock_decode_token):
 
     decoded_token = {'jti': '123', 'type': 'access'}
     mock_decode_token.return_value = decoded_token
-    add_token_to_database(Mock(), 'user1')
+    add_token_to_database(Mock(), '1')
 
 
 @patch('mash.services.api.utils.tokens.Token')
@@ -53,19 +53,20 @@ def test_is_token_revoked(mock_token):
     assert is_token_revoked(decoded_token)
 
 
-@patch('mash.services.api.utils.tokens.get_user_by_username')
+@patch('mash.services.api.utils.tokens.get_user_by_id')
 def test_get_user_tokens(mock_get_user):
     user = Mock()
     token = Mock()
     user.tokens = [token]
     mock_get_user.return_value = user
 
-    result = get_user_tokens('user1')
+    result = get_user_tokens('1')
     assert result == [token]
 
 
+@patch('mash.services.api.utils.tokens.get_user_by_id')
 @patch('mash.services.api.utils.tokens.Token')
-def test_get_token_by_jti(mock_token):
+def test_get_token_by_jti(mock_token, mock_get_user):
     token = Mock()
     queryset = Mock()
     queryset.first.return_value = token
@@ -73,7 +74,7 @@ def test_get_token_by_jti(mock_token):
     queryset1.filter_by.return_value = queryset
     mock_token.query.filter.return_value = queryset1
 
-    assert get_token_by_jti('123', 'user1') == token
+    assert get_token_by_jti('123', 1) == token
 
 
 @patch('mash.services.api.utils.tokens.get_token_by_jti')
@@ -82,16 +83,16 @@ def test_revoke_token_by_jti(mock_db, mock_get_token):
     token = Mock()
     mock_get_token.return_value = token
 
-    assert revoke_token_by_jti('123', 'user1') == 1
+    assert revoke_token_by_jti('123', 1) == 1
     mock_db.session.delete.assert_called_once_with(token)
     mock_db.session.commit.assert_called_once_with()
 
     # No token
     mock_get_token.return_value = None
-    assert revoke_token_by_jti('123', 'user1') == 0
+    assert revoke_token_by_jti('123', 1) == 0
 
 
-@patch('mash.services.api.utils.tokens.get_user_by_username')
+@patch('mash.services.api.utils.tokens.get_user_by_id')
 @patch('mash.services.api.utils.tokens.db')
 def test_revoke_tokens(mock_db, mock_get_user):
     user = Mock()
@@ -99,7 +100,7 @@ def test_revoke_tokens(mock_db, mock_get_user):
     user.tokens = [token]
     mock_get_user.return_value = user
 
-    assert revoke_tokens('user1') == 1
+    assert revoke_tokens(1) == 1
     mock_db.session.commit.assert_called_once_with()
 
 

@@ -20,13 +20,13 @@ from flask import current_app
 
 from mash.mash_exceptions import MashDBException
 from mash.services.api.extensions import db
-from mash.services.api.utils.users import get_user_by_username
-from mash.services.api.models import AzureAccount, User
+from mash.services.api.utils.users import get_user_by_id
+from mash.services.api.models import AzureAccount
 from mash.utils.mash_utils import handle_request
 
 
 def create_azure_account(
-    username,
+    user_id,
     account_name,
     region_name,
     credentials,
@@ -43,11 +43,9 @@ def create_azure_account(
     data = {
         'cloud': 'azure',
         'account_name': account_name,
-        'requesting_user': username,
+        'requesting_user': user_id,
         'credentials': credentials
     }
-
-    user = get_user_by_username(username)
 
     account = AzureAccount(
         name=account_name,
@@ -58,7 +56,7 @@ def create_azure_account(
         destination_container=destination_container,
         destination_resource_group=destination_resource_group,
         destination_storage_account=destination_storage_account,
-        user_id=user.id
+        user_id=user_id
     )
 
     try:
@@ -77,26 +75,15 @@ def create_azure_account(
     return account
 
 
-def get_azure_account(name, username):
-    """
-    Get Azure account for given user.
-    """
-    azure_account = AzureAccount.query.filter(
-        User.username == username
-    ).filter_by(name=name).first()
-
-    return azure_account
-
-
-def get_azure_accounts(username):
+def get_azure_accounts(user_id):
     """
     Retrieve all Azure accounts for user.
     """
-    user = get_user_by_username(username)
+    user = get_user_by_id(user_id)
     return user.azure_accounts
 
 
-def get_azure_account_by_id(name, user_id):
+def get_azure_account(name, user_id):
     """
     Get Azure account for given user.
     """
@@ -112,17 +99,17 @@ def get_azure_account_by_id(name, user_id):
     return azure_account
 
 
-def delete_azure_account(name, username):
+def delete_azure_account(name, user_id):
     """
     Delete Azure account for user.
     """
     data = {
         'cloud': 'azure',
         'account_name': name,
-        'requesting_user': username
+        'requesting_user': user_id
     }
 
-    azure_account = get_azure_account(name, username)
+    azure_account = get_azure_account(name, user_id)
 
     if azure_account:
         try:
@@ -145,7 +132,7 @@ def delete_azure_account(name, username):
 
 def update_azure_account(
     account_name,
-    username,
+    user_id,
     region=None,
     credentials=None,
     source_container=None,
@@ -158,7 +145,7 @@ def update_azure_account(
     """
     Update Azure account for user.
     """
-    account = get_azure_account(account_name, username)
+    account = get_azure_account(account_name, user_id)
 
     if not account:
         return None
@@ -167,7 +154,7 @@ def update_azure_account(
         data = {
             'cloud': 'azure',
             'account_name': account_name,
-            'requesting_user': username,
+            'requesting_user': user_id,
             'credentials': credentials
         }
 

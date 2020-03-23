@@ -158,3 +158,23 @@ class TestBaseConfig(object):
     def test_get_publisher_thread_pool_count(self):
         assert self.config.get_publisher_thread_pool_count() == 60
         assert self.empty_config.get_publisher_thread_pool_count() == 50
+
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
+    def test_get_oauth2_client_id(self):
+        with raises(MashConfigException):
+            self.config.get_oauth2_client_id()
+
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
+    def test_get_oauth2_client_secret(self):
+        with raises(MashConfigException):
+            self.config.get_oauth2_client_secret()
+
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
+    def test_get_oauth2_provider_url(self):
+        with raises(MashConfigException):
+            self.config.get_oauth2_provider_url()
+
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
+    def test_get_oauth2_redirect_ports(self):
+        with raises(MashConfigException):
+            self.config.get_oauth2_redirect_ports()
