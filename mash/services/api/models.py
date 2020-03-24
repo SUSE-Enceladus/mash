@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -26,6 +26,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), index=True, unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
+    password_dirty = db.Column(db.Boolean, default=False)
     ec2_accounts = db.relationship(
         'EC2Account',
         back_populates='user',

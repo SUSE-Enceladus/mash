@@ -96,6 +96,30 @@ login_request_model = {
     ]
 }
 
+password_reset = {
+    'type': 'object',
+    'properties': {'email': email},
+    'additionalProperties': False,
+    'required': [
+        'email'
+    ]
+}
+
+password_change = {
+    'type': 'object',
+    'properties': {
+        'email': email,
+        'current_password': string_with_example('secretpassword123'),
+        'new_password': string_with_example('secretpassword123')
+    },
+    'additionalProperties': False,
+    'required': [
+        'email',
+        'current_password',
+        'new_password'
+    ]
+}
+
 oauth2_request_model = {
     'type': 'object',
     'additionalProperties': False

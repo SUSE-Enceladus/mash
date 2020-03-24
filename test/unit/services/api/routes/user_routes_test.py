@@ -119,3 +119,67 @@ def test_api_delete_user(
 
     assert response.status_code == 400
     assert response.data == b'{"msg":"Delete account failed"}\n'
+
+
+@patch('mash.services.api.routes.user.reset_user_password')
+def test_api_password_reset(
+    mock_reset_password,
+    test_client
+):
+    mock_reset_password.return_value = 1
+
+    data = {'email': 'user1@fake.com'}
+
+    response = test_client.post(
+        '/user/password',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+
+    assert response.status_code == 200
+    assert b'Password reset submitted.' in response.data
+
+    # Not found
+    mock_reset_password.return_value = 0
+    response = test_client.post(
+        '/user/password',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+
+    assert response.status_code == 404
+    assert response.data == b'{"msg":"Password reset failed."}\n'
+
+
+@patch('mash.services.api.routes.user.change_user_password')
+def test_api_password_change(
+    mock_change_password,
+    test_client
+):
+    mock_change_password.return_value = 1
+
+    data = {
+        'email': 'user1@fake.com',
+        'current_password': 'pass',
+        'new_password': 'betterpassword'
+    }
+
+    response = test_client.put(
+        '/user/password',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+
+    assert response.status_code == 200
+    assert b'Password changed successfully.' in response.data
+
+    # Not found
+    mock_change_password.return_value = 0
+    response = test_client.put(
+        '/user/password',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+
+    assert response.status_code == 404
+    assert response.data == b'{"msg":"Password change failed."}\n'

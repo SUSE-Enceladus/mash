@@ -3,6 +3,7 @@ import json
 from unittest.mock import patch, call, Mock
 
 
+@patch('mash.services.api.routes.auth.is_password_dirty')
 @patch('mash.services.api.routes.auth.add_token_to_database')
 @patch('mash.services.api.routes.auth.create_refresh_token')
 @patch('mash.services.api.routes.auth.create_access_token')
@@ -14,11 +15,28 @@ def test_api_login(
         mock_create_access_token,
         mock_create_refresh_token,
         mock_add_token_to_database,
+        mock_is_password_dirty,
         test_client
 ):
     mock_current_app.config = {'AUTH_METHODS': ['password']}
     data = {'email': 'user1@fake.com', 'password': 'super-secret'}
     mock_verify_login.return_value = False
+
+    # Password is dirty
+    mock_is_password_dirty.return_value = True
+
+    response = test_client.post(
+        '/auth/login',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+
+    assert response.status_code == 403
+    assert response.data == \
+        b'{"msg":"Password change is required before you can login."}\n'
+
+    # Email or password invalid
+    mock_is_password_dirty.return_value = False
 
     response = test_client.post(
         '/auth/login',
