@@ -29,8 +29,10 @@ from mash.services.api.utils.accounts.gce import (
     update_gce_account
 )
 
+from werkzeug.local import LocalProxy
 
-@patch('mash.services.api.utils.accounts.gce.current_app')
+
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.gce.GCEAccount')
 @patch('mash.services.api.utils.accounts.gce.handle_request')
 @patch('mash.services.api.utils.accounts.gce.db')
@@ -38,12 +40,14 @@ def test_create_gce_account(
     mock_db,
     mock_handle_request,
     mock_gce_account,
-    mock_current_app
+    mock_get_current_object
 ):
     account = Mock()
     mock_gce_account.return_value = account
 
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     credentials = {'super': 'secret'}
     data = {
@@ -131,7 +135,7 @@ def test_get_gce_account(mock_gce_account):
         get_gce_account('acnt1', 2)
 
 
-@patch('mash.services.api.utils.accounts.gce.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.gce.handle_request')
 @patch('mash.services.api.utils.accounts.gce.get_gce_account')
 @patch('mash.services.api.utils.accounts.gce.db')
@@ -139,9 +143,11 @@ def test_delete_gce_account(
     mock_db,
     mock_get_account,
     mock_handle_request,
-    mock_current_app
+    mock_get_current_object
 ):
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     account = Mock()
     mock_get_account.return_value = account
@@ -174,7 +180,7 @@ def test_delete_gce_account(
     assert delete_gce_account('acnt2', 1) == 0
 
 
-@patch('mash.services.api.utils.accounts.gce.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.gce.handle_request')
 @patch('mash.services.api.utils.accounts.gce.get_gce_account')
 @patch('mash.services.api.utils.accounts.gce.db')
@@ -182,14 +188,16 @@ def test_update_gce_account(
     mock_db,
     mock_get_gce_account,
     mock_handle_request,
-    mock_current_app
+    mock_get_current_object
 ):
     account = Mock()
     account.id = 1
     account.is_publishing_account = True
     mock_get_gce_account.return_value = account
 
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     credentials = {'super': 'secret'}
     data = {

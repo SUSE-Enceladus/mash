@@ -32,6 +32,8 @@ from mash.services.api.utils.accounts.ec2 import (
     update_ec2_account
 )
 
+from werkzeug.local import LocalProxy
+
 
 @patch('mash.services.api.utils.accounts.ec2.EC2Group')
 def test_get_ec2_group(mock_ec2_group):
@@ -64,7 +66,7 @@ def test_create_ec2_region(mock_db):
     mock_db.session.add.assert_called_once_with(result)
 
 
-@patch('mash.services.api.utils.accounts.ec2.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.ec2.EC2Account')
 @patch('mash.services.api.utils.accounts.ec2.EC2Group')
 @patch('mash.services.api.utils.accounts.ec2.handle_request')
@@ -78,7 +80,7 @@ def test_create_ec2_account(
     mock_handle_request,
     mock_ec2_group,
     mock_ec2_account,
-    mock_current_app
+    mock_get_current_object
 ):
     user = Mock()
     user.id = 1
@@ -94,7 +96,9 @@ def test_create_ec2_account(
     group = Mock()
     mock_ec2_group.return_value = group
 
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     credentials = {'super': 'secret'}
     data = {
@@ -177,7 +181,7 @@ def test_get_ec2_account(mock_ec2_account):
         get_ec2_account('acnt1', 2)
 
 
-@patch('mash.services.api.utils.accounts.ec2.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.ec2.handle_request')
 @patch('mash.services.api.utils.accounts.ec2.get_ec2_account')
 @patch('mash.services.api.utils.accounts.ec2.db')
@@ -185,9 +189,11 @@ def test_delete_ec2_account(
     mock_db,
     mock_get_account,
     mock_handle_request,
-    mock_current_app
+    mock_get_current_object
 ):
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     account = Mock()
     mock_get_account.return_value = account
@@ -220,7 +226,7 @@ def test_delete_ec2_account(
     assert delete_ec2_account('acnt2', 1) == 0
 
 
-@patch('mash.services.api.utils.accounts.ec2.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.ec2.get_ec2_account')
 @patch('mash.services.api.utils.accounts.ec2._get_or_create_ec2_group')
 @patch('mash.services.api.utils.accounts.ec2.handle_request')
@@ -234,7 +240,7 @@ def test_update_ec2_account(
     mock_handle_request,
     mock_get_create_group,
     mock_get_ec2_account,
-    mock_current_app
+    mock_get_current_object
 ):
     user = Mock()
     user.id = 1
@@ -247,7 +253,9 @@ def test_update_ec2_account(
     account = Mock()
     mock_get_ec2_account.return_value = account
 
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     credentials = {'super': 'secret'}
     data = {

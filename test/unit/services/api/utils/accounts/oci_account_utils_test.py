@@ -29,9 +29,11 @@ from mash.services.api.utils.accounts.oci import (
     update_oci_account
 )
 
+from werkzeug.local import LocalProxy
+
 
 @patch('mash.services.api.utils.accounts.oci.get_fingerprint_from_private_key')
-@patch('mash.services.api.utils.accounts.oci.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.oci.OCIAccount')
 @patch('mash.services.api.utils.accounts.oci.handle_request')
 @patch('mash.services.api.utils.accounts.oci.get_user_by_id')
@@ -41,7 +43,7 @@ def test_create_oci_account(
     mock_get_user,
     mock_handle_request,
     mock_oci_account,
-    mock_current_app,
+    mock_get_current_object,
     mock_fingerprint
 ):
     user = Mock()
@@ -51,7 +53,9 @@ def test_create_oci_account(
     account = Mock()
     mock_oci_account.return_value = account
 
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
     mock_fingerprint.return_value = 'fingerprint'
 
     credentials = {
@@ -134,7 +138,7 @@ def test_get_oci_account(mock_oci_account):
         get_oci_account('acnt1', 2)
 
 
-@patch('mash.services.api.utils.accounts.oci.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.oci.handle_request')
 @patch('mash.services.api.utils.accounts.oci.get_oci_account')
 @patch('mash.services.api.utils.accounts.oci.db')
@@ -142,9 +146,11 @@ def test_delete_oci_account(
     mock_db,
     mock_get_account,
     mock_handle_request,
-    mock_current_app
+    mock_get_current_object
 ):
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     account = Mock()
     mock_get_account.return_value = account
@@ -178,7 +184,7 @@ def test_delete_oci_account(
 
 
 @patch('mash.services.api.utils.accounts.oci.get_fingerprint_from_private_key')
-@patch('mash.services.api.utils.accounts.oci.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.oci.handle_request')
 @patch('mash.services.api.utils.accounts.oci.get_oci_account')
 @patch('mash.services.api.utils.accounts.oci.db')
@@ -186,7 +192,7 @@ def test_update_oci_account(
     mock_db,
     mock_get_oci_account,
     mock_handle_request,
-    mock_current_app,
+    mock_get_current_object,
     mock_fingerprint
 ):
     account = Mock()
@@ -194,7 +200,9 @@ def test_update_oci_account(
     account.is_publishing_account = True
     mock_get_oci_account.return_value = account
 
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
     mock_fingerprint.return_value = 'fingerprint'
 
     credentials = {
