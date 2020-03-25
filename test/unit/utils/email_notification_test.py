@@ -22,13 +22,12 @@ def test_send_email_notification(mock_smtp):
         port,
         to,
         None,
-        subject,
         False,
         log_callback=log
     )
 
     # Send email without SSL
-    notif_class.send_notification(content, to)
+    notif_class.send_notification(content, subject, to)
     assert smtp_server.send_message.call_count == 1
 
     notif_class = EmailNotification(
@@ -36,18 +35,17 @@ def test_send_email_notification(mock_smtp):
         port,
         to,
         'super.secret',
-        subject,
         True,
         log_callback=log
     )
 
     # Send email with SSL
-    notif_class.send_notification(content, to)
+    notif_class.send_notification(content, subject, to)
     assert smtp_server.send_message.call_count == 2
 
     # Send error
     smtp_server.send_message.side_effect = Exception('Broke!')
-    notif_class.send_notification(content, to)
+    notif_class.send_notification(content, subject, to)
 
     log.warning.assert_called_once_with(
         'Unable to send notification email: Broke!'

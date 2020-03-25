@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -76,7 +76,6 @@ class MashService(object):
             self.config.get_smtp_port(),
             self.config.get_smtp_user(),
             self.config.get_smtp_pass(),
-            self.config.get_notification_subject(),
             self.config.get_smtp_ssl(),
             log_callback=self.log
         )
@@ -275,5 +274,7 @@ class MashService(object):
                 iteration_count, error
             )
             self.notification_class.send_notification(
-                content, notification_email
+                content,
+                self.config.get_notification_subject(),
+                notification_email
             )
