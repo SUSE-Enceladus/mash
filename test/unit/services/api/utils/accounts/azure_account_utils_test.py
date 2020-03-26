@@ -29,8 +29,10 @@ from mash.services.api.utils.accounts.azure import (
     update_azure_account
 )
 
+from werkzeug.local import LocalProxy
 
-@patch('mash.services.api.utils.accounts.azure.current_app')
+
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.azure.AzureAccount')
 @patch('mash.services.api.utils.accounts.azure.handle_request')
 @patch('mash.services.api.utils.accounts.azure.db')
@@ -38,12 +40,14 @@ def test_create_azure_account(
     mock_db,
     mock_handle_request,
     mock_azure_account,
-    mock_current_app
+    mock_get_current_object
 ):
     account = Mock()
     mock_azure_account.return_value = account
 
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     credentials = {'super': 'secret'}
     data = {
@@ -124,7 +128,7 @@ def test_get_azure_account(mock_azure_account):
         get_azure_account('acnt1', 2)
 
 
-@patch('mash.services.api.utils.accounts.azure.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.azure.handle_request')
 @patch('mash.services.api.utils.accounts.azure.get_azure_account')
 @patch('mash.services.api.utils.accounts.azure.db')
@@ -132,9 +136,11 @@ def test_delete_azure_account(
     mock_db,
     mock_get_account,
     mock_handle_request,
-    mock_current_app
+    mock_get_current_object
 ):
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     account = Mock()
     mock_get_account.return_value = account
@@ -167,7 +173,7 @@ def test_delete_azure_account(
     assert delete_azure_account('acnt2', 1) == 0
 
 
-@patch('mash.services.api.utils.accounts.azure.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.accounts.azure.handle_request')
 @patch('mash.services.api.utils.accounts.azure.get_azure_account')
 @patch('mash.services.api.utils.accounts.azure.db')
@@ -175,13 +181,15 @@ def test_update_azure_account(
     mock_db,
     mock_get_azure_account,
     mock_handle_request,
-    mock_current_app
+    mock_get_current_object
 ):
     account = Mock()
     account.id = 1
     mock_get_azure_account.return_value = account
 
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     credentials = {'super': 'secret'}
     data = {

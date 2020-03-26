@@ -2,10 +2,12 @@ from unittest.mock import Mock, patch
 
 from mash.services.api.utils.amqp import connect, publish
 
+from werkzeug.local import LocalProxy
 
-@patch('mash.services.api.utils.amqp.current_app')
+
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.amqp.Connection')
-def test_connect(mock_connection, mock_current_app):
+def test_connect(mock_connection, mock_get_current_object):
     connection = Mock()
     channel = Mock()
     connection.channel.return_value = channel
@@ -16,9 +18,9 @@ def test_connect(mock_connection, mock_current_app):
 
 
 @patch('mash.services.api.utils.amqp.connect')
-@patch('mash.services.api.utils.amqp.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.amqp.channel')
-def test_publish(mock_channel, mock_current_app, mock_connect):
+def test_publish(mock_channel, mock_get_current_object, mock_connect):
     mock_channel.closed = True
     publish('testing', 'doc', 'msg')
 

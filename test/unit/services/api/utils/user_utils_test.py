@@ -12,11 +12,15 @@ from mash.services.api.utils.users import (
     delete_user
 )
 
+from werkzeug.local import LocalProxy
 
-@patch('mash.services.api.utils.users.current_app')
+
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.users.db')
-def test_add_user(mock_db, mock_current_app):
-    mock_current_app.config = {
+def test_add_user(mock_db, mock_get_current_object):
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {
         'EMAIL_WHITELIST': ['user1@fake.com'],
         'DOMAIN_WHITELIST': []
     }
@@ -43,7 +47,7 @@ def test_add_user(mock_db, mock_current_app):
         add_user('user1@fake.com', 'pass')
 
     # Not in email whitelist
-    mock_current_app.config = {
+    app.config = {
         'EMAIL_WHITELIST': ['user2@fake.com'],
         'DOMAIN_WHITELIST': []
     }
@@ -51,7 +55,7 @@ def test_add_user(mock_db, mock_current_app):
         add_user('user1@fake.com', 'password123')
 
     # Not in domain whitelist
-    mock_current_app.config = {
+    app.config = {
         'EMAIL_WHITELIST': [],
         'DOMAIN_WHITELIST': ['suse.com']
     }
@@ -95,17 +99,20 @@ def test_get_user_by_email(mock_user, mock_add_user):
     mock_add_user.assert_called_once_with('user1@fake.com')
 
 
-@patch('mash.services.api.utils.users.current_app')
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.users.handle_request')
 @patch('mash.services.api.utils.users.db')
 @patch('mash.services.api.utils.users.get_user_by_id')
 def test_delete_user(
-    mock_get_user, mock_db, mock_handle_request, mock_current_app
+    mock_get_user, mock_db, mock_handle_request, mock_get_current_object
 ):
     user = Mock()
     user.id = 1
     mock_get_user.return_value = user
-    mock_current_app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
+
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
 
     assert delete_user(1) == 1
     mock_db.session.delete.assert_called_once_with(user)

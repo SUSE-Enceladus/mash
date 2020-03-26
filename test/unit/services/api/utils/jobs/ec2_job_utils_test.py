@@ -29,10 +29,14 @@ from mash.services.api.utils.jobs.ec2 import (
     update_ec2_job_accounts
 )
 
+from werkzeug.local import LocalProxy
 
-@patch('mash.services.api.utils.jobs.ec2.current_app')
-def test_get_ec2_regions_by_partition(mock_current_app):
-    mock_current_app.config = {
+
+@patch.object(LocalProxy, '_get_current_object')
+def test_get_ec2_regions_by_partition(mock_get_current_object):
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {
         'CLOUD_DATA': {
             'ec2': {
                 'regions': {
@@ -45,9 +49,11 @@ def test_get_ec2_regions_by_partition(mock_current_app):
     assert get_ec2_regions_by_partition('aws') == ['us-east-99']
 
 
-@patch('mash.services.api.utils.jobs.ec2.current_app')
-def test_get_ec2_helper_images(mock_current_app):
-    mock_current_app.config = {
+@patch.object(LocalProxy, '_get_current_object')
+def test_get_ec2_helper_images(mock_get_current_object):
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {
         'CLOUD_DATA': {
             'ec2': {
                 'helper_images': {
