@@ -26,12 +26,11 @@ class EmailNotification(object):
     For sending job notification emails.
     """
 
-    def __init__(self, host, port, user, password, subject, ssl, log_callback=None):
+    def __init__(self, host, port, user, password, ssl, log_callback=None):
         self.host = host
         self.port = port
         self.user = user
         self.password = password
-        self.subject = subject
         self.log_callback = log_callback
 
         if ssl:
@@ -39,13 +38,13 @@ class EmailNotification(object):
         else:
             self.smtp_class = smtplib.SMTP
 
-    def _create_email_message(self, msg, to_email):
+    def _create_email_message(self, msg, subject, to_email):
         """
         Return notification email message object.
         """
         email_msg = EmailMessage()
 
-        email_msg['Subject'] = self.subject
+        email_msg['Subject'] = subject
         email_msg['From'] = self.user
         email_msg['To'] = to_email
 
@@ -72,9 +71,9 @@ class EmailNotification(object):
                     'Unable to send notification email: {0}'.format(error)
                 )
 
-    def send_notification(self, content, notification_email):
+    def send_notification(self, content, subject, notification_email):
         """
         Send job notification email.
         """
-        email_msg = self._create_email_message(content, notification_email)
+        email_msg = self._create_email_message(content, subject, notification_email)
         self._send_email(email_msg)
