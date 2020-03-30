@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -25,6 +25,7 @@ from mash.services.api.extensions import api, db, jwt, migrate
 
 from mash.log.filter import BaseServiceFilter
 from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
+from mash.utils.email_notification import EmailNotification
 
 from mash.services.api.utils.tokens import is_token_revoked
 
@@ -63,6 +64,7 @@ def create_app(config_object):
     register_namespaces()
     register_commands(app)
     configure_logger(app)
+    configure_mailer(app)
     return app
 
 
@@ -84,6 +86,20 @@ def configure_logger(app):
 
     logfile_handler = setup_logfile(app.config['LOG_FILE'])
     app.logger.addHandler(logfile_handler)
+
+
+def configure_mailer(app):
+    """Configure email notification class."""
+    notification_class = EmailNotification(
+        app.config['SMTP_HOST'],
+        app.config['SMTP_PORT'],
+        app.config['SMTP_USER'],
+        app.config['SMTP_PASS'],
+        app.config['SMTP_SSL'],
+        log_callback=app.logger
+    )
+
+    app.notification_class = notification_class
 
 
 def register_namespaces():

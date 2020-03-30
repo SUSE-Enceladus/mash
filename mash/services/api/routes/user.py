@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -30,9 +30,17 @@ from mash.mash_exceptions import MashDBException
 from mash.services.api.schema import (
     add_account,
     default_response,
-    validation_error
+    validation_error,
+    password_change,
+    password_reset
 )
-from mash.services.api.utils.users import add_user, delete_user, get_user_by_id
+from mash.services.api.utils.users import (
+    add_user,
+    get_user_by_id,
+    delete_user,
+    reset_user_password,
+    change_user_password
+)
 
 api = Namespace(
     'User',
@@ -49,6 +57,12 @@ add_account_request = api.schema_model(
 )
 validation_error_response = api.schema_model(
     'validation_error', validation_error
+)
+password_reset_request = api.schema_model(
+    'password_reset_request', password_reset
+)
+password_change_request = api.schema_model(
+    'password_change_request', password_change
 )
 
 api.models['default_response'] = default_response
@@ -128,4 +142,52 @@ class Account(Resource):
             return make_response(
                 jsonify({'msg': 'Delete account failed'}),
                 400
+            )
+
+
+@api.route('/password')
+class UserPassword(Resource):
+    @api.doc('password_reset')
+    @api.expect(password_reset_request)
+    @api.response(200, 'Initiated Password Reset', default_response)
+    def post(self):
+        """
+        Initiate password reset.
+        """
+        data = json.loads(request.data.decode())
+
+        if reset_user_password(data['email']):
+            return make_response(
+                jsonify({
+                    'msg': 'Password reset submitted. An email '
+                           'will be sent with steps to change your password.'
+                }),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Password reset failed.'}),
+                404
+            )
+
+    @api.doc('password_change')
+    @api.expect(password_change_request)
+    @api.response(200, 'Password Changed', default_response)
+    def put(self):
+        """
+        Change password.
+        """
+        data = json.loads(request.data.decode())
+
+        if change_user_password(data['email'], data['current_password'], data['new_password']):
+            return make_response(
+                jsonify({
+                    'msg': 'Password changed successfully. You can now login.'
+                }),
+                200
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Password change failed.'}),
+                404
             )

@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -43,7 +43,8 @@ from mash.services.api.utils.tokens import (
 from mash.services.api.utils.users import (
     verify_login,
     email_in_whitelist,
-    get_user_by_email
+    get_user_by_email,
+    is_password_dirty
 )
 from mash.services.api.utils.jwt import decode_token
 
@@ -98,6 +99,14 @@ class Login(Resource):
 
         data = json.loads(request.data.decode())
         email = data['email']
+
+        if is_password_dirty(email):
+            return make_response(
+                jsonify({
+                    'msg': 'Password change is required before you can login.'
+                }),
+                403
+            )
 
         user = verify_login(email, data['password'])
         if user:

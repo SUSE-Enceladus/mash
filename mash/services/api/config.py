@@ -95,3 +95,23 @@ class Config(object):
     @property
     def OAUTH2_REDIRECT_PORTS(self):
         return self.config.get_oauth2_redirect_ports()
+
+    @property
+    def SMTP_HOST(self):
+        return self.config.get_smtp_host()
+
+    @property
+    def SMTP_PORT(self):
+        return self.config.get_smtp_port()
+
+    @property
+    def SMTP_USER(self):
+        return self.config.get_smtp_user()
+
+    @property
+    def SMTP_PASS(self):
+        return self.config.get_smtp_pass()
+
+    @property
+    def SMTP_SSL(self):
+        return self.config.get_smtp_ssl()

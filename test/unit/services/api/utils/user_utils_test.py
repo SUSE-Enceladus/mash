@@ -9,7 +9,10 @@ from mash.services.api.utils.users import (
     verify_login,
     get_user_by_email,
     get_user_by_id,
-    delete_user
+    delete_user,
+    reset_user_password,
+    change_user_password,
+    is_password_dirty
 )
 
 from werkzeug.local import LocalProxy
@@ -125,3 +128,69 @@ def test_delete_user(
 
     mock_get_user.return_value = None
     assert delete_user(1) == 0
+
+
+@patch.object(LocalProxy, '_get_current_object')
+@patch('mash.services.api.utils.users.db')
+@patch('mash.services.api.utils.users.get_user_by_email')
+def test_reset_user_password(
+    mock_get_user, mock_db, mock_get_current_object
+):
+    user = Mock()
+    user.id = 1
+    mock_get_user.return_value = user
+
+    app = Mock()
+    mock_get_current_object.return_value = app
+
+    assert reset_user_password('email@test.com') == 1
+    mock_db.session.commit.assert_called_once_with()
+    app.notification_class.send_notification.call_count == 1
+    assert user.password_dirty is True
+
+    mock_get_user.return_value = None
+    assert reset_user_password('email@test.com') == 0
+
+
+@patch.object(LocalProxy, '_get_current_object')
+@patch('mash.services.api.utils.users.db')
+@patch('mash.services.api.utils.users.get_user_by_email')
+def test_change_user_password(
+    mock_get_user, mock_db, mock_get_current_object
+):
+    user = Mock()
+    user.id = 1
+    user.check_password.return_value = True
+    mock_get_user.return_value = user
+
+    app = Mock()
+    mock_get_current_object.return_value = app
+
+    result = change_user_password(
+        'email@test.com',
+        'oldpass',
+        'newpass'
+    )
+    assert result == 1
+    mock_db.session.commit.assert_called_once_with()
+    app.notification_class.send_notification.call_count == 1
+    assert user.password_dirty is False
+
+    mock_get_user.return_value = None
+    result = change_user_password(
+        'email@test.com',
+        'oldpass',
+        'newpass'
+    )
+    assert result == 0
+
+
+@patch('mash.services.api.utils.users.get_user_by_email')
+def test_is_password_dirty(mock_get_user):
+    user = Mock()
+    user.id = 1
+    user.password_dirty = False
+    mock_get_user.return_value = user
+
+    result = is_password_dirty('email@test.com')
+    assert result is False
