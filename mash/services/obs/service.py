@@ -262,6 +262,12 @@ class OBSImageBuildResultService(MashService):
         if 'conditions_wait_time' in job:
             kwargs['conditions_wait_time'] = job['conditions_wait_time']
 
+        if 'disallow_licenses' in job:
+            kwargs['disallow_licenses'] = job['disallow_licenses']
+
+        if 'disallow_packages' in job:
+            kwargs['disallow_packages'] = job['disallow_packages']
+
         job_worker = OBSImageBuildResult(**kwargs)
         job_worker.set_result_handler(self._send_job_result_for_uploader)
         job_worker.set_notification_handler(self.send_notification)

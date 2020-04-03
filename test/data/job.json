@@ -29,5 +29,7 @@
   "conditions_wait_time": 500,
   "raw_image_upload_type": "s3bucket",
   "raw_image_upload_account": "account",
-  "raw_image_upload_location": "location"
+  "raw_image_upload_location": "location",
+  "disallow_licenses": ["MIT"],
+  "disallow_packages": ["*-mini"]
 }

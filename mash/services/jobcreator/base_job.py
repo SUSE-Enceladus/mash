@@ -62,6 +62,8 @@ class BaseJob(object):
         self.raw_image_upload_location = kwargs.get('raw_image_upload_location')
         self.raw_image_upload_account = kwargs.get('raw_image_upload_account')
         self.target_account_info = kwargs.get('target_account_info')
+        self.disallow_licenses = kwargs.get('disallow_licenses')
+        self.disallow_packages = kwargs.get('disallow_packages')
         self.kwargs = kwargs
 
         if self.raw_image_upload_type and self.last_service == 'uploader':
@@ -118,6 +120,12 @@ class BaseJob(object):
         if self.conditions_wait_time:
             obs_message['obs_job']['conditions_wait_time'] = \
                 self.conditions_wait_time
+
+        if self.disallow_licenses:
+            obs_message['obs_job']['disallow_licenses'] = self.disallow_licenses
+
+        if self.disallow_packages:
+            obs_message['obs_job']['disallow_packages'] = self.disallow_packages
 
         return JsonFormat.json_message(obs_message)
 

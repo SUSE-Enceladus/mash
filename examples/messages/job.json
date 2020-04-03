@@ -23,5 +23,7 @@
   "instance_type": "t2.micro",
   "tests": ["test_stuff"],
   "notification_email": "test@fake.com",
-  "conditions_wait_time": 500
+  "conditions_wait_time": 500,
+  "disallow_licenses": ["MIT"],
+  "disallow_packages": ["*-mini"]
 }

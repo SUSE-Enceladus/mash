@@ -28,7 +28,8 @@ class TestOBSImageBuildResult(object):
             '815', 'job_file', 'obs_project', 'obs_package', 'publisher',
             self.logger,
             notification_email='test@fake.com', notification_type='single',
-            profile='Proxy'
+            profile='Proxy', disallow_licenses=["MIT"],
+            disallow_packages=["fake"]
         )
 
     def test_set_result_handler(self):
