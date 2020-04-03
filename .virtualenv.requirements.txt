@@ -19,7 +19,7 @@ flask-jwt-extended
 setuptools
 idna<2.7
 boto3
-cryptography>=2.2.0
+cryptography>=2.2.0,<=2.8
 PyYAML
 PyJWT
 APScheduler
