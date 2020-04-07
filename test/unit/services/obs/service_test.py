@@ -256,7 +256,9 @@ class TestOBSImageBuildResultService(object):
             "notification_email": "test@fake.com",
             "notification_type": "single",
             "profile": "Proxy",
-            "conditions_wait_time": 500
+            "conditions_wait_time": 500,
+            "disallow_licenses": ["MIT"],
+            "disallow_packages": ["*-mini"]
         }
         self.obs_result._start_job(data)
         job_worker.set_result_handler.assert_called_once_with(

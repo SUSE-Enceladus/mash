@@ -87,13 +87,23 @@ class OBSImageBuildResult(object):
 
     * :attr:`profile`
       The multibuild profile name for the image.
+
+    * :attr:`conditions_wait_time`
+      Time to wait for conditions in image to be met.
+
+    * :attr:`disallow_licenses`
+      A list of licenses to disallow in the image.
+
+    * :attr:`disallow_packages`
+      A list of packages to disallow in the image.
     """
     def __init__(
         self, job_id, job_file, download_url, image_name, last_service,
         log_callback, conditions=None, arch='x86_64',
         download_directory=Defaults.get_download_dir(),
         notification_email=None, notification_type='single',
-        profile=None, conditions_wait_time=900
+        profile=None, conditions_wait_time=900, disallow_licenses=None,
+        disallow_packages=None
     ):
         self.arch = arch
         self.job_id = job_id
@@ -118,6 +128,8 @@ class OBSImageBuildResult(object):
         self.job_status = 'prepared'
         self.progress_log = {}
         self.conditions_wait_time = conditions_wait_time
+        self.disallow_licenses = disallow_licenses
+        self.disallow_packages = disallow_packages
         self.log_callback = logging.LoggerAdapter(
             log_callback,
             {'job_id': self.job_id}
@@ -138,6 +150,12 @@ class OBSImageBuildResult(object):
 
         if self.profile:
             kwargs['profile'] = self.profile
+
+        if self.disallow_licenses:
+            kwargs['filter_licenses'] = self.disallow_licenses
+
+        if self.disallow_packages:
+            kwargs['filter_packages'] = self.disallow_packages
 
         self.downloader = OBSImageUtil(
             self.download_url,

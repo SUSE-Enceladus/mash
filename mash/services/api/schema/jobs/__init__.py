@@ -119,7 +119,19 @@ base_job_message = {
         },
         'raw_image_upload_type': string_with_example('s3bucket'),
         'raw_image_upload_location': string_with_example('my-bucket/prefix/'),
-        'raw_image_upload_account': string_with_example('my_aws_account')
+        'raw_image_upload_account': string_with_example('my_aws_account'),
+        'disallow_licenses': {
+            'type': 'array',
+            'items': non_empty_string,
+            'minItems': 1,
+            'example': ['MIT']
+        },
+        'disallow_packages': {
+            'type': 'array',
+            'items': non_empty_string,
+            'minItems': 1,
+            'example': ['*-mini']
+        },
     },
     'additionalProperties': False,
     'required': [
