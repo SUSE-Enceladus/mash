@@ -43,15 +43,14 @@ validation_error_response = api.schema_model(
 
 
 @api.route('/')
-@api.doc(security='apiKey')
-@api.response(400, 'Validation error', validation_error_response)
-@api.response(401, 'Unauthorized', default_response)
-@api.response(422, 'Not processable', default_response)
-class GCEJobCreate(Resource):
-    @api.doc('add_gce_job')
+class GCEJob(Resource):
+    @api.doc('add_gce_job', security='apiKey')
     @jwt_required
     @api.expect(gce_job)
     @api.response(201, 'Job added', job_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(401, 'Unauthorized', default_response)
+    @api.response(422, 'Not processable', default_response)
     def post(self):
         """
         Add GCE job.
@@ -79,3 +78,11 @@ class GCEJobCreate(Resource):
             jsonify(marshal(job, job_response, skip_none=True)),
             201
         )
+
+    @api.doc('get_gce_job_doc_schema')
+    @api.response(200, 'Success', gce_job)
+    def get(self):
+        """
+        Get GCE job doc schema.
+        """
+        return make_response(jsonify(gce_job_message), 200)

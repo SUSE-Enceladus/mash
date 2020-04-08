@@ -73,3 +73,10 @@ def test_api_add_job_oci(
     )
     assert response.status_code == 400
     assert response.data == b'{"msg":"Job failed: Broken"}\n'
+
+
+def test_api_get_oci_job_schema(test_client):
+    response = test_client.get('/jobs/oci/')
+    assert response.status_code == 200
+    data = json.loads(response.data)  # assert json loads
+    assert data['additionalProperties'] is False

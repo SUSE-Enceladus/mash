@@ -32,12 +32,14 @@ gce_job_message['properties']['guest_os_features'] = {
     'type': 'array',
     'items': string_with_example('UEFI_COMPATIBLE'),
     'uniqueItems': True,
-    'minItems': 1
+    'minItems': 1,
+    'example': ['UEFI_COMPATIBLE']
 }
 gce_job_message['properties']['test_fallback_regions'] = {
     'type': 'array',
     'items': string_with_example('us-west1-a'),
-    'minItems': 0
+    'minItems': 0,
+    'example': ['us-west1-a']
 }
 gce_job_message['properties']['testing_account'] = string_with_example(
     'testaccount1'

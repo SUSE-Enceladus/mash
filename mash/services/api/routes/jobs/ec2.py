@@ -44,15 +44,14 @@ validation_error_response = api.schema_model(
 
 
 @api.route('/')
-@api.doc(security='apiKey')
-@api.response(400, 'Validation error', validation_error_response)
-@api.response(401, 'Unauthorized', default_response)
-@api.response(422, 'Not processable', default_response)
 class EC2JobCreate(Resource):
-    @api.doc('add_ec2_job')
+    @api.doc('add_ec2_job', security='apiKey')
     @jwt_required
     @api.expect(ec2_job)
     @api.response(201, 'Job added', job_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(401, 'Unauthorized', default_response)
+    @api.response(422, 'Not processable', default_response)
     def post(self):
         """
         Add EC2 job.
@@ -80,3 +79,11 @@ class EC2JobCreate(Resource):
             jsonify(marshal(job, job_response, skip_none=True)),
             201
         )
+
+    @api.doc('get_ec2_job_doc_schema')
+    @api.response(200, 'Success', ec2_job)
+    def get(self):
+        """
+        Get ec2 job doc schema.
+        """
+        return make_response(jsonify(ec2_job_message), 200)

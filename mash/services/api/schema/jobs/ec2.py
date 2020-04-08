@@ -52,7 +52,7 @@ ec2_job_message['properties']['cloud_accounts'] = {
     'type': 'array',
     'items': ec2_job_account,
     'minItems': 1,
-    'example': [{'name': 'account1'}]
+    'example': [{'name': 'account1', 'region': 'us-east-2'}]
 }
 ec2_job_message['properties']['cloud_account'] = string_with_example(
     'account1'
@@ -62,7 +62,7 @@ ec2_job_message['properties']['cloud_groups'] = {
     'items': non_empty_string,
     'uniqueItems': True,
     'minItems': 1,
-    'example': ['group1']
+    'example': ['group1', 'group2']
 }
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},

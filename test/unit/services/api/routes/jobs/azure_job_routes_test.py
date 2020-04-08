@@ -71,3 +71,10 @@ def test_api_add_job_gce(
     )
     assert response.status_code == 400
     assert response.data == b'{"msg":"Job failed: Broken"}\n'
+
+
+def test_api_get_azure_job_schema(test_client):
+    response = test_client.get('/jobs/azure/')
+    assert response.status_code == 200
+    data = json.loads(response.data)  # assert json loads
+    assert data['additionalProperties'] is False
