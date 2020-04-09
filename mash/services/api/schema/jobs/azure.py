@@ -38,7 +38,10 @@ azure_job_message['properties']['cloud_image_name_generation_suffix'] = string_w
 azure_job_message['properties']['vm_images_key'] = string_with_example(
     'microsoft-azure-corevm.vmImagesPublicAzure'
 )
-azure_job_message['properties']['publish_offer'] = {'type': 'boolean'}
+azure_job_message['properties']['publish_offer'] = {
+    'type': 'boolean',
+    'description': 'Whether to start the image publish process.'
+}
 azure_job_message['properties']['cloud_account'] = string_with_example(
     'account1'
 )

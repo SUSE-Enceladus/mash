@@ -33,11 +33,19 @@ oci_job_message['properties']['operating_system'] = string_with_example('SLES')
 oci_job_message['properties']['operating_system_version'] = string_with_example('12SP1')
 oci_job_message['properties']['image_type'] = {
     'type': 'string',
-    'enum': ['QCOW2', 'VMDK']
+    'enum': ['QCOW2', 'VMDK'],
+    'description': 'The disk image file format for the given image.'
 }
 oci_job_message['properties']['launch_mode'] = {
     'type': 'string',
-    'enum': ['NATIVE', 'EMULATED', 'PARAVIRTUALIZED', 'CUSTOM']
+    'enum': ['NATIVE', 'EMULATED', 'PARAVIRTUALIZED', 'CUSTOM'],
+    'description': 'Specifies the configuration mode for launching '
+                   'instances. NATIVE instances launch with paravirtualized '
+                   'boot and VFIO devices. EMULATED instances launch with '
+                   'emulated devices and emulated SCSI disk controller. '
+                   'PARAVIRTUALIZED instances launch with paravirtualized '
+                   'devices using virtio drivers. CUSTOM instances launch '
+                   'with custom configuration settings.'
 }
 oci_job_message['properties']['image']['example'] = 'openSUSE-Leap-15.0-oci'
 oci_job_message['properties']['cloud_image_name']['example'] = \

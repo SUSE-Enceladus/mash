@@ -26,20 +26,28 @@ gce_job_message['properties']['family'] = string_with_example('opensuse-leap')
 gce_job_message['properties']['months_to_deletion'] = {
     'type': 'integer',
     'minimum': 0,
-    'example': 6
+    'example': 6,
+    'description': 'When an image is deprecated it can be marked for '
+                   'deletion. The image is deleted after a certain number'
+                   'of months has passed. This is 6 months by default.'
 }
 gce_job_message['properties']['guest_os_features'] = {
     'type': 'array',
     'items': string_with_example('UEFI_COMPATIBLE'),
     'uniqueItems': True,
     'minItems': 1,
-    'example': ['UEFI_COMPATIBLE']
+    'example': ['UEFI_COMPATIBLE'],
+    'description': 'A list of guest os features to add when creating the '
+                   'image.'
 }
 gce_job_message['properties']['test_fallback_regions'] = {
     'type': 'array',
     'items': string_with_example('us-west1-a'),
     'minItems': 0,
-    'example': ['us-west1-a']
+    'example': ['us-west1-a'],
+    'description': 'A list of fallback regions to use if the instance test '
+                   'fails on a recoverable error. This allows mash to test '
+                   'the image multiple times for certain expected issues.'
 }
 gce_job_message['properties']['testing_account'] = string_with_example(
     'testaccount1'

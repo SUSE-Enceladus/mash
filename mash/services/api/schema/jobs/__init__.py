@@ -44,7 +44,12 @@ image_conditions = {
 
 utctime = {
     'type': 'string',
-    'description': 'An RFC3339 date-time string, "now" or "always"',
+    'description': 'An RFC3339 date-time string, "now" or "always".'
+                   'If using a date string it must be in the future '
+                   'and the job will start no sooner than the provided '
+                   'date. Now jobs will run as soon as possible and always '
+                   'jobs run through testing every time a new image tarball '
+                   'is published.',
     'format': 'regex',
     'pattern': r'^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]'
                r'|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):'
@@ -68,7 +73,9 @@ base_job_message = {
                 'publisher',
                 'deprecation'
             ],
-            'example': 'create'
+            'example': 'create',
+            'description': 'Where the job should finish. If only uploading '
+                           'an image then uploader would be the last service.'
         },
         'utctime': utctime,
         'image': string_with_example('openSUSE-Leap-15.0-EC2-HVM'),
@@ -88,7 +95,15 @@ base_job_message = {
                     'version': '4.13.1',
                     'condition': '>='
                 }
-            ]
+            ],
+            'description': 'A list of image conditions to check the image '
+                           'against. Providing only the package name will '
+                           'ensure the package is in the image. The version '
+                           'is the package version from the build service '
+                           'whereas the release is the Kiwi build number. '
+                           'At least one of package_name, version or release '
+                           'is required. If no package name is provided then '
+                           'the condition is against the image itself.'
         },
         'download_url': string_with_example(
             'https://download.opensuse.org/repositories/'
@@ -100,16 +115,28 @@ base_job_message = {
         'distro': {
             'type': 'string',
             'enum': ['opensuse_leap', 'sles'],
-            'example': 'sles'
+            'example': 'sles',
+            'description': 'The distro is used for img-proof testing.'
         },
         'instance_type': string_with_example('t2.micro'),
         'tests': {
             'type': 'array',
             'items': non_empty_string,
             'minItems': 1,
-            'example': ['test_sles']
+            'example': ['test_sles'],
+            'description': 'This is a list of img-proof tests or test '
+                           'descriptions. The tests will be run against '
+                           'the instance. If any tests fail the job will '
+                           'fail.'
         },
-        'cleanup_images': {'type': 'boolean', 'example': True},
+        'cleanup_images': {
+            'type': 'boolean',
+            'example': True,
+            'description': 'Whether to cleanup the image artifacts. By '
+                           'default all artifacts are cleaned up when the '
+                           'last service is testing or if a publishing job '
+                           'fails.'
+        },
         'cloud_architecture': {
             'type': 'string',
             'enum': ['x86_64', 'aarch64'],
@@ -119,15 +146,19 @@ base_job_message = {
         'notification_type': {
             'type': 'string',
             'enum': ['periodic', 'single'],
-            'example': 'single'
+            'example': 'single',
+            'description': 'The single notification option sends an email '
+                           'with job status when the job finishes or fails. '
+                           'The periodic option will send an email after the '
+                           'finishes each service with the job status.'
         },
         'profile': string_with_example('Proxy'),
         'conditions_wait_time': {
             'type': 'integer',
             'minimum': 0,
             'example': 900,
-            'description': 'Time (in seconds) to wait before failing '
-                           'on image conditions.'
+            'description': 'The time (in seconds) to wait before failing '
+                           'a job on image conditions.'
         },
         'raw_image_upload_type': string_with_example('s3bucket'),
         'raw_image_upload_location': string_with_example('my-bucket/prefix/'),
@@ -136,13 +167,20 @@ base_job_message = {
             'type': 'array',
             'items': non_empty_string,
             'minItems': 1,
-            'example': ['MIT']
+            'example': ['MIT'],
+            'description': 'A list of licenses that should not be in the '
+                           'image. If a package is in the manifest that has '
+                           'a matching license the job will fail.'
         },
         'disallow_packages': {
             'type': 'array',
             'items': non_empty_string,
             'minItems': 1,
-            'example': ['*-mini']
+            'example': ['*-mini'],
+            'description': 'A list of packages that should not be in the '
+                           'image. If a package is in the manifest that has '
+                           'a matching name the job will fail. The * wildcard '
+                           'can be used to match a package name pattern.'
         },
     },
     'additionalProperties': False,
