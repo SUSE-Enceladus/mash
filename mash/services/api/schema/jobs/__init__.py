@@ -25,13 +25,26 @@ from mash.services.api.schema import (
 image_conditions = {
     'type': 'object',
     'properties': {
-        'package_name': string_with_example('kernel-default'),
-        'version': string_with_example('4.13.1'),
-        'release': string_with_example('1.1'),
+        'package_name': string_with_example(
+            'kernel-default',
+            description='The name of the package for this condition. '
+                        'If no name is provided for a condition then the '
+                        'condition is checked against the image itself.'
+        ),
+        'version': string_with_example(
+            '4.13.1',
+            description='The package version from the build service.'
+        ),
+        'release': string_with_example(
+            '1.1',
+            description='The Kiwi build (release) number.'
+        ),
         'condition': {
             'type': 'string',
             'enum': ['>=', '==', '<=', '>', '<'],
-            'example': '=='
+            'example': '==',
+            'description': 'The expression to use for comparing version '
+                           'and/or release.'
         }
     },
     'additionalProperties': False,
@@ -78,12 +91,27 @@ base_job_message = {
                            'an image then uploader would be the last service.'
         },
         'utctime': utctime,
-        'image': string_with_example('openSUSE-Leap-15.0-EC2-HVM'),
+        'image': string_with_example(
+            'openSUSE-Leap-15.0-EC2-HVM',
+            description='This should match the name of the tarball file on'
+                        'the download server prior to the architecture. For '
+                        'a file like openSUSE-Leap-15.0-EC2-HVM.x86_64-1.0.0-'
+                        'Build1.206.vhdfixed.xz.sha256 The "image" is '
+                        'openSUSE-Leap-15.0-EC2-HVM.'
+        ),
         'cloud_image_name': string_with_example(
-            'openSUSE-Leap-15.0-v{date}-hvm-ssd-x86_64'
+            'openSUSE-Leap-15.0-v{date}-hvm-ssd-x86_64',
+            description='The name to use for the uploaded image in the cloud '
+                        'framework. The name can have a date of upload '
+                        'inserted such as the example. The {date} will be '
+                        'replaced by the current iso date format at time of '
+                        'upload (20200410).'
         ),
         'old_cloud_image_name': string_with_example(
-            'openSUSE-Leap-15.0-v20190313-hvm-ssd-x86_64'
+            'openSUSE-Leap-15.0-v20190313-hvm-ssd-x86_64',
+            description='The cloud image name for the image to be deprecated. '
+                        'This is only required for jobs that run through '
+                        'deprecation service.'
         ),
         'conditions': {
             'type': 'array',
@@ -107,10 +135,15 @@ base_job_message = {
         },
         'download_url': string_with_example(
             'https://download.opensuse.org/repositories/'
-            'Cloud:/Images:/Leap_15.0/images/'
+            'Cloud:/Images:/Leap_15.0/images/',
+            description='The URL to a download repository. The URL is '
+                        'expected to have the image tarball, checksum and '
+                        'a packages file.'
         ),
         'image_description': string_with_example(
-            'openSUSE Leap 15.0 (HVM, 64-bit, SSD-Backed)'
+            'openSUSE Leap 15.0 (HVM, 64-bit, SSD-Backed)',
+            description='Description to use when creating the image in the '
+                        'cloud framework.'
         ),
         'distro': {
             'type': 'string',
@@ -118,7 +151,11 @@ base_job_message = {
             'example': 'sles',
             'description': 'The distro is used for img-proof testing.'
         },
-        'instance_type': string_with_example('t2.micro'),
+        'instance_type': string_with_example(
+            't2.micro',
+            description='Instance size/type img-proof will use when '
+                        'launching a test instance.'
+        ),
         'tests': {
             'type': 'array',
             'items': non_empty_string,
@@ -140,7 +177,10 @@ base_job_message = {
         'cloud_architecture': {
             'type': 'string',
             'enum': ['x86_64', 'aarch64'],
-            'example': 'x86_64'
+            'example': 'x86_64',
+            'description': 'The underlying architecture for the image. '
+                           'Valid options are x86_64 and aarch64 and the '
+                           'default architecture is x86_64.'
         },
         'notification_email': email,
         'notification_type': {
@@ -160,9 +200,22 @@ base_job_message = {
             'description': 'The time (in seconds) to wait before failing '
                            'a job on image conditions.'
         },
-        'raw_image_upload_type': string_with_example('s3bucket'),
-        'raw_image_upload_location': string_with_example('my-bucket/prefix/'),
-        'raw_image_upload_account': string_with_example('my_aws_account'),
+        'raw_image_upload_type': string_with_example(
+            's3bucket',
+            description='Cloud framework to use for raw image tarball '
+                        'upload. The image tarball will be uploaded as is '
+                        'to the framework using the cloud image name.'
+        ),
+        'raw_image_upload_location': string_with_example(
+            'my-bucket/prefix/',
+            description='The location to put the raw image. This is '
+                        'dependent on the cloud framework chosen.'
+        ),
+        'raw_image_upload_account': string_with_example(
+            'my_aws_account',
+            description='The account credentials to use for uploading the '
+                        'raw image.'
+        ),
         'disallow_licenses': {
             'type': 'array',
             'items': non_empty_string,

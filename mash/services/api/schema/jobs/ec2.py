@@ -36,10 +36,25 @@ share_with = {
 ec2_job_account = {
     'type': 'object',
     'properties': {
-        'name': string_with_example('account1'),
-        'region': string_with_example('us-east-1'),
-        'root_swap_ami': string_with_example('ami-1234567890'),
-        'subnet': string_with_example('subnet-12345678')
+        'name': string_with_example(
+            'account1',
+            description='Name of cloud account.'
+        ),
+        'region': string_with_example(
+            'us-east-1',
+            description='Region to use for initial image creation and '
+                        'instance testing.'
+        ),
+        'root_swap_ami': string_with_example(
+            'ami-1234567890',
+            description='The image AMI to use for the root swap image upload '
+                        'method.'
+        ),
+        'subnet': string_with_example(
+            'subnet-12345678',
+            description='The subnet to use for image testing and image '
+                        'upload.'
+        )
     },
     'additionalProperties': False,
     'required': ['name'],
@@ -56,7 +71,9 @@ ec2_job_message['properties']['allow_copy'] = {
     'description': 'Whether to allow copy of the image.'
 }
 ec2_job_message['properties']['billing_codes'] = string_with_example(
-    'bp-1234567890,bp-0987654321'
+    'bp-1234567890,bp-0987654321',
+    description='A comma separated list of billing codes to apply during '
+                'image creation'
 )
 ec2_job_message['properties']['use_root_swap'] = {
     'type': 'boolean',
@@ -73,7 +90,9 @@ ec2_job_message['properties']['cloud_accounts'] = {
                    'required for an EC2 job.'
 }
 ec2_job_message['properties']['cloud_account'] = string_with_example(
-    'account1'
+    'account1',
+    description='The name of the cloud account credentials to use for '
+                'the job.'
 )
 ec2_job_message['properties']['cloud_groups'] = {
     'type': 'array',

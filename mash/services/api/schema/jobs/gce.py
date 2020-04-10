@@ -22,7 +22,11 @@ from mash.services.api.schema import string_with_example
 from mash.services.api.schema.jobs import base_job_message
 
 gce_job_message = copy.deepcopy(base_job_message)
-gce_job_message['properties']['family'] = string_with_example('opensuse-leap')
+gce_job_message['properties']['family'] = string_with_example(
+    'opensuse-leap',
+    description='Family to add the image to. Image families help group '
+                'related images together and provide versioning of images.'
+)
 gce_job_message['properties']['months_to_deletion'] = {
     'type': 'integer',
     'minimum': 0,
@@ -50,13 +54,27 @@ gce_job_message['properties']['test_fallback_regions'] = {
                    'the image multiple times for certain expected issues.'
 }
 gce_job_message['properties']['testing_account'] = string_with_example(
-    'testaccount1'
+    'testaccount1',
+    description='The account to use for launching and testing an instance '
+                'of the image. This is required if the cloud_account is a '
+                'publishing account which cannot launch instances.'
 )
 gce_job_message['properties']['cloud_account'] = string_with_example(
-    'account1'
+    'account1',
+    description='The name of the cloud account credentials to use for image '
+                'publishing.'
 )
-gce_job_message['properties']['bucket'] = string_with_example('images')
-gce_job_message['properties']['region'] = string_with_example('us-east1')
+gce_job_message['properties']['bucket'] = string_with_example(
+    'images',
+    description='The name of the storage bucket to use for uploading the '
+                'image tarball.'
+)
+gce_job_message['properties']['region'] = string_with_example(
+    'us-east1-a',
+    description='The zone to use for launching and testing an instance '
+                'of the image. This should be in zone format such as the '
+                'example.'
+)
 gce_job_message['required'].append('cloud_account')
 gce_job_message['properties']['image']['example'] = 'openSUSE-Leap-15.0-GCE'
 gce_job_message['properties']['cloud_image_name']['example'] = \
