@@ -43,15 +43,14 @@ azure_job = api.schema_model('azure_job', azure_job_message)
 
 
 @api.route('/')
-@api.doc(security='apiKey')
-@api.response(400, 'Validation error', validation_error_response)
-@api.response(401, 'Unauthorized', default_response)
-@api.response(422, 'Not processable', default_response)
 class AzureJobCreate(Resource):
-    @api.doc('add_azure_job')
+    @api.doc('add_azure_job', security='apiKey')
     @jwt_required
     @api.expect(azure_job)
     @api.response(201, 'Job added', job_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(401, 'Unauthorized', default_response)
+    @api.response(422, 'Not processable', default_response)
     def post(self):
         """
         Add Azure job.
@@ -79,3 +78,11 @@ class AzureJobCreate(Resource):
             jsonify(marshal(job, job_response, skip_none=True)),
             201
         )
+
+    @api.doc('get_azure_job_doc_schema')
+    @api.response(200, 'Success', azure_job)
+    def get(self):
+        """
+        Get azure job doc schema.
+        """
+        return make_response(jsonify(azure_job_message), 200)

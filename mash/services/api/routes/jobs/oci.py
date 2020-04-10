@@ -43,15 +43,14 @@ validation_error_response = api.schema_model(
 
 
 @api.route('/')
-@api.doc(security='apiKey')
-@api.response(400, 'Validation error', validation_error_response)
-@api.response(401, 'Unauthorized', default_response)
-@api.response(422, 'Not processable', default_response)
 class OCIJobCreate(Resource):
-    @api.doc('add_oci_job')
+    @api.doc('add_oci_job', security='apiKey')
     @jwt_required
     @api.expect(oci_job)
     @api.response(201, 'Job added', job_response)
+    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(401, 'Unauthorized', default_response)
+    @api.response(422, 'Not processable', default_response)
     def post(self):
         """
         Add OCI job.
@@ -79,3 +78,11 @@ class OCIJobCreate(Resource):
             jsonify(marshal(job, job_response, skip_none=True)),
             201
         )
+
+    @api.doc('get_oci_job_doc_schema')
+    @api.response(200, 'Success', oci_job)
+    def get(self):
+        """
+        Get OCI job doc schema.
+        """
+        return make_response(jsonify(oci_job_message), 200)

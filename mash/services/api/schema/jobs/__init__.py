@@ -30,7 +30,8 @@ image_conditions = {
         'release': string_with_example('1.1'),
         'condition': {
             'type': 'string',
-            'enum': ['>=', '==', '<=', '>', '<']
+            'enum': ['>=', '==', '<=', '>', '<'],
+            'example': '=='
         }
     },
     'additionalProperties': False,
@@ -66,7 +67,8 @@ base_job_message = {
                 'replication',
                 'publisher',
                 'deprecation'
-            ]
+            ],
+            'example': 'create'
         },
         'utctime': utctime,
         'image': string_with_example('openSUSE-Leap-15.0-EC2-HVM'),
@@ -79,7 +81,14 @@ base_job_message = {
         'conditions': {
             'type': 'array',
             'items': image_conditions,
-            'minItems': 1
+            'minItems': 1,
+            'example': [
+                {
+                    'package_name': 'kernel-default',
+                    'version': '4.13.1',
+                    'condition': '>='
+                }
+            ]
         },
         'download_url': string_with_example(
             'https://download.opensuse.org/repositories/'
@@ -90,7 +99,8 @@ base_job_message = {
         ),
         'distro': {
             'type': 'string',
-            'enum': ['opensuse_leap', 'sles']
+            'enum': ['opensuse_leap', 'sles'],
+            'example': 'sles'
         },
         'instance_type': string_with_example('t2.micro'),
         'tests': {
@@ -99,15 +109,17 @@ base_job_message = {
             'minItems': 1,
             'example': ['test_sles']
         },
-        'cleanup_images': {'type': 'boolean'},
+        'cleanup_images': {'type': 'boolean', 'example': True},
         'cloud_architecture': {
             'type': 'string',
-            'enum': ['x86_64', 'aarch64']
+            'enum': ['x86_64', 'aarch64'],
+            'example': 'x86_64'
         },
         'notification_email': email,
         'notification_type': {
             'type': 'string',
-            'enum': ['periodic', 'single']
+            'enum': ['periodic', 'single'],
+            'example': 'single'
         },
         'profile': string_with_example('Proxy'),
         'conditions_wait_time': {
