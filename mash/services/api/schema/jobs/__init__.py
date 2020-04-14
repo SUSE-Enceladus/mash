@@ -37,7 +37,7 @@ image_conditions = {
         ),
         'release': string_with_example(
             '1.1',
-            description='The Kiwi build (release) number.'
+            description='The build (release) number.'
         ),
         'condition': {
             'type': 'string',
@@ -190,7 +190,7 @@ base_job_message = {
             'description': 'The single notification option sends an email '
                            'with job status when the job finishes or fails. '
                            'The periodic option will send an email after the '
-                           'finishes each service with the job status.'
+                           'job finishes each service with the job status.'
         },
         'profile': string_with_example('Proxy'),
         'conditions_wait_time': {

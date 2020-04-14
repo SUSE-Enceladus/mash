@@ -24,7 +24,7 @@ from mash.services.api.schema.jobs import base_job_message
 azure_job_message = copy.deepcopy(base_job_message)
 azure_job_message['properties']['emails'] = string_with_example(
     'test@fake.com',
-    description='A Comma-separated list of email addresses to be notified '
+    description='A comma-separated list of email addresses to be notified '
                 'of the progress of the publishing operation.'
 )
 azure_job_message['properties']['label'] = string_with_example(
@@ -38,7 +38,7 @@ azure_job_message['properties']['offer_id'] = string_with_example(
 )
 azure_job_message['properties']['publisher_id'] = string_with_example(
     'suse',
-    description='The organization that created the image'
+    description='The organization that created the image.'
 )
 azure_job_message['properties']['sku'] = string_with_example(
     '15',
@@ -52,7 +52,7 @@ azure_job_message['properties']['generation_id'] = string_with_example(
 )
 azure_job_message['properties']['cloud_image_name_generation_suffix'] = string_with_example(
     'gen2',
-    description='The suffix is appended to the cloud image name '
+    description='The suffix is appended to the cloud image name.'
 )
 azure_job_message['properties']['vm_images_key'] = string_with_example(
     'microsoft-azure-corevm.vmImagesPublicAzure',

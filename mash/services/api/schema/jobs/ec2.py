@@ -29,7 +29,7 @@ share_with = {
     'examples': ['all', 'none', '123456789012,098765432109'],
     'description': 'Sharing image to all shares the image publicly. '
                    'Sharing to none keeps the image private and sharing '
-                   'to a comma separated list of accounts makes it available '
+                   'to a comma-separated list of accounts makes it available '
                    'to only those accounts.'
 }
 
@@ -72,7 +72,7 @@ ec2_job_message['properties']['allow_copy'] = {
 }
 ec2_job_message['properties']['billing_codes'] = string_with_example(
     'bp-1234567890,bp-0987654321',
-    description='A comma separated list of billing codes to apply during '
+    description='A comma-separated list of billing codes to apply during '
                 'image creation'
 )
 ec2_job_message['properties']['use_root_swap'] = {
