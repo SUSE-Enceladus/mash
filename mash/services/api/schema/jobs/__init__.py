@@ -22,7 +22,7 @@ from mash.services.api.schema import (
     string_with_example
 )
 
-image_conditions = {
+image_condition = {
     'type': 'object',
     'properties': {
         'package_name': string_with_example(
@@ -120,7 +120,7 @@ base_job_message = {
         ),
         'conditions': {
             'type': 'array',
-            'items': image_conditions,
+            'items': image_condition,
             'minItems': 1,
             'example': [
                 {
