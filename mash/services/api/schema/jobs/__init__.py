@@ -33,11 +33,15 @@ image_conditions = {
         ),
         'version': string_with_example(
             '4.13.1',
-            description='The package version from the build service.'
+            description='The package or image version from the build service.'
+                        ' If no package_name is provided with the condition '
+                        'then the condition is against the image.'
         ),
         'release': string_with_example(
             '1.1',
-            description='The build (release) number.'
+            description='The build (release) number for the package or image.'
+                        ' If no package_name is provided with the condition '
+                        'then the condition is against the image.'
         ),
         'condition': {
             'type': 'string',
@@ -61,8 +65,8 @@ utctime = {
                    'If using a date string it must be in the future '
                    'and the job will start no sooner than the provided '
                    'date. Now jobs will run as soon as possible and always '
-                   'jobs run through testing every time a new image tarball '
-                   'is published.',
+                   'jobs run through the pipeline every time a new image '
+                   'tarball is published.',
     'format': 'regex',
     'pattern': r'^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]'
                r'|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):'
@@ -87,8 +91,9 @@ base_job_message = {
                 'deprecation'
             ],
             'example': 'create',
-            'description': 'Where the job should finish. If only uploading '
-                           'an image then uploader would be the last service.'
+            'description': 'The last service in the pipeline to be executed. '
+                           'All services except the OBS service are valid '
+                           'values.'
         },
         'utctime': utctime,
         'image': string_with_example(
@@ -128,10 +133,12 @@ base_job_message = {
                            'against. Providing only the package name will '
                            'ensure the package is in the image. The version '
                            'is the package version from the build service '
-                           'whereas the release is the Kiwi build number. '
-                           'At least one of package_name, version or release '
-                           'is required. If no package name is provided then '
-                           'the condition is against the image itself.'
+                           'whereas the release is the build or release '
+                           'number. At least one of package_name, version or '
+                           'release is required. If no package name is '
+                           'provided then the condition is against the image '
+                           'itself. Valid condition operators are >, <, >=, '
+                           '<=, or ==.'
         },
         'download_url': string_with_example(
             'https://download.opensuse.org/repositories/'
@@ -149,12 +156,15 @@ base_job_message = {
             'type': 'string',
             'enum': ['opensuse_leap', 'sles'],
             'example': 'sles',
-            'description': 'The distro is used for img-proof testing.'
+            'description': 'The distribution setting used for the img-proof '
+                           'tests.'
         },
         'instance_type': string_with_example(
             't2.micro',
             description='Instance size/type img-proof will use when '
-                        'launching a test instance.'
+                        'launching a test instance. If no type is provided '
+                        'a random type will be selected from a pre-configured '
+                        'list.'
         ),
         'tests': {
             'type': 'array',
@@ -209,12 +219,18 @@ base_job_message = {
         'raw_image_upload_location': string_with_example(
             'my-bucket/prefix/',
             description='The location to put the raw image. This is '
-                        'dependent on the cloud framework chosen.'
+                        'dependent on the cloud framework chosen. For '
+                        'example an S3 upload format would be '
+                        '{bucket_name}/{prefix}/ to denote the bucket and '
+                        'a prefix where the image should be uploaded.'
         ),
         'raw_image_upload_account': string_with_example(
             'my_aws_account',
-            description='The account credentials to use for uploading the '
-                        'raw image.'
+            description='The cloud framework account as configured with '
+                        'the mash account add client command when the mash '
+                        'user was setup. The credentials associated with '
+                        'this cloud framework account will be used for the '
+                        'raw image upload.'
         ),
         'disallow_licenses': {
             'type': 'array',

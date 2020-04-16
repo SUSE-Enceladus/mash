@@ -61,7 +61,7 @@ gce_job_message['properties']['testing_account'] = string_with_example(
 )
 gce_job_message['properties']['cloud_account'] = string_with_example(
     'account1',
-    description='The name of the cloud account credentials to use for image '
+    description='The name of the cloud account to use for image '
                 'publishing.'
 )
 gce_job_message['properties']['bucket'] = string_with_example(

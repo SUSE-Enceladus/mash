@@ -27,8 +27,8 @@ share_with = {
     'pattern': '^[0-9]{12}(,[0-9]{12})*$|^(all|none)$',
     'example': '123456789012,098765432109',
     'examples': ['all', 'none', '123456789012,098765432109'],
-    'description': 'Sharing image to all shares the image publicly. '
-                   'Sharing to none keeps the image private and sharing '
+    'description': 'Sharing image to "all" shares the image publicly. '
+                   'Sharing to "none" keeps the image private and sharing '
                    'to a comma-separated list of accounts makes it available '
                    'to only those accounts.'
 }
@@ -38,22 +38,23 @@ ec2_job_account = {
     'properties': {
         'name': string_with_example(
             'account1',
-            description='Name of cloud account.'
+            description='Name of cloud account as associated with the mash '
+                        'user account.'
         ),
         'region': string_with_example(
             'us-east-1',
             description='Region to use for initial image creation and '
-                        'instance testing.'
+                        'testing.'
         ),
         'root_swap_ami': string_with_example(
             'ami-1234567890',
-            description='The image AMI to use for the root swap image upload '
-                        'method.'
+            description='The image AMI to use for the root swap image '
+                        'creation method.'
         ),
         'subnet': string_with_example(
             'subnet-12345678',
             description='The subnet to use for image testing and image '
-                        'upload.'
+                        'creation.'
         )
     },
     'additionalProperties': False,
@@ -68,7 +69,8 @@ ec2_job_message = copy.deepcopy(base_job_message)
 ec2_job_message['properties']['share_with'] = share_with
 ec2_job_message['properties']['allow_copy'] = {
     'type': 'boolean',
-    'description': 'Whether to allow copy of the image.'
+    'description': 'Whether to allow copy of the snapshot with which '
+                   'the image is associated.'
 }
 ec2_job_message['properties']['billing_codes'] = string_with_example(
     'bp-1234567890,bp-0987654321',
@@ -87,12 +89,14 @@ ec2_job_message['properties']['cloud_accounts'] = {
     'example': [{'name': 'account1', 'region': 'us-east-2'}],
     'description': 'A list of cloud account dictionaries. Either a '
                    'cloud_account, cloud_accounts or cloud_groups is '
-                   'required for an EC2 job.'
+                   'required for an EC2 job. This allows the creation and '
+                   'testing of the same image in multiple partition.'
 }
 ec2_job_message['properties']['cloud_account'] = string_with_example(
     'account1',
-    description='The name of the cloud account credentials to use for '
-                'the job.'
+    description='The name of the cloud account to use for '
+                'the job. This is mutually exclusive with the '
+                '"cloud_acconts" setting.'
 )
 ec2_job_message['properties']['cloud_groups'] = {
     'type': 'array',
