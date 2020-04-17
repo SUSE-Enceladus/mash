@@ -31,6 +31,7 @@ cloud:
   ec2:
     regions:
       aws:
+        - af-south-1
         - ap-east-1
         - ap-northeast-1
         - ap-northeast-2
@@ -40,6 +41,7 @@ cloud:
         - ca-central-1
         - eu-central-1
         - eu-north-1
+        - eu-south-1
         - eu-west-1
         - eu-west-2
         - eu-west-3
@@ -56,6 +58,7 @@ cloud:
         - us-gov-east-1
         - us-gov-west-1
     helper_images:
+      af-south-1: ami-0c6b5f01298bd1a1e
       ap-east-1: ami-024f2681e93e91a81
       ap-northeast-1: ami-383c1956
       ap-northeast-2: ami-249b554a
@@ -67,6 +70,7 @@ cloud:
       cn-northwest-1: ami-23978241
       eu-central-1: ami-bc5b48d0
       eu-north-1: ami-4abe3234
+      eu-south-1: ami-0c747453f89f809cd
       eu-west-1: ami-bff32ccc
       eu-west-2: ami-2a676d4
       eu-west-3: ami-7bc17406
