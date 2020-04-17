@@ -22,33 +22,59 @@ from mash.services.api.schema import string_with_example
 from mash.services.api.schema.jobs import base_job_message
 
 gce_job_message = copy.deepcopy(base_job_message)
-gce_job_message['properties']['family'] = string_with_example('opensuse-leap')
+gce_job_message['properties']['family'] = string_with_example(
+    'opensuse-leap',
+    description='Family to add the image to. Image families help group '
+                'related images together and provide versioning of images.'
+)
 gce_job_message['properties']['months_to_deletion'] = {
     'type': 'integer',
     'minimum': 0,
-    'example': 6
+    'example': 6,
+    'description': 'When an image is deprecated it can be marked for '
+                   'deletion. The image is deleted after a certain number'
+                   'of months has passed. This is 6 months by default.'
 }
 gce_job_message['properties']['guest_os_features'] = {
     'type': 'array',
     'items': string_with_example('UEFI_COMPATIBLE'),
     'uniqueItems': True,
     'minItems': 1,
-    'example': ['UEFI_COMPATIBLE']
+    'example': ['UEFI_COMPATIBLE'],
+    'description': 'A list of guest os features to add when creating the '
+                   'image.'
 }
 gce_job_message['properties']['test_fallback_regions'] = {
     'type': 'array',
     'items': string_with_example('us-west1-a'),
     'minItems': 0,
-    'example': ['us-west1-a']
+    'example': ['us-west1-a'],
+    'description': 'A list of fallback regions to use if the instance test '
+                   'fails on a recoverable error. This allows mash to test '
+                   'the image multiple times for certain expected issues.'
 }
 gce_job_message['properties']['testing_account'] = string_with_example(
-    'testaccount1'
+    'testaccount1',
+    description='The account to use for launching and testing an instance '
+                'of the image. This is required if the cloud_account is a '
+                'publishing account which cannot launch instances.'
 )
 gce_job_message['properties']['cloud_account'] = string_with_example(
-    'account1'
+    'account1',
+    description='The name of the cloud account to use for image '
+                'publishing.'
 )
-gce_job_message['properties']['bucket'] = string_with_example('images')
-gce_job_message['properties']['region'] = string_with_example('us-east1')
+gce_job_message['properties']['bucket'] = string_with_example(
+    'images',
+    description='The name of the storage bucket to use for uploading the '
+                'image tarball.'
+)
+gce_job_message['properties']['region'] = string_with_example(
+    'us-east1-a',
+    description='The zone to use for launching and testing an instance '
+                'of the image. This should be in zone format such as the '
+                'example.'
+)
 gce_job_message['required'].append('cloud_account')
 gce_job_message['properties']['image']['example'] = 'openSUSE-Leap-15.0-GCE'
 gce_job_message['properties']['cloud_image_name']['example'] = \

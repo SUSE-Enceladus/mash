@@ -23,21 +23,53 @@ from mash.services.api.schema.jobs import base_job_message
 
 oci_job_message = copy.deepcopy(base_job_message)
 oci_job_message['properties']['cloud_account'] = string_with_example(
-    'account1'
+    'account1',
+    description='The name of the cloud account credentials to use for image '
+                'publishing.'
 )
-oci_job_message['properties']['bucket'] = string_with_example('images')
-oci_job_message['properties']['region'] = string_with_example('us-phoenix-1')
-oci_job_message['properties']['availability_domain'] = string_with_example('Omic:PHX-AD-1')
-oci_job_message['properties']['compartment_id'] = string_with_example('ocid1.compartment.oc1..')
-oci_job_message['properties']['operating_system'] = string_with_example('SLES')
-oci_job_message['properties']['operating_system_version'] = string_with_example('12SP1')
+oci_job_message['properties']['bucket'] = string_with_example(
+    'images',
+    description='The name of the storage bucket to use for uploading the '
+                'image tarball.'
+)
+oci_job_message['properties']['region'] = string_with_example(
+    'us-phoenix-1',
+    description='The region to use for launching and testing an instance '
+                'of the image.'
+)
+oci_job_message['properties']['availability_domain'] = string_with_example(
+    'Omic:PHX-AD-1',
+    description='The data center to use within the chosen region for '
+                'launching and testing the image.'
+)
+oci_job_message['properties']['compartment_id'] = string_with_example(
+    'ocid1.compartment.oc1..',
+    description='The compartment to use for uploading the image and '
+                'launching a test instance of the image.'
+)
+oci_job_message['properties']['operating_system'] = string_with_example(
+    'SLES',
+    description='Name or type of OS being uploaded.'
+)
+oci_job_message['properties']['operating_system_version'] = string_with_example(
+    '12SP1',
+    description='Version of the image OS being uploaded.'
+)
 oci_job_message['properties']['image_type'] = {
     'type': 'string',
-    'enum': ['QCOW2', 'VMDK']
+    'enum': ['QCOW2', 'VMDK'],
+    'description': 'The disk image file format for the given image.'
 }
 oci_job_message['properties']['launch_mode'] = {
     'type': 'string',
-    'enum': ['NATIVE', 'EMULATED', 'PARAVIRTUALIZED', 'CUSTOM']
+    'enum': ['NATIVE', 'EMULATED', 'PARAVIRTUALIZED', 'CUSTOM'],
+    'description': 'Specifies the configuration mode for launching '
+                   'instances. NATIVE instances launch with paravirtualized '
+                   'boot and VFIO devices. EMULATED instances launch with '
+                   'emulated devices and emulated SCSI disk controller. '
+                   'PARAVIRTUALIZED instances launch with paravirtualized '
+                   'devices using virtio drivers. CUSTOM instances launch '
+                   'with custom configuration settings.'
 }
 oci_job_message['properties']['image']['example'] = 'openSUSE-Leap-15.0-oci'
 oci_job_message['properties']['cloud_image_name']['example'] = \
