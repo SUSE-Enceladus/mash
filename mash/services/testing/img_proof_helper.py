@@ -29,7 +29,8 @@ def img_proof_test(
     secret_access_key=None, security_group_id=None, service_account_file=None,
     ssh_key_name=None, ssh_private_key_file=None, ssh_user=None, subnet_id=None,
     tests=None, availability_domain=None, compartment_id=None, tenancy=None,
-    oci_user_id=None, signing_key_file=None, signing_key_fingerprint=None
+    oci_user_id=None, signing_key_file=None, signing_key_fingerprint=None,
+    enable_uefi=False, enable_secure_boot=False, image_project=None
 ):
     status, result = test_image(
         cloud,
@@ -55,7 +56,10 @@ def img_proof_test(
         subnet_id=subnet_id,
         tenancy=tenancy,
         tests=tests,
-        timeout=img_proof_timeout
+        timeout=img_proof_timeout,
+        enable_uefi=enable_uefi,
+        enable_secure_boot=enable_secure_boot,
+        image_project=image_project
     )
 
     status = SUCCESS if status == 0 else FAILED

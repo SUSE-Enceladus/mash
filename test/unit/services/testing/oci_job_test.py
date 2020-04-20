@@ -101,7 +101,10 @@ class TestOCITestingJob(object):
             subnet_id=None,
             tenancy='ocid1.tenancy.oc1..',
             tests=['test_stuff'],
-            timeout=600
+            timeout=600,
+            enable_uefi=False,
+            enable_secure_boot=False,
+            image_project=None
         )
         mock_send_log.reset_mock()
 

@@ -68,6 +68,9 @@ class GCETestingJob(MashJob):
         self.ssh_user = self.job_config.get('ssh_user', 'root')
         self.cleanup_images = self.job_config.get('cleanup_images')
         self.test_fallback_regions = self.job_config.get('test_fallback_regions')
+        self.enable_uefi = self.job_config.get('enable_uefi', False)
+        self.enable_secure_boot = self.job_config.get('enable_secure_boot', False)
+        self.image_project = self.job_config.get('image_project')
 
         if not self.instance_type:
             self.instance_type = random.choice(instance_types)
@@ -125,7 +128,10 @@ class GCETestingJob(MashJob):
                         service_account_file=auth_file,
                         ssh_private_key_file=self.ssh_private_key_file,
                         ssh_user=self.ssh_user,
-                        tests=self.tests
+                        tests=self.tests,
+                        enable_uefi=self.enable_uefi,
+                        enable_secure_boot=self.enable_secure_boot,
+                        image_project=self.image_project
                     )
                 except IpaRetryableError as error:
                     result = {

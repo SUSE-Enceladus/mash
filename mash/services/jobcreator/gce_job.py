@@ -47,6 +47,7 @@ class GCEJob(BaseJob):
             'months_to_deletion', 6
         )
         self.guest_os_features = self.kwargs.get('guest_os_features')
+        self.image_project = self.kwargs.get('image_project')
 
     def get_deprecation_message(self):
         """
@@ -106,7 +107,9 @@ class GCEJob(BaseJob):
                 'region': self.region,
                 'testing_account': self.testing_account,
                 'distro': self.distro,
-                'instance_type': self.instance_type
+                'instance_type': self.instance_type,
+                'enable_uefi': self.enable_uefi,
+                'enable_secure_boot': self.enable_secure_boot
             }
         }
 
@@ -120,6 +123,9 @@ class GCEJob(BaseJob):
         if self.test_fallback_regions or self.test_fallback is False:
             testing_message['testing_job']['test_fallback_regions'] = \
                 self.test_fallback_regions
+
+        if self.image_project:
+            testing_message['image_project'] = self.image_project
 
         testing_message['testing_job'].update(self.base_message)
 

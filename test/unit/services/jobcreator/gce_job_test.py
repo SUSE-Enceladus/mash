@@ -59,6 +59,8 @@ def test_gce_job_testing_message(mock_init):
     job.cloud_architecture = 'x86_64'
     job.test_fallback = False
     job.test_fallback_regions = None
+    job.enable_uefi = False
+    job.enable_secure_boot = True
     job.base_message = {}
 
     # Test explicit no cleanup images

@@ -111,7 +111,10 @@ class TestEC2TestingJob(object):
             subnet_id='subnet-123456789',
             tenancy=None,
             tests=['test_stuff'],
-            timeout=None
+            timeout=None,
+            enable_uefi=False,
+            enable_secure_boot=False,
+            image_project=None
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
         mock_cleanup_image.assert_called_once_with(
