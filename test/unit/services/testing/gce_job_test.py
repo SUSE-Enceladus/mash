@@ -110,7 +110,10 @@ class TestGCETestingJob(object):
                 subnet_id=None,
                 tenancy=None,
                 tests=['test_stuff'],
-                timeout=None
+                timeout=None,
+                enable_uefi=False,
+                enable_secure_boot=False,
+                image_project=None
             )
         ])
         mock_send_log.reset_mock()
@@ -183,7 +186,10 @@ class TestGCETestingJob(object):
                 subnet_id=None,
                 tenancy=None,
                 tests=['test_stuff'],
-                timeout=None
+                timeout=None,
+                enable_uefi=False,
+                enable_secure_boot=False,
+                image_project=None
             ),
             call(
                 'gce',
@@ -209,7 +215,10 @@ class TestGCETestingJob(object):
                 subnet_id=None,
                 tenancy=None,
                 tests=['test_stuff'],
-                timeout=None
+                timeout=None,
+                enable_uefi=False,
+                enable_secure_boot=False,
+                image_project=None
             )
         ])
 

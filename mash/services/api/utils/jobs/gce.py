@@ -50,4 +50,9 @@ def update_gce_job_accounts(job_doc):
             ' the use of a testing account.'
         )
 
+    if cloud_account.is_publishing_account and not job_doc.get('image_project'):
+        raise MashJobException(
+            'Jobs using a GCE publishing account require an image_project.'
+        )
+
     return job_doc

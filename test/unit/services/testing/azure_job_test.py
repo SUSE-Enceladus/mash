@@ -102,7 +102,10 @@ class TestAzureTestingJob(object):
             subnet_id=None,
             tenancy=None,
             tests=['test_stuff'],
-            timeout=None
+            timeout=None,
+            enable_uefi=False,
+            enable_secure_boot=False,
+            image_project=None
         )
         mock_send_log.reset_mock()
 

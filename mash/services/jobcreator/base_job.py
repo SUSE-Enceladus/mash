@@ -64,7 +64,12 @@ class BaseJob(object):
         self.target_account_info = kwargs.get('target_account_info')
         self.disallow_licenses = kwargs.get('disallow_licenses')
         self.disallow_packages = kwargs.get('disallow_packages')
+        self.enable_uefi = kwargs.get('enable_uefi', False)
+        self.enable_secure_boot = kwargs.get('enable_secure_boot', False)
         self.kwargs = kwargs
+
+        if self.enable_secure_boot and not self.enable_uefi:
+            self.enable_uefi = True
 
         if self.raw_image_upload_type and self.last_service == 'uploader':
             self.cloud = self.raw_image_upload_type

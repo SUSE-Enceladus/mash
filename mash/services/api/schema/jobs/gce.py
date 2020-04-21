@@ -75,6 +75,12 @@ gce_job_message['properties']['region'] = string_with_example(
                 'of the image. This should be in zone format such as the '
                 'example.'
 )
+gce_job_message['properties']['image_project'] = string_with_example(
+    'suse-cloud',
+    description='The image project for the image that will be tested. '
+                'If using a test project for testing the public image '
+                'project where the image is published is required.'
+)
 gce_job_message['required'].append('cloud_account')
 gce_job_message['properties']['image']['example'] = 'openSUSE-Leap-15.0-GCE'
 gce_job_message['properties']['cloud_image_name']['example'] = \

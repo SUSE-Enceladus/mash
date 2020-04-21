@@ -20,7 +20,8 @@ class TestJobCreatorBaseJob(object):
             'download_url': 'https://download.here',
             'cleanup_images': True,
             'test_fallback_regions': [],
-            'target_account_info': {}
+            'target_account_info': {},
+            'enable_secure_boot': True
         })
 
     def test_base_job_post_init(self):

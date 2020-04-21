@@ -22,5 +22,6 @@
   "family": "sles-15",
   "tests": ["test_stuff"],
   "notification_email": "test@fake.com",
-  "guest_os_features": ["UEFI_COMPATIBLE"]
+  "guest_os_features": ["UEFI_COMPATIBLE"],
+  "image_project": "test"
 }

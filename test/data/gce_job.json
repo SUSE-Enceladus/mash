@@ -25,5 +25,6 @@
   "guest_os_features": ["UEFI_COMPATIBLE"],
   "raw_image_upload_type": "s3bucket",
   "raw_image_upload_account": "account",
-  "raw_image_upload_location": "location"
+  "raw_image_upload_location": "location",
+  "image_project": "test"
 }
