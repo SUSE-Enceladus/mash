@@ -16,7 +16,7 @@ flask-restplus
 flask-sqlalchemy
 flask-migrate
 flask-jwt-extended
-setuptools
+setuptools>=40.3.0
 idna<2.7
 boto3
 cryptography>=2.2.0,<=2.8
