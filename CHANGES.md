@@ -1,3 +1,25 @@
+v6.0.0 (2020-04-22)
+===================
+
+- Handle both interrupts and terminate signals.
+  [\#639](https://github.com/SUSE-Enceladus/mash/pull/639)
+- Implement oauth2/oidc authentication route.
+  [\#640](https://github.com/SUSE-Enceladus/mash/pull/640)
+- Fix werkzeug regression in unit tests.
+  [\#641](https://github.com/SUSE-Enceladus/mash/pull/641)
+- Subject is now an arg when sending a message.
+  [\#642](https://github.com/SUSE-Enceladus/mash/pull/642)
+- Implement password reset API.
+  [\#643](https://github.com/SUSE-Enceladus/mash/pull/643)
+- Integrate dissalow licenses and packages options.
+  [\#644](https://github.com/SUSE-Enceladus/mash/pull/644)
+- Update descriptions for all job doc args.
+  [\#646](https://github.com/SUSE-Enceladus/mash/pull/646)
+- Update regions and helper images for ec2.
+  [\#647](https://github.com/SUSE-Enceladus/mash/pull/647)
+- Add uefi and secure boot options for testing.
+  [\#648](https://github.com/SUSE-Enceladus/mash/pull/648)
+
 v5.2.0 (2020-03-10)
 ===================
 
