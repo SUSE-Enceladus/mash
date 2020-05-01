@@ -251,19 +251,18 @@ base_job_message = {
                            'a matching name the job will fail. The * wildcard '
                            'can be used to match a package name pattern.'
         },
-        'enable_uefi': {
-            'type': 'boolean',
-            'example': True,
-            'description': 'Whether to  enable the UEFI boot firmware for '
-                           'the test instance. By default this is disabled.'
-        },
-        'enable_secure_boot': {
-            'type': 'boolean',
-            'example': True,
-            'description': 'Whether to enable secure boot for the test '
-                           'instance. By default this is disabled. If it '
-                           'is set to True and enabled enable_uefi will '
-                           'automatically be enabled as well.'
+        'boot_firmware': {
+            'type': 'array',
+            'items': {
+                'type': 'string',
+                'enum': ['bios', 'uefi'],
+            },
+            'example': ['bios'],
+            'description': 'A list of boot firmware settings to test the '
+                           'image with. The default value if left empty is '
+                           'bios only. If both bios and uefi are provided '
+                           'the image is tested once for each firmware '
+                           'setting.'
         },
     },
     'additionalProperties': False,

@@ -108,8 +108,7 @@ class GCEJob(BaseJob):
                 'testing_account': self.testing_account,
                 'distro': self.distro,
                 'instance_type': self.instance_type,
-                'enable_uefi': self.enable_uefi,
-                'enable_secure_boot': self.enable_secure_boot
+                'boot_firmware': self.boot_firmware
             }
         }
 

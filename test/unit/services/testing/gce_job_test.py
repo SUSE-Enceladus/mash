@@ -21,7 +21,8 @@ class TestGCETestingJob(object):
             'bucket': 'bucket',
             'tests': ['test_stuff'],
             'utctime': 'now',
-            'cleanup_images': True
+            'cleanup_images': True,
+            'boot_firmware': ['uefi']
         }
         self.config = Mock()
         self.config.get_ssh_private_key_file.return_value = \
@@ -111,8 +112,7 @@ class TestGCETestingJob(object):
                 tenancy=None,
                 tests=['test_stuff'],
                 timeout=None,
-                enable_uefi=False,
-                enable_secure_boot=False,
+                enable_secure_boot=True,
                 image_project=None
             )
         ])
@@ -187,8 +187,7 @@ class TestGCETestingJob(object):
                 tenancy=None,
                 tests=['test_stuff'],
                 timeout=None,
-                enable_uefi=False,
-                enable_secure_boot=False,
+                enable_secure_boot=True,
                 image_project=None
             ),
             call(
@@ -216,8 +215,7 @@ class TestGCETestingJob(object):
                 tenancy=None,
                 tests=['test_stuff'],
                 timeout=None,
-                enable_uefi=False,
-                enable_secure_boot=False,
+                enable_secure_boot=True,
                 image_project=None
             )
         ])
