@@ -103,7 +103,6 @@ class TestAzureTestingJob(object):
             tenancy=None,
             tests=['test_stuff'],
             timeout=None,
-            enable_uefi=False,
             enable_secure_boot=False,
             image_project=None
         )

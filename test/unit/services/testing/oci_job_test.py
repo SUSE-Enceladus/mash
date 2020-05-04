@@ -102,7 +102,6 @@ class TestOCITestingJob(object):
             tenancy='ocid1.tenancy.oc1..',
             tests=['test_stuff'],
             timeout=600,
-            enable_uefi=False,
             enable_secure_boot=False,
             image_project=None
         )

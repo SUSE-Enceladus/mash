@@ -68,8 +68,7 @@ class GCETestingJob(MashJob):
         self.ssh_user = self.job_config.get('ssh_user', 'root')
         self.cleanup_images = self.job_config.get('cleanup_images')
         self.test_fallback_regions = self.job_config.get('test_fallback_regions')
-        self.enable_uefi = self.job_config.get('enable_uefi', False)
-        self.enable_secure_boot = self.job_config.get('enable_secure_boot', False)
+        self.boot_firmware = self.job_config.get('boot_firmware', ['bios'])
         self.image_project = self.job_config.get('image_project')
 
         if not self.instance_type:
@@ -86,12 +85,6 @@ class GCETestingJob(MashJob):
         Tests image with img-proof and update status and results.
         """
         self.status = SUCCESS
-        self.send_log(
-            'Running img-proof tests against image with '
-            'type: {inst_type}.'.format(
-                inst_type=self.instance_type
-            )
-        )
 
         accounts = [self.account]
         if self.testing_account:
@@ -114,48 +107,60 @@ class GCETestingJob(MashJob):
         self.cloud_image_name = self.source_regions['cloud_image_name']
 
         with create_json_file(credentials) as auth_file:
-            retry_region = self.region
-            while fallback_regions:
-                try:
-                    result = img_proof_test(
-                        cloud=self.cloud,
-                        description=self.description,
-                        distro=self.distro,
-                        image_id=self.cloud_image_name,
-                        instance_type=self.instance_type,
-                        img_proof_timeout=self.img_proof_timeout,
-                        region=retry_region,
-                        service_account_file=auth_file,
-                        ssh_private_key_file=self.ssh_private_key_file,
-                        ssh_user=self.ssh_user,
-                        tests=self.tests,
-                        enable_uefi=self.enable_uefi,
-                        enable_secure_boot=self.enable_secure_boot,
-                        image_project=self.image_project
+            for firmware in self.boot_firmware:
+                self.send_log(
+                    'Running img-proof tests against image with '
+                    'type: {inst_type}. Using boot firmware setting: '
+                    '{firmware}.'.format(
+                        inst_type=self.instance_type,
+                        firmware=firmware
                     )
-                except IpaRetryableError as error:
-                    result = {
-                        'status': EXCEPTION,
-                        'msg': str(error)
-                    }
-                    fallback_regions.remove(retry_region)
+                )
 
-                    if fallback_regions:
-                        retry_region = random.choice(fallback_regions)
-                except Exception:
-                    result = {
-                        'status': EXCEPTION,
-                        'msg': str(traceback.format_exc())
-                    }
-                    break
-                else:
-                    break
+                retry_region = self.region
+                while fallback_regions:
+                    try:
+                        result = img_proof_test(
+                            cloud=self.cloud,
+                            description=self.description,
+                            distro=self.distro,
+                            image_id=self.cloud_image_name,
+                            instance_type=self.instance_type,
+                            img_proof_timeout=self.img_proof_timeout,
+                            region=retry_region,
+                            service_account_file=auth_file,
+                            ssh_private_key_file=self.ssh_private_key_file,
+                            ssh_user=self.ssh_user,
+                            tests=self.tests,
+                            boot_firmware=firmware,
+                            image_project=self.image_project
+                        )
+                    except IpaRetryableError as error:
+                        result = {
+                            'status': EXCEPTION,
+                            'msg': str(error)
+                        }
+                        fallback_regions.remove(retry_region)
 
-        self.status = process_test_result(
-            result,
-            self.send_log,
-            self.region
-        )
+                        if fallback_regions:
+                            retry_region = random.choice(fallback_regions)
+                    except Exception:
+                        result = {
+                            'status': EXCEPTION,
+                            'msg': str(traceback.format_exc())
+                        }
+                        break
+                    else:
+                        break
+
+                self.status = process_test_result(
+                    result,
+                    self.send_log,
+                    self.region
+                )
+
+                if self.status != SUCCESS:
+                    break
 
         if self.cleanup_images or \
                 (self.status != SUCCESS and self.cleanup_images is not False):

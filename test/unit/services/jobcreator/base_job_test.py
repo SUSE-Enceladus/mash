@@ -21,7 +21,7 @@ class TestJobCreatorBaseJob(object):
             'cleanup_images': True,
             'test_fallback_regions': [],
             'target_account_info': {},
-            'enable_secure_boot': True
+            'boot_firmware': ['bios']
         })
 
     def test_base_job_post_init(self):
