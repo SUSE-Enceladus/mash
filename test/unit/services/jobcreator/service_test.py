@@ -397,6 +397,7 @@ class TestJobCreatorService(object):
         assert data['region'] == 'us-west1'
         assert data['account'] == 'test-gce'
         assert data['testing_account'] == 'testacnt1'
+        assert data['image_project'] == 'test'
 
         # Raw Image Uploader Job Doc
         data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
