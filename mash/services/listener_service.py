@@ -31,7 +31,7 @@ from pytz import utc
 
 from mash.mash_exceptions import MashListenerServiceException
 from mash.services.mash_service import MashService
-from mash.services.status_levels import EXCEPTION, SUCCESS
+from mash.services.status_levels import EXCEPTION, SUCCESS, DELETE
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import (
     remove_file,
@@ -165,23 +165,25 @@ class ListenerService(MashService):
         """
         job.status = status
         self.log.warning('Failed upstream.', extra=job.get_job_id())
-
-        try:
-            # Remove job from scheduler if it has
-            # not started executing yet.
-            self.scheduler.remove_job(job.id)
-        except JobLookupError:
-            pass
-
         self._delete_job(job.id)
 
         if job.last_service != self.service_exchange:
-            self._publish_message(job)
+            message = self._get_status_message(job)
+            self._publish_message(message, job.id)
 
     def _delete_job(self, job_id):
         """
-        Remove job from dict and delete listener queue.
+        Remove job from file store and delete from listener queue.
+
+        Also attempt to remove any running instances of the job.
         """
+        try:
+            # Remove job from scheduler if it has
+            # not started executing yet.
+            self.scheduler.remove_job(job_id)
+        except JobLookupError:
+            pass
+
         if job_id in self.jobs:
             job = self.jobs[job_id]
             self.log.info(
@@ -314,7 +316,8 @@ class ListenerService(MashService):
         # don't send message if last service.
         if (job.utctime != 'always' or job.status == SUCCESS) \
                 and job.last_service != self.service_exchange:
-            self._publish_message(job)
+            message = self._get_status_message(job)
+            self._publish_message(message, job.id)
 
         self.send_notification(
             job.id, job.notification_email, job.notification_type, job.status,
@@ -342,17 +345,16 @@ class ListenerService(MashService):
             extra=metadata
         )
 
-    def _publish_message(self, job):
+    def _publish_message(self, message, job_id):
         """
-        Publish status message to next service exchange.
+        Publish message to next service exchange.
         """
-        message = self._get_status_message(job)
         try:
             self.publish_job_result(self.next_service, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
-                extra=job.get_job_id()
+                extra={'job_id': job_id}
             )
 
     def _schedule_job(self, job_id):
@@ -429,11 +431,30 @@ class ListenerService(MashService):
         - Message should have an id and status.
         - The job should exist.
         - The status should be success.
+
+        Otherwise if the message is a DELETE message delete the job
+        if it exists and pass the message to the next service.
         """
         for arg in ['id', 'status']:
             if arg not in listener_msg:
                 self.log.error('{0} is required in listener message.'.format(arg))
                 return False
+
+        if listener_msg['status'] == DELETE:
+            self.log.info(
+                'Received a job delete message for: {0}.'.format(
+                    listener_msg['id']
+                )
+            )
+
+            if listener_msg['id'] in self.jobs:
+                self._delete_job(listener_msg['id'])
+
+            key = '{0}_result'.format(self.service_exchange)
+            message = JsonFormat.json_message({key: listener_msg})
+            self._publish_message(message, listener_msg['id'])
+
+            return False
 
         if listener_msg['id'] not in self.jobs:
             self.log.error(

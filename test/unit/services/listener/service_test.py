@@ -159,8 +159,6 @@ class TestListenerService(object):
     def test_service_cleanup_job(
         self, mock_publish_message, mock_delete_job
     ):
-        self.service.scheduler.remove_job.side_effect = JobLookupError('1')
-
         job = Mock()
         job.id = '1'
         job.status = 'success'
@@ -174,9 +172,12 @@ class TestListenerService(object):
             'Failed upstream.',
             extra={'job_id': '1'}
         )
-        self.service.scheduler.remove_job.assert_called_once_with('1')
         mock_delete_job.assert_called_once_with('1')
-        mock_publish_message.assert_called_once_with(job)
+        msg = {"replication_result": {"id": "1", "status": 1}}
+        mock_publish_message.assert_called_once_with(
+            JsonFormat.json_message(msg),
+            '1'
+        )
 
     def test_service_add_job_exists(self):
         job = Mock()
@@ -237,6 +238,7 @@ class TestListenerService(object):
         job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
+        self.service.scheduler.remove_job.side_effect = JobLookupError('1')
         self.service._delete_job('1')
 
         self.service.log.info.assert_called_once_with(
@@ -322,12 +324,13 @@ class TestListenerService(object):
             ' line 1 column 1 (char 0).'
         )
 
+    @patch.object(ListenerService, '_get_status_message')
     @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result(
         self, mock_publish_message, mock_delete_job,
-        mock_send_email_notification
+        mock_send_email_notification, mock_get_status_msg
     ):
         event = Mock()
         event.job_id = '1'
@@ -343,6 +346,8 @@ class TestListenerService(object):
         job.listener_msg = msg
         job.get_job_id.return_value = {'job_id': '1'}
 
+        mock_get_status_msg.return_value = '{"status": "message"}'
+
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
 
@@ -351,25 +356,32 @@ class TestListenerService(object):
             'Pass[1]: replication successful.',
             extra={'job_id': '1'}
         )
-        mock_publish_message.assert_called_once_with(job)
+        mock_publish_message.assert_called_once_with(
+            '{"status": "message"}',
+            '1'
+        )
         msg.ack.assert_called_once_with()
 
+    @patch.object(ListenerService, '_get_status_message')
     @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result_exception(
         self, mock_publish_message, mock_delete_job,
-        mock_send_email_notification
+        mock_send_email_notification, mock_get_status_msg
     ):
         event = Mock()
         event.job_id = '1'
         event.exception = 'Image not found!'
 
         job = Mock()
+        job.id = '1'
         job.utctime = 'now'
         job.status = 2
         job.iteration_count = 1
         job.get_job_id.return_value = {'job_id': '1'}
+
+        mock_get_status_msg.return_value = '{"status": "message"}'
 
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
@@ -379,7 +391,10 @@ class TestListenerService(object):
             'Pass[1]: Exception in replication: Image not found!',
             extra={'job_id': '1'}
         )
-        mock_publish_message.assert_called_once_with(job)
+        mock_publish_message.assert_called_once_with(
+            '{"status": "message"}',
+            '1'
+        )
 
     @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
@@ -407,7 +422,11 @@ class TestListenerService(object):
             extra={'job_id': '1'}
         )
         mock_delete_job('1')
-        mock_publish_message.assert_called_once_with(job)
+        msg = {"replication_result": {"id": "1", "status": "error"}}
+        mock_publish_message.assert_called_once_with(
+            JsonFormat.json_message(msg),
+            '1'
+        )
 
     def test_service_process_job_missed(self):
         event = Mock()
@@ -443,10 +462,10 @@ class TestListenerService(object):
         job.cloud_image_name = 'image123'
 
         mock_get_status_message.return_value = self.status_message
-        self.service._publish_message(job)
+        self.service._publish_message('{"test": "message"}', job.id)
         mock_publish.assert_called_once_with(
             'publisher',
-            self.status_message
+            '{"test": "message"}'
         )
 
     @patch.object(ListenerService, '_get_status_message')
@@ -462,9 +481,9 @@ class TestListenerService(object):
         mock_get_status_message.return_value = self.error_message
         mock_publish.side_effect = AMQPError('Unable to connect to RabbitMQ.')
 
-        self.service._publish_message(job)
+        self.service._publish_message('{"test": "message"}', job.id)
         self.service.log.warning.assert_called_once_with(
-            'Message not received: {0}'.format(self.error_message),
+            'Message not received: {0}'.format('{"test": "message"}'),
             extra={'job_id': '1'}
         )
 
@@ -586,6 +605,31 @@ class TestListenerService(object):
 
         result = self.service._validate_base_msg(
             message, ['cloud_image_name']
+        )
+        assert result is False
+
+    @patch.object(ListenerService, '_publish_message')
+    @patch.object(ListenerService, '_delete_job')
+    def test_service_validate_base_msg_delete_job(
+        self,
+        mock_delete_job,
+        mock_publish_message
+    ):
+        message = {
+            'id': '1',
+            'status': 'delete'
+        }
+        job = MagicMock()
+        self.service.jobs = {'1': job}
+
+        result = self.service._validate_base_msg(
+            message, ['cloud_image_name']
+        )
+        mock_delete_job.assert_called_once_with('1')
+        msg = {"replication_result": {"id": "1", "status": 'delete'}}
+        mock_publish_message.assert_called_once_with(
+            JsonFormat.json_message(msg),
+            '1'
         )
         assert result is False
 
