@@ -164,7 +164,7 @@ class AzurePublisherJob(MashJob):
         auth_file, blob_name, container, resource_group, storage_account
     ):
         """
-        Return a SAS url that starts 1 day in past and expires in 3 weeks.
+        Return a SAS url that starts 1 day in past and expires in 92 days.
         """
         pbs = get_classic_page_blob_service(
             auth_file,
@@ -177,7 +177,7 @@ class AzurePublisherJob(MashJob):
             blob_name,
             container,
             permissions='rl',
-            expire_hours=24 * 21,
+            expire_hours=24 * 92,
             start_hours=24
         )
 
