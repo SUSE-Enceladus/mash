@@ -80,7 +80,11 @@ class EC2DeprecationJob(MashJob):
                 try:
                     result = deprecator.deprecate_images()
                     if result is False:
-                        raise Exception('No images to deprecate.')
+                        self.send_log(
+                            'Unable to deprecate image in {region}, '
+                            'no image found.'.format(region=region),
+                            False
+                        )
                 except Exception as error:
                     raise MashDeprecationException(
                         'Error deprecating image {0} in {1}. {2}'.format(
