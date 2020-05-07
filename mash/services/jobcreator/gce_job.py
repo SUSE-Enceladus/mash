@@ -124,7 +124,8 @@ class GCEJob(BaseJob):
                 self.test_fallback_regions
 
         if self.image_project:
-            testing_message['image_project'] = self.image_project
+            testing_message['testing_job']['image_project'] = \
+                self.image_project
 
         testing_message['testing_job'].update(self.base_message)
 
