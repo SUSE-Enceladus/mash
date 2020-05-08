@@ -65,13 +65,12 @@ class TestEC2DeprecationJob(object):
         self.job.run_job()
         assert self.job.status == 'success'
 
-    @patch.object(EC2DeprecationJob, 'send_log')
     @patch('mash.services.deprecation.ec2_job.EC2DeprecateImg')
-    def test_deprecate_exception(
-        self, mock_ec2_deprecate_image, mock_send_log
-    ):
+    def test_deprecate_exception(self, mock_ec2_deprecate_image):
         deprecation = Mock()
-        deprecation.deprecate_images.return_value = False
+        deprecation.deprecate_images.side_effect = Exception(
+            'No images to deprecate.'
+        )
         mock_ec2_deprecate_image.return_value = deprecation
 
         msg = 'Error deprecating image old_image_123 in us-east-2.' \
@@ -79,3 +78,19 @@ class TestEC2DeprecationJob(object):
         with raises(MashDeprecationException) as e:
             self.job.run_job()
         assert msg == str(e.value)
+
+    @patch.object(EC2DeprecationJob, 'send_log')
+    @patch('mash.services.deprecation.ec2_job.EC2DeprecateImg')
+    def test_deprecate_false(
+        self, mock_ec2_deprecate_image, mock_send_log
+    ):
+        deprecation = Mock()
+        deprecation.deprecate_images.return_value = False
+        mock_ec2_deprecate_image.return_value = deprecation
+
+        self.job.run_job()
+
+        mock_send_log.assert_called_once_with(
+            'Unable to deprecate image in us-east-2, no image found.',
+            False
+        )
