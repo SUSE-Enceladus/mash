@@ -34,7 +34,7 @@ class TestAzureTestingJob(object):
             AzureTestingJob(self.job_config, self.config)
 
     @patch('mash.services.testing.azure_job.delete_image')
-    @patch('mash.services.testing.azure_job.delete_page_blob')
+    @patch('mash.services.testing.azure_job.delete_blob')
     @patch('mash.services.testing.azure_job.os')
     @patch('mash.services.testing.azure_job.create_ssh_key_pair')
     @patch('mash.services.testing.azure_job.random')

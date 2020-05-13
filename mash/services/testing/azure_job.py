@@ -24,7 +24,7 @@ from mash.mash_exceptions import MashTestingException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.testing.utils import process_test_result
-from mash.utils.azure import delete_image, delete_page_blob
+from mash.utils.azure import delete_image, delete_blob
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
 from mash.services.testing.img_proof_helper import img_proof_test
 
@@ -141,12 +141,13 @@ class AzureTestingJob(MashJob):
                     self.resource_group,
                     self.cloud_image_name
                 )
-                delete_page_blob(
+                delete_blob(
                     auth_file,
                     blob_name,
                     self.container,
                     self.resource_group,
-                    self.storage_account
+                    self.storage_account,
+                    is_page_blob=True
                 )
             except Exception as error:
                 self.log_callback.warning(

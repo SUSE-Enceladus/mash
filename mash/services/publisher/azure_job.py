@@ -18,7 +18,7 @@
 
 from mash.utils.azure import (
     get_blob_url,
-    get_classic_page_blob_service,
+    get_classic_blob_service,
     publish_cloud_partner_offer,
     put_cloud_partner_offer_doc,
     request_cloud_partner_offer_doc,
@@ -165,10 +165,11 @@ class AzurePublisherJob(MashJob):
         """
         Return a SAS url that starts 1 day in past and expires in 92 days.
         """
-        pbs = get_classic_page_blob_service(
+        pbs = get_classic_blob_service(
             auth_file,
             resource_group,
-            storage_account
+            storage_account,
+            is_page_blob=True
         )
 
         url = get_blob_url(

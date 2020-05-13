@@ -21,7 +21,7 @@ from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
-from mash.utils.azure import upload_azure_image
+from mash.utils.azure import upload_azure_file
 
 
 class AzureUploaderJob(MashJob):
@@ -56,7 +56,7 @@ class AzureUploaderJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        upload_azure_image(
+        upload_azure_file(
             blob_name,
             self.container,
             self.image_file,
@@ -64,7 +64,8 @@ class AzureUploaderJob(MashJob):
             self.config.get_azure_max_workers(),
             self.storage_account,
             credentials=credentials,
-            resource_group=self.resource_group
+            resource_group=self.resource_group,
+            is_page_blob=True
         )
 
         self.source_regions = {

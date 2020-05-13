@@ -67,10 +67,10 @@ class TestAzureUploaderJob(object):
         with raises(MashUploadException):
             AzureUploaderJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.azure_job.upload_azure_image')
+    @patch('mash.services.uploader.azure_job.upload_azure_file')
     @patch('builtins.open')
     def test_upload(
-        self, mock_open, mock_upload_azure_image
+        self, mock_open, mock_upload_azure_file
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
@@ -78,7 +78,7 @@ class TestAzureUploaderJob(object):
 
         self.job.run_job()
 
-        mock_upload_azure_image.assert_called_once_with(
+        mock_upload_azure_file.assert_called_once_with(
             'name.vhd',
             'container',
             'file.vhdfixed.xz',
@@ -86,5 +86,6 @@ class TestAzureUploaderJob(object):
             8,
             'storage',
             credentials=self.credentials['test'],
-            resource_group='group_name'
+            resource_group='group_name',
+            is_page_blob=True
         )

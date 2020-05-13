@@ -133,12 +133,12 @@ class TestAzurePublisherJob(object):
         )
 
     @patch('mash.services.publisher.azure_job.get_blob_url')
-    @patch('mash.services.publisher.azure_job.get_classic_page_blob_service')
+    @patch('mash.services.publisher.azure_job.get_classic_blob_service')
     def test_get_blob_url(
-        self, mock_get_pbs, mock_get_blob_url
+        self, mock_get_bs, mock_get_blob_url
     ):
-        pbs = Mock()
-        mock_get_pbs.return_value = pbs
+        bs = Mock()
+        mock_get_bs.return_value = bs
         mock_get_blob_url.return_value = 'blob/url'
 
         url = self.job._get_blob_url(

@@ -10,21 +10,22 @@ from mash.mash_exceptions import MashAzureUtilsException
 from mash.utils.azure import (
     acquire_access_token,
     delete_image,
-    delete_page_blob,
+    delete_blob,
     deprecate_image_in_offer_doc,
     get_classic_storage_account_keys,
     get_blob_url,
     go_live_with_cloud_partner_offer,
     copy_blob_to_classic_storage,
-    get_page_blob_service_with_account_keys,
-    get_classic_page_blob_service,
+    get_blob_service_with_account_keys,
+    get_classic_blob_service,
     log_operation_response_status,
     publish_cloud_partner_offer,
     put_cloud_partner_offer_doc,
     request_cloud_partner_offer_doc,
     update_cloud_partner_offer_doc,
     wait_on_cloud_partner_operation,
-    upload_azure_image
+    upload_azure_file,
+    get_blob_service_with_sas_token
 )
 
 
@@ -113,9 +114,11 @@ def test_get_blob_url():
 
 
 @patch('mash.utils.azure.get_client_from_auth_file')
+@patch('mash.utils.azure.BlockBlobService')
 @patch('mash.utils.azure.PageBlobService')
-def test_get_page_blob_service_with_account_keys(
-    mock_page_blob_service, mock_get_client_from_auth
+def test_get_blob_service_with_account_keys(
+    mock_page_blob_service, mock_block_blob_service,
+    mock_get_client_from_auth
 ):
     storage_client = MagicMock()
     mock_get_client_from_auth.return_value = storage_client
@@ -128,14 +131,15 @@ def test_get_page_blob_service_with_account_keys(
     key_list.keys = [key1, key2]
     storage_client.storage_accounts.list_keys.return_value = key_list
 
-    page_blob_service = MagicMock()
-    mock_page_blob_service.return_value = page_blob_service
+    blob_service = MagicMock()
+    mock_page_blob_service.return_value = blob_service
+    mock_block_blob_service.return_value = blob_service
 
-    service = get_page_blob_service_with_account_keys(
-        'test/data/azure_creds.json', 'sa1', 'rg1'
+    service = get_blob_service_with_account_keys(
+        'test/data/azure_creds.json', 'sa1', 'rg1', is_page_blob=True
     )
 
-    assert service == page_blob_service
+    assert service == blob_service
     storage_client.storage_accounts.list_keys.assert_called_once_with(
         'rg1', 'sa1'
     )
@@ -143,35 +147,49 @@ def test_get_page_blob_service_with_account_keys(
         account_name='sa1', account_key='12345678'
     )
 
+    service = get_blob_service_with_account_keys(
+        'test/data/azure_creds.json', 'sa1', 'rg1'
+    )
+    assert service == blob_service
+
 
 @patch('mash.utils.azure.get_classic_storage_account_keys')
+@patch('mash.utils.azure.BlockBlobService')
 @patch('mash.utils.azure.PageBlobService')
-def test_get_classic_page_blob_service(
-    mock_page_blob_service, mock_get_classic_storage_account_keys
+def test_get_classic_blob_service(
+    mock_page_blob_service, mock_block_blob_service,
+    mock_get_classic_storage_account_keys
 ):
     keys = {'primaryKey': '12345678'}
     mock_get_classic_storage_account_keys.return_value = keys
 
-    page_blob_service = MagicMock()
-    mock_page_blob_service.return_value = page_blob_service
+    blob_service = MagicMock()
+    mock_page_blob_service.return_value = blob_service
+    mock_block_blob_service.return_value = blob_service
 
-    service = get_classic_page_blob_service(
-        'test/data/azure_creds.json', 'rg1', 'sa1'
+    service = get_classic_blob_service(
+        'test/data/azure_creds.json', 'rg1', 'sa1', is_page_blob=True
     )
 
-    assert service == page_blob_service
+    assert service == blob_service
     mock_page_blob_service.assert_called_once_with(
         account_name='sa1', account_key='12345678'
     )
 
+    service = get_classic_blob_service(
+        'test/data/azure_creds.json', 'rg1', 'sa1'
+    )
+
+    assert service == blob_service
+
 
 @patch('mash.utils.azure.get_blob_url')
-@patch('mash.utils.azure.get_page_blob_service_with_account_keys')
-@patch('mash.utils.azure.get_classic_page_blob_service')
+@patch('mash.utils.azure.get_blob_service_with_account_keys')
+@patch('mash.utils.azure.get_classic_blob_service')
 @patch('mash.utils.azure.time.sleep')
 def test_copy_blob_to_classic_storage(
-    mock_time, mock_get_classic_page_blob_service,
-    mock_get_page_blob_service, mock_get_blob_url
+    mock_time, mock_get_classic_blob_service,
+    mock_get_blob_service, mock_get_blob_url
 ):
     mock_get_blob_url.return_value = 'https://test/url/?token123'
 
@@ -181,28 +199,28 @@ def test_copy_blob_to_classic_storage(
     props_copy = MagicMock()
     props_copy.properties.copy.status = 'success'
 
-    page_blob_service = MagicMock()
-    page_blob_service.copy_blob.return_value = copy
-    page_blob_service.get_blob_properties.return_value = props_copy
-    mock_get_classic_page_blob_service.return_value = page_blob_service
+    blob_service = MagicMock()
+    blob_service.copy_blob.return_value = copy
+    blob_service.get_blob_properties.return_value = props_copy
+    mock_get_classic_blob_service.return_value = blob_service
 
-    mock_get_page_blob_service.return_value = page_blob_service
+    mock_get_blob_service.return_value = blob_service
 
     copy_blob_to_classic_storage(
         'test/data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
-        'dc2', 'drg2', 'dsa2'
+        'dc2', 'drg2', 'dsa2', is_page_blob=True
     )
 
     mock_get_blob_url.assert_called_once_with(
-        page_blob_service, 'blob1', 'sc1'
+        blob_service, 'blob1', 'sc1'
     )
 
 
 @patch('mash.utils.azure.get_blob_url')
-@patch('mash.utils.azure.get_page_blob_service_with_account_keys')
-@patch('mash.utils.azure.get_classic_page_blob_service')
+@patch('mash.utils.azure.get_blob_service_with_account_keys')
+@patch('mash.utils.azure.get_classic_blob_service')
 def test_copy_blob_to_classic_storage_failed(
-    mock_get_classic_page_blob_service, mock_get_page_blob_service,
+    mock_get_classic_blob_service, mock_get_blob_service,
     mock_get_blob_url
 ):
     mock_get_blob_url.return_value = 'https://test/url/?token123'
@@ -210,29 +228,29 @@ def test_copy_blob_to_classic_storage_failed(
     copy = MagicMock()
     copy.status = 'failed'
 
-    page_blob_service = MagicMock()
-    page_blob_service.copy_blob.return_value = copy
-    mock_get_classic_page_blob_service.return_value = page_blob_service
+    blob_service = MagicMock()
+    blob_service.copy_blob.return_value = copy
+    mock_get_classic_blob_service.return_value = blob_service
 
     with raises(MashAzureUtilsException) as error:
         copy_blob_to_classic_storage(
             'test/data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
-            'dc2', 'drg2', 'dsa2'
+            'dc2', 'drg2', 'dsa2', is_page_blob=True
         )
 
     assert str(error.value) == 'Azure blob copy failed.'
 
 
-@patch('mash.utils.azure.get_page_blob_service_with_account_keys')
-def test_delete_page_blob(mock_get_page_blob_service):
-    page_blob_service = MagicMock()
-    mock_get_page_blob_service.return_value = page_blob_service
+@patch('mash.utils.azure.get_blob_service_with_account_keys')
+def test_delete_blob(mock_get_blob_service):
+    blob_service = MagicMock()
+    mock_get_blob_service.return_value = blob_service
 
-    delete_page_blob(
+    delete_blob(
         'test/data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
     )
 
-    page_blob_service.delete_blob.assert_called_once_with(
+    blob_service.delete_blob.assert_called_once_with(
         'container1',
         'blob1'
     )
@@ -557,7 +575,7 @@ def test_deprecate_image_in_offer_invalid():
 @patch('mash.utils.azure.PageBlobService')
 @patch('mash.utils.azure.FileType')
 @patch('mash.utils.azure.lzma')
-def test_upload_azure_image(
+def test_upload_azure_file(
     mock_lzma,
     mock_FileType,
     mock_PageBlobService,
@@ -612,7 +630,7 @@ def test_upload_azure_image(
         'managementEndpointUrl': 'https://management.core.windows.net/'
     }
 
-    upload_azure_image(
+    upload_azure_file(
         'name.vhd',
         'container',
         'file.vhdfixed.xz',
@@ -620,7 +638,8 @@ def test_upload_azure_image(
         8,
         'storage',
         credentials=credentials,
-        resource_group='group_name'
+        resource_group='group_name',
+        is_page_blob=True
     )
 
     mock_get_client_from_auth_file.assert_called_once_with(
@@ -642,14 +661,15 @@ def test_upload_azure_image(
 
     # Test sas token upload
     mock_PageBlobService.reset_mock()
-    upload_azure_image(
+    upload_azure_file(
         'name.vhd',
         'container',
         'file.vhdfixed.xz',
         5,
         8,
         'storage',
-        sas_token='sas_token'
+        sas_token='sas_token',
+        is_page_blob=True
     )
     mock_PageBlobService.assert_called_once_with(
         account_name='storage',
@@ -662,7 +682,7 @@ def test_upload_azure_image(
 
     # Assert raises exception if create blob fails
     with raises(MashAzureUtilsException):
-        upload_azure_image(
+        upload_azure_file(
             'name.vhd',
             'container',
             'file.vhdfixed.xz',
@@ -670,16 +690,26 @@ def test_upload_azure_image(
             8,
             'storage',
             credentials=credentials,
-            resource_group='group_name'
+            resource_group='group_name',
+            is_page_blob=True
         )
 
     # Assert raises exception if missing required args
     with raises(MashAzureUtilsException):
-        upload_azure_image(
+        upload_azure_file(
             'name.vhd',
             'container',
             'file.vhdfixed.xz',
             5,
             8,
-            'storage'
+            'storage',
+            is_page_blob=True
         )
+
+
+@patch('mash.utils.azure.BlockBlobService')
+def test_get_blob_service_with_sas_token(mock_block_blob_service):
+    blob_service = MagicMock()
+    mock_block_blob_service.return_value = blob_service
+    service = get_blob_service_with_sas_token('storage', 'sas_token')
+    assert service == blob_service
