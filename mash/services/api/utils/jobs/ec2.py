@@ -49,7 +49,8 @@ def add_target_ec2_account(
     accounts,
     cloud_accounts,
     helper_images,
-    use_root_swap=None
+    use_root_swap=None,
+    skip_replication=False
 ):
     """
     Update job with account information.
@@ -57,16 +58,21 @@ def add_target_ec2_account(
     - Append any additional regions
     - Update ami for root swap if use_root_swap set
     """
-    regions = get_ec2_regions_by_partition(account.partition)
-
-    if account.additional_regions:
-        for region in account.additional_regions:
-            helper_images[region.name] = region.helper_image
-            regions.append(region.name)
-
     job_doc_data = cloud_accounts.get(account.name, {})
-    region = job_doc_data.get('region') or account.region
+    region_name = job_doc_data.get('region') or account.region
     subnet = job_doc_data.get('subnet') or account.subnet
+
+    if skip_replication:
+        regions = [region_name]
+        if account.additional_regions:  # In case an additional region is used
+            for region in account.additional_regions:
+                helper_images[region.name] = region.helper_image
+    else:
+        regions = get_ec2_regions_by_partition(account.partition)
+        if account.additional_regions:
+            for region in account.additional_regions:
+                helper_images[region.name] = region.helper_image
+                regions.append(region.name)
 
     if use_root_swap:
         try:
@@ -77,9 +83,9 @@ def add_target_ec2_account(
                 ' when using root swap.'.format(account.name)
             )
     else:
-        helper_image = helper_images[region]
+        helper_image = helper_images[region_name]
 
-    accounts[region] = {
+    accounts[region_name] = {
         'account': account.name,
         'target_regions': regions,
         'helper_image': helper_image,
@@ -134,7 +140,8 @@ def update_ec2_job_accounts(job_doc):
                 accounts,
                 cloud_accounts,
                 helper_images,
-                job_doc.get('use_root_swap')
+                job_doc.get('use_root_swap'),
+                job_doc.get('skip_replication', False)
             )
 
     if 'cloud_groups' in job_doc:
