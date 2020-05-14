@@ -26,6 +26,7 @@ from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
 from mash.services.uploader.azure_job import AzureUploaderJob
+from mash.services.uploader.azure_raw_job import AzureRawUploaderJob
 from mash.services.uploader.azure_sas_job import AzureSASUploaderJob
 from mash.services.uploader.gce_job import GCEUploaderJob
 from mash.services.no_op_job import NoOpJob
@@ -49,6 +50,7 @@ def main():
             service_name=service_name,
             job_types={
                 'azure': AzureUploaderJob,
+                'azure_raw': AzureRawUploaderJob,
                 'azure_sas': AzureSASUploaderJob,
                 'ec2': NoOpJob,
                 's3bucket': S3BucketUploaderJob,

@@ -65,7 +65,7 @@ class MashJob(object):
         """
         return {'job_id': self.id}
 
-    def request_credentials(self, accounts):
+    def request_credentials(self, accounts, cloud=None):
         """
         Request credentials from credential service.
 
@@ -75,7 +75,7 @@ class MashJob(object):
             return
 
         data = {
-            'cloud': self.cloud,
+            'cloud': cloud or self.cloud,
             'cloud_accounts': accounts,
             'requesting_user': self.requesting_user
         }
