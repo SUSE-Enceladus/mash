@@ -25,5 +25,6 @@
   "notification_email": "test@fake.com",
   "conditions_wait_time": 500,
   "disallow_licenses": ["MIT"],
-  "disallow_packages": ["*-mini"]
+  "disallow_packages": ["*-mini"],
+  "share_snapshot_with": "123456789012"
 }

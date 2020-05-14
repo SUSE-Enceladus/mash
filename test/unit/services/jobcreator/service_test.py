@@ -189,6 +189,7 @@ class TestJobCreatorService(object):
         check_base_attrs(data)
         assert data['allow_copy'] is False
         assert data['share_with'] == 'all'
+        assert data['share_snapshot_with'] == '123456789012'
 
         for region in data['publish_regions']:
             if region['account'] == 'test-aws-gov':

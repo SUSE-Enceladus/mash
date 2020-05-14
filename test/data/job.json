@@ -31,5 +31,6 @@
   "raw_image_upload_account": "account",
   "raw_image_upload_location": "location",
   "disallow_licenses": ["MIT"],
-  "disallow_packages": ["*-mini"]
+  "disallow_packages": ["*-mini"],
+  "share_snapshot_with": "123456789012"
 }

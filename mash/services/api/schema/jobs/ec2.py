@@ -114,6 +114,14 @@ ec2_job_message['properties']['skip_replication'] = {
                    'the image that is uploaded will not be replicated'
                    'to any regions.'
 }
+ec2_job_message['properties']['share_snapshot_with'] = {
+    'type': 'string',
+    'format': 'regex',
+    'pattern': '^[0-9]{12}(,[0-9]{12})*$',
+    'example': '123456789012,098765432109',
+    'description': 'A comma-separated list of accounts to share the '
+                   'image snapshot with.'
+}
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},
