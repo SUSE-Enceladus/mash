@@ -264,6 +264,19 @@ base_job_message = {
                            'the image is tested once for each firmware '
                            'setting.'
         },
+        'additional_uploads': {
+            'type': 'array',
+            'items': {
+                'type': 'string',
+                'enum': ['sha256', 'sha256.asc']
+            },
+            'example': ['sha256.asc'],
+            'description': 'A list of additional image artifacts to upload '
+                           'to the cloud provider bucket alongside the '
+                           'image tarball. This allows the checksum and/or '
+                           'signature to also be uploaded for image '
+                           'verification.'
+        }
     },
     'additionalProperties': False,
     'required': [
