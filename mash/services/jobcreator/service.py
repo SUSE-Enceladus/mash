@@ -74,7 +74,7 @@ class JobCreatorService(MashService):
         This will flush the job with the given id out of the pipeline.
         """
         self.log.info(
-            'Deleting job.'.format(job_id),
+            'Deleting job.',
             extra={'job_id': job_id}
         )
 

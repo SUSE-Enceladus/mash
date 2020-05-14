@@ -128,7 +128,7 @@ class OBSImageBuildResultService(MashService):
         elif job_data.get('obs_job_delete'):
             job_id = job_data['obs_job_delete']
             self.log.info(
-                'Deleting Job'.format(job_id),
+                'Deleting Job',
                 extra={'job_id': job_id}
             )
             result = self._delete_job(job_id)
