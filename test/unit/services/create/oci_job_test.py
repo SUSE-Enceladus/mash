@@ -39,6 +39,7 @@ class TestOCICreateJob(object):
         }
 
         self.job = OCICreateJob(job_doc, self.config)
+        self.job._log_callback = Mock()
         self.job.credentials = self.credentials
 
     def test_post_init_incomplete_arguments(self):

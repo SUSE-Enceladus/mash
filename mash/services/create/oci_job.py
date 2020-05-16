@@ -61,7 +61,7 @@ class OCICreateJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Creating image.')
+        self.log_callback.info('Creating image.')
 
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
@@ -117,7 +117,7 @@ class OCICreateJob(MashJob):
             'cloud_image_name': cloud_image_name,
             'image_id': response.data.id
         }
-        self.send_log(
+        self.log_callback.info(
             'Created image has ID: {0}.'.format(
                 object_name
             )

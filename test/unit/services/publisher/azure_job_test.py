@@ -1,5 +1,5 @@
 from pytest import raises
-from unittest.mock import call, Mock, patch
+from unittest.mock import call, Mock, patch, MagicMock
 
 from mash.mash_exceptions import MashPublisherException
 from mash.services.publisher.azure_job import AzurePublisherJob
@@ -52,6 +52,8 @@ class TestAzurePublisherJob(object):
             'cloud_image_name': 'New Image',
             'blob_name': 'New Image.vhd'
         }
+        self.log = MagicMock()
+        self.job._log_callback = self.log
 
     def test_publish_ec2_missing_key(self):
         del self.job_config['account']
@@ -68,10 +70,9 @@ class TestAzurePublisherJob(object):
         'mash.services.publisher.azure_job.request_cloud_partner_offer_doc'
     )
     @patch('mash.services.publisher.azure_job.create_json_file')
-    @patch.object(AzurePublisherJob, 'send_log')
     @patch.object(AzurePublisherJob, '_get_blob_url')
     def test_publish(
-        self, mock_get_blob_url, mock_send_log, mock_create_json_file,
+        self, mock_get_blob_url, mock_create_json_file,
         mock_request_doc, mock_put_doc, mock_publish_offer,
         mock_wait_on_operation
     ):
@@ -92,7 +93,7 @@ class TestAzurePublisherJob(object):
 
         self.job.run_job()
 
-        mock_send_log.assert_has_calls([
+        self.log.info.assert_has_calls([
             call('Publishing image for account: acnt1, using cloud partner API.'),
             call('Updated cloud partner offer doc for account: acnt1.'),
             call('Publishing finished for account: acnt1.')
@@ -103,10 +104,9 @@ class TestAzurePublisherJob(object):
         'mash.services.publisher.azure_job.request_cloud_partner_offer_doc'
     )
     @patch('mash.services.publisher.azure_job.create_json_file')
-    @patch.object(AzurePublisherJob, 'send_log')
     @patch.object(AzurePublisherJob, '_get_blob_url')
     def test_publish_exception(
-        self, mock_get_blob_url, mock_send_log, mock_create_json_file,
+        self, mock_get_blob_url, mock_create_json_file,
         mock_request_doc, mock_put_doc
     ):
         self.job.vm_images_key = None
@@ -125,13 +125,12 @@ class TestAzurePublisherJob(object):
 
         self.job.run_job()
 
-        mock_send_log.assert_has_calls([
-            call('Publishing image for account: acnt1, using cloud partner API.'),
-            call(
-                'There was an error publishing image in acnt1: Invalid doc!',
-                False
-            )
-        ])
+        self.log.info.assert_called_once_with(
+            'Publishing image for account: acnt1, using cloud partner API.'
+        )
+        self.log.error.assert_called_once_with(
+            'There was an error publishing image in acnt1: Invalid doc!'
+        )
 
     @patch('mash.services.publisher.azure_job.get_blob_url')
     @patch('mash.services.publisher.azure_job.get_classic_page_blob_service')

@@ -49,7 +49,7 @@ class AzureSASUploaderJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Uploading image.')
+        self.log_callback.info('Uploading image.')
 
         if self.cloud_image_name:
             self.cloud_image_name = format_string_with_date(
@@ -71,7 +71,7 @@ class AzureSASUploaderJob(MashJob):
             build.group(1),
             sas_token=build.group(3)
         )
-        self.send_log(
+        self.log_callback.info(
             'Uploaded blob: {blob} using sas token.'.format(
                 blob=self.blob_name
             )

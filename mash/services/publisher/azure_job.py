@@ -81,7 +81,7 @@ class AzurePublisherJob(MashJob):
         self.blob_name = self.source_regions['blob_name']
 
         with create_json_file(credential) as auth_file:
-            self.send_log(
+            self.log_callback.info(
                 'Publishing image for account: {},'
                 ' using cloud partner API.'.format(
                     self.account
@@ -125,7 +125,7 @@ class AzurePublisherJob(MashJob):
                     self.offer_id,
                     self.publisher_id
                 )
-                self.send_log(
+                self.log_callback.info(
                     'Updated cloud partner offer doc for account: {}.'.format(
                         self.account
                     )
@@ -141,21 +141,20 @@ class AzurePublisherJob(MashJob):
                     wait_on_cloud_partner_operation(
                         credential,
                         operation,
-                        self.send_log
+                        self.log_callback
                     )
 
-                self.send_log(
+                self.log_callback.info(
                     'Publishing finished for account: {}.'.format(
                         self.account
                     )
                 )
             except Exception as error:
-                self.send_log(
+                self.log_callback.error(
                     'There was an error publishing image in {0}: {1}'.format(
                         self.account,
                         error
-                    ),
-                    False
+                    )
                 )
                 self.status = FAILED
 

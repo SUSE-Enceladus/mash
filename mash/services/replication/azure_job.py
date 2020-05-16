@@ -77,7 +77,7 @@ class AzureReplicationJob(MashJob):
         self.blob_name = self.source_regions['blob_name']
 
         with create_json_file(credential) as auth_file:
-            self.send_log(
+            self.log_callback.info(
                 'Copying image for account: {},'
                 ' to classic storage container.'.format(
                     self.account
@@ -97,7 +97,7 @@ class AzureReplicationJob(MashJob):
                 )
 
                 if self.cleanup_images:
-                    self.send_log(
+                    self.log_callback.info(
                         'Removing ARM image and page blob for account: {}.'.format(
                             self.account
                         )
@@ -115,11 +115,10 @@ class AzureReplicationJob(MashJob):
                         self.source_storage_account
                     )
             except Exception as error:
-                self.send_log(
+                self.log_callback.error(
                     'There was an error copying image blob in {0}: {1}'.format(
                         self.account,
                         error
-                    ),
-                    False
+                    )
                 )
                 self.status = FAILED

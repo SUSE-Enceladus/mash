@@ -57,13 +57,13 @@ class S3BucketUploaderJob(MashJob):
             self._last_percentage_logged = int(
                 percent_transferred - (percent_transferred % self._percentage_log_step)
             )
-            self.send_log('Raw image {progress}% uploaded.'.format(
+            self.log_callback.info('Raw image {progress}% uploaded.'.format(
                 progress=str(self._last_percentage_logged)
             ))
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Uploading raw image.')
+        self.log_callback.info('Uploading raw image.')
 
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]

@@ -62,7 +62,7 @@ class EC2CreateJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Creating image.')
+        self.log_callback.info('Creating image.')
 
         self.cloud_image_name = format_string_with_date(
             self.base_cloud_image_name
@@ -179,7 +179,7 @@ class EC2CreateJob(MashJob):
                     )
 
                 self.source_regions[region] = ami_id
-                self.send_log(
+                self.log_callback.info(
                     'Created image has ID: {0} in region {1}'.format(
                         ami_id, region
                     )

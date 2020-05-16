@@ -51,6 +51,8 @@ class TestAzureReplicationJob(object):
             'cloud_image_name': 'image123',
             'blob_name': 'image123.vhd'
         }
+        self.log = Mock()
+        self.job._log_callback = self.log
 
     def test_replicate_ec2_missing_key(self):
         del self.job_config['account']
@@ -64,9 +66,8 @@ class TestAzureReplicationJob(object):
     @patch('mash.services.replication.azure_job.delete_image')
     @patch('mash.services.replication.azure_job.create_json_file')
     @patch('mash.services.replication.azure_job.copy_blob_to_classic_storage')
-    @patch.object(AzureReplicationJob, 'send_log')
     def test_replicate(
-        self, mock_send_log, mock_copy_blob, mock_create_json_file,
+        self, mock_copy_blob, mock_create_json_file,
         mock_delete_image, mock_delete_page_blob
     ):
         mock_delete_page_blob.side_effect = Exception('Cannot delete image.')
@@ -75,10 +76,13 @@ class TestAzureReplicationJob(object):
 
         self.job.run_job()
 
-        mock_send_log.has_calls([
+        self.log.info.assert_has_calls([
             call('Copying image for account: acnt1, to classic storage container.'),
-            call('There was an error copying image blob in acnt1.', False)
+            call('Removing ARM image and page blob for account: acnt1.')
         ])
+        self.log.error.assert_called_once_with(
+            'There was an error copying image blob in acnt1: Cannot delete image.'
+        )
         mock_copy_blob.assert_called_once_with(
             '/tmp/file.auth', 'image123.vhd', 'container1', 'rg-1', 'sa1',
             'container2', 'rg-2', 'sa2'

@@ -53,7 +53,7 @@ class GCEUploaderJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Uploading image.')
+        self.log_callback.info('Uploading image.')
 
         self.cloud_image_name = format_string_with_date(
             self.base_cloud_image_name
@@ -81,7 +81,7 @@ class GCEUploaderJob(MashJob):
             'cloud_image_name': self.cloud_image_name,
             'object_name': object_name
         }
-        self.send_log(
+        self.log_callback.info(
             'Uploaded image: {0}, to the bucket named: {1}'.format(
                 object_name,
                 self.bucket

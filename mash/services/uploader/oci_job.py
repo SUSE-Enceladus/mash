@@ -56,7 +56,7 @@ class OCIUploaderJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Uploading image.')
+        self.log_callback.info('Uploading image.')
 
         self.cloud_image_name = format_string_with_date(
             self.base_cloud_image_name
@@ -97,7 +97,7 @@ class OCIUploaderJob(MashJob):
             'object_name': object_name,
             'namespace': namespace
         }
-        self.send_log(
+        self.log_callback.info(
             'Uploaded image: {0}, to the bucket named: {1}'.format(
                 object_name,
                 self.bucket
@@ -112,7 +112,7 @@ class OCIUploaderJob(MashJob):
             current_percent = int(
                 percent_transferred - (percent_transferred % self._progress_step)
             )
-            self.send_log('Image {progress}% uploaded.'.format(
+            self.log_callback.info('Image {progress}% uploaded.'.format(
                 progress=str(current_percent)
             ))
             self._next_percent += self._progress_step

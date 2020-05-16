@@ -98,7 +98,7 @@ class EC2TestingJob(MashJob):
         Tests image with img-proof and update status and results.
         """
         self.status = SUCCESS
-        self.send_log(
+        self.log_callback.info(
             'Running img-proof tests against image with '
             'type: {inst_type}.'.format(
                 inst_type=self.instance_type
@@ -147,7 +147,7 @@ class EC2TestingJob(MashJob):
                         'msg': str(traceback.format_exc())
                     }
 
-                status = process_test_result(result, self.send_log, region)
+                status = process_test_result(result, self.log_callback, region)
                 if status != SUCCESS:
                     self.status = status
 
@@ -173,7 +173,7 @@ class EC2TestingJob(MashJob):
                 )
 
     def cleanup_ec2_image(self, credentials, region, image_id):
-        self.send_log(
+        self.log_callback.info(
             'Cleaning up image: {0} in region: {1}.'.format(
                 image_id,
                 region
@@ -192,7 +192,6 @@ class EC2TestingJob(MashJob):
             ec2_remove_img.set_region(region)
             ec2_remove_img.remove_images()
         except Exception as error:
-            self.send_log(
-                'Failed to cleanup image: {0}'.format(error),
-                success=False
+            self.log_callback.warning(
+                'Failed to cleanup image: {0}'.format(error)
             )

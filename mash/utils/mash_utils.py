@@ -215,7 +215,7 @@ def setup_logfile(logfile):
 def get_logging_formatter():
     return logging.Formatter(
         '%(newline)s%(levelname)s %(asctime)s %(name)s%(newline)s'
-        '    %(job)s %(message)s'
+        '    %(job)s%(iteration)s%(message)s'
     )
 
 

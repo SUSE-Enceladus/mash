@@ -1,5 +1,5 @@
 from pytest import raises
-from unittest.mock import call, Mock, patch
+from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashReplicationException
 from mash.services.status_levels import FAILED
@@ -25,6 +25,7 @@ class TestEC2ReplicationJob(object):
 
         self.config = Mock()
         self.job = EC2ReplicationJob(self.job_config, self.config)
+        self.job._log_callback = Mock()
 
         self.job.credentials = {
             "test-aws": {
@@ -47,9 +48,8 @@ class TestEC2ReplicationJob(object):
     @patch('mash.services.replication.ec2_job.time')
     @patch.object(EC2ReplicationJob, '_wait_on_image')
     @patch.object(EC2ReplicationJob, '_replicate_to_region')
-    @patch.object(EC2ReplicationJob, 'send_log')
     def test_replicate(
-        self, mock_send_log, mock_replicate_to_region,
+        self, mock_replicate_to_region,
         mock_wait_on_image, mock_time
     ):
         mock_replicate_to_region.return_value = 'ami-54321'
@@ -57,13 +57,13 @@ class TestEC2ReplicationJob(object):
 
         self.job.run_job()
 
-        mock_send_log.assert_has_calls([
-            call(
-                'Replicating source region: us-east-1 to the following '
-                'regions: us-east-2.'
-            ),
-            call('Replication to us-east-2 region failed: Broken!')
-        ])
+        self.job._log_callback.info.assert_called_once_with(
+            'Replicating source region: us-east-1 to the following '
+            'regions: us-east-2.'
+        )
+        self.job._log_callback.warning.assert_called_once_with(
+            'Replication to us-east-2 region failed: Broken!'
+        )
 
         mock_replicate_to_region.assert_called_once_with(
             self.job.credentials['test-aws'], 'ami-12345',
@@ -168,10 +168,9 @@ class TestEC2ReplicationJob(object):
         )
 
     @patch('mash.services.replication.ec2_job.time')
-    @patch.object(EC2ReplicationJob, 'send_log')
     @patch('mash.services.replication.ec2_job.get_client')
     def test_replicate_wait_on_image_exception(
-        self, mock_get_client, mock_send_log, mock_sleep
+        self, mock_get_client, mock_sleep
     ):
         client = Mock()
         client.describe_images.side_effect = [

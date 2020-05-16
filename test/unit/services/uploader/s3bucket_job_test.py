@@ -48,6 +48,7 @@ class TestS3BucketUploaderJob(object):
         self.job.image_file = 'file.raw.gz'
         self.job.cloud_image_name = 'name'
         self.job.credentials = self.credentials
+        self.job._log_callback = Mock()
 
     def test_post_init_incomplete_arguments(self):
         job_doc = {
@@ -94,10 +95,9 @@ class TestS3BucketUploaderJob(object):
         with raises(MashUploadException):
             self.job.run_job()
 
-    @patch.object(S3BucketUploaderJob, 'send_log')
-    def test_log_progress(self, mock_send_log):
+    def test_log_progress(self):
         self.job._image_size = 100
         self.job._log_progress(100)
-        mock_send_log.assert_called_once_with(
+        self.job._log_callback.info.assert_called_once_with(
             'Raw image 100% uploaded.'
         )

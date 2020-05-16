@@ -338,7 +338,7 @@ def log_operation_response_status(response, log_callback):
     """
     for step in response['steps']:
         if step['status'] == 'inProgress':
-            log_callback(
+            log_callback.info(
                 '{0} {1}% complete.'.format(
                     step['stepName'],
                     str(step['progressPercentage'])

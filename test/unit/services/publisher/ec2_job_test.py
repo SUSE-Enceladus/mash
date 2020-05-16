@@ -25,6 +25,7 @@ class TestEC2PublisherJob(object):
 
         self.config = Mock()
         self.job = EC2PublisherJob(self.job_config, self.config)
+        self.job._log_callback = Mock()
         self.job.credentials = {
             'test-aws': {
                 'access_key_id': '123456',
@@ -57,10 +58,9 @@ class TestEC2PublisherJob(object):
         assert publisher.publish_images.call_count == 1
         assert self.job.status == 'success'
 
-    @patch.object(EC2PublisherJob, 'send_log')
     @patch('mash.services.publisher.ec2_job.EC2PublishImage')
     def test_publish_exception(
-        self, mock_ec2_publish_image, mock_send_log
+        self, mock_ec2_publish_image
     ):
         publisher = Mock()
         publisher.publish_images.side_effect = Exception('Failed to publish.')

@@ -30,21 +30,6 @@ class TestMashJob(object):
         assert job.cloud == 'ec2'
         assert job.utctime == 'now'
 
-    def test_send_log(self):
-        callback = Mock()
-
-        job = MashJob(self.job_config, self.config)
-        job.log_callback = callback
-        job.iteration_count = 0
-
-        job.send_log('Starting publish.')
-
-        callback.assert_called_once_with(
-            'Pass[0]: Starting publish.',
-            {'job_id': '1'},
-            True
-        )
-
     @patch('mash.services.mash_job.handle_request')
     def test_request_credentials(self, mock_handle_request):
         callback = Mock()
@@ -102,15 +87,18 @@ class TestMashJob(object):
         job.cloud_image_name = 'name123'
         assert job.cloud_image_name == 'name123'
 
-    def test_set_log_callback(self):
+    @patch('mash.services.mash_job.logging')
+    def test_set_log_callback(self, mock_logging):
         job = MashJob(self.job_config, self.config)
-        callback = Mock()
-        job.log_callback = callback
+        adapter = Mock()
+        mock_logging.LoggerAdapter.return_value = adapter
+        job.log_callback = Mock()
 
-        assert job.log_callback == callback
+        assert job.log_callback == adapter
 
     @patch.object(MashJob, 'run_job')
     def test_process_job(self, mock_run_job):
         job = MashJob(self.job_config, self.config)
+        job._log_callback = Mock()
         job.process_job()
         mock_run_job.assert_called_once_with()

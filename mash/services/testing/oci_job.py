@@ -84,7 +84,7 @@ class OCITestingJob(MashJob):
         Tests image with img-proof and update status and results.
         """
         self.status = SUCCESS
-        self.send_log(
+        self.log_callback.info(
             'Running img-proof tests against image with '
             'type: {inst_type}.'.format(
                 inst_type=self.instance_type
@@ -125,7 +125,7 @@ class OCITestingJob(MashJob):
 
         self.status = process_test_result(
             result,
-            self.send_log,
+            self.log_callback,
             self.region
         )
 
@@ -134,7 +134,7 @@ class OCITestingJob(MashJob):
             self.cleanup_image(credentials, image_id)
 
     def cleanup_image(self, credentials, image_id):
-        self.send_log(
+        self.log_callback.info(
             'Cleaning up image: {0} in region: {1}.'.format(
                 self.cloud_image_name,
                 self.region
@@ -169,7 +169,6 @@ class OCITestingJob(MashJob):
                 waiter_kwargs={'max_wait_seconds': self.max_oci_wait_seconds}
             )
         except Exception as error:
-            self.send_log(
-                'Failed to cleanup image: {0}'.format(error),
-                success=False
+            self.log_callback.warning(
+                'Failed to cleanup image: {0}'.format(error)
             )

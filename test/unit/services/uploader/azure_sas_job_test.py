@@ -27,6 +27,7 @@ class TestAzureSASUploaderJob(object):
 
         self.job = AzureSASUploaderJob(job_doc, self.config)
         self.job.image_file = 'file.vhdfixed.xz'
+        self.job._log_callback = MagicMock()
 
     def test_post_init_incomplete_arguments(self):
         job_doc = {

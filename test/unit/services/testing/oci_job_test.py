@@ -1,6 +1,6 @@
 import pytest
 
-from unittest.mock import call, Mock, patch
+from unittest.mock import Mock, patch
 
 from mash.services.testing.oci_job import OCITestingJob
 from mash.mash_exceptions import MashTestingException
@@ -40,9 +40,8 @@ class TestOCITestingJob(object):
     @patch('mash.services.testing.oci_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.testing.img_proof_helper.test_image')
-    @patch.object(OCITestingJob, 'send_log')
     def test_oci_image_proof(
-        self, mock_send_log, mock_test_image, mock_temp_file, mock_random,
+        self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_cleanup_image
     ):
         tmp_file = Mock()
@@ -64,6 +63,7 @@ class TestOCITestingJob(object):
         mock_os.path.exists.return_value = False
 
         job = OCITestingJob(self.job_config, self.config)
+        job._log_callback = Mock()
         mock_create_ssh_key_pair.assert_called_once_with('/var/lib/mash/ssh_key')
         job.credentials = {
             'test-oci': {
@@ -105,28 +105,27 @@ class TestOCITestingJob(object):
             enable_secure_boot=False,
             image_project=None
         )
-        mock_send_log.reset_mock()
+        job._log_callback.info.reset_mock()
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
 
         job.run_job()
 
-        assert mock_send_log.mock_calls[1] == call(
-            'Image tests failed in region: us-phoenix-1.', success=False
+        job._log_callback.warning.assert_called_once_with(
+            'Image tests failed in region: us-phoenix-1.'
         )
-        assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
-        assert mock_send_log.mock_calls[2][2] == {'success': False}
+        assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
 
     @patch('mash.services.testing.oci_job.create_ssh_key_pair')
     @patch('mash.services.testing.oci_job.ComputeClientCompositeOperations')
     @patch('mash.services.testing.oci_job.ComputeClient')
-    @patch.object(OCITestingJob, 'send_log')
     def test_oci_image_cleanup_after_test(
-        self, mock_send_log, mock_compute_client, mock_compute_client_composite,
+        self, mock_compute_client, mock_compute_client_composite,
         mock_create_ssh_key_pair
     ):
         job = OCITestingJob(self.job_config, self.config)
+        job._log_callback = Mock()
         job.cloud_image_name = 'name.qcow2'
 
         compute_client = Mock()
@@ -143,21 +142,20 @@ class TestOCITestingJob(object):
 
         job.cleanup_image(credentials, image_id)
 
-        mock_send_log.assert_called_once_with(
+        job._log_callback.info.assert_called_once_with(
             'Cleaning up image: name.qcow2 in region: us-phoenix-1.'
         )
 
         # Test failed cleanup
-        mock_send_log.reset_mock()
+        job._log_callback.info.reset_mock()
         compute_composite_client.delete_image_and_wait_for_state.side_effect = Exception(
             'Image not found!'
         )
         job.cleanup_image(credentials, image_id)
 
-        mock_send_log.assert_has_calls([
-            call('Cleaning up image: name.qcow2 in region: us-phoenix-1.'),
-            call(
-                'Failed to cleanup image: Image not found!',
-                success=False
-            )
-        ])
+        job._log_callback.info.assert_called_once_with(
+            'Cleaning up image: name.qcow2 in region: us-phoenix-1.'
+        )
+        job._log_callback.warning.assert_called_once_with(
+            'Failed to cleanup image: Image not found!'
+        )

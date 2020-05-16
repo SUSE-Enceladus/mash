@@ -50,6 +50,7 @@ class TestGCEUploaderJob(object):
         self.job = GCEUploaderJob(job_doc, self.config)
         self.job.image_file = ['sles-12-sp4-v20180909.tar.gz']
         self.job.credentials = self.credentials
+        self.job._log_callback = Mock()
 
     def test_post_init_incomplete_arguments(self):
         job_doc = {

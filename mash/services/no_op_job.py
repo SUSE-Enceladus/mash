@@ -36,7 +36,7 @@ class NoOpJob(MashJob):
         Do nothing and be successful.
         """
         self.status = SUCCESS
-        self.send_log(
+        self.log_callback.info(
             'Skip {0} cloud framework, has no implementation.'.format(
                 self.cloud
             )

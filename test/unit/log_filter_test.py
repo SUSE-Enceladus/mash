@@ -36,12 +36,12 @@ class TestBaseServiceFilter(object):
         self.record.job_id = '123'
         assert self.log_filter.filter(self.record) is True
         assert self.record.newline == os.linesep
-        assert self.record.job == 'Job[123]:'
+        assert self.record.job == 'Job[123]: '
 
     def test_filter_with_iteration(self):
         self.record.iteration = '1'
         assert self.log_filter.filter(self.record) is True
-        assert self.record.iteration == 'Pass[1]:'
+        assert self.record.iteration == 'Pass[1]: '
 
     def test_filter_with_no_iteration(self):
         delattr(self.record, 'iteration')

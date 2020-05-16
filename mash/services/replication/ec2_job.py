@@ -68,7 +68,7 @@ class EC2ReplicationJob(MashJob):
         for source_region, reg_info in self.replication_source_regions.items():
             credential = self.credentials[reg_info['account']]
 
-            self.send_log(
+            self.log_callback.info(
                 'Replicating source region: {0} to the following regions: {1}.'
                 .format(
                     source_region, ', '.join(reg_info['target_regions'])
@@ -108,7 +108,7 @@ class EC2ReplicationJob(MashJob):
                     )
                 except Exception as error:
                     self.status = FAILED
-                    self.send_log(
+                    self.log_callback.warning(
                         'Replication to {0} region failed: {1}'.format(
                             target_region,
                             error
