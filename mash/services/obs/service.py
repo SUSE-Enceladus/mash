@@ -125,7 +125,7 @@ class OBSImageBuildResultService(MashService):
         if 'obs_job' in job_data:
             job_id = job_data['obs_job'].get('id', None)
             result = self._add_job(job_data)
-        elif 'obs_job_delete' in job_data and job_data['obs_job_delete']:
+        elif job_data.get('obs_job_delete'):
             job_id = job_data['obs_job_delete']
             self.log.info(
                 'Deleting Job'.format(job_id),
