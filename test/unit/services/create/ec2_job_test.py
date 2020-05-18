@@ -66,6 +66,7 @@ class TestAmazonCreateJob(object):
         with raises(MashUploadException):
             EC2CreateJob(job_doc, self.config)
 
+    @patch('mash.services.create.ec2_job.cleanup_ec2_image')
     @patch('mash.services.create.ec2_job.get_vpc_id_from_subnet')
     @patch('mash.services.create.ec2_job.EC2Setup')
     @patch('mash.services.create.ec2_job.get_client')
@@ -76,7 +77,7 @@ class TestAmazonCreateJob(object):
     def test_create(
         self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
         mock_generate_name, mock_get_client, mock_ec2_setup,
-        mock_get_vpc_id_from_subnet
+        mock_get_vpc_id_from_subnet, mock_cleanup_image
     ):
         open_context = context_manager()
         mock_open.return_value = open_context.context_manager_mock
@@ -139,18 +140,34 @@ class TestAmazonCreateJob(object):
             wait_count=3
         )
         open_context.file_mock.write.assert_called_once_with('pkey')
-
         ec2_client.create_key_pair.assert_called_once_with(KeyName='mash-xxxx')
         ec2_client.delete_key_pair.assert_called_once_with(KeyName='mash-xxxx')
-
         ec2_upload.set_region.assert_called_once_with('us-east-1')
         ec2_upload.create_image.assert_called_once_with('file')
-
         ec2_setup.clean_up.assert_called_once_with()
-        ec2_upload.create_image.side_effect = Exception
 
-        with raises(MashUploadException):
-            self.job.run_job()
+        ec2_upload.create_image.side_effect = ['ami_id', Exception('Failed!')]
+        self.job.source_regions['us-east-1'] = 'ami_id'
+        self.job.target_regions['us-east-2'] = {
+            'account': 'test',
+            'helper_image': 'ami-bc5b48d0',
+            'billing_codes': None,
+            'use_root_swap': False,
+            'subnet': 'subnet-123456789'
+        }
+
+        self.job.run_job()
+
+        self.job._log_callback.error.assert_called_once_with(
+            'Image creation in account test failed with: Failed!'
+        )
+        mock_cleanup_image.assert_called_once_with(
+            'access-key',
+            'secret-access-key',
+            self.job._log_callback,
+            'us-east-1',
+            'ami_id'
+        )
 
     @patch('mash.services.create.ec2_job.EC2Setup')
     @patch('mash.services.create.ec2_job.get_client')
