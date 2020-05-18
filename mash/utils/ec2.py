@@ -20,7 +20,9 @@ import boto3
 
 from contextlib import contextmanager, suppress
 from mash.utils.mash_utils import generate_name, get_key_from_file
+
 from ec2imgutils.ec2setup import EC2Setup
+from ec2imgutils.ec2removeimg import EC2RemoveImage
 
 
 def get_client(service_name, access_key_id, secret_access_key, region_name):
@@ -152,3 +154,34 @@ def share_image_snapshot(
         SnapshotId=snapshot_id,
         UserIds=share_with.split(',')
     )
+
+
+def cleanup_ec2_image(
+    access_key_id,
+    secret_access_key,
+    log_callback,
+    region,
+    image_id
+):
+    log_callback.info(
+        'Cleaning up image: {0} in region: {1}.'.format(
+            image_id,
+            region
+        )
+    )
+
+    try:
+        ec2_remove_img = EC2RemoveImage(
+            access_key=access_key_id,
+            image_id=image_id,
+            no_confirm=True,
+            remove_all=True,
+            secret_key=secret_access_key,
+        )
+
+        ec2_remove_img.set_region(region)
+        ec2_remove_img.remove_images()
+    except Exception as error:
+        log_callback.warning(
+            'Failed to cleanup image: {0}'.format(error)
+        )
