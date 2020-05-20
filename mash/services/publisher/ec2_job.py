@@ -95,7 +95,7 @@ class EC2PublisherJob(MashJob):
                             creds['secret_access_key']
                         )
                     except Exception:
-                        self.send_log(
+                        self.log_callback.error(
                             'Failed to share snapshot for {0} in {1}.'.format(
                                 cloud_image_name,
                                 region
