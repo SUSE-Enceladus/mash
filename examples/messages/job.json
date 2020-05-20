@@ -26,5 +26,5 @@
   "conditions_wait_time": 500,
   "disallow_licenses": ["MIT"],
   "disallow_packages": ["*-mini"],
-  "share_snapshot_with": "123456789012"
+  "share_snapshot_with": "123456789012,987654321210"
 }
