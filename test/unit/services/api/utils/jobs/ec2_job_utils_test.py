@@ -118,6 +118,16 @@ def test_add_target_ec2_account(mock_get_regions):
 
     assert accounts['us-east-100']['helper_image'] == 'ami-987'
 
+    add_target_ec2_account(
+        account,
+        accounts,
+        cloud_accounts,
+        helper_images,
+        skip_replication=True
+    )
+
+    assert 'us-east-99' not in accounts
+
 
 def test_convert_account_dict():
     accounts = [{'name': 'acnt1', 'data': 'more_stuff'}]

@@ -20,7 +20,8 @@ class TestEC2PublisherJob(object):
                 }
             ],
             'share_with': 'all',
-            'utctime': 'now'
+            'utctime': 'now',
+            'share_snapshot_with': '123,321'
         }
 
         self.config = Mock()
@@ -33,7 +34,11 @@ class TestEC2PublisherJob(object):
                 'ssh_private_key': 'key123'
             }
         }
-        self.job.source_regions = {'cloud_image_name': 'image_name_123'}
+        self.job.source_regions = {
+            'cloud_image_name': 'image_name_123',
+            'us-east-2': 'image-id'
+        }
+        self.job.log_callback = Mock()
 
     def test_publish_ec2_missing_key(self):
         del self.job_config['publish_regions']
@@ -41,15 +46,24 @@ class TestEC2PublisherJob(object):
         with raises(MashPublisherException):
             EC2PublisherJob(self.job_config, self.config)
 
+    @patch('mash.services.publisher.ec2_job.share_image_snapshot')
     @patch('mash.services.publisher.ec2_job.EC2PublishImage')
-    def test_publish(self, mock_ec2_publish_image):
+    def test_publish(self, mock_ec2_publish_image, mock_share_snapshot):
         publisher = Mock()
         mock_ec2_publish_image.return_value = publisher
+        mock_share_snapshot.side_effect = Exception('Image not found')
         self.job.run_job()
 
         mock_ec2_publish_image.assert_called_once_with(
             access_key='123456', allow_copy=False, image_name='image_name_123',
             secret_key='654321', verbose=False, visibility='all'
+        )
+        mock_share_snapshot.assert_called_once_with(
+            'image_name_123',
+            '123,321',
+            'us-east-2',
+            '123456',
+            '654321'
         )
 
         publisher.set_region.assert_called_once_with('us-east-2')

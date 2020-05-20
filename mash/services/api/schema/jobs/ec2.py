@@ -96,7 +96,7 @@ ec2_job_message['properties']['cloud_account'] = string_with_example(
     'account1',
     description='The name of the cloud account to use for '
                 'the job. This is mutually exclusive with the '
-                '"cloud_acconts" setting.'
+                '"cloud_accounts" setting.'
 )
 ec2_job_message['properties']['cloud_groups'] = {
     'type': 'array',
@@ -107,6 +107,20 @@ ec2_job_message['properties']['cloud_groups'] = {
     'description': 'A list of cloud groups to use for EC2 credentials. '
                    'Either a cloud_account, cloud_accounts or cloud_groups '
                    'is required for an EC2 job.'
+}
+ec2_job_message['properties']['skip_replication'] = {
+    'type': 'boolean',
+    'description': 'Whether to skip the replication step. If true '
+                   'the image that is uploaded will not be replicated'
+                   'to any regions.'
+}
+ec2_job_message['properties']['share_snapshot_with'] = {
+    'type': 'string',
+    'format': 'regex',
+    'pattern': '^[0-9]{12}(,[0-9]{12})*$',
+    'example': '123456789012,098765432109',
+    'description': 'A comma-separated list of accounts to share the '
+                   'image snapshot with.'
 }
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
