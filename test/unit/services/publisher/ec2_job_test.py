@@ -39,7 +39,7 @@ class TestEC2PublisherJob(object):
             'cloud_image_name': 'image_name_123',
             'us-east-2': 'image-id'
         }
-        self.job.log_callback = Mock()
+        self.job._log_callback = Mock()
 
     def test_publish_ec2_missing_key(self):
         del self.job_config['publish_regions']
