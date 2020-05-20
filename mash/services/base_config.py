@@ -297,6 +297,9 @@ class BaseConfig(object):
             attribute='credentials_url'
         )
 
+        if credentials_url and not credentials_url.endswith('/'):
+            credentials_url += '/'
+
         return credentials_url or Defaults.get_credentials_url()
 
     def get_database_uri(self):
