@@ -108,7 +108,7 @@ class GCETestingJob(MashJob):
 
         with create_json_file(credentials) as auth_file:
             for firmware in self.boot_firmware:
-                self.send_log(
+                self.log_callback.info(
                     'Running img-proof tests against image with '
                     'type: {inst_type}. Using boot firmware setting: '
                     '{firmware}.'.format(
@@ -155,7 +155,7 @@ class GCETestingJob(MashJob):
 
                 self.status = process_test_result(
                     result,
-                    self.send_log,
+                    self.log_callback,
                     self.region
                 )
 
@@ -169,7 +169,7 @@ class GCETestingJob(MashJob):
     def cleanup_image(self):
         credentials = self.credentials[self.account]
 
-        self.send_log(
+        self.log_callback.info(
             'Cleaning up image: {0} in region: {1}.'.format(
                 self.cloud_image_name,
                 self.region
@@ -179,7 +179,6 @@ class GCETestingJob(MashJob):
         try:
             cleanup_gce_image(credentials, self.cloud_image_name, self.bucket)
         except Exception as error:
-            self.send_log(
-                'Failed to cleanup image: {0}'.format(error),
-                success=False
+            self.log_callback.warning(
+                'Failed to cleanup image: {0}'.format(error)
             )

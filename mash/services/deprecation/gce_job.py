@@ -88,18 +88,17 @@ class GCEDeprecationJob(MashJob):
                     self.cloud_image_name,
                     deleted=delete_timestamp
                 )
-                self.send_log(
+                self.log_callback.info(
                     'Deprecated image {0}.'.format(
                         self.old_cloud_image_name
                     )
                 )
             except Exception as error:
-                self.send_log(
+                self.log_callback.error(
                     'There was an error deprecating image in {0}:'
                     ' {1}'.format(
                         self.account,
                         error
-                    ),
-                    False
+                    )
                 )
                 self.status = FAILED

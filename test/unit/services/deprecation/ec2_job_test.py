@@ -24,6 +24,7 @@ class TestEC2DeprecationJob(object):
 
         self.config = Mock()
         self.job = EC2DeprecationJob(self.job_config, self.config)
+        self.job._log_callback = Mock()
         self.job.credentials = {
             'test-aws': {
                 'access_key_id': '123456',
@@ -79,10 +80,9 @@ class TestEC2DeprecationJob(object):
             self.job.run_job()
         assert msg == str(e.value)
 
-    @patch.object(EC2DeprecationJob, 'send_log')
     @patch('mash.services.deprecation.ec2_job.EC2DeprecateImg')
     def test_deprecate_false(
-        self, mock_ec2_deprecate_image, mock_send_log
+        self, mock_ec2_deprecate_image
     ):
         deprecation = Mock()
         deprecation.deprecate_images.return_value = False
@@ -90,7 +90,6 @@ class TestEC2DeprecationJob(object):
 
         self.job.run_job()
 
-        mock_send_log.assert_called_once_with(
-            'Unable to deprecate image in us-east-2, no image found.',
-            False
+        self.job._log_callback.warning.assert_called_once_with(
+            'Unable to deprecate image in us-east-2, no image found.'
         )

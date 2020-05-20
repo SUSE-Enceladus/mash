@@ -40,9 +40,8 @@ class TestAzureTestingJob(object):
     @patch('mash.services.testing.azure_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.testing.img_proof_helper.test_image')
-    @patch.object(AzureTestingJob, 'send_log')
     def test_testing_run_azure_test(
-        self, mock_send_log, mock_test_image, mock_temp_file, mock_random,
+        self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_delete_blob, mock_delete_image
     ):
         tmp_file = Mock()
@@ -76,6 +75,7 @@ class TestAzureTestingJob(object):
             'blob_name': 'name.vhd'
         }
         job.cloud_image_name = 'test_image'
+        job._log_callback = Mock()
         job.run_job()
 
         mock_test_image.assert_called_once_with(
@@ -106,7 +106,7 @@ class TestAzureTestingJob(object):
             enable_secure_boot=False,
             image_project=None
         )
-        mock_send_log.reset_mock()
+        job._log_callback.info.reset_mock()
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
@@ -114,10 +114,10 @@ class TestAzureTestingJob(object):
 
         job.run_job()
 
-        assert mock_send_log.mock_calls[1] == call(
-            'Image tests failed in region: East US.', success=False
-        )
-        assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
-        assert mock_send_log.mock_calls[2][2] == {'success': False}
+        job._log_callback.warning.assert_has_calls([
+            call('Image tests failed in region: East US.'),
+            call('Failed to cleanup image: Cleanup blob failed!')
+        ])
+        assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
         assert mock_delete_image.call_count == 1
         assert mock_delete_blob.call_count == 1

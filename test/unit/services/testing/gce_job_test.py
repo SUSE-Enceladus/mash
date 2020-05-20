@@ -44,9 +44,8 @@ class TestGCETestingJob(object):
     @patch('mash.services.testing.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.testing.img_proof_helper.test_image')
-    @patch.object(GCETestingJob, 'send_log')
     def test_testing_run_gce_test(
-        self, mock_send_log, mock_test_image, mock_temp_file, mock_random,
+        self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_cleanup_image, mock_get_region_list
     ):
         tmp_file = Mock()
@@ -72,6 +71,7 @@ class TestGCETestingJob(object):
             mock_test_image.side_effect = IpaRetryableError('quota exceeded')
 
         job = GCETestingJob(self.job_config, self.config)
+        job._log_callback = Mock()
         mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         job.credentials = {
             'test-gce': {
@@ -116,15 +116,18 @@ class TestGCETestingJob(object):
                 image_project=None
             )
         ])
-        mock_send_log.reset_mock()
+        job._log_callback.warning.reset_mock()
+        job._log_callback.error.reset_mock()
         mock_cleanup_image.side_effect = Exception('Unable to cleanup image!')
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
         job.run_job()
-        assert 'Image tests failed' in mock_send_log.mock_calls[1][1][0]
-        assert 'Tests broken!' in mock_send_log.mock_calls[2][1][0]
-        assert mock_send_log.mock_calls[2][2] == {'success': False}
+        job._log_callback.warning.assert_has_calls([
+            call('Image tests failed in region: us-west1-c.'),
+            call('Failed to cleanup image: Unable to cleanup image!')
+        ])
+        assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
 
     @patch('mash.services.testing.gce_job.get_region_list')
     @patch('mash.services.testing.gce_job.cleanup_gce_image')
@@ -133,9 +136,8 @@ class TestGCETestingJob(object):
     @patch('mash.services.testing.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.testing.img_proof_helper.test_image')
-    @patch.object(GCETestingJob, 'send_log')
     def test_testing_run_default_fallback(
-            self, mock_send_log, mock_test_image, mock_temp_file, mock_random,
+            self, mock_test_image, mock_temp_file, mock_random,
             mock_create_ssh_key_pair, mock_os, mock_cleanup_image, mock_get_region_list
     ):
         tmp_file = Mock()
@@ -147,6 +149,7 @@ class TestGCETestingJob(object):
         mock_test_image.side_effect = IpaRetryableError('quota exceeded')
 
         job = GCETestingJob(self.job_config, self.config)
+        job._log_callback = Mock()
         mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         job.credentials = {
             'test-gce': {

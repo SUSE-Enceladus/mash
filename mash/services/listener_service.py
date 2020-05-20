@@ -136,7 +136,7 @@ class ListenerService(MashService):
                 )
             else:
                 self.jobs[job.id] = job
-                job.log_callback = self.log_job_message
+                job.log_callback = self.log
 
                 if 'job_file' not in job_config:
                     job_config['job_file'] = '{0}job-{1}.json'.format(
@@ -486,15 +486,6 @@ class ListenerService(MashService):
         Publish the result message to the listener queue on given exchange.
         """
         self._publish(exchange, self.listener_msg_key, message)
-
-    def log_job_message(self, msg, metadata, success=True):
-        """
-        Callback for job instance to log given message.
-        """
-        if success:
-            self.log.info(msg, extra=metadata)
-        else:
-            self.log.error(msg, extra=metadata)
 
     def start(self):
         """

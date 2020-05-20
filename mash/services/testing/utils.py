@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -25,19 +25,18 @@ def get_testing_account(account_info):
 
 def process_test_result(result, log_callback, region):
     if 'results_file' in result:
-        log_callback(
+        log_callback.info(
             'Results file for {0} region: {1}'.format(
                 region, result['results_file']
             )
         )
 
     if result['status'] != SUCCESS:
-        log_callback(
-            'Image tests failed in region: {0}.'.format(region),
-            success=False
+        log_callback.warning(
+            'Image tests failed in region: {0}.'.format(region)
         )
         if result.get('msg'):
-            log_callback(result['msg'], success=False)
+            log_callback.error(result['msg'])
 
         return FAILED
 

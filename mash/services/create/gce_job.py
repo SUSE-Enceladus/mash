@@ -54,7 +54,7 @@ class GCECreateJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Creating image.')
+        self.log_callback.info('Creating image.')
 
         self.cloud_image_name = self.source_regions['cloud_image_name']
         object_name = self.source_regions['object_name']
@@ -100,7 +100,7 @@ class GCECreateJob(MashJob):
                 **kwargs
             )
 
-        self.send_log(
+        self.log_callback.info(
             'Created image has ID: {0}'.format(
                 self.cloud_image_name
             )

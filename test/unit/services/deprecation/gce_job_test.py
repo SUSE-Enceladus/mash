@@ -19,6 +19,7 @@ class TestGCEDeprecationJob(object):
 
         self.config = Mock()
         self.job = GCEDeprecationJob(self.job_config, self.config)
+        self.job._log_callback = Mock()
         self.job.credentials = {
             'test-gce': {
                 'client_email': 'test@gce.com',
@@ -37,10 +38,9 @@ class TestGCEDeprecationJob(object):
 
         self.job_config['account'] = 'test-gce'
 
-    @patch.object(GCEDeprecationJob, 'send_log')
     @patch('mash.services.deprecation.gce_job.Provider')
     @patch('mash.services.deprecation.gce_job.get_driver')
-    def test_deprecate(self, mock_get_driver, mock_provider, mock_send_log):
+    def test_deprecate(self, mock_get_driver, mock_provider):
         compute_engine = MagicMock()
         mock_get_driver.return_value = compute_engine
 
@@ -51,7 +51,7 @@ class TestGCEDeprecationJob(object):
 
         assert compute_driver.ex_deprecate_image.call_count == 1
         assert self.job.status == 'success'
-        mock_send_log.assert_called_once_with(
+        self.job._log_callback.info.assert_called_once_with(
             'Deprecated image old_image_123.'
         )
 
@@ -60,11 +60,10 @@ class TestGCEDeprecationJob(object):
         self.job.run_job()
         assert self.job.status == 'success'
 
-    @patch.object(GCEDeprecationJob, 'send_log')
     @patch('mash.services.deprecation.gce_job.Provider')
     @patch('mash.services.deprecation.gce_job.get_driver')
     def test_deprecate_exception(
-        self, mock_get_driver, mock_provider, mock_send_log
+        self, mock_get_driver, mock_provider
     ):
         compute_engine = MagicMock()
         mock_get_driver.return_value = compute_engine
@@ -75,8 +74,7 @@ class TestGCEDeprecationJob(object):
 
         self.job.run_job()
 
-        mock_send_log.assert_called_once_with(
-            'There was an error deprecating image in test-gce: Failed!',
-            False
+        self.job._log_callback.error.assert_called_once_with(
+            'There was an error deprecating image in test-gce: Failed!'
         )
         assert self.job.status == 'failed'

@@ -309,7 +309,7 @@ def test_log_operation_response_status():
     }
 
     log_operation_response_status(response, callback)
-    callback.assert_called_once_with(
+    callback.info.assert_called_once_with(
         'Publishing the image 30% complete.'
     )
 

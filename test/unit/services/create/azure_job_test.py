@@ -50,6 +50,7 @@ class TestAzureCreateJob(object):
 
         self.job = AzureCreateJob(job_doc, self.config)
         self.job.credentials = self.credentials
+        self.job._log_callback = Mock()
 
     def test_post_init_incomplete_arguments(self):
         job_doc = {

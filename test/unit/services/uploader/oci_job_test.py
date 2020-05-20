@@ -39,6 +39,7 @@ class TestOCIUploaderJob(object):
         self.job = OCIUploaderJob(job_doc, self.config)
         self.job.image_file = ['sles-12-sp4-v20180909.qcow2']
         self.job.credentials = credentials
+        self.job._log_callback = Mock()
 
     def test_post_init_incomplete_arguments(self):
         job_doc = {
@@ -88,10 +89,9 @@ class TestOCIUploaderJob(object):
             progress_callback=self.job._progress_callback
         )
 
-    @patch.object(OCIUploaderJob, 'send_log')
-    def test_progress_callback(self, mock_send_log):
+    def test_progress_callback(self):
         self.job._image_size = 112358
         self.job._progress_callback(400)
 
-        mock_send_log.assert_called_once_with('Image 0% uploaded.')
+        self.job._log_callback.info.assert_called_once_with('Image 0% uploaded.')
         assert self.job._total_bytes_transferred == 400

@@ -14,6 +14,7 @@ class TestNoOpJob(object):
         }
         self.config = Mock()
         self.job = NoOpJob(self.job_config, self.config)
+        self.job._log_callback = Mock()
 
     def test_run_job(self):
         self.job.run_job()

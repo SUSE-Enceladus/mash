@@ -47,7 +47,7 @@ class AzureCreateJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
-        self.send_log('Creating image.')
+        self.log_callback.info('Creating image.')
 
         self.cloud_image_name = self.source_regions['cloud_image_name']
         self.blob_name = self.source_regions['blob_name']
@@ -57,7 +57,7 @@ class AzureCreateJob(MashJob):
 
         self._create_image(self.blob_name, credentials)
 
-        self.send_log(
+        self.log_callback.info(
             'Image has ID: {0} in region {1}'.format(
                 self.cloud_image_name,
                 self.region

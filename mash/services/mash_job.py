@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import logging
+
 from mash.mash_exceptions import MashJobException
 from mash.services.status_levels import UNKOWN
 from mash.utils.mash_utils import handle_request
@@ -63,20 +65,6 @@ class MashJob(object):
         """
         return {'job_id': self.id}
 
-    def send_log(self, message, success=True):
-        """
-        Send a log message to the log callback function.
-        """
-        if self.log_callback:
-            self.log_callback(
-                'Pass[{0}]: {1}'.format(
-                    self.iteration_count,
-                    message
-                ),
-                self.get_job_id(),
-                success
-            )
-
     def request_credentials(self, accounts):
         """
         Request credentials from credential service.
@@ -123,6 +111,10 @@ class MashJob(object):
         Update iteration count and run job.
         """
         self.iteration_count += 1
+        self.log_callback.extra = {
+            'job_id': self.id,
+            'iteration': self.iteration_count
+        }
         self.run_job()
 
     @property
@@ -167,7 +159,10 @@ class MashJob(object):
         """
         Set log_callback function to callback.
         """
-        self._log_callback = callback
+        self._log_callback = logging.LoggerAdapter(
+            callback,
+            {'job_id': self.id}
+        )
 
     @property
     def source_regions(self):

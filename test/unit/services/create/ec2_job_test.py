@@ -42,6 +42,7 @@ class TestAmazonCreateJob(object):
             'image_description': 'description'
         }
         self.job = EC2CreateJob(job_doc, self.config)
+        self.job._log_callback = Mock()
         self.job.image_file = 'file'
         self.job.credentials = self.credentials
 
@@ -180,6 +181,7 @@ class TestAmazonCreateJob(object):
             'image_description': 'description'
         }
         self.job = EC2CreateJob(job_doc, self.config)
+        self.job._log_callback = Mock()
         self.job.image_file = 'file'
         self.job.credentials = self.credentials
 
