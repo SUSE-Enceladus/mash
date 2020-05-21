@@ -30,7 +30,7 @@ class TestEC2TestingJob(object):
         with pytest.raises(MashTestingException):
             EC2TestingJob(self.job_config, self.config)
 
-    @patch.object(EC2TestingJob, 'cleanup_ec2_image')
+    @patch('mash.services.testing.ec2_job.cleanup_ec2_image')
     @patch('mash.services.testing.ec2_job.os')
     @patch('mash.services.testing.ec2_job.create_ssh_key_pair')
     @patch('mash.services.testing.ec2_job.random')
@@ -117,7 +117,9 @@ class TestEC2TestingJob(object):
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
         mock_cleanup_image.assert_called_once_with(
-            job.credentials['test-aws'],
+            '123',
+            '321',
+            job._log_callback,
             'us-east-1',
             'ami-123'
         )
@@ -139,32 +141,3 @@ class TestEC2TestingJob(object):
     def test_testing_run_test_subnet(self):
         self.job_config['test_regions']['us-east-1']['subnet'] = 'subnet-123456789'
         self.test_testing_run_test()
-
-    @patch('mash.services.testing.ec2_job.os')
-    @patch('mash.services.testing.ec2_job.random')
-    @patch('mash.services.testing.ec2_job.EC2RemoveImage')
-    def test_cleanup_images(
-        self, mock_rm_img, mock_random, mock_os
-    ):
-        rm_img = Mock()
-        rm_img.remove_images.side_effect = Exception('image not found!')
-
-        mock_rm_img.return_value = rm_img
-        mock_random.choice.return_value = 't2.micro'
-        mock_os.path.exists.return_value = True
-
-        job = EC2TestingJob(self.job_config, self.config)
-        job._log_callback = Mock()
-
-        credentials = {
-            'access_key_id': '123',
-            'secret_access_key': '321'
-        }
-
-        job.cleanup_ec2_image(credentials, 'us-east-1', 'ami-123')
-
-        job._log_callback.warning.assert_has_calls([
-            call('Failed to cleanup image: image not found!')
-        ])
-        rm_img.set_region.assert_called_once_with('us-east-1')
-        rm_img.remove_images.assert_called_once_with()

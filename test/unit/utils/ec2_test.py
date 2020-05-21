@@ -20,7 +20,8 @@ from unittest.mock import Mock, patch
 from mash.utils.ec2 import (
     get_client,
     get_vpc_id_from_subnet,
-    share_image_snapshot
+    share_image_snapshot,
+    cleanup_ec2_image
 )
 
 
@@ -69,3 +70,19 @@ def test_share_image_snapshot(mock_get_client):
         SnapshotId='123',
         UserIds=['123', '321']
     )
+
+
+@patch('mash.utils.ec2.EC2RemoveImage')
+def test_cleanup_images(mock_rm_img):
+    log_callback = Mock()
+    rm_img = Mock()
+    rm_img.remove_images.side_effect = Exception('image not found!')
+    mock_rm_img.return_value = rm_img
+
+    cleanup_ec2_image('123', '321', log_callback, 'us-east-1', 'ami-123')
+
+    log_callback.warning.assert_called_once_with(
+        'Failed to cleanup image: image not found!'
+    )
+    rm_img.set_region.assert_called_once_with('us-east-1')
+    rm_img.remove_images.assert_called_once_with()

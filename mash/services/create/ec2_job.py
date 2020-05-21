@@ -24,10 +24,13 @@ from ec2imgutils.ec2setup import EC2Setup
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
-from mash.utils.ec2 import get_client
-from mash.utils.ec2 import get_vpc_id_from_subnet
+from mash.utils.ec2 import (
+    get_client,
+    get_vpc_id_from_subnet,
+    cleanup_ec2_image
+)
 from mash.utils.mash_utils import format_string_with_date, generate_name
-from mash.services.status_levels import SUCCESS
+from mash.services.status_levels import SUCCESS, FAILED
 
 
 class EC2CreateJob(MashJob):
@@ -105,6 +108,7 @@ class EC2CreateJob(MashJob):
         self.request_credentials(accounts)
 
         for region, info in self.target_regions.items():
+            self.source_regions[region] = None  # Reset ami id if always job
             account = info['account']
             credentials = self.credentials[account]
 
@@ -141,7 +145,7 @@ class EC2CreateJob(MashJob):
                     ssh_key_pair.private_key_file.name
 
                 # Create a temporary vpc, subnet and security group for the
-                # helper image, unless a subnet was specificed.
+                # helper image, unless a subnet was specified.
                 # This provides a security group with an open ssh port.
                 ec2_setup = EC2Setup(
                     credentials['access_key_id'],
@@ -184,15 +188,33 @@ class EC2CreateJob(MashJob):
                         ami_id, region
                     )
                 )
-            except Exception as e:
-                raise MashUploadException(
-                    'Image creation in Amazon EC2 failed with: {0}'.format(e)
+            except Exception as error:
+                self.status = FAILED
+                self.log_callback.error(
+                    'Image creation in account {0} failed with: {1}'.format(
+                        account,
+                        error
+                    )
                 )
             finally:
                 self._delete_key_pair(
                     ec2_client, ssh_key_pair
                 )
                 ec2_setup.clean_up()
+
+        if self.status != SUCCESS:
+            for region, info in self.target_regions.items():
+                credentials = self.credentials[info['account']]
+
+                if self.source_regions.get(region):
+                    # Only cleanup regions that passed
+                    cleanup_ec2_image(
+                        credentials['access_key_id'],
+                        credentials['secret_access_key'],
+                        self.log_callback,
+                        region,
+                        self.source_regions[region]
+                    )
 
     def _create_key_pair(self, ec2_client):
         ssh_key_pair_type = namedtuple(
