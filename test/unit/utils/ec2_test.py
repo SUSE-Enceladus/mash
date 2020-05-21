@@ -20,7 +20,6 @@ from unittest.mock import Mock, patch
 from mash.utils.ec2 import (
     get_client,
     get_vpc_id_from_subnet,
-    share_image_snapshot,
     cleanup_ec2_image
 )
 
@@ -48,28 +47,6 @@ def test_get_vpc_id_from_subnet():
     client.describe_subnets.return_value = {'Subnets': [{'VpcId': 'vpc-123456789'}]}
     assert get_vpc_id_from_subnet(client, 'subnet-123456789') == 'vpc-123456789'
     client.describe_subnets.assert_called_once_with(SubnetIds=['subnet-123456789'])
-
-
-@patch('mash.utils.ec2.get_client')
-def test_share_image_snapshot(mock_get_client):
-    images = {
-        'Images': [{
-            'Name': 'test',
-            'BlockDeviceMappings': [{'Ebs': {'SnapshotId': '123'}}]}
-        ]
-    }
-    client = Mock()
-    mock_get_client.return_value = client
-    client.describe_images.return_value = images
-
-    share_image_snapshot('test', '123,321', 'us-east-1', '123', '321')
-
-    client.modify_snapshot_attribute.assert_called_once_with(
-        Attribute='createVolumePermission',
-        OperationType='add',
-        SnapshotId='123',
-        UserIds=['123', '321']
-    )
 
 
 @patch('mash.utils.ec2.EC2RemoveImage')

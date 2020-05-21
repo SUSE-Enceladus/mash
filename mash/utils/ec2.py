@@ -128,34 +128,6 @@ def wait_for_instance_termination(
     waiter.wait(InstanceIds=[instance_id])
 
 
-def share_image_snapshot(
-    image_name,
-    share_with,
-    region,
-    access_key_id,
-    secret_access_key
-):
-    client = get_client(
-        'ec2',
-        access_key_id,
-        secret_access_key,
-        region
-    )
-    images = describe_images(client)
-
-    for image in images:
-        if image['Name'] == image_name:
-            snapshot_id = image['BlockDeviceMappings'][0]['Ebs']['SnapshotId']
-            break
-
-    client.modify_snapshot_attribute(
-        Attribute='createVolumePermission',
-        OperationType='add',
-        SnapshotId=snapshot_id,
-        UserIds=share_with.split(',')
-    )
-
-
 def cleanup_ec2_image(
     access_key_id,
     secret_access_key,

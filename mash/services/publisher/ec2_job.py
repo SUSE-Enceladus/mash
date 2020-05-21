@@ -21,7 +21,6 @@ from ec2imgutils.ec2publishimg import EC2PublishImage
 from mash.mash_exceptions import MashPublisherException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
-from mash.utils.ec2 import share_image_snapshot
 
 
 class EC2PublisherJob(MashJob):
@@ -43,9 +42,8 @@ class EC2PublisherJob(MashJob):
                 )
             )
 
-        self.allow_copy = self.job_config.get('allow_copy', True)
+        self.allow_copy = self.job_config.get('allow_copy', 'none')
         self.share_with = self.job_config.get('share_with', 'all')
-        self.share_snapshot_with = self.job_config.get('share_snapshot_with')
 
     def run_job(self):
         """
@@ -83,22 +81,3 @@ class EC2PublisherJob(MashJob):
                             cloud_image_name, region, error
                         )
                     )
-
-                if region in self.source_regions and self.share_snapshot_with:
-                    # only share snapshot once from source region
-                    try:
-                        share_image_snapshot(
-                            cloud_image_name,
-                            self.share_snapshot_with,
-                            region,
-                            creds['access_key_id'],
-                            creds['secret_access_key']
-                        )
-                    except Exception:
-                        self.log_callback.error(
-                            'Failed to share snapshot for {0} in {1}.'.format(
-                                cloud_image_name,
-                                region
-                            ),
-                            success=False
-                        )

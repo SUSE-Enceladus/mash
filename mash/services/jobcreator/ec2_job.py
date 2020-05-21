@@ -32,10 +32,9 @@ class EC2Job(BaseJob):
         Post initialization method.
         """
         self.share_with = self.kwargs.get('share_with', 'all')
-        self.allow_copy = self.kwargs.get('allow_copy', True)
+        self.allow_copy = self.kwargs.get('allow_copy', 'none')
         self.billing_codes = self.kwargs.get('billing_codes')
         self.use_root_swap = self.kwargs.get('use_root_swap', False)
-        self.share_snapshot_with = self.kwargs.get('share_snapshot_with')
 
     def _get_target_regions_list(self):
         """
@@ -86,10 +85,6 @@ class EC2Job(BaseJob):
             }
         }
         publisher_message['publisher_job'].update(self.base_message)
-
-        if self.share_snapshot_with:
-            publisher_message['publisher_job']['share_snapshot_with'] = \
-                self.share_snapshot_with
 
         return JsonFormat.json_message(publisher_message)
 
