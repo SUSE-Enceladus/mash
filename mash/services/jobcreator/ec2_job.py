@@ -176,7 +176,8 @@ class EC2Job(BaseJob):
         for source_region, value in self.target_account_info.items():
             test_regions[source_region] = {
                 'account': value['account'],
-                'subnet': value['subnet']
+                'subnet': value['subnet'],
+                'partition': value['partition']
             }
 
         return test_regions

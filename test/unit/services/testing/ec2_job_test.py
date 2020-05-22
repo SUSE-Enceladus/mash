@@ -14,7 +14,9 @@ class TestEC2TestingJob(object):
             'cloud': 'ec2',
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
-            'test_regions': {'us-east-1': {'account': 'test-aws'}},
+            'test_regions': {
+                'us-east-1': {'account': 'test-aws', 'partition': 'aws'}
+            },
             'tests': ['test_stuff'],
             'utctime': 'now',
             'cleanup_images': True
@@ -141,3 +143,33 @@ class TestEC2TestingJob(object):
     def test_testing_run_test_subnet(self):
         self.job_config['test_regions']['us-east-1']['subnet'] = 'subnet-123456789'
         self.test_testing_run_test()
+
+    @patch('mash.services.testing.ec2_job.random')
+    @patch('mash.services.testing.ec2_job.os')
+    def test_run_test_arm_skip(self, mock_os, mock_random):
+        mock_os.path.exists.return_value = True
+        mock_random.choice.return_value = 'a1.large'
+
+        job_config = {
+            'id': '2',
+            'last_service': 'testing',
+            'cloud': 'ec2',
+            'requesting_user': 'user1',
+            'ssh_private_key_file': 'private_ssh_key.file',
+            'test_regions': {
+                'cn-east-1': {'account': 'test-aws-cn', 'partition': 'aws-cn'}
+            },
+            'tests': ['test_stuff'],
+            'utctime': 'now',
+            'cloud_architecture': 'aarch64'
+        }
+        job = EC2TestingJob(job_config, self.config)
+        job._log_callback = Mock()
+        job.credentials = {
+            'test-aws-cn': {
+                'access_key_id': '123',
+                'secret_access_key': '321'
+            }
+        }
+        job.source_regions = {'cn-east-1': 'ami-123'}
+        job.run_job()
