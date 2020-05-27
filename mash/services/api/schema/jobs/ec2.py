@@ -21,18 +21,6 @@ import copy
 from mash.services.api.schema import string_with_example, non_empty_string
 from mash.services.api.schema.jobs import base_job_message
 
-share_with = {
-    'type': 'string',
-    'format': 'regex',
-    'pattern': '^[0-9]{12}(,[0-9]{12})*$|^(all|none)$',
-    'example': '123456789012,098765432109',
-    'examples': ['all', 'none', '123456789012,098765432109'],
-    'description': 'Sharing image to "all" shares the image publicly. '
-                   'Sharing to "none" keeps the image private and sharing '
-                   'to a comma-separated list of accounts makes it available '
-                   'to only those accounts.'
-}
-
 ec2_job_account = {
     'type': 'object',
     'properties': {
@@ -66,11 +54,30 @@ ec2_job_account = {
 }
 
 ec2_job_message = copy.deepcopy(base_job_message)
-ec2_job_message['properties']['share_with'] = share_with
+ec2_job_message['properties']['share_with'] = {
+    'type': 'string',
+    'format': 'regex',
+    'pattern': '^[0-9]{12}(,[0-9]{12})*$|^(all|none)$',
+    'example': '123456789012,098765432109',
+    'examples': ['all', 'none', '123456789012,098765432109'],
+    'description': 'Sharing image to "all" shares the image publicly. '
+                   'Sharing to "none" keeps the image private and sharing '
+                   'to a comma-separated list of accounts makes it available '
+                   'to only those accounts.'
+}
 ec2_job_message['properties']['allow_copy'] = {
-    'type': 'boolean',
-    'description': 'Whether to allow copy of the snapshot with which '
-                   'the image is associated.'
+    'type': 'string',
+    'format': 'regex',
+    'pattern': '^[0-9]{12}(,[0-9]{12})*$|^(image|none)$',
+    'example': '123456789012,098765432109',
+    'examples': ['image', 'none', '123456789012,098765432109'],
+    'description': 'Set the image copy permissions. Supports '
+                   'the keyword "image" to allow those that the image is '
+                   'shared with to copy it; the keyword "none" which does '
+                   'not allow copy access and is the default behavior. And '
+                   'an AWS account number or a comma-separated list with no '
+                   'white space to specify multiple account numbers to allow '
+                   'those accounts to copy the image.'
 }
 ec2_job_message['properties']['billing_codes'] = string_with_example(
     'bp-1234567890,bp-0987654321',

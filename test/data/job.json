@@ -17,7 +17,7 @@
   ],
   "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
   "share_with": "all",
-  "allow_copy": false,
+  "allow_copy": "none",
   "image_description": "New Image #123",
   "distro": "sles",
   "instance_type": "t2.micro",
@@ -31,6 +31,5 @@
   "raw_image_upload_account": "account",
   "raw_image_upload_location": "location",
   "disallow_licenses": ["MIT"],
-  "disallow_packages": ["*-mini"],
-  "share_snapshot_with": "123456789012"
+  "disallow_packages": ["*-mini"]
 }
