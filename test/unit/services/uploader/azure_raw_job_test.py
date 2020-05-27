@@ -1,15 +1,16 @@
 from pytest import raises
 from unittest.mock import (
     MagicMock,
-    patch
+    patch,
+    call
 )
 
-from mash.services.uploader.azure_job import AzureUploaderJob
+from mash.services.uploader.azure_raw_job import AzureRawUploaderJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.uploader.config import UploaderConfig
 
 
-class TestAzureUploaderJob(object):
+class TestAzureRawUploaderJob(object):
     def setup(self):
         self.credentials = {
             'test': {
@@ -34,7 +35,7 @@ class TestAzureUploaderJob(object):
         job_doc = {
             'id': '1',
             'last_service': 'uploader',
-            'cloud': 'azure',
+            'cloud': 'azure_raw',
             'requesting_user': 'user1',
             'utctime': 'now',
             'account': 'test',
@@ -42,14 +43,15 @@ class TestAzureUploaderJob(object):
             'container': 'container',
             'storage_account': 'storage',
             'region': 'region',
-            'cloud_image_name': 'name'
+            'cloud_image_name': 'name',
+            'additional_uploads': ['sha256.asc']
         }
 
         self.config = UploaderConfig(
             config_file='test/data/mash_config.yaml'
         )
 
-        self.job = AzureUploaderJob(job_doc, self.config)
+        self.job = AzureRawUploaderJob(job_doc, self.config)
         self.job.image_file = 'file.vhdfixed.xz'
         self.job.credentials = self.credentials
         self.job._log_callback = MagicMock()
@@ -65,9 +67,9 @@ class TestAzureUploaderJob(object):
         }
 
         with raises(MashUploadException):
-            AzureUploaderJob(job_doc, self.config)
+            AzureRawUploaderJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.azure_job.upload_azure_file')
+    @patch('mash.services.uploader.azure_raw_job.upload_azure_file')
     @patch('builtins.open')
     def test_upload(
         self, mock_open, mock_upload_azure_file
@@ -78,14 +80,27 @@ class TestAzureUploaderJob(object):
 
         self.job.run_job()
 
-        mock_upload_azure_file.assert_called_once_with(
-            'name.vhd',
-            'container',
-            'file.vhdfixed.xz',
-            5,
-            8,
-            'storage',
-            credentials=self.credentials['test'],
-            resource_group='group_name',
-            is_page_blob=True
-        )
+        mock_upload_azure_file.assert_has_calls([
+            call(
+                'file.vhdfixed.xz.sha256.asc',
+                'container',
+                'file.vhdfixed.xz.sha256.asc',
+                5,
+                8,
+                'storage',
+                credentials=self.credentials['test'],
+                resource_group='group_name',
+                expand_image=False
+            ),
+            call(
+                'file.vhdfixed.xz',
+                'container',
+                'file.vhdfixed.xz',
+                5,
+                8,
+                'storage',
+                credentials=self.credentials['test'],
+                resource_group='group_name',
+                expand_image=False
+            )
+        ])

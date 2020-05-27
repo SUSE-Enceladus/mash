@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,65 +16,73 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-# project
+import os
+
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
-from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
 from mash.utils.azure import upload_azure_file
 
 
-class AzureUploaderJob(MashJob):
+class AzureRawUploaderJob(MashJob):
     """
-    Implements VM image upload to Azure
+    Implements raw image upload to Azure.
+
+    The image tarball is not expanded during upload.
     """
     def post_init(self):
         try:
             self.container = self.job_config['container']
             self.storage_account = self.job_config['storage_account']
-            self.base_cloud_image_name = self.job_config['cloud_image_name']
             self.account = self.job_config.get('account')
             self.region = self.job_config.get('region')
             self.resource_group = self.job_config.get('resource_group')
         except KeyError as error:
             raise MashUploadException(
-                'Azure uploader jobs require a(n) {0} '
+                'Azure raw uploader jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
             )
 
+        self.additional_uploads = self.job_config.get(
+            'additional_uploads',
+            []
+        )
+
     def run_job(self):
         self.status = SUCCESS
         self.log_callback.info('Uploading image.')
 
-        self.cloud_image_name = format_string_with_date(
-            self.base_cloud_image_name
-        )
-        blob_name = ''.join([self.cloud_image_name, '.vhd'])
-
-        self.request_credentials([self.account])
+        self.request_credentials([self.account], 'azure')
         credentials = self.credentials[self.account]
 
-        upload_azure_file(
-            blob_name,
-            self.container,
-            self.image_file,
-            self.config.get_azure_max_retry_attempts(),
-            self.config.get_azure_max_workers(),
-            self.storage_account,
-            credentials=credentials,
-            resource_group=self.resource_group,
-            is_page_blob=True
-        )
+        file_name = self.image_file.rsplit(os.sep, maxsplit=1)[-1]
+        self.additional_uploads.append('')
+
+        for extension in self.additional_uploads:
+            upload_file_name = '.'.join(filter(None, [file_name, extension]))
+            file_path = '.'.join(filter(None, [self.image_file, extension]))
+
+            upload_azure_file(
+                upload_file_name,
+                self.container,
+                file_path,
+                self.config.get_azure_max_retry_attempts(),
+                self.config.get_azure_max_workers(),
+                self.storage_account,
+                credentials=credentials,
+                resource_group=self.resource_group,
+                expand_image=False
+            )
 
         self.source_regions = {
-            'cloud_image_name': self.cloud_image_name,
-            'blob_name': blob_name
+            'cloud_image_name': file_name,
+            'blob_name': file_name
         }
         self.log_callback.info(
             'Uploaded image: {0}, to the container: {1}'.format(
-                blob_name,
+                file_name,
                 self.container
             )
         )

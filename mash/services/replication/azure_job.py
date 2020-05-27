@@ -19,7 +19,7 @@
 from mash.utils.azure import (
     copy_blob_to_classic_storage,
     delete_image,
-    delete_page_blob
+    delete_blob
 )
 
 from mash.mash_exceptions import MashReplicationException
@@ -93,7 +93,8 @@ class AzureReplicationJob(MashJob):
                     self.source_storage_account,
                     self.destination_container,
                     self.destination_resource_group,
-                    self.destination_storage_account
+                    self.destination_storage_account,
+                    is_page_blob=True
                 )
 
                 if self.cleanup_images:
@@ -107,12 +108,13 @@ class AzureReplicationJob(MashJob):
                         self.source_resource_group,
                         self.cloud_image_name
                     )
-                    delete_page_blob(
+                    delete_blob(
                         auth_file,
                         self.blob_name,
                         self.source_container,
                         self.source_resource_group,
-                        self.source_storage_account
+                        self.source_storage_account,
+                        is_page_blob=True
                     )
             except Exception as error:
                 self.log_callback.error(

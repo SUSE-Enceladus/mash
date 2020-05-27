@@ -65,6 +65,7 @@ class BaseJob(object):
         self.disallow_licenses = kwargs.get('disallow_licenses')
         self.disallow_packages = kwargs.get('disallow_packages')
         self.boot_firmware = kwargs.get('boot_firmware', ['bios'])
+        self.additional_uploads = kwargs.get('additional_uploads')
         self.kwargs = kwargs
 
         if self.raw_image_upload_type and self.last_service == 'uploader':

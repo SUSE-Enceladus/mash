@@ -264,6 +264,7 @@ class TestJobCreatorService(object):
         assert data['container'] == 'container1'
         assert data['resource_group'] == 'rg-1'
         assert data['storage_account'] == 'sa1'
+        assert data['additional_uploads'] == ['sha256']
 
         # create Job Doc
 

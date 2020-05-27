@@ -41,7 +41,7 @@ class TestAzureSASUploaderJob(object):
         with raises(MashUploadException):
             AzureSASUploaderJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.azure_sas_job.upload_azure_image')
+    @patch('mash.services.uploader.azure_sas_job.upload_azure_file')
     @patch('builtins.open')
     def test_sas_upload_only(
         self, mock_open, mock_upload_azure_image
@@ -58,10 +58,11 @@ class TestAzureSASUploaderJob(object):
             5,
             8,
             'storage',
-            sas_token='sas_token'
+            sas_token='sas_token',
+            is_page_blob=True
         )
 
-    @patch('mash.services.uploader.azure_sas_job.upload_azure_image')
+    @patch('mash.services.uploader.azure_sas_job.upload_azure_file')
     @patch('builtins.open')
     def test_sas_upload(
         self, mock_open, mock_upload_azure_image
@@ -84,5 +85,6 @@ class TestAzureSASUploaderJob(object):
             5,
             8,
             'storage',
-            sas_token='sas_token'
+            sas_token='sas_token',
+            is_page_blob=True
         )

@@ -34,5 +34,6 @@
   "vm_images_key": "key123",
   "notification_email": "test@fake.com",
   "publish_offer": true,
-  "cleanup_images": true
+  "cleanup_images": true,
+  "additional_uploads": ["sha256"]
 }

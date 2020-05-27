@@ -23,7 +23,7 @@ from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
-from mash.utils.azure import upload_azure_image
+from mash.utils.azure import upload_azure_file
 
 
 # https://[storage-account].[maangement-url]/[container]?[SAS token]
@@ -62,14 +62,15 @@ class AzureSASUploaderJob(MashJob):
 
         build = re.search(sas_url_match, self.raw_image_upload_location)
 
-        upload_azure_image(
+        upload_azure_file(
             self.blob_name,
             build.group(2),
             self.image_file,
             self.config.get_azure_max_retry_attempts(),
             self.config.get_azure_max_workers(),
             build.group(1),
-            sas_token=build.group(3)
+            sas_token=build.group(3),
+            is_page_blob=True
         )
         self.log_callback.info(
             'Uploaded blob: {blob} using sas token.'.format(

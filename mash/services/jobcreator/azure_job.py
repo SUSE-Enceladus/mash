@@ -192,6 +192,10 @@ class AzureJob(BaseJob):
             }
         }
 
+        if self.additional_uploads:
+            uploader_message['uploader_job']['additional_uploads'] = \
+                self.additional_uploads
+
         uploader_message['uploader_job'].update(self.base_message)
 
         return JsonFormat.json_message(uploader_message)
