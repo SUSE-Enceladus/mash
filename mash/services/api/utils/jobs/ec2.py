@@ -87,6 +87,7 @@ def add_target_ec2_account(
 
     accounts[region_name] = {
         'account': account.name,
+        'partition': account.partition,
         'target_regions': regions,
         'helper_image': helper_image,
         'subnet': subnet

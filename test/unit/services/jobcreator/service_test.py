@@ -81,7 +81,8 @@ class TestJobCreatorService(object):
                 'account': 'test-aws-gov',
                 'target_regions': ['us-gov-west-1'],
                 'helper_image': 'ami-c2b5d7e1',
-                'subnet': 'subnet-12345'
+                'subnet': 'subnet-12345',
+                'partition': 'aws-us-gov'
             },
             'ap-northeast-1': {
                 'account': 'test-aws',
@@ -89,7 +90,8 @@ class TestJobCreatorService(object):
                     'ap-northeast-1', 'ap-northeast-2', 'ap-northeast-3'
                 ],
                 'helper_image': 'ami-383c1956',
-                'subnet': 'subnet-54321'
+                'subnet': 'subnet-54321',
+                'partition': 'aws'
             }
         }
         del job['cloud_accounts']
@@ -154,9 +156,11 @@ class TestJobCreatorService(object):
         for region, info in data['test_regions'].items():
             if region == 'ap-northeast-1':
                 assert info['account'] == 'test-aws'
+                assert info['partition'] == 'aws'
             else:
                 assert region == 'us-gov-west-1'
                 assert info['account'] == 'test-aws-gov'
+                assert info['partition'] == 'aws-us-gov'
 
         # Raw Image Uploader Job Doc
 

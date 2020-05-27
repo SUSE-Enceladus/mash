@@ -115,6 +115,12 @@ class EC2TestingJob(MashJob):
             account = get_testing_account(info)
             credentials = self.credentials[account]
 
+            if info['partition'] in ('aws-cn', 'aws-us-gov') and \
+                    self.cloud_architecture == 'aarch64':
+                # Skip testing aarch64 images in China and GovCloud.
+                # There are no aarch64 based instance types available.
+                continue
+
             with setup_ec2_networking(
                 credentials['access_key_id'],
                 region,
