@@ -310,7 +310,7 @@ def test_publish_cloud_partner_offer(
         credentials = json.load(f)
 
     response = publish_cloud_partner_offer(
-        credentials, 'jdoe@fake.com', 'sles', 'suse'
+        credentials, 'sles', 'suse'
     )
 
     assert response == '/api/endpoint/url'

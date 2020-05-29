@@ -22,12 +22,6 @@ from mash.services.api.schema import string_with_example
 from mash.services.api.schema.jobs import base_job_message
 
 azure_job_message = copy.deepcopy(base_job_message)
-azure_job_message['properties']['emails'] = string_with_example(
-    'test@fake.com',
-    description='A comma-separated list of email addresses to recieve '
-                'notifications from the Azure partner portal about the '
-                'progress of the publishing operation.'
-)
 azure_job_message['properties']['label'] = string_with_example(
     'openSUSE Leap 15',
     description='The title to be displayed in the marketplace.'

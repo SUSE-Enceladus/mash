@@ -24,7 +24,6 @@
   "distro": "sles",
   "instance_type": "Basic_A2",
   "tests": ["test_stuff"],
-  "emails": "jdoe@fake.com",
   "offer_id": "sles",
   "publisher_id": "suse",
   "label": "New Image 123",

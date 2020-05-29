@@ -430,7 +430,7 @@ def put_cloud_partner_offer_doc(credentials, doc, offer_id, publisher_id):
 
 
 def publish_cloud_partner_offer(
-    credentials, emails, offer_id, publisher_id
+    credentials, offer_id, publisher_id
 ):
     """
     Publish the cloud partner offer and return the operation location.
@@ -448,7 +448,6 @@ def publish_cloud_partner_offer(
     response = process_request(
         endpoint,
         headers,
-        data={'metadata': {'notification-emails': emails}},
         method='post',
         json_response=False
     )

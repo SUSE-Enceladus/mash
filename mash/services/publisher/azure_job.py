@@ -42,7 +42,6 @@ class AzurePublisherJob(MashJob):
         Post initialization method.
         """
         try:
-            self.emails = self.job_config['emails']
             self.image_description = self.job_config['image_description']
             self.label = self.job_config['label']
             self.offer_id = self.job_config['offer_id']
@@ -134,7 +133,6 @@ class AzurePublisherJob(MashJob):
                 if self.publish_offer:
                     operation = publish_cloud_partner_offer(
                         credential,
-                        self.emails,
                         self.offer_id,
                         self.publisher_id
                     )

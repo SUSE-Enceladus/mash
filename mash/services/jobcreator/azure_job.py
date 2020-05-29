@@ -48,7 +48,6 @@ class AzureJob(BaseJob):
         self.destination_container = self.kwargs.get('destination_container')
         self.destination_resource_group = self.kwargs.get('destination_resource_group')
         self.destination_storage_account = self.kwargs.get('destination_storage_account')
-        self.emails = self.kwargs.get('emails')
         self.label = self.kwargs.get('label')
         self.offer_id = self.kwargs.get('offer_id')
         self.publisher_id = self.kwargs.get('publisher_id')
@@ -77,7 +76,6 @@ class AzureJob(BaseJob):
         """
         publisher_message = {
             'publisher_job': {
-                'emails': self.emails,
                 'image_description': self.image_description,
                 'label': self.label,
                 'offer_id': self.offer_id,

@@ -317,7 +317,6 @@ class TestJobCreatorService(object):
 
         data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
         check_base_attrs(data)
-        assert data['emails'] == 'jdoe@fake.com'
         assert data['image_description'] == 'New Image #123'
         assert data['label'] == 'New Image 123'
         assert data['offer_id'] == 'sles'
