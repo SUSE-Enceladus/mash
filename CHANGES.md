@@ -1,3 +1,33 @@
+v7.0.0 (2020-06-01)
+===================
+
+- Change secure boot options.
+  [\#649](https://github.com/SUSE-Enceladus/mash/pull/649)
+- Fix image project bug.
+  [\#650](https://github.com/SUSE-Enceladus/mash/pull/650)
+- Extend length of sas blob url.
+  [\#651](https://github.com/SUSE-Enceladus/mash/pull/651)
+- Log message if image not in region.
+  [\#652](https://github.com/SUSE-Enceladus/mash/pull/652)
+- Better handle the delete message.
+  [\#653](https://github.com/SUSE-Enceladus/mash/pull/653)
+- Add additional upload option and raw tarball upload for Azure.
+  [\#654](https://github.com/SUSE-Enceladus/mash/pull/654)
+- Add snapshot sharing for EC2 images.
+  [\#655](https://github.com/SUSE-Enceladus/mash/pull/655)
+- Fix logging in listener service classes.
+  [\#656](https://github.com/SUSE-Enceladus/mash/pull/656)
+- Accept credentials URL without trailing slash.
+  [\#657](https://github.com/SUSE-Enceladus/mash/pull/657)
+- Cleanup on EC2 create failure.
+  [\#658](https://github.com/SUSE-Enceladus/mash/pull/658)
+- Remove accounts file example.
+  [\#659](https://github.com/SUSE-Enceladus/mash/pull/659)
+- Update snapshot sharing option for ec2 jobs.
+  [\#660](https://github.com/SUSE-Enceladus/mash/pull/660)
+- Add flag in ec2 testing.
+  [\#661](https://github.com/SUSE-Enceladus/mash/pull/661)
+
 v6.0.0 (2020-04-22)
 ===================
 
