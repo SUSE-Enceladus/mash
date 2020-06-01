@@ -47,7 +47,6 @@ def test_azure_job_cleanup(mock_init):
     })
     job.kwargs = {
         'cloud_account': 'acnt1',
-        'emails': 'test@test.com',
         'label': 'Great Image',
         'offer_id': 'sles',
         'publisher_id': 'suse',

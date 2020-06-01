@@ -39,7 +39,6 @@ def update_azure_job_accounts(job_doc):
         'destination_storage_account'
     )
     publisher_args = (
-        'emails',
         'label',
         'offer_id',
         'publisher_id',

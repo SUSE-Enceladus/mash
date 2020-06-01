@@ -42,7 +42,6 @@ def test_update_azure_job_accounts(
         'destination_resource_group': 'rg-2',
         'destination_container': 'container2',
         'destination_storage_account': 'sa2',
-        'emails': 'jdoe@fake.com',
         'label': 'New Image 123',
         'offer_id': 'sles',
         'publisher_id': 'suse'
