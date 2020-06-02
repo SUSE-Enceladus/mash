@@ -115,7 +115,8 @@ class OCITestingJob(MashJob):
                     ssh_private_key_file=self.ssh_private_key_file,
                     ssh_user=self.ssh_user,
                     tenancy=self.tenancy,
-                    tests=self.tests
+                    tests=self.tests,
+                    log_callback=self.log_callback
                 )
             except Exception:
                 result = {

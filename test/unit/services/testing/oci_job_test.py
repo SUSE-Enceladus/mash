@@ -103,7 +103,8 @@ class TestOCITestingJob(object):
             tests=['test_stuff'],
             timeout=600,
             enable_secure_boot=False,
-            image_project=None
+            image_project=None,
+            log_callback=job._log_callback
         )
         job._log_callback.info.reset_mock()
 

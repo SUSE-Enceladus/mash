@@ -115,7 +115,8 @@ class TestEC2TestingJob(object):
             tests=['test_stuff'],
             timeout=None,
             enable_secure_boot=False,
-            image_project=None
+            image_project=None,
+            log_callback=job._log_callback
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
         mock_cleanup_image.assert_called_once_with(
