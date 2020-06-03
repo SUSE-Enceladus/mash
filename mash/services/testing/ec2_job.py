@@ -144,7 +144,8 @@ class EC2TestingJob(MashJob):
                         ssh_private_key_file=self.ssh_private_key_file,
                         ssh_user=self.ssh_user,
                         subnet_id=network_details['subnet_id'],
-                        tests=self.tests
+                        tests=self.tests,
+                        log_callback=self.log_callback
                     )
                 except Exception:
                     result = {

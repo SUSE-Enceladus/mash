@@ -133,7 +133,8 @@ class GCETestingJob(MashJob):
                             ssh_user=self.ssh_user,
                             tests=self.tests,
                             boot_firmware=firmware,
-                            image_project=self.image_project
+                            image_project=self.image_project,
+                            log_callback=self.log_callback
                         )
                     except IpaRetryableError as error:
                         result = {

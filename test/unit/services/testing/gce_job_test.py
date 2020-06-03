@@ -113,7 +113,8 @@ class TestGCETestingJob(object):
                 tests=['test_stuff'],
                 timeout=None,
                 enable_secure_boot=True,
-                image_project=None
+                image_project=None,
+                log_callback=job._log_callback
             )
         ])
         job._log_callback.warning.reset_mock()
@@ -191,7 +192,8 @@ class TestGCETestingJob(object):
                 tests=['test_stuff'],
                 timeout=None,
                 enable_secure_boot=True,
-                image_project=None
+                image_project=None,
+                log_callback=job._log_callback
             ),
             call(
                 'gce',
@@ -219,7 +221,8 @@ class TestGCETestingJob(object):
                 tests=['test_stuff'],
                 timeout=None,
                 enable_secure_boot=True,
-                image_project=None
+                image_project=None,
+                log_callback=job._log_callback
             )
         ])
 

@@ -105,7 +105,8 @@ class AzureTestingJob(MashJob):
                     service_account_file=auth_file,
                     ssh_private_key_file=self.ssh_private_key_file,
                     ssh_user=self.ssh_user,
-                    tests=self.tests
+                    tests=self.tests,
+                    log_callback=self.log_callback
                 )
             except Exception:
                 result = {
