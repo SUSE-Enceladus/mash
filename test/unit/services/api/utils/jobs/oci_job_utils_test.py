@@ -18,12 +18,16 @@
 
 from unittest.mock import patch, Mock
 
+from pytest import raises
+
+from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.jobs.oci import update_oci_job_accounts
 
 
+@patch('mash.services.api.utils.jobs.oci.get_services_by_last_service')
 @patch('mash.services.api.utils.jobs.oci.get_oci_account')
 def test_update_oci_job_accounts(
-    mock_get_oci_account
+    mock_get_oci_account, mock_get_services
 ):
     account = Mock()
     account.name = 'acnt1'
@@ -35,10 +39,20 @@ def test_update_oci_job_accounts(
     account.tenancy = 'ocid1.tenancy.oc1..'
     mock_get_oci_account.return_value = account
 
+    mock_get_services.return_value = [
+        'obs',
+        'uploader',
+        'create',
+        'testing'
+    ]
+
     job_doc = {
+        'last_service': 'testing',
         'requesting_user': 1,
         'cloud_account': 'acnt1',
-        'bucket': 'images2'
+        'bucket': 'images2',
+        'operating_system': 'sles',
+        'operating_system_version': '14'
     }
 
     result = update_oci_job_accounts(job_doc)
@@ -49,3 +63,7 @@ def test_update_oci_job_accounts(
     assert result['compartment_id'] == 'ocid1.compartment.oc1..'
     assert result['oci_user_id'] == 'ocid1.user.oc1..'
     assert result['tenancy'] == 'ocid1.tenancy.oc1..'
+
+    del job_doc['operating_system']
+    with raises(MashJobException):
+        update_oci_job_accounts(job_doc)
