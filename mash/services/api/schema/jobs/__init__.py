@@ -81,15 +81,6 @@ base_job_message = {
     'properties': {
         'last_service': {
             'type': 'string',
-            'enum': [
-                'uploader',
-                'create',
-                'testing',
-                'raw_image_uploader',
-                'replication',
-                'publisher',
-                'deprecation'
-            ],
             'example': 'create',
             'description': 'The last service in the pipeline to be executed. '
                            'All services except the OBS service are valid '
@@ -283,8 +274,6 @@ base_job_message = {
         'last_service',
         'utctime',
         'image',
-        'cloud_image_name',
-        'image_description',
         'download_url'
     ]
 }

@@ -115,3 +115,7 @@ class Config(object):
     @property
     def SMTP_SSL(self):
         return self.config.get_smtp_ssl()
+
+    @property
+    def SERVICE_NAMES(self):
+        return self.config.get_service_names()
