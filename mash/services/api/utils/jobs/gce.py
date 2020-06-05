@@ -18,6 +18,7 @@
 
 from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.accounts.gce import get_gce_account
+from mash.services.api.utils.jobs import get_services_by_last_service
 
 
 def update_gce_job_accounts(job_doc):
@@ -39,20 +40,24 @@ def update_gce_job_accounts(job_doc):
         if attr not in job_doc:
             job_doc[attr] = getattr(cloud_account, attr)
 
-    if cloud_account.is_publishing_account and not job_doc.get('family'):
-        raise MashJobException(
-            'Jobs using a GCE publishing account require a family.'
-        )
+    services = get_services_by_last_service(job_doc['last_service'])
 
-    if cloud_account.is_publishing_account and not job_doc['testing_account']:
-        raise MashJobException(
-            'Jobs using a GCE publishing account require'
-            ' the use of a testing account.'
-        )
+    if 'create' in services:
+        if cloud_account.is_publishing_account and not job_doc.get('family'):
+            raise MashJobException(
+                'Jobs using a GCE publishing account require a family.'
+            )
 
-    if cloud_account.is_publishing_account and not job_doc.get('image_project'):
-        raise MashJobException(
-            'Jobs using a GCE publishing account require an image_project.'
-        )
+    if 'testing' in services:
+        if cloud_account.is_publishing_account and not job_doc['testing_account']:
+            raise MashJobException(
+                'Jobs using a GCE publishing account require'
+                ' the use of a testing account.'
+            )
+
+        if cloud_account.is_publishing_account and not job_doc.get('image_project'):
+            raise MashJobException(
+                'Jobs using a GCE publishing account require an image_project.'
+            )
 
     return job_doc
