@@ -26,7 +26,7 @@ APScheduler
 python-dateutil>=2.6.0,<2.8.1
 amqpstorm
 ec2imgutils
-img-proof>=5.0.0
+img-proof>=5.2.0
 lxml
 requests
 urllib3<1.25,>=1.20
