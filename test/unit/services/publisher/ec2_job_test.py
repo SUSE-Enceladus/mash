@@ -54,7 +54,7 @@ class TestEC2PublisherJob(object):
 
         mock_ec2_publish_image.assert_called_once_with(
             access_key='123456', allow_copy='123,321', image_name='image_name_123',
-            secret_key='654321', verbose=False, visibility='all'
+            secret_key='654321', visibility='all', log_callback=self.job._log_callback
         )
 
         publisher.set_region.assert_called_once_with('us-east-2')

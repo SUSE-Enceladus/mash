@@ -135,9 +135,9 @@ class TestAmazonCreateJob(object):
             ssh_timeout=300,
             use_grub2=True,
             use_private_ip=False,
-            verbose=True,
             vpc_subnet_id='subnet-123456789',
-            wait_count=3
+            wait_count=3,
+            log_callback=self.job._log_callback
         )
         open_context.file_mock.write.assert_called_once_with('pkey')
         ec2_client.create_key_pair.assert_called_once_with(KeyName='mash-xxxx')

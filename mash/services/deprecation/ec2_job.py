@@ -72,7 +72,7 @@ class EC2DeprecationJob(MashJob):
                 secret_key=credential['secret_access_key'],
                 deprecation_image_name=self.old_cloud_image_name,
                 replacement_image_name=cloud_image_name,
-                verbose=False
+                log_callback=self.log_callback
             )
 
             for region in region_info['target_regions']:

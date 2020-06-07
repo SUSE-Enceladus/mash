@@ -52,7 +52,7 @@ class TestEC2DeprecationJob(object):
         mock_ec2_deprecate_image.assert_called_once_with(
             access_key='123456', deprecation_image_name='old_image_123',
             replacement_image_name='image_123', secret_key='654321',
-            verbose=False
+            log_callback=self.job._log_callback
         )
 
         deprecation.set_region.assert_called_once_with('us-east-2')

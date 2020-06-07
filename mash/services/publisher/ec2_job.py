@@ -67,8 +67,8 @@ class EC2PublisherJob(MashJob):
                 allow_copy=self.allow_copy,
                 image_name=cloud_image_name,
                 secret_key=creds['secret_access_key'],
-                verbose=False,
                 visibility=self.share_with,
+                log_callback=self.log_callback
             )
 
             for region in region_info['target_regions']:
