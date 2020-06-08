@@ -23,14 +23,26 @@ from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.jobs.azure import update_azure_job_accounts
 
 
+@patch('mash.services.api.utils.jobs.azure.get_services_by_last_service')
 @patch('mash.services.api.utils.jobs.azure.get_azure_account')
 def test_update_azure_job_accounts(
-    mock_get_azure_account
+    mock_get_azure_account, mock_get_services
 ):
     account = Mock()
     account.region = 'southcentralus'
     account.name = 'acnt1'
     mock_get_azure_account.return_value = account
+
+    mock_get_services.return_value = [
+        'obs',
+        'uploader',
+        'create',
+        'testing',
+        'raw_image_uploader',
+        'replication',
+        'publisher',
+        'deprecation'
+    ]
 
     job_doc = {
         'last_service': 'deprecation',

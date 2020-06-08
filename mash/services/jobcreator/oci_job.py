@@ -38,8 +38,6 @@ class OCIJob(BaseJob):
             self.compartment_id = self.kwargs['compartment_id']
             self.oci_user_id = self.kwargs['oci_user_id']
             self.tenancy = self.kwargs['tenancy']
-            self.operating_system = self.kwargs['operating_system']
-            self.operating_system_version = self.kwargs['operating_system_version']
         except KeyError as error:
             raise MashJobCreatorException(
                 'OCI jobs require a(n) {0} key in the job doc.'.format(
@@ -49,6 +47,10 @@ class OCIJob(BaseJob):
 
         self.image_type = self.kwargs.get('image_type')
         self.launch_mode = self.kwargs.get('launch_mode')
+        self.operating_system = self.kwargs.get('operating_system')
+        self.operating_system_version = self.kwargs.get(
+            'operating_system_version'
+        )
 
     def get_deprecation_message(self):
         """

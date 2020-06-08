@@ -9,30 +9,59 @@ from mash.services.api.utils.jobs import (
     get_job,
     get_jobs
 )
+from mash.mash_exceptions import MashJobException
+
+from werkzeug.local import LocalProxy
 
 
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.jobs.Job')
 @patch('mash.services.api.utils.jobs.publish')
 @patch('mash.services.api.utils.jobs.db')
 @patch('mash.services.api.utils.jobs.get_user_by_id')
 @patch('mash.services.api.utils.jobs.uuid')
-def test_create_job(mock_uuid, mock_get_user, mock_db, mock_publish, mock_job):
+def test_create_job(
+    mock_uuid,
+    mock_get_user,
+    mock_db,
+    mock_publish,
+    mock_job,
+    mock_get_current_obj
+):
     job = Mock()
     user = Mock()
     user.id = '1'
+
+    app = Mock()
+    app.config = {
+        'SERVICE_NAMES': [
+            'obs',
+            'uploader',
+            'create',
+            'testing',
+            'raw_image_uploader',
+            'replication',
+            'publisher',
+            'deprecation'
+        ]
+    }
+    mock_get_current_obj.return_value = app
 
     mock_uuid.uuid4.return_value = '12345678-1234-1234-1234-123456789012'
     mock_get_user.return_value = user
     mock_job.return_value = job
 
     data = {
-        'last_service': 'testing',
+        'last_service': 'deprecation',
         'utctime': 'now',
         'image': 'test_oem_image',
         'download_url': 'http://download.opensuse.org/repositories/Cloud:Tools/images',
         'cloud_architecture': 'x86_64',
         'profile': 'Server',
-        'requesting_user': '1'
+        'requesting_user': '1',
+        'cloud_image_name': 'Test OEM Image',
+        'old_cloud_image_name': 'Old test OEM Image',
+        'image_description': 'Description of an image'
     }
 
     result = create_job(data)
@@ -52,6 +81,18 @@ def test_create_job(mock_uuid, mock_get_user, mock_db, mock_publish, mock_job):
     del data['job_id']
 
     with raises(Exception):
+        create_job(data)
+
+    del data['old_cloud_image_name']  # Test missing deprecate arg
+    with raises(MashJobException):
+        create_job(data)
+
+    del data['cloud_image_name']  # Test missing create arg
+    with raises(MashJobException):
+        create_job(data)
+
+    data['last_service'] = 'fake'
+    with raises(MashJobException):
         create_job(data)
 
     mock_db.session.rollback.assert_called_once_with()

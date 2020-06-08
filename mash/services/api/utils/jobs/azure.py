@@ -18,6 +18,7 @@
 
 from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.accounts.azure import get_azure_account
+from mash.services.api.utils.jobs import get_services_by_last_service
 
 
 def update_azure_job_accounts(job_doc):
@@ -49,7 +50,8 @@ def update_azure_job_accounts(job_doc):
         if attr not in job_doc:
             job_doc[attr] = getattr(cloud_account, attr)
 
-    if job_doc['last_service'] in ('publisher', 'deprecation'):
+    services = get_services_by_last_service(job_doc['last_service'])
+    if 'publisher' in services:
         for arg in publisher_args:
             if arg not in job_doc:
                 raise MashJobException(

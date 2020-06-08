@@ -24,9 +24,10 @@ from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.jobs.gce import update_gce_job_accounts
 
 
+@patch('mash.services.api.utils.jobs.gce.get_services_by_last_service')
 @patch('mash.services.api.utils.jobs.gce.get_gce_account')
 def test_update_gce_job_accounts(
-    mock_get_gce_account
+    mock_get_gce_account, mock_get_services
 ):
     account = Mock()
     account.name = 'acnt1'
@@ -36,7 +37,15 @@ def test_update_gce_job_accounts(
     account.is_publishing_account = True
     mock_get_gce_account.return_value = account
 
+    mock_get_services.return_value = [
+        'obs',
+        'uploader',
+        'create',
+        'testing'
+    ]
+
     job_doc = {
+        'last_service': 'testing',
         'requesting_user': '1',
         'cloud_account': 'acnt1',
         'bucket': 'images2',

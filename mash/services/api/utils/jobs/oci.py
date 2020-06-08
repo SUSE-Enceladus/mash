@@ -17,6 +17,8 @@
 #
 
 from mash.services.api.utils.accounts.oci import get_oci_account
+from mash.services.api.utils.jobs import get_services_by_last_service
+from mash.mash_exceptions import MashJobException
 
 
 def update_oci_job_accounts(job_doc):
@@ -34,9 +36,25 @@ def update_oci_job_accounts(job_doc):
         'oci_user_id',
         'tenancy',
     ]
+    create_args = [
+        'operating_system',
+        'operating_system_version'
+    ]
 
     for attr in attrs:
         if attr not in job_doc:
             job_doc[attr] = getattr(cloud_account, attr)
+
+    services = get_services_by_last_service(job_doc['last_service'])
+
+    if 'create' in services:
+        for arg in create_args:
+            if arg not in job_doc:
+                raise MashJobException(
+                    'OCI jobs that create an image require an '
+                    ' {arg} argument in the job document.'.format(
+                        arg=arg
+                    )
+                )
 
     return job_doc

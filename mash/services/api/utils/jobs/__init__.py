@@ -19,10 +19,13 @@
 import json
 import uuid
 
+from flask import current_app
+
 from mash.services.api.extensions import db
 from mash.services.api.models import Job, User
 from mash.services.api.utils.amqp import publish
 from mash.services.api.utils.users import get_user_by_id
+from mash.mash_exceptions import MashJobException
 
 
 def get_new_job_id():
@@ -33,6 +36,7 @@ def create_job(data):
     """
     Create a new job for user.
     """
+    validate_job(data)
     job_id = get_new_job_id()
     data['job_id'] = job_id
 
@@ -66,6 +70,69 @@ def create_job(data):
         raise
 
     return job
+
+
+def validate_job(data):
+    """
+    Validate job doc.
+    """
+    validate_last_service(data)
+    services_run = get_services_by_last_service(data['last_service'])
+
+    if 'create' in services_run:
+        validate_create_args(data)
+
+    if 'deprecation' in services_run:
+        validate_deprecate_args(data)
+
+
+def validate_last_service(data):
+    """
+    Validate last service is a valid service name.
+    """
+    if data['last_service'] not in current_app.config['SERVICE_NAMES']:
+        raise MashJobException(
+            'The service name {name} is invalid. '
+            'Valid service names are: {services}.'.format(
+                name=data['last_service'],
+                services=', '.join(current_app.config['SERVICE_NAMES'])
+            )
+        )
+
+
+def validate_create_args(data):
+    """
+    Validate required args for image creation jobs.
+    """
+    required_args = ['cloud_image_name', 'image_description']
+
+    for required_arg in required_args:
+        if required_arg not in data:
+            raise MashJobException(
+                'Jobs that perform image creation require {arg_name} '
+                'in the job doc.'.format(
+                    arg_name=required_arg
+                )
+            )
+
+
+def validate_deprecate_args(data):
+    """
+    Validate required args for image deprecation jobs.
+    """
+    if 'old_cloud_image_name' not in data:
+        raise MashJobException(
+            'Jobs that perform image deprecation require '
+            'old_cloud_image_name in the job doc.'
+        )
+
+
+def get_services_by_last_service(last_service):
+    """
+    Returns a list of service names that will run based on last service.
+    """
+    index = current_app.config['SERVICE_NAMES'].index(last_service)
+    return current_app.config['SERVICE_NAMES'][:index + 1]
 
 
 def get_job(job_id, user_id):

@@ -81,5 +81,3 @@ oci_job_message['properties']['image_description']['example'] = \
 oci_job_message['properties']['instance_type']['example'] = 'VM.Standard2.1'
 
 oci_job_message['required'].append('cloud_account')
-oci_job_message['required'].append('operating_system')
-oci_job_message['required'].append('operating_system_version')
