@@ -76,7 +76,6 @@ class EC2CreateJob(MashJob):
             'image_name': self.cloud_image_name,
             'image_description': self.cloud_image_description,
             'ssh_key_pair_name': None,
-            'verbose': True,
             'image_arch': self.arch,
             'launch_ami': None,
             'use_grub2': True,
@@ -97,7 +96,8 @@ class EC2CreateJob(MashJob):
             'backing_store': 'ssd',
             'running_id': None,
             'secret_key': None,
-            'billing_codes': None
+            'billing_codes': None,
+            'log_callback': self.log_callback
         }
 
         # Get all account credentials in one request
@@ -152,7 +152,7 @@ class EC2CreateJob(MashJob):
                     region,
                     credentials['secret_access_key'],
                     None,
-                    False
+                    log_callback=self.log_callback
                 )
 
                 subnet_id = info.get('subnet')
