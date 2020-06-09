@@ -17,7 +17,7 @@ pipeline. As a job finishes in one service it moves to the next in line. The
 following services are part of the pipeline:
 
 - OBS (image build service)
-- Uploader
+- Upload
 - Testing
 - Replication
 - Publisher

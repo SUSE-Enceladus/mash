@@ -24,7 +24,7 @@ from mash.services.status_levels import SUCCESS
 from mash.utils.azure import upload_azure_file
 
 
-class AzureRawUploaderJob(MashJob):
+class AzureRawUploadJob(MashJob):
     """
     Implements raw image upload to Azure.
 
@@ -39,7 +39,7 @@ class AzureRawUploaderJob(MashJob):
             self.resource_group = self.job_config.get('resource_group')
         except KeyError as error:
             raise MashUploadException(
-                'Azure raw uploader jobs require a(n) {0} '
+                'Azure raw upload jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )

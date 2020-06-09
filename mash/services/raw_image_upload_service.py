@@ -21,31 +21,31 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.uploader.config import UploaderConfig
+from mash.services.upload.config import UploadConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
-from mash.services.uploader.azure_sas_job import AzureSASUploaderJob
-from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
+from mash.services.upload.azure_sas_job import AzureSASUploadJob
+from mash.services.upload.s3bucket_job import S3BucketUploadJob
 
 
 def main():
     """
-    mash - raw image uploader service application entry point
+    mash - raw image upload service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
 
-        service_name = 'raw_image_uploader'
+        service_name = 'raw_image_upload'
 
         # Create job factory
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
-                'azure_sas': AzureSASUploaderJob,
-                's3bucket': S3BucketUploaderJob
+                'azure_sas': AzureSASUploadJob,
+                's3bucket': S3BucketUploadJob
             },
             job_type_key='raw_image_upload_type',
             can_skip=True
@@ -54,7 +54,7 @@ def main():
         # run service, enter main loop
         ListenerService(
             service_exchange=service_name,
-            config=UploaderConfig(),
+            config=UploadConfig(),
             custom_args={
                 'listener_msg_args': ['image_file', 'source_regions'],
                 'status_msg_args': ['source_regions'],

@@ -19,16 +19,16 @@ from mash.services.base_config import BaseConfig
 from mash.services.base_defaults import Defaults
 
 
-class UploaderConfig(BaseConfig):
+class UploadConfig(BaseConfig):
     """
-    Implements reading of uploader configuration from mash configuration file:
+    Implements reading of upload configuration from mash configuration file:
 
     * /etc/mash/mash_config.yaml
 
     The mash configuration file is a yaml formatted file containing
     information to control the behavior of the mash services.
 
-    uploader:
+    upload:
       azure:
         # max retries on block upload error
         max_chunk_retry_attempts: 5
@@ -36,13 +36,13 @@ class UploaderConfig(BaseConfig):
         max_workers: 16
     """
     def __init__(self, config_file=None):
-        super(UploaderConfig, self).__init__(config_file)
-        self.azure_uploader = self._get_attribute('azure', 'uploader') or dict()
+        super(UploadConfig, self).__init__(config_file)
+        self.azure_upload = self._get_attribute('azure', 'upload') or dict()
 
     def get_azure_max_retry_attempts(self):
-        return self.azure_uploader.get('max_retry_attempts') or \
+        return self.azure_upload.get('max_retry_attempts') or \
             Defaults.get_azure_max_retry_attempts()
 
     def get_azure_max_workers(self):
-        return self.azure_uploader.get('max_workers') or \
+        return self.azure_upload.get('max_workers') or \
             Defaults.get_azure_max_workers()

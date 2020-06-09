@@ -59,7 +59,7 @@ def test_validate_oci_job(
 
     mock_get_services.return_value = [
         'obs',
-        'uploader',
+        'upload',
         'create',
         'testing'
     ]

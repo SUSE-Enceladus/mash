@@ -14,10 +14,10 @@ credentials_url: http://localhost:5006/
 database_uri: sqlite:////var/lib/mash/app.db
 services:
   - obs
-  - uploader
+  - upload
   - create
   - testing
-  - raw_image_uploader
+  - raw_image_upload
   - replication
   - publisher
   - deprecation

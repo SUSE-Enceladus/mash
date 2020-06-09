@@ -25,7 +25,7 @@ from mash.utils.mash_utils import format_string_with_date, create_json_file
 from mash.services.status_levels import SUCCESS
 
 
-class GCEUploaderJob(MashJob):
+class GCEUploadJob(MashJob):
     """
     Implements system image upload to GCE
     """
@@ -37,7 +37,7 @@ class GCEUploaderJob(MashJob):
             self.base_cloud_image_name = self.job_config['cloud_image_name']
         except KeyError as error:
             raise MashUploadException(
-                'GCE uploader jobs require a(n) {0} '
+                'GCE upload jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )

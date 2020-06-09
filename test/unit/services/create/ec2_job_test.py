@@ -182,7 +182,7 @@ class TestAmazonCreateJob(object):
         job_doc = {
             'cloud_architecture': 'aarch64',
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'cloud': 'ec2',
             'requesting_user': 'user1',
             'utctime': 'now',

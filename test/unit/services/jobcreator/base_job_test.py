@@ -31,7 +31,7 @@ class TestJobCreatorBaseJob(object):
         ('get_deprecation_message'),
         ('get_publisher_message'),
         ('get_replication_message'),
-        ('get_uploader_message'),
+        ('get_upload_message'),
         ('get_testing_message'),
         ('get_create_message')
     ])
@@ -59,7 +59,7 @@ class TestJobCreatorBaseJob(object):
             'job_id': '123',
             'cloud': 'aws',
             'requesting_user': 'test-user',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'utctime': 'now',
             'image': 'test-image',
             'cloud_image_name': 'test-cloud-image',

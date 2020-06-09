@@ -17,7 +17,7 @@ base_thread_pool_count: 20
 publisher_thread_pool_count: 60
 services:
   - obs
-  - uploader
+  - upload
   - testing
   - replication
   - publisher
@@ -43,7 +43,7 @@ cloud:
       us-gov-west-1: ami-c2b5d7e1
 testing:
   img_proof_timeout: 600
-uploader:
+upload:
   azure:
     max_retry_attempts: 5
     max_workers: 8

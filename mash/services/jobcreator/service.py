@@ -127,13 +127,13 @@ class JobCreatorService(MashService):
                 self.publish_job_doc(
                     'testing', job.get_testing_message()
                 )
-            elif service == 'uploader':
+            elif service == 'upload':
                 self.publish_job_doc(
-                    'uploader', job.get_uploader_message()
+                    'upload', job.get_upload_message()
                 )
-            elif service == 'raw_image_uploader':
+            elif service == 'raw_image_upload':
                 self.publish_job_doc(
-                    'raw_image_uploader', job.get_raw_image_uploader_message()
+                    'raw_image_upload', job.get_raw_image_upload_message()
                 )
 
             if service == job.last_service:

@@ -53,10 +53,10 @@ def test_update_azure_job_accounts(
 
     mock_get_services.return_value = [
         'obs',
-        'uploader',
+        'upload',
         'create',
         'testing',
-        'raw_image_uploader',
+        'raw_image_upload',
         'replication',
         'publisher',
         'deprecation'

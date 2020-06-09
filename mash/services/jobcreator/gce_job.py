@@ -131,12 +131,12 @@ class GCEJob(BaseJob):
 
         return JsonFormat.json_message(testing_message)
 
-    def get_uploader_message(self):
+    def get_upload_message(self):
         """
-        Build uploader job message.
+        Build upload job message.
         """
-        uploader_message = {
-            'uploader_job': {
+        upload_message = {
+            'upload_job': {
                 'cloud_image_name': self.cloud_image_name,
                 'cloud': self.cloud,
                 'account': self.cloud_account,
@@ -147,9 +147,9 @@ class GCEJob(BaseJob):
                 'raw_image_upload_location': self.raw_image_upload_location
             }
         }
-        uploader_message['uploader_job'].update(self.base_message)
+        upload_message['upload_job'].update(self.base_message)
 
-        return JsonFormat.json_message(uploader_message)
+        return JsonFormat.json_message(upload_message)
 
     def get_create_message(self):
         """

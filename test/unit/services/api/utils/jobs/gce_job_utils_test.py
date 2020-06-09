@@ -57,7 +57,7 @@ def test_update_gce_job_accounts(
 
     mock_get_services.return_value = [
         'obs',
-        'uploader',
+        'upload',
         'create',
         'testing'
     ]

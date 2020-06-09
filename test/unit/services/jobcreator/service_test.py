@@ -34,7 +34,7 @@ class TestJobCreatorService(object):
         self.jobcreator.service_queue = 'service'
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
-            'obs', 'uploader', 'create', 'testing', 'raw_image_uploader',
+            'obs', 'upload', 'create', 'testing', 'raw_image_upload',
             'replication', 'publisher', 'deprecation'
         ]
 
@@ -120,9 +120,9 @@ class TestJobCreatorService(object):
             else:
                 assert condition['version'] == '8.13.21'
 
-        # Uploader Job Doc
+        # Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
         check_base_attrs(data)
         assert data['cloud_image_name'] == 'new_image_123'
 
@@ -162,9 +162,9 @@ class TestJobCreatorService(object):
                 assert info['account'] == 'test-aws-gov'
                 assert info['partition'] == 'aws-us-gov'
 
-        # Raw Image Uploader Job Doc
+        # Raw Image Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
         check_base_attrs(data)
         assert data['raw_image_upload_type'] == 's3bucket'
         assert data['raw_image_upload_account'] == 'account'
@@ -258,9 +258,9 @@ class TestJobCreatorService(object):
             else:
                 assert condition['version'] == '8.13.21'
 
-        # Uploader Job Doc
+        # Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
         check_base_attrs(data)
         assert data['cloud_image_name'] == 'new_image_123'
         assert data['account'] == 'test-azure'
@@ -291,9 +291,9 @@ class TestJobCreatorService(object):
         assert data['resource_group'] == 'rg-1'
         assert data['storage_account'] == 'sa1'
 
-        # Raw Image Uploader Job Doc
+        # Raw Image Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
         check_base_attrs(data)
         assert data['raw_image_upload_type'] == 's3bucket'
         assert data['raw_image_upload_account'] == 'account'
@@ -371,9 +371,9 @@ class TestJobCreatorService(object):
             else:
                 assert condition['version'] == '8.13.21'
 
-        # Uploader Job Doc
+        # Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
         check_base_attrs(data)
         assert data['cloud_image_name'] == 'new_image_123'
         assert data['region'] == 'us-west1'
@@ -403,8 +403,8 @@ class TestJobCreatorService(object):
         assert data['testing_account'] == 'testacnt1'
         assert data['image_project'] == 'test'
 
-        # Raw Image Uploader Job Doc
-        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        # Raw Image Upload Job Doc
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
         check_base_attrs(data)
         assert data['raw_image_upload_type'] == 's3bucket'
         assert data['raw_image_upload_account'] == 'account'
@@ -453,9 +453,9 @@ class TestJobCreatorService(object):
             'http://download.opensuse.org/repositories/Cloud:Tools/images'
         assert data['image'] == 'test_image_oem'
 
-        # Uploader Job Doc
+        # Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
         check_base_attrs(data)
         assert data['cloud_image_name'] == 'new_image_123'
         assert data['region'] == 'us-phoenix-1'
@@ -485,8 +485,8 @@ class TestJobCreatorService(object):
         assert data['region'] == 'us-phoenix-1'
         assert data['account'] == 'test-oci'
 
-        # Raw Image Uploader Job Doc
-        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        # Raw Image Upload Job Doc
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
         check_base_attrs(data)
         assert data['raw_image_upload_type'] is None
 

@@ -22,7 +22,7 @@ class TestListenerService(object):
         self.config = Mock()
         self.config.config_data = None
         self.config.get_service_names.return_value = [
-            'obs', 'uploader', 'testing', 'replication', 'publisher',
+            'obs', 'upload', 'testing', 'replication', 'publisher',
             'deprecation'
         ]
         self.config.get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
@@ -648,7 +648,7 @@ class TestListenerService(object):
         # Test service with prev service
         self.service.service_exchange = 'testing'
         prev_service = self.service._get_previous_service()
-        assert prev_service == 'uploader'
+        assert prev_service == 'upload'
 
         # Test service not in pipeline
         self.service.service_exchange = 'credentials'

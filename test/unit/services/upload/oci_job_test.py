@@ -3,14 +3,14 @@ from unittest.mock import (
     MagicMock, Mock, patch
 )
 
-from mash.services.uploader.oci_job import OCIUploaderJob
+from mash.services.upload.oci_job import OCIUploadJob
 from mash.mash_exceptions import MashUploadException
-from mash.services.uploader.config import UploaderConfig
+from mash.services.upload.config import UploadConfig
 
 
-class TestOCIUploaderJob(object):
+class TestOCIUploadJob(object):
     def setup(self):
-        self.config = UploaderConfig(
+        self.config = UploadConfig(
             config_file='test/data/mash_config.yaml'
         )
 
@@ -23,7 +23,7 @@ class TestOCIUploaderJob(object):
 
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'cloud': 'oci',
             'requesting_user': 'user1',
             'utctime': 'now',
@@ -36,7 +36,7 @@ class TestOCIUploaderJob(object):
             'tenancy': 'ocid1.tenancy.oc1..'
         }
 
-        self.job = OCIUploaderJob(job_doc, self.config)
+        self.job = OCIUploadJob(job_doc, self.config)
         self.job.image_file = ['sles-12-sp4-v20180909.qcow2']
         self.job.credentials = credentials
         self.job._log_callback = Mock()
@@ -44,18 +44,18 @@ class TestOCIUploaderJob(object):
     def test_post_init_incomplete_arguments(self):
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'requesting_user': 'user1',
             'cloud': 'oci',
             'utctime': 'now'
         }
 
         with raises(MashUploadException):
-            OCIUploaderJob(job_doc, self.config)
+            OCIUploadJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.oci_job.stat')
-    @patch('mash.services.uploader.oci_job.UploadManager')
-    @patch('mash.services.uploader.oci_job.ObjectStorageClient')
+    @patch('mash.services.upload.oci_job.stat')
+    @patch('mash.services.upload.oci_job.UploadManager')
+    @patch('mash.services.upload.oci_job.ObjectStorageClient')
     @patch('builtins.open')
     def test_upload(
         self, mock_open, mock_storage_client, mock_upload_manager, mock_stat

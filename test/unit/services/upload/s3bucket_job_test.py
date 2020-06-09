@@ -5,12 +5,12 @@ from test.unit.test_helper import (
     patch_open
 )
 
-from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
+from mash.services.upload.s3bucket_job import S3BucketUploadJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.base_config import BaseConfig
 
 
-class TestS3BucketUploaderJob(object):
+class TestS3BucketUploadJob(object):
     def setup(self):
         self.config = BaseConfig(
             config_file='test/data/mash_config.yaml'
@@ -25,7 +25,7 @@ class TestS3BucketUploaderJob(object):
         job_doc = {
             'cloud_architecture': 'x86_64',
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'cloud': 'ec2',
             'requesting_user': 'user1',
             'utctime': 'now',
@@ -44,7 +44,7 @@ class TestS3BucketUploaderJob(object):
             'raw_image_upload_location': 'my-bucket/some-prefix/',
             'raw_image_upload_account': 'test'
         }
-        self.job = S3BucketUploaderJob(job_doc, self.config)
+        self.job = S3BucketUploadJob(job_doc, self.config)
         self.job.image_file = 'file.raw.gz'
         self.job.cloud_image_name = 'name'
         self.job.credentials = self.credentials
@@ -53,21 +53,21 @@ class TestS3BucketUploaderJob(object):
     def test_post_init_incomplete_arguments(self):
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now'
         }
 
         with raises(MashUploadException):
-            S3BucketUploaderJob(job_doc, self.config)
+            S3BucketUploadJob(job_doc, self.config)
 
         job_doc['cloud_image_name'] = 'name'
         with raises(MashUploadException):
-            S3BucketUploaderJob(job_doc, self.config)
+            S3BucketUploadJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.s3bucket_job.stat')
-    @patch('mash.services.uploader.s3bucket_job.get_client')
+    @patch('mash.services.upload.s3bucket_job.stat')
+    @patch('mash.services.upload.s3bucket_job.get_client')
     @patch_open
     def test_upload(
         self, mock_request_credentials, mock_get_client, mock_stat

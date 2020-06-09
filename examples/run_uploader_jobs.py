@@ -10,7 +10,7 @@ connection = Connection(
 
 channel = connection.channel()
 
-channel.queue.declare(queue='uploader.service', durable=True)
+channel.queue.declare(queue='upload.service', durable=True)
 channel.queue.declare(queue='obs.service', durable=True)
 channel.queue.declare(queue='credentials.service', durable=True)
 
@@ -18,7 +18,7 @@ messages = [
     ('credentials', 'credentials_job.json'),
     ('obs', 'obs_job_delete.json'),
     ('obs', 'obs_now_job.json'),
-    ('uploader', 'uploader_job.json')
+    ('upload', 'upload_job.json')
 ]
 
 for exchange, message in messages:

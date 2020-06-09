@@ -43,7 +43,7 @@ class TestBaseConfig(object):
     def test_get_services_names(self):
         # Services requiring credentials
         expected = [
-            'uploader', 'create', 'testing', 'raw_image_uploader',
+            'upload', 'create', 'testing', 'raw_image_upload',
             'replication', 'publisher', 'deprecation'
         ]
         services = self.empty_config.get_service_names(

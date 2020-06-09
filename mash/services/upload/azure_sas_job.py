@@ -30,7 +30,7 @@ from mash.utils.azure import upload_azure_file
 sas_url_match = r'^https://([A-Za-z]+).+/([A-Za-z|-]+)\?(.+)$'
 
 
-class AzureSASUploaderJob(MashJob):
+class AzureSASUploadJob(MashJob):
     """
     Implements VM image upload to Azure via SAS token.
     """
@@ -39,7 +39,7 @@ class AzureSASUploaderJob(MashJob):
             self.raw_image_upload_location = self.job_config['raw_image_upload_location']
         except KeyError as error:
             raise MashUploadException(
-                'Azure SAS uploader jobs require a(n) {0} '
+                'Azure SAS upload jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )

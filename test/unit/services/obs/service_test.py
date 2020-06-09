@@ -17,7 +17,7 @@ class TestOBSImageBuildResultService(object):
     @patch('mash.services.obs.service.os.makedirs')
     @patch('mash.services.obs.service.setup_logfile')
     @patch.object(OBSImageBuildResultService, '_process_message')
-    @patch.object(OBSImageBuildResultService, '_send_job_result_for_uploader')
+    @patch.object(OBSImageBuildResultService, '_send_job_result_for_upload')
     @patch('mash.services.obs.service.restart_jobs')
     @patch.object(MashService, '__init__')
     @patch('os.listdir')
@@ -25,7 +25,7 @@ class TestOBSImageBuildResultService(object):
     @patch('atexit.register')
     def setup(
         self, mock_register, mock_log, mock_listdir, mock_MashService,
-        mock_restart_jobs, mock_send_job_result_for_uploader,
+        mock_restart_jobs, mock_send_job_result_for_upload,
         mock_process_message,
         mock_setup_logfile, mock_makedirs
     ):
@@ -47,7 +47,7 @@ class TestOBSImageBuildResultService(object):
         self.obs_result.close_connection = Mock()
         self.obs_result.service_exchange = 'obs'
         self.obs_result.service_queue = 'service'
-        self.obs_result.next_service = 'uploader'
+        self.obs_result.next_service = 'upload'
         self.obs_result.job_document_key = 'job_document'
         self.obs_result.listener_msg_key = 'listener_msg'
 
@@ -79,15 +79,15 @@ class TestOBSImageBuildResultService(object):
 
     @patch.object(MashService, '_publish')
     @patch.object(OBSImageBuildResultService, '_delete_job')
-    def test_send_job_result_for_uploader(
+    def test_send_job_result_for_upload(
         self, mock_delete_job, mock_publish
     ):
         self.obs_result.jobs['815'] = Mock()
         self.obs_result.jobs['815'].job_nonstop = False
-        self.obs_result._send_job_result_for_uploader('815', {})
+        self.obs_result._send_job_result_for_upload('815', {})
         mock_delete_job.assert_called_once_with('815')
         mock_publish.assert_called_once_with(
-            'uploader', 'listener_msg', '{}'
+            'upload', 'listener_msg', '{}'
         )
 
     def test_send_control_response_local(self):
@@ -148,7 +148,7 @@ class TestOBSImageBuildResultService(object):
         message.body = '{"job_delete": "4711"}'
         self.obs_result._process_message(message)
         mock_publish.assert_called_once_with(
-            'uploader',
+            'upload',
             'listener_msg',
             JsonFormat.json_message(
                 {'obs_result': {'id': '4711', 'status': 'delete'}}
@@ -233,7 +233,7 @@ class TestOBSImageBuildResultService(object):
         job_worker = Mock()
         mock_OBSImageBuildResult.return_value = job_worker
         self.obs_result._send_job_response = Mock()
-        self.obs_result._send_job_result_for_uploader = Mock()
+        self.obs_result._send_job_result_for_upload = Mock()
         data = {
             "id": "123",
             "job_file": "tempfile",
@@ -262,7 +262,7 @@ class TestOBSImageBuildResultService(object):
         }
         self.obs_result._start_job(data)
         job_worker.set_result_handler.assert_called_once_with(
-            self.obs_result._send_job_result_for_uploader
+            self.obs_result._send_job_result_for_upload
         )
         job_worker.start_watchdog.assert_called_once_with(
             isotime=None, nonstop=False

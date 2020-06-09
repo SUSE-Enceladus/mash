@@ -27,7 +27,7 @@ from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
 
 
-class OCIUploaderJob(MashJob):
+class OCIUploadJob(MashJob):
     """
     Implements VM image upload to OCI
     """
@@ -46,7 +46,7 @@ class OCIUploaderJob(MashJob):
             self.base_cloud_image_name = self.job_config['cloud_image_name']
         except KeyError as error:
             raise MashUploadException(
-                'OCI uploader jobs require a(n) {0} '
+                'OCI upload jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )

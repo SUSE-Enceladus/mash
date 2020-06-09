@@ -21,48 +21,48 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.uploader.config import UploaderConfig
+from mash.services.upload.config import UploadConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
-from mash.services.uploader.azure_job import AzureUploaderJob
-from mash.services.uploader.azure_raw_job import AzureRawUploaderJob
-from mash.services.uploader.azure_sas_job import AzureSASUploaderJob
-from mash.services.uploader.gce_job import GCEUploaderJob
+from mash.services.upload.azure_job import AzureUploadJob
+from mash.services.upload.azure_raw_job import AzureRawUploadJob
+from mash.services.upload.azure_sas_job import AzureSASUploadJob
+from mash.services.upload.gce_job import GCEUploadJob
 from mash.services.no_op_job import NoOpJob
-from mash.services.uploader.s3bucket_job import S3BucketUploaderJob
-from mash.services.uploader.oci_job import OCIUploaderJob
+from mash.services.upload.s3bucket_job import S3BucketUploadJob
+from mash.services.upload.oci_job import OCIUploadJob
 
 
 def main():
     """
-    mash - uploader service application entry point
+    mash - upload service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
 
-        service_name = 'uploader'
+        service_name = 'upload'
 
         # Create job factory
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
-                'azure': AzureUploaderJob,
-                'azure_raw': AzureRawUploaderJob,
-                'azure_sas': AzureSASUploaderJob,
+                'azure': AzureUploadJob,
+                'azure_raw': AzureRawUploadJob,
+                'azure_sas': AzureSASUploadJob,
                 'ec2': NoOpJob,
-                's3bucket': S3BucketUploaderJob,
-                'gce': GCEUploaderJob,
-                'oci': OCIUploaderJob
+                's3bucket': S3BucketUploadJob,
+                'gce': GCEUploadJob,
+                'oci': OCIUploadJob
             }
         )
 
         # run service, enter main loop
         ListenerService(
             service_exchange=service_name,
-            config=UploaderConfig(),
+            config=UploadConfig(),
             custom_args={
                 'listener_msg_args': ['image_file'],
                 'status_msg_args': ['image_file', 'source_regions'],

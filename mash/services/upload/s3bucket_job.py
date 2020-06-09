@@ -25,7 +25,7 @@ from mash.utils.ec2 import get_client
 from mash.services.status_levels import SUCCESS
 
 
-class S3BucketUploaderJob(MashJob):
+class S3BucketUploadJob(MashJob):
     """
     Implements raw image upload to Amazon S3 bucket
     """
@@ -43,7 +43,7 @@ class S3BucketUploaderJob(MashJob):
             self.location = self.job_config['raw_image_upload_location']
         except KeyError as error:
             raise MashUploadException(
-                'S3 bucket uploader jobs require a(n) {0} '
+                'S3 bucket upload jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )

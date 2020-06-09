@@ -3,14 +3,14 @@ from unittest.mock import (
     MagicMock, Mock, patch
 )
 
-from mash.services.uploader.gce_job import GCEUploaderJob
+from mash.services.upload.gce_job import GCEUploadJob
 from mash.mash_exceptions import MashUploadException
-from mash.services.uploader.config import UploaderConfig
+from mash.services.upload.config import UploadConfig
 
 
-class TestGCEUploaderJob(object):
+class TestGCEUploadJob(object):
     def setup(self):
-        self.config = UploaderConfig(
+        self.config = UploadConfig(
             config_file='test/data/mash_config.yaml'
         )
 
@@ -34,7 +34,7 @@ class TestGCEUploaderJob(object):
         }
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'cloud': 'gce',
             'requesting_user': 'user1',
             'utctime': 'now',
@@ -47,7 +47,7 @@ class TestGCEUploaderJob(object):
             'image_description': 'description 20180909'
         }
 
-        self.job = GCEUploaderJob(job_doc, self.config)
+        self.job = GCEUploadJob(job_doc, self.config)
         self.job.image_file = ['sles-12-sp4-v20180909.tar.gz']
         self.job.credentials = self.credentials
         self.job._log_callback = Mock()
@@ -55,19 +55,19 @@ class TestGCEUploaderJob(object):
     def test_post_init_incomplete_arguments(self):
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'requesting_user': 'user1',
             'cloud': 'gce',
             'utctime': 'now'
         }
 
         with raises(MashUploadException):
-            GCEUploaderJob(job_doc, self.config)
+            GCEUploadJob(job_doc, self.config)
 
     def test_post_init_sles_11(self):
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'cloud': 'gce',
             'requesting_user': 'user1',
             'utctime': 'now',
@@ -81,9 +81,9 @@ class TestGCEUploaderJob(object):
         }
 
         with raises(MashUploadException):
-            GCEUploaderJob(job_doc, self.config)
+            GCEUploadJob(job_doc, self.config)
 
-    @patch('mash.services.uploader.gce_job.GoogleStorageDriver')
+    @patch('mash.services.upload.gce_job.GoogleStorageDriver')
     @patch('builtins.open')
     def test_upload(
         self, mock_open, mock_storage_driver

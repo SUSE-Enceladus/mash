@@ -24,7 +24,7 @@ from mash.services.status_levels import SUCCESS
 from mash.utils.azure import upload_azure_file
 
 
-class AzureUploaderJob(MashJob):
+class AzureUploadJob(MashJob):
     """
     Implements VM image upload to Azure
     """
@@ -38,7 +38,7 @@ class AzureUploaderJob(MashJob):
             self.resource_group = self.job_config.get('resource_group')
         except KeyError as error:
             raise MashUploadException(
-                'Azure uploader jobs require a(n) {0} '
+                'Azure upload jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
