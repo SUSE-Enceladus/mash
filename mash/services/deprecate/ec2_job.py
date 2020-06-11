@@ -70,7 +70,7 @@ class EC2DeprecateJob(MashJob):
             deprecator = EC2DeprecateImg(
                 access_key=credential['access_key_id'],
                 secret_key=credential['secret_access_key'],
-                deprecate_image_name=self.old_cloud_image_name,
+                deprecation_image_name=self.old_cloud_image_name,
                 replacement_image_name=cloud_image_name,
                 log_callback=self.log_callback
             )

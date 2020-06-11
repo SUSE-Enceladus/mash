@@ -50,7 +50,7 @@ class TestEC2DeprecateJob(object):
         self.job.run_job()
 
         mock_ec2_deprecate_image.assert_called_once_with(
-            access_key='123456', deprecate_image_name='old_image_123',
+            access_key='123456', deprecation_image_name='old_image_123',
             replacement_image_name='image_123', secret_key='654321',
             log_callback=self.job._log_callback
         )

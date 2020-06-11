@@ -21,7 +21,7 @@ class TestAzurePublishJob(object):
             'container': 'container2',
             'storage_account': 'sa2',
             'region': 'East US',
-            'publish_id': 'suse',
+            'publisher_id': 'suse',
             'sku': '123',
             'utctime': 'now',
             'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure',

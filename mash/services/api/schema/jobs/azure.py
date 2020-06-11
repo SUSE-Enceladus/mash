@@ -31,7 +31,7 @@ azure_job_message['properties']['offer_id'] = string_with_example(
     description='The name of a group of related images created by a '
                 'publish.'
 )
-azure_job_message['properties']['publish_id'] = string_with_example(
+azure_job_message['properties']['publisher_id'] = string_with_example(
     'suse',
     description='The organization that created the image.'
 )

@@ -34,7 +34,7 @@ class GCEJob(BaseJob):
             self.cloud_account = self.kwargs['cloud_account']
             self.region = self.kwargs['region']
             self.bucket = self.kwargs['bucket']
-            self.test_account = self.kwargs['test_account']
+            self.testing_account = self.kwargs['testing_account']
         except KeyError as error:
             raise MashJobCreatorException(
                 'GCE jobs require a(n) {0} key in the job doc.'.format(
@@ -105,7 +105,7 @@ class GCEJob(BaseJob):
                 'account': self.cloud_account,
                 'bucket': self.bucket,
                 'region': self.region,
-                'test_account': self.test_account,
+                'testing_account': self.testing_account,
                 'distro': self.distro,
                 'instance_type': self.instance_type,
                 'boot_firmware': self.boot_firmware

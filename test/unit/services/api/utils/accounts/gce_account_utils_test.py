@@ -213,7 +213,7 @@ def test_update_gce_account(
         bucket='images',
         region='us-east1',
         credentials=credentials,
-        test_account='tester'
+        testing_account='tester'
     )
 
     assert result == account
@@ -238,7 +238,7 @@ def test_update_gce_account(
             bucket='images',
             region='us-east1',
             credentials=credentials,
-            test_account='tester'
+            testing_account='tester'
         )
 
     mock_db.session.rollback.assert_called_once_with()
@@ -253,7 +253,7 @@ def test_update_gce_account(
             bucket='images',
             region='us-east1',
             credentials=credentials,
-            test_account='tester'
+            testing_account='tester'
         )
 
     # Account not found
@@ -265,7 +265,7 @@ def test_update_gce_account(
         bucket='images',
         region='us-east1',
         credentials=credentials,
-        test_account='tester'
+        testing_account='tester'
     )
 
     assert result is None

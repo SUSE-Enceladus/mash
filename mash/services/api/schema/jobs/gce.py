@@ -53,7 +53,7 @@ gce_job_message['properties']['test_fallback_regions'] = {
                    'fails on a recoverable error. This allows mash to test '
                    'the image multiple times for certain expected issues.'
 }
-gce_job_message['properties']['test_account'] = string_with_example(
+gce_job_message['properties']['testing_account'] = string_with_example(
     'testaccount1',
     description='The account to use for launching and test an instance '
                 'of the image. This is required if the cloud_account is a '

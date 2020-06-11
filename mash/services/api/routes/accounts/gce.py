@@ -61,7 +61,7 @@ gce_account_response = Model(
         'name': fields.String,
         'bucket': fields.String,
         'region': fields.String,
-        'test_account': fields.String,
+        'testing_account': fields.String,
         'is_publishing_account': fields.String
     }
 )
@@ -97,7 +97,7 @@ class GCEAccountCreateAndList(Resource):
                 data['bucket'],
                 data['region'],
                 data['credentials'],
-                data.get('test_account'),
+                data.get('testing_account'),
                 data.get('is_publishing_account', False)
             )
         except MashException as error:
@@ -208,7 +208,7 @@ class GCEAccount(Resource):
                 data.get('bucket'),
                 data.get('region'),
                 data.get('credentials'),
-                data.get('test_account')
+                data.get('testing_account')
             )
         except Exception as error:
             current_app.logger.warning(error)

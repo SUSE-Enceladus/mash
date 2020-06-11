@@ -31,13 +31,13 @@ def create_gce_account(
     bucket,
     region_name,
     credentials,
-    test_account,
+    testing_account,
     is_publishing_account
 ):
     """
     Create a new GCE account for user.
     """
-    if is_publishing_account and not test_account:
+    if is_publishing_account and not testing_account:
         raise MashDBException(
             'Jobs using a GCE publishing account require'
             ' the use of a test account.'
@@ -54,7 +54,7 @@ def create_gce_account(
         name=account_name,
         bucket=bucket,
         region=region_name,
-        test_account=test_account,
+        testing_account=testing_account,
         is_publishing_account=is_publishing_account,
         user_id=user_id
     )
@@ -136,7 +136,7 @@ def update_gce_account(
     bucket=None,
     region=None,
     credentials=None,
-    test_account=None
+    testing_account=None
 ):
     """
     Update an existing GCE account.
@@ -170,8 +170,8 @@ def update_gce_account(
     if region:
         gce_account.region = region
 
-    if test_account and gce_account.is_publishing_account:
-        gce_account.test_account = test_account
+    if testing_account and gce_account.is_publishing_account:
+        gce_account.testing_account = testing_account
 
     try:
         db.session.add(gce_account)

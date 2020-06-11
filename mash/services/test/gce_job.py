@@ -52,7 +52,7 @@ class GCETestJob(MashJob):
             self.account = self.job_config['account']
             self.region = self.job_config['region']
             self.bucket = self.job_config['bucket']
-            self.test_account = self.job_config['test_account']
+            self.testing_account = self.job_config['testing_account']
             self.tests = self.job_config['tests']
         except KeyError as error:
             raise MashTestException(
@@ -87,15 +87,15 @@ class GCETestJob(MashJob):
         self.status = SUCCESS
 
         accounts = [self.account]
-        if self.test_account:
+        if self.testing_account:
             # Get both sets of credentials in case cleanup method is run.
-            accounts.append(self.test_account)
+            accounts.append(self.testing_account)
 
         self.request_credentials(accounts)
-        credentials = self.credentials[self.test_account or self.account]
+        credentials = self.credentials[self.testing_account or self.account]
 
         if self.test_fallback_regions == []:
-            # fallback test explicitly disabled
+            # fallback testing explicitly disabled
             fallback_regions = set()
         elif self.test_fallback_regions is None:
             fallback_regions = get_region_list(credentials)

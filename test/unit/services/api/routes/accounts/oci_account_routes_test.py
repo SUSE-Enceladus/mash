@@ -125,8 +125,6 @@ def test_api_get_account_oci(
     account.name = 'user1'
     account.bucket = 'images'
     account.region = 'us-phoenix-1'
-    account.test_account = None
-    account.is_publishing_account = False
 
     mock_get_oci_account.return_value = account
     mock_jwt_identity.return_value = 'user1'
@@ -161,8 +159,6 @@ def test_api_get_account_list_oci(
     account.name = 'user1'
     account.bucket = 'images'
     account.region = 'us-phoenix-1'
-    account.test_account = None
-    account.is_publishing_account = False
 
     mock_get_oci_accounts.return_value = [account]
     mock_jwt_identity.return_value = 'user1'
@@ -190,8 +186,6 @@ def test_api_update_account_oci(
     account.name = 'user1'
     account.bucket = 'images'
     account.region = 'us-phoenix-1'
-    account.test_account = None
-    account.is_publishing_account = False
 
     mock_update_oci_account.return_value = account
     mock_jwt_identity.return_value = 'user1'

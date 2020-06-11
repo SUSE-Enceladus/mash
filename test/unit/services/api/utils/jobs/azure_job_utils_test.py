@@ -74,7 +74,7 @@ def test_update_azure_job_accounts(
         'destination_storage_account': 'sa2',
         'label': 'New Image 123',
         'offer_id': 'sles',
-        'publish_id': 'suse',
+        'publisher_id': 'suse',
         'cloud_image_name': 'Test OEM Image',
         'image_description': 'Description of an image',
         'old_cloud_image_name': 'Old test OEM Image'

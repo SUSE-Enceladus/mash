@@ -320,7 +320,7 @@ class TestJobCreatorService(object):
         assert data['image_description'] == 'New Image #123'
         assert data['label'] == 'New Image 123'
         assert data['offer_id'] == 'sles'
-        assert data['publish_id'] == 'suse'
+        assert data['publisher_id'] == 'suse'
         assert data['sku'] == '123'
         assert data['generation_id'] == 'image-gen2'
         assert data['cloud_image_name_generation_suffix'] == 'gen2'
@@ -400,7 +400,7 @@ class TestJobCreatorService(object):
         assert data['tests'] == ['test_stuff']
         assert data['region'] == 'us-west1'
         assert data['account'] == 'test-gce'
-        assert data['test_account'] == 'testacnt1'
+        assert data['testing_account'] == 'testacnt1'
         assert data['image_project'] == 'test'
 
         # Raw Image Upload Job Doc

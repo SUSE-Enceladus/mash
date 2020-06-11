@@ -49,7 +49,7 @@ def validate_azure_job(job_doc):
     publish_args = (
         'label',
         'offer_id',
-        'publish_id',
+        'publisher_id',
         'sku'
     )
 

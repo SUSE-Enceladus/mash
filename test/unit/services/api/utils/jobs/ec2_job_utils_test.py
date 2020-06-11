@@ -123,7 +123,7 @@ def test_add_target_ec2_account(mock_get_regions):
         accounts,
         cloud_accounts,
         helper_images,
-        skip_replicate=True
+        skip_replication=True
     )
 
     assert 'us-east-99' not in accounts

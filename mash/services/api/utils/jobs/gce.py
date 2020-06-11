@@ -40,7 +40,7 @@ def validate_gce_job(job_doc):
     attrs = [
         'region',
         'bucket',
-        'test_account'
+        'testing_account'
     ]
 
     for attr in attrs:
@@ -56,7 +56,7 @@ def validate_gce_job(job_doc):
             )
 
     if 'test' in services:
-        if cloud_account.is_publishing_account and not job_doc['test_account']:
+        if cloud_account.is_publishing_account and not job_doc['testing_account']:
             raise MashJobException(
                 'Jobs using a GCE publishing account require'
                 ' the use of a test account.'

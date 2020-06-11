@@ -45,7 +45,7 @@ class AzurePublishJob(MashJob):
             self.image_description = self.job_config['image_description']
             self.label = self.job_config['label']
             self.offer_id = self.job_config['offer_id']
-            self.publish_id = self.job_config['publish_id']
+            self.publisher_id = self.job_config['publisher_id']
             self.sku = self.job_config['sku']
             self.account = self.job_config['account']
             self.region = self.job_config['region']
@@ -98,7 +98,7 @@ class AzurePublishJob(MashJob):
                 offer_doc = request_cloud_partner_offer_doc(
                     credential,
                     self.offer_id,
-                    self.publish_id
+                    self.publisher_id
                 )
 
                 kwargs = {
@@ -122,7 +122,7 @@ class AzurePublishJob(MashJob):
                     credential,
                     offer_doc,
                     self.offer_id,
-                    self.publish_id
+                    self.publisher_id
                 )
                 self.log_callback.info(
                     'Updated cloud partner offer doc for account: {}.'.format(
@@ -134,7 +134,7 @@ class AzurePublishJob(MashJob):
                     operation = publish_cloud_partner_offer(
                         credential,
                         self.offer_id,
-                        self.publish_id
+                        self.publisher_id
                     )
                     wait_on_cloud_partner_operation(
                         credential,

@@ -51,7 +51,7 @@
         "test123": {
           "bucket": "images",
           "region": "us-west2",
-          "test_account": "tester"
+          "testing_account": "tester"
         },
         "tester": {
           "bucket": "vmimages",

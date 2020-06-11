@@ -55,7 +55,7 @@ def upgrade():
     sa.Column('name', sa.String(length=64), nullable=False),
     sa.Column('bucket', sa.String(length=222), nullable=False),
     sa.Column('region', sa.String(length=32), nullable=False),
-    sa.Column('test_account', sa.String(length=64), nullable=True),
+    sa.Column('testing_account', sa.String(length=64), nullable=True),
     sa.Column('is_publishing_account', sa.Boolean(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),

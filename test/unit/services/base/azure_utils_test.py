@@ -373,7 +373,7 @@ def test_request_cloud_partner_offer_doc(
         credentials, 'sles', 'suse',
     )
     mock_requests.get.assert_called_once_with(
-        'https://cloudpartner.azure.com/api/publishs/suse/'
+        'https://cloudpartner.azure.com/api/publishers/suse/'
         'offers/sles?api-version=2017-10-31',
         headers={
             'Accept': 'application/json',
@@ -564,7 +564,7 @@ def test_deprecate_image_in_offer_invalid():
     )
 
     callback.assert_called_once_with(
-        'Deprecate image name, new_image_20180909 does match the '
+        'Deprecation image name, new_image_20180909 does match the '
         'mediaName attribute, new_image.'
     )
 

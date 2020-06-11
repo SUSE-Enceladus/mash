@@ -50,7 +50,7 @@ def test_gce_job_test_message(mock_init):
         'bucket': 'images',
         'cloud': 'gce',
         'region': 'westus',
-        'test_account': None
+        'testing_account': None
     }
     job.cloud = 'gce'
     job.tests = ['test1']

@@ -24,7 +24,7 @@ from mash.mash_exceptions import MashTestException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import (
-    get_test_account,
+    get_testing_account,
     process_test_result
 )
 from mash.utils.mash_utils import create_ssh_key_pair
@@ -107,12 +107,12 @@ class EC2TestJob(MashJob):
         # Get all account credentials in one request
         accounts = []
         for region, info in self.test_regions.items():
-            accounts.append(get_test_account(info))
+            accounts.append(get_testing_account(info))
 
         self.request_credentials(accounts)
 
         for region, info in self.test_regions.items():
-            account = get_test_account(info)
+            account = get_testing_account(info)
             credentials = self.credentials[account]
 
             if info['partition'] in ('aws-cn', 'aws-us-gov') and \

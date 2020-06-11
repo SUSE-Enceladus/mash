@@ -36,7 +36,7 @@ def test_update_gce_job_accounts(
     account.name = 'acnt1'
     account.region = 'us-east1'
     account.bucket = 'images'
-    account.test_account = 'acnt2'
+    account.testing_account = 'acnt2'
     account.is_publishing_account = True
     mock_get_gce_account.return_value = account
 
@@ -77,7 +77,7 @@ def test_update_gce_job_accounts(
 
     assert result['region'] == 'us-east1'
     assert result['bucket'] == 'images2'
-    assert result['test_account'] == 'acnt2'
+    assert result['testing_account'] == 'acnt2'
 
     # Missing family
     del job_doc['family']
@@ -86,16 +86,16 @@ def test_update_gce_job_accounts(
         validate_gce_job(job_doc)
 
     # Publishing account has no test account
-    del job_doc['test_account']
+    del job_doc['testing_account']
     job_doc['family'] = 'sles'
-    account.test_account = None
+    account.testing_account = None
 
     with raises(MashJobException):
         validate_gce_job(job_doc)
 
     # Publishing account has no image_project
     del job_doc['image_project']
-    job_doc['test_account'] = 'acnt2'
+    job_doc['testing_account'] = 'acnt2'
 
     with raises(MashJobException):
         validate_gce_job(job_doc)

@@ -17,7 +17,7 @@ class TestGCETestJob(object):
             'ssh_private_key_file': 'private_ssh_key.file',
             'region': 'us-west1-c',
             'account': 'test-gce',
-            'test_account': 'testacnt',
+            'testing_account': 'testacnt',
             'bucket': 'bucket',
             'tests': ['test_stuff'],
             'utctime': 'now',

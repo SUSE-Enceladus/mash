@@ -50,7 +50,7 @@ class AzureJob(BaseJob):
         self.destination_storage_account = self.kwargs.get('destination_storage_account')
         self.label = self.kwargs.get('label')
         self.offer_id = self.kwargs.get('offer_id')
-        self.publish_id = self.kwargs.get('publish_id')
+        self.publisher_id = self.kwargs.get('publisher_id')
         self.sku = self.kwargs.get('sku')
         self.generation_id = self.kwargs.get('generation_id')
         self.cloud_image_name_generation_suffix = self.kwargs.get(
@@ -80,7 +80,7 @@ class AzureJob(BaseJob):
                 'label': self.label,
                 'offer_id': self.offer_id,
                 'cloud': self.cloud,
-                'publish_id': self.publish_id,
+                'publisher_id': self.publisher_id,
                 'sku': self.sku,
                 'publish_offer': self.publish_offer,
                 'account': self.cloud_account,

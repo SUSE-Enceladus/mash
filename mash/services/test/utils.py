@@ -19,8 +19,8 @@
 from mash.services.status_levels import FAILED, SUCCESS
 
 
-def get_test_account(account_info):
-    return account_info.get('test_account', account_info['account'])
+def get_testing_account(account_info):
+    return account_info.get('testing_account', account_info['account'])
 
 
 def process_test_result(result, log_callback, region):
