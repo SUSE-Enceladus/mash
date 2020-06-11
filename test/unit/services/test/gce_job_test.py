@@ -2,22 +2,22 @@ import pytest
 
 from unittest.mock import call, Mock, patch
 
-from mash.services.testing.gce_job import GCETestingJob
-from mash.mash_exceptions import MashTestingException
+from mash.services.test.gce_job import GCETestJob
+from mash.mash_exceptions import MashTestException
 from img_proof.ipa_exceptions import IpaRetryableError
 
 
-class TestGCETestingJob(object):
+class TestGCETestJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'last_service': 'testing',
+            'last_service': 'test',
             'cloud': 'gce',
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
             'region': 'us-west1-c',
             'account': 'test-gce',
-            'testing_account': 'testingacnt',
+            'test_account': 'testacnt',
             'bucket': 'bucket',
             'tests': ['test_stuff'],
             'utctime': 'now',
@@ -29,22 +29,22 @@ class TestGCETestingJob(object):
             'private_ssh_key.file'
         self.config.get_img_proof_timeout.return_value = None
 
-    def test_testing_gce_missing_key(self):
+    def test_test_gce_missing_key(self):
         del self.job_config['account']
 
-        with pytest.raises(MashTestingException):
-            GCETestingJob(self.job_config, self.config)
+        with pytest.raises(MashTestException):
+            GCETestJob(self.job_config, self.config)
 
         self.job_config['account'] = 'test-gce'
 
-    @patch('mash.services.testing.gce_job.get_region_list')
-    @patch('mash.services.testing.gce_job.cleanup_gce_image')
-    @patch('mash.services.testing.gce_job.os')
-    @patch('mash.services.testing.gce_job.create_ssh_key_pair')
-    @patch('mash.services.testing.gce_job.random')
+    @patch('mash.services.test.gce_job.get_region_list')
+    @patch('mash.services.test.gce_job.cleanup_gce_image')
+    @patch('mash.services.test.gce_job.os')
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
+    @patch('mash.services.test.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.testing.img_proof_helper.test_image')
-    def test_testing_run_gce_test(
+    @patch('mash.services.test.img_proof_helper.test_image')
+    def test_test_run_gce_test(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_cleanup_image, mock_get_region_list
     ):
@@ -70,7 +70,7 @@ class TestGCETestingJob(object):
         if 'test_fallback_regions' in self.job_config:
             mock_test_image.side_effect = IpaRetryableError('quota exceeded')
 
-        job = GCETestingJob(self.job_config, self.config)
+        job = GCETestJob(self.job_config, self.config)
         job._log_callback = Mock()
         mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         job.credentials = {
@@ -78,7 +78,7 @@ class TestGCETestingJob(object):
                 'fake': '123',
                 'credentials': '321'
             },
-            'testingacnt': {
+            'testacnt': {
                 'fake': '123',
                 'credentials': '321'
             }
@@ -130,14 +130,14 @@ class TestGCETestingJob(object):
         ])
         assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
 
-    @patch('mash.services.testing.gce_job.get_region_list')
-    @patch('mash.services.testing.gce_job.cleanup_gce_image')
-    @patch('mash.services.testing.gce_job.os')
-    @patch('mash.services.testing.gce_job.create_ssh_key_pair')
-    @patch('mash.services.testing.gce_job.random')
+    @patch('mash.services.test.gce_job.get_region_list')
+    @patch('mash.services.test.gce_job.cleanup_gce_image')
+    @patch('mash.services.test.gce_job.os')
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
+    @patch('mash.services.test.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.testing.img_proof_helper.test_image')
-    def test_testing_run_default_fallback(
+    @patch('mash.services.test.img_proof_helper.test_image')
+    def test_test_run_default_fallback(
             self, mock_test_image, mock_temp_file, mock_random,
             mock_create_ssh_key_pair, mock_os, mock_cleanup_image, mock_get_region_list
     ):
@@ -149,7 +149,7 @@ class TestGCETestingJob(object):
         mock_get_region_list.return_value = set(['us-west1-c', 'us-east1-c'])
         mock_test_image.side_effect = IpaRetryableError('quota exceeded')
 
-        job = GCETestingJob(self.job_config, self.config)
+        job = GCETestJob(self.job_config, self.config)
         job._log_callback = Mock()
         mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         job.credentials = {
@@ -157,7 +157,7 @@ class TestGCETestingJob(object):
                 'fake': '123',
                 'credentials': '321'
             },
-            'testingacnt': {
+            'testacnt': {
                 'fake': '123',
                 'credentials': '321'
             }
@@ -226,10 +226,10 @@ class TestGCETestingJob(object):
             )
         ])
 
-    def test_testing_run_gce_test_no_fallback_region(self):
+    def test_test_run_gce_test_no_fallback_region(self):
         self.job_config['test_fallback_regions'] = []
-        self.test_testing_run_gce_test()
+        self.test_test_run_gce_test()
 
-    def test_testing_run_gce_test_explicit_fallback_region(self):
+    def test_test_run_gce_test_explicit_fallback_region(self):
         self.job_config['test_fallback_regions'] = ['us-west1-c']
-        self.test_testing_run_gce_test()
+        self.test_test_run_gce_test()

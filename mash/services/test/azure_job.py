@@ -20,13 +20,13 @@ import os
 import random
 import traceback
 
-from mash.mash_exceptions import MashTestingException
+from mash.mash_exceptions import MashTestException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
-from mash.services.testing.utils import process_test_result
+from mash.services.test.utils import process_test_result
 from mash.utils.azure import delete_image, delete_blob
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
-from mash.services.testing.img_proof_helper import img_proof_test
+from mash.services.test.img_proof_helper import img_proof_test
 
 instance_types = [
     'Basic_A2',
@@ -37,9 +37,9 @@ instance_types = [
 ]
 
 
-class AzureTestingJob(MashJob):
+class AzureTestJob(MashJob):
     """
-    Class for an Azure testing job.
+    Class for an Azure test job.
     """
 
     def post_init(self):
@@ -54,8 +54,8 @@ class AzureTestingJob(MashJob):
             self.storage_account = self.job_config['storage_account']
             self.tests = self.job_config['tests']
         except KeyError as error:
-            raise MashTestingException(
-                'Azure testing jobs require a(n) {0} '
+            raise MashTestException(
+                'Azure test jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )

@@ -22,42 +22,42 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.testing.config import TestingConfig
+from mash.services.test.config import TestConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
-from mash.services.testing.azure_job import AzureTestingJob
-from mash.services.testing.ec2_job import EC2TestingJob
-from mash.services.testing.gce_job import GCETestingJob
-from mash.services.testing.oci_job import OCITestingJob
+from mash.services.test.azure_job import AzureTestJob
+from mash.services.test.ec2_job import EC2TestJob
+from mash.services.test.gce_job import GCETestJob
+from mash.services.test.oci_job import OCITestJob
 
 
 def main():
     """
-    mash - testing service application entry point
+    mash - test service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.INFO)
 
-        service_name = 'testing'
+        service_name = 'test'
 
         # Create job factory
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
-                'azure': AzureTestingJob,
-                'ec2': EC2TestingJob,
-                'gce': GCETestingJob,
-                'oci': OCITestingJob
+                'azure': AzureTestJob,
+                'ec2': EC2TestJob,
+                'gce': GCETestJob,
+                'oci': OCITestJob
             }
         )
 
         # run service, enter main loop
         ListenerService(
             service_exchange=service_name,
-            config=TestingConfig(),
+            config=TestConfig(),
             custom_args={
                 'listener_msg_args': ['image_file', 'source_regions'],
                 'status_msg_args': ['image_file', 'source_regions'],

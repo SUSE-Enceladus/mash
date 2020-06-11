@@ -166,13 +166,13 @@ class BaseJob(object):
             )
         )
 
-    def get_testing_message(self):
+    def get_test_message(self):
         """
-        Build testing job message.
+        Build test job message.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_testing_message method.'.format(
+            'get_test_message method.'.format(
                 self.__class__.__name__
             )
         )

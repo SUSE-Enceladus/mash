@@ -141,7 +141,7 @@ def test_api_get_account_gce(
     account.name = 'user1'
     account.bucket = 'images'
     account.region = 'us-east-1'
-    account.testing_account = None
+    account.test_account = None
     account.is_publishing_account = False
 
     mock_get_gce_account.return_value = account
@@ -177,7 +177,7 @@ def test_api_get_account_list_gce(
     account.name = 'user1'
     account.bucket = 'images'
     account.region = 'us-east-1'
-    account.testing_account = None
+    account.test_account = None
     account.is_publishing_account = False
 
     mock_get_gce_accounts.return_value = [account]
@@ -206,7 +206,7 @@ def test_api_update_account_gce(
     account.name = 'user1'
     account.bucket = 'images'
     account.region = 'us-east-1'
-    account.testing_account = None
+    account.test_account = None
     account.is_publishing_account = False
 
     mock_update_gce_account.return_value = account

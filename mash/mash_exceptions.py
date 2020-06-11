@@ -111,9 +111,9 @@ class MashLoggerException(MashException):
     """
 
 
-class MashTestingException(MashException):
+class MashTestException(MashException):
     """
-    Base exception for testing service.
+    Base exception for test service.
     """
 
 

@@ -96,12 +96,12 @@ class OCIJob(BaseJob):
 
         return JsonFormat.json_message(replication_message)
 
-    def get_testing_message(self):
+    def get_test_message(self):
         """
-        Build testing job message.
+        Build test job message.
         """
-        testing_message = {
-            'testing_job': {
+        test_message = {
+            'test_job': {
                 'cloud': self.cloud,
                 'tests': self.tests,
                 'account': self.cloud_account,
@@ -116,16 +116,16 @@ class OCIJob(BaseJob):
             }
         }
 
-        if self.last_service == 'testing' and \
+        if self.last_service == 'test' and \
                 self.cleanup_images in [True, None]:
-            testing_message['testing_job']['cleanup_images'] = True
+            test_message['test_job']['cleanup_images'] = True
 
         elif self.cleanup_images is False:
-            testing_message['testing_job']['cleanup_images'] = False
+            test_message['test_job']['cleanup_images'] = False
 
-        testing_message['testing_job'].update(self.base_message)
+        test_message['test_job'].update(self.base_message)
 
-        return JsonFormat.json_message(testing_message)
+        return JsonFormat.json_message(test_message)
 
     def get_upload_message(self):
         """

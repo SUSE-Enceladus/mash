@@ -96,7 +96,7 @@ def test_create_gce_account(
 
     mock_db.session.rollback.assert_called_once_with()
 
-    # Publishing account with no testing account
+    # Publishing account with no test account
 
     with raises(MashDBException):
         create_gce_account(
@@ -213,7 +213,7 @@ def test_update_gce_account(
         bucket='images',
         region='us-east1',
         credentials=credentials,
-        testing_account='tester'
+        test_account='tester'
     )
 
     assert result == account
@@ -238,7 +238,7 @@ def test_update_gce_account(
             bucket='images',
             region='us-east1',
             credentials=credentials,
-            testing_account='tester'
+            test_account='tester'
         )
 
     mock_db.session.rollback.assert_called_once_with()
@@ -253,7 +253,7 @@ def test_update_gce_account(
             bucket='images',
             region='us-east1',
             credentials=credentials,
-            testing_account='tester'
+            test_account='tester'
         )
 
     # Account not found
@@ -265,7 +265,7 @@ def test_update_gce_account(
         bucket='images',
         region='us-east1',
         credentials=credentials,
-        testing_account='tester'
+        test_account='tester'
     )
 
     assert result is None

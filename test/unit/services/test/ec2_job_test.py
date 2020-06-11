@@ -2,15 +2,15 @@ import pytest
 
 from unittest.mock import call, Mock, patch
 
-from mash.services.testing.ec2_job import EC2TestingJob
-from mash.mash_exceptions import MashTestingException
+from mash.services.test.ec2_job import EC2TestJob
+from mash.mash_exceptions import MashTestException
 
 
-class TestEC2TestingJob(object):
+class TestEC2TestJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'last_service': 'testing',
+            'last_service': 'test',
             'cloud': 'ec2',
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
@@ -26,23 +26,23 @@ class TestEC2TestingJob(object):
             'private_ssh_key.file'
         self.config.get_img_proof_timeout.return_value = None
 
-    def test_testing_ec2_missing_key(self):
+    def test_test_ec2_missing_key(self):
         del self.job_config['test_regions']
 
-        with pytest.raises(MashTestingException):
-            EC2TestingJob(self.job_config, self.config)
+        with pytest.raises(MashTestException):
+            EC2TestJob(self.job_config, self.config)
 
-    @patch('mash.services.testing.ec2_job.cleanup_ec2_image')
-    @patch('mash.services.testing.ec2_job.os')
-    @patch('mash.services.testing.ec2_job.create_ssh_key_pair')
-    @patch('mash.services.testing.ec2_job.random')
+    @patch('mash.services.test.ec2_job.cleanup_ec2_image')
+    @patch('mash.services.test.ec2_job.os')
+    @patch('mash.services.test.ec2_job.create_ssh_key_pair')
+    @patch('mash.services.test.ec2_job.random')
     @patch('mash.utils.ec2.EC2Setup')
     @patch('mash.utils.ec2.generate_name')
     @patch('mash.utils.ec2.get_client')
     @patch('mash.utils.ec2.get_key_from_file')
     @patch('mash.utils.ec2.get_vpc_id_from_subnet')
-    @patch('mash.services.testing.img_proof_helper.test_image')
-    def test_testing_run_test(
+    @patch('mash.services.test.img_proof_helper.test_image')
+    def test_test_run_test(
         self, mock_test_image, mock_get_vpc_id_from_subnet,
         mock_get_key_from_file, mock_get_client, mock_generate_name,
         mock_ec2_setup, mock_random, mock_create_ssh_key_pair, mock_os,
@@ -74,7 +74,7 @@ class TestEC2TestingJob(object):
         )
         mock_os.path.exists.return_value = False
 
-        job = EC2TestingJob(self.job_config, self.config)
+        job = EC2TestJob(self.job_config, self.config)
         job._log_callback = Mock()
         mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         job.credentials = {
@@ -141,19 +141,19 @@ class TestEC2TestingJob(object):
         client.delete_key_pair.side_effect = Exception('Cannot delete key!')
         job.run_job()
 
-    def test_testing_run_test_subnet(self):
+    def test_test_run_test_subnet(self):
         self.job_config['test_regions']['us-east-1']['subnet'] = 'subnet-123456789'
-        self.test_testing_run_test()
+        self.test_test_run_test()
 
-    @patch('mash.services.testing.ec2_job.random')
-    @patch('mash.services.testing.ec2_job.os')
+    @patch('mash.services.test.ec2_job.random')
+    @patch('mash.services.test.ec2_job.os')
     def test_run_test_arm_skip(self, mock_os, mock_random):
         mock_os.path.exists.return_value = True
         mock_random.choice.return_value = 'a1.large'
 
         job_config = {
             'id': '2',
-            'last_service': 'testing',
+            'last_service': 'test',
             'cloud': 'ec2',
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
@@ -164,7 +164,7 @@ class TestEC2TestingJob(object):
             'utctime': 'now',
             'cloud_architecture': 'aarch64'
         }
-        job = EC2TestingJob(job_config, self.config)
+        job = EC2TestJob(job_config, self.config)
         job._log_callback = Mock()
         job.credentials = {
             'test-aws-cn': {

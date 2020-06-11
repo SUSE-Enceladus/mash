@@ -4,7 +4,7 @@
   "cloud_account": "test-gce",
   "region": "us-west1",
   "bucket": "images",
-  "testing_account": "testacnt1",
+  "test_account": "testacnt1",
   "requesting_user": "user1",
   "last_service": "deprecation",
   "utctime": "now",

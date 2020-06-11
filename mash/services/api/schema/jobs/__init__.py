@@ -172,7 +172,7 @@ base_job_message = {
             'example': True,
             'description': 'Whether to cleanup the image artifacts. By '
                            'default all artifacts are cleaned up when the '
-                           'last service is testing or if a publishing job '
+                           'last service is test or if a publishing job '
                            'fails.'
         },
         'cloud_architecture': {

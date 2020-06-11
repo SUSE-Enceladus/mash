@@ -11,7 +11,7 @@ class TestJobCreatorBaseJob(object):
             'job_id': '123',
             'cloud': 'aws',
             'requesting_user': 'test-user',
-            'last_service': 'testing',
+            'last_service': 'test',
             'utctime': 'now',
             'image': 'test-image',
             'cloud_image_name': 'test-cloud-image',
@@ -32,7 +32,7 @@ class TestJobCreatorBaseJob(object):
         ('get_publisher_message'),
         ('get_replication_message'),
         ('get_upload_message'),
-        ('get_testing_message'),
+        ('get_test_message'),
         ('get_create_message')
     ])
     def test_base_job_not_impl_methods(self, method):

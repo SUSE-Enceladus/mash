@@ -34,7 +34,7 @@ class GCEJob(BaseJob):
             self.cloud_account = self.kwargs['cloud_account']
             self.region = self.kwargs['region']
             self.bucket = self.kwargs['bucket']
-            self.testing_account = self.kwargs['testing_account']
+            self.test_account = self.kwargs['test_account']
         except KeyError as error:
             raise MashJobCreatorException(
                 'GCE jobs require a(n) {0} key in the job doc.'.format(
@@ -94,42 +94,42 @@ class GCEJob(BaseJob):
 
         return JsonFormat.json_message(replication_message)
 
-    def get_testing_message(self):
+    def get_test_message(self):
         """
-        Build testing job message.
+        Build test job message.
         """
-        testing_message = {
-            'testing_job': {
+        test_message = {
+            'test_job': {
                 'cloud': self.cloud,
                 'tests': self.tests,
                 'account': self.cloud_account,
                 'bucket': self.bucket,
                 'region': self.region,
-                'testing_account': self.testing_account,
+                'test_account': self.test_account,
                 'distro': self.distro,
                 'instance_type': self.instance_type,
                 'boot_firmware': self.boot_firmware
             }
         }
 
-        if self.last_service == 'testing' and \
+        if self.last_service == 'test' and \
                 self.cleanup_images in [True, None]:
-            testing_message['testing_job']['cleanup_images'] = True
+            test_message['test_job']['cleanup_images'] = True
 
         elif self.cleanup_images is False:
-            testing_message['testing_job']['cleanup_images'] = False
+            test_message['test_job']['cleanup_images'] = False
 
         if self.test_fallback_regions or self.test_fallback is False:
-            testing_message['testing_job']['test_fallback_regions'] = \
+            test_message['test_job']['test_fallback_regions'] = \
                 self.test_fallback_regions
 
         if self.image_project:
-            testing_message['testing_job']['image_project'] = \
+            test_message['test_job']['image_project'] = \
                 self.image_project
 
-        testing_message['testing_job'].update(self.base_message)
+        test_message['test_job'].update(self.base_message)
 
-        return JsonFormat.json_message(testing_message)
+        return JsonFormat.json_message(test_message)
 
     def get_upload_message(self):
         """

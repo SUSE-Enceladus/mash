@@ -22,7 +22,7 @@ class TestListenerService(object):
         self.config = Mock()
         self.config.config_data = None
         self.config.get_service_names.return_value = [
-            'obs', 'upload', 'testing', 'replication', 'publisher',
+            'obs', 'upload', 'test', 'replication', 'publisher',
             'deprecation'
         ]
         self.config.get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
@@ -79,7 +79,7 @@ class TestListenerService(object):
         self.service.job_document_key = 'job_document'
         self.service.listener_msg_key = 'listener_msg'
         self.service.next_service = 'publisher'
-        self.service.prev_service = 'testing'
+        self.service.prev_service = 'test'
         self.service.custom_args = None
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
@@ -550,7 +550,7 @@ class TestListenerService(object):
         job = MagicMock()
         self.service.jobs = {'1': job}
         message = '{' \
-                  '"testing_result": {' \
+                  '"test_result": {' \
                   '"status": "success", "id": "1", ' \
                   '"cloud_image_name": "name"' \
                   '}}'
@@ -565,7 +565,7 @@ class TestListenerService(object):
 
     def test_service_validate_listener_msg_no_job(self):
         message = '{' \
-                  '"testing_result": {' \
+                  '"test_result": {' \
                   '"status": "success", "id": "1", ' \
                   '"cloud_image_name": "name"' \
                   '}}'
@@ -646,7 +646,7 @@ class TestListenerService(object):
 
     def test_get_prev_service(self):
         # Test service with prev service
-        self.service.service_exchange = 'testing'
+        self.service.service_exchange = 'test'
         prev_service = self.service._get_previous_service()
         assert prev_service == 'upload'
 

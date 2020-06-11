@@ -2,16 +2,16 @@ import pytest
 
 from unittest.mock import Mock, patch
 
-from mash.services.testing.oci_job import OCITestingJob
-from mash.mash_exceptions import MashTestingException
-from mash.services.testing.config import TestingConfig
+from mash.services.test.oci_job import OCITestJob
+from mash.mash_exceptions import MashTestException
+from mash.services.test.config import TestConfig
 
 
-class TestOCITestingJob(object):
+class TestOCITestJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'last_service': 'testing',
+            'last_service': 'test',
             'cloud': 'oci',
             'requesting_user': 'user1',
             'account': 'test-oci',
@@ -26,20 +26,20 @@ class TestOCITestingJob(object):
             'tests': ['test_stuff'],
             'utctime': 'now'
         }
-        self.config = TestingConfig(config_file='test/data/mash_config.yaml')
+        self.config = TestConfig(config_file='test/data/mash_config.yaml')
 
     def test_oci_missing_key(self):
         del self.job_config['account']
 
-        with pytest.raises(MashTestingException):
-            OCITestingJob(self.job_config, self.config)
+        with pytest.raises(MashTestException):
+            OCITestJob(self.job_config, self.config)
 
-    @patch.object(OCITestingJob, 'cleanup_image')
-    @patch('mash.services.testing.oci_job.os')
-    @patch('mash.services.testing.oci_job.create_ssh_key_pair')
-    @patch('mash.services.testing.oci_job.random')
+    @patch.object(OCITestJob, 'cleanup_image')
+    @patch('mash.services.test.oci_job.os')
+    @patch('mash.services.test.oci_job.create_ssh_key_pair')
+    @patch('mash.services.test.oci_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.testing.img_proof_helper.test_image')
+    @patch('mash.services.test.img_proof_helper.test_image')
     def test_oci_image_proof(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_cleanup_image
@@ -62,7 +62,7 @@ class TestOCITestingJob(object):
         mock_random.choice.return_value = 'VM.Standard2.1'
         mock_os.path.exists.return_value = False
 
-        job = OCITestingJob(self.job_config, self.config)
+        job = OCITestJob(self.job_config, self.config)
         job._log_callback = Mock()
         mock_create_ssh_key_pair.assert_called_once_with('/var/lib/mash/ssh_key')
         job.credentials = {
@@ -118,14 +118,14 @@ class TestOCITestingJob(object):
         )
         assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
 
-    @patch('mash.services.testing.oci_job.create_ssh_key_pair')
-    @patch('mash.services.testing.oci_job.ComputeClientCompositeOperations')
-    @patch('mash.services.testing.oci_job.ComputeClient')
+    @patch('mash.services.test.oci_job.create_ssh_key_pair')
+    @patch('mash.services.test.oci_job.ComputeClientCompositeOperations')
+    @patch('mash.services.test.oci_job.ComputeClient')
     def test_oci_image_cleanup_after_test(
         self, mock_compute_client, mock_compute_client_composite,
         mock_create_ssh_key_pair
     ):
-        job = OCITestingJob(self.job_config, self.config)
+        job = OCITestJob(self.job_config, self.config)
         job._log_callback = Mock()
         job.cloud_image_name = 'name.qcow2'
 

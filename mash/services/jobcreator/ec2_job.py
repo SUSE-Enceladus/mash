@@ -124,45 +124,45 @@ class EC2Job(BaseJob):
 
         return replication_source_regions
 
-    def get_testing_message(self):
+    def get_test_message(self):
         """
-        Build testing job message.
+        Build test job message.
         """
-        testing_message = {
-            'testing_job': {
+        test_message = {
+            'test_job': {
                 'cloud': self.cloud,
                 'tests': self.tests,
-                'test_regions': self.get_testing_regions(),
+                'test_regions': self.get_test_regions(),
             }
         }
 
         if self.distro:
-            testing_message['testing_job']['distro'] = self.distro
+            test_message['test_job']['distro'] = self.distro
 
         if self.instance_type:
-            testing_message['testing_job']['instance_type'] = \
+            test_message['test_job']['instance_type'] = \
                 self.instance_type
 
-        if self.last_service == 'testing' and \
+        if self.last_service == 'test' and \
                 self.cleanup_images in [True, None]:
-            testing_message['testing_job']['cleanup_images'] = True
+            test_message['test_job']['cleanup_images'] = True
 
         elif self.cleanup_images is False:
-            testing_message['testing_job']['cleanup_images'] = False
+            test_message['test_job']['cleanup_images'] = False
 
         if self.test_fallback_regions or self.test_fallback is False:
-            testing_message['testing_job']['test_fallback_regions'] = \
+            test_message['test_job']['test_fallback_regions'] = \
                 self.test_fallback_regions
 
         if self.cloud_architecture:
-            testing_message['testing_job']['cloud_architecture'] = \
+            test_message['test_job']['cloud_architecture'] = \
                 self.cloud_architecture
 
-        testing_message['testing_job'].update(self.base_message)
+        test_message['test_job'].update(self.base_message)
 
-        return JsonFormat.json_message(testing_message)
+        return JsonFormat.json_message(test_message)
 
-    def get_testing_regions(self):
+    def get_test_regions(self):
         """
         Return a dictionary of target test regions.
         """

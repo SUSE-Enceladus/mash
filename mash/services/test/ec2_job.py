@@ -20,11 +20,11 @@ import os
 import random
 import traceback
 
-from mash.mash_exceptions import MashTestingException
+from mash.mash_exceptions import MashTestException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
-from mash.services.testing.utils import (
-    get_testing_account,
+from mash.services.test.utils import (
+    get_test_account,
     process_test_result
 )
 from mash.utils.mash_utils import create_ssh_key_pair
@@ -33,7 +33,7 @@ from mash.utils.ec2 import (
     wait_for_instance_termination,
     cleanup_ec2_image
 )
-from mash.services.testing.img_proof_helper import img_proof_test
+from mash.services.test.img_proof_helper import img_proof_test
 
 instance_types = {
     'x86_64': [
@@ -50,9 +50,9 @@ instance_types = {
 }
 
 
-class EC2TestingJob(MashJob):
+class EC2TestJob(MashJob):
     """
-    Class for an EC2 testing job.
+    Class for an EC2 test job.
     """
 
     def post_init(self):
@@ -63,8 +63,8 @@ class EC2TestingJob(MashJob):
             self.test_regions = self.job_config['test_regions']
             self.tests = self.job_config['tests']
         except KeyError as error:
-            raise MashTestingException(
-                'EC2 testing jobs require a(n) {0} '
+            raise MashTestException(
+                'EC2 test jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -107,17 +107,17 @@ class EC2TestingJob(MashJob):
         # Get all account credentials in one request
         accounts = []
         for region, info in self.test_regions.items():
-            accounts.append(get_testing_account(info))
+            accounts.append(get_test_account(info))
 
         self.request_credentials(accounts)
 
         for region, info in self.test_regions.items():
-            account = get_testing_account(info)
+            account = get_test_account(info)
             credentials = self.credentials[account]
 
             if info['partition'] in ('aws-cn', 'aws-us-gov') and \
                     self.cloud_architecture == 'aarch64':
-                # Skip testing aarch64 images in China and GovCloud.
+                # Skip test aarch64 images in China and GovCloud.
                 # There are no aarch64 based instance types available.
                 continue
 

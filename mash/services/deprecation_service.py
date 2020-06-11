@@ -33,7 +33,7 @@ from mash.services.deprecation.gce_job import GCEDeprecationJob
 
 def main():
     """
-    mash - testing service application entry point
+    mash - test service application entry point
     """
     try:
         logging.basicConfig()

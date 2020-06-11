@@ -123,9 +123,9 @@ class JobCreatorService(MashService):
                 self.publish_job_doc(
                     'replication', job.get_replication_message()
                 )
-            elif service == 'testing':
+            elif service == 'test':
                 self.publish_job_doc(
-                    'testing', job.get_testing_message()
+                    'test', job.get_test_message()
                 )
             elif service == 'upload':
                 self.publish_job_doc(

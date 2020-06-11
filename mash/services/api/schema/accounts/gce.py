@@ -25,7 +25,7 @@ gce_account = {
     'properties': {
         'account_name': string_with_example('account1'),
         'bucket': string_with_example('image-bucket'),
-        'testing_account': string_with_example('testing-account1'),
+        'test_account': string_with_example('test-account1'),
         'region': string_with_example('us-west1-a'),
         'is_publishing_account': {'type': 'boolean'}
     },
@@ -91,14 +91,14 @@ gce_account_update = {
     'type': 'object',
     'properties': {
         'bucket': string_with_example('image-bucket'),
-        'testing_account': string_with_example('testing-account1'),
+        'test_account': string_with_example('test-account1'),
         'region': string_with_example('us-west1-a'),
         'credentials': gce_credentials
     },
     'additionalProperties': False,
     'anyOf': [
         {'required': ['bucket']},
-        {'required': ['testing_account']},
+        {'required': ['test_account']},
         {'required': ['region']},
         {'required': ['credentials']}
     ]

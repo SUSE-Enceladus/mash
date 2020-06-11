@@ -30,7 +30,7 @@ def test_gce_job_missing_keys(mock_init):
 
 
 @patch.object(GCEJob, '__init__')
-def test_gce_job_testing_message(mock_init):
+def test_gce_job_test_message(mock_init):
     mock_init.return_value = None
 
     job = GCEJob({
@@ -50,7 +50,7 @@ def test_gce_job_testing_message(mock_init):
         'bucket': 'images',
         'cloud': 'gce',
         'region': 'westus',
-        'testing_account': None
+        'test_account': None
     }
     job.cloud = 'gce'
     job.tests = ['test1']
@@ -68,14 +68,14 @@ def test_gce_job_testing_message(mock_init):
 
     job.post_init()
 
-    testing_message = json.loads(job.get_testing_message())
-    assert testing_message['testing_job']['cleanup_images'] is False
+    test_message = json.loads(job.get_test_message())
+    assert test_message['test_job']['cleanup_images'] is False
 
-    # Test cleanup images on testing only
-    job.last_service = 'testing'
+    # Test cleanup images on test only
+    job.last_service = 'test'
     job.cleanup_images = True
 
     job.post_init()
 
-    testing_message = json.loads(job.get_testing_message())
-    assert testing_message['testing_job']['cleanup_images'] is True
+    test_message = json.loads(job.get_test_message())
+    assert test_message['test_job']['cleanup_images'] is True

@@ -61,11 +61,11 @@ def test_validate_oci_job(
         'obs',
         'upload',
         'create',
-        'testing'
+        'test'
     ]
 
     job_doc = {
-        'last_service': 'testing',
+        'last_service': 'test',
         'requesting_user': 1,
         'cloud_account': 'acnt1',
         'bucket': 'images2',

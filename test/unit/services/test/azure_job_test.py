@@ -2,15 +2,15 @@ import pytest
 
 from unittest.mock import call, Mock, patch
 
-from mash.services.testing.azure_job import AzureTestingJob
-from mash.mash_exceptions import MashTestingException
+from mash.services.test.azure_job import AzureTestJob
+from mash.mash_exceptions import MashTestException
 
 
-class TestAzureTestingJob(object):
+class TestAzureTestJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'last_service': 'testing',
+            'last_service': 'test',
             'cloud': 'azure',
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
@@ -27,20 +27,20 @@ class TestAzureTestingJob(object):
             'private_ssh_key.file'
         self.config.get_img_proof_timeout.return_value = None
 
-    def test_testing_azure_missing_key(self):
+    def test_test_azure_missing_key(self):
         del self.job_config['account']
 
-        with pytest.raises(MashTestingException):
-            AzureTestingJob(self.job_config, self.config)
+        with pytest.raises(MashTestException):
+            AzureTestJob(self.job_config, self.config)
 
-    @patch('mash.services.testing.azure_job.delete_image')
-    @patch('mash.services.testing.azure_job.delete_blob')
-    @patch('mash.services.testing.azure_job.os')
-    @patch('mash.services.testing.azure_job.create_ssh_key_pair')
-    @patch('mash.services.testing.azure_job.random')
+    @patch('mash.services.test.azure_job.delete_image')
+    @patch('mash.services.test.azure_job.delete_blob')
+    @patch('mash.services.test.azure_job.os')
+    @patch('mash.services.test.azure_job.create_ssh_key_pair')
+    @patch('mash.services.test.azure_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.testing.img_proof_helper.test_image')
-    def test_testing_run_azure_test(
+    @patch('mash.services.test.img_proof_helper.test_image')
+    def test_test_run_azure_test(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_delete_blob, mock_delete_image
     ):
@@ -62,7 +62,7 @@ class TestAzureTestingJob(object):
         mock_random.choice.return_value = 'Standard_A0'
         mock_os.path.exists.return_value = False
 
-        job = AzureTestingJob(self.job_config, self.config)
+        job = AzureTestJob(self.job_config, self.config)
         mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         job.credentials = {
             'test-azure': {

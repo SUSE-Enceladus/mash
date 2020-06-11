@@ -24,21 +24,21 @@ from oci.retry import RetryStrategyBuilder
 from oci.core import ComputeClient, ComputeClientCompositeOperations
 from oci.core.models import Image
 
-from mash.mash_exceptions import MashTestingException
+from mash.mash_exceptions import MashTestException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
-from mash.services.testing.utils import process_test_result
+from mash.services.test.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair, create_key_file
-from mash.services.testing.img_proof_helper import img_proof_test
+from mash.services.test.img_proof_helper import img_proof_test
 
 instance_types = [
     'VM.Standard2.1'
 ]
 
 
-class OCITestingJob(MashJob):
+class OCITestJob(MashJob):
     """
-    Class for an OCI testing job.
+    Class for an OCI test job.
     """
 
     def post_init(self):
@@ -55,8 +55,8 @@ class OCITestingJob(MashJob):
             self.compartment_id = self.job_config['compartment_id']
             self.availability_domain = self.job_config['availability_domain']
         except KeyError as error:
-            raise MashTestingException(
-                'OCI testing jobs require a(n) {0} '
+            raise MashTestException(
+                'OCI test jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )

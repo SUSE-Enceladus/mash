@@ -5,7 +5,7 @@ import os
 from amqpstorm import Connection
 
 services = (
-    'obs', 'upload', 'testing', 'replication', 'publisher',
+    'obs', 'upload', 'test', 'replication', 'publisher',
     'deprecation'
 )
 
@@ -134,7 +134,7 @@ class Test(object):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Mash testing script!.')
+    parser = argparse.ArgumentParser(description='Mash test script!.')
     parser.add_argument(
         '--service', type=str,
         help='Service exchange name.'

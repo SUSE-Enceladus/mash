@@ -18,7 +18,7 @@ publisher_thread_pool_count: 60
 services:
   - obs
   - upload
-  - testing
+  - test
   - replication
   - publisher
   - deprecation
@@ -41,7 +41,7 @@ cloud:
       ap-northeast-2: ami-249b554a
       cn-north-1: ami-bcc45885
       us-gov-west-1: ami-c2b5d7e1
-testing:
+test:
   img_proof_timeout: 600
 upload:
   azure:

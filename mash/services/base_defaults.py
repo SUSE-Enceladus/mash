@@ -48,7 +48,7 @@ class Defaults(object):
     @classmethod
     def get_service_names(self):
         return [
-            'obs', 'upload', 'create', 'testing', 'raw_image_upload',
+            'obs', 'upload', 'create', 'test', 'raw_image_upload',
             'replication', 'publisher', 'deprecation'
         ]
 

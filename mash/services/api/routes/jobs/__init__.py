@@ -37,7 +37,7 @@ job_response = api.model(
         'job_id': fields.String(
             example='12345678-1234-1234-1234-123456789012'
         ),
-        'last_service': fields.String(example='testing'),
+        'last_service': fields.String(example='test'),
         'utctime': fields.String(example='now'),
         'image': fields.String(example='test_image_oem'),
         'download_url': fields.String(

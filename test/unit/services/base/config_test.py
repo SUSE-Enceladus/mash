@@ -43,7 +43,7 @@ class TestBaseConfig(object):
     def test_get_services_names(self):
         # Services requiring credentials
         expected = [
-            'upload', 'create', 'testing', 'raw_image_upload',
+            'upload', 'create', 'test', 'raw_image_upload',
             'replication', 'publisher', 'deprecation'
         ]
         services = self.empty_config.get_service_names(
@@ -112,10 +112,10 @@ class TestBaseConfig(object):
         assert subject == '[MASH] Job Status Update'
 
     def test_get_job_dir(self):
-        assert self.config.get_job_directory('testing') == \
-            '/tmp/jobs/testing_jobs/'
-        assert self.empty_config.get_job_directory('testing') == \
-            '/var/lib/mash/testing_jobs/'
+        assert self.config.get_job_directory('test') == \
+            '/tmp/jobs/test_jobs/'
+        assert self.empty_config.get_job_directory('test') == \
+            '/var/lib/mash/test_jobs/'
 
     def test_get_log_dir(self):
         assert self.config.get_log_directory() == '/tmp/log/'

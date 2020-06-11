@@ -55,7 +55,7 @@ def test_update_azure_job_accounts(
         'obs',
         'upload',
         'create',
-        'testing',
+        'test',
         'raw_image_upload',
         'replication',
         'publisher',

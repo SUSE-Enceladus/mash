@@ -133,12 +133,12 @@ class AzureJob(BaseJob):
 
         return JsonFormat.json_message(replication_message)
 
-    def get_testing_message(self):
+    def get_test_message(self):
         """
-        Build testing job message.
+        Build test job message.
         """
-        testing_message = {
-            'testing_job': {
+        test_message = {
+            'test_job': {
                 'cloud': self.cloud,
                 'tests': self.tests,
                 'account': self.cloud_account,
@@ -150,26 +150,26 @@ class AzureJob(BaseJob):
         }
 
         if self.distro:
-            testing_message['testing_job']['distro'] = self.distro
+            test_message['test_job']['distro'] = self.distro
 
         if self.instance_type:
-            testing_message['testing_job']['instance_type'] = \
+            test_message['test_job']['instance_type'] = \
                 self.instance_type
 
-        if self.last_service == 'testing' and \
+        if self.last_service == 'test' and \
                 self.cleanup_images in [True, None]:
-            testing_message['testing_job']['cleanup_images'] = True
+            test_message['test_job']['cleanup_images'] = True
 
         elif self.cleanup_images is False:
-            testing_message['testing_job']['cleanup_images'] = False
+            test_message['test_job']['cleanup_images'] = False
 
         if self.cloud_architecture:
-            testing_message['testing_job']['cloud_architecture'] = \
+            test_message['test_job']['cloud_architecture'] = \
                 self.cloud_architecture
 
-        testing_message['testing_job'].update(self.base_message)
+        test_message['test_job'].update(self.base_message)
 
-        return JsonFormat.json_message(testing_message)
+        return JsonFormat.json_message(test_message)
 
     def get_upload_message(self):
         """

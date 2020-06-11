@@ -31,7 +31,7 @@ class TestBaseService(object):
 
         config = Mock()
         config.get_service_names.return_value = [
-            'obs', 'upload', 'create', 'raw_image_upload', 'testing',
+            'obs', 'upload', 'create', 'raw_image_upload', 'test',
             'replication', 'publisher', 'deprecation'
         ]
 
@@ -63,10 +63,10 @@ class TestBaseService(object):
 
     def test_unbind_queue(self):
         self.service.unbind_queue(
-            'service', 'testing', '1'
+            'service', 'test', '1'
         )
         self.service.channel.queue.unbind.assert_called_once_with(
-            queue='testing.service', exchange='testing', routing_key='1'
+            queue='test.service', exchange='test', routing_key='1'
         )
 
     def test_should_notify(self):

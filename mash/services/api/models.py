@@ -158,7 +158,7 @@ class GCEAccount(db.Model):
     name = db.Column(db.String(64), nullable=False)
     bucket = db.Column(db.String(222), nullable=False)
     region = db.Column(db.String(32), nullable=False)
-    testing_account = db.Column(db.String(64))
+    test_account = db.Column(db.String(64))
     is_publishing_account = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', back_populates='gce_accounts')

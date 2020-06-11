@@ -20,14 +20,14 @@ import os
 import random
 import traceback
 
-from mash.mash_exceptions import MashTestingException
+from mash.mash_exceptions import MashTestException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
-from mash.services.testing.utils import process_test_result
+from mash.services.test.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
 from mash.utils.gce import cleanup_gce_image
 from mash.utils.gce import get_region_list
-from mash.services.testing.img_proof_helper import img_proof_test
+from mash.services.test.img_proof_helper import img_proof_test
 
 from img_proof.ipa_exceptions import IpaRetryableError
 
@@ -39,9 +39,9 @@ instance_types = [
 ]
 
 
-class GCETestingJob(MashJob):
+class GCETestJob(MashJob):
     """
-    Class for an GCE testing job.
+    Class for an GCE test job.
     """
 
     def post_init(self):
@@ -52,11 +52,11 @@ class GCETestingJob(MashJob):
             self.account = self.job_config['account']
             self.region = self.job_config['region']
             self.bucket = self.job_config['bucket']
-            self.testing_account = self.job_config['testing_account']
+            self.test_account = self.job_config['test_account']
             self.tests = self.job_config['tests']
         except KeyError as error:
-            raise MashTestingException(
-                'GCE testing jobs require a(n) {0} '
+            raise MashTestException(
+                'GCE test jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -87,15 +87,15 @@ class GCETestingJob(MashJob):
         self.status = SUCCESS
 
         accounts = [self.account]
-        if self.testing_account:
+        if self.test_account:
             # Get both sets of credentials in case cleanup method is run.
-            accounts.append(self.testing_account)
+            accounts.append(self.test_account)
 
         self.request_credentials(accounts)
-        credentials = self.credentials[self.testing_account or self.account]
+        credentials = self.credentials[self.test_account or self.account]
 
         if self.test_fallback_regions == []:
-            # fallback testing explicitly disabled
+            # fallback test explicitly disabled
             fallback_regions = set()
         elif self.test_fallback_regions is None:
             fallback_regions = get_region_list(credentials)

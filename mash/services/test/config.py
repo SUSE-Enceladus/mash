@@ -17,12 +17,12 @@
 #
 
 from mash.services.base_config import BaseConfig
-from mash.services.testing.defaults import Defaults
+from mash.services.test.defaults import Defaults
 
 
-class TestingConfig(BaseConfig):
+class TestConfig(BaseConfig):
     """
-    Implements reading of testing configuration from the mash
+    Implements reading of test configuration from the mash
     configuration file:
 
     * /etc/mash/mash_config.yaml
@@ -33,7 +33,7 @@ class TestingConfig(BaseConfig):
     __test__ = False  # Used by pytest to ignore class in auto discovery
 
     def __init__(self, config_file=None):
-        super(TestingConfig, self).__init__(config_file)
+        super(TestConfig, self).__init__(config_file)
 
     def get_img_proof_timeout(self):
         """
@@ -43,6 +43,6 @@ class TestingConfig(BaseConfig):
         """
         img_proof_timeout = self._get_attribute(
             attribute='img_proof_timeout',
-            element='testing'
+            element='test'
         )
         return img_proof_timeout or Defaults.get_img_proof_timeout()

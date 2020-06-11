@@ -34,7 +34,7 @@ class TestJobCreatorService(object):
         self.jobcreator.service_queue = 'service'
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
-            'obs', 'upload', 'create', 'testing', 'raw_image_upload',
+            'obs', 'upload', 'create', 'test', 'raw_image_upload',
             'replication', 'publisher', 'deprecation'
         ]
 
@@ -145,9 +145,9 @@ class TestJobCreatorService(object):
                 assert info['helper_image'] == 'ami-c2b5d7e1'
                 assert info['billing_codes'] is None
 
-        # Testing Job Doc
+        # Test Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 't2.micro'
@@ -278,9 +278,9 @@ class TestJobCreatorService(object):
         assert data['resource_group'] == 'rg-1'
         assert data['storage_account'] == 'sa1'
 
-        # Testing Job Doc
+        # Test Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'Basic_A2'
@@ -391,16 +391,16 @@ class TestJobCreatorService(object):
         assert data['family'] == 'sles-15'
         assert data['guest_os_features'] == ['UEFI_COMPATIBLE']
 
-        # Testing Job Doc
+        # Test Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'n1-standard-1'
         assert data['tests'] == ['test_stuff']
         assert data['region'] == 'us-west1'
         assert data['account'] == 'test-gce'
-        assert data['testing_account'] == 'testacnt1'
+        assert data['test_account'] == 'testacnt1'
         assert data['image_project'] == 'test'
 
         # Raw Image Upload Job Doc
@@ -475,9 +475,9 @@ class TestJobCreatorService(object):
         assert data['account'] == 'test-oci'
         assert data['bucket'] == 'images2'
 
-        # Testing Job Doc
+        # Test Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'VM.Standard2.1'
