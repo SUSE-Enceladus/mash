@@ -131,15 +131,15 @@ class BaseJob(object):
 
         return JsonFormat.json_message(obs_message)
 
-    def get_publisher_message(self):
+    def get_publish_message(self):
         """
-        Build publisher job message.
+        Build publish job message.
 
         Implementation in child class.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_publisher_message method.'.format(
+            'get_publish_message method.'.format(
                 self.__class__.__name__
             )
         )

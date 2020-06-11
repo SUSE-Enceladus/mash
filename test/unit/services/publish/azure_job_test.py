@@ -1,18 +1,18 @@
 from pytest import raises
 from unittest.mock import call, Mock, patch, MagicMock
 
-from mash.mash_exceptions import MashPublisherException
-from mash.services.publisher.azure_job import AzurePublisherJob
+from mash.mash_exceptions import MashPublishException
+from mash.services.publish.azure_job import AzurePublishJob
 
 
-class TestAzurePublisherJob(object):
+class TestAzurePublishJob(object):
     def setup(self):
         self.job_config = {
             'emails': 'jdoe@fake.com',
             'id': '1',
             'image_description': 'New image for v123',
             'label': 'New Image 123',
-            'last_service': 'publisher',
+            'last_service': 'publish',
             'requesting_user': 'user1',
             'offer_id': 'sles',
             'cloud': 'azure',
@@ -21,7 +21,7 @@ class TestAzurePublisherJob(object):
             'container': 'container2',
             'storage_account': 'sa2',
             'region': 'East US',
-            'publisher_id': 'suse',
+            'publish_id': 'suse',
             'sku': '123',
             'utctime': 'now',
             'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure',
@@ -29,7 +29,7 @@ class TestAzurePublisherJob(object):
         }
 
         self.config = Mock()
-        self.job = AzurePublisherJob(self.job_config, self.config)
+        self.job = AzurePublishJob(self.job_config, self.config)
         self.job.credentials = {
             "acnt1": {
                 "clientId": "09876543-1234-1234-1234-123456789012",
@@ -58,19 +58,19 @@ class TestAzurePublisherJob(object):
     def test_publish_ec2_missing_key(self):
         del self.job_config['account']
 
-        with raises(MashPublisherException):
-            AzurePublisherJob(self.job_config, self.config)
+        with raises(MashPublishException):
+            AzurePublishJob(self.job_config, self.config)
 
     @patch(
-        'mash.services.publisher.azure_job.wait_on_cloud_partner_operation'
+        'mash.services.publish.azure_job.wait_on_cloud_partner_operation'
     )
-    @patch('mash.services.publisher.azure_job.publish_cloud_partner_offer')
-    @patch('mash.services.publisher.azure_job.put_cloud_partner_offer_doc')
+    @patch('mash.services.publish.azure_job.publish_cloud_partner_offer')
+    @patch('mash.services.publish.azure_job.put_cloud_partner_offer_doc')
     @patch(
-        'mash.services.publisher.azure_job.request_cloud_partner_offer_doc'
+        'mash.services.publish.azure_job.request_cloud_partner_offer_doc'
     )
-    @patch('mash.services.publisher.azure_job.create_json_file')
-    @patch.object(AzurePublisherJob, '_get_blob_url')
+    @patch('mash.services.publish.azure_job.create_json_file')
+    @patch.object(AzurePublishJob, '_get_blob_url')
     def test_publish(
         self, mock_get_blob_url, mock_create_json_file,
         mock_request_doc, mock_put_doc, mock_publish_offer,
@@ -99,12 +99,12 @@ class TestAzurePublisherJob(object):
             call('Publishing finished for account: acnt1.')
         ])
 
-    @patch('mash.services.publisher.azure_job.put_cloud_partner_offer_doc')
+    @patch('mash.services.publish.azure_job.put_cloud_partner_offer_doc')
     @patch(
-        'mash.services.publisher.azure_job.request_cloud_partner_offer_doc'
+        'mash.services.publish.azure_job.request_cloud_partner_offer_doc'
     )
-    @patch('mash.services.publisher.azure_job.create_json_file')
-    @patch.object(AzurePublisherJob, '_get_blob_url')
+    @patch('mash.services.publish.azure_job.create_json_file')
+    @patch.object(AzurePublishJob, '_get_blob_url')
     def test_publish_exception(
         self, mock_get_blob_url, mock_create_json_file,
         mock_request_doc, mock_put_doc
@@ -132,8 +132,8 @@ class TestAzurePublisherJob(object):
             'There was an error publishing image in acnt1: Invalid doc!'
         )
 
-    @patch('mash.services.publisher.azure_job.get_blob_url')
-    @patch('mash.services.publisher.azure_job.get_classic_blob_service')
+    @patch('mash.services.publish.azure_job.get_blob_url')
+    @patch('mash.services.publish.azure_job.get_classic_blob_service')
     def test_get_blob_url(
         self, mock_get_bs, mock_get_blob_url
     ):

@@ -18,12 +18,12 @@
 
 from ec2imgutils.ec2publishimg import EC2PublishImage
 
-from mash.mash_exceptions import MashPublisherException
+from mash.mash_exceptions import MashPublishException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 
 
-class EC2PublisherJob(MashJob):
+class EC2PublishJob(MashJob):
     """
     Class for an EC2 publishing job.
     """
@@ -35,8 +35,8 @@ class EC2PublisherJob(MashJob):
         try:
             self.publish_regions = self.job_config['publish_regions']
         except KeyError as error:
-            raise MashPublisherException(
-                'EC2 publisher Jobs require a(n) {0} '
+            raise MashPublishException(
+                'EC2 publish Jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -62,7 +62,7 @@ class EC2PublisherJob(MashJob):
         for region_info in self.publish_regions:
             creds = self.credentials[region_info['account']]
 
-            publisher = EC2PublishImage(
+            publish = EC2PublishImage(
                 access_key=creds['access_key_id'],
                 allow_copy=self.allow_copy,
                 image_name=cloud_image_name,
@@ -72,11 +72,11 @@ class EC2PublisherJob(MashJob):
             )
 
             for region in region_info['target_regions']:
-                publisher.set_region(region)
+                publish.set_region(region)
                 try:
-                    publisher.publish_images()
+                    publish.publish_images()
                 except Exception as error:
-                    raise MashPublisherException(
+                    raise MashPublishException(
                         'An error publishing image {0} in {1}. {2}'.format(
                             cloud_image_name, region, error
                         )

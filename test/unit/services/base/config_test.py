@@ -44,7 +44,7 @@ class TestBaseConfig(object):
         # Services requiring credentials
         expected = [
             'upload', 'create', 'test', 'raw_image_upload',
-            'replicate', 'publisher', 'deprecation'
+            'replicate', 'publish', 'deprecation'
         ]
         services = self.empty_config.get_service_names(
             credentials_required=True
@@ -155,9 +155,9 @@ class TestBaseConfig(object):
         assert self.config.get_base_thread_pool_count() == 20
         assert self.empty_config.get_base_thread_pool_count() == 10
 
-    def test_get_publisher_thread_pool_count(self):
-        assert self.config.get_publisher_thread_pool_count() == 60
-        assert self.empty_config.get_publisher_thread_pool_count() == 50
+    def test_get_publish_thread_pool_count(self):
+        assert self.config.get_publish_thread_pool_count() == 60
+        assert self.empty_config.get_publish_thread_pool_count() == 50
 
     @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
     def test_get_oauth2_client_id(self):

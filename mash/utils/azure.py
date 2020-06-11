@@ -296,14 +296,14 @@ def get_classic_storage_account_keys(
 
 
 def go_live_with_cloud_partner_offer(
-    credentials, offer_id, publisher_id
+    credentials, offer_id, publish_id
 ):
     """
     Go live with cloud partner offer and return the operation location.
     """
     endpoint = get_cloud_partner_endpoint(
         offer_id,
-        publisher_id,
+        publish_id,
         go_live=True
     )
     headers = get_cloud_partner_api_headers(
@@ -322,14 +322,14 @@ def go_live_with_cloud_partner_offer(
 
 
 def get_cloud_partner_endpoint(
-    offer_id, publisher_id, api_version='2017-10-31',
+    offer_id, publish_id, api_version='2017-10-31',
     publish=False, go_live=False
 ):
     """
-    Return the endpoint URL to cloud partner API for offer and publisher.
+    Return the endpoint URL to cloud partner API for offer and publish.
     """
     endpoint = 'https://cloudpartner.azure.com/api/' \
-               'publishers/{publisher_id}/' \
+               'publishs/{publish_id}/' \
                'offers/{offer_id}' \
                '{method}' \
                '?api-version={api_version}'
@@ -343,7 +343,7 @@ def get_cloud_partner_endpoint(
 
     endpoint = endpoint.format(
         offer_id=offer_id,
-        publisher_id=publisher_id,
+        publish_id=publish_id,
         method=method,
         api_version=api_version
     )
@@ -405,13 +405,13 @@ def log_operation_response_status(response, log_callback):
             break
 
 
-def put_cloud_partner_offer_doc(credentials, doc, offer_id, publisher_id):
+def put_cloud_partner_offer_doc(credentials, doc, offer_id, publish_id):
     """
     Put an updated cloud partner offer doc to the API.
     """
     endpoint = get_cloud_partner_endpoint(
         offer_id,
-        publisher_id
+        publish_id
     )
     headers = get_cloud_partner_api_headers(
         credentials,
@@ -430,14 +430,14 @@ def put_cloud_partner_offer_doc(credentials, doc, offer_id, publisher_id):
 
 
 def publish_cloud_partner_offer(
-    credentials, offer_id, publisher_id
+    credentials, offer_id, publish_id
 ):
     """
     Publish the cloud partner offer and return the operation location.
     """
     endpoint = get_cloud_partner_endpoint(
         offer_id,
-        publisher_id,
+        publish_id,
         publish=True
     )
     headers = get_cloud_partner_api_headers(
@@ -485,16 +485,16 @@ def process_request(
         return response
 
 
-def request_cloud_partner_offer_doc(credentials, offer_id, publisher_id):
+def request_cloud_partner_offer_doc(credentials, offer_id, publish_id):
     """
-    Request a Cloud Partner Offer doc for the provided publisher and offer.
+    Request a Cloud Partner Offer doc for the provided publish and offer.
 
     credentials:
        A service account json dictionary.
     """
     endpoint = get_cloud_partner_endpoint(
         offer_id,
-        publisher_id
+        publish_id
     )
     headers = get_cloud_partner_api_headers(credentials)
 

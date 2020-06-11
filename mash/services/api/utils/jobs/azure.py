@@ -46,10 +46,10 @@ def validate_azure_job(job_doc):
         'destination_resource_group',
         'destination_storage_account'
     )
-    publisher_args = (
+    publish_args = (
         'label',
         'offer_id',
-        'publisher_id',
+        'publish_id',
         'sku'
     )
 
@@ -58,8 +58,8 @@ def validate_azure_job(job_doc):
             job_doc[attr] = getattr(cloud_account, attr)
 
     services = get_services_by_last_service(job_doc['last_service'])
-    if 'publisher' in services:
-        for arg in publisher_args:
+    if 'publish' in services:
+        for arg in publish_args:
             if arg not in job_doc:
                 raise MashJobException(
                     'Azure publishing jobs require a(n) '

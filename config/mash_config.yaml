@@ -19,7 +19,7 @@ services:
   - test
   - raw_image_upload
   - replicate
-  - publisher
+  - publish
   - deprecation
 non_cred_services:
   - obs

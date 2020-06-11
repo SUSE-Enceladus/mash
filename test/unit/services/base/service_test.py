@@ -32,7 +32,7 @@ class TestBaseService(object):
         config = Mock()
         config.get_service_names.return_value = [
             'obs', 'upload', 'create', 'raw_image_upload', 'test',
-            'replicate', 'publisher', 'deprecation'
+            'replicate', 'publish', 'deprecation'
         ]
 
         self.service = MashService('obs', config=config)
@@ -71,17 +71,17 @@ class TestBaseService(object):
 
     def test_should_notify(self):
         result = self.service._should_notify(
-            None, 'single', 'always', 'success', 'publisher'
+            None, 'single', 'always', 'success', 'publish'
         )
         assert result is False
 
         result = self.service._should_notify(
-            'test@fake.com', 'single', 'always', 'success', 'publisher'
+            'test@fake.com', 'single', 'always', 'success', 'publish'
         )
         assert result is False
 
         result = self.service._should_notify(
-            'test@fake.com', 'periodic', 'now', 'success', 'publisher'
+            'test@fake.com', 'periodic', 'now', 'success', 'publish'
         )
         assert result is True
 
@@ -108,7 +108,7 @@ class TestBaseService(object):
 
         # Service with success
         msg = self.service._create_notification_content(
-            '1', 'success', 'now', 'publisher', 'test_image', 3
+            '1', 'success', 'now', 'publish', 'test_image', 3
         )
 
         assert 'Job finished through the obs service' in msg

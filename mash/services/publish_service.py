@@ -25,28 +25,28 @@ from mash.services.base_config import BaseConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
-from mash.services.publisher.azure_job import AzurePublisherJob
-from mash.services.publisher.ec2_job import EC2PublisherJob
+from mash.services.publish.azure_job import AzurePublishJob
+from mash.services.publish.ec2_job import EC2PublishJob
 from mash.services.no_op_job import NoOpJob
 
 
 def main():
     """
-    mash - publisher service application entry point
+    mash - publish service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
 
-        service_name = 'publisher'
+        service_name = 'publish'
 
         # Create job factory
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
-                'azure': AzurePublisherJob,
-                'ec2': EC2PublisherJob,
+                'azure': AzurePublishJob,
+                'ec2': EC2PublishJob,
                 'gce': NoOpJob,
                 'oci': NoOpJob
             }
@@ -62,7 +62,7 @@ def main():
                 'listener_msg_args': ['source_regions'],
                 'status_msg_args': ['source_regions'],
                 'job_factory': job_factory,
-                'thread_pool_count': config.get_publisher_thread_pool_count()
+                'thread_pool_count': config.get_publish_thread_pool_count()
             }
         )
     except MashException as e:

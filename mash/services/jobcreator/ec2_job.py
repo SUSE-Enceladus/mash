@@ -72,25 +72,25 @@ class EC2Job(BaseJob):
         """
         return self._get_target_regions_list()
 
-    def get_publisher_message(self):
+    def get_publish_message(self):
         """
-        Build publisher job message.
+        Build publish job message.
         """
-        publisher_message = {
-            'publisher_job': {
+        publish_message = {
+            'publish_job': {
                 'cloud': self.cloud,
                 'allow_copy': self.allow_copy,
                 'share_with': self.share_with,
-                'publish_regions': self.get_publisher_regions()
+                'publish_regions': self.get_publish_regions()
             }
         }
-        publisher_message['publisher_job'].update(self.base_message)
+        publish_message['publish_job'].update(self.base_message)
 
-        return JsonFormat.json_message(publisher_message)
+        return JsonFormat.json_message(publish_message)
 
-    def get_publisher_regions(self):
+    def get_publish_regions(self):
         """
-        Return a list of publisher region info.
+        Return a list of publish region info.
         """
         return self._get_target_regions_list()
 

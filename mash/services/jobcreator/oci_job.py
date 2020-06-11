@@ -70,18 +70,18 @@ class OCIJob(BaseJob):
 
         return JsonFormat.json_message(deprecation_message)
 
-    def get_publisher_message(self):
+    def get_publish_message(self):
         """
-        Build publisher job message.
+        Build publish job message.
         """
-        publisher_message = {
-            'publisher_job': {
+        publish_message = {
+            'publish_job': {
                 'cloud': self.cloud
             }
         }
-        publisher_message['publisher_job'].update(self.base_message)
+        publish_message['publish_job'].update(self.base_message)
 
-        return JsonFormat.json_message(publisher_message)
+        return JsonFormat.json_message(publish_message)
 
     def get_replicate_message(self):
         """

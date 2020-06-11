@@ -145,8 +145,8 @@ install -D -m 644 config/mash_raw_image_upload.service \
 install -D -m 644 config/mash_replicate.service \
     %{buildroot}%{_unitdir}/mash_replicate.service
 
-install -D -m 644 config/mash_publisher.service \
-    %{buildroot}%{_unitdir}/mash_publisher.service
+install -D -m 644 config/mash_publish.service \
+    %{buildroot}%{_unitdir}/mash_publish.service
 
 install -D -m 644 config/mash_deprecation.service \
     %{buildroot}%{_unitdir}/mash_deprecation.service
@@ -205,8 +205,8 @@ python3 -m pytest
 %{_bindir}/mash-replicate-service
 %{_unitdir}/mash_replicate.service
 
-%{_bindir}/mash-publisher-service
-%{_unitdir}/mash_publisher.service
+%{_bindir}/mash-publish-service
+%{_unitdir}/mash_publish.service
 
 %{_bindir}/mash-deprecation-service
 %{_unitdir}/mash_deprecation.service

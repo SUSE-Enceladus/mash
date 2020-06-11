@@ -385,16 +385,16 @@ class BaseConfig(object):
         )
         return base_thread_pool_count or Defaults.get_base_thread_pool_count()
 
-    def get_publisher_thread_pool_count(self):
+    def get_publish_thread_pool_count(self):
         """
-        Return the thread pool count for publisher background scheduler.
+        Return the thread pool count for publish background scheduler.
 
         :return: int
         """
-        publisher_thread_pool_count = self._get_attribute(
-            attribute='publisher_thread_pool_count'
+        publish_thread_pool_count = self._get_attribute(
+            attribute='publish_thread_pool_count'
         )
-        return publisher_thread_pool_count or Defaults.get_publisher_thread_pool_count()
+        return publish_thread_pool_count or Defaults.get_publish_thread_pool_count()
 
     def get_auth_methods(self):
         """

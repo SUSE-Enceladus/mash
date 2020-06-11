@@ -35,7 +35,7 @@ class TestJobCreatorService(object):
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
             'obs', 'upload', 'create', 'test', 'raw_image_upload',
-            'replicate', 'publisher', 'deprecation'
+            'replicate', 'publish', 'deprecation'
         ]
 
     @patch('mash.services.jobcreator.service.setup_logfile')
@@ -187,9 +187,9 @@ class TestJobCreatorService(object):
                 assert info['account'] == 'test-aws-gov'
                 assert 'us-gov-west-1' in info['target_regions']
 
-        # Publisher Job Doc
+        # Publish Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
         assert data['allow_copy'] == 'none'
         assert data['share_with'] == 'all'
@@ -313,14 +313,14 @@ class TestJobCreatorService(object):
         assert data['destination_resource_group'] == 'rg-2'
         assert data['destination_storage_account'] == 'sa2'
 
-        # Publisher Job Doc
+        # Publish Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
         assert data['image_description'] == 'New Image #123'
         assert data['label'] == 'New Image 123'
         assert data['offer_id'] == 'sles'
-        assert data['publisher_id'] == 'suse'
+        assert data['publish_id'] == 'suse'
         assert data['sku'] == '123'
         assert data['generation_id'] == 'image-gen2'
         assert data['cloud_image_name_generation_suffix'] == 'gen2'
@@ -415,9 +415,9 @@ class TestJobCreatorService(object):
         data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
 
-        # Publisher Job Doc
+        # Publish Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
 
         # Deprecation Job Doc
@@ -495,9 +495,9 @@ class TestJobCreatorService(object):
         data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
 
-        # Publisher Job Doc
+        # Publish Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
 
         # Deprecation Job Doc

@@ -1,5 +1,5 @@
 [Unit]
-Description=Mash Publisher service
+Description=Mash Publish service
 After=syslog.target network.target rabbitmq-server.service
 Before=systemd-user-sessions.service
 Requires=rabbitmq-server.service
@@ -8,7 +8,7 @@ Requires=rabbitmq-server.service
 User=mash
 Group=mash
 Type=simple
-ExecStart=/usr/bin/mash-publisher-service
+ExecStart=/usr/bin/mash-publish-service
 StandardOutput=journal
 Restart=always
 RestartSec=3

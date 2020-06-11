@@ -26,13 +26,13 @@ from mash.utils.azure import (
     wait_on_cloud_partner_operation
 )
 
-from mash.mash_exceptions import MashPublisherException
+from mash.mash_exceptions import MashPublishException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 
 
-class AzurePublisherJob(MashJob):
+class AzurePublishJob(MashJob):
     """
     Class for an Azure publishing job.
     """
@@ -45,7 +45,7 @@ class AzurePublisherJob(MashJob):
             self.image_description = self.job_config['image_description']
             self.label = self.job_config['label']
             self.offer_id = self.job_config['offer_id']
-            self.publisher_id = self.job_config['publisher_id']
+            self.publish_id = self.job_config['publish_id']
             self.sku = self.job_config['sku']
             self.account = self.job_config['account']
             self.region = self.job_config['region']
@@ -53,8 +53,8 @@ class AzurePublisherJob(MashJob):
             self.resource_group = self.job_config['resource_group']
             self.storage_account = self.job_config['storage_account']
         except KeyError as error:
-            raise MashPublisherException(
-                'Azure publisher Jobs require a(n) {0} '
+            raise MashPublishException(
+                'Azure publish Jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -98,7 +98,7 @@ class AzurePublisherJob(MashJob):
                 offer_doc = request_cloud_partner_offer_doc(
                     credential,
                     self.offer_id,
-                    self.publisher_id
+                    self.publish_id
                 )
 
                 kwargs = {
@@ -122,7 +122,7 @@ class AzurePublisherJob(MashJob):
                     credential,
                     offer_doc,
                     self.offer_id,
-                    self.publisher_id
+                    self.publish_id
                 )
                 self.log_callback.info(
                     'Updated cloud partner offer doc for account: {}.'.format(
@@ -134,7 +134,7 @@ class AzurePublisherJob(MashJob):
                     operation = publish_cloud_partner_offer(
                         credential,
                         self.offer_id,
-                        self.publisher_id
+                        self.publish_id
                     )
                     wait_on_cloud_partner_operation(
                         credential,

@@ -373,7 +373,7 @@ def test_request_cloud_partner_offer_doc(
         credentials, 'sles', 'suse',
     )
     mock_requests.get.assert_called_once_with(
-        'https://cloudpartner.azure.com/api/publishers/suse/'
+        'https://cloudpartner.azure.com/api/publishs/suse/'
         'offers/sles?api-version=2017-10-31',
         headers={
             'Accept': 'application/json',

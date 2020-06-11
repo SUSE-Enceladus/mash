@@ -58,7 +58,7 @@ def test_update_azure_job_accounts(
         'test',
         'raw_image_upload',
         'replicate',
-        'publisher',
+        'publish',
         'deprecation'
     ]
 
@@ -74,7 +74,7 @@ def test_update_azure_job_accounts(
         'destination_storage_account': 'sa2',
         'label': 'New Image 123',
         'offer_id': 'sles',
-        'publisher_id': 'suse',
+        'publish_id': 'suse',
         'cloud_image_name': 'Test OEM Image',
         'image_description': 'Description of an image',
         'old_cloud_image_name': 'Old test OEM Image'

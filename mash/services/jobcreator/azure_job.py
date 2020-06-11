@@ -50,7 +50,7 @@ class AzureJob(BaseJob):
         self.destination_storage_account = self.kwargs.get('destination_storage_account')
         self.label = self.kwargs.get('label')
         self.offer_id = self.kwargs.get('offer_id')
-        self.publisher_id = self.kwargs.get('publisher_id')
+        self.publish_id = self.kwargs.get('publish_id')
         self.sku = self.kwargs.get('sku')
         self.generation_id = self.kwargs.get('generation_id')
         self.cloud_image_name_generation_suffix = self.kwargs.get(
@@ -70,17 +70,17 @@ class AzureJob(BaseJob):
 
         return JsonFormat.json_message(deprecation_message)
 
-    def get_publisher_message(self):
+    def get_publish_message(self):
         """
-        Build publisher job message.
+        Build publish job message.
         """
-        publisher_message = {
-            'publisher_job': {
+        publish_message = {
+            'publish_job': {
                 'image_description': self.image_description,
                 'label': self.label,
                 'offer_id': self.offer_id,
                 'cloud': self.cloud,
-                'publisher_id': self.publisher_id,
+                'publish_id': self.publish_id,
                 'sku': self.sku,
                 'publish_offer': self.publish_offer,
                 'account': self.cloud_account,
@@ -92,20 +92,20 @@ class AzureJob(BaseJob):
         }
 
         if self.vm_images_key:
-            publisher_message['publisher_job']['vm_images_key'] = \
+            publish_message['publish_job']['vm_images_key'] = \
                 self.vm_images_key
 
         if self.generation_id:
-            publisher_message['publisher_job']['generation_id'] = \
+            publish_message['publish_job']['generation_id'] = \
                 self.generation_id
 
         if self.cloud_image_name_generation_suffix:
-            publisher_message['publisher_job']['cloud_image_name_generation_suffix'] = \
+            publish_message['publish_job']['cloud_image_name_generation_suffix'] = \
                 self.cloud_image_name_generation_suffix
 
-        publisher_message['publisher_job'].update(self.base_message)
+        publish_message['publish_job'].update(self.base_message)
 
-        return JsonFormat.json_message(publisher_message)
+        return JsonFormat.json_message(publish_message)
 
     def get_replicate_message(self):
         """

@@ -49,7 +49,7 @@ class Defaults(object):
     def get_service_names(self):
         return [
             'obs', 'upload', 'create', 'test', 'raw_image_upload',
-            'replicate', 'publisher', 'deprecation'
+            'replicate', 'publish', 'deprecation'
         ]
 
     @staticmethod
@@ -121,7 +121,7 @@ class Defaults(object):
         return 10
 
     @staticmethod
-    def get_publisher_thread_pool_count():
+    def get_publish_thread_pool_count():
         return 50
 
     @staticmethod

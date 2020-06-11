@@ -25,7 +25,7 @@ class TestOBSImageBuildResult(object):
         mock_logging.LoggerAdapter.return_value = self.log_callback
 
         self.obs_result = OBSImageBuildResult(
-            '815', 'job_file', 'obs_project', 'obs_package', 'publisher',
+            '815', 'job_file', 'obs_project', 'obs_package', 'publish',
             self.logger,
             notification_email='test@fake.com', notification_type='single',
             profile='Proxy', disallow_licenses=["MIT"],
@@ -69,7 +69,7 @@ class TestOBSImageBuildResult(object):
         )
         self.obs_result.notification_callback.assert_called_once_with(
             '815', 'test@fake.com', 'single', 'success', 'now',
-            'publisher', 'obs_package', 2, 'error!'
+            'publish', 'obs_package', 2, 'error!'
         )
 
     @patch('mash.services.obs.build_result.BackgroundScheduler')

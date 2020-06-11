@@ -22,7 +22,7 @@ class TestListenerService(object):
         self.config = Mock()
         self.config.config_data = None
         self.config.get_service_names.return_value = [
-            'obs', 'upload', 'test', 'replicate', 'publisher',
+            'obs', 'upload', 'test', 'replicate', 'publish',
             'deprecation'
         ]
         self.config.get_job_directory.return_value = '/var/lib/mash/replicate_jobs/'
@@ -78,7 +78,7 @@ class TestListenerService(object):
         self.service.listener_queue = 'listener'
         self.service.job_document_key = 'job_document'
         self.service.listener_msg_key = 'listener_msg'
-        self.service.next_service = 'publisher'
+        self.service.next_service = 'publish'
         self.service.prev_service = 'test'
         self.service.custom_args = None
         self.service.listener_msg_args = ['cloud_image_name']
@@ -464,7 +464,7 @@ class TestListenerService(object):
         mock_get_status_message.return_value = self.status_message
         self.service._publish_message('{"test": "message"}', job.id)
         mock_publish.assert_called_once_with(
-            'publisher',
+            'publish',
             '{"test": "message"}'
         )
 
