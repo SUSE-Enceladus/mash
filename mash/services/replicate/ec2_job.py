@@ -21,15 +21,15 @@ import time
 from botocore.exceptions import ClientError
 from collections import defaultdict
 
-from mash.mash_exceptions import MashReplicationException
+from mash.mash_exceptions import MashReplicateException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.ec2 import get_client, describe_images
 
 
-class EC2ReplicationJob(MashJob):
+class EC2ReplicateJob(MashJob):
     """
-    Class for an EC2 replication job.
+    Class for an EC2 replicate job.
     """
 
     def post_init(self):
@@ -38,11 +38,11 @@ class EC2ReplicationJob(MashJob):
         """
         try:
             self.image_description = self.job_config['image_description']
-            self.replication_source_regions = \
-                self.job_config['replication_source_regions']
+            self.replicate_source_regions = \
+                self.job_config['replicate_source_regions']
         except KeyError as error:
-            raise MashReplicationException(
-                'EC2 replication jobs require a(n) {0} '
+            raise MashReplicateException(
+                'EC2 replicate jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -60,12 +60,12 @@ class EC2ReplicationJob(MashJob):
 
         # Get all account credentials in one request
         accounts = []
-        for source_region, reg_info in self.replication_source_regions.items():
+        for source_region, reg_info in self.replicate_source_regions.items():
             accounts.append(reg_info['account'])
 
         self.request_credentials(accounts)
 
-        for source_region, reg_info in self.replication_source_regions.items():
+        for source_region, reg_info in self.replicate_source_regions.items():
             credential = self.credentials[reg_info['account']]
 
             self.log_callback.info(
@@ -111,7 +111,7 @@ class EC2ReplicationJob(MashJob):
                 except Exception as error:
                     self.status = FAILED
                     self.log_callback.warning(
-                        'Replication to {0} region failed: {1}'.format(
+                        'Replicate to {0} region failed: {1}'.format(
                             target_region,
                             error
                         )
@@ -140,7 +140,7 @@ class EC2ReplicationJob(MashJob):
             else:
                 new_image = {'ImageId': None}
         except Exception as e:
-            raise MashReplicationException(
+            raise MashReplicateException(
                 'There was an error replicating image to {0}. {1}'
                 .format(
                     target_region, e
@@ -166,7 +166,7 @@ class EC2ReplicationJob(MashJob):
                 images = describe_images(client, [image_id])
                 state = images[0]['State']
             except (IndexError, KeyError, ClientError):
-                raise MashReplicationException(
+                raise MashReplicateException(
                     'The image with ID: {0} was not found.'.format(
                         image_id
                     )
@@ -175,7 +175,7 @@ class EC2ReplicationJob(MashJob):
             if state == 'available':
                 break
             elif state == 'failed':
-                raise MashReplicationException(
+                raise MashReplicateException(
                     'The image with ID: {0} reached a failed state.'.format(
                         image_id
                     )

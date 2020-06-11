@@ -51,7 +51,7 @@ def add_target_ec2_account(
     cloud_accounts,
     helper_images,
     use_root_swap=None,
-    skip_replication=False
+    skip_replicate=False
 ):
     """
     Update job with account information.
@@ -63,7 +63,7 @@ def add_target_ec2_account(
     region_name = job_doc_data.get('region') or account.region
     subnet = job_doc_data.get('subnet') or account.subnet
 
-    if skip_replication:
+    if skip_replicate:
         regions = [region_name]
         if account.additional_regions:  # In case an additional region is used
             for region in account.additional_regions:
@@ -147,7 +147,7 @@ def validate_ec2_job(job_doc):
                 cloud_accounts,
                 helper_images,
                 job_doc.get('use_root_swap'),
-                job_doc.get('skip_replication', False)
+                job_doc.get('skip_replicate', False)
             )
 
     if 'cloud_groups' in job_doc:

@@ -107,12 +107,12 @@ class AzureJob(BaseJob):
 
         return JsonFormat.json_message(publisher_message)
 
-    def get_replication_message(self):
+    def get_replicate_message(self):
         """
-        Build replication job message and publish to replication exchange.
+        Build replicate job message and publish to replicate exchange.
         """
-        replication_message = {
-            'replication_job': {
+        replicate_message = {
+            'replicate_job': {
                 'cloud': self.cloud,
                 'account': self.cloud_account,
                 'region': self.region,
@@ -125,13 +125,13 @@ class AzureJob(BaseJob):
                     self.destination_storage_account
             }
         }
-        replication_message['replication_job'].update(self.base_message)
+        replicate_message['replicate_job'].update(self.base_message)
 
         if self.cleanup_images is not None:
-            replication_message['replication_job']['cleanup_images'] = \
+            replicate_message['replicate_job']['cleanup_images'] = \
                 self.cleanup_images
 
-        return JsonFormat.json_message(replication_message)
+        return JsonFormat.json_message(replicate_message)
 
     def get_test_message(self):
         """

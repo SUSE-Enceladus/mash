@@ -81,18 +81,18 @@ class GCEJob(BaseJob):
 
         return JsonFormat.json_message(publisher_message)
 
-    def get_replication_message(self):
+    def get_replicate_message(self):
         """
-        Build replication job message and publish to replication exchange.
+        Build replicate job message and publish to replicate exchange.
         """
-        replication_message = {
-            'replication_job': {
+        replicate_message = {
+            'replicate_job': {
                 'cloud': self.cloud
             }
         }
-        replication_message['replication_job'].update(self.base_message)
+        replicate_message['replicate_job'].update(self.base_message)
 
-        return JsonFormat.json_message(replication_message)
+        return JsonFormat.json_message(replicate_message)
 
     def get_test_message(self):
         """

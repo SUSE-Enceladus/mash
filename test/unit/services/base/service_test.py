@@ -32,7 +32,7 @@ class TestBaseService(object):
         config = Mock()
         config.get_service_names.return_value = [
             'obs', 'upload', 'create', 'raw_image_upload', 'test',
-            'replication', 'publisher', 'deprecation'
+            'replicate', 'publisher', 'deprecation'
         ]
 
         self.service = MashService('obs', config=config)
@@ -121,7 +121,7 @@ class TestBaseService(object):
         self.service.notification_class = notif_class
 
         self.service.send_notification(
-            job_id, to, 'periodic', 'failed', 'now', 'replication',
+            job_id, to, 'periodic', 'failed', 'now', 'replicate',
             'test_image', 1
         )
         assert notif_class.send_notification.call_count == 1

@@ -26,28 +26,28 @@ from mash.services.base_config import BaseConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
-from mash.services.replication.azure_job import AzureReplicationJob
-from mash.services.replication.ec2_job import EC2ReplicationJob
+from mash.services.replicate.azure_job import AzureReplicateJob
+from mash.services.replicate.ec2_job import EC2ReplicateJob
 from mash.services.no_op_job import NoOpJob
 
 
 def main():
     """
-    mash - replication service application entry point
+    mash - replicate service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.INFO)
 
-        service_name = 'replication'
+        service_name = 'replicate'
 
         # Create job factory
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
-                'azure': AzureReplicationJob,
-                'ec2': EC2ReplicationJob,
+                'azure': AzureReplicateJob,
+                'ec2': EC2ReplicateJob,
                 'gce': NoOpJob,
                 'oci': NoOpJob
             }

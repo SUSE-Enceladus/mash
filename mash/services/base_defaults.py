@@ -49,7 +49,7 @@ class Defaults(object):
     def get_service_names(self):
         return [
             'obs', 'upload', 'create', 'test', 'raw_image_upload',
-            'replication', 'publisher', 'deprecation'
+            'replicate', 'publisher', 'deprecation'
         ]
 
     @staticmethod

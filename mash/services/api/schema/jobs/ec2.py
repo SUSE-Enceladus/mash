@@ -115,9 +115,9 @@ ec2_job_message['properties']['cloud_groups'] = {
                    'Either a cloud_account, cloud_accounts or cloud_groups '
                    'is required for an EC2 job.'
 }
-ec2_job_message['properties']['skip_replication'] = {
+ec2_job_message['properties']['skip_replicate'] = {
     'type': 'boolean',
-    'description': 'Whether to skip the replication step. If true '
+    'description': 'Whether to skip the replicate step. If true '
                    'the image that is uploaded will not be replicated'
                    'to any regions.'
 }

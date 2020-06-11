@@ -144,13 +144,13 @@ class BaseJob(object):
             )
         )
 
-    def get_replication_message(self):
+    def get_replicate_message(self):
         """
-        Build replication job message and publish to replication exchange.
+        Build replicate job message and publish to replicate exchange.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_replication_message method.'.format(
+            'get_replicate_message method.'.format(
                 self.__class__.__name__
             )
         )

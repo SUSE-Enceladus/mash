@@ -142,8 +142,8 @@ install -D -m 644 config/mash_test.service \
 install -D -m 644 config/mash_raw_image_upload.service \
     %{buildroot}%{_unitdir}/mash_raw_image_upload.service
 
-install -D -m 644 config/mash_replication.service \
-    %{buildroot}%{_unitdir}/mash_replication.service
+install -D -m 644 config/mash_replicate.service \
+    %{buildroot}%{_unitdir}/mash_replicate.service
 
 install -D -m 644 config/mash_publisher.service \
     %{buildroot}%{_unitdir}/mash_publisher.service
@@ -202,8 +202,8 @@ python3 -m pytest
 %{_bindir}/mash-raw-image-upload-service
 %{_unitdir}/mash_raw_image_upload.service
 
-%{_bindir}/mash-replication-service
-%{_unitdir}/mash_replication.service
+%{_bindir}/mash-replicate-service
+%{_unitdir}/mash_replicate.service
 
 %{_bindir}/mash-publisher-service
 %{_unitdir}/mash_publisher.service

@@ -123,9 +123,9 @@ class MashJobCreatorException(MashException):
     """
 
 
-class MashReplicationException(MashException):
+class MashReplicateException(MashException):
     """
-    Base exception for replication service.
+    Base exception for replicate service.
     """
 
 

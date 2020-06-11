@@ -30,7 +30,7 @@ class TestJobCreatorBaseJob(object):
     @pytest.mark.parametrize('method', [
         ('get_deprecation_message'),
         ('get_publisher_message'),
-        ('get_replication_message'),
+        ('get_replicate_message'),
         ('get_upload_message'),
         ('get_test_message'),
         ('get_create_message')

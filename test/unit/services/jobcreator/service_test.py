@@ -35,7 +35,7 @@ class TestJobCreatorService(object):
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
             'obs', 'upload', 'create', 'test', 'raw_image_upload',
-            'replication', 'publisher', 'deprecation'
+            'replicate', 'publisher', 'deprecation'
         ]
 
     @patch('mash.services.jobcreator.service.setup_logfile')
@@ -170,13 +170,13 @@ class TestJobCreatorService(object):
         assert data['raw_image_upload_account'] == 'account'
         assert data['raw_image_upload_location'] == 'location'
 
-        # Replication Job Doc
+        # Replicate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
         assert data['image_description'] == 'New Image #123'
 
-        for region, info in data['replication_source_regions'].items():
+        for region, info in data['replicate_source_regions'].items():
             if region == 'ap-northeast-1':
                 assert info['account'] == 'test-aws'
                 assert 'ap-northeast-1' in info['target_regions']
@@ -299,9 +299,9 @@ class TestJobCreatorService(object):
         assert data['raw_image_upload_account'] == 'account'
         assert data['raw_image_upload_location'] == 'location'
 
-        # Replication Job Doc
+        # Replicate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
         assert data['cleanup_images']
         assert data['region'] == 'southcentralus'
@@ -410,9 +410,9 @@ class TestJobCreatorService(object):
         assert data['raw_image_upload_account'] == 'account'
         assert data['raw_image_upload_location'] == 'location'
 
-        # Replication Job Doc
+        # Replicate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
 
         # Publisher Job Doc
@@ -490,9 +490,9 @@ class TestJobCreatorService(object):
         check_base_attrs(data)
         assert data['raw_image_upload_type'] is None
 
-        # Replication Job Doc
+        # Replicate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
 
         # Publisher Job Doc

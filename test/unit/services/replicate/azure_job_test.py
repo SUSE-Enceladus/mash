@@ -2,16 +2,16 @@ from pytest import raises
 from unittest.mock import call, patch, Mock
 
 from mash.services.status_levels import FAILED
-from mash.services.replication.azure_job import AzureReplicationJob
-from mash.mash_exceptions import MashReplicationException
+from mash.services.replicate.azure_job import AzureReplicateJob
+from mash.mash_exceptions import MashReplicateException
 
 
-class TestAzureReplicationJob(object):
+class TestAzureReplicateJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
             'image_description': 'My image',
-            'last_service': 'replication',
+            'last_service': 'replicate',
             'requesting_user': 'user1',
             'cloud': 'azure',
             'utctime': 'now',
@@ -27,7 +27,7 @@ class TestAzureReplicationJob(object):
         }
 
         self.config = Mock()
-        self.job = AzureReplicationJob(self.job_config, self.config)
+        self.job = AzureReplicateJob(self.job_config, self.config)
 
         self.job.credentials = {
             "acnt1": {
@@ -57,15 +57,15 @@ class TestAzureReplicationJob(object):
     def test_replicate_ec2_missing_key(self):
         del self.job_config['account']
 
-        with raises(MashReplicationException):
-            AzureReplicationJob(self.job_config, self.config)
+        with raises(MashReplicateException):
+            AzureReplicateJob(self.job_config, self.config)
 
         self.job_config['account'] = 'acnt1'
 
-    @patch('mash.services.replication.azure_job.delete_blob')
-    @patch('mash.services.replication.azure_job.delete_image')
-    @patch('mash.services.replication.azure_job.create_json_file')
-    @patch('mash.services.replication.azure_job.copy_blob_to_classic_storage')
+    @patch('mash.services.replicate.azure_job.delete_blob')
+    @patch('mash.services.replicate.azure_job.delete_image')
+    @patch('mash.services.replicate.azure_job.create_json_file')
+    @patch('mash.services.replicate.azure_job.copy_blob_to_classic_storage')
     def test_replicate(
         self, mock_copy_blob, mock_create_json_file,
         mock_delete_image, mock_delete_blob

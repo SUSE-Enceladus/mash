@@ -94,35 +94,35 @@ class EC2Job(BaseJob):
         """
         return self._get_target_regions_list()
 
-    def get_replication_message(self):
+    def get_replicate_message(self):
         """
-        Build replication job message and publish to replication exchange.
+        Build replicate job message and publish to replicate exchange.
         """
-        replication_message = {
-            'replication_job': {
+        replicate_message = {
+            'replicate_job': {
                 'image_description': self.image_description,
                 'cloud': self.cloud,
-                'replication_source_regions':
-                    self.get_replication_source_regions()
+                'replicate_source_regions':
+                    self.get_replicate_source_regions()
             }
         }
-        replication_message['replication_job'].update(self.base_message)
+        replicate_message['replicate_job'].update(self.base_message)
 
-        return JsonFormat.json_message(replication_message)
+        return JsonFormat.json_message(replicate_message)
 
-    def get_replication_source_regions(self):
+    def get_replicate_source_regions(self):
         """
-        Return a dictionary of replication source regions.
+        Return a dictionary of replicate source regions.
         """
-        replication_source_regions = {}
+        replicate_source_regions = {}
 
         for source_region, value in self.target_account_info.items():
-            replication_source_regions[source_region] = {
+            replicate_source_regions[source_region] = {
                 'account': value['account'],
                 'target_regions': value['target_regions']
             }
 
-        return replication_source_regions
+        return replicate_source_regions
 
     def get_test_message(self):
         """

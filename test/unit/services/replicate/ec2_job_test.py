@@ -1,21 +1,21 @@
 from pytest import raises
 from unittest.mock import Mock, patch
 
-from mash.mash_exceptions import MashReplicationException
+from mash.mash_exceptions import MashReplicateException
 from mash.services.status_levels import FAILED
-from mash.services.replication.ec2_job import EC2ReplicationJob
+from mash.services.replicate.ec2_job import EC2ReplicateJob
 
 
-class TestEC2ReplicationJob(object):
+class TestEC2ReplicateJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
             'image_description': 'My image',
-            'last_service': 'replication',
+            'last_service': 'replicate',
             'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now',
-            "replication_source_regions": {
+            "replicate_source_regions": {
                 "us-east-1": {
                     "account": "test-aws",
                     "target_regions": ["us-east-2"]
@@ -24,7 +24,7 @@ class TestEC2ReplicationJob(object):
         }
 
         self.config = Mock()
-        self.job = EC2ReplicationJob(self.job_config, self.config)
+        self.job = EC2ReplicateJob(self.job_config, self.config)
         self.job._log_callback = Mock()
 
         self.job.credentials = {
@@ -40,14 +40,14 @@ class TestEC2ReplicationJob(object):
         }
 
     def test_replicate_ec2_missing_key(self):
-        del self.job_config['replication_source_regions']
+        del self.job_config['replicate_source_regions']
 
-        with raises(MashReplicationException):
-            EC2ReplicationJob(self.job_config, self.config)
+        with raises(MashReplicateException):
+            EC2ReplicateJob(self.job_config, self.config)
 
-    @patch('mash.services.replication.ec2_job.time')
-    @patch.object(EC2ReplicationJob, '_wait_on_image')
-    @patch.object(EC2ReplicationJob, '_replicate_to_region')
+    @patch('mash.services.replicate.ec2_job.time')
+    @patch.object(EC2ReplicateJob, '_wait_on_image')
+    @patch.object(EC2ReplicateJob, '_replicate_to_region')
     def test_replicate(
         self, mock_replicate_to_region,
         mock_wait_on_image, mock_time
@@ -62,7 +62,7 @@ class TestEC2ReplicationJob(object):
             'regions: us-east-2.'
         )
         self.job._log_callback.warning.assert_called_once_with(
-            'Replication to us-east-2 region failed: Broken!'
+            'Replicate to us-east-2 region failed: Broken!'
         )
 
         mock_replicate_to_region.assert_called_once_with(
@@ -77,8 +77,8 @@ class TestEC2ReplicationJob(object):
         )
         assert self.job.status == FAILED
 
-    @patch.object(EC2ReplicationJob, 'image_exists')
-    @patch('mash.services.replication.ec2_job.get_client')
+    @patch.object(EC2ReplicateJob, 'image_exists')
+    @patch('mash.services.replicate.ec2_job.get_client')
     def test_replicate_to_region(
         self, mock_get_client, mock_image_exists
     ):
@@ -108,8 +108,8 @@ class TestEC2ReplicationJob(object):
             SourceRegion='us-east-1',
         )
 
-    @patch.object(EC2ReplicationJob, 'image_exists')
-    @patch('mash.services.replication.ec2_job.get_client')
+    @patch.object(EC2ReplicateJob, 'image_exists')
+    @patch('mash.services.replicate.ec2_job.get_client')
     def test_replicate_to_region_exists(
             self, mock_get_client, mock_image_exists
     ):
@@ -124,8 +124,8 @@ class TestEC2ReplicationJob(object):
 
         assert result is None
 
-    @patch.object(EC2ReplicationJob, 'image_exists')
-    @patch('mash.services.replication.ec2_job.get_client')
+    @patch.object(EC2ReplicateJob, 'image_exists')
+    @patch('mash.services.replicate.ec2_job.get_client')
     def test_replicate_to_region_exception(
         self, mock_get_client, mock_image_exists
     ):
@@ -136,7 +136,7 @@ class TestEC2ReplicationJob(object):
 
         msg = 'There was an error replicating image to us-east-2. ' \
             'Error copying image!'
-        with raises(MashReplicationException) as e:
+        with raises(MashReplicateException) as e:
             self.job._replicate_to_region(
                 self.job.credentials['test-aws'],
                 'ami-12345', 'us-east-1', 'us-east-2'
@@ -144,7 +144,7 @@ class TestEC2ReplicationJob(object):
 
         assert msg == str(e.value)
 
-    @patch('mash.services.replication.ec2_job.get_client')
+    @patch('mash.services.replicate.ec2_job.get_client')
     def test_replicate_wait_on_image(self, mock_get_client):
         client = Mock()
         client.describe_images.return_value = {
@@ -167,8 +167,8 @@ class TestEC2ReplicationJob(object):
             ImageIds=['ami-54321']
         )
 
-    @patch('mash.services.replication.ec2_job.time')
-    @patch('mash.services.replication.ec2_job.get_client')
+    @patch('mash.services.replicate.ec2_job.time')
+    @patch('mash.services.replicate.ec2_job.get_client')
     def test_replicate_wait_on_image_exception(
         self, mock_get_client, mock_sleep
     ):
@@ -180,7 +180,7 @@ class TestEC2ReplicationJob(object):
         ]
         mock_get_client.return_value = client
 
-        with raises(MashReplicationException):
+        with raises(MashReplicateException):
             self.job._wait_on_image(
                 self.job.credentials['test-aws']['access_key_id'],
                 self.job.credentials['test-aws']['secret_access_key'],
@@ -188,7 +188,7 @@ class TestEC2ReplicationJob(object):
                 'us-east-2'
             )
 
-        with raises(MashReplicationException):
+        with raises(MashReplicateException):
             self.job._wait_on_image(
                 self.job.credentials['test-aws']['access_key_id'],
                 self.job.credentials['test-aws']['secret_access_key'],

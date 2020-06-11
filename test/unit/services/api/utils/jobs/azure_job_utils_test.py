@@ -57,7 +57,7 @@ def test_update_azure_job_accounts(
         'create',
         'test',
         'raw_image_upload',
-        'replication',
+        'replicate',
         'publisher',
         'deprecation'
     ]

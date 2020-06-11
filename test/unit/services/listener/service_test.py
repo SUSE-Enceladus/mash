@@ -22,10 +22,10 @@ class TestListenerService(object):
         self.config = Mock()
         self.config.config_data = None
         self.config.get_service_names.return_value = [
-            'obs', 'upload', 'test', 'replication', 'publisher',
+            'obs', 'upload', 'test', 'replicate', 'publisher',
             'deprecation'
         ]
-        self.config.get_job_directory.return_value = '/var/lib/mash/replication_jobs/'
+        self.config.get_job_directory.return_value = '/var/lib/mash/replicate_jobs/'
         self.config.get_base_thread_pool_count.return_value = 10
 
         self.channel = Mock()
@@ -47,13 +47,13 @@ class TestListenerService(object):
         }
 
         self.error_message = JsonFormat.json_message({
-            "replication_result": {
+            "replicate_result": {
                 "id": "1",
                 "status": "failed"
             }
         })
         self.status_message = JsonFormat.json_message({
-            "replication_result": {
+            "replicate_result": {
                 "cloud_image_name": "image123",
                 "id": "1",
                 "status": "success"
@@ -73,7 +73,7 @@ class TestListenerService(object):
         scheduler = Mock()
         self.service.scheduler = scheduler
 
-        self.service.service_exchange = 'replication'
+        self.service.service_exchange = 'replicate'
         self.service.service_queue = 'service'
         self.service.listener_queue = 'listener'
         self.service.job_document_key = 'job_document'
@@ -111,22 +111,22 @@ class TestListenerService(object):
 
         self.service.post_init()
 
-        self.config.get_job_directory.assert_called_once_with('replication')
+        self.config.get_job_directory.assert_called_once_with('replicate')
         mock_makedirs.assert_called_once_with(
-            '/var/lib/mash/replication_jobs/', exist_ok=True
+            '/var/lib/mash/replicate_jobs/', exist_ok=True
         )
 
-        self.config.get_log_file.assert_called_once_with('replication')
+        self.config.get_log_file.assert_called_once_with('replicate')
         mock_setup_logfile.assert_called_once_with(
             '/var/log/mash/service_service.log'
         )
 
         mock_bind_queue.has_calls([
-            call('replication', 'job_document', 'service'),
-            call('replication', 'listener_msg', 'listener')
+            call('replicate', 'job_document', 'service'),
+            call('replicate', 'listener_msg', 'listener')
         ])
         mock_restart_jobs.assert_called_once_with(
-            '/var/lib/mash/replication_jobs/',
+            '/var/lib/mash/replicate_jobs/',
             self.service._add_job
         )
         mock_start.assert_called_once_with()
@@ -173,7 +173,7 @@ class TestListenerService(object):
             extra={'job_id': '1'}
         )
         mock_delete_job.assert_called_once_with('1')
-        msg = {"replication_result": {"id": "1", "status": 1}}
+        msg = {"replicate_result": {"id": "1", "status": 1}}
         mock_publish_message.assert_called_once_with(
             JsonFormat.json_message(msg),
             '1'
@@ -232,7 +232,7 @@ class TestListenerService(object):
         job = Mock()
         job.id = '1'
         job.job_file = 'job-test.json'
-        job.last_service = 'replication'
+        job.last_service = 'replicate'
         job.status = 'success'
         job.utctime = 'now'
         job.get_job_id.return_value = {'job_id': '1'}
@@ -305,7 +305,7 @@ class TestListenerService(object):
     @patch.object(ListenerService, '_add_job')
     def test_service_handle_service_message(self, mock_add_job):
         self.method['routing_key'] = 'job_document'
-        self.message.body = '{"replication_job": {"id": "1", ' \
+        self.message.body = '{"replicate_job": {"id": "1", ' \
             '"cloud": "ec2", "utctime": "now"}}'
         self.service._handle_service_message(self.message)
 
@@ -353,7 +353,7 @@ class TestListenerService(object):
 
         mock_delete_job.assert_called_once_with('1')
         self.service.log.info.assert_called_once_with(
-            'Pass[1]: replication successful.',
+            'Pass[1]: replicate successful.',
             extra={'job_id': '1'}
         )
         mock_publish_message.assert_called_once_with(
@@ -388,7 +388,7 @@ class TestListenerService(object):
 
         mock_delete_job.assert_called_once_with('1')
         self.service.log.error.assert_called_once_with(
-            'Pass[1]: Exception in replication: Image not found!',
+            'Pass[1]: Exception in replicate: Image not found!',
             extra={'job_id': '1'}
         )
         mock_publish_message.assert_called_once_with(
@@ -418,11 +418,11 @@ class TestListenerService(object):
         self.service._process_job_result(event)
 
         self.service.log.error.assert_called_once_with(
-            'Pass[1]: Error occurred in replication.',
+            'Pass[1]: Error occurred in replicate.',
             extra={'job_id': '1'}
         )
         mock_delete_job('1')
-        msg = {"replication_result": {"id": "1", "status": "error"}}
+        msg = {"replicate_result": {"id": "1", "status": "error"}}
         mock_publish_message.assert_called_once_with(
             JsonFormat.json_message(msg),
             '1'
@@ -447,7 +447,7 @@ class TestListenerService(object):
         self.service._process_job_missed(event)
 
         self.service.log.warning.assert_called_once_with(
-            'Pass[1]: Job missed during replication.',
+            'Pass[1]: Job missed during replicate.',
             extra={'job_id': '1'}
         )
 
@@ -626,7 +626,7 @@ class TestListenerService(object):
             message, ['cloud_image_name']
         )
         mock_delete_job.assert_called_once_with('1')
-        msg = {"replication_result": {"id": "1", "status": 'delete'}}
+        msg = {"replicate_result": {"id": "1", "status": 'delete'}}
         mock_publish_message.assert_called_once_with(
             JsonFormat.json_message(msg),
             '1'

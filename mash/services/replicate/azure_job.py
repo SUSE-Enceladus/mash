@@ -22,15 +22,15 @@ from mash.utils.azure import (
     delete_blob
 )
 
-from mash.mash_exceptions import MashReplicationException
+from mash.mash_exceptions import MashReplicateException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 
 
-class AzureReplicationJob(MashJob):
+class AzureReplicateJob(MashJob):
     """
-    Class for an Azure replication job.
+    Class for an Azure replicate job.
     """
 
     def post_init(self):
@@ -47,8 +47,8 @@ class AzureReplicationJob(MashJob):
             self.destination_resource_group = self.job_config['destination_resource_group']
             self.destination_storage_account = self.job_config['destination_storage_account']
         except KeyError as error:
-            raise MashReplicationException(
-                'Azure replication Jobs require a(n) {0} '
+            raise MashReplicateException(
+                'Azure replicate Jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -60,7 +60,7 @@ class AzureReplicationJob(MashJob):
         """
         Replicate image in each source region.
 
-        The azure replication process requires multiple steps:
+        The azure replicate process requires multiple steps:
 
         - The image blob is copied from ARM storage to legacy ASM storage
           + The azure publishing process requires an ASM based page blob
