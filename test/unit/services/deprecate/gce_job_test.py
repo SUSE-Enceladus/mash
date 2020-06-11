@@ -1,15 +1,15 @@
 from pytest import raises
 from unittest.mock import MagicMock, patch, Mock
 
-from mash.services.deprecation.gce_job import GCEDeprecationJob
-from mash.mash_exceptions import MashDeprecationException
+from mash.services.deprecate.gce_job import GCEDeprecateJob
+from mash.mash_exceptions import MashDeprecateException
 
 
-class TestGCEDeprecationJob(object):
+class TestGCEDeprecateJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'last_service': 'deprecation',
+            'last_service': 'deprecate',
             'cloud': 'gce',
             'requesting_user': 'user1',
             'old_cloud_image_name': 'old_image_123',
@@ -18,7 +18,7 @@ class TestGCEDeprecationJob(object):
         }
 
         self.config = Mock()
-        self.job = GCEDeprecationJob(self.job_config, self.config)
+        self.job = GCEDeprecateJob(self.job_config, self.config)
         self.job._log_callback = Mock()
         self.job.credentials = {
             'test-gce': {
@@ -30,16 +30,16 @@ class TestGCEDeprecationJob(object):
             'cloud_image_name': 'image_123'
         }
 
-    def test_deprecation_gce_missing_key(self):
+    def test_deprecate_gce_missing_key(self):
         del self.job_config['account']
 
-        with raises(MashDeprecationException):
-            GCEDeprecationJob(self.job_config, self.config)
+        with raises(MashDeprecateException):
+            GCEDeprecateJob(self.job_config, self.config)
 
         self.job_config['account'] = 'test-gce'
 
-    @patch('mash.services.deprecation.gce_job.Provider')
-    @patch('mash.services.deprecation.gce_job.get_driver')
+    @patch('mash.services.deprecate.gce_job.Provider')
+    @patch('mash.services.deprecate.gce_job.get_driver')
     def test_deprecate(self, mock_get_driver, mock_provider):
         compute_engine = MagicMock()
         mock_get_driver.return_value = compute_engine
@@ -60,8 +60,8 @@ class TestGCEDeprecationJob(object):
         self.job.run_job()
         assert self.job.status == 'success'
 
-    @patch('mash.services.deprecation.gce_job.Provider')
-    @patch('mash.services.deprecation.gce_job.get_driver')
+    @patch('mash.services.deprecate.gce_job.Provider')
+    @patch('mash.services.deprecate.gce_job.get_driver')
     def test_deprecate_exception(
         self, mock_get_driver, mock_provider
     ):

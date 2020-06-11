@@ -32,7 +32,7 @@ class TestBaseService(object):
         config = Mock()
         config.get_service_names.return_value = [
             'obs', 'upload', 'create', 'raw_image_upload', 'test',
-            'replicate', 'publish', 'deprecation'
+            'replicate', 'publish', 'deprecate'
         ]
 
         self.service = MashService('obs', config=config)
@@ -93,7 +93,7 @@ class TestBaseService(object):
     def test_create_notification_content(self):
         # Failed message
         msg = self.service._create_notification_content(
-            '1', 'failed', 'always', 'deprecation', 'test_image', 3,
+            '1', 'failed', 'always', 'deprecate', 'test_image', 3,
             'Invalid publish permissions!'
         )
 

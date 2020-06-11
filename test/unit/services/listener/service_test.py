@@ -23,7 +23,7 @@ class TestListenerService(object):
         self.config.config_data = None
         self.config.get_service_names.return_value = [
             'obs', 'upload', 'test', 'replicate', 'publish',
-            'deprecation'
+            'deprecate'
         ]
         self.config.get_job_directory.return_value = '/var/lib/mash/replicate_jobs/'
         self.config.get_base_thread_pool_count.return_value = 10
@@ -635,7 +635,7 @@ class TestListenerService(object):
 
     def test_get_next_service_error(self):
         # Test service with no next service
-        self.service.service_exchange = 'deprecation'
+        self.service.service_exchange = 'deprecate'
         next_service = self.service._get_next_service()
         assert next_service is None
 

@@ -52,23 +52,23 @@ class OCIJob(BaseJob):
             'operating_system_version'
         )
 
-    def get_deprecation_message(self):
+    def get_deprecate_message(self):
         """
-        Build deprecation job message.
+        Build deprecate job message.
         """
-        deprecation_message = {
-            'deprecation_job': {
+        deprecate_message = {
+            'deprecate_job': {
                 'cloud': self.cloud,
                 'account': self.cloud_account
             }
         }
-        deprecation_message['deprecation_job'].update(self.base_message)
+        deprecate_message['deprecate_job'].update(self.base_message)
 
         if self.old_cloud_image_name:
-            deprecation_message['deprecation_job']['old_cloud_image_name'] = \
+            deprecate_message['deprecate_job']['old_cloud_image_name'] = \
                 self.old_cloud_image_name
 
-        return JsonFormat.json_message(deprecation_message)
+        return JsonFormat.json_message(deprecate_message)
 
     def get_publish_message(self):
         """

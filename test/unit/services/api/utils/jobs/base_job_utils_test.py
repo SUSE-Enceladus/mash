@@ -38,7 +38,7 @@ def test_create_job(
     mock_job.return_value = job
 
     data = {
-        'last_service': 'deprecation',
+        'last_service': 'deprecate',
         'utctime': 'now',
         'image': 'test_oem_image',
         'download_url': 'http://download.opensuse.org/repositories/Cloud:Tools/images',

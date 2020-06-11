@@ -28,7 +28,7 @@ class TestJobCreatorBaseJob(object):
         self.job.post_init()
 
     @pytest.mark.parametrize('method', [
-        ('get_deprecation_message'),
+        ('get_deprecate_message'),
         ('get_publish_message'),
         ('get_replicate_message'),
         ('get_upload_message'),
@@ -44,7 +44,7 @@ class TestJobCreatorBaseJob(object):
             BaseJob({
                 'cloud': 'aws',
                 'requesting_user': 'test-user',
-                'last_service': 'deprecation',
+                'last_service': 'deprecate',
                 'utctime': 'now',
                 'image': 'test-image',
                 'cloud_image_name': 'test-cloud-image',

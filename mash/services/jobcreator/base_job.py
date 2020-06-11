@@ -84,15 +84,15 @@ class BaseJob(object):
 
         self.post_init()
 
-    def get_deprecation_message(self):
+    def get_deprecate_message(self):
         """
-        Build deprecation job message.
+        Build deprecate job message.
 
         Implement in child class.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_deprecation_message method.'.format(
+            'get_deprecate_message method.'.format(
                 self.__class__.__name__
             )
         )

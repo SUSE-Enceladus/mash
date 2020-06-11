@@ -33,7 +33,7 @@ config = {
             'mash-create-service=mash.services.create_service:main',
             'mash-replicate-service=mash.services.replicate_service:main',
             'mash-publish-service=mash.services.publish_service:main',
-            'mash-deprecation-service=mash.services.deprecation_service:main',
+            'mash-deprecate-service=mash.services.deprecate_service:main',
             'mash-raw-image-upload-service=mash.services.raw_image_upload_service:main'
         ]
     },

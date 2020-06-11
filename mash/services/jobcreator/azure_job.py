@@ -57,18 +57,18 @@ class AzureJob(BaseJob):
             'cloud_image_name_generation_suffix'
         )
 
-    def get_deprecation_message(self):
+    def get_deprecate_message(self):
         """
-        Build deprecation job message.
+        Build deprecate job message.
         """
-        deprecation_message = {
-            'deprecation_job': {
+        deprecate_message = {
+            'deprecate_job': {
                 'cloud': self.cloud
             }
         }
-        deprecation_message['deprecation_job'].update(self.base_message)
+        deprecate_message['deprecate_job'].update(self.base_message)
 
-        return JsonFormat.json_message(deprecation_message)
+        return JsonFormat.json_message(deprecate_message)
 
     def get_publish_message(self):
         """

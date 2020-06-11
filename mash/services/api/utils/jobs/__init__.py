@@ -84,7 +84,7 @@ def validate_job(data):
     if 'create' in services_run:
         validate_create_args(data)
 
-    if 'deprecation' in services_run:
+    if 'deprecate' in services_run:
         validate_deprecate_args(data)
 
 
@@ -120,11 +120,11 @@ def validate_create_args(data):
 
 def validate_deprecate_args(data):
     """
-    Validate required args for image deprecation jobs.
+    Validate required args for image deprecate jobs.
     """
     if 'old_cloud_image_name' not in data:
         raise MashJobException(
-            'Jobs that perform image deprecation require '
+            'Jobs that perform image deprecate require '
             'old_cloud_image_name in the job doc.'
         )
 

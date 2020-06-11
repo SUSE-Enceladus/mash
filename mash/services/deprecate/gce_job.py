@@ -23,15 +23,15 @@ from dateutil.relativedelta import relativedelta
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 
-from mash.mash_exceptions import MashDeprecationException
+from mash.mash_exceptions import MashDeprecateException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
 from mash.utils.mash_utils import create_json_file
 
 
-class GCEDeprecationJob(MashJob):
+class GCEDeprecateJob(MashJob):
     """
-    Class for an GCE deprecation job.
+    Class for an GCE deprecate job.
     """
 
     def post_init(self):
@@ -41,8 +41,8 @@ class GCEDeprecationJob(MashJob):
         try:
             self.account = self.job_config['account']
         except KeyError as error:
-            raise MashDeprecationException(
-                'GCE deprecation Jobs require a(n) {0} '
+            raise MashDeprecateException(
+                'GCE deprecate Jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -60,7 +60,7 @@ class GCEDeprecationJob(MashJob):
         self.status = SUCCESS
 
         if self.old_cloud_image_name is None:
-            # There is no old image that needs deprecation for the job.
+            # There is no old image that needs deprecate for the job.
             return
 
         self.request_credentials([self.account])

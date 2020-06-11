@@ -20,7 +20,7 @@ services:
   - raw_image_upload
   - replicate
   - publish
-  - deprecation
+  - deprecate
 non_cred_services:
   - obs
 credentials:

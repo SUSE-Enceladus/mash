@@ -21,7 +21,7 @@ services:
   - test
   - replicate
   - publish
-  - deprecation
+  - deprecate
 non_cred_services:
   - obs
 obs:

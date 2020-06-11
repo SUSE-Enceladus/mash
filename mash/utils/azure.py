@@ -591,7 +591,7 @@ def deprecate_image_in_offer_doc(
                 image['showInGui'] = False
             else:
                 log_callback(
-                    'Deprecation image name, {0} does match the mediaName '
+                    'Deprecate image name, {0} does match the mediaName '
                     'attribute, {1}.'.format(
                         image_name,
                         image['mediaName']

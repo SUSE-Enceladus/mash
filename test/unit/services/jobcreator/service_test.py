@@ -35,7 +35,7 @@ class TestJobCreatorService(object):
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
             'obs', 'upload', 'create', 'test', 'raw_image_upload',
-            'replicate', 'publish', 'deprecation'
+            'replicate', 'publish', 'deprecate'
         ]
 
     @patch('mash.services.jobcreator.service.setup_logfile')
@@ -66,7 +66,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'deprecation'
+            assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
             assert job_data['notification_type'] == 'single'
 
@@ -205,13 +205,13 @@ class TestJobCreatorService(object):
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']
 
-        # Deprecation Job Doc
+        # Deprecate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
 
-        for region in data['deprecation_regions']:
+        for region in data['deprecate_regions']:
             if region['account'] == 'test-aws-gov':
                 assert region['helper_image'] == 'ami-c2b5d7e1'
                 assert 'us-gov-west-1' in region['target_regions']
@@ -227,7 +227,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'deprecation'
+            assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
             assert job_data['notification_type'] == 'single'
 
@@ -330,9 +330,9 @@ class TestJobCreatorService(object):
         assert data['resource_group'] == 'rg-2'
         assert data['storage_account'] == 'sa2'
 
-        # Deprecation Job Doc
+        # Deprecate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
         check_base_attrs(data)
 
     @patch.object(JobCreatorService, '_publish')
@@ -340,7 +340,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'deprecation'
+            assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
             assert job_data['notification_type'] == 'single'
 
@@ -420,9 +420,9 @@ class TestJobCreatorService(object):
         data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
 
-        # Deprecation Job Doc
+        # Deprecate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert data['account'] == 'test-gce'
@@ -432,7 +432,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'deprecation'
+            assert job_data['last_service'] == 'deprecate'
 
             if cloud:
                 assert job_data['cloud'] == 'oci'
@@ -500,9 +500,9 @@ class TestJobCreatorService(object):
         data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
 
-        # Deprecation Job Doc
+        # Deprecate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert data['account'] == 'test-oci'

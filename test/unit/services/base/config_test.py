@@ -44,7 +44,7 @@ class TestBaseConfig(object):
         # Services requiring credentials
         expected = [
             'upload', 'create', 'test', 'raw_image_upload',
-            'replicate', 'publish', 'deprecation'
+            'replicate', 'publish', 'deprecate'
         ]
         services = self.empty_config.get_service_names(
             credentials_required=True

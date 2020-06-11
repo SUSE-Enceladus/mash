@@ -135,9 +135,9 @@ class MashPublishException(MashException):
     """
 
 
-class MashDeprecationException(MashException):
+class MashDeprecateException(MashException):
     """
-    Base exception for deprecation service.
+    Base exception for deprecate service.
     """
 
 

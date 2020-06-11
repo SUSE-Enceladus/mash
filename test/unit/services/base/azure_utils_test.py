@@ -564,7 +564,7 @@ def test_deprecate_image_in_offer_invalid():
     )
 
     callback.assert_called_once_with(
-        'Deprecation image name, new_image_20180909 does match the '
+        'Deprecate image name, new_image_20180909 does match the '
         'mediaName attribute, new_image.'
     )
 

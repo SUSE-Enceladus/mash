@@ -7,7 +7,7 @@ class TestNoOpJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'last_service': 'deprecation',
+            'last_service': 'deprecate',
             'requesting_user': 'user1',
             'cloud': 'gce',
             'utctime': 'now'

@@ -107,7 +107,7 @@ base_job_message = {
             'openSUSE-Leap-15.0-v20190313-hvm-ssd-x86_64',
             description='The cloud image name for the image to be deprecated. '
                         'This is only required for jobs that run through '
-                        'deprecation service.'
+                        'deprecate service.'
         ),
         'conditions': {
             'type': 'array',

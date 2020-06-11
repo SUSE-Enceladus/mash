@@ -59,11 +59,11 @@ def test_update_azure_job_accounts(
         'raw_image_upload',
         'replicate',
         'publish',
-        'deprecation'
+        'deprecate'
     ]
 
     job_doc = {
-        'last_service': 'deprecation',
+        'last_service': 'deprecate',
         'requesting_user': '1',
         'cloud_account': 'acnt1',
         'source_resource_group': 'rg-1',

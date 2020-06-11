@@ -18,14 +18,14 @@
 
 from ec2imgutils.ec2deprecateimg import EC2DeprecateImg
 
-from mash.mash_exceptions import MashDeprecationException
+from mash.mash_exceptions import MashDeprecateException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 
 
-class EC2DeprecationJob(MashJob):
+class EC2DeprecateJob(MashJob):
     """
-    Class for an EC2 deprecation job.
+    Class for an EC2 deprecate job.
     """
 
     def post_init(self):
@@ -33,10 +33,10 @@ class EC2DeprecationJob(MashJob):
         Post initialization method.
         """
         try:
-            self.deprecation_regions = self.job_config['deprecation_regions']
+            self.deprecate_regions = self.job_config['deprecate_regions']
         except KeyError as error:
-            raise MashDeprecationException(
-                'EC2 deprecation Jobs require a(n) {0} '
+            raise MashDeprecateException(
+                'EC2 deprecate Jobs require a(n) {0} '
                 'key in the job doc.'.format(
                     error
                 )
@@ -53,24 +53,24 @@ class EC2DeprecationJob(MashJob):
         self.status = SUCCESS
 
         if self.old_cloud_image_name is None:
-            # There is no old image that needs deprecation for the job.
+            # There is no old image that needs deprecate for the job.
             return
 
         # Get all account credentials in one request
         accounts = []
-        for region_info in self.deprecation_regions:
+        for region_info in self.deprecate_regions:
             accounts.append(region_info['account'])
 
         self.request_credentials(accounts)
         cloud_image_name = self.source_regions['cloud_image_name']
 
-        for region_info in self.deprecation_regions:
+        for region_info in self.deprecate_regions:
             credential = self.credentials[region_info['account']]
 
             deprecator = EC2DeprecateImg(
                 access_key=credential['access_key_id'],
                 secret_key=credential['secret_access_key'],
-                deprecation_image_name=self.old_cloud_image_name,
+                deprecate_image_name=self.old_cloud_image_name,
                 replacement_image_name=cloud_image_name,
                 log_callback=self.log_callback
             )
@@ -85,7 +85,7 @@ class EC2DeprecationJob(MashJob):
                             'no image found.'.format(region=region)
                         )
                 except Exception as error:
-                    raise MashDeprecationException(
+                    raise MashDeprecateException(
                         'Error deprecating image {0} in {1}. {2}'.format(
                             self.old_cloud_image_name, region, error
                         )

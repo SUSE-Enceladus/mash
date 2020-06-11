@@ -148,8 +148,8 @@ install -D -m 644 config/mash_replicate.service \
 install -D -m 644 config/mash_publish.service \
     %{buildroot}%{_unitdir}/mash_publish.service
 
-install -D -m 644 config/mash_deprecation.service \
-    %{buildroot}%{_unitdir}/mash_deprecation.service
+install -D -m 644 config/mash_deprecate.service \
+    %{buildroot}%{_unitdir}/mash_deprecate.service
 
 %pre
 %{_bindir}/getent group mash > /dev/null || %{_sbindir}/groupadd mash
@@ -208,7 +208,7 @@ python3 -m pytest
 %{_bindir}/mash-publish-service
 %{_unitdir}/mash_publish.service
 
-%{_bindir}/mash-deprecation-service
-%{_unitdir}/mash_deprecation.service
+%{_bindir}/mash-deprecate-service
+%{_unitdir}/mash_deprecate.service
 
 %changelog

@@ -27,8 +27,8 @@ from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
 from mash.services.no_op_job import NoOpJob
-from mash.services.deprecation.ec2_job import EC2DeprecationJob
-from mash.services.deprecation.gce_job import GCEDeprecationJob
+from mash.services.deprecate.ec2_job import EC2DeprecateJob
+from mash.services.deprecate.gce_job import GCEDeprecateJob
 
 
 def main():
@@ -39,15 +39,15 @@ def main():
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.INFO)
-        service_name = 'deprecation'
+        service_name = 'deprecate'
 
         # Create job factory
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
                 'azure': NoOpJob,
-                'ec2': EC2DeprecationJob,
-                'gce': GCEDeprecationJob,
+                'ec2': EC2DeprecateJob,
+                'gce': GCEDeprecateJob,
                 'oci': NoOpJob
             }
         )
