@@ -30,7 +30,7 @@ from mash.services.api.schema import (
 from mash.services.api.routes.jobs import job_response
 from mash.services.api.schema.jobs.oci import oci_job_message
 from mash.services.api.utils.jobs import create_job
-from mash.services.api.utils.jobs.oci import update_oci_job_accounts
+from mash.services.api.utils.jobs.oci import validate_oci_job
 
 api = Namespace(
     'OCI Jobs',
@@ -60,7 +60,7 @@ class OCIJobCreate(Resource):
         data['requesting_user'] = get_jwt_identity()
 
         try:
-            data = update_oci_job_accounts(data)
+            data = validate_oci_job(data)
             job = create_job(data)
         except MashException as error:
             return make_response(
@@ -74,10 +74,16 @@ class OCIJobCreate(Resource):
                 400
             )
 
-        return make_response(
-            jsonify(marshal(job, job_response, skip_none=True)),
-            201
-        )
+        if job:
+            return make_response(
+                jsonify(marshal(job, job_response, skip_none=True)),
+                201
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Job doc is valid!'}),
+                200
+            )
 
     @api.doc('get_oci_job_doc_schema')
     @api.response(200, 'Success', oci_job)

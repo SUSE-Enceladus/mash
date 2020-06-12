@@ -26,7 +26,7 @@ from mash.services.api.utils.jobs.ec2 import (
     get_ec2_helper_images,
     add_target_ec2_account,
     convert_account_dict,
-    update_ec2_job_accounts
+    validate_ec2_job
 )
 
 from werkzeug.local import LocalProxy
@@ -134,15 +134,17 @@ def test_convert_account_dict():
     assert convert_account_dict(accounts)['acnt1']['data'] == 'more_stuff'
 
 
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.jobs.ec2.add_target_ec2_account')
 @patch('mash.services.api.utils.jobs.ec2.get_ec2_account')
 @patch('mash.services.api.utils.jobs.ec2.get_ec2_group')
 @patch('mash.services.api.utils.jobs.ec2.get_ec2_helper_images')
-def test_update_ec2_job_accounts(
+def test_validate_ec2_job(
     mock_get_helper_images,
     mock_get_group,
     mock_get_ec2_account,
-    mock_add_target_account
+    mock_add_target_account,
+    mock_get_current_obj
 ):
     account = Mock()
     account.name = 'acnt1'
@@ -152,15 +154,33 @@ def test_update_ec2_job_accounts(
     group.accounts = [account]
     mock_get_group.return_value = group
 
+    app = Mock()
+    app.config = {
+        'SERVICE_NAMES': [
+            'obs',
+            'uploader',
+            'create',
+            'testing',
+            'raw_image_uploader',
+            'replication',
+            'publisher',
+            'deprecation'
+        ]
+    }
+    mock_get_current_obj.return_value = app
+
     mock_get_helper_images.return_value = {'us-east-99': 'ami-789'}
 
     job_doc = {
+        'last_service': 'testing',
         'requesting_user': '1',
         'cloud_accounts': [{'name': 'acnt1', 'data': 'more_stuff'}],
-        'cloud_groups': ['group1']
+        'cloud_groups': ['group1'],
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image'
     }
 
-    result = update_ec2_job_accounts(job_doc)
+    result = validate_ec2_job(job_doc)
 
     assert 'target_account_info' in result
     assert 'cloud_accounts' not in result
@@ -168,26 +188,35 @@ def test_update_ec2_job_accounts(
 
     # Test doc with no accounts
     job_doc = {
+        'last_service': 'testing',
         'requesting_user': '1',
-        'cloud_groups': ['group1']
+        'cloud_groups': ['group1'],
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image'
     }
 
-    update_ec2_job_accounts(job_doc)
+    validate_ec2_job(job_doc)
 
     # Test doc with no groups
     job_doc = {
+        'last_service': 'testing',
         'requesting_user': '1',
-        'cloud_accounts': [{'name': 'acnt1', 'data': 'more_stuff'}]
+        'cloud_accounts': [{'name': 'acnt1', 'data': 'more_stuff'}],
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image'
     }
 
-    update_ec2_job_accounts(job_doc)
+    validate_ec2_job(job_doc)
 
     # Test doc using cloud_account
     job_doc = {
+        'last_service': 'testing',
         'requesting_user': '1',
-        'cloud_account': 'acnt1'
+        'cloud_account': 'acnt1',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image'
     }
 
-    result = update_ec2_job_accounts(job_doc)
+    result = validate_ec2_job(job_doc)
 
     assert 'cloud_account' not in result

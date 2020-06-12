@@ -30,7 +30,7 @@ from mash.services.api.schema import (
 from mash.services.api.routes.jobs import job_response
 from mash.services.api.schema.jobs.gce import gce_job_message
 from mash.services.api.utils.jobs import create_job
-from mash.services.api.utils.jobs.gce import update_gce_job_accounts
+from mash.services.api.utils.jobs.gce import validate_gce_job
 
 api = Namespace(
     'GCE Jobs',
@@ -60,7 +60,7 @@ class GCEJob(Resource):
         data['requesting_user'] = get_jwt_identity()
 
         try:
-            data = update_gce_job_accounts(data)
+            data = validate_gce_job(data)
             job = create_job(data)
         except MashException as error:
             return make_response(
@@ -74,10 +74,16 @@ class GCEJob(Resource):
                 400
             )
 
-        return make_response(
-            jsonify(marshal(job, job_response, skip_none=True)),
-            201
-        )
+        if job:
+            return make_response(
+                jsonify(marshal(job, job_response, skip_none=True)),
+                201
+            )
+        else:
+            return make_response(
+                jsonify({'msg': 'Job doc is valid!'}),
+                200
+            )
 
     @api.doc('get_gce_job_doc_schema')
     @api.response(200, 'Success', gce_job)

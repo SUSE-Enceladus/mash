@@ -18,13 +18,20 @@
 
 from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.accounts.gce import get_gce_account
-from mash.services.api.utils.jobs import get_services_by_last_service
+from mash.services.api.utils.jobs import (
+    get_services_by_last_service,
+    validate_job
+)
 
 
-def update_gce_job_accounts(job_doc):
+def validate_gce_job(job_doc):
     """
-    Update target_account_info for given job doc.
+    Validate job.
+
+    And update target_account_info for given job doc.
     """
+    validate_job(job_doc)
+
     cloud_account = get_gce_account(
         job_doc['cloud_account'],
         job_doc['requesting_user']

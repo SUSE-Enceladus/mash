@@ -17,14 +17,19 @@
 #
 
 from mash.services.api.utils.accounts.oci import get_oci_account
-from mash.services.api.utils.jobs import get_services_by_last_service
+from mash.services.api.utils.jobs import (
+    get_services_by_last_service,
+    validate_job
+)
 from mash.mash_exceptions import MashJobException
 
 
-def update_oci_job_accounts(job_doc):
+def validate_oci_job(job_doc):
     """
     Update target_account_info for given job doc.
     """
+    validate_job(job_doc)
+
     user_id = job_doc['requesting_user']
     cloud_account = get_oci_account(job_doc['cloud_account'], user_id)
 

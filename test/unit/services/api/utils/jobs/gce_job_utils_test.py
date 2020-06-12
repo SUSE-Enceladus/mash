@@ -21,13 +21,16 @@ from unittest.mock import patch, Mock
 from pytest import raises
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.utils.jobs.gce import update_gce_job_accounts
+from mash.services.api.utils.jobs.gce import validate_gce_job
+
+from werkzeug.local import LocalProxy
 
 
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.jobs.gce.get_services_by_last_service')
 @patch('mash.services.api.utils.jobs.gce.get_gce_account')
 def test_update_gce_job_accounts(
-    mock_get_gce_account, mock_get_services
+    mock_get_gce_account, mock_get_services, mock_get_current_obj
 ):
     account = Mock()
     account.name = 'acnt1'
@@ -36,6 +39,21 @@ def test_update_gce_job_accounts(
     account.testing_account = 'acnt2'
     account.is_publishing_account = True
     mock_get_gce_account.return_value = account
+
+    app = Mock()
+    app.config = {
+        'SERVICE_NAMES': [
+            'obs',
+            'uploader',
+            'create',
+            'testing',
+            'raw_image_uploader',
+            'replication',
+            'publisher',
+            'deprecation'
+        ]
+    }
+    mock_get_current_obj.return_value = app
 
     mock_get_services.return_value = [
         'obs',
@@ -50,10 +68,12 @@ def test_update_gce_job_accounts(
         'cloud_account': 'acnt1',
         'bucket': 'images2',
         'family': 'sles',
-        'image_project': 'suse-cloud'
+        'image_project': 'suse-cloud',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image'
     }
 
-    result = update_gce_job_accounts(job_doc)
+    result = validate_gce_job(job_doc)
 
     assert result['region'] == 'us-east1'
     assert result['bucket'] == 'images2'
@@ -63,7 +83,7 @@ def test_update_gce_job_accounts(
     del job_doc['family']
 
     with raises(MashJobException):
-        update_gce_job_accounts(job_doc)
+        validate_gce_job(job_doc)
 
     # Publishing account has no testing account
     del job_doc['testing_account']
@@ -71,11 +91,11 @@ def test_update_gce_job_accounts(
     account.testing_account = None
 
     with raises(MashJobException):
-        update_gce_job_accounts(job_doc)
+        validate_gce_job(job_doc)
 
     # Publishing account has no image_project
     del job_doc['image_project']
     job_doc['testing_account'] = 'acnt2'
 
     with raises(MashJobException):
-        update_gce_job_accounts(job_doc)
+        validate_gce_job(job_doc)
