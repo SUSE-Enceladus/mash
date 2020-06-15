@@ -44,13 +44,13 @@ def test_update_gce_job_accounts(
     app.config = {
         'SERVICE_NAMES': [
             'obs',
-            'uploader',
+            'upload',
             'create',
-            'testing',
-            'raw_image_uploader',
-            'replication',
-            'publisher',
-            'deprecation'
+            'test',
+            'raw_image_upload',
+            'replicate',
+            'publish',
+            'deprecate'
         ]
     }
     mock_get_current_obj.return_value = app
