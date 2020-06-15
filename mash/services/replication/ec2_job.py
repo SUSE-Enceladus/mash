@@ -92,8 +92,10 @@ class EC2ReplicationJob(MashJob):
                     self.source_region_results[target_region]['account'] = \
                         credential
 
-        # Wait for images to replicate, this will take time.
-        time.sleep(300)
+        if self.source_region_results:
+            # Wait for images to replicate, this will take time.
+            # Only wait if at least one region was replicated.
+            time.sleep(300)
 
         for target_region, reg_info in self.source_region_results.items():
             credential = reg_info['account']
