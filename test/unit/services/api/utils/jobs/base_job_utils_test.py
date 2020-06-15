@@ -7,14 +7,16 @@ from mash.services.api.utils.jobs import (
     create_job,
     delete_job,
     get_job,
-    get_jobs
+    get_jobs,
+    validate_last_service,
+    validate_create_args,
+    validate_deprecate_args
 )
 from mash.mash_exceptions import MashJobException
 
 from werkzeug.local import LocalProxy
 
 
-@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.jobs.Job')
 @patch('mash.services.api.utils.jobs.publish')
 @patch('mash.services.api.utils.jobs.db')
@@ -25,27 +27,11 @@ def test_create_job(
     mock_get_user,
     mock_db,
     mock_publish,
-    mock_job,
-    mock_get_current_obj
+    mock_job
 ):
     job = Mock()
     user = Mock()
     user.id = '1'
-
-    app = Mock()
-    app.config = {
-        'SERVICE_NAMES': [
-            'obs',
-            'uploader',
-            'create',
-            'testing',
-            'raw_image_uploader',
-            'replication',
-            'publisher',
-            'deprecation'
-        ]
-    }
-    mock_get_current_obj.return_value = app
 
     mock_uuid.uuid4.return_value = '12345678-1234-1234-1234-123456789012'
     mock_get_user.return_value = user
@@ -83,19 +69,12 @@ def test_create_job(
     with raises(Exception):
         create_job(data)
 
-    del data['old_cloud_image_name']  # Test missing deprecate arg
-    with raises(MashJobException):
-        create_job(data)
-
-    del data['cloud_image_name']  # Test missing create arg
-    with raises(MashJobException):
-        create_job(data)
-
-    data['last_service'] = 'fake'
-    with raises(MashJobException):
-        create_job(data)
-
     mock_db.session.rollback.assert_called_once_with()
+
+    # Dry run
+    data['dry_run'] = True
+    result = create_job(data)
+    assert result is None
 
 
 @patch('mash.services.api.utils.jobs.Job')
@@ -147,3 +126,38 @@ def test_delete_jobs(mock_get_job, mock_db, mock_publish):
     # Not found
     mock_get_job.return_value = None
     assert delete_job('12345678-1234-1234-1234-123456789012', '1') == 0
+
+
+@patch.object(LocalProxy, '_get_current_object')
+def test_validate_last_service(mock_get_current_obj):
+    app = Mock()
+    app.config = {
+        'SERVICE_NAMES': [
+            'obs',
+            'uploader',
+            'create',
+            'testing',
+            'raw_image_uploader',
+            'replication',
+            'publisher',
+            'deprecation'
+        ]
+    }
+    mock_get_current_obj.return_value = app
+
+    data = {
+        'last_service': 'fake'
+    }
+
+    with raises(MashJobException):
+        validate_last_service(data)
+
+
+def test_validate_create_args():
+    with raises(MashJobException):
+        validate_create_args({})
+
+
+def test_validate_deprecate_args():
+    with raises(MashJobException):
+        validate_deprecate_args({})

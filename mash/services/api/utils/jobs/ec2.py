@@ -22,6 +22,7 @@ from flask import current_app
 
 from mash.mash_exceptions import MashJobException
 from mash.services.api.utils.accounts.ec2 import get_ec2_group, get_ec2_account
+from mash.services.api.utils.jobs import validate_job
 
 
 def get_ec2_regions_by_partition(partition):
@@ -106,13 +107,17 @@ def convert_account_dict(accounts):
     return cloud_accounts
 
 
-def update_ec2_job_accounts(job_doc):
+def validate_ec2_job(job_doc):
     """
+    Validate job.
+
     Update target_account_info for given job doc.
 
     Once accounts dictionary is built remove cloud_groups
     and cloud_accounts keys from job_doc.
     """
+    validate_job(job_doc)
+
     user_id = job_doc['requesting_user']
 
     helper_images = get_ec2_helper_images()

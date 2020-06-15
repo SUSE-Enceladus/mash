@@ -267,6 +267,12 @@ base_job_message = {
                            'image tarball. This allows the checksum and/or '
                            'signature to also be uploaded for image '
                            'verification.'
+        },
+        'dry_run': {
+            'type': 'boolean',
+            'example': True,
+            'description': 'Only validate the job document and return. '
+                           'Do not create the job.'
         }
     },
     'additionalProperties': False,

@@ -20,18 +20,36 @@ from pytest import raises
 from unittest.mock import patch, Mock
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.utils.jobs.azure import update_azure_job_accounts
+from mash.services.api.utils.jobs.azure import validate_azure_job
+
+from werkzeug.local import LocalProxy
 
 
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.jobs.azure.get_services_by_last_service')
 @patch('mash.services.api.utils.jobs.azure.get_azure_account')
 def test_update_azure_job_accounts(
-    mock_get_azure_account, mock_get_services
+    mock_get_azure_account, mock_get_services, mock_get_current_obj
 ):
     account = Mock()
     account.region = 'southcentralus'
     account.name = 'acnt1'
     mock_get_azure_account.return_value = account
+
+    app = Mock()
+    app.config = {
+        'SERVICE_NAMES': [
+            'obs',
+            'uploader',
+            'create',
+            'testing',
+            'raw_image_uploader',
+            'replication',
+            'publisher',
+            'deprecation'
+        ]
+    }
+    mock_get_current_obj.return_value = app
 
     mock_get_services.return_value = [
         'obs',
@@ -56,14 +74,17 @@ def test_update_azure_job_accounts(
         'destination_storage_account': 'sa2',
         'label': 'New Image 123',
         'offer_id': 'sles',
-        'publisher_id': 'suse'
+        'publisher_id': 'suse',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'old_cloud_image_name': 'Old test OEM Image'
     }
 
     # Missing args causes exception
     with raises(MashJobException):
-        update_azure_job_accounts(job_doc)
+        validate_azure_job(job_doc)
 
     job_doc['sku'] = '123'
-    result = update_azure_job_accounts(job_doc)
+    result = validate_azure_job(job_doc)
 
     assert result['region'] == 'southcentralus'

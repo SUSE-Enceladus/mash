@@ -6,13 +6,13 @@ from mash.mash_exceptions import MashException
 
 
 @patch('mash.services.api.routes.jobs.azure.create_job')
-@patch('mash.services.api.routes.jobs.azure.update_azure_job_accounts')
+@patch('mash.services.api.routes.jobs.azure.validate_azure_job')
 @patch('mash.services.api.routes.jobs.azure.get_jwt_identity')
 @patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_add_job_gce(
         mock_jwt_required,
         mock_jwt_identity,
-        mock_update_azure_job_accounts,
+        mock_validate_azure_job,
         mock_create_job,
         test_client
 ):
@@ -50,8 +50,19 @@ def test_api_add_job_gce(
     assert response.json['cloud_architecture'] == 'x86_64'
     assert response.json['profile'] == 'Server'
 
+    # Dry run
+    data['dry_run'] = True
+    mock_create_job.return_value = None
+    response = test_client.post(
+        '/jobs/azure/',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+    assert response.status_code == 200
+    assert response.data == b'{"msg":"Job doc is valid!"}\n'
+
     # Exception
-    mock_update_azure_job_accounts.side_effect = Exception('Broken')
+    mock_validate_azure_job.side_effect = Exception('Broken')
 
     response = test_client.post(
         '/jobs/azure/',
@@ -62,7 +73,7 @@ def test_api_add_job_gce(
     assert response.data == b'{"msg":"Failed to start job"}\n'
 
     # Mash Exception
-    mock_update_azure_job_accounts.side_effect = MashException('Broken')
+    mock_validate_azure_job.side_effect = MashException('Broken')
 
     response = test_client.post(
         '/jobs/azure/',

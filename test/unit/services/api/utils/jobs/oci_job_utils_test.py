@@ -21,13 +21,16 @@ from unittest.mock import patch, Mock
 from pytest import raises
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.utils.jobs.oci import update_oci_job_accounts
+from mash.services.api.utils.jobs.oci import validate_oci_job
+
+from werkzeug.local import LocalProxy
 
 
+@patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.jobs.oci.get_services_by_last_service')
 @patch('mash.services.api.utils.jobs.oci.get_oci_account')
-def test_update_oci_job_accounts(
-    mock_get_oci_account, mock_get_services
+def test_validate_oci_job(
+    mock_get_oci_account, mock_get_services, mock_get_current_obj
 ):
     account = Mock()
     account.name = 'acnt1'
@@ -38,6 +41,21 @@ def test_update_oci_job_accounts(
     account.oci_user_id = 'ocid1.user.oc1..'
     account.tenancy = 'ocid1.tenancy.oc1..'
     mock_get_oci_account.return_value = account
+
+    app = Mock()
+    app.config = {
+        'SERVICE_NAMES': [
+            'obs',
+            'uploader',
+            'create',
+            'testing',
+            'raw_image_uploader',
+            'replication',
+            'publisher',
+            'deprecation'
+        ]
+    }
+    mock_get_current_obj.return_value = app
 
     mock_get_services.return_value = [
         'obs',
@@ -52,10 +70,12 @@ def test_update_oci_job_accounts(
         'cloud_account': 'acnt1',
         'bucket': 'images2',
         'operating_system': 'sles',
-        'operating_system_version': '14'
+        'operating_system_version': '14',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image'
     }
 
-    result = update_oci_job_accounts(job_doc)
+    result = validate_oci_job(job_doc)
 
     assert result['region'] == 'us-phoenix-1'
     assert result['bucket'] == 'images2'
@@ -66,4 +86,4 @@ def test_update_oci_job_accounts(
 
     del job_doc['operating_system']
     with raises(MashJobException):
-        update_oci_job_accounts(job_doc)
+        validate_oci_job(job_doc)

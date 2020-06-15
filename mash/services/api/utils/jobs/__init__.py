@@ -36,7 +36,9 @@ def create_job(data):
     """
     Create a new job for user.
     """
-    validate_job(data)
+    if data.get('dry_run'):
+        return None
+
     job_id = get_new_job_id()
     data['job_id'] = job_id
 
