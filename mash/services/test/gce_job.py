@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -25,8 +25,13 @@ from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
-from mash.utils.gce import cleanup_gce_image
-from mash.utils.gce import get_region_list
+from mash.utils.gce import (
+    delete_gce_image,
+    delete_image_tarball,
+    get_region_list,
+    get_gce_compute_driver,
+    get_gce_storage_driver
+)
 from mash.services.test.img_proof_helper import img_proof_test
 
 from img_proof.ipa_exceptions import IpaRetryableError
@@ -93,12 +98,14 @@ class GCETestJob(MashJob):
 
         self.request_credentials(accounts)
         credentials = self.credentials[self.testing_account or self.account]
+        project = credentials.get('project_id')
+        compute_driver = get_gce_compute_driver(credentials)
 
         if self.test_fallback_regions == []:
             # fallback testing explicitly disabled
             fallback_regions = set()
         elif self.test_fallback_regions is None:
-            fallback_regions = get_region_list(credentials)
+            fallback_regions = get_region_list(compute_driver, project)
         else:
             fallback_regions = set(self.test_fallback_regions)
 
@@ -169,6 +176,10 @@ class GCETestJob(MashJob):
 
     def cleanup_image(self):
         credentials = self.credentials[self.account]
+        project = credentials.get('project_id')
+        object_name = self.status_msg['object_name']
+        compute_driver = get_gce_compute_driver(credentials)
+        storage_driver = get_gce_storage_driver(credentials)
 
         self.log_callback.info(
             'Cleaning up image: {0} in region: {1}.'.format(
@@ -178,7 +189,16 @@ class GCETestJob(MashJob):
         )
 
         try:
-            cleanup_gce_image(credentials, self.cloud_image_name, self.bucket)
+            delete_gce_image(
+                compute_driver,
+                project,
+                self.cloud_image_name
+            )
+            delete_image_tarball(
+                storage_driver,
+                object_name,
+                self.bucket
+            )
         except Exception as error:
             self.log_callback.warning(
                 'Failed to cleanup image: {0}'.format(error)

@@ -28,7 +28,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-adal
-BuildRequires:  python3-apache-libcloud
 BuildRequires:  python3-azure-mgmt-compute < 5.0.0
 BuildRequires:  python3-azure-mgmt-resource
 BuildRequires:  python3-azure-mgmt-storage
@@ -54,9 +53,11 @@ BuildRequires:  python3-requests
 BuildRequires:  python3-obs-img-utils >= 0.2.0
 BuildRequires:  python3-obs-img-utils < 0.3.0
 BuildRequires:  python3-oci-sdk
+BuildRequires:  python3-google-auth
+BuildRequires:  python3-google-cloud-storage
+BuildRequires:  python3-google-api-python-client
 Requires:       rabbitmq-server
 Requires:       python3-adal
-Requires:       python3-apache-libcloud
 Requires:       python3-azure-mgmt-compute < 5.0.0
 Requires:       python3-azure-mgmt-resource
 Requires:       python3-azure-mgmt-storage
@@ -82,6 +83,9 @@ Requires:       python3-requests
 Requires:       python3-obs-img-utils >= 0.2.0
 Requires:       python3-obs-img-utils < 0.3.0
 Requires:       python3-oci-sdk
+Requires:       python3-google-auth
+Requires:       python3-google-cloud-storage
+Requires:       python3-google-api-python-client
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
 Requires(pre):  pwdutils

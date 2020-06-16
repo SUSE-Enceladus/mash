@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,13 +16,12 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from libcloud.storage.drivers.google_storage import GoogleStorageDriver
-
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
-from mash.utils.mash_utils import format_string_with_date, create_json_file
+from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
+from mash.utils.gce import get_gce_storage_driver, upload_image_tarball
 
 
 class GCEUploadJob(MashJob):
@@ -61,21 +60,15 @@ class GCEUploadJob(MashJob):
 
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
+        storage_driver = get_gce_storage_driver(credentials)
 
-        with create_json_file(credentials) as auth_file:
-            storage_driver = GoogleStorageDriver(
-                credentials['client_email'],
-                secret=auth_file,
-                project=credentials['project_id']
-            )
-
-            object_name = ''.join([self.cloud_image_name, '.tar.gz'])
-            container = storage_driver.get_container(self.bucket)
-
-            with open(self.status_msg['image_file'], 'rb') as image_stream:
-                storage_driver.upload_object_via_stream(
-                    image_stream, container, object_name
-                )
+        object_name = ''.join([self.cloud_image_name, '.tar.gz'])
+        upload_image_tarball(
+            storage_driver,
+            object_name,
+            self.status_msg['image_file'],
+            self.bucket
+        )
 
         self.status_msg['cloud_image_name'] = self.cloud_image_name
         self.status_msg['object_name'] = object_name
