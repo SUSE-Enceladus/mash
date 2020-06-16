@@ -26,6 +26,7 @@ from mash.services.api.models import Job, User
 from mash.services.api.utils.amqp import publish
 from mash.services.api.utils.users import get_user_by_id
 from mash.mash_exceptions import MashJobException
+from mash.utils.mash_utils import normalize_dictionary
 
 
 def get_new_job_id():
@@ -78,6 +79,7 @@ def validate_job(data):
     """
     Validate job doc.
     """
+    data = normalize_dictionary(data)
     validate_last_service(data)
     services_run = get_services_by_last_service(data['last_service'])
 
@@ -86,6 +88,8 @@ def validate_job(data):
 
     if 'deprecate' in services_run:
         validate_deprecate_args(data)
+
+    return data
 
 
 def validate_last_service(data):
