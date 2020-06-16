@@ -38,7 +38,8 @@ from mash.utils.mash_utils import (
     handle_request,
     setup_logfile,
     setup_rabbitmq_log_handler,
-    get_fingerprint_from_private_key
+    get_fingerprint_from_private_key,
+    normalize_dictionary
 )
 
 
@@ -258,3 +259,24 @@ def test_create_key_file(mock_temp_file, mock_os):
         file_handle.write.assert_called_with(private_key)
 
     mock_os.remove.assert_called_once_with('test.pem')
+
+
+def test_normalize_dict():
+    data = {
+        'boolean': True,
+        'int': 8,
+        'string': 'Good string',
+        'bad_string': ' extra white space ',
+        'dict': {'test': ' data '},
+        'list': [' test '],
+        'list_dict': [{'test': ' data ', 'boolean': False}]
+    }
+    data = normalize_dictionary(data)
+
+    assert data['boolean']
+    assert data['int'] == 8
+    assert data['string'] == 'Good string'
+    assert data['bad_string'] == 'extra white space'
+    assert data['dict']['test'] == 'data'
+    assert data['list'][0] == 'test'
+    assert data['list_dict'][0]['test'] == 'data'

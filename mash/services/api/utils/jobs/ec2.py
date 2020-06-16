@@ -116,7 +116,7 @@ def validate_ec2_job(job_doc):
     Once accounts dictionary is built remove cloud_groups
     and cloud_accounts keys from job_doc.
     """
-    validate_job(job_doc)
+    job_doc = validate_job(job_doc)
 
     user_id = job_doc['requesting_user']
 

@@ -251,3 +251,28 @@ def get_fingerprint_from_private_key(private_key_value):
     digest = hashlib.md5(ssh_public_key).hexdigest()
 
     return ':'.join(a + b for a, b in zip(digest[::2], digest[1::2]))
+
+
+def normalize_dictionary(data):
+    for key, value in data.items():
+        normalize_data(data, value, key)
+
+    return data
+
+
+def normalize_list(data):
+    for index, value in enumerate(data):
+        normalize_data(data, value, index)
+
+    return data
+
+
+def normalize_data(data, value, key):
+    if hasattr(value, 'strip'):
+        data[key] = value.strip()
+    elif isinstance(value, dict):
+        data[key] = normalize_dictionary(value)
+    elif isinstance(value, list):
+        data[key] = normalize_list(value)
+
+    return data

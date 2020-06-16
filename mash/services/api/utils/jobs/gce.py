@@ -30,7 +30,7 @@ def validate_gce_job(job_doc):
 
     And update target_account_info for given job doc.
     """
-    validate_job(job_doc)
+    job_doc = validate_job(job_doc)
 
     cloud_account = get_gce_account(
         job_doc['cloud_account'],
