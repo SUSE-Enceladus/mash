@@ -37,8 +37,11 @@ class TestGCETestJob(object):
 
         self.job_config['account'] = 'test-gce'
 
+    @patch('mash.services.test.gce_job.get_gce_compute_driver')
+    @patch('mash.services.test.gce_job.get_gce_storage_driver')
+    @patch('mash.services.test.gce_job.delete_gce_image')
+    @patch('mash.services.test.gce_job.delete_image_tarball')
     @patch('mash.services.test.gce_job.get_region_list')
-    @patch('mash.services.test.gce_job.cleanup_gce_image')
     @patch('mash.services.test.gce_job.os')
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.random')
@@ -46,7 +49,9 @@ class TestGCETestJob(object):
     @patch('mash.services.test.img_proof_helper.test_image')
     def test_test_run_gce_test(
         self, mock_test_image, mock_temp_file, mock_random,
-        mock_create_ssh_key_pair, mock_os, mock_cleanup_image, mock_get_region_list
+        mock_create_ssh_key_pair, mock_os, mock_get_region_list,
+        mock_delete_image_tarball, mock_delete_image, mock_get_storage_driver,
+        mock_get_compute_driver
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -94,6 +99,7 @@ class TestGCETestJob(object):
             }
         }
         job.status_msg['cloud_image_name'] = 'ami-123'
+        job.status_msg['object_name'] = 'ami-123.tar.gz'
         job.run_job()
 
         mock_test_image.assert_has_calls([
@@ -130,7 +136,7 @@ class TestGCETestJob(object):
         ])
         job._log_callback.warning.reset_mock()
         job._log_callback.error.reset_mock()
-        mock_cleanup_image.side_effect = Exception('Unable to cleanup image!')
+        mock_delete_image_tarball.side_effect = Exception('Unable to cleanup image!')
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
@@ -141,16 +147,21 @@ class TestGCETestJob(object):
         ])
         assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
 
+    @patch('mash.services.test.gce_job.get_gce_compute_driver')
+    @patch('mash.services.test.gce_job.get_gce_storage_driver')
+    @patch('mash.services.test.gce_job.delete_gce_image')
+    @patch('mash.services.test.gce_job.delete_image_tarball')
     @patch('mash.services.test.gce_job.get_region_list')
-    @patch('mash.services.test.gce_job.cleanup_gce_image')
     @patch('mash.services.test.gce_job.os')
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.test.img_proof_helper.test_image')
     def test_test_run_default_fallback(
-            self, mock_test_image, mock_temp_file, mock_random,
-            mock_create_ssh_key_pair, mock_os, mock_cleanup_image, mock_get_region_list
+        self, mock_test_image, mock_temp_file, mock_random,
+        mock_create_ssh_key_pair, mock_os, mock_get_region_list,
+        mock_delete_image_tarball, mock_delete_image, mock_get_storage_driver,
+        mock_get_compute_driver
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -174,6 +185,7 @@ class TestGCETestJob(object):
             }
         }
         job.status_msg['cloud_image_name'] = 'ami-123'
+        job.status_msg['object_name'] = 'ami-123.tar.gz'
         job.run_job()
 
         mock_test_image.assert_has_calls([
