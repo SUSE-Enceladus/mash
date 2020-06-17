@@ -9,7 +9,7 @@ class TestMashJob(object):
     def setup(self):
         self.job_config = {
             'id': '1',
-            'last_service': 'testing',
+            'last_service': 'test',
             'requesting_user': 'user1',
             'cloud': 'ec2',
             'utctime': 'now'

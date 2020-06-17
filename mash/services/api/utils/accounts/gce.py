@@ -40,7 +40,7 @@ def create_gce_account(
     if is_publishing_account and not testing_account:
         raise MashDBException(
             'Jobs using a GCE publishing account require'
-            ' the use of a testing account.'
+            ' the use of a test account.'
         )
 
     data = {

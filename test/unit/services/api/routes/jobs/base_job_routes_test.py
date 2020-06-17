@@ -50,7 +50,7 @@ def test_api_get_job(
 ):
     job = Mock()
     job.job_id = '12345678-1234-1234-1234-123456789012'
-    job.last_service = 'testing'
+    job.last_service = 'test'
     job.utctime = 'now'
     job.image = 'test_image_oem'
     job.download_url = 'http://download.opensuse.org/repositories/Cloud:Tools/images'
@@ -66,7 +66,7 @@ def test_api_get_job(
 
     assert response.status_code == 200
     assert response.json['job_id'] == '12345678-1234-1234-1234-123456789012'
-    assert response.json['last_service'] == 'testing'
+    assert response.json['last_service'] == 'test'
     assert response.json['utctime'] == 'now'
     assert response.json['image'] == 'test_image_oem'
     assert response.json['download_url'] == 'http://download.opensuse.org/repositories/Cloud:Tools/images'
@@ -94,7 +94,7 @@ def test_api_get_job_list(
 ):
     job = Mock()
     job.job_id = '12345678-1234-1234-1234-123456789012'
-    job.last_service = 'testing'
+    job.last_service = 'test'
     job.utctime = 'now'
     job.image = 'test_image_oem'
     job.download_url = 'http://download.opensuse.org/repositories/Cloud:Tools/images'
@@ -108,7 +108,7 @@ def test_api_get_job_list(
 
     assert response.status_code == 200
     assert response.json[0]['job_id'] == '12345678-1234-1234-1234-123456789012'
-    assert response.json[0]['last_service'] == 'testing'
+    assert response.json[0]['last_service'] == 'test'
     assert response.json[0]['utctime'] == 'now'
     assert response.json[0]['image'] == 'test_image_oem'
     assert response.json[0]['download_url'] == 'http://download.opensuse.org/repositories/Cloud:Tools/images'

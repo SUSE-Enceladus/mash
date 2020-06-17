@@ -79,9 +79,9 @@ class OBSImageBuildResultService(MashService):
         finally:
             self.close_connection()
 
-    def _send_job_result_for_uploader(self, job_id, trigger_info):
+    def _send_job_result_for_upload(self, job_id, trigger_info):
         self._publish(
-            'uploader',
+            'upload',
             self.listener_msg_key,
             JsonFormat.json_message(trigger_info)
         )
@@ -139,7 +139,7 @@ class OBSImageBuildResultService(MashService):
                 }
             }
             self._publish(
-                'uploader',
+                'upload',
                 self.listener_msg_key,
                 JsonFormat.json_message(message)
             )
@@ -161,7 +161,7 @@ class OBSImageBuildResultService(MashService):
               "download_url": "http://download.suse.de/ibs/Devel:/PubCloud
               :/Stable:/Images12/images",
               "image": "SLES12-Azure-BYOS",
-              "last_service": "uploader",
+              "last_service": "upload",
               "utctime": "now|always|timestring_utc_timezone",
               "conditions": [
                   {
@@ -269,7 +269,7 @@ class OBSImageBuildResultService(MashService):
             kwargs['disallow_packages'] = job['disallow_packages']
 
         job_worker = OBSImageBuildResult(**kwargs)
-        job_worker.set_result_handler(self._send_job_result_for_uploader)
+        job_worker.set_result_handler(self._send_job_result_for_upload)
         job_worker.set_notification_handler(self.send_notification)
         job_worker.start_watchdog(
             nonstop=nonstop, isotime=time

@@ -18,7 +18,7 @@ def test_api_add_job_oci(
 ):
     job = Mock()
     job.job_id = '12345678-1234-1234-1234-123456789012'
-    job.last_service = 'testing'
+    job.last_service = 'test'
     job.utctime = 'now'
     job.image = 'test_image_oem'
     job.download_url = 'http://download.opensuse.org/repositories/Cloud:Tools/images'
@@ -45,7 +45,7 @@ def test_api_add_job_oci(
 
     assert response.status_code == 201
     assert response.json['job_id'] == '12345678-1234-1234-1234-123456789012'
-    assert response.json['last_service'] == 'testing'
+    assert response.json['last_service'] == 'test'
     assert response.json['utctime'] == 'now'
     assert response.json['image'] == 'test_image_oem'
     assert response.json['download_url'] == 'http://download.opensuse.org/repositories/Cloud:Tools/images'

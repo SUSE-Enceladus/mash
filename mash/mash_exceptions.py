@@ -111,9 +111,9 @@ class MashLoggerException(MashException):
     """
 
 
-class MashTestingException(MashException):
+class MashTestException(MashException):
     """
-    Base exception for testing service.
+    Base exception for test service.
     """
 
 
@@ -123,21 +123,21 @@ class MashJobCreatorException(MashException):
     """
 
 
-class MashReplicationException(MashException):
+class MashReplicateException(MashException):
     """
-    Base exception for replication service.
-    """
-
-
-class MashPublisherException(MashException):
-    """
-    Base exception for publisher service.
+    Base exception for replicate service.
     """
 
 
-class MashDeprecationException(MashException):
+class MashPublishException(MashException):
     """
-    Base exception for deprecation service.
+    Base exception for publish service.
+    """
+
+
+class MashDeprecateException(MashException):
+    """
+    Base exception for deprecate service.
     """
 
 

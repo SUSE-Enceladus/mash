@@ -85,7 +85,7 @@ def test_azure_account_model():
 def test_job_model():
     job = Job(
         job_id='12345678-1234-1234-1234-123456789012',
-        last_service='testing',
+        last_service='test',
         utctime='now',
         image='test_image_oem',
         download_url='http://download.opensuse.org/repositories/Cloud:Tools/images',

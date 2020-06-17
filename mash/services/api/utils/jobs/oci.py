@@ -28,7 +28,7 @@ def validate_oci_job(job_doc):
     """
     Update target_account_info for given job doc.
     """
-    validate_job(job_doc)
+    job_doc = validate_job(job_doc)
 
     user_id = job_doc['requesting_user']
     cloud_account = get_oci_account(job_doc['cloud_account'], user_id)

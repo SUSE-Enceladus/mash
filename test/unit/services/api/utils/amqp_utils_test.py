@@ -22,13 +22,13 @@ def test_connect(mock_connection, mock_get_current_object):
 @patch('mash.services.api.utils.amqp.channel')
 def test_publish(mock_channel, mock_get_current_object, mock_connect):
     mock_channel.closed = True
-    publish('testing', 'doc', 'msg')
+    publish('test', 'doc', 'msg')
 
     mock_connect.assert_called_once_with()
     mock_channel.basic.publish.assert_called_once_with(
         body='msg',
         routing_key='doc',
-        exchange='testing',
+        exchange='test',
         properties={
             'content_type': 'application/json',
             'delivery_mode': 2

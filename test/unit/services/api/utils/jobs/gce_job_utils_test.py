@@ -44,26 +44,26 @@ def test_update_gce_job_accounts(
     app.config = {
         'SERVICE_NAMES': [
             'obs',
-            'uploader',
+            'upload',
             'create',
-            'testing',
-            'raw_image_uploader',
-            'replication',
-            'publisher',
-            'deprecation'
+            'test',
+            'raw_image_upload',
+            'replicate',
+            'publish',
+            'deprecate'
         ]
     }
     mock_get_current_obj.return_value = app
 
     mock_get_services.return_value = [
         'obs',
-        'uploader',
+        'upload',
         'create',
-        'testing'
+        'test'
     ]
 
     job_doc = {
-        'last_service': 'testing',
+        'last_service': 'test',
         'requesting_user': '1',
         'cloud_account': 'acnt1',
         'bucket': 'images2',
@@ -85,7 +85,7 @@ def test_update_gce_job_accounts(
     with raises(MashJobException):
         validate_gce_job(job_doc)
 
-    # Publishing account has no testing account
+    # Publishing account has no test account
     del job_doc['testing_account']
     job_doc['family'] = 'sles'
     account.testing_account = None

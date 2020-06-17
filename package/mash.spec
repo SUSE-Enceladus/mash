@@ -124,8 +124,8 @@ install -D -m 644 config/credentials.conf \
 install -D -m 644 config/mash_obs.service \
     %{buildroot}%{_unitdir}/mash_obs.service
 
-install -D -m 644 config/mash_uploader.service \
-    %{buildroot}%{_unitdir}/mash_uploader.service
+install -D -m 644 config/mash_upload.service \
+    %{buildroot}%{_unitdir}/mash_upload.service
 
 install -D -m 644 config/mash_create.service \
     %{buildroot}%{_unitdir}/mash_create.service
@@ -136,20 +136,20 @@ install -D -m 644 config/mash_logger.service \
 install -D -m 644 config/mash_job_creator.service \
     %{buildroot}%{_unitdir}/mash_job_creator.service
 
-install -D -m 644 config/mash_testing.service \
-    %{buildroot}%{_unitdir}/mash_testing.service
+install -D -m 644 config/mash_test.service \
+    %{buildroot}%{_unitdir}/mash_test.service
 
-install -D -m 644 config/mash_raw_image_uploader.service \
-    %{buildroot}%{_unitdir}/mash_raw_image_uploader.service
+install -D -m 644 config/mash_raw_image_upload.service \
+    %{buildroot}%{_unitdir}/mash_raw_image_upload.service
 
-install -D -m 644 config/mash_replication.service \
-    %{buildroot}%{_unitdir}/mash_replication.service
+install -D -m 644 config/mash_replicate.service \
+    %{buildroot}%{_unitdir}/mash_replicate.service
 
-install -D -m 644 config/mash_publisher.service \
-    %{buildroot}%{_unitdir}/mash_publisher.service
+install -D -m 644 config/mash_publish.service \
+    %{buildroot}%{_unitdir}/mash_publish.service
 
-install -D -m 644 config/mash_deprecation.service \
-    %{buildroot}%{_unitdir}/mash_deprecation.service
+install -D -m 644 config/mash_deprecate.service \
+    %{buildroot}%{_unitdir}/mash_deprecate.service
 
 %pre
 %{_bindir}/getent group mash > /dev/null || %{_sbindir}/groupadd mash
@@ -184,8 +184,8 @@ python3 -m pytest
 %{_bindir}/mash-obs-service
 %{_unitdir}/mash_obs.service
 
-%{_bindir}/mash-uploader-service
-%{_unitdir}/mash_uploader.service
+%{_bindir}/mash-upload-service
+%{_unitdir}/mash_upload.service
 
 %{_bindir}/mash-create-service
 %{_unitdir}/mash_create.service
@@ -196,19 +196,19 @@ python3 -m pytest
 %{_bindir}/mash-job-creator-service
 %{_unitdir}/mash_job_creator.service
 
-%{_bindir}/mash-testing-service
-%{_unitdir}/mash_testing.service
+%{_bindir}/mash-test-service
+%{_unitdir}/mash_test.service
 
-%{_bindir}/mash-raw-image-uploader-service
-%{_unitdir}/mash_raw_image_uploader.service
+%{_bindir}/mash-raw-image-upload-service
+%{_unitdir}/mash_raw_image_upload.service
 
-%{_bindir}/mash-replication-service
-%{_unitdir}/mash_replication.service
+%{_bindir}/mash-replicate-service
+%{_unitdir}/mash_replicate.service
 
-%{_bindir}/mash-publisher-service
-%{_unitdir}/mash_publisher.service
+%{_bindir}/mash-publish-service
+%{_unitdir}/mash_publish.service
 
-%{_bindir}/mash-deprecation-service
-%{_unitdir}/mash_deprecation.service
+%{_bindir}/mash-deprecate-service
+%{_unitdir}/mash_deprecate.service
 
 %changelog

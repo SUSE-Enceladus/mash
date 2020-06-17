@@ -43,8 +43,8 @@ class TestBaseConfig(object):
     def test_get_services_names(self):
         # Services requiring credentials
         expected = [
-            'uploader', 'create', 'testing', 'raw_image_uploader',
-            'replication', 'publisher', 'deprecation'
+            'upload', 'create', 'test', 'raw_image_upload',
+            'replicate', 'publish', 'deprecate'
         ]
         services = self.empty_config.get_service_names(
             credentials_required=True
@@ -112,10 +112,10 @@ class TestBaseConfig(object):
         assert subject == '[MASH] Job Status Update'
 
     def test_get_job_dir(self):
-        assert self.config.get_job_directory('testing') == \
-            '/tmp/jobs/testing_jobs/'
-        assert self.empty_config.get_job_directory('testing') == \
-            '/var/lib/mash/testing_jobs/'
+        assert self.config.get_job_directory('test') == \
+            '/tmp/jobs/test_jobs/'
+        assert self.empty_config.get_job_directory('test') == \
+            '/var/lib/mash/test_jobs/'
 
     def test_get_log_dir(self):
         assert self.config.get_log_directory() == '/tmp/log/'
@@ -155,9 +155,9 @@ class TestBaseConfig(object):
         assert self.config.get_base_thread_pool_count() == 20
         assert self.empty_config.get_base_thread_pool_count() == 10
 
-    def test_get_publisher_thread_pool_count(self):
-        assert self.config.get_publisher_thread_pool_count() == 60
-        assert self.empty_config.get_publisher_thread_pool_count() == 50
+    def test_get_publish_thread_pool_count(self):
+        assert self.config.get_publish_thread_pool_count() == 60
+        assert self.empty_config.get_publish_thread_pool_count() == 50
 
     @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
     def test_get_oauth2_client_id(self):

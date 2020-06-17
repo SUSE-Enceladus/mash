@@ -24,9 +24,9 @@ class Config(object):
     Flask API config.
     """
 
-    def __init__(self, config_file=None, testing=False):
+    def __init__(self, config_file=None, test=False):
         self.config = BaseConfig(config_file)
-        self.TESTING = testing
+        self.TESTING = test
 
     @property
     def AMQP_HOST(self):

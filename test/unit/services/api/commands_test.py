@@ -10,7 +10,7 @@ from mash.services.api.commands import tokens_cli
 def test_app():
     flask_config = Config(
         config_file='test/data/mash_config.yaml',
-        testing=True
+        test=True
     )
     app = create_app(flask_config)
 

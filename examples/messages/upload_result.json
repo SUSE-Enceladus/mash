@@ -1,0 +1,11 @@
+{
+    "upload_result": {
+        "id": "123",
+        "cloud_image_name": "image_123",
+        "source_regions": {
+            "us-east-1": "ami-bc5b48d0",
+            "cn-north-1": "ami-bc5b4853"
+        },
+        "status": "success"
+    }
+}

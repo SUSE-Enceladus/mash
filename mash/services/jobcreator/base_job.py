@@ -68,7 +68,7 @@ class BaseJob(object):
         self.additional_uploads = kwargs.get('additional_uploads')
         self.kwargs = kwargs
 
-        if self.raw_image_upload_type and self.last_service == 'uploader':
+        if self.raw_image_upload_type and self.last_service == 'upload':
             self.cloud = self.raw_image_upload_type
 
         self.base_message = {
@@ -84,15 +84,15 @@ class BaseJob(object):
 
         self.post_init()
 
-    def get_deprecation_message(self):
+    def get_deprecate_message(self):
         """
-        Build deprecation job message.
+        Build deprecate job message.
 
         Implement in child class.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_deprecation_message method.'.format(
+            'get_deprecate_message method.'.format(
                 self.__class__.__name__
             )
         )
@@ -131,48 +131,48 @@ class BaseJob(object):
 
         return JsonFormat.json_message(obs_message)
 
-    def get_publisher_message(self):
+    def get_publish_message(self):
         """
-        Build publisher job message.
+        Build publish job message.
 
         Implementation in child class.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_publisher_message method.'.format(
+            'get_publish_message method.'.format(
                 self.__class__.__name__
             )
         )
 
-    def get_replication_message(self):
+    def get_replicate_message(self):
         """
-        Build replication job message and publish to replication exchange.
+        Build replicate job message and publish to replicate exchange.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_replication_message method.'.format(
+            'get_replicate_message method.'.format(
                 self.__class__.__name__
             )
         )
 
-    def get_uploader_message(self):
+    def get_upload_message(self):
         """
-        Build uploader job message.
+        Build upload job message.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_uploader_message method.'.format(
+            'get_upload_message method.'.format(
                 self.__class__.__name__
             )
         )
 
-    def get_testing_message(self):
+    def get_test_message(self):
         """
-        Build testing job message.
+        Build test job message.
         """
         raise NotImplementedError(
             'This {0} class does not implement the '
-            'get_testing_message method.'.format(
+            'get_test_message method.'.format(
                 self.__class__.__name__
             )
         )
@@ -188,21 +188,21 @@ class BaseJob(object):
             )
         )
 
-    def get_raw_image_uploader_message(self):
+    def get_raw_image_upload_message(self):
         """
-        Build raw image uploader job message.
+        Build raw image upload job message.
         """
-        raw_image_uploader_message = {
-            'raw_image_uploader_job': {
+        raw_image_upload_message = {
+            'raw_image_upload_job': {
                 'cloud': self.cloud,
                 'raw_image_upload_type': self.raw_image_upload_type,
                 'raw_image_upload_account': self.raw_image_upload_account,
                 'raw_image_upload_location': self.raw_image_upload_location
             }
         }
-        raw_image_uploader_message['raw_image_uploader_job'].update(self.base_message)
+        raw_image_upload_message['raw_image_upload_job'].update(self.base_message)
 
-        return JsonFormat.json_message(raw_image_uploader_message)
+        return JsonFormat.json_message(raw_image_upload_message)
 
     def post_init(self):
         """

@@ -15,7 +15,7 @@ def test_oci_job_missing_keys(mock_init):
         'job_id': '123',
         'cloud': 'oci',
         'requesting_user': 'test-user',
-        'last_service': 'deprecation',
+        'last_service': 'deprecate',
         'utctime': 'now',
         'image': 'test-image',
         'cloud_image_name': 'test-cloud-image',
@@ -30,14 +30,14 @@ def test_oci_job_missing_keys(mock_init):
 
 
 @patch.object(OCIJob, '__init__')
-def test_oci_job_testing_message(mock_init):
+def test_oci_job_test_message(mock_init):
     mock_init.return_value = None
 
     job = OCIJob({
         'job_id': '123',
         'cloud': 'oci',
         'requesting_user': 'test-user',
-        'last_service': 'deprecation',
+        'last_service': 'deprecate',
         'utctime': 'now',
         'image': 'test-image',
         'cloud_image_name': 'test-cloud-image',
@@ -67,19 +67,19 @@ def test_oci_job_testing_message(mock_init):
     job.base_message = {}
 
     # Test explicit no cleanup images
-    job.last_service = 'deprecation'
+    job.last_service = 'deprecate'
     job.cleanup_images = False
 
     job.post_init()
 
-    testing_message = json.loads(job.get_testing_message())
-    assert testing_message['testing_job']['cleanup_images'] is False
+    test_message = json.loads(job.get_test_message())
+    assert test_message['test_job']['cleanup_images'] is False
 
-    # Test cleanup images on testing only
-    job.last_service = 'testing'
+    # Test cleanup images on test only
+    job.last_service = 'test'
     job.cleanup_images = True
 
     job.post_init()
 
-    testing_message = json.loads(job.get_testing_message())
-    assert testing_message['testing_job']['cleanup_images'] is True
+    test_message = json.loads(job.get_test_message())
+    assert test_message['test_job']['cleanup_images'] is True

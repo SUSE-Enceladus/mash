@@ -34,8 +34,8 @@ class TestJobCreatorService(object):
         self.jobcreator.service_queue = 'service'
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = [
-            'obs', 'uploader', 'create', 'testing', 'raw_image_uploader',
-            'replication', 'publisher', 'deprecation'
+            'obs', 'upload', 'create', 'test', 'raw_image_upload',
+            'replicate', 'publish', 'deprecate'
         ]
 
     @patch('mash.services.jobcreator.service.setup_logfile')
@@ -66,7 +66,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'deprecation'
+            assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
             assert job_data['notification_type'] == 'single'
 
@@ -120,9 +120,9 @@ class TestJobCreatorService(object):
             else:
                 assert condition['version'] == '8.13.21'
 
-        # Uploader Job Doc
+        # Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
         check_base_attrs(data)
         assert data['cloud_image_name'] == 'new_image_123'
 
@@ -145,9 +145,9 @@ class TestJobCreatorService(object):
                 assert info['helper_image'] == 'ami-c2b5d7e1'
                 assert info['billing_codes'] is None
 
-        # Testing Job Doc
+        # Test Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 't2.micro'
@@ -162,21 +162,21 @@ class TestJobCreatorService(object):
                 assert info['account'] == 'test-aws-gov'
                 assert info['partition'] == 'aws-us-gov'
 
-        # Raw Image Uploader Job Doc
+        # Raw Image Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
         check_base_attrs(data)
         assert data['raw_image_upload_type'] == 's3bucket'
         assert data['raw_image_upload_account'] == 'account'
         assert data['raw_image_upload_location'] == 'location'
 
-        # Replication Job Doc
+        # Replicate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
         assert data['image_description'] == 'New Image #123'
 
-        for region, info in data['replication_source_regions'].items():
+        for region, info in data['replicate_source_regions'].items():
             if region == 'ap-northeast-1':
                 assert info['account'] == 'test-aws'
                 assert 'ap-northeast-1' in info['target_regions']
@@ -187,9 +187,9 @@ class TestJobCreatorService(object):
                 assert info['account'] == 'test-aws-gov'
                 assert 'us-gov-west-1' in info['target_regions']
 
-        # Publisher Job Doc
+        # Publish Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
         assert data['allow_copy'] == 'none'
         assert data['share_with'] == 'all'
@@ -205,13 +205,13 @@ class TestJobCreatorService(object):
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']
 
-        # Deprecation Job Doc
+        # Deprecate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
 
-        for region in data['deprecation_regions']:
+        for region in data['deprecate_regions']:
             if region['account'] == 'test-aws-gov':
                 assert region['helper_image'] == 'ami-c2b5d7e1'
                 assert 'us-gov-west-1' in region['target_regions']
@@ -227,7 +227,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'deprecation'
+            assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
             assert job_data['notification_type'] == 'single'
 
@@ -258,9 +258,9 @@ class TestJobCreatorService(object):
             else:
                 assert condition['version'] == '8.13.21'
 
-        # Uploader Job Doc
+        # Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
         check_base_attrs(data)
         assert data['cloud_image_name'] == 'new_image_123'
         assert data['account'] == 'test-azure'
@@ -278,9 +278,9 @@ class TestJobCreatorService(object):
         assert data['resource_group'] == 'rg-1'
         assert data['storage_account'] == 'sa1'
 
-        # Testing Job Doc
+        # Test Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'Basic_A2'
@@ -291,17 +291,17 @@ class TestJobCreatorService(object):
         assert data['resource_group'] == 'rg-1'
         assert data['storage_account'] == 'sa1'
 
-        # Raw Image Uploader Job Doc
+        # Raw Image Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
         check_base_attrs(data)
         assert data['raw_image_upload_type'] == 's3bucket'
         assert data['raw_image_upload_account'] == 'account'
         assert data['raw_image_upload_location'] == 'location'
 
-        # Replication Job Doc
+        # Replicate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
         assert data['cleanup_images']
         assert data['region'] == 'southcentralus'
@@ -313,9 +313,9 @@ class TestJobCreatorService(object):
         assert data['destination_resource_group'] == 'rg-2'
         assert data['destination_storage_account'] == 'sa2'
 
-        # Publisher Job Doc
+        # Publish Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
         assert data['image_description'] == 'New Image #123'
         assert data['label'] == 'New Image 123'
@@ -330,9 +330,9 @@ class TestJobCreatorService(object):
         assert data['resource_group'] == 'rg-2'
         assert data['storage_account'] == 'sa2'
 
-        # Deprecation Job Doc
+        # Deprecate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
         check_base_attrs(data)
 
     @patch.object(JobCreatorService, '_publish')
@@ -340,7 +340,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'deprecation'
+            assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
             assert job_data['notification_type'] == 'single'
 
@@ -371,9 +371,9 @@ class TestJobCreatorService(object):
             else:
                 assert condition['version'] == '8.13.21'
 
-        # Uploader Job Doc
+        # Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
         check_base_attrs(data)
         assert data['cloud_image_name'] == 'new_image_123'
         assert data['region'] == 'us-west1'
@@ -391,9 +391,9 @@ class TestJobCreatorService(object):
         assert data['family'] == 'sles-15'
         assert data['guest_os_features'] == ['UEFI_COMPATIBLE']
 
-        # Testing Job Doc
+        # Test Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'n1-standard-1'
@@ -403,26 +403,26 @@ class TestJobCreatorService(object):
         assert data['testing_account'] == 'testacnt1'
         assert data['image_project'] == 'test'
 
-        # Raw Image Uploader Job Doc
-        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        # Raw Image Upload Job Doc
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
         check_base_attrs(data)
         assert data['raw_image_upload_type'] == 's3bucket'
         assert data['raw_image_upload_account'] == 'account'
         assert data['raw_image_upload_location'] == 'location'
 
-        # Replication Job Doc
+        # Replicate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
 
-        # Publisher Job Doc
+        # Publish Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
 
-        # Deprecation Job Doc
+        # Deprecate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert data['account'] == 'test-gce'
@@ -432,7 +432,7 @@ class TestJobCreatorService(object):
         def check_base_attrs(job_data, cloud=True):
             assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
             assert job_data['utctime'] == 'now'
-            assert job_data['last_service'] == 'deprecation'
+            assert job_data['last_service'] == 'deprecate'
 
             if cloud:
                 assert job_data['cloud'] == 'oci'
@@ -453,9 +453,9 @@ class TestJobCreatorService(object):
             'http://download.opensuse.org/repositories/Cloud:Tools/images'
         assert data['image'] == 'test_image_oem'
 
-        # Uploader Job Doc
+        # Upload Job Doc
 
-        data = json.loads(mock_publish.mock_calls[1][1][2])['uploader_job']
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
         check_base_attrs(data)
         assert data['cloud_image_name'] == 'new_image_123'
         assert data['region'] == 'us-phoenix-1'
@@ -475,9 +475,9 @@ class TestJobCreatorService(object):
         assert data['account'] == 'test-oci'
         assert data['bucket'] == 'images2'
 
-        # Testing Job Doc
+        # Test Job Doc
 
-        data = json.loads(mock_publish.mock_calls[3][1][2])['testing_job']
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
         check_base_attrs(data)
         assert data['distro'] == 'sles'
         assert data['instance_type'] == 'VM.Standard2.1'
@@ -485,24 +485,24 @@ class TestJobCreatorService(object):
         assert data['region'] == 'us-phoenix-1'
         assert data['account'] == 'test-oci'
 
-        # Raw Image Uploader Job Doc
-        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_uploader_job']
+        # Raw Image Upload Job Doc
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
         check_base_attrs(data)
         assert data['raw_image_upload_type'] is None
 
-        # Replication Job Doc
+        # Replicate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replication_job']
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
 
-        # Publisher Job Doc
+        # Publish Job Doc
 
-        data = json.loads(mock_publish.mock_calls[6][1][2])['publisher_job']
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
 
-        # Deprecation Job Doc
+        # Deprecate Job Doc
 
-        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecation_job']
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
         check_base_attrs(data)
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert data['account'] == 'test-oci'

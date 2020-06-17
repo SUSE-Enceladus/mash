@@ -31,8 +31,8 @@ class TestBaseService(object):
 
         config = Mock()
         config.get_service_names.return_value = [
-            'obs', 'uploader', 'create', 'raw_image_uploader', 'testing',
-            'replication', 'publisher', 'deprecation'
+            'obs', 'upload', 'create', 'raw_image_upload', 'test',
+            'replicate', 'publish', 'deprecate'
         ]
 
         self.service = MashService('obs', config=config)
@@ -63,25 +63,25 @@ class TestBaseService(object):
 
     def test_unbind_queue(self):
         self.service.unbind_queue(
-            'service', 'testing', '1'
+            'service', 'test', '1'
         )
         self.service.channel.queue.unbind.assert_called_once_with(
-            queue='testing.service', exchange='testing', routing_key='1'
+            queue='test.service', exchange='test', routing_key='1'
         )
 
     def test_should_notify(self):
         result = self.service._should_notify(
-            None, 'single', 'always', 'success', 'publisher'
+            None, 'single', 'always', 'success', 'publish'
         )
         assert result is False
 
         result = self.service._should_notify(
-            'test@fake.com', 'single', 'always', 'success', 'publisher'
+            'test@fake.com', 'single', 'always', 'success', 'publish'
         )
         assert result is False
 
         result = self.service._should_notify(
-            'test@fake.com', 'periodic', 'now', 'success', 'publisher'
+            'test@fake.com', 'periodic', 'now', 'success', 'publish'
         )
         assert result is True
 
@@ -93,7 +93,7 @@ class TestBaseService(object):
     def test_create_notification_content(self):
         # Failed message
         msg = self.service._create_notification_content(
-            '1', 'failed', 'always', 'deprecation', 'test_image', 3,
+            '1', 'failed', 'always', 'deprecate', 'test_image', 3,
             'Invalid publish permissions!'
         )
 
@@ -108,7 +108,7 @@ class TestBaseService(object):
 
         # Service with success
         msg = self.service._create_notification_content(
-            '1', 'success', 'now', 'publisher', 'test_image', 3
+            '1', 'success', 'now', 'publish', 'test_image', 3
         )
 
         assert 'Job finished through the obs service' in msg
@@ -121,7 +121,7 @@ class TestBaseService(object):
         self.service.notification_class = notif_class
 
         self.service.send_notification(
-            job_id, to, 'periodic', 'failed', 'now', 'replication',
+            job_id, to, 'periodic', 'failed', 'now', 'replicate',
             'test_image', 1
         )
         assert notif_class.send_notification.call_count == 1

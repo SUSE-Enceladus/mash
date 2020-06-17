@@ -54,7 +54,7 @@ class TestGCECreateJob(object):
     def test_post_init_incomplete_arguments(self):
         job_doc = {
             'id': '1',
-            'last_service': 'uploader',
+            'last_service': 'upload',
             'requesting_user': 'user1',
             'cloud': 'gce',
             'utctime': 'now'

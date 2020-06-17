@@ -4,7 +4,7 @@
   "region": "us-phoenix-1",
   "cloud_account": "test-oci",
   "requesting_user": "user1",
-  "last_service": "deprecation",
+  "last_service": "deprecate",
   "utctime": "now",
   "image": "test_image_oem",
   "cloud_image_name": "new_image_123",

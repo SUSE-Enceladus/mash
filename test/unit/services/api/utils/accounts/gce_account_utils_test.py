@@ -96,7 +96,7 @@ def test_create_gce_account(
 
     mock_db.session.rollback.assert_called_once_with()
 
-    # Publishing account with no testing account
+    # Publishing account with no test account
 
     with raises(MashDBException):
         create_gce_account(

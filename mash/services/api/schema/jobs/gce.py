@@ -55,7 +55,7 @@ gce_job_message['properties']['test_fallback_regions'] = {
 }
 gce_job_message['properties']['testing_account'] = string_with_example(
     'testaccount1',
-    description='The account to use for launching and testing an instance '
+    description='The account to use for launching and test an instance '
                 'of the image. This is required if the cloud_account is a '
                 'publishing account which cannot launch instances.'
 )
@@ -71,14 +71,14 @@ gce_job_message['properties']['bucket'] = string_with_example(
 )
 gce_job_message['properties']['region'] = string_with_example(
     'us-east1-a',
-    description='The zone to use for launching and testing an instance '
+    description='The zone to use for launching and test an instance '
                 'of the image. This should be in zone format such as the '
                 'example.'
 )
 gce_job_message['properties']['image_project'] = string_with_example(
     'suse-cloud',
     description='The image project for the image that will be tested. '
-                'If using a test project for testing the public image '
+                'If using a test project for test the public image '
                 'project where the image is published is required.'
 )
 gce_job_message['required'].append('cloud_account')

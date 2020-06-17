@@ -14,14 +14,14 @@ max_oci_attempts: 500
 max_oci_wait_seconds: 1000
 oci_upload_process_count: 2
 base_thread_pool_count: 20
-publisher_thread_pool_count: 60
+publish_thread_pool_count: 60
 services:
   - obs
-  - uploader
-  - testing
-  - replication
-  - publisher
-  - deprecation
+  - upload
+  - test
+  - replicate
+  - publish
+  - deprecate
 non_cred_services:
   - obs
 obs:
@@ -41,9 +41,9 @@ cloud:
       ap-northeast-2: ami-249b554a
       cn-north-1: ami-bcc45885
       us-gov-west-1: ami-c2b5d7e1
-testing:
+test:
   img_proof_timeout: 600
-uploader:
+upload:
   azure:
     max_retry_attempts: 5
     max_workers: 8

@@ -20,10 +20,10 @@ from mash.services.credentials.config import CredentialsConfig
 
 
 class Config(object):
-    def __init__(self, config_file=None, testing=False):
+    def __init__(self, config_file=None, test=False):
         self.config = CredentialsConfig(config_file)
         self.service_exchange = 'credentials'
-        self.TESTING = testing
+        self.TESTING = test
 
     @property
     def AMQP_HOST(self):

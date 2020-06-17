@@ -6,7 +6,7 @@
   "bucket": "images",
   "testing_account": "testacnt1",
   "requesting_user": "user1",
-  "last_service": "deprecation",
+  "last_service": "deprecate",
   "utctime": "now",
   "image": "test_image_oem",
   "cloud_image_name": "new_image_123",

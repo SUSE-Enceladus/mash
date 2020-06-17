@@ -28,13 +28,13 @@ config = {
             'mash-obs-service=mash.services.obs_service:main',
             'mash-logger-service=mash.services.logger_service:main',
             'mash-job-creator-service=mash.services.job_creator_service:main',
-            'mash-testing-service=mash.services.testing_service:main',
-            'mash-uploader-service=mash.services.uploader_service:main',
+            'mash-test-service=mash.services.test_service:main',
+            'mash-upload-service=mash.services.upload_service:main',
             'mash-create-service=mash.services.create_service:main',
-            'mash-replication-service=mash.services.replication_service:main',
-            'mash-publisher-service=mash.services.publisher_service:main',
-            'mash-deprecation-service=mash.services.deprecation_service:main',
-            'mash-raw-image-uploader-service=mash.services.raw_image_uploader_service:main'
+            'mash-replicate-service=mash.services.replicate_service:main',
+            'mash-publish-service=mash.services.publish_service:main',
+            'mash-deprecate-service=mash.services.deprecate_service:main',
+            'mash-raw-image-upload-service=mash.services.raw_image_upload_service:main'
         ]
     },
     'include_package_data': True,

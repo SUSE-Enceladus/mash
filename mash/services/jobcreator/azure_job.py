@@ -57,25 +57,25 @@ class AzureJob(BaseJob):
             'cloud_image_name_generation_suffix'
         )
 
-    def get_deprecation_message(self):
+    def get_deprecate_message(self):
         """
-        Build deprecation job message.
+        Build deprecate job message.
         """
-        deprecation_message = {
-            'deprecation_job': {
+        deprecate_message = {
+            'deprecate_job': {
                 'cloud': self.cloud
             }
         }
-        deprecation_message['deprecation_job'].update(self.base_message)
+        deprecate_message['deprecate_job'].update(self.base_message)
 
-        return JsonFormat.json_message(deprecation_message)
+        return JsonFormat.json_message(deprecate_message)
 
-    def get_publisher_message(self):
+    def get_publish_message(self):
         """
-        Build publisher job message.
+        Build publish job message.
         """
-        publisher_message = {
-            'publisher_job': {
+        publish_message = {
+            'publish_job': {
                 'image_description': self.image_description,
                 'label': self.label,
                 'offer_id': self.offer_id,
@@ -92,27 +92,27 @@ class AzureJob(BaseJob):
         }
 
         if self.vm_images_key:
-            publisher_message['publisher_job']['vm_images_key'] = \
+            publish_message['publish_job']['vm_images_key'] = \
                 self.vm_images_key
 
         if self.generation_id:
-            publisher_message['publisher_job']['generation_id'] = \
+            publish_message['publish_job']['generation_id'] = \
                 self.generation_id
 
         if self.cloud_image_name_generation_suffix:
-            publisher_message['publisher_job']['cloud_image_name_generation_suffix'] = \
+            publish_message['publish_job']['cloud_image_name_generation_suffix'] = \
                 self.cloud_image_name_generation_suffix
 
-        publisher_message['publisher_job'].update(self.base_message)
+        publish_message['publish_job'].update(self.base_message)
 
-        return JsonFormat.json_message(publisher_message)
+        return JsonFormat.json_message(publish_message)
 
-    def get_replication_message(self):
+    def get_replicate_message(self):
         """
-        Build replication job message and publish to replication exchange.
+        Build replicate job message and publish to replicate exchange.
         """
-        replication_message = {
-            'replication_job': {
+        replicate_message = {
+            'replicate_job': {
                 'cloud': self.cloud,
                 'account': self.cloud_account,
                 'region': self.region,
@@ -125,20 +125,20 @@ class AzureJob(BaseJob):
                     self.destination_storage_account
             }
         }
-        replication_message['replication_job'].update(self.base_message)
+        replicate_message['replicate_job'].update(self.base_message)
 
         if self.cleanup_images is not None:
-            replication_message['replication_job']['cleanup_images'] = \
+            replicate_message['replicate_job']['cleanup_images'] = \
                 self.cleanup_images
 
-        return JsonFormat.json_message(replication_message)
+        return JsonFormat.json_message(replicate_message)
 
-    def get_testing_message(self):
+    def get_test_message(self):
         """
-        Build testing job message.
+        Build test job message.
         """
-        testing_message = {
-            'testing_job': {
+        test_message = {
+            'test_job': {
                 'cloud': self.cloud,
                 'tests': self.tests,
                 'account': self.cloud_account,
@@ -150,33 +150,33 @@ class AzureJob(BaseJob):
         }
 
         if self.distro:
-            testing_message['testing_job']['distro'] = self.distro
+            test_message['test_job']['distro'] = self.distro
 
         if self.instance_type:
-            testing_message['testing_job']['instance_type'] = \
+            test_message['test_job']['instance_type'] = \
                 self.instance_type
 
-        if self.last_service == 'testing' and \
+        if self.last_service == 'test' and \
                 self.cleanup_images in [True, None]:
-            testing_message['testing_job']['cleanup_images'] = True
+            test_message['test_job']['cleanup_images'] = True
 
         elif self.cleanup_images is False:
-            testing_message['testing_job']['cleanup_images'] = False
+            test_message['test_job']['cleanup_images'] = False
 
         if self.cloud_architecture:
-            testing_message['testing_job']['cloud_architecture'] = \
+            test_message['test_job']['cloud_architecture'] = \
                 self.cloud_architecture
 
-        testing_message['testing_job'].update(self.base_message)
+        test_message['test_job'].update(self.base_message)
 
-        return JsonFormat.json_message(testing_message)
+        return JsonFormat.json_message(test_message)
 
-    def get_uploader_message(self):
+    def get_upload_message(self):
         """
-        Build uploader job message.
+        Build upload job message.
         """
-        uploader_message = {
-            'uploader_job': {
+        upload_message = {
+            'upload_job': {
                 'cloud_image_name': self.cloud_image_name,
                 'cloud': self.cloud,
                 'account': self.cloud_account,
@@ -191,12 +191,12 @@ class AzureJob(BaseJob):
         }
 
         if self.additional_uploads:
-            uploader_message['uploader_job']['additional_uploads'] = \
+            upload_message['upload_job']['additional_uploads'] = \
                 self.additional_uploads
 
-        uploader_message['uploader_job'].update(self.base_message)
+        upload_message['upload_job'].update(self.base_message)
 
-        return JsonFormat.json_message(uploader_message)
+        return JsonFormat.json_message(upload_message)
 
     def get_create_message(self):
         """

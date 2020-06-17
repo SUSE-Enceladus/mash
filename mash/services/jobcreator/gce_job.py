@@ -49,57 +49,57 @@ class GCEJob(BaseJob):
         self.guest_os_features = self.kwargs.get('guest_os_features')
         self.image_project = self.kwargs.get('image_project')
 
-    def get_deprecation_message(self):
+    def get_deprecate_message(self):
         """
-        Build deprecation job message.
+        Build deprecate job message.
         """
-        deprecation_message = {
-            'deprecation_job': {
+        deprecate_message = {
+            'deprecate_job': {
                 'cloud': self.cloud,
                 'account': self.cloud_account,
                 'months_to_deletion': self.months_to_deletion
             }
         }
-        deprecation_message['deprecation_job'].update(self.base_message)
+        deprecate_message['deprecate_job'].update(self.base_message)
 
         if self.old_cloud_image_name:
-            deprecation_message['deprecation_job']['old_cloud_image_name'] = \
+            deprecate_message['deprecate_job']['old_cloud_image_name'] = \
                 self.old_cloud_image_name
 
-        return JsonFormat.json_message(deprecation_message)
+        return JsonFormat.json_message(deprecate_message)
 
-    def get_publisher_message(self):
+    def get_publish_message(self):
         """
-        Build publisher job message.
+        Build publish job message.
         """
-        publisher_message = {
-            'publisher_job': {
+        publish_message = {
+            'publish_job': {
                 'cloud': self.cloud
             }
         }
-        publisher_message['publisher_job'].update(self.base_message)
+        publish_message['publish_job'].update(self.base_message)
 
-        return JsonFormat.json_message(publisher_message)
+        return JsonFormat.json_message(publish_message)
 
-    def get_replication_message(self):
+    def get_replicate_message(self):
         """
-        Build replication job message and publish to replication exchange.
+        Build replicate job message and publish to replicate exchange.
         """
-        replication_message = {
-            'replication_job': {
+        replicate_message = {
+            'replicate_job': {
                 'cloud': self.cloud
             }
         }
-        replication_message['replication_job'].update(self.base_message)
+        replicate_message['replicate_job'].update(self.base_message)
 
-        return JsonFormat.json_message(replication_message)
+        return JsonFormat.json_message(replicate_message)
 
-    def get_testing_message(self):
+    def get_test_message(self):
         """
-        Build testing job message.
+        Build test job message.
         """
-        testing_message = {
-            'testing_job': {
+        test_message = {
+            'test_job': {
                 'cloud': self.cloud,
                 'tests': self.tests,
                 'account': self.cloud_account,
@@ -112,31 +112,31 @@ class GCEJob(BaseJob):
             }
         }
 
-        if self.last_service == 'testing' and \
+        if self.last_service == 'test' and \
                 self.cleanup_images in [True, None]:
-            testing_message['testing_job']['cleanup_images'] = True
+            test_message['test_job']['cleanup_images'] = True
 
         elif self.cleanup_images is False:
-            testing_message['testing_job']['cleanup_images'] = False
+            test_message['test_job']['cleanup_images'] = False
 
         if self.test_fallback_regions or self.test_fallback is False:
-            testing_message['testing_job']['test_fallback_regions'] = \
+            test_message['test_job']['test_fallback_regions'] = \
                 self.test_fallback_regions
 
         if self.image_project:
-            testing_message['testing_job']['image_project'] = \
+            test_message['test_job']['image_project'] = \
                 self.image_project
 
-        testing_message['testing_job'].update(self.base_message)
+        test_message['test_job'].update(self.base_message)
 
-        return JsonFormat.json_message(testing_message)
+        return JsonFormat.json_message(test_message)
 
-    def get_uploader_message(self):
+    def get_upload_message(self):
         """
-        Build uploader job message.
+        Build upload job message.
         """
-        uploader_message = {
-            'uploader_job': {
+        upload_message = {
+            'upload_job': {
                 'cloud_image_name': self.cloud_image_name,
                 'cloud': self.cloud,
                 'account': self.cloud_account,
@@ -147,9 +147,9 @@ class GCEJob(BaseJob):
                 'raw_image_upload_location': self.raw_image_upload_location
             }
         }
-        uploader_message['uploader_job'].update(self.base_message)
+        upload_message['upload_job'].update(self.base_message)
 
-        return JsonFormat.json_message(uploader_message)
+        return JsonFormat.json_message(upload_message)
 
     def get_create_message(self):
         """

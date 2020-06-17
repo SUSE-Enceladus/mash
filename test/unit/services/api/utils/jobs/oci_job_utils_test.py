@@ -46,26 +46,26 @@ def test_validate_oci_job(
     app.config = {
         'SERVICE_NAMES': [
             'obs',
-            'uploader',
+            'upload',
             'create',
-            'testing',
-            'raw_image_uploader',
-            'replication',
-            'publisher',
-            'deprecation'
+            'test',
+            'raw_image_upload',
+            'replicate',
+            'publish',
+            'deprecate'
         ]
     }
     mock_get_current_obj.return_value = app
 
     mock_get_services.return_value = [
         'obs',
-        'uploader',
+        'upload',
         'create',
-        'testing'
+        'test'
     ]
 
     job_doc = {
-        'last_service': 'testing',
+        'last_service': 'test',
         'requesting_user': 1,
         'cloud_account': 'acnt1',
         'bucket': 'images2',

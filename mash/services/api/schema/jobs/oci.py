@@ -34,13 +34,13 @@ oci_job_message['properties']['bucket'] = string_with_example(
 )
 oci_job_message['properties']['region'] = string_with_example(
     'us-phoenix-1',
-    description='The region to use for launching and testing an instance '
+    description='The region to use for launching and test an instance '
                 'of the image.'
 )
 oci_job_message['properties']['availability_domain'] = string_with_example(
     'Omic:PHX-AD-1',
     description='The data center to use within the chosen region for '
-                'launching and testing the image.'
+                'launching and test the image.'
 )
 oci_job_message['properties']['compartment_id'] = string_with_example(
     'ocid1.compartment.oc1..',

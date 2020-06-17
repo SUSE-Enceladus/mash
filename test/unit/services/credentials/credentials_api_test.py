@@ -11,15 +11,15 @@ from mash.services.credentials.flask_config import Config
 def test_client():
     flask_config = Config(
         config_file='test/data/mash_config.yaml',
-        testing=True
+        test=True
     )
     application = create_app(flask_config)
-    testing_client = application.test_client()
+    test_client = application.test_client()
 
     ctx = application.app_context()
     ctx.push()
 
-    yield testing_client
+    yield test_client
     ctx.pop()
 
 

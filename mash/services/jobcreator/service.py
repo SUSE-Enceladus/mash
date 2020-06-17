@@ -103,9 +103,9 @@ class JobCreatorService(MashService):
         )
 
         for service in self.services:
-            if service == 'deprecation':
+            if service == 'deprecate':
                 self.publish_job_doc(
-                    'deprecation', job.get_deprecation_message()
+                    'deprecate', job.get_deprecate_message()
                 )
             elif service == 'create':
                 self.publish_job_doc(
@@ -115,25 +115,25 @@ class JobCreatorService(MashService):
                 self.publish_job_doc(
                     'obs', job.get_obs_message()
                 )
-            elif service == 'publisher':
+            elif service == 'publish':
                 self.publish_job_doc(
-                    'publisher', job.get_publisher_message()
+                    'publish', job.get_publish_message()
                 )
-            elif service == 'replication':
+            elif service == 'replicate':
                 self.publish_job_doc(
-                    'replication', job.get_replication_message()
+                    'replicate', job.get_replicate_message()
                 )
-            elif service == 'testing':
+            elif service == 'test':
                 self.publish_job_doc(
-                    'testing', job.get_testing_message()
+                    'test', job.get_test_message()
                 )
-            elif service == 'uploader':
+            elif service == 'upload':
                 self.publish_job_doc(
-                    'uploader', job.get_uploader_message()
+                    'upload', job.get_upload_message()
                 )
-            elif service == 'raw_image_uploader':
+            elif service == 'raw_image_upload':
                 self.publish_job_doc(
-                    'raw_image_uploader', job.get_raw_image_uploader_message()
+                    'raw_image_upload', job.get_raw_image_upload_message()
                 )
 
             if service == job.last_service:

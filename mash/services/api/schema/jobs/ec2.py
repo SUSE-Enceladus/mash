@@ -32,7 +32,7 @@ ec2_job_account = {
         'region': string_with_example(
             'us-east-1',
             description='Region to use for initial image creation and '
-                        'testing.'
+                        'test.'
         ),
         'root_swap_ami': string_with_example(
             'ami-1234567890',
@@ -41,7 +41,7 @@ ec2_job_account = {
         ),
         'subnet': string_with_example(
             'subnet-12345678',
-            description='The subnet to use for image testing and image '
+            description='The subnet to use for image test and image '
                         'creation.'
         )
     },
@@ -97,7 +97,7 @@ ec2_job_message['properties']['cloud_accounts'] = {
     'description': 'A list of cloud account dictionaries. Either a '
                    'cloud_account, cloud_accounts or cloud_groups is '
                    'required for an EC2 job. This allows the creation and '
-                   'testing of the same image in multiple partition.'
+                   'test of the same image in multiple partition.'
 }
 ec2_job_message['properties']['cloud_account'] = string_with_example(
     'account1',
