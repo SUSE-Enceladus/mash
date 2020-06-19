@@ -1,3 +1,25 @@
+v8.0.0 (2020-06-19)
+===================
+
+- Provide log callback to img-proof.
+  [\#663](https://github.com/SUSE-Enceladus/mash/pull/663)
+- Move required arg validation to utils.
+  [\#665](https://github.com/SUSE-Enceladus/mash/pull/665)
+- Pass job logger to ec2imgutils.
+  [\#666](https://github.com/SUSE-Enceladus/mash/pull/666)
+- Rename all service to be consistent.
+  [\#667](https://github.com/SUSE-Enceladus/mash/pull/667)
+- Don't sleep if there's no region replication.
+  [\#668](https://github.com/SUSE-Enceladus/mash/pull/668)
+- Reorder job validation.
+  [\#669](https://github.com/SUSE-Enceladus/mash/pull/669)
+- Update ec2imgutils version requirement.
+  [\#670](https://github.com/SUSE-Enceladus/mash/pull/670)
+- Set cloud image name as instance attr.
+  [\#671](https://github.com/SUSE-Enceladus/mash/pull/671)
+- Remove trailing and leading whitespace.
+  [\#672](https://github.com/SUSE-Enceladus/mash/pull/672)
+
 v7.0.0 (2020-06-01)
 ===================
 
