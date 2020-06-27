@@ -16,12 +16,14 @@ The core services for image uploading, testing and publishing are in a chained
 pipeline. As a job finishes in one service it moves to the next in line. The
 following services are part of the pipeline:
 
-- OBS (image build service)
-- Upload
-- Testing
-- Replication
-- Publisher
-- Deprecation
+- obs (image build service)
+- upload
+- create
+- test
+- raw_image_upload
+- replicate
+- publish
+- deprecate
 
 Aside from pipeline services there 4 other helper services:
 
