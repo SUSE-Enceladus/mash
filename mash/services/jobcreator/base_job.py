@@ -34,8 +34,6 @@ class BaseJob(object):
             self.last_service = kwargs['last_service']
             self.utctime = kwargs['utctime']
             self.image = kwargs['image']
-            self.cloud_image_name = kwargs['cloud_image_name']
-            self.image_description = kwargs['image_description']
             self.download_url = kwargs['download_url']
         except KeyError as error:
             raise MashJobCreatorException(
@@ -66,6 +64,8 @@ class BaseJob(object):
         self.disallow_packages = kwargs.get('disallow_packages')
         self.boot_firmware = kwargs.get('boot_firmware', ['bios'])
         self.additional_uploads = kwargs.get('additional_uploads')
+        self.cloud_image_name = kwargs.get('cloud_image_name')
+        self.image_description = kwargs.get('image_description')
         self.kwargs = kwargs
 
         if self.raw_image_upload_type and self.last_service == 'upload':
