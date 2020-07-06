@@ -464,7 +464,7 @@ class TestListenerService(object):
         mock_get_status_message.return_value = self.status_message
         self.service._publish_message('{"test": "message"}', job.id)
         mock_publish.assert_called_once_with(
-            'publish',
+            'replicate',
             '{"test": "message"}'
         )
 
