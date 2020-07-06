@@ -81,7 +81,7 @@ class OBSImageBuildResultService(MashService):
 
     def _send_job_result_for_upload(self, job_id, trigger_info):
         self._publish(
-            'upload',
+            self.service_exchange,
             self.listener_msg_key,
             JsonFormat.json_message(trigger_info)
         )
@@ -139,7 +139,7 @@ class OBSImageBuildResultService(MashService):
                 }
             }
             self._publish(
-                'upload',
+                self.service_exchange,
                 self.listener_msg_key,
                 JsonFormat.json_message(message)
             )
