@@ -93,7 +93,7 @@ class ListenerService(MashService):
             self.service_exchange, self.job_document_key, self.service_queue
         )
         self.bind_queue(
-            self.service_exchange, self.listener_msg_key, self.listener_queue
+            self.prev_service, self.listener_msg_key, self.listener_queue
         )
 
         thread_pool_count = self.custom_args.get(
@@ -350,7 +350,7 @@ class ListenerService(MashService):
         Publish message to next service exchange.
         """
         try:
-            self.publish_job_result(self.next_service, message)
+            self.publish_job_result(self.service_exchange, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
