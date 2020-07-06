@@ -633,17 +633,6 @@ class TestListenerService(object):
         )
         assert result is False
 
-    def test_get_next_service_error(self):
-        # Test service with no next service
-        self.service.service_exchange = 'deprecate'
-        next_service = self.service._get_next_service()
-        assert next_service is None
-
-        # Test service not in pipeline
-        self.service.service_exchange = 'credentials'
-        next_service = self.service._get_next_service()
-        assert next_service is None
-
     def test_get_prev_service(self):
         # Test service with prev service
         self.service.service_exchange = 'test'

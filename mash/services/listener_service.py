@@ -62,7 +62,6 @@ class ListenerService(MashService):
             self.job_directory, exist_ok=True
         )
 
-        self.next_service = self._get_next_service()
         self.prev_service = self._get_previous_service()
 
         if not self.custom_args:
@@ -198,17 +197,6 @@ class ListenerService(MashService):
                 'Job deletion failed, job is not queued.',
                 extra={'job_id': job_id}
             )
-
-    def _get_next_service(self):
-        """Return the next service based on the current exchange."""
-        services = self.config.get_service_names()
-
-        try:
-            next_service = services[services.index(self.service_exchange) + 1]
-        except (IndexError, ValueError):
-            next_service = None
-
-        return next_service
 
     def _get_previous_service(self):
         """
