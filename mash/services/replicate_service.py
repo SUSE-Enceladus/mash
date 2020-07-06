@@ -58,8 +58,6 @@ def main():
             service_exchange=service_name,
             config=BaseConfig(),
             custom_args={
-                'listener_msg_args': ['source_regions'],
-                'status_msg_args': ['source_regions'],
                 'job_factory': job_factory
             }
         )

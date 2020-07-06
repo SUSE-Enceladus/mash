@@ -32,7 +32,6 @@ class S3BucketUploadJob(MashJob):
 
     def post_init(self):
         self.cloud = 'ec2'
-        self.image_file = None
         self._image_size = 0
         self._total_bytes_transferred = 0
         self._last_percentage_logged = 0
@@ -80,12 +79,12 @@ class S3BucketUploadJob(MashJob):
         except IndexError:
             bucket_path = ''
 
-        if self.cloud_image_name:
+        if self.status_msg['cloud_image_name']:
             # take suffix from file name, should always consist of two parts
-            suffix = '.'.join(str.split(self.image_file, '.')[-2:])
-            key_name = '.'.join([self.cloud_image_name, suffix])
+            suffix = '.'.join(str.split(self.status_msg['image_file'], '.')[-2:])
+            key_name = '.'.join([self.status_msg['cloud_image_name'], suffix])
         else:
-            key_name = path.basename(self.image_file)
+            key_name = path.basename(self.status_msg['image_file'])
 
         if not bucket_path:
             pass
@@ -95,7 +94,7 @@ class S3BucketUploadJob(MashJob):
             key_name = bucket_path
 
         try:
-            statinfo = stat(self.image_file)
+            statinfo = stat(self.status_msg['image_file'])
             self._image_size = statinfo.st_size
 
             client = get_client(
@@ -104,7 +103,7 @@ class S3BucketUploadJob(MashJob):
             )
 
             client.upload_file(
-                self.image_file,
+                self.status_msg['image_file'],
                 bucket_name,
                 key_name,
                 Callback=self._log_progress

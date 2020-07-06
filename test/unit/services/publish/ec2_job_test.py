@@ -34,10 +34,8 @@ class TestEC2PublishJob(object):
                 'ssh_private_key': 'key123'
             }
         }
-        self.job.source_regions = {
-            'cloud_image_name': 'image_name_123',
-            'us-east-2': 'image-id'
-        }
+        self.job.status_msg['cloud_image_name'] = 'image_name_123'
+        self.job.status_msg['source_regions'] = {'us-east-2': 'image-id'}
         self.job._log_callback = Mock()
 
     def test_publish_ec2_missing_key(self):

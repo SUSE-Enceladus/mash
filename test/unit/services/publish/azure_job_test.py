@@ -48,10 +48,8 @@ class TestAzurePublishJob(object):
                     "https://management.core.windows.net/"
             }
         }
-        self.job.source_regions = {
-            'cloud_image_name': 'New Image',
-            'blob_name': 'New Image.vhd'
-        }
+        self.job.status_msg['cloud_image_name'] = 'New Image'
+        self.job.status_msg['blob_name'] = 'New Image.vhd'
         self.log = MagicMock()
         self.job._log_callback = self.log
 

@@ -49,8 +49,8 @@ class AzureCreateJob(MashJob):
         self.status = SUCCESS
         self.log_callback.info('Creating image.')
 
-        self.cloud_image_name = self.source_regions['cloud_image_name']
-        self.blob_name = self.source_regions['blob_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
+        self.blob_name = self.status_msg['blob_name']
 
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]

@@ -104,7 +104,7 @@ class GCETestJob(MashJob):
 
         fallback_regions.add(self.region)
 
-        self.cloud_image_name = self.source_regions['cloud_image_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
 
         with create_json_file(credentials) as auth_file:
             for firmware in self.boot_firmware:

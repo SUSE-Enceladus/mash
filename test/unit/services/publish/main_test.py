@@ -23,8 +23,6 @@ class TestPublishServiceMain(object):
             service_exchange='publish',
             config=config,
             custom_args={
-                'listener_msg_args': ['source_regions'],
-                'status_msg_args': ['source_regions'],
                 'job_factory': factory,
                 'thread_pool_count': 50
             }
@@ -50,8 +48,6 @@ class TestPublishServiceMain(object):
             service_exchange='publish',
             config=config,
             custom_args={
-                'listener_msg_args': ['source_regions'],
-                'status_msg_args': ['source_regions'],
                 'job_factory': factory,
                 'thread_pool_count': 50
             }

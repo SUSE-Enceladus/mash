@@ -37,7 +37,7 @@ class TestOCIUploadJob(object):
         }
 
         self.job = OCIUploadJob(job_doc, self.config)
-        self.job.image_file = ['sles-12-sp4-v20180909.qcow2']
+        self.job.status_msg = {'image_file': 'sles-12-sp4-v20180909.qcow2'}
         self.job.credentials = credentials
         self.job._log_callback = Mock()
 

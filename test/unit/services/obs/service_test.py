@@ -65,7 +65,7 @@ class TestOBSImageBuildResultService(object):
         )
 
         self.obs_result.consume_queue.assert_called_once_with(
-            mock_process_message, queue_name='service'
+            mock_process_message, 'service', 'obs'
         )
         self.obs_result.channel.start_consuming.assert_called_once_with()
 

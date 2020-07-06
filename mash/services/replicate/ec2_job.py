@@ -56,7 +56,7 @@ class EC2ReplicateJob(MashJob):
         """
         self.status = SUCCESS
         self.source_region_results = defaultdict(dict)
-        self.cloud_image_name = self.source_regions['cloud_image_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
 
         # Get all account credentials in one request
         accounts = []
@@ -82,7 +82,7 @@ class EC2ReplicateJob(MashJob):
                     self.source_region_results[target_region]['image_id'] = \
                         self._replicate_to_region(
                             credential,
-                            self.source_regions[source_region],
+                            self.status_msg['source_regions'][source_region],
                             source_region,
                             target_region
                         )  # noqa: E123 Suppress erroneous flake8 warning.

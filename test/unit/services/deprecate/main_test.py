@@ -20,7 +20,6 @@ class TestDeprecateServiceMain(object):
             service_exchange='deprecate',
             config=config,
             custom_args={
-                'listener_msg_args': ['source_regions'],
                 'job_factory': factory
             }
         )
@@ -48,7 +47,6 @@ class TestDeprecateServiceMain(object):
             service_exchange='deprecate',
             config=config,
             custom_args={
-                'listener_msg_args': ['source_regions'],
                 'job_factory': factory
             }
         )

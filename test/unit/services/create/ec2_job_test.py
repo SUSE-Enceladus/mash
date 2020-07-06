@@ -43,7 +43,8 @@ class TestAmazonCreateJob(object):
         }
         self.job = EC2CreateJob(job_doc, self.config)
         self.job._log_callback = Mock()
-        self.job.image_file = 'file'
+        self.job.status_msg['image_file'] = 'file'
+        self.job.status_msg['source_regions'] = {'us-east-1': 'ami_id'}
         self.job.credentials = self.credentials
 
     def test_post_init_incomplete_arguments(self):
@@ -147,7 +148,6 @@ class TestAmazonCreateJob(object):
         ec2_setup.clean_up.assert_called_once_with()
 
         ec2_upload.create_image.side_effect = ['ami_id', Exception('Failed!')]
-        self.job.source_regions['us-east-1'] = 'ami_id'
         self.job.target_regions['us-east-2'] = {
             'account': 'test',
             'helper_image': 'ami-bc5b48d0',
@@ -199,7 +199,8 @@ class TestAmazonCreateJob(object):
         }
         self.job = EC2CreateJob(job_doc, self.config)
         self.job._log_callback = Mock()
-        self.job.image_file = 'file'
+        self.job.status_msg['image_file'] = 'file'
+        self.job.status_msg['source_regions'] = {'us-east-1': 'ami_id'}
         self.job.credentials = self.credentials
 
         open_context = context_manager()

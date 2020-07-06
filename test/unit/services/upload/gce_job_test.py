@@ -48,7 +48,7 @@ class TestGCEUploadJob(object):
         }
 
         self.job = GCEUploadJob(job_doc, self.config)
-        self.job.image_file = ['sles-12-sp4-v20180909.tar.gz']
+        self.job.status_msg['image_file'] = 'sles-12-sp4-v20180909.tar.gz'
         self.job.credentials = self.credentials
         self.job._log_callback = Mock()
 

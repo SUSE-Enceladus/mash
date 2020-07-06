@@ -178,11 +178,11 @@ class MashService(object):
         if self.connection and self.connection.is_open:
             self.connection.close()
 
-    def consume_queue(self, callback, queue_name):
+    def consume_queue(self, callback, queue_name, exchange):
         """
         Declare and consume queue.
         """
-        queue = self._get_queue_name(self.service_exchange, queue_name)
+        queue = self._get_queue_name(exchange, queue_name)
         self._declare_queue(queue)
         self.channel.basic.consume(
             callback=callback, queue=queue

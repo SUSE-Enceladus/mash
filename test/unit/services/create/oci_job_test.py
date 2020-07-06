@@ -70,11 +70,9 @@ class TestOCICreateJob(object):
         compute_composite_client = Mock()
         mock_compute_client_composite.return_value = compute_composite_client
 
-        self.job.source_regions = {
-            'cloud_image_name': 'sles-12-sp4-v20180909',
-            'object_name': 'sles-12-sp4-v20180909.tar.gz',
-            'namespace': 'sles'
-        }
+        self.job.status_msg['cloud_image_name'] = 'sles-12-sp4-v20180909'
+        self.job.status_msg['object_name'] = 'sles-12-sp4-v20180909.tar.gz'
+        self.job.status_msg['namespace'] = 'sles'
         self.job.run_job()
 
         compute_composite_client.create_image_and_wait_for_state.call_count == 1

@@ -90,7 +90,7 @@ class AzureTestJob(MashJob):
 
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
-        self.cloud_image_name = self.source_regions['cloud_image_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
 
         with create_json_file(credentials) as auth_file:
             try:
@@ -126,7 +126,7 @@ class AzureTestJob(MashJob):
 
     def cleanup_image(self):
         credentials = self.credentials[self.account]
-        blob_name = self.source_regions['blob_name']
+        blob_name = self.status_msg['blob_name']
 
         self.log_callback.info(
             'Cleaning up image: {0} in region: {1}.'.format(
