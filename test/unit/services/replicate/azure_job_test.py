@@ -47,10 +47,8 @@ class TestAzureReplicateJob(object):
                     "https://management.core.windows.net/"
             }
         }
-        self.job.source_regions = {
-            'cloud_image_name': 'image123',
-            'blob_name': 'image123.vhd'
-        }
+        self.job.status_msg['cloud_image_name'] = 'image123'
+        self.job.status_msg['blob_name'] = 'image123.vhd'
         self.log = Mock()
         self.job._log_callback = self.log
 

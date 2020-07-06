@@ -145,7 +145,8 @@ class JobCreatorService(MashService):
         """
         self.consume_queue(
             self._handle_service_message,
-            queue_name=self.service_queue
+            self.service_queue,
+            self.service_exchange
         )
         try:
             self.channel.start_consuming()

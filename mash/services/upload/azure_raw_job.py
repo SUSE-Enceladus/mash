@@ -57,12 +57,16 @@ class AzureRawUploadJob(MashJob):
         self.request_credentials([self.account], 'azure')
         credentials = self.credentials[self.account]
 
-        file_name = self.image_file.rsplit(os.sep, maxsplit=1)[-1]
+        file_name = self.status_msg['image_file'].rsplit(
+            os.sep, maxsplit=1
+        )[-1]
         self.additional_uploads.append('')
 
         for extension in self.additional_uploads:
             upload_file_name = '.'.join(filter(None, [file_name, extension]))
-            file_path = '.'.join(filter(None, [self.image_file, extension]))
+            file_path = '.'.join(
+                filter(None, [self.status_msg['image_file'], extension])
+            )
 
             upload_azure_file(
                 upload_file_name,
@@ -76,10 +80,7 @@ class AzureRawUploadJob(MashJob):
                 expand_image=False
             )
 
-        self.source_regions = {
-            'cloud_image_name': file_name,
-            'blob_name': file_name
-        }
+        self.status_msg['blob_name'] = file_name
         self.log_callback.info(
             'Uploaded image: {0}, to the container: {1}'.format(
                 file_name,

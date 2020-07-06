@@ -82,7 +82,11 @@ class LoggerService(MashService):
         """
         Start logger service.
         """
-        self.consume_queue(self._process_log, 'logging')
+        self.consume_queue(
+            self._process_log,
+            'logging',
+            self.service_exchange
+        )
 
         try:
             self.channel.start_consuming()

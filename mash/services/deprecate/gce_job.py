@@ -66,7 +66,7 @@ class GCEDeprecateJob(MashJob):
         self.request_credentials([self.account])
         credential = self.credentials[self.account]
 
-        self.cloud_image_name = self.source_regions['cloud_image_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
 
         with create_json_file(credential) as auth_file:
             try:

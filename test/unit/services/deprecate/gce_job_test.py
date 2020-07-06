@@ -26,9 +26,7 @@ class TestGCEDeprecateJob(object):
                 'project_id': '1234567890'
             }
         }
-        self.job.source_regions = {
-            'cloud_image_name': 'image_123'
-        }
+        self.job.status_msg['cloud_image_name'] = 'image_123'
 
     def test_deprecate_gce_missing_key(self):
         del self.job_config['account']

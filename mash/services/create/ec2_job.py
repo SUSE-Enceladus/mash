@@ -65,12 +65,13 @@ class EC2CreateJob(MashJob):
 
     def run_job(self):
         self.status = SUCCESS
+        self.status_msg['source_regions'] = {}
         self.log_callback.info('Creating image.')
 
         self.cloud_image_name = format_string_with_date(
             self.base_cloud_image_name
         )
-        self.source_regions['cloud_image_name'] = self.cloud_image_name
+        self.status_msg['cloud_image_name'] = self.cloud_image_name
 
         self.ec2_upload_parameters = {
             'image_name': self.cloud_image_name,
@@ -108,7 +109,7 @@ class EC2CreateJob(MashJob):
         self.request_credentials(accounts)
 
         for region, info in self.target_regions.items():
-            self.source_regions[region] = None  # Reset ami id if always job
+            self.status_msg['source_regions'][region] = None  # Reset ami id if always job
             account = info['account']
             credentials = self.credentials[account]
 
@@ -175,14 +176,14 @@ class EC2CreateJob(MashJob):
 
                 if use_root_swap:
                     ami_id = ec2_upload.create_image_use_root_swap(
-                        self.image_file
+                        self.status_msg['image_file']
                     )
                 else:
                     ami_id = ec2_upload.create_image(
-                        self.image_file
+                        self.status_msg['image_file']
                     )
 
-                self.source_regions[region] = ami_id
+                self.status_msg['source_regions'][region] = ami_id
                 self.log_callback.info(
                     'Created image has ID: {0} in region {1}'.format(
                         ami_id, region
@@ -206,14 +207,14 @@ class EC2CreateJob(MashJob):
             for region, info in self.target_regions.items():
                 credentials = self.credentials[info['account']]
 
-                if self.source_regions.get(region):
+                if self.status_msg['source_regions'].get(region):
                     # Only cleanup regions that passed
                     cleanup_ec2_image(
                         credentials['access_key_id'],
                         credentials['secret_access_key'],
                         self.log_callback,
                         region,
-                        self.source_regions[region]
+                        self.status_msg['source_regions'][region]
                     )
 
     def _create_key_pair(self, ec2_client):

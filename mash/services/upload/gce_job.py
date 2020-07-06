@@ -72,30 +72,16 @@ class GCEUploadJob(MashJob):
             object_name = ''.join([self.cloud_image_name, '.tar.gz'])
             container = storage_driver.get_container(self.bucket)
 
-            with open(self.image_file, 'rb') as image_stream:
+            with open(self.status_msg['image_file'], 'rb') as image_stream:
                 storage_driver.upload_object_via_stream(
                     image_stream, container, object_name
                 )
 
-        self.source_regions = {
-            'cloud_image_name': self.cloud_image_name,
-            'object_name': object_name
-        }
+        self.status_msg['cloud_image_name'] = self.cloud_image_name
+        self.status_msg['object_name'] = object_name
         self.log_callback.info(
             'Uploaded image: {0}, to the bucket named: {1}'.format(
                 object_name,
                 self.bucket
             )
         )
-
-    @property
-    def image_file(self):
-        """System image file property."""
-        return self._image_file
-
-    @image_file.setter
-    def image_file(self, system_image_file):
-        """
-        Setter for image_file list.
-        """
-        self._image_file = system_image_file
