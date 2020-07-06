@@ -89,6 +89,11 @@ def validate_job(data):
     if 'deprecate' in services_run:
         validate_deprecate_args(data)
 
+    if 'notification_type' in data:
+        user_id = data['requesting_user']
+        user = get_user_by_id(user_id)
+        data['notification_email'] = user.email
+
     return data
 
 

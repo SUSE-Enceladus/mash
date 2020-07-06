@@ -96,6 +96,7 @@ class TestJobCreatorService(object):
         }
         del job['cloud_accounts']
         del job['cloud_groups']
+        job['notification_email'] = 'test@fake.com'
 
         message = MagicMock()
         message.body = JsonFormat.json_message(job)
@@ -237,6 +238,7 @@ class TestJobCreatorService(object):
         with open('test/data/azure_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
+        job['notification_email'] = 'test@fake.com'
         message = MagicMock()
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
@@ -350,6 +352,7 @@ class TestJobCreatorService(object):
         with open('test/data/gce_job.json', 'r') as job_doc:
             job = json.load(job_doc)
 
+        job['notification_email'] = 'test@fake.com'
         message = MagicMock()
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
