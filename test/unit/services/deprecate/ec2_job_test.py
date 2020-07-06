@@ -31,10 +31,8 @@ class TestEC2DeprecateJob(object):
                 'secret_access_key': '654321'
             }
         }
-        self.job.source_regions = {
-            'cloud_image_name': 'image_123',
-            'us-east-2': 'ami-123456'
-        }
+        self.job.status_msg['cloud_image_name'] = 'image_123'
+        self.job.status_msg['source_regions'] = {'us-east-2': 'ami-123456'}
 
     def test_deprecate_ec2_missing_key(self):
         del self.job_config['deprecate_regions']

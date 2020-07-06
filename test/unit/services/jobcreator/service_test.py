@@ -545,7 +545,8 @@ class TestJobCreatorService(object):
 
         mock_consume_queue.assert_called_once_with(
             self.jobcreator._handle_service_message,
-            queue_name='service'
+            'service',
+            'jobcreator'
         )
         mock_stop.assert_called_once_with()
 

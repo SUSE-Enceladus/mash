@@ -71,10 +71,8 @@ class TestOCITestJob(object):
                 'fingerprint': 'fake fingerprint'
             }
         }
-        job.source_regions = {
-            'cloud_image_name': 'name.qcow2',
-            'image_id': 'ocid1.image.oc1..'
-        }
+        job.status_msg['cloud_image_name'] = 'name.qcow2'
+        job.status_msg['image_id'] = 'ocid1.image.oc1..'
         job.run_job()
 
         mock_test_image.assert_called_once_with(

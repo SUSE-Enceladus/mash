@@ -57,15 +57,15 @@ class AzureSASUploadJob(MashJob):
             )
             self.blob_name = ''.join([self.cloud_image_name, '.vhd'])
         else:
-            self.cloud_image_name = self.source_regions['cloud_image_name']
-            self.blob_name = self.source_regions['blob_name']
+            self.cloud_image_name = self.status_msg['cloud_image_name']
+            self.blob_name = self.status_msg['blob_name']
 
         build = re.search(sas_url_match, self.raw_image_upload_location)
 
         upload_azure_file(
             self.blob_name,
             build.group(2),
-            self.image_file,
+            self.status_msg['image_file'],
             self.config.get_azure_max_retry_attempts(),
             self.config.get_azure_max_workers(),
             build.group(1),

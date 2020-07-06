@@ -94,8 +94,8 @@ class OCITestJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        self.cloud_image_name = self.source_regions['cloud_image_name']
-        image_id = self.source_regions['image_id']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
+        image_id = self.status_msg['image_id']
 
         with create_key_file(credentials['signing_key']) as signing_key_file:
             try:

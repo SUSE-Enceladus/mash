@@ -70,10 +70,8 @@ class TestAzureTestJob(object):
                 'credentials': '321'
             }
         }
-        job.source_regions = {
-            'cloud_image_name': 'name',
-            'blob_name': 'name.vhd'
-        }
+        job.status_msg['cloud_image_name'] = 'name'
+        job.status_msg['blob_name'] = 'name.vhd'
         job.cloud_image_name = 'test_image'
         job._log_callback = Mock()
         job.run_job()

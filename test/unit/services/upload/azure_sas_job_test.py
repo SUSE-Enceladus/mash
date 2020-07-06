@@ -26,7 +26,7 @@ class TestAzureSASUploadJob(object):
         )
 
         self.job = AzureSASUploadJob(job_doc, self.config)
-        self.job.image_file = 'file.vhdfixed.xz'
+        self.job.status_msg = {'image_file': 'file.vhdfixed.xz'}
         self.job._log_callback = MagicMock()
 
     def test_post_init_incomplete_arguments(self):
@@ -71,10 +71,8 @@ class TestAzureSASUploadJob(object):
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
 
-        self.job.source_regions = self.job.source_regions = {
-            'cloud_image_name': 'name',
-            'blob_name': 'name.vhd'
-        }
+        self.job.status_msg['cloud_image_name'] = 'name'
+        self.job.status_msg['blob_name'] = 'name.vhd'
         self.job.cloud_image_name = ''
 
         self.job.run_job()
