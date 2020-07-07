@@ -17,6 +17,7 @@
 #
 
 from mash.services.api.schema import (
+    email,
     non_empty_string,
     string_with_example
 )
@@ -182,6 +183,7 @@ base_job_message = {
                            'Valid options are x86_64 and aarch64 and the '
                            'default architecture is x86_64.'
         },
+        'notification_email': email,
         'notification_type': {
             'type': 'string',
             'enum': ['periodic', 'single'],
