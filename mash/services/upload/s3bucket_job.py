@@ -68,14 +68,31 @@ class S3BucketUploadJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        bucket_name, key_name = str.split(self.location, '/', 1)
-        if key_name[-1] == '/':
+        # Possible values for location:
+        # bucket
+        # bucket/file.path or bucket/path/to/file.path
+        # bucket/path/to/
+        location_args = str.split(self.location, '/', 1)
+        bucket_name = location_args[0]
+
+        try:
+            bucket_path = location_args[1]
+        except IndexError:
+            bucket_path = ''
+
+        if self.cloud_image_name:
             # take suffix from file name, should always consist of two parts
             suffix = '.'.join(str.split(self.image_file, '.')[-2:])
-            key_name += '{}.{}'.format(
-                path.basename(self.cloud_image_name),
-                suffix
-            )
+            key_name = '.'.join([self.cloud_image_name, suffix])
+        else:
+            key_name = path.basename(self.image_file)
+
+        if not bucket_path:
+            pass
+        elif bucket_path[-1] == '/':
+            key_name = ''.join([bucket_path, key_name])
+        else:
+            key_name = bucket_path
 
         try:
             statinfo = stat(self.image_file)

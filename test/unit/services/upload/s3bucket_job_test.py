@@ -90,6 +90,31 @@ class TestS3BucketUploadJob(object):
             Callback=self.job._log_progress
         )
 
+        # Test bucket only location
+        mock_client.upload_file.reset_mock()
+        self.job.location = 'my-bucket'
+        self.job.run_job()
+
+        mock_client.upload_file.assert_called_once_with(
+            'file.raw.gz',
+            'my-bucket',
+            'name.raw.gz',
+            Callback=self.job._log_progress
+        )
+
+        # Test bucket and full name
+        mock_client.upload_file.reset_mock()
+        self.job.location = 'my-bucket/some-prefix/image.raw.gz'
+        self.job.cloud_image_name = None
+        self.job.run_job()
+
+        mock_client.upload_file.assert_called_once_with(
+            'file.raw.gz',
+            'my-bucket',
+            'some-prefix/image.raw.gz',
+            Callback=self.job._log_progress
+        )
+
         mock_client.upload_file.side_effect = Exception
 
         with raises(MashUploadException):
