@@ -10,7 +10,8 @@ from mash.services.api.utils.jobs import (
     get_jobs,
     validate_last_service,
     validate_create_args,
-    validate_deprecate_args
+    validate_deprecate_args,
+    validate_job
 )
 from mash.mash_exceptions import MashJobException
 
@@ -161,3 +162,32 @@ def test_validate_create_args():
 def test_validate_deprecate_args():
     with raises(MashJobException):
         validate_deprecate_args({})
+
+
+@patch('mash.services.api.utils.jobs.get_user_by_id')
+@patch('mash.services.api.utils.jobs.get_services_by_last_service')
+@patch('mash.services.api.utils.jobs.validate_last_service')
+def test_validate_job(
+    mock_validate_last_srv,
+    mock_get_services,
+    mock_get_user
+):
+    user = Mock()
+    user.email = 'test@fake.com'
+
+    mock_get_user.return_value = user
+    mock_get_services.return_value = ['obs', 'upload']
+
+    data = {
+        'last_service': 'upload',
+        'utctime': 'now',
+        'image': 'test_oem_image',
+        'download_url': 'http://download.opensuse.org/repositories/Cloud:Tools/images',
+        'requesting_user': '1',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'notification_type': 'single'
+    }
+
+    data = validate_job(data)
+    assert data['notification_email'] == 'test@fake.com'
