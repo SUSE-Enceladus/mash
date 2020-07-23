@@ -87,7 +87,7 @@ class TestOBSImageBuildResultService(object):
         self.obs_result._send_job_result_for_upload('815', {})
         mock_delete_job.assert_called_once_with('815')
         mock_publish.assert_called_once_with(
-            'upload', 'listener_msg', '{}'
+            'obs', 'listener_msg', '{}'
         )
 
     def test_send_control_response_local(self):
@@ -148,7 +148,7 @@ class TestOBSImageBuildResultService(object):
         message.body = '{"job_delete": "4711"}'
         self.obs_result._process_message(message)
         mock_publish.assert_called_once_with(
-            'upload',
+            'obs',
             'listener_msg',
             JsonFormat.json_message(
                 {'obs_result': {'id': '4711', 'status': 'delete'}}
