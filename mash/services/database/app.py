@@ -23,7 +23,9 @@ from flask.logging import default_handler
 
 from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
 from mash.log.filter import BaseServiceFilter
+from mash.services.database.routes import tokens
 from mash.services.database.extensions import db, migrate
+from mash.services.database.commands import tokens_cli
 
 
 def register_extensions(app):
@@ -67,7 +69,9 @@ def configure_logger(app):
 
 def register_blueprints(app):
     """Register Flask blueprints."""
+    app.register_blueprint(tokens.blueprint)
 
 
 def register_commands(app):
     """Register Click commands."""
+    app.cli.add_command(tokens_cli)
