@@ -21,7 +21,7 @@ from unittest.mock import patch, Mock, call
 from pytest import raises
 
 from mash.mash_exceptions import MashDBException
-from mash.services.api.models import EC2Account
+from mash.services.database.models import EC2Account
 from mash.services.api.utils.accounts.ec2 import (
     get_ec2_group,
     create_ec2_region,

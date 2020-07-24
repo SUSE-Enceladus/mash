@@ -21,7 +21,7 @@ from flask import current_app
 from mash.mash_exceptions import MashDBException
 from mash.services.api.extensions import db
 from mash.services.api.utils.users import get_user_by_id
-from mash.services.api.models import OCIAccount
+from mash.services.database.models import OCIAccount
 from mash.utils.mash_utils import handle_request, get_fingerprint_from_private_key
 
 

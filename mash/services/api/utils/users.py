@@ -24,7 +24,7 @@ from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 from mash.services.api.extensions import db
-from mash.services.api.models import User
+from mash.services.database.models import User
 from mash.services.api.variables import (
     password_change_msg_template,
     password_reset_msg_template
