@@ -19,7 +19,7 @@
 import logging
 
 from mash.mash_exceptions import MashJobException
-from mash.services.status_levels import UNKOWN
+from mash.services.status_levels import UNKOWN, SUCCESS
 from mash.utils.mash_utils import handle_request
 
 
@@ -34,12 +34,11 @@ class MashJob(object):
         self._cloud_image_name = None
         self._credentials = None
         self._log_callback = None
-        self._source_regions = {}
         self._job_file = job_config.get('job_file')
 
         self.config = config
         self.iteration_count = 0
-        self.status = UNKOWN
+        self.status_msg = {'status': UNKOWN}
 
         try:
             self.id = job_config['id']
@@ -164,29 +163,35 @@ class MashJob(object):
             {'job_id': self.id}
         )
 
+    def get_status_message(self):
+        """Status message property."""
+        if self.status == SUCCESS:
+            return self.status_msg
+        else:
+            return {
+                'id': self.id,
+                'status': self.status,
+            }
+
+    def set_status_message(self, message):
+        """
+        Setter for status_msg dictionary.
+        """
+        self.status_msg = message
+
     @property
-    def source_regions(self):
-        """Source regions property."""
-        return self._source_regions
+    def status(self):
+        """
+        Returns the status from the status message dictionary.
+        """
+        return self.status_msg['status']
 
-    @source_regions.setter
-    def source_regions(self, regions):
+    @status.setter
+    def status(self, value):
         """
-        Setter for source_regions dictionary.
+        Returns the status from status dictionary.
         """
-        self._source_regions = regions
-
-    @property
-    def image_file(self):
-        """VM image file property."""
-        return self._image_file
-
-    @image_file.setter
-    def image_file(self, system_image_file):
-        """
-        Setter for image_file list.
-        """
-        self._image_file = system_image_file
+        self.status_msg['status'] = value
 
     def post_init(self):
         """

@@ -59,7 +59,7 @@ class AzureUploadJob(MashJob):
         upload_azure_file(
             blob_name,
             self.container,
-            self.image_file,
+            self.status_msg['image_file'],
             self.config.get_azure_max_retry_attempts(),
             self.config.get_azure_max_workers(),
             self.storage_account,
@@ -68,10 +68,8 @@ class AzureUploadJob(MashJob):
             is_page_blob=True
         )
 
-        self.source_regions = {
-            'cloud_image_name': self.cloud_image_name,
-            'blob_name': blob_name
-        }
+        self.status_msg['cloud_image_name'] = self.cloud_image_name
+        self.status_msg['blob_name'] = blob_name
         self.log_callback.info(
             'Uploaded image: {0}, to the container: {1}'.format(
                 blob_name,

@@ -81,9 +81,9 @@ class OCIUploadJob(MashJob):
         )
 
         object_name = ''.join([self.cloud_image_name, '.qcow2'])
-        self._image_size = stat(self.image_file).st_size
+        self._image_size = stat(self.status_msg['image_file']).st_size
 
-        with open(self.image_file, 'rb') as image_stream:
+        with open(self.status_msg['image_file'], 'rb') as image_stream:
             upload_manager.upload_stream(
                 namespace,
                 self.bucket,
@@ -92,11 +92,10 @@ class OCIUploadJob(MashJob):
                 progress_callback=self._progress_callback
             )
 
-        self.source_regions = {
-            'cloud_image_name': self.cloud_image_name,
-            'object_name': object_name,
-            'namespace': namespace
-        }
+        self.status_msg['cloud_image_name'] = self.cloud_image_name
+        self.status_msg['object_name'] = object_name
+        self.status_msg['namespace'] = namespace
+
         self.log_callback.info(
             'Uploaded image: {0}, to the bucket named: {1}'.format(
                 object_name,

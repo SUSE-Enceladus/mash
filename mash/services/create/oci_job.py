@@ -78,9 +78,9 @@ class OCICreateJob(MashJob):
             compute_client
         )
 
-        object_name = self.source_regions['object_name']
-        namespace = self.source_regions['namespace']
-        cloud_image_name = self.source_regions['cloud_image_name']
+        object_name = self.status_msg['object_name']
+        namespace = self.status_msg['namespace']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
 
         image_source_details = ImageSourceViaObjectStorageTupleDetails(
             bucket_name=self.bucket,
@@ -93,7 +93,7 @@ class OCICreateJob(MashJob):
 
         image_details = CreateImageDetails(
             compartment_id=self.compartment_id,
-            display_name=cloud_image_name,
+            display_name=self.cloud_image_name,
             image_source_details=image_source_details,
             launch_mode=self.launch_mode
         )
@@ -113,10 +113,7 @@ class OCICreateJob(MashJob):
             waiter_kwargs={'max_wait_seconds': self.max_oci_wait_seconds}
         )
 
-        self.source_regions = {
-            'cloud_image_name': cloud_image_name,
-            'image_id': response.data.id
-        }
+        self.status_msg['image_id'] = response.data.id
         self.log_callback.info(
             'Created image has ID: {0}.'.format(
                 object_name

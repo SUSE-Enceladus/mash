@@ -45,8 +45,10 @@ class TestS3BucketUploadJob(object):
             'raw_image_upload_account': 'test'
         }
         self.job = S3BucketUploadJob(job_doc, self.config)
-        self.job.image_file = 'file.raw.gz'
-        self.job.cloud_image_name = 'name'
+        self.job.status_msg = {
+            'image_file': 'file.raw.gz',
+            'cloud_image_name': 'name'
+        }
         self.job.credentials = self.credentials
         self.job._log_callback = Mock()
 
@@ -105,7 +107,7 @@ class TestS3BucketUploadJob(object):
         # Test bucket and full name
         mock_client.upload_file.reset_mock()
         self.job.location = 'my-bucket/some-prefix/image.raw.gz'
-        self.job.cloud_image_name = None
+        self.job.status_msg['cloud_image_name'] = None
         self.job.run_job()
 
         mock_client.upload_file.assert_called_once_with(

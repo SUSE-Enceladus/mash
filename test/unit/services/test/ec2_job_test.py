@@ -83,7 +83,7 @@ class TestEC2TestJob(object):
                 'secret_access_key': '321'
             }
         }
-        job.source_regions = {'us-east-1': 'ami-123'}
+        job.status_msg['source_regions'] = {'us-east-1': 'ami-123'}
         job.run_job()
 
         client.import_key_pair.assert_called_once_with(
@@ -172,5 +172,5 @@ class TestEC2TestJob(object):
                 'secret_access_key': '321'
             }
         }
-        job.source_regions = {'cn-east-1': 'ami-123'}
+        job.status_msg['source_regions'] = {'cn-east-1': 'ami-123'}
         job.run_job()

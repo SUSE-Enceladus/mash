@@ -59,8 +59,6 @@ def main():
             service_exchange=service_name,
             config=config,
             custom_args={
-                'listener_msg_args': ['source_regions'],
-                'status_msg_args': ['source_regions'],
                 'job_factory': job_factory,
                 'thread_pool_count': config.get_publish_thread_pool_count()
             }

@@ -34,10 +34,8 @@ class TestEC2ReplicateJob(object):
             }
         }
 
-        self.job.source_regions = {
-            'cloud_image_name': 'My image',
-            'us-east-1': 'ami-12345'
-        }
+        self.job.status_msg['cloud_image_name'] = 'My image'
+        self.job.status_msg['source_regions'] = {'us-east-1': 'ami-12345'}
 
     def test_replicate_ec2_missing_key(self):
         del self.job_config['replicate_source_regions']

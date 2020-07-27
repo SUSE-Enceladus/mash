@@ -67,7 +67,8 @@ class OBSImageBuildResultService(MashService):
         atexit.register(lambda: os._exit(0))
         self.consume_queue(
             self._process_message,
-            queue_name=self.service_queue
+            self.service_queue,
+            self.service_exchange
         )
 
         try:
