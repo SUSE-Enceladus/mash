@@ -26,18 +26,6 @@ class TestRabbitMQHandler(object):
         log.addHandler(self.handler)
         log.setLevel(logging.DEBUG)
 
-        log.info('Test %s', 'args')
-        self.channel.basic.publish.assert_called_once_with(
-            exchange='logger',
-            routing_key='mash.logger',
-            body='{"msg": "Test args"}',
-            properties={
-                'content_type': 'application/json',
-                'delivery_mode': 2
-            }
-        )
-        self.channel.basic.publish.reset_mock()
-
         log.info('Job finished!', extra={'job_id': '4711'})
         self.channel.basic.publish.assert_called_once_with(
             exchange='logger',
