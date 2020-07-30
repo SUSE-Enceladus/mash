@@ -9,6 +9,8 @@ matrix:
   - python: 3.7
     env: TOXENV=unit_py3,check
     dist: xenial
+  - python: 3.8
+    env: TOXENV=unit_py3,check
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y enchant
