@@ -16,9 +16,12 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import json
+
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from mash.services.api.extensions import db
+from mash.services.database.extensions import db
 
 
 class User(db.Model):
@@ -216,13 +219,29 @@ class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.String(40), nullable=False)
     last_service = db.Column(db.String(16), nullable=False)
+    current_service = db.Column(db.String(16))
+    prev_service = db.Column(db.String(16))
+    failed_service = db.Column(db.String(16))
     utctime = db.Column(db.String(32), nullable=False)
     image = db.Column(db.String(128), nullable=False)
     download_url = db.Column(db.String(128), nullable=False)
     cloud_architecture = db.Column(db.String(8), default='x86_64')
     profile = db.Column(db.String(32))
+    state = db.Column(db.String(12))
+    start_time = db.Column(db.DateTime, default=datetime.utcnow)
+    finish_time = db.Column(db.DateTime)
+    errors = db.Column(db.ARRAY(db.Text), default=list)
+    _data = db.Column('data', db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', back_populates='jobs')
+
+    @property
+    def data(self):
+        return json.loads(self._data) if self._data else None
+
+    @data.setter
+    def data(self, value):
+        self._data = json.dumps(value)
 
     def __repr__(self):
         return '<Job {}>'.format(self.job_id)

@@ -46,8 +46,6 @@ from mash.services.api.routes.jobs.gce import api as gce_jobs_api
 from mash.services.api.routes.jobs.azure import api as azure_jobs_api
 from mash.services.api.routes.jobs.oci import api as oci_jobs_api
 
-from mash.services.api.commands import tokens_cli
-
 
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decoded_token):
@@ -62,7 +60,6 @@ def create_app(config_object):
     app.config.from_object(config_object)
     register_extensions(app)
     register_namespaces()
-    register_commands(app)
     configure_logger(app)
     configure_mailer(app)
     return app
@@ -131,8 +128,3 @@ def register_extensions(app):
 
     # Required for flask-restplus to play nicely with flask-jwt-extended
     jwt._set_error_handler_callbacks(api)
-
-
-def register_commands(app):
-    """Register Click commands."""
-    app.cli.add_command(tokens_cli)
