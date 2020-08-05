@@ -21,7 +21,7 @@ import uuid
 
 from flask import current_app
 
-from mash.services.api.extensions import db
+from mash.services.database.extensions import db
 from mash.services.database.models import Job, User
 from mash.services.api.utils.amqp import publish
 from mash.services.api.utils.users import get_user_by_id

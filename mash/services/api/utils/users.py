@@ -23,7 +23,7 @@ from secrets import choice
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
-from mash.services.api.extensions import db
+from mash.services.database.extensions import db
 from mash.services.database.models import User
 from mash.services.api.variables import (
     password_change_msg_template,

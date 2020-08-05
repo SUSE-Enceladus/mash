@@ -45,10 +45,6 @@ class Config(object):
         return self.config.get_log_file('api')
 
     @property
-    def CREDENTIALS_URL(self):
-        return self.config.get_credentials_url()
-
-    @property
     def CLOUD_DATA(self):
         return self.config.get_cloud_data()
 
@@ -59,14 +55,6 @@ class Config(object):
     @property
     def JWT_SECRET_KEY(self):
         return self.config.get_jwt_secret()
-
-    @property
-    def SQLALCHEMY_TRACK_MODIFICATIONS(self):
-        return False
-
-    @property
-    def SQLALCHEMY_DATABASE_URI(self):
-        return self.config.get_database_uri()
 
     @property
     def EMAIL_WHITELIST(self):

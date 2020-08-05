@@ -21,7 +21,7 @@ from flask_jwt_extended import decode_token
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from mash.services.api.extensions import db
+from mash.services.database.extensions import db
 from mash.services.database.models import (
     User,
     Token
