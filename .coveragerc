@@ -2,3 +2,4 @@
 omit =
     */version.py
     */wsgi.py
+    */migrations/*
