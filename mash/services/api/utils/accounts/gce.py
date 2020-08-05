@@ -19,7 +19,7 @@
 from flask import current_app
 
 from mash.mash_exceptions import MashDBException
-from mash.services.api.extensions import db
+from mash.services.database.extensions import db
 from mash.services.api.utils.users import get_user_by_id
 from mash.services.database.models import GCEAccount
 from mash.utils.mash_utils import handle_request
