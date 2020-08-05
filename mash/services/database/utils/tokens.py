@@ -82,8 +82,8 @@ def revoke_token_by_jti(jti, user_id):
         db.session.delete(token)
         db.session.commit()
         return 1
-    else:
-        return 0
+    
+    return 0
 
 
 def revoke_user_tokens(user_id):
