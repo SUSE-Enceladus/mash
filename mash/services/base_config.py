@@ -475,3 +475,17 @@ class BaseConfig(object):
             )
 
         return redirect_port
+
+    def get_database_api_url(self):
+        """
+        Return the database API URL.
+        :rtype: string
+        """
+        database_api_url = self._get_attribute(
+            attribute='database_api_url'
+        )
+
+        if database_api_url and not database_api_url.endswith('/'):
+            database_api_url += '/'
+
+        return database_api_url or Defaults.get_database_api_url()

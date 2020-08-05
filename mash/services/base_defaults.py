@@ -127,3 +127,7 @@ class Defaults(object):
     @staticmethod
     def get_auth_methods():
         return ['password']
+
+    @staticmethod
+    def get_database_api_url():
+        return 'http://localhost:5007/'

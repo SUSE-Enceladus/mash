@@ -9,6 +9,7 @@ amqp_pass: guest
 smtp_user: user@test.com
 smtp_pass: super.secret
 credentials_url: http://localhost:5006
+database_api_url: http://localhost:5057
 database_uri: sqlite:////var/lib/mash/app.db
 max_oci_attempts: 500
 max_oci_wait_seconds: 1000

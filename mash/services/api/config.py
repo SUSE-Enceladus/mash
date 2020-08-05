@@ -119,3 +119,7 @@ class Config(object):
     @property
     def SERVICE_NAMES(self):
         return self.config.get_service_names()
+
+    @property
+    def DATABASE_API_URL(self):
+        return self.config.get_database_api_url()
