@@ -21,7 +21,7 @@ import logging
 from flask import Flask
 from flask.logging import default_handler
 
-from mash.services.api.extensions import api, db, jwt, migrate
+from mash.services.api.extensions import api, jwt
 
 from mash.log.filter import BaseServiceFilter
 from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
@@ -121,8 +121,6 @@ def register_namespaces():
 
 def register_extensions(app):
     """Register Flask extensions."""
-    db.init_app(app)
-    migrate.init_app(app, db)
     jwt.init_app(app)
     api.init_app(app)
 
