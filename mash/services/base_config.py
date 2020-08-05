@@ -496,6 +496,7 @@ class BaseConfig(object):
     def get_database_api_url(self):
         """
         Return the database API URL.
+
         :rtype: string
         """
         database_api_url = self._get_attribute(
