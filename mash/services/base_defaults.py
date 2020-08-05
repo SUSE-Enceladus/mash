@@ -131,3 +131,7 @@ class Defaults(object):
     @staticmethod
     def get_download_dir():
         return '/var/lib/mash/images/'
+
+    @staticmethod
+    def get_database_api_url():
+        return 'http://localhost:5007/'
