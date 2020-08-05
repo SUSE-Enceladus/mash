@@ -82,7 +82,7 @@ def revoke_token_by_jti(jti, user_id):
         db.session.delete(token)
         db.session.commit()
         return 1
-    
+
     return 0
 
 
