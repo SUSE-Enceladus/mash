@@ -19,7 +19,7 @@
 import json
 
 from flask import jsonify, request, make_response, current_app
-from flask_restplus import fields, marshal, Namespace, Resource
+from flask_restplus import Namespace, Resource
 
 from flask_jwt_extended import (
     jwt_required,
@@ -41,16 +41,11 @@ from mash.services.api.utils.users import (
     reset_user_password,
     change_user_password
 )
+from mash.services.database.routes.users import user_response
 
 api = Namespace(
     'User',
     description='User operations'
-)
-get_account_response = api.model(
-    'get_account_response', {
-        'id': fields.String,
-        'email': fields.String
-    }
 )
 add_account_request = api.schema_model(
     'add_account_request', add_account
@@ -65,6 +60,7 @@ password_change_request = api.schema_model(
     'password_change_request', password_change
 )
 
+api.models['user_response'] = user_response
 api.models['default_response'] = default_response
 
 
@@ -72,8 +68,8 @@ api.models['default_response'] = default_response
 class Account(Resource):
     @api.doc('create_mash_account')
     @api.expect(add_account_request)
-    @api.response(201, 'Created account', get_account_response)
-    @api.response(400, 'Validation error', validation_error_response)
+    @api.response(201, 'Created account', user_response)
+    @api.response(400, 'Validation error', default_response)
     @api.response(403, 'Forbidden', default_response)
     @api.response(409, 'Already in use', default_response)
     def post(self):
@@ -89,18 +85,12 @@ class Account(Resource):
             user = add_user(data['email'], data['password'])
         except MashDBException as error:
             return make_response(
-                jsonify({
-                    "errors": {"password": str(error)},
-                    "message": "Input payload validation failed"
-                }),
+                jsonify({"msg": str(error)}),
                 400
             )
 
         if user:
-            return make_response(
-                jsonify(marshal(user, get_account_response)),
-                201
-            )
+            return make_response(jsonify(user), 201)
         else:
             return make_response(
                 jsonify({'msg': 'Email already in use'}),
@@ -109,8 +99,8 @@ class Account(Resource):
 
     @api.doc('get_mash_account')
     @api.doc(security='apiKey')
-    @api.marshal_with(get_account_response)
     @jwt_required
+    @api.response(200, 'Account', user_response)
     @api.response(401, 'Unauthorized', default_response)
     @api.response(422, 'Not processable', default_response)
     def get(self):
@@ -118,7 +108,7 @@ class Account(Resource):
         Returns MASH account.
         """
         user = get_user_by_id(get_jwt_identity())
-        return user
+        return make_response(jsonify(user), 200)
 
     @api.doc('delete_mash_account')
     @api.doc(security='apiKey')
@@ -156,19 +146,21 @@ class UserPassword(Resource):
         """
         data = json.loads(request.data.decode())
 
-        if reset_user_password(data['email']):
-            return make_response(
-                jsonify({
-                    'msg': 'Password reset submitted. An email '
-                           'will be sent with steps to change your password.'
-                }),
-                200
-            )
-        else:
+        try:
+            reset_user_password(data['email'])
+        except Exception:
             return make_response(
                 jsonify({'msg': 'Password reset failed.'}),
                 404
             )
+
+        return make_response(
+            jsonify({
+                'msg': 'Password reset submitted. An email '
+                       'will be sent with steps to change your password.'
+            }),
+            200
+        )
 
     @api.doc('password_change')
     @api.expect(password_change_request)
@@ -179,15 +171,21 @@ class UserPassword(Resource):
         """
         data = json.loads(request.data.decode())
 
-        if change_user_password(data['email'], data['current_password'], data['new_password']):
-            return make_response(
-                jsonify({
-                    'msg': 'Password changed successfully. You can now login.'
-                }),
-                200
+        try:
+            change_user_password(
+                data['email'],
+                data['current_password'],
+                data['new_password']
             )
-        else:
+        except Exception as error:
             return make_response(
-                jsonify({'msg': 'Password change failed.'}),
+                jsonify({'msg': str(error)}),
                 404
             )
+
+        return make_response(
+            jsonify({
+                'msg': 'Password changed successfully. You can now login.'
+            }),
+            200
+        )
