@@ -2,184 +2,195 @@ import json
 
 from unittest.mock import patch, Mock
 
-from mash.mash_exceptions import MashDBException
-
 
 @patch('mash.services.api.routes.user.current_app')
-@patch('mash.services.api.routes.user.add_user')
-def test_api_create_user(mock_add_user, mock_current_app, test_client):
-    user = Mock()
-    user.id = '1'
-    user.email = 'user1@fake.com'
-
-    mock_add_user.return_value = user
+@patch('mash.services.api.utils.users.handle_request')
+def test_api_create_user(mock_handle_request, mock_current_app, test_client):
+    user = {
+        'id': '1',
+        'email': 'user1@fake.com'
+    }
+    response = Mock()
+    response.json.return_value = user
+    mock_handle_request.return_value = response
     mock_current_app.config = {'AUTH_METHODS': ['password']}
 
     data = {
         'email': 'user1@fake.com',
         'password': 'secretpassword123'
     }
-    response = test_client.post(
+    result = test_client.post(
         '/user/',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    mock_add_user.assert_called_once_with(
-        'user1@fake.com',
-        'secretpassword123'
-    )
-
-    assert response.status_code == 201
-    assert response.json['id'] == "1"
-    assert response.json['email'] == "user1@fake.com"
+    assert result.status_code == 201
+    assert result.json['id'] == "1"
+    assert result.json['email'] == "user1@fake.com"
 
     # User exists
-    mock_add_user.return_value = None
+    response.json.return_value = {}
 
-    response = test_client.post(
+    result = test_client.post(
         '/user/',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    assert response.status_code == 409
-    assert response.data == b'{"msg":"Email already in use"}\n'
+    assert result.status_code == 409
+    assert result.data == b'{"msg":"Email already in use"}\n'
 
     # Password too short
     data['password'] = 'secret'
-    mock_add_user.side_effect = MashDBException(
-        'Password too short. Minimum length is 8 characters.'
-    )
-    response = test_client.post(
+    result = test_client.post(
         '/user/',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    assert response.status_code == 400
-    assert response.data == \
-        b'{"errors":{"password":"Password too short. ' \
-        b'Minimum length is 8 characters."},"message":' \
-        b'"Input payload validation failed"}\n'
+    assert result.status_code == 400
+    assert result.data == \
+        b'{"msg":"Password too short. ' \
+        b'Minimum length is 8 characters."}\n'
 
     # Fail with forbidden auth method
     mock_current_app.config = {'AUTH_METHODS': ['oauth2']}
 
-    response = test_client.post(
+    result = test_client.post(
         '/user/',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
-    assert response.status_code == 403
+    assert result.status_code == 403
 
 
-@patch('mash.services.api.routes.user.get_user_by_id')
+@patch('mash.services.api.utils.users.handle_request')
 @patch('mash.services.api.routes.user.get_jwt_identity')
 @patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_get_user(
         mock_jwt_required,
         mock_jwt_identity,
-        mock_get_user,
+        mock_handle_request,
         test_client
 ):
-    user = Mock()
-    user.id = '1'
-    user.email = 'user1@fake.com'
-    mock_get_user.return_value = user
+    user = {
+        'id': '1',
+        'email': 'user1@fake.com'
+    }
+    response = Mock()
+    response.json.return_value = user
+    mock_handle_request.return_value = response
     mock_jwt_identity.return_value = '1'
 
-    response = test_client.get('/user/')
+    result = test_client.get('/user/')
 
-    assert response.status_code == 200
-    assert response.json['id'] == "1"
-    assert response.json['email'] == "user1@fake.com"
+    assert result.status_code == 200
+    assert result.json['id'] == "1"
+    assert result.json['email'] == "user1@fake.com"
 
 
-@patch('mash.services.api.routes.user.delete_user')
+@patch('mash.services.api.utils.users.handle_request')
 @patch('mash.services.api.routes.user.get_jwt_identity')
 @patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_delete_user(
         mock_jwt_required,
         mock_jwt_identity,
-        mock_delete_user,
+        mock_handle_request,
         test_client
 ):
-    mock_delete_user.return_value = 1
     mock_jwt_identity.return_value = 'user1'
 
-    response = test_client.delete('/user/')
+    result = test_client.delete('/user/')
 
-    assert response.status_code == 200
-    assert response.data == b'{"msg":"Account deleted"}\n'
+    assert result.status_code == 200
+    assert result.data == b'{"msg":"Account deleted"}\n'
 
     # Not found
-    mock_delete_user.return_value = 0
-    response = test_client.delete('/user/')
+    mock_handle_request.side_effect = Exception('Fail')
+    result = test_client.delete('/user/')
 
-    assert response.status_code == 400
-    assert response.data == b'{"msg":"Delete account failed"}\n'
+    assert result.status_code == 400
+    assert result.data == b'{"msg":"Delete account failed"}\n'
 
 
-@patch('mash.services.api.routes.user.reset_user_password')
+@patch('mash.services.api.routes.user.current_app')
+@patch('mash.services.api.utils.users.handle_request')
 def test_api_password_reset(
-    mock_reset_password,
+    mock_handle_request,
+    mock_current_app,
     test_client
 ):
-    mock_reset_password.return_value = 1
+    response = Mock()
+    response.json.return_value = {'password': 'fake'}
+    mock_handle_request.return_value = response
 
     data = {'email': 'user1@fake.com'}
 
-    response = test_client.post(
+    result = test_client.post(
         '/user/password',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    assert response.status_code == 200
-    assert b'Password reset submitted.' in response.data
+    assert result.status_code == 200
+    assert b'Password reset submitted.' in result.data
+    mock_current_app.notification_class.send_notification.call_count == 1
 
     # Not found
-    mock_reset_password.return_value = 0
-    response = test_client.post(
+    mock_handle_request.side_effect = Exception('Fail')
+    result = test_client.post(
         '/user/password',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    assert response.status_code == 404
-    assert response.data == b'{"msg":"Password reset failed."}\n'
+    assert result.status_code == 404
+    assert result.data == b'{"msg":"Password reset failed."}\n'
 
 
-@patch('mash.services.api.routes.user.change_user_password')
+@patch('mash.services.api.routes.user.current_app')
+@patch('mash.services.api.utils.users.handle_request')
 def test_api_password_change(
-    mock_change_password,
+    mock_handle_request,
+    mock_current_app,
     test_client
 ):
-    mock_change_password.return_value = 1
-
     data = {
         'email': 'user1@fake.com',
         'current_password': 'pass',
         'new_password': 'betterpassword'
     }
 
-    response = test_client.put(
+    result = test_client.put(
         '/user/password',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    assert response.status_code == 200
-    assert b'Password changed successfully.' in response.data
+    assert result.status_code == 200
+    assert b'Password changed successfully.' in result.data
+    mock_current_app.notification_class.send_notification.call_count == 1
 
     # Not found
-    mock_change_password.return_value = 0
-    response = test_client.put(
+    mock_handle_request.side_effect = Exception('Password change failed.')
+    result = test_client.put(
         '/user/password',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    assert response.status_code == 404
-    assert response.data == b'{"msg":"Password change failed."}\n'
+    assert result.status_code == 404
+    assert result.data == b'{"msg":"Password change failed."}\n'
+
+    # Password too short
+    data['new_password'] = 'pass12'
+    result = test_client.put(
+        '/user/password',
+        content_type='application/json',
+        data=json.dumps(data, sort_keys=True)
+    )
+
+    assert result.status_code == 404
+    assert result.data == \
+        b'{"msg":"Password too short. Minimum length is 8 characters."}\n'

@@ -3,27 +3,26 @@ import json
 from unittest.mock import patch, call, Mock
 
 
-@patch('mash.services.api.routes.auth.is_password_dirty')
+@patch('mash.services.api.utils.users.handle_request')
 @patch('mash.services.api.routes.auth.add_token_to_database')
 @patch('mash.services.api.routes.auth.create_refresh_token')
 @patch('mash.services.api.routes.auth.create_access_token')
-@patch('mash.services.api.routes.auth.verify_login')
 @patch('mash.services.api.routes.auth.current_app')
 def test_api_login(
         mock_current_app,
-        mock_verify_login,
         mock_create_access_token,
         mock_create_refresh_token,
         mock_add_token_to_database,
-        mock_is_password_dirty,
+        mock_handle_request,
         test_client
 ):
     mock_current_app.config = {'AUTH_METHODS': ['password']}
     data = {'email': 'user1@fake.com', 'password': 'super-secret'}
-    mock_verify_login.return_value = False
 
     # Password is dirty
-    mock_is_password_dirty.return_value = True
+    mock_handle_request.side_effect = Exception(
+        'Password change is required before you can login.'
+    )
 
     response = test_client.post(
         '/auth/login',
@@ -36,51 +35,54 @@ def test_api_login(
         b'{"msg":"Password change is required before you can login."}\n'
 
     # Email or password invalid
-    mock_is_password_dirty.return_value = False
+    response = Mock()
+    response.json.return_value = {}
+    mock_handle_request.side_effect = None
+    mock_handle_request.return_value = response
 
-    response = test_client.post(
+    result = test_client.post(
         '/auth/login',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    assert response.status_code == 401
-    assert response.data == b'{"msg":"Email or password is invalid"}\n'
+    assert result.status_code == 401
+    assert result.data == b'{"msg":"Email or password is invalid"}\n'
 
     # Success
-    user = Mock()
-    user.id = 1
-    mock_verify_login.return_value = user
+    response.json.return_value = {'id': '1'}
     access_token = '54321'
     refresh_token = '12345'
 
     mock_create_access_token.return_value = access_token
     mock_create_refresh_token.return_value = refresh_token
 
-    response = test_client.post(
+    result = test_client.post(
         '/auth/login',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
     mock_add_token_to_database.assert_has_calls([
-        call(access_token, 1),
-        call(refresh_token, 1)
+        call(access_token, '1'),
+        call(refresh_token, '1')
     ])
 
-    assert response.status_code == 200
-    assert response.json['access_token'] == '54321'
-    assert response.json['refresh_token'] == '12345'
+    assert result.status_code == 200
+    assert result.json['access_token'] == '54321'
+    assert result.json['refresh_token'] == '12345'
 
+    # Password login disabled
     mock_current_app.config = {'AUTH_METHODS': ['oauth2']}
 
-    response = test_client.post(
+    result = test_client.post(
         '/auth/login',
         content_type='application/json',
         data=json.dumps(data, sort_keys=True)
     )
 
-    assert response.status_code == 403
+    assert result.status_code == 403
+    assert result.data == b'{"msg":"Password based login is disabled"}\n'
 
 
 @patch('mash.services.api.routes.auth.revoke_token_by_jti')
@@ -145,7 +147,7 @@ def test_api_oauth2_get(
 @patch('mash.services.api.routes.auth.add_token_to_database')
 @patch('mash.services.api.routes.auth.create_refresh_token')
 @patch('mash.services.api.routes.auth.create_access_token')
-@patch('mash.services.api.routes.auth.get_user_by_email')
+@patch('mash.services.api.utils.users.handle_request')
 @patch('mash.services.api.routes.auth.email_in_whitelist')
 @patch('mash.services.api.routes.auth.decode_token')
 @patch('mash.services.api.routes.auth.OAuth2Session')
@@ -155,7 +157,7 @@ def test_oauth2_login(
         mock_oauth2_session,
         mock_decode_token,
         mock_email_in_whitelist,
-        mock_get_user_by_email,
+        mock_handle_request,
         mock_create_access_token,
         mock_create_refresh_token,
         mock_add_token_to_database,
@@ -184,9 +186,9 @@ def test_oauth2_login(
     }
     mock_decode_token.return_value = {'email': 'user1@fake.com'}
     mock_email_in_whitelist.return_value = False
-    user = Mock()
-    user.id = 1
-    mock_get_user_by_email.return_value = user
+    result = Mock()
+    result.json.return_value = {'id': '1'}
+    mock_handle_request.return_value = result
 
     response = test_client.post(
         '/auth/oauth2',
@@ -212,8 +214,8 @@ def test_oauth2_login(
     )
 
     mock_add_token_to_database.assert_has_calls([
-        call(access_token, 1),
-        call(refresh_token, 1)
+        call(access_token, '1'),
+        call(refresh_token, '1')
     ])
 
     assert response.status_code == 200

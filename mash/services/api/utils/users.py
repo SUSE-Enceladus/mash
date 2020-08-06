@@ -16,15 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import string
-
-from secrets import choice
-
 from flask import current_app
-from sqlalchemy.exc import IntegrityError
 
-from mash.services.database.extensions import db
-from mash.services.database.models import User
 from mash.services.api.variables import (
     password_change_msg_template,
     password_reset_msg_template
@@ -51,24 +44,17 @@ def add_user(email, password=None):
             'Cannot create a user with the provided email. Access denied.'
         )
 
-    user = User(
-        email=email
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'users/',
+        'post',
+        job_data={
+            'email': email,
+            'password': password
+        }
     )
-    if not password:
-        password = ''.join(
-            [choice(string.ascii_letters + string.digits) for n in range(64)]
-        )
-    user.set_password(password)
 
-    try:
-        db.session.add(user)
-        db.session.commit()
-    except IntegrityError as ie:
-        current_app.logger.warning(ie)
-        db.session.rollback()
-        return None
-
-    return user
+    return response.json()
 
 
 def email_in_whitelist(email):
@@ -93,17 +79,16 @@ def verify_login(email, password):
     If hashes match the user is authenticated
     and user instance is returned.
     """
-    user = get_user_by_email(email)
-
-    if user and user.check_password(password):
-        return user
-    else:
-        return None
-
-
-def is_password_dirty(email):
-    user = get_user_by_email(email)
-    return user.password_dirty
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'users/login/',
+        'post',
+        job_data={
+            'email': email,
+            'password': password
+        }
+    )
+    return response.json()
 
 
 def get_user_by_email(email, create=False):
@@ -113,10 +98,15 @@ def get_user_by_email(email, create=False):
     If the user does not exist and create is True, the user
     is created on the fly. Otherwise None is returned.
     """
-    user = User.query.filter_by(email=email).first()
-    if not user and create is True:
-        user = add_user(email)
-    return user
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'users/get_user/{email}'.format(email=email),
+        'get',
+        job_data={
+            'create': create
+        }
+    )
+    return response.json()
 
 
 def get_user_by_id(user_id):
@@ -125,8 +115,12 @@ def get_user_by_id(user_id):
 
     If user does not exist return None.
     """
-    user = User.query.filter_by(id=user_id).first()
-    return user
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'users/{user}'.format(user=user_id),
+        'get'
+    )
+    return response.json()
 
 
 def delete_user(user_id):
@@ -135,19 +129,16 @@ def delete_user(user_id):
 
     If user does not exist return 0.
     """
-    user = get_user_by_id(user_id)
-
-    if user:
-        db.session.delete(user)
-        db.session.commit()
+    try:
         handle_request(
-            current_app.config['CREDENTIALS_URL'],
-            'credentials/{user}'.format(user=user_id),
+            current_app.config['DATABASE_API_URL'],
+            'users/{user}'.format(user=user_id),
             'delete'
         )
-        return 1
-    else:
+    except Exception:
         return 0
+
+    return 1
 
 
 def reset_user_password(email):
@@ -161,25 +152,18 @@ def reset_user_password(email):
 
     If user does not exist return 0.
     """
-    user = get_user_by_email(email)
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'users/password/reset/{email}'.format(email=email),
+        'post'
+    )
+    password = response.json()['password']
 
-    if user:
-        password = ''.join(
-            [choice(string.ascii_letters + string.digits) for _ in range(24)]
-        )
-        user.set_password(password)
-        user.password_dirty = True
-        user.tokens = []  # Revoke all user sessions
-        db.session.commit()
-        current_app.notification_class.send_notification(
-            password_reset_msg_template.format(password=password),
-            '[MASH] Password Reset',
-            user.email
-        )
-
-        return 1
-    else:
-        return 0
+    current_app.notification_class.send_notification(
+        password_reset_msg_template.format(password=password),
+        '[MASH] Password Reset',
+        email
+    )
 
 
 def change_user_password(email, current_password, new_password):
@@ -187,21 +171,24 @@ def change_user_password(email, current_password, new_password):
     Change password for user if user exists and existing password matches.
 
     And reset the password to clean so the user can login again.
-
-    If user does not exist return 0.
     """
-    user = get_user_by_email(email)
-
-    if user and user.check_password(current_password):
-        user.set_password(new_password)
-        user.password_dirty = False
-        db.session.commit()
-        current_app.notification_class.send_notification(
-            password_change_msg_template,
-            '[MASH] Password Changed',
-            user.email
+    if len(new_password) < 8:
+        raise MashDBException(
+            'Password too short. Minimum length is 8 characters.'
         )
 
-        return 1
-    else:
-        return 0
+    handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'users/password/change/{email}'.format(email=email),
+        'post',
+        job_data={
+            'current_password': current_password,
+            'new_password': new_password
+        }
+    )
+
+    current_app.notification_class.send_notification(
+        password_change_msg_template,
+        '[MASH] Password Changed',
+        email
+    )

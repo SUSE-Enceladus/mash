@@ -43,8 +43,7 @@ from mash.services.api.utils.tokens import (
 from mash.services.api.utils.users import (
     verify_login,
     email_in_whitelist,
-    get_user_by_email,
-    is_password_dirty
+    get_user_by_email
 )
 from mash.services.api.utils.jwt import decode_token
 
@@ -100,21 +99,20 @@ class Login(Resource):
         data = json.loads(request.data.decode())
         email = data['email']
 
-        if is_password_dirty(email):
+        try:
+            user = verify_login(email, data['password'])
+        except Exception as error:
             return make_response(
-                jsonify({
-                    'msg': 'Password change is required before you can login.'
-                }),
+                jsonify({'msg': str(error)}),
                 403
             )
 
-        user = verify_login(email, data['password'])
         if user:
-            access_token = create_access_token(identity=user.id)
-            refresh_token = create_refresh_token(identity=user.id)
+            access_token = create_access_token(identity=user['id'])
+            refresh_token = create_refresh_token(identity=user['id'])
 
-            add_token_to_database(access_token, user.id)
-            add_token_to_database(refresh_token, user.id)
+            add_token_to_database(access_token, user['id'])
+            add_token_to_database(refresh_token, user['id'])
 
             response = {
                 'access_token': access_token,
@@ -238,11 +236,11 @@ class OAuth2Request(Resource):
 
         if email_in_whitelist(user_email):
             user = get_user_by_email(user_email, create=True)
-            access_token = create_access_token(identity=user.id)
-            refresh_token = create_refresh_token(identity=user.id)
+            access_token = create_access_token(identity=user['id'])
+            refresh_token = create_refresh_token(identity=user['id'])
 
-            add_token_to_database(access_token, user.id)
-            add_token_to_database(refresh_token, user.id)
+            add_token_to_database(access_token, user['id'])
+            add_token_to_database(refresh_token, user['id'])
 
             response = {
                 'access_token': access_token,
