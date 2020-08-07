@@ -92,7 +92,7 @@ def validate_job(data):
     if 'notification_type' in data and not data.get('notification_email'):
         user_id = data['requesting_user']
         user = get_user_by_id(user_id)
-        data['notification_email'] = user.email
+        data['notification_email'] = user['email']
 
     return data
 
