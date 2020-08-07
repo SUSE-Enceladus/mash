@@ -18,15 +18,12 @@
 import json
 
 from flask import jsonify, request, make_response, current_app
-from flask_restplus import fields, marshal, Model, Namespace, Resource
+from flask_restplus import Namespace, Resource
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity
 )
 
-from sqlalchemy.exc import IntegrityError
-
-from mash.mash_exceptions import MashException
 from mash.services.api.utils.accounts.ec2 import (
     create_ec2_account,
     get_ec2_accounts,
@@ -42,6 +39,7 @@ from mash.services.api.schema.accounts.ec2 import (
     add_account_ec2,
     ec2_account_update
 )
+from mash.services.database.routes.accounts.ec2 import ec2_account_response, region, group
 
 api = Namespace(
     'EC2 Accounts',
@@ -57,35 +55,6 @@ update_ec2_account_request = api.schema_model(
 )
 validation_error_response = api.schema_model(
     'validation_error', validation_error
-)
-
-region = Model(
-    'region', {
-        'id': fields.String,
-        'name': fields.String,
-        'helper_image': fields.String
-    }
-)
-
-group = Model(
-    'group', {
-        'id': fields.String,
-        'name': fields.String
-    }
-)
-
-ec2_account_response = Model(
-    'ec2_account_response', {
-        'id': fields.String,
-        'name': fields.String,
-        'partition': fields.String,
-        'region': fields.String,
-        'subnet': fields.String,
-        'additional_regions': api.as_list(
-            fields.Nested(region, skip_none=True)
-        ),
-        'group': fields.Nested(group, skip_none=True)
-    }
 )
 
 api.models['region'] = region
@@ -108,7 +77,6 @@ class EC2AccountCreateAndList(Resource):
     @api.expect(add_ec2_account_request)
     @api.response(201, 'Created EC2 account', ec2_account_response)
     @api.response(400, 'Validation error', validation_error_response)
-    @api.response(409, 'Duplicate account', default_response)
     def post(self):
         """
         Create a new EC2 account.
@@ -118,39 +86,19 @@ class EC2AccountCreateAndList(Resource):
         try:
             account = create_ec2_account(
                 get_jwt_identity(),
-                data['account_name'],
-                data['partition'],
-                data['region'],
-                data['credentials'],
-                data.get('subnet'),
-                data.get('group'),
-                data.get('additional_regions')
-            )
-        except MashException as error:
-            return make_response(
-                jsonify({'msg': str(error)}),
-                400
-            )
-        except IntegrityError:
-            return make_response(
-                jsonify({'msg': 'Account already exists'}),
-                409
+                data
             )
         except Exception as error:
             current_app.logger.warning(error)
             return make_response(
-                jsonify({'msg': 'Failed to add EC2 account'}),
+                jsonify({'msg': str(error)}),
                 400
             )
 
-        return make_response(
-            jsonify(marshal(account, ec2_account_response, skip_none=True)),
-            201
-        )
+        return make_response(jsonify(account), 201)
 
     @api.doc('get_ec2_accounts')
     @jwt_required
-    @api.marshal_list_with(ec2_account_response, skip_none=True)
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -202,13 +150,13 @@ class EC2Account(Resource):
         """
         Get EC2 account.
         """
-        account = get_ec2_account(name, get_jwt_identity())
+        try:
+            account = get_ec2_account(name, get_jwt_identity())
+        except Exception:
+            account = None
 
         if account:
-            return make_response(
-                jsonify(marshal(account, ec2_account_response, skip_none=True)),
-                200
-            )
+            return make_response(jsonify(account), 200)
         else:
             return make_response(
                 jsonify({'msg': 'EC2 account not found'}),
@@ -231,11 +179,7 @@ class EC2Account(Resource):
             account = update_ec2_account(
                 name,
                 get_jwt_identity(),
-                data.get('additional_regions'),
-                data.get('credentials'),
-                data.get('group'),
-                data.get('region'),
-                data.get('subnet')
+                data
             )
         except Exception as error:
             current_app.logger.warning(error)
@@ -245,10 +189,7 @@ class EC2Account(Resource):
             )
 
         if account:
-            return make_response(
-                jsonify(marshal(account, ec2_account_response, skip_none=True)),
-                200
-            )
+            return make_response(jsonify(account), 200)
         else:
             return make_response(
                 jsonify({'msg': 'EC2 account not found'}),
