@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -17,7 +17,7 @@
 #
 
 from flask import jsonify, make_response
-from flask_restplus import fields, marshal, Namespace, Resource
+from flask_restplus import fields, Namespace, Resource
 
 from flask_jwt_extended import (
     create_access_token,
@@ -36,6 +36,7 @@ from mash.services.api.utils.tokens import (
     revoke_tokens,
     revoke_token_by_jti
 )
+from mash.services.database.routes.tokens import token_response
 
 api = Namespace(
     'Token',
@@ -47,16 +48,9 @@ refresh_response = api.model(
         'access_token': fields.String
     }
 )
-token_response = api.model(
-    'token_response', {
-        'id': fields.String,
-        'jti': fields.String,
-        'token_type': fields.String,
-        'expires': fields.DateTime
-    }
-)
 
 api.models['default_response'] = default_response
+api.models['token_response'] = token_response
 
 
 @api.route('/refresh')
@@ -86,13 +80,12 @@ class RefreshToken(Resource):
 class ListTokens(Resource):
     @api.doc('list_auth_tokens')
     @jwt_required
-    @api.marshal_list_with(token_response)
     def get(self):
         """
         Get list of all authorization tokens.
         """
         tokens = get_user_tokens(get_jwt_identity())
-        return tokens
+        return make_response(jsonify(tokens), 200)
 
     @api.doc('delete_all_auth_tokens')
     @jwt_required
@@ -151,10 +144,7 @@ class Token(Resource):
         token = get_token_by_jti(jti, get_jwt_identity())
 
         if token:
-            return make_response(
-                jsonify(marshal(token, token_response)),
-                200
-            )
+            return make_response(jsonify(token), 200)
         else:
             return make_response(
                 jsonify({'msg': 'Token not found'}),
