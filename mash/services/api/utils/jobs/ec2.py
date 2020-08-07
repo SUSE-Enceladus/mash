@@ -21,7 +21,10 @@ import copy
 from flask import current_app
 
 from mash.mash_exceptions import MashJobException
-from mash.services.api.utils.accounts.ec2 import get_ec2_group, get_ec2_account
+from mash.services.api.utils.accounts.ec2 import (
+    get_accounts_in_ec2_group,
+    get_ec2_account
+)
 from mash.services.api.utils.jobs import validate_job
 
 
@@ -59,21 +62,21 @@ def add_target_ec2_account(
     - Append any additional regions
     - Update ami for root swap if use_root_swap set
     """
-    job_doc_data = cloud_accounts.get(account.name, {})
-    region_name = job_doc_data.get('region') or account.region
-    subnet = job_doc_data.get('subnet') or account.subnet
+    job_doc_data = cloud_accounts.get(account['name'], {})
+    region_name = job_doc_data.get('region') or account.get('region')
+    subnet = job_doc_data.get('subnet') or account.get('subnet')
 
     if skip_replication:
         regions = [region_name]
-        if account.additional_regions:  # In case an additional region is used
-            for region in account.additional_regions:
-                helper_images[region.name] = region.helper_image
+        if account.get('additional_regions'):  # In case an additional region is used
+            for region in account['additional_regions']:
+                helper_images[region['name']] = region['helper_image']
     else:
-        regions = get_ec2_regions_by_partition(account.partition)
-        if account.additional_regions:
-            for region in account.additional_regions:
-                helper_images[region.name] = region.helper_image
-                regions.append(region.name)
+        regions = get_ec2_regions_by_partition(account['partition'])
+        if account.get('additional_regions'):
+            for region in account['additional_regions']:
+                helper_images[region['name']] = region['helper_image']
+                regions.append(region['name'])
 
     if use_root_swap:
         try:
@@ -81,14 +84,14 @@ def add_target_ec2_account(
         except KeyError:
             raise MashJobException(
                 'root_swap_ami is required for account {0},'
-                ' when using root swap.'.format(account.name)
+                ' when using root swap.'.format(account['name'])
             )
     else:
         helper_image = helper_images[region_name]
 
     accounts[region_name] = {
-        'account': account.name,
-        'partition': account.partition,
+        'account': account['name'],
+        'partition': account['partition'],
         'target_regions': regions,
         'helper_image': helper_image,
         'subnet': subnet
@@ -132,15 +135,15 @@ def validate_ec2_job(job_doc):
         target_accounts.append(cloud_account)
 
     for group_name in job_doc.get('cloud_groups', []):
-        group = get_ec2_group(group_name, user_id)
-        target_accounts += group.accounts
+        group_accounts = get_accounts_in_ec2_group(group_name, user_id)
+        target_accounts += group_accounts
 
     for account_name in cloud_accounts:
         cloud_account = get_ec2_account(account_name, user_id)
         target_accounts.append(cloud_account)
 
     for account in target_accounts:
-        if account.name not in accounts:
+        if account['name'] not in accounts:
             add_target_ec2_account(
                 account,
                 accounts,

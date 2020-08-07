@@ -172,8 +172,7 @@ def test_validate_job(
     mock_get_services,
     mock_get_user
 ):
-    user = Mock()
-    user.email = 'test@fake.com'
+    user = {'email': 'test@fake.com'}
 
     mock_get_user.return_value = user
     mock_get_services.return_value = ['obs', 'upload']

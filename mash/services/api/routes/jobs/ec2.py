@@ -19,7 +19,7 @@
 import json
 
 from flask import jsonify, request, make_response, current_app
-from flask_restplus import marshal, Namespace, Resource
+from flask_restplus import Namespace, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from mash.mash_exceptions import MashException
@@ -77,7 +77,7 @@ class EC2JobCreate(Resource):
 
         if job:
             return make_response(
-                jsonify(marshal(job, job_response, skip_none=True)),
+                jsonify(job),
                 201
             )
         else:
