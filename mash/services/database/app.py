@@ -24,7 +24,7 @@ from flask.logging import default_handler
 from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
 from mash.log.filter import BaseServiceFilter
 from mash.services.database.routes import tokens, users
-from mash.services.database.routes.accounts import azure
+from mash.services.database.routes.accounts import azure, ec2
 from mash.services.database.extensions import db, migrate
 from mash.services.database.commands import tokens_cli
 
@@ -73,6 +73,7 @@ def register_blueprints(app):
     app.register_blueprint(tokens.blueprint)
     app.register_blueprint(users.blueprint)
     app.register_blueprint(azure.blueprint)
+    app.register_blueprint(ec2.blueprint)
 
 
 def register_commands(app):
