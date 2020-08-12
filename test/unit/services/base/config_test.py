@@ -182,4 +182,4 @@ class TestBaseConfig(object):
     def test_get_database_api_url(self):
         assert self.config.get_database_api_url() == 'http://localhost:5057/'
         assert self.empty_config.get_database_api_url() == \
-               'http://localhost:5007/'
+            'http://localhost:5007/'
