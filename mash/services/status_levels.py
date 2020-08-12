@@ -4,3 +4,6 @@ EXCEPTION = 'exception'
 OVERDUE = 'overdue'
 DELETE = 'delete'
 UNKOWN = None
+PENDING = 'pending'
+FINISHED = 'finished'
+RUNNING = 'running'
