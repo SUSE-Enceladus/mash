@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -17,7 +17,7 @@
 #
 
 from flask import jsonify, make_response, current_app
-from flask_restplus import marshal, fields, Namespace, Resource
+from flask_restplus import Namespace, Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from mash.services.api.schema import (
@@ -25,6 +25,7 @@ from mash.services.api.schema import (
     validation_error
 )
 from mash.services.api.utils.jobs import delete_job, get_job, get_jobs
+from mash.services.database.routes.jobs import job_response, job_data
 
 
 api = Namespace(
@@ -32,21 +33,9 @@ api = Namespace(
     description='Job operations'
 )
 
-job_response = api.model(
-    'job_response', {
-        'job_id': fields.String(
-            example='12345678-1234-1234-1234-123456789012'
-        ),
-        'last_service': fields.String(example='test'),
-        'utctime': fields.String(example='now'),
-        'image': fields.String(example='test_image_oem'),
-        'download_url': fields.String(
-            example='http://download.opensuse.org/repositories/Cloud:Tools/images'
-        ),
-        'cloud_architecture': fields.String(example='x86_64'),
-        'profile': fields.String(example='Server')
-    }
-)
+api.models['job_data'] = job_data
+api.models['job_response'] = job_response
+
 validation_error_response = api.schema_model(
     'validation_error', validation_error
 )
@@ -63,14 +52,13 @@ class JobList(Resource):
 
     @api.doc('get_jobs')
     @jwt_required
-    @api.marshal_list_with(job_response, skip_none=True)
-    @api.response(200, 'Success', default_response)
+    @api.response(200, 'Success', job_response)
     def get(self):
         """
         Get all jobs.
         """
         jobs = get_jobs(get_jwt_identity())
-        return jobs
+        return make_response(jsonify(jobs), 200)
 
 
 @api.route('/<string:job_id>')
@@ -91,7 +79,7 @@ class Job(Resource):
         except Exception as error:
             current_app.logger.warning(error)
             return make_response(
-                jsonify({'msg': 'Delete job failed'}),
+                jsonify({'msg': str(error)}),
                 400
             )
 
@@ -114,15 +102,9 @@ class Job(Resource):
         """
         Get job.
         """
-        account = get_job(job_id, get_jwt_identity())
+        job = get_job(job_id, get_jwt_identity())
 
-        if account:
-            return make_response(
-                jsonify(marshal(account, job_response, skip_none=True)),
-                200
-            )
+        if job:
+            return make_response(jsonify(job), 200)
         else:
-            return make_response(
-                jsonify({'msg': 'Job not found'}),
-                404
-            )
+            return make_response(jsonify({'msg': 'Job not found'}), 404)

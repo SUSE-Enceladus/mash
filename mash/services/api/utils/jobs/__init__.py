@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -19,14 +19,15 @@
 import json
 import uuid
 
+from dateutil import parser
 from flask import current_app
 
-from mash.services.database.extensions import db
-from mash.services.database.models import Job, User
 from mash.services.api.utils.amqp import publish
-from mash.services.api.utils.users import get_user_by_id
 from mash.mash_exceptions import MashJobException
 from mash.utils.mash_utils import normalize_dictionary
+from mash.services.status_levels import RUNNING
+from mash.utils.mash_utils import handle_request
+from mash.services.api.utils.users import get_user_by_id
 
 
 def get_new_job_id():
@@ -51,8 +52,13 @@ def create_job(data):
         'utctime': data['utctime'],
         'image': data['image'],
         'download_url': data['download_url'],
-        'user_id': user_id
+        'user_id': user_id,
+        'state': RUNNING,
+        'current_service': current_app.config['SERVICE_NAMES'][0]
     }
+
+    if data['utctime'] not in ('now', 'always'):
+        kwargs['start_time'] = parser.parse(data['utctime'])
 
     if data.get('cloud_architecture'):
         kwargs['cloud_architecture'] = data['cloud_architecture']
@@ -60,19 +66,33 @@ def create_job(data):
     if data.get('profile'):
         kwargs['profile'] = data['profile']
 
-    job = Job(**kwargs)
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'jobs/',
+        'post',
+        job_data=kwargs
+    )
 
     try:
-        db.session.add(job)
         publish(
-            'jobcreator', 'job_document', json.dumps(data, sort_keys=True)
+            'jobcreator',
+            'job_document',
+            json.dumps(data, sort_keys=True)
         )
-        db.session.commit()
     except Exception:
-        db.session.rollback()
-        raise
+        try:
+            handle_request(
+                current_app.config['DATABASE_API_URL'],
+                'jobs/',
+                'delete',
+                job_data={'job_id': job_id, 'user_id': user_id}
+            )
+        except Exception:
+            pass  # Attempt to cleanup job in database
 
-    return job
+        raise MashJobException('Failed to initialize job.')
+
+    return response.json()
 
 
 def validate_job(data):
@@ -150,38 +170,50 @@ def get_job(job_id, user_id):
     """
     Get job for given user.
     """
-    job = Job.query.filter(
-        User.id == user_id
-    ).filter_by(job_id=job_id).first()
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'jobs/',
+        'get',
+        job_data={'job_id': job_id, 'user_id': user_id}
+    )
 
-    return job
+    return response.json()
 
 
 def get_jobs(user_id):
     """
     Retrieve all jobs for user.
     """
-    user = get_user_by_id(user_id)
-    return user.jobs
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'jobs/list/{user}'.format(user=user_id),
+        'get'
+    )
+
+    return response.json()
 
 
 def delete_job(job_id, user_id):
     """Delete job for user."""
-    job = get_job(job_id, user_id)
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'jobs/',
+        'delete',
+        job_data={'job_id': job_id, 'user_id': user_id}
+    )
 
-    if job:
-        try:
-            db.session.delete(job)
-            publish(
-                'jobcreator',
-                'job_document',
-                json.dumps({'job_delete': job_id}, sort_keys=True)
-            )
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
-        else:
-            return 1
-    else:
-        return 0
+    try:
+        rows_deleted = response.json()['rows_deleted']
+    except KeyError:
+        raise MashJobException('Delete job failed')
+
+    try:
+        publish(
+            'jobcreator',
+            'job_document',
+            json.dumps({'job_delete': job_id}, sort_keys=True)
+        )
+    except Exception:
+        pass  # We cannot always cleanup the job from the queue
+
+    return rows_deleted
