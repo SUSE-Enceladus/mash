@@ -69,15 +69,18 @@ def test_get_ec2_helper_images(mock_get_current_object):
 
 @patch('mash.services.api.utils.jobs.ec2.get_ec2_regions_by_partition')
 def test_add_target_ec2_account(mock_get_regions):
-    account = Mock()
-    account.region = 'us-east-100'
-    account.name = 'acnt1'
+    account = {
+        'region': 'us-east-100',
+        'name': 'acnt1',
+        'partition': 'aws',
+        'additional_regions': [
+            {
+                'name': 'us-east-100',
+                'helper_image': 'ami-987'
+            }
+        ]
+    }
 
-    region = Mock()
-    region.name = 'us-east-100'
-    region.helper_image = 'ami-987'
-
-    account.additional_regions = [region]
     mock_get_regions.return_value = ['us-east-99']
 
     cloud_accounts = {'acnt1': {'root_swap_ami': 'ami-456'}}
@@ -137,22 +140,28 @@ def test_convert_account_dict():
 @patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.utils.jobs.ec2.add_target_ec2_account')
 @patch('mash.services.api.utils.jobs.ec2.get_ec2_account')
-@patch('mash.services.api.utils.jobs.ec2.get_ec2_group')
+@patch('mash.services.api.utils.jobs.ec2.get_accounts_in_ec2_group')
 @patch('mash.services.api.utils.jobs.ec2.get_ec2_helper_images')
 def test_validate_ec2_job(
     mock_get_helper_images,
-    mock_get_group,
+    mock_get_group_accounts,
     mock_get_ec2_account,
     mock_add_target_account,
     mock_get_current_obj
 ):
-    account = Mock()
-    account.name = 'acnt1'
+    account = {
+        'region': 'us-east-100',
+        'name': 'acnt1',
+        'partition': 'aws',
+        'additional_regions': [
+            {
+                'name': 'us-east-100',
+                'helper_image': 'ami-987'
+            }
+        ]
+    }
     mock_get_ec2_account.return_value = account
-
-    group = Mock()
-    group.accounts = [account]
-    mock_get_group.return_value = group
+    mock_get_group_accounts.return_value = [account]
 
     app = Mock()
     app.config = {
