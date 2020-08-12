@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -18,14 +18,12 @@
 import json
 
 from flask import jsonify, request, make_response, current_app
-from flask_restplus import fields, marshal, Model, Namespace, Resource
+from flask_restplus import Namespace, Resource
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity
 )
-from sqlalchemy.exc import IntegrityError
 
-from mash.mash_exceptions import MashException
 from mash.services.api.schema import (
     default_response,
     validation_error
@@ -41,6 +39,7 @@ from mash.services.api.utils.accounts.gce import (
     delete_gce_account,
     update_gce_account
 )
+from mash.services.database.routes.accounts.gce import gce_account_response
 
 api = Namespace(
     'GCE Accounts',
@@ -53,17 +52,6 @@ update_gce_account_request = api.schema_model(
 )
 validation_error_response = api.schema_model(
     'validation_error', validation_error
-)
-
-gce_account_response = Model(
-    'gce_account_response', {
-        'id': fields.String,
-        'name': fields.String,
-        'bucket': fields.String,
-        'region': fields.String,
-        'testing_account': fields.String,
-        'is_publishing_account': fields.String
-    }
 )
 
 api.models['gce_account_response'] = gce_account_response
@@ -93,38 +81,19 @@ class GCEAccountCreateAndList(Resource):
         try:
             account = create_gce_account(
                 get_jwt_identity(),
-                data['account_name'],
-                data['bucket'],
-                data['region'],
-                data['credentials'],
-                data.get('testing_account'),
-                data.get('is_publishing_account', False)
-            )
-        except MashException as error:
-            return make_response(
-                jsonify({'msg': str(error)}),
-                400
-            )
-        except IntegrityError:
-            return make_response(
-                jsonify({'msg': 'Account already exists'}),
-                409
+                data
             )
         except Exception as error:
             current_app.logger.warning(error)
             return make_response(
-                jsonify({'msg': 'Failed to add GCE account'}),
+                jsonify({'msg': str(error)}),
                 400
             )
 
-        return make_response(
-            jsonify(marshal(account, gce_account_response, skip_none=True)),
-            201
-        )
+        return make_response(jsonify(account), 201)
 
     @api.doc('get_gce_accounts')
     @jwt_required
-    @api.marshal_list_with(gce_account_response, skip_none=True)
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -176,13 +145,13 @@ class GCEAccount(Resource):
         """
         Get GCE account.
         """
-        account = get_gce_account(name, get_jwt_identity())
+        try:
+            account = get_gce_account(name, get_jwt_identity())
+        except Exception:
+            account = None
 
         if account:
-            return make_response(
-                jsonify(marshal(account, gce_account_response, skip_none=True)),
-                200
-            )
+            return make_response(jsonify(account), 200)
         else:
             return make_response(
                 jsonify({'msg': 'GCE account not found'}),
@@ -205,10 +174,7 @@ class GCEAccount(Resource):
             account = update_gce_account(
                 name,
                 get_jwt_identity(),
-                data.get('bucket'),
-                data.get('region'),
-                data.get('credentials'),
-                data.get('testing_account')
+                data
             )
         except Exception as error:
             current_app.logger.warning(error)
@@ -218,10 +184,7 @@ class GCEAccount(Resource):
             )
 
         if account:
-            return make_response(
-                jsonify(marshal(account, gce_account_response, skip_none=True)),
-                200
-            )
+            return make_response(jsonify(account), 200)
         else:
             return make_response(
                 jsonify({'msg': 'GCE account not found'}),
