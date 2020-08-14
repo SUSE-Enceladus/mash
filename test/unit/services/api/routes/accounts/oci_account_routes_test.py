@@ -1,19 +1,18 @@
 import json
 
-from sqlalchemy.exc import IntegrityError
 from unittest.mock import patch, Mock
 
 from mash.mash_exceptions import MashException
 
 
-@patch('mash.services.api.routes.accounts.oci.create_oci_account')
+@patch('mash.services.api.utils.accounts.oci.handle_request')
 @patch('mash.services.api.routes.accounts.oci.get_jwt_identity')
 @patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_add_account_oci(
-        mock_jwt_required,
-        mock_jwt_identity,
-        mock_create_oci_account,
-        test_client
+    mock_jwt_required,
+    mock_jwt_identity,
+    mock_handle_request,
+    test_client
 ):
     mock_jwt_identity.return_value = 'user1'
     request = {
@@ -26,168 +25,150 @@ def test_api_add_account_oci(
         'tenancy': 'ocid1.tenancy.oc1..',
         'signing_key': 'signing_key'
     }
-    response = test_client.post(
+    response = Mock()
+    response.json.return_value = request
+    mock_handle_request.return_value = response
+
+    result = test_client.post(
         '/accounts/oci/',
         content_type='application/json',
         data=json.dumps(request, sort_keys=True)
     )
-    mock_create_oci_account.assert_called_once_with(
-        'user1',
-        'acnt1',
-        'bucket1',
-        'us-phoenix-1',
-        'Omic:PHX-AD-1',
-        'ocid1.compartment.oc1..',
-        'ocid1.user.oc1..',
-        'ocid1.tenancy.oc1..',
-        'signing_key'
-    )
 
-    assert response.status_code == 201
-
-    # Mash Exception
-    mock_create_oci_account.side_effect = MashException('Broken')
-
-    response = test_client.post(
-        '/accounts/oci/',
-        content_type='application/json',
-        data=json.dumps(request, sort_keys=True)
-    )
-    assert response.status_code == 400
-    assert response.data == b'{"msg":"Broken"}\n'
-
-    # Integrity Error
-    mock_create_oci_account.side_effect = IntegrityError('Broken', None, None)
-
-    response = test_client.post(
-        '/accounts/oci/',
-        content_type='application/json',
-        data=json.dumps(request, sort_keys=True)
-    )
-    assert response.status_code == 409
-    assert response.data == b'{"msg":"Account already exists"}\n'
+    assert result.status_code == 201
 
     # Exception
-    mock_create_oci_account.side_effect = Exception('Broken')
+    mock_handle_request.side_effect = Exception('Failed to add OCI account')
 
-    response = test_client.post(
+    result = test_client.post(
         '/accounts/oci/',
         content_type='application/json',
         data=json.dumps(request, sort_keys=True)
     )
-    assert response.status_code == 400
-    assert response.data == b'{"msg":"Failed to add OCI account"}\n'
+    assert result.status_code == 400
+    assert result.data == b'{"msg":"Failed to add OCI account"}\n'
 
 
-@patch('mash.services.api.routes.accounts.oci.delete_oci_account')
+@patch('mash.services.api.utils.accounts.oci.handle_request')
 @patch('mash.services.api.routes.accounts.oci.get_jwt_identity')
 @patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_delete_account_oci(
-        mock_jwt_required,
-        mock_jwt_identity,
-        mock_delete_oci_account,
-        test_client
+    mock_jwt_required,
+    mock_jwt_identity,
+    mock_handle_request,
+    test_client
 ):
-    mock_delete_oci_account.return_value = 1
+    response = Mock()
+    response.json.return_value = {'rows_deleted': 1}
+    mock_handle_request.return_value = response
     mock_jwt_identity.return_value = 'user1'
 
-    response = test_client.delete('/accounts/oci/test')
+    result = test_client.delete('/accounts/oci/test')
 
-    assert response.status_code == 200
-    assert response.data == b'{"msg":"OCI account deleted"}\n'
+    assert result.status_code == 200
+    assert result.data == b'{"msg":"OCI account deleted"}\n'
 
     # Not found
-    mock_delete_oci_account.return_value = 0
+    response.json.return_value = {'rows_deleted': 0}
 
-    response = test_client.delete('/accounts/oci/test')
-    assert response.status_code == 404
-    assert response.data == b'{"msg":"OCI account not found"}\n'
+    result = test_client.delete('/accounts/oci/test')
+    assert result.status_code == 404
+    assert result.data == b'{"msg":"OCI account not found"}\n'
 
     # Exception
-    mock_delete_oci_account.side_effect = Exception('Broken')
+    mock_handle_request.side_effect = Exception('Broken')
 
-    response = test_client.delete('/accounts/oci/test')
-    assert response.status_code == 400
-    assert response.data == b'{"msg":"Delete OCI account failed"}\n'
+    result = test_client.delete('/accounts/oci/test')
+    assert result.status_code == 400
+    assert result.data == b'{"msg":"Delete OCI account failed"}\n'
 
 
-@patch('mash.services.api.routes.accounts.oci.get_oci_account')
+@patch('mash.services.api.utils.accounts.oci.handle_request')
 @patch('mash.services.api.routes.accounts.oci.get_jwt_identity')
 @patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_get_account_oci(
-        mock_jwt_required,
-        mock_jwt_identity,
-        mock_get_oci_account,
-        test_client
+    mock_jwt_required,
+    mock_jwt_identity,
+    mock_handle_request,
+    test_client
 ):
-    account = Mock()
-    account.id = '1'
-    account.name = 'user1'
-    account.bucket = 'images'
-    account.region = 'us-phoenix-1'
+    account = {
+        'id': '1',
+        'name': 'user1',
+        'bucket': 'images',
+        'region': 'us-phoenix-1'
+    }
 
-    mock_get_oci_account.return_value = account
+    response = Mock()
+    response.json.return_value = account
+    mock_handle_request.return_value = response
     mock_jwt_identity.return_value = 'user1'
 
-    response = test_client.get('/accounts/oci/test')
+    result = test_client.get('/accounts/oci/test')
 
-    assert response.status_code == 200
-    assert response.json['id'] == "1"
-    assert response.json['name'] == "user1"
-    assert response.json['bucket'] == "images"
-    assert response.json['region'] == "us-phoenix-1"
+    assert result.status_code == 200
+    assert result.json['id'] == "1"
+    assert result.json['name'] == "user1"
+    assert result.json['bucket'] == "images"
+    assert result.json['region'] == "us-phoenix-1"
 
     # Not found
-    mock_get_oci_account.return_value = None
+    response.json.return_value = {}
 
     response = test_client.get('/accounts/oci/test')
     assert response.status_code == 404
     assert response.data == b'{"msg":"OCI account not found"}\n'
 
 
-@patch('mash.services.api.routes.accounts.oci.get_oci_accounts')
+@patch('mash.services.api.utils.accounts.oci.handle_request')
 @patch('mash.services.api.routes.accounts.oci.get_jwt_identity')
 @patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_get_account_list_oci(
-        mock_jwt_required,
-        mock_jwt_identity,
-        mock_get_oci_accounts,
-        test_client
+    mock_jwt_required,
+    mock_jwt_identity,
+    mock_handle_request,
+    test_client
 ):
-    account = Mock()
-    account.id = '1'
-    account.name = 'user1'
-    account.bucket = 'images'
-    account.region = 'us-phoenix-1'
+    account = {
+        'id': '1',
+        'name': 'user1',
+        'bucket': 'images',
+        'region': 'us-phoenix-1'
+    }
 
-    mock_get_oci_accounts.return_value = [account]
+    response = Mock()
+    response.json.return_value = [account]
+    mock_handle_request.return_value = response
     mock_jwt_identity.return_value = 'user1'
 
-    response = test_client.get('/accounts/oci/')
+    result = test_client.get('/accounts/oci/')
 
-    assert response.status_code == 200
-    assert response.json[0]['id'] == "1"
-    assert response.json[0]['name'] == "user1"
-    assert response.json[0]['bucket'] == "images"
-    assert response.json[0]['region'] == "us-phoenix-1"
+    assert result.status_code == 200
+    assert result.json[0]['id'] == "1"
+    assert result.json[0]['name'] == "user1"
+    assert result.json[0]['bucket'] == "images"
+    assert result.json[0]['region'] == "us-phoenix-1"
 
 
-@patch('mash.services.api.routes.accounts.oci.update_oci_account')
+@patch('mash.services.api.utils.accounts.oci.handle_request')
 @patch('mash.services.api.routes.accounts.oci.get_jwt_identity')
 @patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_update_account_oci(
-        mock_jwt_required,
-        mock_jwt_identity,
-        mock_update_oci_account,
-        test_client
+    mock_jwt_required,
+    mock_jwt_identity,
+    mock_handle_request,
+    test_client
 ):
-    account = Mock()
-    account.id = '1'
-    account.name = 'user1'
-    account.bucket = 'images'
-    account.region = 'us-phoenix-1'
+    account = {
+        'id': '1',
+        'name': 'user1',
+        'bucket': 'images',
+        'region': 'us-phoenix-1'
+    }
 
-    mock_update_oci_account.return_value = account
+    response = Mock()
+    response.json.return_value = account
+    mock_handle_request.return_value = response
     mock_jwt_identity.return_value = 'user1'
 
     request = {
@@ -195,44 +176,32 @@ def test_api_update_account_oci(
         'region': 'us-phoenix-1'
     }
 
-    response = test_client.post(
+    result = test_client.post(
         '/accounts/oci/acnt1',
         content_type='application/json',
         data=json.dumps(request, sort_keys=True)
     )
-    mock_update_oci_account.assert_called_once_with(
-        'user1',
-        'acnt1',
-        'bucket1',
-        'us-phoenix-1',
-        None,
-        None,
-        None,
-        None,
-        None
-    )
 
-    assert response.status_code == 200
-
-    # Mash Exception
-    mock_update_oci_account.side_effect = MashException('Broken')
-
-    response = test_client.post(
-        '/accounts/oci/acnt1',
-        content_type='application/json',
-        data=json.dumps(request, sort_keys=True)
-    )
-    assert response.status_code == 400
-    assert response.data == b'{"msg":"Broken"}\n'
+    assert result.status_code == 200
 
     # Account not found
-    mock_update_oci_account.side_effect = None
-    mock_update_oci_account.return_value = None
+    response.json.return_value = {}
 
-    response = test_client.post(
+    result = test_client.post(
         '/accounts/oci/acnt1',
         content_type='application/json',
         data=json.dumps(request, sort_keys=True)
     )
-    assert response.status_code == 404
-    assert response.data == b'{"msg":"OCI account not found"}\n'
+    assert result.status_code == 404
+    assert result.data == b'{"msg":"OCI account not found"}\n'
+
+    # Mash Exception
+    mock_handle_request.side_effect = MashException('Broken')
+
+    result = test_client.post(
+        '/accounts/oci/acnt1',
+        content_type='application/json',
+        data=json.dumps(request, sort_keys=True)
+    )
+    assert result.status_code == 400
+    assert result.data == b'{"msg":"Broken"}\n'
