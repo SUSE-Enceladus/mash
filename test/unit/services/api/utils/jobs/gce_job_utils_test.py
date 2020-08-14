@@ -32,12 +32,13 @@ from werkzeug.local import LocalProxy
 def test_update_gce_job_accounts(
     mock_get_gce_account, mock_get_services, mock_get_current_obj
 ):
-    account = Mock()
-    account.name = 'acnt1'
-    account.region = 'us-east1'
-    account.bucket = 'images'
-    account.testing_account = 'acnt2'
-    account.is_publishing_account = True
+    account = {
+        'name': 'acnt1',
+        'region': 'us-east1',
+        'bucket': 'images',
+        'testing_account': 'acnt2',
+        'is_publishing_account': True
+    }
     mock_get_gce_account.return_value = account
 
     app = Mock()
@@ -88,7 +89,7 @@ def test_update_gce_job_accounts(
     # Publishing account has no test account
     del job_doc['testing_account']
     job_doc['family'] = 'sles'
-    account.testing_account = None
+    account['testing_account'] = None
 
     with raises(MashJobException):
         validate_gce_job(job_doc)
