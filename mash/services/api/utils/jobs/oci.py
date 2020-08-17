@@ -48,7 +48,7 @@ def validate_oci_job(job_doc):
 
     for attr in attrs:
         if attr not in job_doc:
-            job_doc[attr] = getattr(cloud_account, attr)
+            job_doc[attr] = cloud_account[attr]
 
     services = get_services_by_last_service(job_doc['last_service'])
 
