@@ -14,9 +14,14 @@ class TestJobCreatorService(object):
     def setup(
         self, mock_base_init
     ):
+        services = [
+            'obs', 'upload', 'create', 'test', 'raw_image_upload',
+            'replicate', 'publish', 'deprecate'
+        ]
         mock_base_init.return_value = None
         self.config = Mock()
         self.config.config_data = None
+        self.config.get_service_names.return_value = services
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
 
@@ -33,10 +38,7 @@ class TestJobCreatorService(object):
         self.jobcreator.service_exchange = 'jobcreator'
         self.jobcreator.service_queue = 'service'
         self.jobcreator.job_document_key = 'job_document'
-        self.jobcreator.services = [
-            'obs', 'upload', 'create', 'test', 'raw_image_upload',
-            'replicate', 'publish', 'deprecate'
-        ]
+        self.jobcreator.services = services
 
     @patch('mash.services.jobcreator.service.setup_logfile')
     @patch.object(JobCreatorService, 'start')
@@ -56,9 +58,7 @@ class TestJobCreatorService(object):
             '/var/log/mash/job_creator_service.log'
         )
 
-        mock_bind_queue.assert_called_once_with(
-            'jobcreator', 'job_document', 'service'
-        )
+        mock_bind_queue.call_count == 9
         mock_start.assert_called_once_with()
 
     @patch.object(JobCreatorService, '_publish')
@@ -535,6 +535,51 @@ class TestJobCreatorService(object):
             JsonFormat.json_message({"obs_job_delete": "1"})
         )
 
+    @patch('mash.services.jobcreator.service.handle_request')
+    def test_jobcreator_handle_status_message(self, mock_handle_request):
+        data = {
+            'test_status': {
+                'id': '12345678-1234-1234-1234-123456789012',
+                'state': 'running',
+                'status': 'success'
+            }
+        }
+        message = MagicMock()
+        message.body = json.dumps(data)
+        self.jobcreator.database_api_url = 'http://localhost:5007/'
+
+        self.jobcreator._handle_status_message(message)
+
+        # Request failed
+        mock_handle_request.side_effect = Exception('Not found')
+        self.jobcreator._handle_status_message(message)
+        self.jobcreator.log.error.assert_called_once_with(
+            'Job status update failed: Not found'
+        )
+
+        # Fake service
+        data['fake_status'] = data['test_status']
+        del data['test_status']
+        message.body = json.dumps(data)
+
+        self.jobcreator._handle_status_message(message)
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Unkown service message received for fake service.'
+        )
+
+        # Invalid message
+        message.body = 'Not json'
+        self.jobcreator.log.error.reset_mock()
+
+        self.jobcreator._handle_status_message(message)
+        self.jobcreator.log.error.assert_called_once_with(
+            'Invalid message received: Expecting value: line 1 column 1 (char 0).'
+        )
+
+    def test_get_next_service(self):
+        result = self.jobcreator._get_next_service('deprecate')
+        assert result is None
+
     @patch.object(JobCreatorService, 'consume_queue')
     @patch.object(JobCreatorService, 'stop')
     def test_jobcreator_start(self, mock_stop, mock_consume_queue):
@@ -543,11 +588,7 @@ class TestJobCreatorService(object):
         self.jobcreator.start()
         self.channel.start_consuming.assert_called_once_with()
 
-        mock_consume_queue.assert_called_once_with(
-            self.jobcreator._handle_service_message,
-            'service',
-            'jobcreator'
-        )
+        mock_consume_queue.call_count == 9
         mock_stop.assert_called_once_with()
 
     @patch.object(JobCreatorService, 'consume_queue')
