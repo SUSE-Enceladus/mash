@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -22,6 +22,7 @@ from mash.services.mash_service import MashService
 from mash.services.jobcreator import create_job
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import setup_logfile
+from mash.utils.mash_utils import handle_request
 
 
 class JobCreatorService(MashService):
@@ -43,12 +44,22 @@ class JobCreatorService(MashService):
         )
         self.log.addHandler(logfile_handler)
         self.services = self.config.get_service_names()
+        self.database_api_url = self.config.get_database_api_url()
 
         self.bind_queue(
             self.service_exchange, self.job_document_key, self.service_queue
         )
+        self._bind_result_queues()
 
         self.start()
+
+    def _bind_result_queues(self):
+        for service in self.services:
+            self.bind_queue(
+                service,
+                'listener_msg',
+                '{service}_status'.format(service=service)
+            )
 
     def _handle_service_message(self, message):
         """
@@ -66,6 +77,65 @@ class JobCreatorService(MashService):
             )
 
         message.ack()
+
+    def _handle_status_message(self, message):
+        """
+        Handle status messages from listener services.
+        """
+        job_doc = None
+
+        try:
+            job_doc = json.loads(message.body)
+        except Exception as error:
+            self.log.error(
+                'Invalid message received: {0}.'.format(error)
+            )
+
+        if job_doc:
+            for key, value in job_doc.items():
+                service = key.rsplit('_')[0]
+
+                if service not in self.services:
+                    self.log.warning(
+                        'Unkown service message received for {0} service.'.format(
+                            service
+                        )
+                    )
+                else:
+                    self._process_job_status(service, value)
+
+        message.ack()
+
+    def _get_next_service(self, service):
+        """
+        Return the next service based on the service name.
+        """
+        index = self.services.index(service)
+
+        if index >= len(self.services) - 1:
+            return None
+
+        return self.services[index + 1]
+
+    def _process_job_status(self, service, job_doc):
+        """
+        Send job status to DB service.
+
+        Include info on prev and next service which DB service
+        does not know about.
+        """
+        job_doc['current_service'] = self._get_next_service(service)
+        job_doc['prev_service'] = service
+
+        try:
+            handle_request(
+                self.database_api_url,
+                'jobs/',
+                'put',
+                job_data=job_doc
+            )
+        except Exception as error:
+            self.log.error('Job status update failed: {}'.format(error))
 
     def publish_delete_job_message(self, job_id):
         """
@@ -148,6 +218,14 @@ class JobCreatorService(MashService):
             self.service_queue,
             self.service_exchange
         )
+
+        for service in self.services:
+            self.consume_queue(
+                self._handle_status_message,
+                '{service}_status'.format(service=service),
+                service
+            )
+
         try:
             self.channel.start_consuming()
         except KeyboardInterrupt:
