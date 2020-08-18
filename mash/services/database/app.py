@@ -23,7 +23,7 @@ from flask.logging import default_handler
 
 from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
 from mash.log.filter import BaseServiceFilter
-from mash.services.database.routes import tokens, users
+from mash.services.database.routes import jobs, tokens, users
 from mash.services.database.routes.accounts import azure, ec2, gce, oci
 from mash.services.database.extensions import db, migrate
 from mash.services.database.commands import tokens_cli
@@ -70,6 +70,7 @@ def configure_logger(app):
 
 def register_blueprints(app):
     """Register Flask blueprints."""
+    app.register_blueprint(jobs.blueprint)
     app.register_blueprint(tokens.blueprint)
     app.register_blueprint(users.blueprint)
     app.register_blueprint(azure.blueprint)
