@@ -1,7 +1,7 @@
 from pytest import raises
 from unittest.mock import patch, Mock
 
-from mash.mash_exceptions import MashDBException
+from mash.mash_exceptions import MashException
 from mash.services.api.utils.users import add_user
 
 from werkzeug.local import LocalProxy
@@ -21,7 +21,7 @@ def test_add_user_not_in_whitelist(mock_get_current_object):
         'EMAIL_WHITELIST': ['user2@fake.com'],
         'DOMAIN_WHITELIST': []
     }
-    with raises(MashDBException):
+    with raises(MashException):
         add_user('user1@fake.com', 'password123')
 
     # Not in domain whitelist
@@ -29,5 +29,5 @@ def test_add_user_not_in_whitelist(mock_get_current_object):
         'EMAIL_WHITELIST': [],
         'DOMAIN_WHITELIST': ['suse.com']
     }
-    with raises(MashDBException):
+    with raises(MashException):
         add_user('user1@fake.com', 'password123')

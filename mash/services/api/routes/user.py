@@ -26,7 +26,6 @@ from flask_jwt_extended import (
     get_jwt_identity
 )
 
-from mash.mash_exceptions import MashDBException
 from mash.services.api.schema import (
     add_account,
     default_response,
@@ -83,7 +82,7 @@ class Account(Resource):
 
         try:
             user = add_user(data['email'], data['password'])
-        except MashDBException as error:
+        except Exception as error:
             return make_response(
                 jsonify({"msg": str(error)}),
                 400
