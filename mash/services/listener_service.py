@@ -282,6 +282,7 @@ class ListenerService(MashService):
 
         if event.exception:
             job.status = EXCEPTION
+            job.add_error_msg(str(event.exception))
             self.log.error(
                 'Pass[{0}]: Exception in {1}: {2}'.format(
                     job.iteration_count,

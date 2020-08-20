@@ -110,12 +110,12 @@ class EC2ReplicateJob(MashJob):
                     )
                 except Exception as error:
                     self.status = FAILED
-                    self.log_callback.warning(
-                        'Replicate to {0} region failed: {1}'.format(
-                            target_region,
-                            error
-                        )
+                    msg = 'Replicate to {0} region failed: {1}'.format(
+                        target_region,
+                        error
                     )
+                    self.add_error_msg(msg)
+                    self.log_callback.warning(msg)
 
     def _replicate_to_region(
         self, credential, image_id, source_region, target_region
