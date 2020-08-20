@@ -22,7 +22,7 @@ from mash.services.api.variables import (
     password_change_msg_template,
     password_reset_msg_template
 )
-from mash.mash_exceptions import MashDBException
+from mash.mash_exceptions import MashException
 from mash.utils.mash_utils import handle_request
 
 
@@ -35,12 +35,12 @@ def add_user(email, password=None):
     an account that can only be used with oidc authentication.
     """
     if password and len(password) < 8:
-        raise MashDBException(
+        raise MashException(
             'Password too short. Minimum length is 8 characters.'
         )
 
     if not email_in_whitelist(email):
-        raise MashDBException(
+        raise MashException(
             'Cannot create a user with the provided email. Access denied.'
         )
 
@@ -173,7 +173,7 @@ def change_user_password(email, current_password, new_password):
     And reset the password to clean so the user can login again.
     """
     if len(new_password) < 8:
-        raise MashDBException(
+        raise MashException(
             'Password too short. Minimum length is 8 characters.'
         )
 
