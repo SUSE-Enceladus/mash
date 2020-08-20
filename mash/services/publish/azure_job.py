@@ -148,12 +148,12 @@ class AzurePublishJob(MashJob):
                     )
                 )
             except Exception as error:
-                self.log_callback.error(
-                    'There was an error publishing image in {0}: {1}'.format(
-                        self.account,
-                        error
-                    )
+                msg = 'There was an error publishing image in {0}: {1}'.format(
+                    self.account,
+                    error
                 )
+                self.add_error_msg(msg)
+                self.log_callback.error(msg)
                 self.status = FAILED
 
     @staticmethod

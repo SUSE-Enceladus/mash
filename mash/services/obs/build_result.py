@@ -134,6 +134,7 @@ class OBSImageBuildResult(object):
             log_callback,
             {'job_id': self.job_id}
         )
+        self.errors = []
 
         # How often to update log callback with download progress.
         # 25 updates every 25%. I.e. 25, 50, 75, 100.
@@ -241,7 +242,8 @@ class OBSImageBuildResult(object):
                         'id': self.job_id,
                         'image_file':
                             self.downloader.image_status['image_source'],
-                        'status': self.job_status
+                        'status': self.job_status,
+                        'errors': self.errors
                     }
                 }
             )
@@ -309,6 +311,7 @@ class OBSImageBuildResult(object):
             msg = '{0}: {1}'.format(type(issue).__name__, issue)
 
             self.job_status = 'failed'
+            self.errors.append(msg)
             self.log_callback.error(msg)
             self._notification_callback(FAILED, msg)
 

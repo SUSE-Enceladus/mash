@@ -191,12 +191,12 @@ class EC2CreateJob(MashJob):
                 )
             except Exception as error:
                 self.status = FAILED
-                self.log_callback.error(
-                    'Image creation in account {0} failed with: {1}'.format(
-                        account,
-                        error
-                    )
+                msg = 'Image creation in account {0} failed with: {1}'.format(
+                    account,
+                    error
                 )
+                self.add_error_msg(msg)
+                self.log_callback.error(msg)
             finally:
                 self._delete_key_pair(
                     ec2_client, ssh_key_pair

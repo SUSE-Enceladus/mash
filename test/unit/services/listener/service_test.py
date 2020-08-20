@@ -423,6 +423,7 @@ class TestListenerService(object):
         job.id = '1'
         job.utctime = 'now'
         job.status = 2
+        job.status_msg = {'errors': []}
         job.iteration_count = 1
         job.get_job_id.return_value = {'job_id': '1'}
 

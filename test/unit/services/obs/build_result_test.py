@@ -56,7 +56,9 @@ class TestOBSImageBuildResult(object):
             '815', {
                 'obs_result': {
                     'id': '815',
-                    'image_file': 'image', 'status': 'success'
+                    'image_file': 'image',
+                    'status': 'success',
+                    'errors': []
                 }
             }
         )
