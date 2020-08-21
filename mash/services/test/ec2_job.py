@@ -145,13 +145,19 @@ class EC2TestJob(MashJob):
                         tests=self.tests,
                         log_callback=self.log_callback
                     )
-                except Exception:
+                except Exception as error:
+                    self.add_error_msg(str(error))
                     result = {
                         'status': EXCEPTION,
                         'msg': str(traceback.format_exc())
                     }
 
-                status = process_test_result(result, self.log_callback, region)
+                status = process_test_result(
+                    result,
+                    self.log_callback,
+                    region,
+                    self.status_msg
+                )
                 if status != SUCCESS:
                     self.status = status
 

@@ -50,8 +50,18 @@ class TestAzureTestJob(object):
         mock_test_image.return_value = (
             0,
             {
-                'tests': '...',
-                'summary': '...',
+                'tests': [
+                    {
+                        "outcome": "passed",
+                        "test_index": 0,
+                        "name": "test_sles_azure_metadata.py::test_sles_azure_metadata[paramiko://10.0.0.10]"
+                    }
+                ],
+                'summary': {
+                    "duration": 2.839970827102661,
+                    "passed": 1,
+                    "num_tests": 1
+                },
                 'info': {
                     'log_file': 'test.log',
                     'results_file': 'test.results',
