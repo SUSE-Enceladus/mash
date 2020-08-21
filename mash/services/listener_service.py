@@ -147,14 +147,13 @@ class ListenerService(MashService):
                 extra={'job_id': job_id}
             )
 
-    def _cleanup_job(self, job_id, status):
+    def _cleanup_job(self, job_id):
         """
         Job failed upstream.
 
         Delete job and notify the next service.
         """
         job = self.jobs[job_id]
-        job.status = status
 
         self.log.warning('Failed upstream.', extra=job.get_job_id())
         self._delete_job(job.id)
@@ -223,15 +222,37 @@ class ListenerService(MashService):
         """
         Callback for listener messages.
         """
-        validated_msg = self._validate_listener_msg(message.body)
+        listener_msg = self._get_listener_msg(
+            message.body,
+            '{0}_result'.format(self.prev_service)
+        )
 
-        if validated_msg:
-            job = self.jobs[validated_msg['id']]
+        job_id = None
+        if listener_msg:
+            status = listener_msg['status']
+            job_id = listener_msg['id']
+
+        if job_id and job_id in self.jobs:
+            job = self.jobs[listener_msg['id']]
             job.listener_msg = message
-            job.set_status_message(validated_msg)
-            self._schedule_job(job.id)
-        else:
-            message.ack()
+            job.set_status_message(listener_msg)
+
+            if status == SUCCESS:
+                self._schedule_job(job.id)
+                return  # Don't ack message until job finishes
+            elif status == DELETE:
+                self.log.info(
+                    'Received a job delete message for: {0}.'.format(job_id)
+                )
+
+                self._delete_job(job_id)
+                key = '{0}_result'.format(self.service_exchange)
+                msg = JsonFormat.json_message({key: listener_msg})
+                self._publish_message(msg, job_id)
+            elif self.jobs[job_id].utctime != 'always':
+                self._cleanup_job(job_id)
+
+        message.ack()
 
     def _handle_service_message(self, message):
         """
@@ -353,39 +374,6 @@ class ListenerService(MashService):
         """
         job = self.jobs[job_id]
         job.process_job()
-
-    def _validate_listener_msg(self, message):
-        """
-        Validate the required keys are in message dictionary.
-
-        If listener message is valid return the job instance.
-        """
-        listener_msg = self._get_listener_msg(
-            message,
-            '{0}_result'.format(self.prev_service)
-        )
-
-        if not listener_msg:
-            return None
-
-        status = listener_msg['status']
-        job_id = listener_msg['id']
-
-        if job_id not in self.jobs:
-            return None
-        elif status == DELETE:
-            self.log.info(
-                'Received a job delete message for: {0}.'.format(job_id)
-            )
-
-            self._delete_job(job_id)
-            key = '{0}_result'.format(self.service_exchange)
-            message = JsonFormat.json_message({key: listener_msg})
-            self._publish_message(message, job_id)
-        elif status != SUCCESS and self.jobs[job_id].utctime != 'always':
-            self._cleanup_job(job_id, status)
-        else:
-            return listener_msg
 
     def _get_listener_msg(self, message, key):
         """Load json and attempt to get message by key."""

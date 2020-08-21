@@ -112,11 +112,6 @@ class TestMashJob(object):
 
     def test_get_set_status_message(self):
         job = MashJob(self.job_config, self.config)
-        status_msg = job.get_status_message()
-
-        assert status_msg['id'] == '1'
-        assert status_msg['status'] is None
-
         job.set_status_message({'id': '1', 'status': 'success'})
         status_msg = job.get_status_message()
 
