@@ -93,7 +93,7 @@ class JobCreatorService(MashService):
 
         if job_doc:
             for key, value in job_doc.items():
-                service = key.rsplit('_')[0]
+                service = key.rsplit('_', maxsplit=1)[0]
 
                 if service not in self.services:
                     self.log.warning(
