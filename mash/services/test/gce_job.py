@@ -145,7 +145,8 @@ class GCETestJob(MashJob):
 
                         if fallback_regions:
                             retry_region = random.choice(fallback_regions)
-                    except Exception:
+                    except Exception as error:
+                        self.add_error_msg(str(error))
                         result = {
                             'status': EXCEPTION,
                             'msg': str(traceback.format_exc())
@@ -157,7 +158,8 @@ class GCETestJob(MashJob):
                 self.status = process_test_result(
                     result,
                     self.log_callback,
-                    self.region
+                    self.region,
+                    self.status_msg
                 )
 
                 if self.status != SUCCESS:
@@ -180,6 +182,6 @@ class GCETestJob(MashJob):
         try:
             cleanup_gce_image(credentials, self.cloud_image_name, self.bucket)
         except Exception as error:
-            self.log_callback.warning(
-                'Failed to cleanup image: {0}'.format(error)
-            )
+            msg = 'Failed to cleanup image: {0}'.format(error)
+            self.log_callback.warning(msg)
+            self.add_error_msg(msg)

@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import json
+
 from mash.services.status_levels import FAILED, SUCCESS
 
 
@@ -23,7 +25,13 @@ def get_testing_account(account_info):
     return account_info.get('testing_account', account_info['account'])
 
 
-def process_test_result(result, log_callback, region):
+def process_test_result(result, log_callback, region, status_msg):
+    if 'tests' in result:
+        status_msg['test_results'] = json.dumps({
+            'tests': result['tests'],
+            'summary': result['summary']
+        })
+
     if 'results_file' in result:
         log_callback.info(
             'Results file for {0} region: {1}'.format(
