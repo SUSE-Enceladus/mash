@@ -19,7 +19,7 @@
 import logging
 
 from mash.mash_exceptions import MashJobException
-from mash.services.status_levels import UNKOWN, SUCCESS
+from mash.services.status_levels import UNKOWN
 from mash.utils.mash_utils import handle_request
 
 
@@ -165,13 +165,7 @@ class MashJob(object):
 
     def get_status_message(self):
         """Status message property."""
-        if self.status == SUCCESS:
-            return self.status_msg
-        else:
-            return {
-                'id': self.id,
-                'status': self.status,
-            }
+        return self.status_msg
 
     def set_status_message(self, message):
         """
