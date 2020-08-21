@@ -116,7 +116,8 @@ class TestEC2TestJob(object):
             timeout=None,
             enable_secure_boot=False,
             image_project=None,
-            log_callback=job._log_callback
+            log_callback=job._log_callback,
+            prefix_name='mash'
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
         mock_cleanup_image.assert_called_once_with(

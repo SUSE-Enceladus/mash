@@ -64,7 +64,8 @@ def img_proof_test(
         timeout=img_proof_timeout,
         enable_secure_boot=enable_secure_boot,
         image_project=image_project,
-        log_callback=log_callback
+        log_callback=log_callback,
+        prefix_name='mash'
     )
 
     status = SUCCESS if status == 0 else FAILED
