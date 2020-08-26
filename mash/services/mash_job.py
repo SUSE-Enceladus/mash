@@ -37,7 +37,6 @@ class MashJob(object):
         self._job_file = job_config.get('job_file')
 
         self.config = config
-        self.iteration_count = 0
         self.status_msg = {'status': UNKOWN, 'errors': []}
 
         try:
@@ -109,10 +108,8 @@ class MashJob(object):
         """
         Update iteration count and run job.
         """
-        self.iteration_count += 1
         self.log_callback.extra = {
-            'job_id': self.id,
-            'iteration': self.iteration_count
+            'job_id': self.id
         }
         self.run_job()
 

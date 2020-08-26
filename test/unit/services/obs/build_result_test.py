@@ -5,10 +5,7 @@ from pytz import utc
 from datetime import datetime
 import dateutil.parser
 
-from apscheduler.events import (
-    EVENT_JOB_MAX_INSTANCES,
-    EVENT_JOB_SUBMITTED
-)
+from apscheduler.events import EVENT_JOB_SUBMITTED
 
 from mash.services.obs.build_result import OBSImageBuildResult
 
@@ -65,13 +62,12 @@ class TestOBSImageBuildResult(object):
 
     def test_notification_callback(self):
         self.obs_result.notification_callback = Mock()
-        self.obs_result.iteration_count = 2
         self.obs_result._notification_callback(
             'success', 'error!'
         )
         self.obs_result.notification_callback.assert_called_once_with(
-            '815', 'test@fake.com', 'single', 'success', 'now',
-            'publish', 'obs_package', 2, 'error!'
+            '815', 'test@fake.com', 'single', 'success',
+            'publish', 'obs_package', 'error!'
         )
 
     @patch('mash.services.obs.build_result.BackgroundScheduler')
@@ -99,36 +95,6 @@ class TestOBSImageBuildResult(object):
         )
         scheduler.start.assert_called_once_with()
 
-    @patch('mash.services.obs.build_result.BackgroundScheduler')
-    @patch.object(OBSImageBuildResult, '_update_image_status')
-    @patch.object(OBSImageBuildResult, '_job_skipped_event')
-    @patch.object(OBSImageBuildResult, '_job_submit_event')
-    def test_start_watchdog_nonstop(
-        self, mock_job_submit_event, mock_job_skipped_event,
-        mock_update_image_status, mock_BackgroundScheduler
-    ):
-        scheduler = Mock()
-        mock_BackgroundScheduler.return_value = scheduler
-        time = 'Tue Oct 10 14:40:42 UTC 2017'
-        iso_time = dateutil.parser.parse(time).isoformat()
-        run_time = datetime.strptime(iso_time[:19], '%Y-%m-%dT%H:%M:%S')
-        self.obs_result.start_watchdog(
-            isotime=iso_time, nonstop=True
-        )
-        mock_BackgroundScheduler.assert_called_once_with(
-            timezone=utc
-        )
-        scheduler.add_job.assert_called_once_with(
-            mock_update_image_status, 'interval',
-            max_instances=1, seconds=5, start_date=run_time,
-            timezone='utc'
-        )
-        assert scheduler.add_listener.call_args_list == [
-            call(mock_job_skipped_event, EVENT_JOB_MAX_INSTANCES),
-            call(mock_job_submit_event, EVENT_JOB_SUBMITTED)
-        ]
-        scheduler.start.assert_called_once_with()
-
     def test_stop_watchdog_no_exception(self):
         self.obs_result.job = Mock()
         self.obs_result.stop_watchdog()
@@ -140,11 +106,6 @@ class TestOBSImageBuildResult(object):
         self.obs_result.stop_watchdog()
 
     def test_job_submit_event(self):
-        self.obs_result.job_nonstop = True
-        self.obs_result._job_submit_event(Mock())
-        self.log_callback.info.assert_called_once_with('Nonstop job submitted')
-        self.log_callback.info.reset_mock()
-        self.obs_result.job_nonstop = False
         self.obs_result._job_submit_event(Mock())
         self.log_callback.info.assert_called_once_with('Oneshot Job submitted')
 
@@ -167,19 +128,15 @@ class TestOBSImageBuildResult(object):
 
     @patch.object(OBSImageBuildResult, '_notification_callback')
     @patch.object(OBSImageBuildResult, '_result_callback')
-    @patch.object(OBSImageBuildResult, '_wait_for_new_image')
     def test_update_image_status(
-        self, mock_wait_for_new_image,
-        mock_result_callback, mock_notification_callback
+        self,
+        mock_result_callback,
+        mock_notification_callback
     ):
         self.downloader.get_image.return_value = 'new-image.xz'
         self.obs_result._update_image_status()
         mock_result_callback.assert_called_once_with()
         mock_notification_callback.assert_called_once_with('success')
-
-        self.obs_result.job_nonstop = True
-        self.obs_result._update_image_status()
-        mock_wait_for_new_image.assert_called_once_with()
 
     @patch.object(OBSImageBuildResult, '_notification_callback')
     @patch.object(OBSImageBuildResult, '_result_callback')

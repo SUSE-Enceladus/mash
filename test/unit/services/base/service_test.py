@@ -71,29 +71,29 @@ class TestBaseService(object):
 
     def test_should_notify(self):
         result = self.service._should_notify(
-            None, 'single', 'always', 'success', 'publish'
+            None, 'single', 'success', 'publish'
         )
         assert result is False
 
         result = self.service._should_notify(
-            'test@fake.com', 'single', 'always', 'success', 'publish'
+            'test@fake.com', 'single', 'success', 'publish'
         )
         assert result is False
 
         result = self.service._should_notify(
-            'test@fake.com', 'periodic', 'now', 'success', 'publish'
+            'test@fake.com', 'periodic', 'success', 'publish'
         )
         assert result is True
 
         result = self.service._should_notify(
-            'test@fake.com', 'single', 'now', 'success', 'obs'
+            'test@fake.com', 'single', 'success', 'obs'
         )
         assert result is True
 
     def test_create_notification_content(self):
         # Failed message
         msg = self.service._create_notification_content(
-            '1', 'failed', 'always', 'deprecate', 'test_image', 3,
+            '1', 'failed', 'deprecate', 'test_image',
             'Invalid publish permissions!'
         )
 
@@ -101,14 +101,14 @@ class TestBaseService(object):
 
         # Job finished with success
         msg = self.service._create_notification_content(
-            '1', 'success', 'now', 'obs', 'test_image', 3
+            '1', 'success', 'obs', 'test_image'
         )
 
         assert 'Job finished successfully' in msg
 
         # Service with success
         msg = self.service._create_notification_content(
-            '1', 'success', 'now', 'publish', 'test_image', 3
+            '1', 'success', 'publish', 'test_image'
         )
 
         assert 'Job finished through the obs service' in msg
@@ -121,7 +121,7 @@ class TestBaseService(object):
         self.service.notification_class = notif_class
 
         self.service.send_notification(
-            job_id, to, 'periodic', 'failed', 'now', 'replicate',
-            'test_image', 1
+            job_id, to, 'periodic', 'failed', 'replicate',
+            'test_image'
         )
         assert notif_class.send_notification.call_count == 1

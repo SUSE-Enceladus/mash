@@ -23,16 +23,12 @@ import logging
 from datetime import datetime
 from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.events import (
-    EVENT_JOB_MAX_INSTANCES,
-    EVENT_JOB_SUBMITTED
-)
+from apscheduler.events import EVENT_JOB_SUBMITTED
 
 from obs_img_utils.api import OBSImageUtil
 
 # project
 from mash.services.base_defaults import Defaults
-from mash.log.filter import SchedulerLoggingFilter
 from mash.services.status_levels import FAILED, SUCCESS
 
 
@@ -117,11 +113,9 @@ class OBSImageBuildResult(object):
         self.scheduler = None
         self.job = None
         self.job_deleted = False
-        self.job_nonstop = False
         self.log_callback = None
         self.result_callback = None
         self.notification_callback = None
-        self.iteration_count = 0
         self.notification_email = notification_email
         self.notification_type = notification_type
         self.profile = profile
@@ -164,26 +158,17 @@ class OBSImageBuildResult(object):
             **kwargs
         )
 
-    def start_watchdog(
-        self, interval_sec=5, nonstop=False, isotime=None
-    ):
+    def start_watchdog(self, isotime=None):
         """
         Start a background job which triggers the update
         of the image build data and image fetched from the obs project.
 
         The job is started at a given data/time which must
         be the result of a isoformat() call. If no data/time is
-        specified the job runs immediately. If nonstop is true
-        the job runs continuously in the given interval but allows
-        for one active instance only. The running job causes any
-        subsequent jobs to be skipped until the state of the build
-        results changes
+        specified the job runs immediately.
 
-        :param bool nonstop: run continuously
         :param string isotime: data and time by isoformat()
-        :param int interval_sec: interval for nonstop jobs
         """
-        self.job_nonstop = nonstop
         job_time = None
 
         if isotime:
@@ -191,23 +176,10 @@ class OBSImageBuildResult(object):
 
         self.scheduler = BackgroundScheduler(timezone=utc)
 
-        if nonstop:
-            self.job = self.scheduler.add_job(
-                self._update_image_status, 'interval',
-                max_instances=1, seconds=interval_sec,
-                start_date=job_time, timezone='utc'
-            )
-            self.scheduler.add_listener(
-                self._job_skipped_event, EVENT_JOB_MAX_INSTANCES
-            )
-            logging.getLogger("apscheduler.scheduler").addFilter(
-                SchedulerLoggingFilter()
-            )
-        else:
-            self.job = self.scheduler.add_job(
-                self._update_image_status, 'date',
-                run_date=job_time, timezone='utc'
-            )
+        self.job = self.scheduler.add_job(
+            self._update_image_status, 'date',
+            run_date=job_time, timezone='utc'
+        )
         self.scheduler.add_listener(
             self._job_submit_event, EVENT_JOB_SUBMITTED
         )
@@ -251,20 +223,19 @@ class OBSImageBuildResult(object):
     def _notification_callback(
         self, status, error=None
     ):
-        utctime = 'always' if self.job_nonstop else 'now'
-
         if self.notification_callback:
             self.notification_callback(
-                self.job_id, self.notification_email, self.notification_type,
-                status, utctime, self.last_service, self.image_name,
-                self.iteration_count, error
+                self.job_id,
+                self.notification_email,
+                self.notification_type,
+                status,
+                self.last_service,
+                self.image_name,
+                error
             )
 
     def _job_submit_event(self, event):
-        if self.job_nonstop:
-            self.log_callback.info('Nonstop job submitted')
-        else:
-            self.log_callback.info('Oneshot Job submitted')
+        self.log_callback.info('Oneshot Job submitted')
 
     def _job_skipped_event(self, event):
         # Job is still active while the next _update_image_status
@@ -281,11 +252,8 @@ class OBSImageBuildResult(object):
         self._update_image_status()
 
     def _update_image_status(self):
-        self.iteration_count += 1
-
         self.log_callback.extra = {
-            'job_id': self.job_id,
-            'iteration': self.iteration_count
+            'job_id': self.job_id
         }
         self.log_callback.info('Job running')
 
@@ -300,13 +268,8 @@ class OBSImageBuildResult(object):
                 'Job status: {0}'.format(self.job_status)
             )
             self._result_callback()
-
-            if self.job_nonstop:
-                self.log_callback.info('Waiting for image update')
-                self._wait_for_new_image()
-            else:
-                self._notification_callback(SUCCESS)
-                self.log_callback.info('Job done')
+            self._notification_callback(SUCCESS)
+            self.log_callback.info('Job done')
         except Exception as issue:
             msg = '{0}: {1}'.format(type(issue).__name__, issue)
 
@@ -314,9 +277,7 @@ class OBSImageBuildResult(object):
             self.errors.append(msg)
             self.log_callback.error(msg)
             self._notification_callback(FAILED, msg)
-
-            if not self.job_nonstop:
-                self._result_callback()
+            self._result_callback()
 
     def progress_callback(self, block_num, read_size, total_size, done=False):
         """

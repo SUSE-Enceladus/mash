@@ -265,7 +265,7 @@ class TestOBSImageBuildResultService(object):
             self.obs_result._send_job_result_for_upload
         )
         job_worker.start_watchdog.assert_called_once_with(
-            isotime=None, nonstop=False
+            isotime=None
         )
 
     @patch('mash.services.obs.service.OBSImageBuildResult')
@@ -279,11 +279,11 @@ class TestOBSImageBuildResultService(object):
                             "PubCloud:/Stable:/Images12/images",
             "image": "test-image-oem",
             "last_service": "publish",
-            "utctime": "always"
+            "utctime": "now"
         }
         self.obs_result._start_job(data)
         job_worker.start_watchdog.assert_called_once_with(
-            isotime=None, nonstop=True
+            isotime=None
         )
 
     @patch('mash.services.obs.service.OBSImageBuildResult')
@@ -301,5 +301,5 @@ class TestOBSImageBuildResultService(object):
         }
         self.obs_result._start_job(data)
         job_worker.start_watchdog.assert_called_once_with(
-            isotime='2017-10-11T17:50:26+00:00', nonstop=False
+            isotime='2017-10-11T17:50:26+00:00'
         )

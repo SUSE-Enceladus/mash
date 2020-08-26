@@ -36,7 +36,6 @@ class TestMashJob(object):
 
         job = MashJob(self.job_config, self.config)
         job.log_callback = callback
-        job.iteration_count = 0
 
         response = Mock()
         response.json.return_value = {'acnt1': {'super': 'secret'}}
