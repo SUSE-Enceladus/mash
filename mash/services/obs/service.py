@@ -86,8 +86,7 @@ class OBSImageBuildResultService(MashService):
             self.listener_msg_key,
             JsonFormat.json_message(trigger_info)
         )
-        if not self.jobs[job_id].job_nonstop:
-            self._delete_job(job_id)
+        self._delete_job(job_id)
 
     def _send_control_response(self, result, job_id=None):
         message = result['message']
@@ -163,7 +162,7 @@ class OBSImageBuildResultService(MashService):
               :/Stable:/Images12/images",
               "image": "SLES12-Azure-BYOS",
               "last_service": "upload",
-              "utctime": "now|always|timestring_utc_timezone",
+              "utctime": "now|timestring_utc_timezone",
               "conditions": [
                   {
                     "package_name": "kernel-default",
@@ -228,12 +227,9 @@ class OBSImageBuildResultService(MashService):
     def _start_job(self, job):
         job_id = job['id']
         time = job['utctime']
-        nonstop = False
+
         if time == 'now':
             time = None
-        elif time == 'always':
-            time = None
-            nonstop = True
         else:
             time = dateutil.parser.parse(job['utctime']).isoformat()
 
@@ -272,9 +268,7 @@ class OBSImageBuildResultService(MashService):
         job_worker = OBSImageBuildResult(**kwargs)
         job_worker.set_result_handler(self._send_job_result_for_upload)
         job_worker.set_notification_handler(self.send_notification)
-        job_worker.start_watchdog(
-            nonstop=nonstop, isotime=time
-        )
+        job_worker.start_watchdog(isotime=time)
         self.jobs[job_id] = job_worker
         return {
             'ok': True,

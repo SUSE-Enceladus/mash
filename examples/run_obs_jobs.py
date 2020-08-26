@@ -12,7 +12,7 @@ channel = connection.channel()
 
 channel.queue.declare(queue='obs.service', durable=True)
 
-messages = ['obs_delete_job.json', 'obs_now_job.json', 'obs_always_job.json']
+messages = ['obs_delete_job.json', 'obs_now_job.json']
 for message in messages:
     job_file = os.path.join('messages', message)
     with open(job_file, 'r') as job_document:

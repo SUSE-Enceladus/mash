@@ -61,21 +61,18 @@ image_condition = {
 
 utctime = {
     'type': 'string',
-    'description': 'An RFC3339 date-time string, "now" or "always".'
+    'description': 'An RFC3339 date-time string or "now".'
                    'If using a date string it must be in the future '
                    'and the job will start no sooner than the provided '
-                   'date. Now jobs will run as soon as possible and always '
-                   'jobs run through the pipeline every time a new image '
-                   'tarball is published.',
+                   'date. Now jobs will run as soon as possible.',
     'format': 'regex',
     'pattern': r'^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]'
                r'|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):'
                r'([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]'
-               r'([01][0-9]|2[0-3]):[0-5][0-9]))$|^(now|always)$',
+               r'([01][0-9]|2[0-3]):[0-5][0-9]))$|^(now)$',
     'example': '2019-04-28T06:44:50.142Z',
-    'examples': ['now', 'always', '2019-04-28T06:44:50.142Z']
+    'examples': ['now', '2019-04-28T06:44:50.142Z']
 }
-
 base_job_message = {
     'type': 'object',
     'properties': {

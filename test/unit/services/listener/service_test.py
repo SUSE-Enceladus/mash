@@ -261,7 +261,7 @@ class TestListenerService(object):
     def test_service_handle_listener_message(self, mock_schedule_job):
         job = Mock()
         job.id = '1'
-        job.utctime = 'always'
+        job.utctime = 'now'
         self.service.jobs['1'] = job
 
         self.message.body = JsonFormat.json_message({
@@ -304,7 +304,7 @@ class TestListenerService(object):
     ):
         job = Mock()
         job.id = '1'
-        job.utctime = 'always'
+        job.utctime = 'now'
         self.service.jobs['1'] = job
 
         self.message.body = JsonFormat.json_message({
@@ -387,7 +387,6 @@ class TestListenerService(object):
         job.id = '1'
         job.utctime = 'now'
         job.status = 'success'
-        job.iteration_count = 1
         job.listener_msg = msg
         job.get_job_id.return_value = {'job_id': '1'}
 
@@ -398,7 +397,7 @@ class TestListenerService(object):
 
         mock_delete_job.assert_called_once_with('1')
         self.service.log.info.assert_called_once_with(
-            'Pass[1]: replicate successful.',
+            'replicate successful.',
             extra={'job_id': '1'}
         )
         mock_publish_message.assert_called_once_with(
@@ -424,7 +423,6 @@ class TestListenerService(object):
         job.utctime = 'now'
         job.status = 2
         job.status_msg = {'errors': []}
-        job.iteration_count = 1
         job.get_job_id.return_value = {'job_id': '1'}
 
         mock_get_status_msg.return_value = '{"status": "message"}'
@@ -434,7 +432,7 @@ class TestListenerService(object):
 
         mock_delete_job.assert_called_once_with('1')
         self.service.log.error.assert_called_once_with(
-            'Pass[1]: Exception in replicate: Image not found!',
+            'Exception in replicate: Image not found!',
             extra={'job_id': '1'}
         )
         mock_publish_message.assert_called_once_with(
@@ -457,7 +455,6 @@ class TestListenerService(object):
         job.id = '1'
         job.status = 'error'
         job.utctime = 'now'
-        job.iteration_count = 1
         job.get_job_id.return_value = {'job_id': '1'}
         job.get_status_message.return_value = {"id": "1", "status": "error"}
 
@@ -465,7 +462,7 @@ class TestListenerService(object):
         self.service._process_job_result(event)
 
         self.service.log.error.assert_called_once_with(
-            'Pass[1]: Error occurred in replicate.',
+            'Error occurred in replicate.',
             extra={'job_id': '1'}
         )
         mock_delete_job('1')
@@ -486,7 +483,6 @@ class TestListenerService(object):
         job.id = '1'
         job.utctime = 'now'
         job.status = 'success'
-        job.iteration_count = 1
         job.listener_msg = msg
         job.get_job_id.return_value = {'job_id': '1'}
 
@@ -494,7 +490,7 @@ class TestListenerService(object):
         self.service._process_job_missed(event)
 
         self.service.log.warning.assert_called_once_with(
-            'Pass[1]: Job missed during replicate.',
+            'Job missed during replicate.',
             extra={'job_id': '1'}
         )
 
@@ -539,7 +535,7 @@ class TestListenerService(object):
         self, mock_start_job
     ):
         job = Mock()
-        job.utctime = 'always'
+        job.utctime = 'now'
         self.service.jobs['1'] = job
 
         scheduler = Mock()

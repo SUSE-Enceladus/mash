@@ -249,7 +249,7 @@ class ListenerService(MashService):
                 key = '{0}_result'.format(self.service_exchange)
                 msg = JsonFormat.json_message({key: listener_msg})
                 self._publish_message(msg, job_id)
-            elif self.jobs[job_id].utctime != 'always':
+            else:
                 self._cleanup_job(job_id)
 
         message.ack()
@@ -277,15 +277,13 @@ class ListenerService(MashService):
         job = self.jobs[job_id]
         metadata = job.get_job_id()
 
-        if job.utctime != 'always':
-            self._delete_job(job_id)
+        self._delete_job(job_id)
 
         if event.exception:
             job.status = EXCEPTION
             job.add_error_msg(str(event.exception))
             self.log.error(
-                'Pass[{0}]: Exception in {1}: {2}'.format(
-                    job.iteration_count,
+                'Exception in {0}: {1}'.format(
                     self.service_exchange,
                     event.exception
                 ),
@@ -293,16 +291,14 @@ class ListenerService(MashService):
             )
         elif job.status == SUCCESS:
             self.log.info(
-                'Pass[{0}]: {1} successful.'.format(
-                    job.iteration_count,
+                '{0} successful.'.format(
                     self.service_exchange
                 ),
                 extra=metadata
             )
         else:
             self.log.error(
-                'Pass[{0}]: Error occurred in {1}.'.format(
-                    job.iteration_count,
+                'Error occurred in {0}.'.format(
                     self.service_exchange
                 ),
                 extra=metadata
@@ -312,9 +308,13 @@ class ListenerService(MashService):
         self._publish_message(message, job.id)
 
         self.send_notification(
-            job.id, job.notification_email, job.notification_type, job.status,
-            job.utctime, job.last_service, job.cloud_image_name,
-            job.iteration_count, event.exception
+            job.id,
+            job.notification_email,
+            job.notification_type,
+            job.status,
+            job.last_service,
+            job.cloud_image_name,
+            event.exception
         )
 
         job.listener_msg.ack()
@@ -330,8 +330,7 @@ class ListenerService(MashService):
         metadata = job.get_job_id()
 
         self.log.warning(
-            'Pass[{0}]: Job missed during {1}.'.format(
-                job.iteration_count,
+            'Job missed during {0}.'.format(
                 self.service_exchange
             ),
             extra=metadata
