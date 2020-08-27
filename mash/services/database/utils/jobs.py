@@ -110,6 +110,7 @@ def save_job_status(job_doc):
     else:
         job.current_service = current_service
 
+    job.errors = job_doc.pop('errors', [])
     job.data = job_doc
 
     try:

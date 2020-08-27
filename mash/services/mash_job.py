@@ -38,7 +38,7 @@ class MashJob(object):
 
         self.config = config
         self.iteration_count = 0
-        self.status_msg = {'status': UNKOWN}
+        self.status_msg = {'status': UNKOWN, 'errors': []}
 
         try:
             self.id = job_config['id']
@@ -172,6 +172,12 @@ class MashJob(object):
         Setter for status_msg dictionary.
         """
         self.status_msg = message
+
+    def add_error_msg(self, message):
+        """
+        Append error message to job status_msg dictionary.
+        """
+        self.status_msg['errors'].append(message)
 
     @property
     def status(self):

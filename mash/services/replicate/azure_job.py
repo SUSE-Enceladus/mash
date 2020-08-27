@@ -117,10 +117,10 @@ class AzureReplicateJob(MashJob):
                         is_page_blob=True
                     )
             except Exception as error:
-                self.log_callback.error(
-                    'There was an error copying image blob in {0}: {1}'.format(
-                        self.account,
-                        error
-                    )
+                msg = 'There was an error copying image blob in {0}: {1}'.format(
+                    self.account,
+                    error
                 )
+                self.add_error_msg(msg)
+                self.log_callback.error(msg)
                 self.status = FAILED
