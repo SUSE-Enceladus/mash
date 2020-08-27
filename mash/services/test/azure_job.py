@@ -108,7 +108,8 @@ class AzureTestJob(MashJob):
                     tests=self.tests,
                     log_callback=self.log_callback
                 )
-            except Exception:
+            except Exception as error:
+                self.add_error_msg(str(error))
                 result = {
                     'status': EXCEPTION,
                     'msg': str(traceback.format_exc())
@@ -117,7 +118,8 @@ class AzureTestJob(MashJob):
         self.status = process_test_result(
             result,
             self.log_callback,
-            self.region
+            self.region,
+            self.status_msg
         )
 
         if self.cleanup_images or \
@@ -151,6 +153,6 @@ class AzureTestJob(MashJob):
                     is_page_blob=True
                 )
             except Exception as error:
-                self.log_callback.warning(
-                    'Failed to cleanup image: {0}'.format(error)
-                )
+                msg = 'Failed to cleanup image: {0}'.format(error)
+                self.log_callback.warning(msg)
+                self.add_error_msg(msg)

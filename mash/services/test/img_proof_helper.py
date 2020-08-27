@@ -71,5 +71,7 @@ def img_proof_test(
     return {
         'status': status,
         'results_file': result['info']['results_file'],
-        'instance_id': result['info']['instance']
+        'instance_id': result['info']['instance'],
+        'summary': result['summary'],
+        'tests': result['tests']
     }
