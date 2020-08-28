@@ -4,7 +4,7 @@ from unittest.mock import call, MagicMock, Mock, patch
 
 from amqpstorm import AMQPError
 
-from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
+from apscheduler.jobstores.base import ConflictingIdError
 
 from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
@@ -238,7 +238,6 @@ class TestListenerService(object):
         job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
-        self.service.scheduler.remove_job.side_effect = JobLookupError('1')
         self.service._delete_job('1')
 
         self.service.log.info.assert_called_once_with(
