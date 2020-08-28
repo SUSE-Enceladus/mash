@@ -63,14 +63,11 @@ class JobCreatorService(MashService):
 
     def _handle_service_message(self, message):
         """
-        Handle new and delete job messages.
+        Handle new job messages.
         """
         try:
             job_doc = json.loads(message.body)
-            if 'job_delete' in job_doc:
-                self.publish_delete_job_message(job_doc['job_delete'])
-            else:
-                self.send_job(job_doc)
+            self.send_job(job_doc)
         except Exception as error:
             self.log.error(
                 'Invalid message received: {0}.'.format(error)
@@ -136,24 +133,6 @@ class JobCreatorService(MashService):
             )
         except Exception as error:
             self.log.error('Job status update failed: {}'.format(error))
-
-    def publish_delete_job_message(self, job_id):
-        """
-        Publish delete job message to obs service.
-
-        This will flush the job with the given id out of the pipeline.
-        """
-        self.log.info(
-            'Deleting job.',
-            extra={'job_id': job_id}
-        )
-
-        delete_message = {
-            "obs_job_delete": job_id
-        }
-        self._publish(
-            'obs', self.job_document_key, JsonFormat.json_message(delete_message)
-        )
 
     def publish_job_doc(self, service, job_doc):
         """

@@ -121,11 +121,6 @@ def test_delete_jobs(mock_handle_request, mock_publish, mock_get_current_obj):
     mock_get_current_obj.return_value = app
 
     assert delete_job('12345678-1234-1234-1234-123456789012', '1') == 1
-    mock_publish.assert_called_once_with(
-        'jobcreator',
-        'job_document',
-        json.dumps({'job_delete': '12345678-1234-1234-1234-123456789012'}, sort_keys=True)
-    )
 
     # Exception
     del job['rows_deleted']

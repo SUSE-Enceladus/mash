@@ -20,7 +20,7 @@ from datetime import datetime
 
 from mash.services.database.extensions import db
 from mash.services.database.models import Job
-from mash.services.status_levels import FAILED, EXCEPTION, DELETE, RUNNING, FINISHED
+from mash.services.status_levels import FAILED, EXCEPTION, RUNNING, FINISHED
 from mash.services.database.utils.users import get_user_by_id
 
 
@@ -96,7 +96,7 @@ def save_job_status(job_doc):
     status = job_doc.pop('status')
     current_service = job_doc.pop('current_service')
 
-    failed_states = (FAILED, EXCEPTION, DELETE)
+    failed_states = (FAILED, EXCEPTION)
     if status in failed_states and job.state != status:
         job.failed_service = job.prev_service
         job.state = status

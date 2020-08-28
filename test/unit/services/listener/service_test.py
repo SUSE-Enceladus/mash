@@ -295,40 +295,6 @@ class TestListenerService(object):
 
         self.message.ack.assert_called_once_with()
 
-    @patch.object(ListenerService, '_publish_message')
-    @patch.object(ListenerService, '_delete_job')
-    def test_service_handle_listener_message_delete_job(
-        self,
-        mock_delete_job,
-        mock_publish_message
-    ):
-        job = Mock()
-        job.id = '1'
-        job.utctime = 'now'
-        self.service.jobs['1'] = job
-
-        self.message.body = JsonFormat.json_message({
-            "test_result": {
-                "cloud_image_name": "image123",
-                "id": "1",
-                "status": "delete",
-                "errors": []
-            }
-        })
-        self.service._handle_listener_message(self.message)
-
-        msg = JsonFormat.json_message({
-            "replicate_result": {
-                "cloud_image_name": "image123",
-                "id": "1",
-                "status": "delete",
-                "errors": []
-            }
-        })
-
-        mock_delete_job.assert_called_once_with('1')
-        mock_publish_message.assert_called_once_with(msg, '1')
-
     @patch.object(ListenerService, '_cleanup_job')
     def test_service_handle_listener_message_failed(self, mock_cleanup_job):
         job = Mock()

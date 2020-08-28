@@ -525,16 +525,6 @@ class TestJobCreatorService(object):
             'Expecting value: line 1 column 1 (char 0).'
         )
 
-    @patch.object(JobCreatorService, '_publish')
-    def test_jobcreator_publish_delete_job_message(self, mock_publish):
-        message = MagicMock()
-        message.body = '{"job_delete": "1"}'
-        self.jobcreator._handle_service_message(message)
-        mock_publish.assert_called_once_with(
-            'obs', 'job_document',
-            JsonFormat.json_message({"obs_job_delete": "1"})
-        )
-
     @patch('mash.services.jobcreator.service.handle_request')
     def test_jobcreator_handle_status_message(self, mock_handle_request):
         data = {
