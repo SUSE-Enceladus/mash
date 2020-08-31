@@ -109,7 +109,7 @@ class EC2CreateJob(MashJob):
         self.request_credentials(accounts)
 
         for region, info in self.target_regions.items():
-            self.status_msg['source_regions'][region] = None  # Reset ami id if always job
+            self.status_msg['source_regions'][region] = None
             account = info['account']
             credentials = self.credentials[account]
 

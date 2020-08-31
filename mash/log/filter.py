@@ -45,8 +45,4 @@ class BaseServiceFilter(logging.Filter):
             record.job = 'Job[{0}]: '.format(record.job_id)
         else:
             record.job = ''
-        if hasattr(record, 'iteration'):
-            record.iteration = 'Pass[{0}]: '.format(record.iteration)
-        else:
-            record.iteration = ''
         return True

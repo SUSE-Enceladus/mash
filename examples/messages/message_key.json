@@ -1,4 +1,4 @@
 {
   "share_with": ["all", "None", "comma_sep_account_number_list"],
-  "utctime": ["now", "always", "timestring_utc_timezone"],
+  "utctime": ["now", "timestring_utc_timezone"],
 }

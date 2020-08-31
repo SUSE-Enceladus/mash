@@ -57,7 +57,7 @@ def create_job(data):
         'current_service': current_app.config['SERVICE_NAMES'][0]
     }
 
-    if data['utctime'] not in ('now', 'always'):
+    if data['utctime'] != 'now':
         kwargs['start_time'] = parser.parse(data['utctime'])
 
     if data.get('cloud_architecture'):

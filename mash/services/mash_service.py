@@ -198,7 +198,10 @@ class MashService(object):
         )
 
     def _should_notify(
-        self, notification_email, notification_type, utctime, status,
+        self,
+        notification_email,
+        notification_type,
+        status,
         last_service
     ):
         """
@@ -208,16 +211,16 @@ class MashService(object):
             return False
         elif status != SUCCESS:
             return True
-        elif notification_type == 'periodic' and utctime != 'always':
+        elif notification_type == 'periodic':
             return True
-        elif last_service == self.service_exchange and utctime != 'always':
+        elif last_service == self.service_exchange:
             return True
 
         return False
 
     def _create_notification_content(
-        self, job_id, status, utctime, last_service, image_name,
-        iteration_count=None, error=None
+        self, job_id, status, last_service, image_name,
+        error=None
     ):
         """
         Build content string for job notification message.
@@ -239,9 +242,6 @@ class MashService(object):
         else:
             msg.append('Job failed.')
 
-            if utctime == 'always' and iteration_count:
-                msg.append(' The current pass is #{iteration_count}.')
-
             if error:
                 msg.append(' The following error was logged: \n\n{error}')
 
@@ -252,26 +252,30 @@ class MashService(object):
             service=self.service_exchange,
             job_log=self.config.get_job_log_file(job_id),
             image_name=image_name,
-            iteration_count=str(iteration_count),
             error=error
         )
 
     def send_notification(
-        self, job_id, notification_email, notification_type, status, utctime,
-        last_service, image_name, iteration_count=None, error=None
+        self, job_id, notification_email, notification_type, status,
+        last_service, image_name, error=None
     ):
         """
         Send job notification based on result of _should_notify.
         """
         notify = self._should_notify(
-            notification_email, notification_type, utctime, status,
+            notification_email,
+            notification_type,
+            status,
             last_service
         )
 
         if notify:
             content = self._create_notification_content(
-                job_id, status, utctime, last_service, image_name,
-                iteration_count, error
+                job_id,
+                status,
+                last_service,
+                image_name,
+                error
             )
             self.notification_class.send_notification(
                 content,
