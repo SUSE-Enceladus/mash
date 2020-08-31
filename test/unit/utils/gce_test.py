@@ -16,89 +16,220 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from pytest import raises
+
+from googleapiclient.errors import HttpError
+
 from unittest.mock import Mock, patch
 from mash.utils.gce import (
-    cleanup_gce_image,
     get_region_list,
+    create_gce_image,
     delete_gce_image,
-    delete_image_tarball
+    deprecate_gce_image,
+    get_gce_image,
+    delete_image_tarball,
+    upload_image_tarball,
+    wait_on_image_ready,
+    get_gce_compute_driver,
+    get_gce_storage_driver,
+    wait_on_operation
 )
+from mash.mash_exceptions import MashException
 
 
-@patch('mash.utils.gce.delete_image_tarball')
-@patch('mash.utils.gce.delete_gce_image')
-def test_cleanup_gce_image(mock_delete_image, mock_delete_tarball):
-    creds = {
-        'client_email': 'fake@fake.com',
-        'project_id': '123'
-    }
-    cleanup_gce_image(creds, 'image_123', 'bucket')
-
-    assert mock_delete_image.call_count == 1
-    assert mock_delete_tarball.call_count == 1
-
-
-@patch('mash.utils.gce.get_driver')
-def test_delete_gce_image(mock_get_driver):
-    compute_engine = Mock()
+@patch('mash.utils.gce.wait_on_operation')
+def test_delete_gce_image(mock_wait_on_op):
     driver = Mock()
-    mock_get_driver.return_value = compute_engine
-    compute_engine.return_value = driver
-
-    creds = {
-        'client_email': 'fake@fake.com',
-        'project_id': '123'
+    delete_op = Mock()
+    response = Mock()
+    operation = {
+        'error': {
+            'errors': [{'message': 'No image found!'}]
+        }
     }
 
-    delete_gce_image(creds, 'auth_file', 'image_123')
+    driver.images.return_value = delete_op
+    delete_op.delete.return_value = response
+    response.execute.return_value = {'name': 'operation123'}
+    mock_wait_on_op.return_value = operation
 
-    driver.ex_delete_image.assert_called_once_with('image_123')
+    with raises(MashException):
+        delete_gce_image(driver, 'project', 'image_123')
 
 
-@patch('mash.utils.gce.GoogleStorageDriver')
-def test_delete_image_tarball(mock_get_driver):
+def test_delete_image_tarball():
     driver = Mock()
-    obj = Mock()
+    bucket = Mock()
+    blob = Mock()
 
-    driver.get_object.return_value = obj
-    mock_get_driver.return_value = driver
+    bucket.blob.return_value = blob
+    driver.get_bucket.return_value = bucket
 
-    creds = {
-        'client_email': 'fake@fake.com',
-        'project_id': '123'
-    }
+    delete_image_tarball(driver, 'image_123', 'bucket')
 
-    delete_image_tarball(creds, 'auth_file', 'image_123', 'bucket')
-
-    driver.get_object.assert_called_once_with('bucket', 'image_123.tar.gz')
-    driver.delete_object.assert_called_once_with(obj)
+    driver.get_bucket.assert_called_once_with('bucket')
+    blob.delete.assert_called_once_with()
 
 
-@patch('mash.utils.gce.get_driver')
-def test_get_region_list(mock_get_driver):
-    compute_engine = Mock()
+def test_upload_image_tarball():
     driver = Mock()
-    mock_get_driver.return_value = compute_engine
-    compute_engine.return_value = driver
+    bucket = Mock()
+    blob = Mock()
 
-    class MockGCERegion:
-        def __init__(self, name, status, zones):
-            self.name = name
-            self.status = status
-            self.zones = zones
+    bucket.blob.return_value = blob
+    driver.get_bucket.return_value = bucket
 
-    class MockGCEZone:
-        def __init__(self, name):
-            self.name = name
+    upload_image_tarball(
+        driver,
+        'image_123.tar.gz',
+        '/path/to/file.tar.gz',
+        'bucket'
+    )
 
-    driver.ex_list_regions.return_value = \
-        [MockGCERegion('us-west1', 'UP', [MockGCEZone('us-west1-c')])]
+    driver.get_bucket.assert_called_once_with('bucket')
+    blob.upload_from_filename.assert_called_once_with('/path/to/file.tar.gz')
 
-    creds = {
-        'client_email': 'fake@fake.com',
-        'project_id': '123'
+
+def test_get_region_list():
+    driver = Mock()
+    regions_op = Mock()
+    response = Mock()
+
+    driver.regions.return_value = regions_op
+    regions_op.list.return_value = response
+    response.execute.return_value = {
+        'items': [
+            {'status': 'UP', 'name': 'us-west1', 'zones': ['us-west1-c']}
+        ]
     }
 
-    get_region_list(creds)
+    zones = get_region_list(driver, 'project')
 
-    driver.ex_list_regions.assert_called_once_with()
+    assert 'us-west1-c' in zones
+
+
+@patch('mash.utils.gce.wait_on_image_ready')
+@patch('mash.utils.gce.wait_on_operation')
+def test_create_gce_image(mock_wait_on_op, wait_on_ready):
+    driver = Mock()
+    insert_op = Mock()
+    response = Mock()
+    operation = {
+        'error': {
+            'errors': [{'message': 'No image found!'}]
+        }
+    }
+
+    driver.images.return_value = insert_op
+    insert_op.insert.return_value = response
+    response.execute.return_value = {'name': 'operation123'}
+    mock_wait_on_op.return_value = operation
+
+    with raises(MashException):
+        create_gce_image(
+            driver,
+            'project',
+            'image_123',
+            'description',
+            'blob_uri',
+            family='sles',
+            guest_os_features=['UEFI_COMPATIBLE']
+        )
+
+    # Test successful operation
+    operation = {}
+    mock_wait_on_op.return_value = operation
+    create_gce_image(
+        driver,
+        'project',
+        'image_123',
+        'description',
+        'blob_uri',
+        family='sles',
+        guest_os_features=['UEFI_COMPATIBLE']
+    )
+
+
+def test_get_gce_image():
+    driver = Mock()
+    get_op = Mock()
+    response = Mock()
+
+    driver.images.return_value = get_op
+    get_op.get.return_value = response
+    response.execute.side_effect = HttpError('Not found!', content=b'Nothing')
+
+    get_gce_image(driver, 'project', 'image name')
+
+
+@patch('mash.utils.gce.get_gce_image')
+def test_deprecate_gce_image(mock_get_gce_image):
+    driver = Mock()
+    deprecate_op = Mock()
+    response = Mock()
+
+    driver.images.return_value = deprecate_op
+    deprecate_op.get.return_value = response
+
+    mock_get_gce_image.return_value = {'selfLink': 'link/to/image'}
+
+    deprecate_gce_image(driver, 'project', 'image name', 'replacement name')
+
+
+@patch('mash.utils.gce.time')
+@patch('mash.utils.gce.get_gce_image')
+def test_wait_on_image_ready(mock_get_gce_image, mock_time):
+    driver = Mock()
+    mock_get_gce_image.side_effect = [{}, {'status': 'FAILED'}]
+
+    with raises(MashException):
+        wait_on_image_ready(driver, 'project', 'image name')
+
+
+@patch('mash.utils.gce.discovery')
+@patch('mash.utils.gce.service_account')
+def test_get_gce_compute_driver(mock_service_account, mock_discovery):
+    creds = Mock()
+    mock_service_account.Credentials.from_service_account_info.return_value = creds
+
+    get_gce_compute_driver({'some': 'creds'})
+    mock_discovery.build.assert_called_once_with(
+        'compute',
+        'v1',
+        credentials=creds,
+        cache_discovery=False
+    )
+
+
+@patch('mash.utils.gce.storage')
+@patch('mash.utils.gce.service_account')
+def test_get_gce_storage_driver(mock_service_account, mock_storage):
+    creds = Mock()
+    mock_service_account.Credentials.from_service_account_info.return_value = creds
+
+    get_gce_storage_driver({'project_id': 'project'})
+    mock_storage.Client.assert_called_once_with('project', creds)
+
+
+@patch('mash.utils.gce.time')
+def test_wait_on_operation(mock_time):
+    driver = Mock()
+    mock_time.time.return_value = 10
+
+    global_ops_obj = Mock()
+    operation = Mock()
+    operation.execute.return_value = {'status': 'DONE'}
+    global_ops_obj.get.return_value = operation
+    driver.globalOperations.return_value = global_ops_obj
+
+    result = wait_on_operation(driver, 'project', 'operation213')
+    assert result['status'] == 'DONE'
+    assert global_ops_obj.get.call_count == 1
+
+    # Test operation timeout
+
+    mock_time.time.side_effect = [10, 10, 12]
+    operation.execute.return_value = {'status': 'PENDING'}
+
+    with raises(MashException):
+        wait_on_operation(driver, 'project', 'operation213', timeout=1)
