@@ -23,7 +23,7 @@ import signal
 from amqpstorm import AMQPError
 
 from apscheduler import events
-from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
+from apscheduler.jobstores.base import ConflictingIdError
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 
@@ -167,13 +167,6 @@ class ListenerService(MashService):
 
         Also attempt to remove any running instances of the job.
         """
-        try:
-            # Remove job from scheduler if it has
-            # not started executing yet.
-            self.scheduler.remove_job(job_id)
-        except JobLookupError:
-            pass
-
         if job_id in self.jobs:
             job = self.jobs[job_id]
             self.log.info(
