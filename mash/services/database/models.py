@@ -230,7 +230,7 @@ class Job(db.Model):
     state = db.Column(db.String(12))
     start_time = db.Column(db.DateTime, default=datetime.utcnow)
     finish_time = db.Column(db.DateTime)
-    errors = db.Column(db.ARRAY(db.Text), default=list)
+    _errors = db.Column('errors', db.Text)
     _data = db.Column('data', db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', back_populates='jobs')
@@ -242,6 +242,14 @@ class Job(db.Model):
     @data.setter
     def data(self, value):
         self._data = json.dumps(value)
+
+    @property
+    def errors(self):
+        return self._errors.split('|') if self._errors else []
+
+    @errors.setter
+    def errors(self, value):
+        self._errors = '|'.join(value) if value else ''
 
     def __repr__(self):
         return '<Job {}>'.format(self.job_id)
