@@ -91,8 +91,14 @@ def test_job_model():
         download_url='http://download.opensuse.org/repositories/Cloud:Tools/images',
         user_id='1'
     )
+
     job.data = {'test': 'data'}
     assert job.data['test'] == 'data'
+
+    job.errors = ['Rut ro, Something bad happened.', 'Another error.']
+    assert job.errors[0] == 'Rut ro, Something bad happened.'
+    assert job.errors[1] == 'Another error.'
+
     assert job.__repr__() == '<Job 12345678-1234-1234-1234-123456789012>'
 
 
