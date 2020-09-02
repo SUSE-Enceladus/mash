@@ -207,13 +207,4 @@ def delete_job(job_id, user_id):
     except KeyError:
         raise MashJobException('Delete job failed')
 
-    try:
-        publish(
-            'jobcreator',
-            'job_document',
-            json.dumps({'job_delete': job_id}, sort_keys=True)
-        )
-    except Exception:
-        pass  # We cannot always cleanup the job from the queue
-
     return rows_deleted

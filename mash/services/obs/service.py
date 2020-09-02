@@ -23,7 +23,6 @@ import dateutil.parser
 from mash.services.mash_service import MashService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
-from mash.services.status_levels import DELETE
 from mash.utils.mash_utils import persist_json, restart_jobs, setup_logfile
 
 
@@ -125,24 +124,6 @@ class OBSImageBuildResultService(MashService):
         if 'obs_job' in job_data:
             job_id = job_data['obs_job'].get('id', None)
             result = self._add_job(job_data)
-        elif job_data.get('obs_job_delete'):
-            job_id = job_data['obs_job_delete']
-            self.log.info(
-                'Deleting Job',
-                extra={'job_id': job_id}
-            )
-            result = self._delete_job(job_id)
-            message = {
-                'obs_result': {
-                    'id': job_id,
-                    'status': DELETE
-                }
-            }
-            self._publish(
-                self.service_exchange,
-                self.listener_msg_key,
-                JsonFormat.json_message(message)
-            )
         else:
             result = {
                 'ok': False,

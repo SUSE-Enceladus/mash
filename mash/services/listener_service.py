@@ -31,7 +31,7 @@ from pytz import utc
 
 from mash.mash_exceptions import MashListenerServiceException
 from mash.services.mash_service import MashService
-from mash.services.status_levels import EXCEPTION, SUCCESS, DELETE
+from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import (
     remove_file,
@@ -233,15 +233,6 @@ class ListenerService(MashService):
             if status == SUCCESS:
                 self._schedule_job(job.id)
                 return  # Don't ack message until job finishes
-            elif status == DELETE:
-                self.log.info(
-                    'Received a job delete message for: {0}.'.format(job_id)
-                )
-
-                self._delete_job(job_id)
-                key = '{0}_result'.format(self.service_exchange)
-                msg = JsonFormat.json_message({key: listener_msg})
-                self._publish_message(msg, job_id)
             else:
                 self._cleanup_job(job_id)
 

@@ -2,7 +2,6 @@ SUCCESS = 'success'
 FAILED = 'failed'
 EXCEPTION = 'exception'
 OVERDUE = 'overdue'
-DELETE = 'delete'
 UNKOWN = None
 PENDING = 'pending'
 FINISHED = 'finished'
