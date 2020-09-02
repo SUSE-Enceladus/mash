@@ -257,6 +257,14 @@ def get_classic_blob_service(
         storage_account
     )
 
+    if 'error' in keys:
+        try:
+            error = keys['error']['message']
+        except KeyError:
+            error = 'Unable to retrieve storage account keys.'
+
+        raise MashAzureUtilsException(error)
+
     return blob_service_type(
         account_name=storage_account,
         account_key=keys['primaryKey']
