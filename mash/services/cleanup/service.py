@@ -18,6 +18,7 @@
 
 import os
 import time
+import shutil
 
 from apscheduler.schedulers.background import BlockingScheduler
 from pytz import utc
@@ -64,9 +65,9 @@ class CleanupService(MashService):
         now = time.time()
         cutoff = now - max_image_age * 86400
 
-        for entry in os.scandir(download_dir):
-            if (not entry.name.startswith('.')
-                and entry.is_file(follow_symlinks=False)):
-                if entry.stat().st_mtime < cutoff:
-                    self.log.info('Purging {}'.format(entry.name))
-                    os.unlink(entry.path)
+        with os.scandir(download_dir) as scanner:
+            for entry in scanner:
+                if entry.is_dir(follow_symlinks=False):
+                    if entry.stat().st_mtime < cutoff:
+                        self.log.info('Purging {}'.format(entry.name))
+                        shutil.rmtree(entry.path)
