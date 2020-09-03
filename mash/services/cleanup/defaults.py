@@ -1,4 +1,4 @@
-# Copyright (c) 2020 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
