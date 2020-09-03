@@ -182,6 +182,15 @@ def test_get_classic_blob_service(
 
     assert service == blob_service
 
+    # Error
+    keys = {'error': {'some': 'data'}}
+    mock_get_classic_storage_account_keys.return_value = keys
+
+    with raises(MashAzureUtilsException):
+        get_classic_blob_service(
+            'test/data/azure_creds.json', 'rg1', 'sa1'
+        )
+
 
 @patch('mash.utils.azure.get_blob_url')
 @patch('mash.utils.azure.get_blob_service_with_account_keys')
