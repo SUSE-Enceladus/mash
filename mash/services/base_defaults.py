@@ -127,3 +127,7 @@ class Defaults(object):
     @staticmethod
     def get_auth_methods():
         return ['password']
+
+    @staticmethod
+    def get_download_dir():
+        return '/var/lib/mash/images/'

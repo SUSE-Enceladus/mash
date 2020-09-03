@@ -21,7 +21,7 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.obs.config import OBSConfig
+from mash.services.base_config import BaseConfig
 from mash.services.obs.service import OBSImageBuildResultService
 
 
@@ -36,7 +36,7 @@ def main():
         # run service, enter main loop
         OBSImageBuildResultService(
             service_exchange='obs',
-            config=OBSConfig()
+            config=BaseConfig()
         )
     except MashException as e:
         # known exception

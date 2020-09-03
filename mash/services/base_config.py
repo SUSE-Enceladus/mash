@@ -319,6 +319,23 @@ class BaseConfig(object):
 
         return database_uri
 
+    def get_download_directory(self):
+        """
+        Return directory name for image download directory:
+
+        download_directory: /tmp
+
+        if no configuration exists the download dir name from
+        the Defaults class is returned
+
+        :rtype: string
+        """
+        download_directory = self._get_attribute(
+            attribute='download_directory'
+        )
+        return download_directory if download_directory else \
+            Defaults.get_download_dir()
+
     def get_email_whitelist(self):
         """
         Return the list of whitelisted emails if it's configured.

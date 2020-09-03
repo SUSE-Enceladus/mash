@@ -1,4 +1,4 @@
-# Copyright (c) 2020 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -18,7 +18,6 @@
 
 from mash.services.base_config import BaseConfig
 from mash.services.cleanup.defaults import Defaults as CleanupDefaults
-from mash.services.obs.defaults import Defaults as OBSDefaults
 
 
 class CleanupConfig(BaseConfig):
@@ -32,24 +31,6 @@ class CleanupConfig(BaseConfig):
     """
     def __init__(self, config_file=None):
         super(CleanupConfig, self).__init__(config_file)
-
-    def get_download_directory(self):
-        """
-        Return directory name for image download directory:
-
-        obs:
-          download_directory: /tmp
-
-        if no configuration exists the download dir name from
-        the Defaults class is returned
-
-        :rtype: string
-        """
-        download_directory = self._get_attribute(
-            attribute='download_directory', element='obs'
-        )
-        return download_directory if download_directory else \
-            OBSDefaults.get_download_dir()
 
     def get_max_image_age(self):
         """

@@ -31,7 +31,7 @@ from apscheduler.events import (
 from obs_img_utils.api import OBSImageUtil
 
 # project
-from mash.services.obs.defaults import Defaults
+from mash.services.base_defaults import Defaults
 from mash.log.filter import SchedulerLoggingFilter
 from mash.services.status_levels import FAILED, SUCCESS
 
