@@ -15,6 +15,7 @@ max_oci_wait_seconds: 1000
 oci_upload_process_count: 2
 base_thread_pool_count: 20
 publish_thread_pool_count: 60
+download_directory: /images
 services:
   - obs
   - upload
@@ -24,8 +25,6 @@ services:
   - deprecate
 non_cred_services:
   - obs
-obs:
-  download_directory: /images
 cloud:
   ec2:
     regions:

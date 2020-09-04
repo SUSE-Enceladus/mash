@@ -5,7 +5,7 @@ from mash.services.obs_service import main
 
 
 class TestOBS(object):
-    @patch('mash.services.obs_service.OBSConfig')
+    @patch('mash.services.obs_service.BaseConfig')
     @patch('mash.services.obs_service.OBSImageBuildResultService')
     def test_main(self, mock_OBSImageBuildResultService, mock_config):
         config = Mock()
@@ -17,7 +17,7 @@ class TestOBS(object):
             config=config
         )
 
-    @patch('mash.services.obs_service.OBSConfig')
+    @patch('mash.services.obs_service.BaseConfig')
     @patch('mash.services.obs_service.OBSImageBuildResultService')
     @patch('sys.exit')
     def test_main_mash_error(
@@ -27,7 +27,7 @@ class TestOBS(object):
         main()
         mock_exit.assert_called_once_with(1)
 
-    @patch('mash.services.obs_service.OBSConfig')
+    @patch('mash.services.obs_service.BaseConfig')
     @patch('mash.services.obs_service.OBSImageBuildResultService')
     @patch('sys.exit')
     def test_main_keyboard_interrupt(
@@ -37,7 +37,7 @@ class TestOBS(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.obs_service.OBSConfig')
+    @patch('mash.services.obs_service.BaseConfig')
     @patch('mash.services.obs_service.OBSImageBuildResultService')
     @patch('sys.exit')
     def test_main_system_exit(
@@ -47,7 +47,7 @@ class TestOBS(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.obs_service.OBSConfig')
+    @patch('mash.services.obs_service.BaseConfig')
     @patch('mash.services.obs_service.OBSImageBuildResultService')
     @patch('sys.exit')
     def test_main_unexpected_error(
