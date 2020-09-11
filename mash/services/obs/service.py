@@ -248,7 +248,6 @@ class OBSImageBuildResultService(MashService):
 
         job_worker = OBSImageBuildResult(**kwargs)
         job_worker.set_result_handler(self._send_job_result_for_upload)
-        job_worker.set_notification_handler(self.send_notification)
         job_worker.start_watchdog(isotime=time)
         self.jobs[job_id] = job_worker
         return {

@@ -29,7 +29,6 @@ from obs_img_utils.api import OBSImageUtil
 
 # project
 from mash.services.base_defaults import Defaults
-from mash.services.status_levels import FAILED, SUCCESS
 
 
 class OBSImageBuildResult(object):
@@ -115,7 +114,6 @@ class OBSImageBuildResult(object):
         self.job_deleted = False
         self.log_callback = None
         self.result_callback = None
-        self.notification_callback = None
         self.notification_email = notification_email
         self.notification_type = notification_type
         self.profile = profile
@@ -200,9 +198,6 @@ class OBSImageBuildResult(object):
     def set_result_handler(self, function):
         self.result_callback = function
 
-    def set_notification_handler(self, function):
-        self.notification_callback = function
-
     def call_result_handler(self):
         self._result_callback()
 
@@ -215,23 +210,12 @@ class OBSImageBuildResult(object):
                         'image_file':
                             self.downloader.image_status['image_source'],
                         'status': self.job_status,
-                        'errors': self.errors
+                        'errors': self.errors,
+                        'notification_email': self.notification_email,
+                        'notification_type': self.notification_type,
+                        'last_service': self.last_service
                     }
                 }
-            )
-
-    def _notification_callback(
-        self, status, error=None
-    ):
-        if self.notification_callback:
-            self.notification_callback(
-                self.job_id,
-                self.notification_email,
-                self.notification_type,
-                status,
-                self.last_service,
-                self.image_name,
-                error
             )
 
     def _job_submit_event(self, event):
@@ -268,7 +252,6 @@ class OBSImageBuildResult(object):
                 'Job status: {0}'.format(self.job_status)
             )
             self._result_callback()
-            self._notification_callback(SUCCESS)
             self.log_callback.info('Job done')
         except Exception as issue:
             msg = '{0}: {1}'.format(type(issue).__name__, issue)
@@ -276,7 +259,6 @@ class OBSImageBuildResult(object):
             self.job_status = 'failed'
             self.errors.append(msg)
             self.log_callback.error(msg)
-            self._notification_callback(FAILED, msg)
             self._result_callback()
 
     def progress_callback(self, block_num, read_size, total_size, done=False):

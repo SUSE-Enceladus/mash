@@ -34,11 +34,6 @@ class TestOBSImageBuildResult(object):
         self.obs_result.set_result_handler(function)
         assert self.obs_result.result_callback == function
 
-    def test_set_notification_handler(self):
-        function = Mock()
-        self.obs_result.set_notification_handler(function)
-        assert self.obs_result.notification_callback == function
-
     @patch.object(OBSImageBuildResult, '_result_callback')
     def test_call_result_handler(self, mock_result_callback):
         self.obs_result.call_result_handler()
@@ -55,19 +50,12 @@ class TestOBSImageBuildResult(object):
                     'id': '815',
                     'image_file': 'image',
                     'status': 'success',
-                    'errors': []
+                    'errors': [],
+                    'notification_email': 'test@fake.com',
+                    'notification_type': 'single',
+                    'last_service': 'publish'
                 }
             }
-        )
-
-    def test_notification_callback(self):
-        self.obs_result.notification_callback = Mock()
-        self.obs_result._notification_callback(
-            'success', 'error!'
-        )
-        self.obs_result.notification_callback.assert_called_once_with(
-            '815', 'test@fake.com', 'single', 'success',
-            'publish', 'obs_package', 'error!'
         )
 
     @patch('mash.services.obs.build_result.BackgroundScheduler')
@@ -126,22 +114,18 @@ class TestOBSImageBuildResult(object):
         osc_result_thread.join.assert_called_once_with()
         mock_image_status.assert_called_once_with()
 
-    @patch.object(OBSImageBuildResult, '_notification_callback')
     @patch.object(OBSImageBuildResult, '_result_callback')
     def test_update_image_status(
         self,
-        mock_result_callback,
-        mock_notification_callback
+        mock_result_callback
     ):
         self.downloader.get_image.return_value = 'new-image.xz'
         self.obs_result._update_image_status()
         mock_result_callback.assert_called_once_with()
-        mock_notification_callback.assert_called_once_with('success')
 
-    @patch.object(OBSImageBuildResult, '_notification_callback')
     @patch.object(OBSImageBuildResult, '_result_callback')
     def test_update_image_status_raises(
-        self, mock_result_callback, mock_notification_callback
+        self, mock_result_callback
     ):
         self.downloader.get_image.side_effect = Exception(
             'request error'

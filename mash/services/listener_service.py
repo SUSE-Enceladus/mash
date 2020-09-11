@@ -290,17 +290,6 @@ class ListenerService(MashService):
 
         message = self._get_status_message(job)
         self._publish_message(message, job.id)
-
-        self.send_notification(
-            job.id,
-            job.notification_email,
-            job.notification_type,
-            job.status,
-            job.last_service,
-            job.cloud_image_name,
-            event.exception
-        )
-
         job.listener_msg.ack()
 
     def _process_job_missed(self, event):

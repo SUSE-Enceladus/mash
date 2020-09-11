@@ -52,9 +52,6 @@ class MashJob(object):
                 )
             )
 
-        self.notification_email = job_config.get('notification_email')
-        self.notification_type = job_config.get('notification_type', 'single')
-
         self.post_init()
 
     def get_job_id(self):
