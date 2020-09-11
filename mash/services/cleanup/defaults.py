@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -22,5 +22,5 @@ class Defaults(object):
     Default values
     """
     @classmethod
-    def get_download_dir(self):
-        return '/var/lib/mash/images/'
+    def get_max_image_age(self):
+        return 90

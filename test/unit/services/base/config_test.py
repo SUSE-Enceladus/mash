@@ -139,6 +139,10 @@ class TestBaseConfig(object):
         with raises(MashConfigException):
             self.empty_config.get_database_uri()
 
+    def test_get_download_directory(self):
+        assert self.config.get_download_directory() == '/images'
+        assert self.empty_config.get_download_directory() == '/var/lib/mash/images/'
+
     def test_get_max_oci_attempts(self):
         assert self.config.get_max_oci_attempts() == 500
         assert self.empty_config.get_max_oci_attempts() == 100

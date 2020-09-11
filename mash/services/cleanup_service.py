@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2020 SUSE Linux GmbH.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -15,28 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
 import logging
 import sys
 import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.base_config import BaseConfig
-from mash.services.obs.service import OBSImageBuildResultService
+from mash.services.cleanup.config import CleanupConfig
+from mash.services.cleanup.service import CleanupService
 
 
 def main():
     """
-    mash - obs service application entry point
+    mash - cleanup service application entry point
     """
     try:
         logging.basicConfig()
-        log = logging.getLogger('MashService')
+        log = logging.getLogger('CleanupService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        OBSImageBuildResultService(
-            service_exchange='obs',
-            config=BaseConfig()
+        CleanupService(
+            service_exchange='cleanup',
+            config=CleanupConfig()
         )
     except MashException as e:
         # known exception

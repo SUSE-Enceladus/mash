@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -17,12 +17,12 @@
 #
 
 from mash.services.base_config import BaseConfig
-from mash.services.obs.defaults import Defaults
+from mash.services.cleanup.defaults import Defaults as CleanupDefaults
 
 
-class OBSConfig(BaseConfig):
+class CleanupConfig(BaseConfig):
     """
-    Implements reading of obs configuration from mash configuration file:
+    Implements reading of cleanup configuration from mash configuration file:
 
     * /etc/mash/mash_config.yaml
 
@@ -30,22 +30,22 @@ class OBSConfig(BaseConfig):
     information to control the behavior of the mash services.
     """
     def __init__(self, config_file=None):
-        super(OBSConfig, self).__init__(config_file)
+        super(CleanupConfig, self).__init__(config_file)
 
-    def get_download_directory(self):
+    def get_max_image_age(self):
         """
-        Return directory name for image download directory:
+        Return maximum image age (in days):
 
-        obs:
-          download_directory: /tmp
+        cleanup:
+          max_image_age: 90
 
-        if no configuration exists the download dir name from
+        if no configuration exists the max image age from
         the Defaults class is returned
 
-        :rtype: string
+        :rtype: int
         """
-        download_directory = self._get_attribute(
-            attribute='download_directory', element='obs'
+        max_image_age = self._get_attribute(
+            attribute='max_image_age', element='cleanup'
         )
-        return download_directory if download_directory else \
-            Defaults.get_download_dir()
+        return max_image_age if max_image_age else \
+            CleanupDefaults.get_max_image_age()

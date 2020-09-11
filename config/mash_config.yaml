@@ -12,6 +12,7 @@ smtp_ssl: False
 smtp_user: test@fake.com
 credentials_url: http://localhost:5006/
 database_uri: sqlite:////var/lib/mash/app.db
+download_directory: /var/lib/mash/images
 services:
   - obs
   - upload
@@ -25,8 +26,6 @@ non_cred_services:
   - obs
 credentials:
   credentials_directory: /var/lib/mash/credentials/
-obs:
-  download_directory: /var/lib/mash/images
 cloud:
   ec2:
     regions:
