@@ -335,12 +335,11 @@ class TestListenerService(object):
         )
 
     @patch.object(ListenerService, '_get_status_message')
-    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result(
         self, mock_publish_message, mock_delete_job,
-        mock_send_email_notification, mock_get_status_msg
+        mock_get_status_msg
     ):
         event = Mock()
         event.job_id = '1'
@@ -372,12 +371,11 @@ class TestListenerService(object):
         msg.ack.assert_called_once_with()
 
     @patch.object(ListenerService, '_get_status_message')
-    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result_exception(
         self, mock_publish_message, mock_delete_job,
-        mock_send_email_notification, mock_get_status_msg
+        mock_get_status_msg
     ):
         event = Mock()
         event.job_id = '1'
@@ -405,12 +403,10 @@ class TestListenerService(object):
             '1'
         )
 
-    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_publishing_process_job_result_fail(
-        self, mock_publish_message, mock_delete_job,
-        mock_send_email_notification
+        self, mock_publish_message, mock_delete_job
     ):
         event = Mock()
         event.job_id = '1'

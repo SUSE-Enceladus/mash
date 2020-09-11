@@ -20,9 +20,11 @@ import json
 
 from mash.services.mash_service import MashService
 from mash.services.jobcreator import create_job
+from mash.services.status_levels import SUCCESS
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import setup_logfile
 from mash.utils.mash_utils import handle_request
+from mash.utils.email_notification import EmailNotification
 
 
 class JobCreatorService(MashService):
@@ -50,6 +52,16 @@ class JobCreatorService(MashService):
             self.service_exchange, self.job_document_key, self.service_queue
         )
         self._bind_result_queues()
+
+        # notification settings
+        self.notification_class = EmailNotification(
+            self.config.get_smtp_host(),
+            self.config.get_smtp_port(),
+            self.config.get_smtp_user(),
+            self.config.get_smtp_pass(),
+            self.config.get_smtp_ssl(),
+            log_callback=self.log
+        )
 
         self.start()
 
@@ -134,6 +146,17 @@ class JobCreatorService(MashService):
         except Exception as error:
             self.log.error('Job status update failed: {}'.format(error))
 
+        self.send_notification(
+            job_doc['id'],
+            job_doc['notification_email'],
+            job_doc['notification_type'],
+            job_doc['status'],
+            job_doc['last_service'],
+            service,
+            job_doc.get('cloud_image_name'),
+            job_doc['errors']
+        )
+
     def publish_job_doc(self, service, job_doc):
         """
         Publish the job_doc message to the given service exchange.
@@ -187,6 +210,107 @@ class JobCreatorService(MashService):
 
             if service == job.last_service:
                 break
+
+    def _should_notify(
+        self,
+        notification_email,
+        notification_type,
+        status,
+        last_service,
+        current_service
+    ):
+        """
+        Return True if a notification should be sent based on job info.
+        """
+        if not notification_email:
+            return False
+        elif status != SUCCESS:
+            return True
+        elif notification_type == 'periodic':
+            return True
+        elif last_service == current_service:
+            return True
+
+        return False
+
+    def _create_notification_content(
+        self,
+        job_id,
+        status,
+        last_service,
+        current_service,
+        image_name,
+        errors=None
+    ):
+        """
+        Build content string for job notification message.
+        """
+        msg = [
+            'Job: {job_id}\n'
+            'Image Name: {image_name}\n'
+            'Service: {service}\n'
+        ]
+        error_msg = ''
+
+        if status == SUCCESS:
+            if current_service == last_service:
+                msg.append('Job finished successfully.')
+            else:
+                msg.append(
+                    'Job finished through the {service} service.'
+                )
+        else:
+            msg.append('Job failed.')
+
+            if errors:
+                error_msg = '\n\n'.join(errors)
+                msg.append(' The following errors were logged: \n\n{error_msg}')
+
+        msg = ''.join(msg)
+
+        return msg.format(
+            job_id=job_id,
+            service=current_service,
+            image_name=image_name,
+            error_msg=error_msg
+        )
+
+    def send_notification(
+        self,
+        job_id,
+        notification_email,
+        notification_type,
+        status,
+        last_service,
+        current_service,
+        image_name,
+        errors=None
+    ):
+        """
+        Send job notification based on result of _should_notify.
+        """
+        notify = self._should_notify(
+            notification_email,
+            notification_type,
+            status,
+            last_service,
+            current_service
+        )
+
+        if notify:
+            content = self._create_notification_content(
+                job_id,
+                status,
+                last_service,
+                current_service,
+                image_name,
+                errors
+            )
+            self.notification_class.send_notification(
+                content,
+                self.config.get_notification_subject(),
+                notification_email
+            )
 
     def start(self):
         """

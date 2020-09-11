@@ -9,11 +9,8 @@ from mash.mash_exceptions import MashRabbitConnectionException
 
 class TestBaseService(object):
 
-    @patch('mash.services.mash_service.EmailNotification')
     @patch('mash.services.mash_service.Connection')
-    def setup(
-        self, mock_connection, mock_email_notif
-    ):
+    def setup(self, mock_connection):
         self.connection = Mock()
         self.channel = Mock()
         self.msg_properties = {
@@ -37,7 +34,6 @@ class TestBaseService(object):
 
         self.service = MashService('obs', config=config)
 
-        assert mock_email_notif.call_count == 1
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
@@ -68,60 +64,3 @@ class TestBaseService(object):
         self.service.channel.queue.unbind.assert_called_once_with(
             queue='test.service', exchange='test', routing_key='1'
         )
-
-    def test_should_notify(self):
-        result = self.service._should_notify(
-            None, 'single', 'success', 'publish'
-        )
-        assert result is False
-
-        result = self.service._should_notify(
-            'test@fake.com', 'single', 'success', 'publish'
-        )
-        assert result is False
-
-        result = self.service._should_notify(
-            'test@fake.com', 'periodic', 'success', 'publish'
-        )
-        assert result is True
-
-        result = self.service._should_notify(
-            'test@fake.com', 'single', 'success', 'obs'
-        )
-        assert result is True
-
-    def test_create_notification_content(self):
-        # Failed message
-        msg = self.service._create_notification_content(
-            '1', 'failed', 'deprecate', 'test_image',
-            'Invalid publish permissions!'
-        )
-
-        assert 'Job failed' in msg
-
-        # Job finished with success
-        msg = self.service._create_notification_content(
-            '1', 'success', 'obs', 'test_image'
-        )
-
-        assert 'Job finished successfully' in msg
-
-        # Service with success
-        msg = self.service._create_notification_content(
-            '1', 'success', 'publish', 'test_image'
-        )
-
-        assert 'Job finished through the obs service' in msg
-
-    def test_send_email_notification(self):
-        job_id = '12345678-1234-1234-1234-123456789012'
-        to = 'test@fake.com'
-
-        notif_class = Mock()
-        self.service.notification_class = notif_class
-
-        self.service.send_notification(
-            job_id, to, 'periodic', 'failed', 'replicate',
-            'test_image'
-        )
-        assert notif_class.send_notification.call_count == 1

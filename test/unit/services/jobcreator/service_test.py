@@ -11,9 +11,7 @@ from mash.utils.json_format import JsonFormat
 class TestJobCreatorService(object):
 
     @patch.object(MashService, '__init__')
-    def setup(
-        self, mock_base_init
-    ):
+    def setup(self, mock_base_init):
         services = [
             'obs', 'upload', 'create', 'test', 'raw_image_upload',
             'replicate', 'publish', 'deprecate'
@@ -34,18 +32,21 @@ class TestJobCreatorService(object):
         )
 
         self.jobcreator = JobCreatorService()
+
         self.jobcreator.log = Mock()
         self.jobcreator.service_exchange = 'jobcreator'
         self.jobcreator.service_queue = 'service'
         self.jobcreator.job_document_key = 'job_document'
         self.jobcreator.services = services
 
+    @patch('mash.services.jobcreator.service.EmailNotification')
     @patch('mash.services.jobcreator.service.setup_logfile')
     @patch.object(JobCreatorService, 'start')
     @patch.object(JobCreatorService, 'bind_queue')
     def test_jobcreator_post_init(
         self, mock_bind_queue,
-        mock_start, mock_setup_logfile
+        mock_start, mock_setup_logfile,
+        mock_email_notif
     ):
         self.jobcreator.config = self.config
         self.config.get_log_file.return_value = \
@@ -60,6 +61,7 @@ class TestJobCreatorService(object):
 
         mock_bind_queue.call_count == 9
         mock_start.assert_called_once_with()
+        assert mock_email_notif.call_count == 1
 
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message(self, mock_publish):
@@ -525,13 +527,22 @@ class TestJobCreatorService(object):
             'Expecting value: line 1 column 1 (char 0).'
         )
 
+    @patch.object(JobCreatorService, 'send_notification')
     @patch('mash.services.jobcreator.service.handle_request')
-    def test_jobcreator_handle_status_message(self, mock_handle_request):
+    def test_jobcreator_handle_status_message(
+        self,
+        mock_handle_request,
+        mock_send_notif
+    ):
         data = {
             'test_status': {
                 'id': '12345678-1234-1234-1234-123456789012',
                 'state': 'running',
-                'status': 'success'
+                'status': 'success',
+                'notification_email': 'test@fake.com',
+                'notification_type': 'single',
+                'last_service': 'publish',
+                'errors': []
             }
         }
         message = MagicMock()
@@ -539,6 +550,7 @@ class TestJobCreatorService(object):
         self.jobcreator.database_api_url = 'http://localhost:5007/'
 
         self.jobcreator._handle_status_message(message)
+        assert mock_send_notif.call_count == 1
 
         # Request failed
         mock_handle_request.side_effect = Exception('Not found')
@@ -607,3 +619,61 @@ class TestJobCreatorService(object):
         self.jobcreator.stop()
         self.channel.stop_consuming.assert_called_once_with()
         mock_close_connection.assert_called_once_with()
+
+    def test_should_notify(self):
+        result = self.jobcreator._should_notify(
+            None, 'single', 'success', 'publish', 'obs'
+        )
+        assert result is False
+
+        result = self.jobcreator._should_notify(
+            'test@fake.com', 'single', 'success', 'publish', 'obs'
+        )
+        assert result is False
+
+        result = self.jobcreator._should_notify(
+            'test@fake.com', 'periodic', 'success', 'publish', 'obs'
+        )
+        assert result is True
+
+        result = self.jobcreator._should_notify(
+            'test@fake.com', 'single', 'success', 'obs', 'obs'
+        )
+        assert result is True
+
+    def test_create_notification_content(self):
+        # Failed message
+        msg = self.jobcreator._create_notification_content(
+            '1', 'failed', 'deprecate', 'obs', 'test_image',
+            ['Invalid publish permissions!']
+        )
+
+        assert 'Job failed' in msg
+
+        # Job finished with success
+        msg = self.jobcreator._create_notification_content(
+            '1', 'success', 'obs', 'obs', 'test_image'
+        )
+
+        assert 'Job finished successfully' in msg
+
+        # Service with success
+        msg = self.jobcreator._create_notification_content(
+            '1', 'success', 'publish', 'obs', 'test_image'
+        )
+
+        assert 'Job finished through the obs service' in msg
+
+    def test_send_email_notification(self):
+        job_id = '12345678-1234-1234-1234-123456789012'
+        to = 'test@fake.com'
+
+        notif_class = Mock()
+        self.jobcreator.notification_class = notif_class
+        self.jobcreator.config = self.config
+
+        self.jobcreator.send_notification(
+            job_id, to, 'periodic', 'failed', 'replicate', 'obs',
+            'test_image'
+        )
+        assert notif_class.send_notification.call_count == 1
