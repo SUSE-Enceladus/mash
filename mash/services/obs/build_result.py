@@ -77,9 +77,6 @@ class OBSImageBuildResult(object):
     * :attr:`notification_email`
       Email to send job notifications.
 
-    * :attr:`notification_type`
-      The frequency of notification emails.
-
     * :attr:`profile`
       The multibuild profile name for the image.
 
@@ -96,7 +93,7 @@ class OBSImageBuildResult(object):
         self, job_id, job_file, download_url, image_name, last_service,
         log_callback, conditions=None, arch='x86_64',
         download_directory=Defaults.get_download_dir(),
-        notification_email=None, notification_type='single',
+        notification_email=None,
         profile=None, conditions_wait_time=900, disallow_licenses=None,
         disallow_packages=None
     ):
@@ -115,7 +112,6 @@ class OBSImageBuildResult(object):
         self.log_callback = None
         self.result_callback = None
         self.notification_email = notification_email
-        self.notification_type = notification_type
         self.profile = profile
         self.job_status = 'prepared'
         self.progress_log = {}
@@ -212,7 +208,6 @@ class OBSImageBuildResult(object):
                         'status': self.job_status,
                         'errors': self.errors,
                         'notification_email': self.notification_email,
-                        'notification_type': self.notification_type,
                         'last_service': self.last_service
                     }
                 }

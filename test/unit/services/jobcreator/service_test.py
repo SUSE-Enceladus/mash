@@ -70,7 +70,6 @@ class TestJobCreatorService(object):
             assert job_data['utctime'] == 'now'
             assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
-            assert job_data['notification_type'] == 'single'
 
             if cloud:
                 assert job_data['cloud'] == 'ec2'
@@ -232,7 +231,6 @@ class TestJobCreatorService(object):
             assert job_data['utctime'] == 'now'
             assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
-            assert job_data['notification_type'] == 'single'
 
             if cloud:
                 assert job_data['cloud'] == 'azure'
@@ -346,7 +344,6 @@ class TestJobCreatorService(object):
             assert job_data['utctime'] == 'now'
             assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
-            assert job_data['notification_type'] == 'single'
 
             if cloud:
                 assert job_data['cloud'] == 'gce'
@@ -535,12 +532,11 @@ class TestJobCreatorService(object):
         mock_send_notif
     ):
         data = {
-            'test_status': {
+            'publish_status': {
                 'id': '12345678-1234-1234-1234-123456789012',
                 'state': 'running',
                 'status': 'success',
                 'notification_email': 'test@fake.com',
-                'notification_type': 'single',
                 'last_service': 'publish',
                 'errors': []
             }
@@ -560,8 +556,8 @@ class TestJobCreatorService(object):
         )
 
         # Fake service
-        data['fake_status'] = data['test_status']
-        del data['test_status']
+        data['fake_status'] = data['publish_status']
+        del data['publish_status']
         message.body = json.dumps(data)
 
         self.jobcreator._handle_status_message(message)
@@ -620,31 +616,10 @@ class TestJobCreatorService(object):
         self.channel.stop_consuming.assert_called_once_with()
         mock_close_connection.assert_called_once_with()
 
-    def test_should_notify(self):
-        result = self.jobcreator._should_notify(
-            None, 'single', 'success', 'publish', 'obs'
-        )
-        assert result is False
-
-        result = self.jobcreator._should_notify(
-            'test@fake.com', 'single', 'success', 'publish', 'obs'
-        )
-        assert result is False
-
-        result = self.jobcreator._should_notify(
-            'test@fake.com', 'periodic', 'success', 'publish', 'obs'
-        )
-        assert result is True
-
-        result = self.jobcreator._should_notify(
-            'test@fake.com', 'single', 'success', 'obs', 'obs'
-        )
-        assert result is True
-
     def test_create_notification_content(self):
         # Failed message
         msg = self.jobcreator._create_notification_content(
-            '1', 'failed', 'deprecate', 'obs', 'test_image',
+            '1', 'failed', 'test_image',
             ['Invalid publish permissions!']
         )
 
@@ -652,17 +627,15 @@ class TestJobCreatorService(object):
 
         # Job finished with success
         msg = self.jobcreator._create_notification_content(
-            '1', 'success', 'obs', 'obs', 'test_image'
+            '1', 'success', 'test_image'
         )
 
         assert 'Job finished successfully' in msg
 
         # Service with success
         msg = self.jobcreator._create_notification_content(
-            '1', 'success', 'publish', 'obs', 'test_image'
+            '1', 'success', 'test_image'
         )
-
-        assert 'Job finished through the obs service' in msg
 
     def test_send_email_notification(self):
         job_id = '12345678-1234-1234-1234-123456789012'
@@ -673,7 +646,7 @@ class TestJobCreatorService(object):
         self.jobcreator.config = self.config
 
         self.jobcreator.send_notification(
-            job_id, to, 'periodic', 'failed', 'replicate', 'obs',
+            job_id, to, 'periodic', 'failed',
             'test_image'
         )
         assert notif_class.send_notification.call_count == 1

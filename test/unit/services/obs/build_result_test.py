@@ -24,7 +24,7 @@ class TestOBSImageBuildResult(object):
         self.obs_result = OBSImageBuildResult(
             '815', 'job_file', 'obs_project', 'obs_package', 'publish',
             self.logger,
-            notification_email='test@fake.com', notification_type='single',
+            notification_email='test@fake.com',
             profile='Proxy', disallow_licenses=["MIT"],
             disallow_packages=["fake"]
         )
@@ -52,7 +52,6 @@ class TestOBSImageBuildResult(object):
                     'status': 'success',
                     'errors': [],
                     'notification_email': 'test@fake.com',
-                    'notification_type': 'single',
                     'last_service': 'publish'
                 }
             }

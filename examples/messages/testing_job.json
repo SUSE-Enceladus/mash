@@ -12,6 +12,6 @@
             "cn-north-1": "test-aws-cn"
         },
         "notification_email": "test@fake.com",
-        "notification_type": "single"
+        "notify": true
     }
 }
