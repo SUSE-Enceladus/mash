@@ -135,6 +135,8 @@ class JobCreatorService(MashService):
         """
         job_doc['current_service'] = self._get_next_service(service)
         job_doc['prev_service'] = service
+        last_service = job_doc.pop('last_service')
+        notification_email = job_doc.pop('notification_email')
 
         try:
             handle_request(
@@ -146,10 +148,10 @@ class JobCreatorService(MashService):
         except Exception as error:
             self.log.error('Job status update failed: {}'.format(error))
 
-        if job_doc.get('notification_email') and (job_doc['last_service'] == service):
+        if notification_email and (last_service == service):
             self.send_notification(
                 job_doc['id'],
-                job_doc['notification_email'],
+                notification_email,
                 job_doc['status'],
                 job_doc.get('cloud_image_name'),
                 job_doc['errors']
