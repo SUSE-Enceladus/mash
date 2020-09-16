@@ -181,14 +181,10 @@ base_job_message = {
                            'default architecture is x86_64.'
         },
         'notification_email': email,
-        'notification_type': {
-            'type': 'string',
-            'enum': ['periodic', 'single'],
-            'example': 'single',
-            'description': 'The single notification option sends an email '
-                           'with job status when the job finishes or fails. '
-                           'The periodic option will send an email after the '
-                           'job finishes each service with the job status.'
+        'notify': {
+            'type': 'boolean',
+            'example': True,
+            'description': 'If True Send email notification when job finishes.'
         },
         'profile': string_with_example('Proxy'),
         'conditions_wait_time': {

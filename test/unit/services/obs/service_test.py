@@ -242,7 +242,7 @@ class TestOBSImageBuildResultService(object):
             ],
             "cloud_architecture": "aarch64",
             "notification_email": "test@fake.com",
-            "notification_type": "single",
+            "notify": True,
             "profile": "Proxy",
             "conditions_wait_time": 500,
             "disallow_licenses": ["MIT"],

@@ -146,16 +146,14 @@ class JobCreatorService(MashService):
         except Exception as error:
             self.log.error('Job status update failed: {}'.format(error))
 
-        self.send_notification(
-            job_doc['id'],
-            job_doc['notification_email'],
-            job_doc['notification_type'],
-            job_doc['status'],
-            job_doc['last_service'],
-            service,
-            job_doc.get('cloud_image_name'),
-            job_doc['errors']
-        )
+        if job_doc.get('notification_email') and (job_doc['last_service'] == service):
+            self.send_notification(
+                job_doc['id'],
+                job_doc['notification_email'],
+                job_doc['status'],
+                job_doc.get('cloud_image_name'),
+                job_doc['errors']
+            )
 
     def publish_job_doc(self, service, job_doc):
         """
@@ -211,34 +209,10 @@ class JobCreatorService(MashService):
             if service == job.last_service:
                 break
 
-    def _should_notify(
-        self,
-        notification_email,
-        notification_type,
-        status,
-        last_service,
-        current_service
-    ):
-        """
-        Return True if a notification should be sent based on job info.
-        """
-        if not notification_email:
-            return False
-        elif status != SUCCESS:
-            return True
-        elif notification_type == 'periodic':
-            return True
-        elif last_service == current_service:
-            return True
-
-        return False
-
     def _create_notification_content(
         self,
         job_id,
         status,
-        last_service,
-        current_service,
         image_name,
         errors=None
     ):
@@ -248,17 +222,11 @@ class JobCreatorService(MashService):
         msg = [
             'Job: {job_id}\n'
             'Image Name: {image_name}\n'
-            'Service: {service}\n'
         ]
         error_msg = ''
 
         if status == SUCCESS:
-            if current_service == last_service:
-                msg.append('Job finished successfully.')
-            else:
-                msg.append(
-                    'Job finished through the {service} service.'
-                )
+            msg.append('Job finished successfully.')
         else:
             msg.append('Job failed.')
 
@@ -270,7 +238,6 @@ class JobCreatorService(MashService):
 
         return msg.format(
             job_id=job_id,
-            service=current_service,
             image_name=image_name,
             error_msg=error_msg
         )
@@ -279,38 +246,24 @@ class JobCreatorService(MashService):
         self,
         job_id,
         notification_email,
-        notification_type,
         status,
-        last_service,
-        current_service,
         image_name,
         errors=None
     ):
         """
         Send job notification based on result of _should_notify.
         """
-        notify = self._should_notify(
-            notification_email,
-            notification_type,
+        content = self._create_notification_content(
+            job_id,
             status,
-            last_service,
-            current_service
+            image_name,
+            errors
         )
-
-        if notify:
-            content = self._create_notification_content(
-                job_id,
-                status,
-                last_service,
-                current_service,
-                image_name,
-                errors
-            )
-            self.notification_class.send_notification(
-                content,
-                self.config.get_notification_subject(),
-                notification_email
-            )
+        self.notification_class.send_notification(
+            content,
+            self.config.get_notification_subject(),
+            notification_email
+        )
 
     def start(self):
         """

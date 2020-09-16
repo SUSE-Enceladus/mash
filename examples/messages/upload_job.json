@@ -17,6 +17,6 @@
             }
         },
         "notification_email": "test@fake.com",
-        "notification_type": "single"
+        "notify": true
     }
 }

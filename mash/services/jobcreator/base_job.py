@@ -53,8 +53,8 @@ class BaseJob(object):
         self.cleanup_images = kwargs.get('cleanup_images')
         self.cloud_architecture = kwargs.get('cloud_architecture', 'x86_64')
         self.conditions_wait_time = kwargs.get('conditions_wait_time')
+        self.notify = kwargs.get('notify')
         self.notification_email = kwargs.get('notification_email')
-        self.notification_type = kwargs.get('notification_type', 'single')
         self.profile = kwargs.get('profile')
         self.raw_image_upload_type = kwargs.get('raw_image_upload_type')
         self.raw_image_upload_location = kwargs.get('raw_image_upload_location')
@@ -78,9 +78,8 @@ class BaseJob(object):
             'requesting_user': self.requesting_user
         }
 
-        if self.notification_email:
+        if self.notify:
             self.base_message['notification_email'] = self.notification_email
-            self.base_message['notification_type'] = self.notification_type
 
         self.post_init()
 

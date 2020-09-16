@@ -154,7 +154,7 @@ class OBSImageBuildResultService(MashService):
                   {"version": "8.13.21"}
               ],
               "notification_email": "test@fake.com",
-              "notification_type": "single",
+              "notify": True,
               "conditions_wait_time": 900
           }
         }
@@ -235,7 +235,6 @@ class OBSImageBuildResultService(MashService):
 
         if 'notification_email' in job:
             kwargs['notification_email'] = job['notification_email']
-            kwargs['notification_type'] = job['notification_type']
 
         if 'conditions_wait_time' in job:
             kwargs['conditions_wait_time'] = job['conditions_wait_time']
