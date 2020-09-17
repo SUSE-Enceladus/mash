@@ -20,8 +20,6 @@ class TestUpload(object):
             service_exchange='upload',
             config=config,
             custom_args={
-                'listener_msg_args': ['image_file'],
-                'status_msg_args': ['image_file', 'source_regions'],
                 'job_factory': factory
             }
         )

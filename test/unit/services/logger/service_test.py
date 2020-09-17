@@ -111,7 +111,7 @@ class TestLoggerService(object):
         self.logger.start()
         self.channel.start_consuming.assert_called_once_with()
         mock_consume_queue.assert_called_once_with(
-            self.logger._process_log, 'logging'
+            self.logger._process_log, 'logging', 'logger'
         )
         mock_close_connection.assert_called_once_with()
 

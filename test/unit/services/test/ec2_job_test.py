@@ -63,8 +63,18 @@ class TestEC2TestJob(object):
         mock_test_image.return_value = (
             0,
             {
-                'tests': '...',
-                'summary': '...',
+                'tests': [
+                    {
+                        "outcome": "passed",
+                        "test_index": 0,
+                        "name": "test_sles_ec2_metadata.py::test_sles_ec2_metadata[paramiko://10.0.0.10]"
+                    }
+                ],
+                'summary': {
+                    "duration": 2.839970827102661,
+                    "passed": 1,
+                    "num_tests": 1
+                },
                 'info': {
                     'log_file': 'test.log',
                     'results_file': 'test.results',
@@ -83,7 +93,7 @@ class TestEC2TestJob(object):
                 'secret_access_key': '321'
             }
         }
-        job.source_regions = {'us-east-1': 'ami-123'}
+        job.status_msg['source_regions'] = {'us-east-1': 'ami-123'}
         job.run_job()
 
         client.import_key_pair.assert_called_once_with(
@@ -173,5 +183,5 @@ class TestEC2TestJob(object):
                 'secret_access_key': '321'
             }
         }
-        job.source_regions = {'cn-east-1': 'ami-123'}
+        job.status_msg['source_regions'] = {'cn-east-1': 'ami-123'}
         job.run_job()

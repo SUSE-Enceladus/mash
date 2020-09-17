@@ -50,7 +50,7 @@ class TestAzureUploadJob(object):
         )
 
         self.job = AzureUploadJob(job_doc, self.config)
-        self.job.image_file = 'file.vhdfixed.xz'
+        self.job.status_msg['image_file'] = 'file.vhdfixed.xz'
         self.job.credentials = self.credentials
         self.job._log_callback = MagicMock()
 

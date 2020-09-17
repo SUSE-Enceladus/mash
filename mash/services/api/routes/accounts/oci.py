@@ -18,14 +18,11 @@
 import json
 
 from flask import jsonify, request, make_response, current_app
-from flask_restplus import fields, marshal, Model, Namespace, Resource
+from flask_restplus import Namespace, Resource
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity
 )
-from sqlalchemy.exc import IntegrityError
-
-from mash.mash_exceptions import MashException
 from mash.services.api.schema import (
     default_response,
     validation_error
@@ -41,6 +38,7 @@ from mash.services.api.utils.accounts.oci import (
     delete_oci_account,
     update_oci_account
 )
+from mash.services.database.routes.accounts.oci import oci_account_response
 
 api = Namespace(
     'OCI Accounts',
@@ -53,19 +51,6 @@ update_oci_account_request = api.schema_model(
 )
 validation_error_response = api.schema_model(
     'validation_error', validation_error
-)
-
-oci_account_response = Model(
-    'oci_account_response', {
-        'id': fields.String,
-        'name': fields.String,
-        'bucket': fields.String,
-        'region': fields.String,
-        'availability_domain': fields.String,
-        'compartment_id': fields.String,
-        'oci_user_id': fields.String,
-        'tenancy': fields.String
-    }
 )
 
 api.models['oci_account_response'] = oci_account_response
@@ -95,40 +80,19 @@ class OCIAccountCreateAndList(Resource):
         try:
             account = create_oci_account(
                 get_jwt_identity(),
-                data['account_name'],
-                data['bucket'],
-                data['region'],
-                data['availability_domain'],
-                data['compartment_id'],
-                data['oci_user_id'],
-                data['tenancy'],
-                data['signing_key']
-            )
-        except MashException as error:
-            return make_response(
-                jsonify({'msg': str(error)}),
-                400
-            )
-        except IntegrityError:
-            return make_response(
-                jsonify({'msg': 'Account already exists'}),
-                409
+                data
             )
         except Exception as error:
             current_app.logger.warning(error)
             return make_response(
-                jsonify({'msg': 'Failed to add OCI account'}),
+                jsonify({'msg': str(error)}),
                 400
             )
 
-        return make_response(
-            jsonify(marshal(account, oci_account_response, skip_none=True)),
-            201
-        )
+        return make_response(jsonify(account), 201)
 
     @api.doc('get_oci_accounts')
     @jwt_required
-    @api.marshal_list_with(oci_account_response, skip_none=True)
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -180,13 +144,13 @@ class OCIAccount(Resource):
         """
         Get OCI account.
         """
-        account = get_oci_account(name, get_jwt_identity())
+        try:
+            account = get_oci_account(name, get_jwt_identity())
+        except Exception:
+            account = None
 
         if account:
-            return make_response(
-                jsonify(marshal(account, oci_account_response, skip_none=True)),
-                200
-            )
+            return make_response(jsonify(account), 200)
         else:
             return make_response(
                 jsonify({'msg': 'OCI account not found'}),
@@ -209,13 +173,7 @@ class OCIAccount(Resource):
             account = update_oci_account(
                 get_jwt_identity(),
                 name,
-                data.get('bucket'),
-                data.get('region'),
-                data.get('availability_domain'),
-                data.get('compartment_id'),
-                data.get('oci_user_id'),
-                data.get('tenancy'),
-                data.get('signing_key')
+                data
             )
         except Exception as error:
             current_app.logger.warning(error)
@@ -225,10 +183,7 @@ class OCIAccount(Resource):
             )
 
         if account:
-            return make_response(
-                jsonify(marshal(account, oci_account_response, skip_none=True)),
-                200
-            )
+            return make_response(jsonify(account), 200)
         else:
             return make_response(
                 jsonify({'msg': 'OCI account not found'}),

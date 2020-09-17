@@ -11,12 +11,15 @@ from mash.utils.json_format import JsonFormat
 class TestJobCreatorService(object):
 
     @patch.object(MashService, '__init__')
-    def setup(
-        self, mock_base_init
-    ):
+    def setup(self, mock_base_init):
+        services = [
+            'obs', 'upload', 'create', 'test', 'raw_image_upload',
+            'replicate', 'publish', 'deprecate'
+        ]
         mock_base_init.return_value = None
         self.config = Mock()
         self.config.config_data = None
+        self.config.get_service_names.return_value = services
         self.channel = Mock()
         self.channel.basic_ack.return_value = None
 
@@ -29,21 +32,21 @@ class TestJobCreatorService(object):
         )
 
         self.jobcreator = JobCreatorService()
+
         self.jobcreator.log = Mock()
         self.jobcreator.service_exchange = 'jobcreator'
         self.jobcreator.service_queue = 'service'
         self.jobcreator.job_document_key = 'job_document'
-        self.jobcreator.services = [
-            'obs', 'upload', 'create', 'test', 'raw_image_upload',
-            'replicate', 'publish', 'deprecate'
-        ]
+        self.jobcreator.services = services
 
+    @patch('mash.services.jobcreator.service.EmailNotification')
     @patch('mash.services.jobcreator.service.setup_logfile')
     @patch.object(JobCreatorService, 'start')
     @patch.object(JobCreatorService, 'bind_queue')
     def test_jobcreator_post_init(
         self, mock_bind_queue,
-        mock_start, mock_setup_logfile
+        mock_start, mock_setup_logfile,
+        mock_email_notif
     ):
         self.jobcreator.config = self.config
         self.config.get_log_file.return_value = \
@@ -56,10 +59,9 @@ class TestJobCreatorService(object):
             '/var/log/mash/job_creator_service.log'
         )
 
-        mock_bind_queue.assert_called_once_with(
-            'jobcreator', 'job_document', 'service'
-        )
+        mock_bind_queue.call_count == 9
         mock_start.assert_called_once_with()
+        assert mock_email_notif.call_count == 1
 
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message(self, mock_publish):
@@ -68,7 +70,6 @@ class TestJobCreatorService(object):
             assert job_data['utctime'] == 'now'
             assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
-            assert job_data['notification_type'] == 'single'
 
             if cloud:
                 assert job_data['cloud'] == 'ec2'
@@ -230,7 +231,6 @@ class TestJobCreatorService(object):
             assert job_data['utctime'] == 'now'
             assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
-            assert job_data['notification_type'] == 'single'
 
             if cloud:
                 assert job_data['cloud'] == 'azure'
@@ -344,7 +344,6 @@ class TestJobCreatorService(object):
             assert job_data['utctime'] == 'now'
             assert job_data['last_service'] == 'deprecate'
             assert job_data['notification_email'] == 'test@fake.com'
-            assert job_data['notification_type'] == 'single'
 
             if cloud:
                 assert job_data['cloud'] == 'gce'
@@ -525,15 +524,59 @@ class TestJobCreatorService(object):
             'Expecting value: line 1 column 1 (char 0).'
         )
 
-    @patch.object(JobCreatorService, '_publish')
-    def test_jobcreator_publish_delete_job_message(self, mock_publish):
+    @patch.object(JobCreatorService, 'send_notification')
+    @patch('mash.services.jobcreator.service.handle_request')
+    def test_jobcreator_handle_status_message(
+        self,
+        mock_handle_request,
+        mock_send_notif
+    ):
+        data = {
+            'publish_status': {
+                'id': '12345678-1234-1234-1234-123456789012',
+                'state': 'running',
+                'status': 'success',
+                'notification_email': 'test@fake.com',
+                'last_service': 'publish',
+                'errors': []
+            }
+        }
         message = MagicMock()
-        message.body = '{"job_delete": "1"}'
-        self.jobcreator._handle_service_message(message)
-        mock_publish.assert_called_once_with(
-            'obs', 'job_document',
-            JsonFormat.json_message({"obs_job_delete": "1"})
+        message.body = json.dumps(data)
+        self.jobcreator.database_api_url = 'http://localhost:5007/'
+
+        self.jobcreator._handle_status_message(message)
+        assert mock_send_notif.call_count == 1
+
+        # Request failed
+        mock_handle_request.side_effect = Exception('Not found')
+        self.jobcreator._handle_status_message(message)
+        self.jobcreator.log.error.assert_called_once_with(
+            'Job status update failed: Not found'
         )
+
+        # Fake service
+        data['fake_status'] = data['publish_status']
+        del data['publish_status']
+        message.body = json.dumps(data)
+
+        self.jobcreator._handle_status_message(message)
+        self.jobcreator.log.warning.assert_called_once_with(
+            'Unkown service message received for fake service.'
+        )
+
+        # Invalid message
+        message.body = 'Not json'
+        self.jobcreator.log.error.reset_mock()
+
+        self.jobcreator._handle_status_message(message)
+        self.jobcreator.log.error.assert_called_once_with(
+            'Invalid message received: Expecting value: line 1 column 1 (char 0).'
+        )
+
+    def test_get_next_service(self):
+        result = self.jobcreator._get_next_service('deprecate')
+        assert result is None
 
     @patch.object(JobCreatorService, 'consume_queue')
     @patch.object(JobCreatorService, 'stop')
@@ -543,10 +586,7 @@ class TestJobCreatorService(object):
         self.jobcreator.start()
         self.channel.start_consuming.assert_called_once_with()
 
-        mock_consume_queue.assert_called_once_with(
-            self.jobcreator._handle_service_message,
-            queue_name='service'
-        )
+        mock_consume_queue.call_count == 9
         mock_stop.assert_called_once_with()
 
     @patch.object(JobCreatorService, 'consume_queue')
@@ -575,3 +615,38 @@ class TestJobCreatorService(object):
         self.jobcreator.stop()
         self.channel.stop_consuming.assert_called_once_with()
         mock_close_connection.assert_called_once_with()
+
+    def test_create_notification_content(self):
+        # Failed message
+        msg = self.jobcreator._create_notification_content(
+            '1', 'failed', 'test_image',
+            ['Invalid publish permissions!']
+        )
+
+        assert 'Job failed' in msg
+
+        # Job finished with success
+        msg = self.jobcreator._create_notification_content(
+            '1', 'success', 'test_image'
+        )
+
+        assert 'Job finished successfully' in msg
+
+        # Service with success
+        msg = self.jobcreator._create_notification_content(
+            '1', 'success', 'test_image'
+        )
+
+    def test_send_email_notification(self):
+        job_id = '12345678-1234-1234-1234-123456789012'
+        to = 'test@fake.com'
+
+        notif_class = Mock()
+        self.jobcreator.notification_class = notif_class
+        self.jobcreator.config = self.config
+
+        self.jobcreator.send_notification(
+            job_id, to, 'periodic', 'failed',
+            'test_image'
+        )
+        assert notif_class.send_notification.call_count == 1

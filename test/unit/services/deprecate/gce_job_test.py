@@ -26,9 +26,7 @@ class TestGCEDeprecateJob(object):
                 'project_id': '1234567890'
             }
         }
-        self.job.source_regions = {
-            'cloud_image_name': 'image_123'
-        }
+        self.job.status_msg['cloud_image_name'] = 'image_123'
 
     def test_deprecate_gce_missing_key(self):
         del self.job_config['account']
@@ -38,18 +36,15 @@ class TestGCEDeprecateJob(object):
 
         self.job_config['account'] = 'test-gce'
 
-    @patch('mash.services.deprecate.gce_job.Provider')
-    @patch('mash.services.deprecate.gce_job.get_driver')
-    def test_deprecate(self, mock_get_driver, mock_provider):
-        compute_engine = MagicMock()
-        mock_get_driver.return_value = compute_engine
-
+    @patch('mash.services.deprecate.gce_job.deprecate_gce_image')
+    @patch('mash.services.deprecate.gce_job.get_gce_compute_driver')
+    def test_deprecate(self, mock_get_driver, mock_deprecate_image):
         compute_driver = MagicMock()
-        compute_engine.return_value = compute_driver
+        mock_get_driver.return_value = compute_driver
 
         self.job.run_job()
 
-        assert compute_driver.ex_deprecate_image.call_count == 1
+        assert mock_deprecate_image.call_count == 1
         assert self.job.status == 'success'
         self.job._log_callback.info.assert_called_once_with(
             'Deprecated image old_image_123.'
@@ -60,17 +55,15 @@ class TestGCEDeprecateJob(object):
         self.job.run_job()
         assert self.job.status == 'success'
 
-    @patch('mash.services.deprecate.gce_job.Provider')
-    @patch('mash.services.deprecate.gce_job.get_driver')
+    @patch('mash.services.deprecate.gce_job.deprecate_gce_image')
+    @patch('mash.services.deprecate.gce_job.get_gce_compute_driver')
     def test_deprecate_exception(
-        self, mock_get_driver, mock_provider
+        self, mock_get_driver, mock_deprecate_image
     ):
-        compute_engine = MagicMock()
-        mock_get_driver.return_value = compute_engine
-
         compute_driver = MagicMock()
-        compute_driver.ex_deprecate_image.side_effect = Exception('Failed!')
-        compute_engine.return_value = compute_driver
+        mock_get_driver.return_value = compute_driver
+
+        mock_deprecate_image.side_effect = Exception('Failed!')
 
         self.job.run_job()
 

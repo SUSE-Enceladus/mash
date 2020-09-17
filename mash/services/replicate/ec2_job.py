@@ -56,7 +56,7 @@ class EC2ReplicateJob(MashJob):
         """
         self.status = SUCCESS
         self.source_region_results = defaultdict(dict)
-        self.cloud_image_name = self.source_regions['cloud_image_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
 
         # Get all account credentials in one request
         accounts = []
@@ -82,7 +82,7 @@ class EC2ReplicateJob(MashJob):
                     self.source_region_results[target_region]['image_id'] = \
                         self._replicate_to_region(
                             credential,
-                            self.source_regions[source_region],
+                            self.status_msg['source_regions'][source_region],
                             source_region,
                             target_region
                         )  # noqa: E123 Suppress erroneous flake8 warning.
@@ -110,12 +110,12 @@ class EC2ReplicateJob(MashJob):
                     )
                 except Exception as error:
                     self.status = FAILED
-                    self.log_callback.warning(
-                        'Replicate to {0} region failed: {1}'.format(
-                            target_region,
-                            error
-                        )
+                    msg = 'Replicate to {0} region failed: {1}'.format(
+                        target_region,
+                        error
                     )
+                    self.add_error_msg(msg)
+                    self.log_callback.warning(msg)
 
     def _replicate_to_region(
         self, credential, image_id, source_region, target_region

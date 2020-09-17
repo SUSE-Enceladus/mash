@@ -18,182 +18,95 @@
 
 from flask import current_app
 
-from mash.mash_exceptions import MashDBException
-from mash.services.api.extensions import db
-from mash.services.api.utils.users import get_user_by_id
-from mash.services.api.models import OCIAccount
-from mash.utils.mash_utils import handle_request, get_fingerprint_from_private_key
+from mash.utils.mash_utils import handle_request
+from mash.mash_exceptions import MashException
 
 
 def create_oci_account(
     user_id,
-    account_name,
-    bucket,
-    region_name,
-    availability_domain,
-    compartment_id,
-    oci_user_id,
-    tenancy,
-    signing_key
+    data
 ):
     """
     Create a new OCI account for user.
     """
-    data = {
-        'cloud': 'oci',
-        'account_name': account_name,
-        'requesting_user': user_id,
-        'credentials': {
-            'signing_key': signing_key,
-            'fingerprint': get_fingerprint_from_private_key(signing_key)
-        }
-    }
+    data['user_id'] = user_id
 
-    account = OCIAccount(
-        name=account_name,
-        bucket=bucket,
-        region=region_name,
-        availability_domain=availability_domain,
-        compartment_id=compartment_id,
-        oci_user_id=oci_user_id,
-        tenancy=tenancy,
-        user_id=user_id
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'oci_accounts/',
+        'post',
+        job_data=data
     )
 
-    try:
-        handle_request(
-            current_app.config['CREDENTIALS_URL'],
-            'credentials/',
-            'post',
-            job_data=data
-        )
-        db.session.add(account)
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        raise
-
-    return account
+    return response.json()
 
 
 def get_oci_accounts(user_id):
     """
     Retrieve all OCI accounts for user.
     """
-    user = get_user_by_id(user_id)
-    return user.oci_accounts
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'oci_accounts/list/{user}'.format(user=user_id),
+        'get'
+    )
+
+    return response.json()
 
 
 def get_oci_account(name, user_id):
     """
     Get OCI account for given user.
     """
-    try:
-        oci_account = OCIAccount.query.filter_by(
-            name=name, user_id=user_id
-        ).one()
-    except Exception:
-        raise MashDBException(
-            'OCI account {name} does not exist'.format(name=name)
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'oci_accounts/',
+        'get',
+        job_data={'name': name, 'user_id': user_id}
+    )
+
+    account = response.json()
+
+    if not account:
+        raise MashException(
+            'OCI account {account} not found. '.format(
+                account=name
+            )
         )
 
-    return oci_account
+    return account
 
 
 def delete_oci_account(name, user_id):
     """
     Delete OCI account for user.
     """
-    data = {
-        'cloud': 'oci',
-        'account_name': name,
-        'requesting_user': user_id
-    }
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'oci_accounts/',
+        'delete',
+        job_data={'name': name, 'user_id': user_id}
+    )
 
-    oci_account = get_oci_account(name, user_id)
-
-    if oci_account:
-        try:
-            db.session.delete(oci_account)
-            db.session.commit()
-            handle_request(
-                current_app.config['CREDENTIALS_URL'],
-                'credentials/',
-                'delete',
-                job_data=data
-            )
-        except Exception:
-            db.session.rollback()
-            raise
-        else:
-            return 1
-    else:
-        return 0
+    return response.json()['rows_deleted']
 
 
 def update_oci_account(
-    user_id,
     account_name,
-    bucket=None,
-    region=None,
-    availability_domain=None,
-    compartment_id=None,
-    oci_user_id=None,
-    tenancy=None,
-    signing_key=None
+    user_id,
+    data
 ):
     """
-    Update an existing OCI account.
+    Update OCI account for user.
     """
-    oci_account = get_oci_account(account_name, user_id)
+    data['account_name'] = account_name
+    data['user_id'] = user_id
 
-    if not oci_account:
-        return None
+    response = handle_request(
+        current_app.config['DATABASE_API_URL'],
+        'oci_accounts/',
+        'put',
+        job_data=data
+    )
 
-    if signing_key:
-        data = {
-            'cloud': 'oci',
-            'account_name': account_name,
-            'requesting_user': user_id,
-            'credentials': {
-                'signing_key': signing_key,
-                'fingerprint': get_fingerprint_from_private_key(signing_key)
-            }
-        }
-
-        try:
-            handle_request(
-                current_app.config['CREDENTIALS_URL'],
-                'credentials/',
-                'post',
-                job_data=data
-            )
-        except Exception:
-            raise
-
-    if bucket:
-        oci_account.bucket = bucket
-
-    if region:
-        oci_account.region = region
-
-    if availability_domain:
-        oci_account.availability_domain = availability_domain
-
-    if compartment_id:
-        oci_account.compartment_id = compartment_id
-
-    if oci_user_id:
-        oci_account.oci_user_id = oci_user_id
-
-    if tenancy:
-        oci_account.tenancy = tenancy
-
-    try:
-        db.session.add(oci_account)
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        raise
-
-    return oci_account
+    return response.json()

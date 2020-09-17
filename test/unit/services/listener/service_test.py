@@ -4,7 +4,7 @@ from unittest.mock import call, MagicMock, Mock, patch
 
 from amqpstorm import AMQPError
 
-from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
+from apscheduler.jobstores.base import ConflictingIdError
 
 from mash.services.base_defaults import Defaults
 from mash.services.mash_service import MashService
@@ -78,7 +78,6 @@ class TestListenerService(object):
         self.service.listener_queue = 'listener'
         self.service.job_document_key = 'job_document'
         self.service.listener_msg_key = 'listener_msg'
-        self.service.next_service = 'publish'
         self.service.prev_service = 'test'
         self.service.custom_args = None
         self.service.listener_msg_args = ['cloud_image_name']
@@ -161,19 +160,20 @@ class TestListenerService(object):
     ):
         job = Mock()
         job.id = '1'
-        job.status = 'success'
+        job.status = 'failed'
         job.utctime = 'now'
         job.get_job_id.return_value = {'job_id': '1'}
+        job.get_status_message.return_value = {'id': '1', 'status': 'failed'}
 
         self.service.jobs['1'] = job
-        self.service._cleanup_job(job, 1)
+        self.service._cleanup_job('1')
 
         self.service.log.warning.assert_called_once_with(
             'Failed upstream.',
             extra={'job_id': '1'}
         )
         mock_delete_job.assert_called_once_with('1')
-        msg = {"replicate_result": {"id": "1", "status": 1}}
+        msg = {"replicate_result": {"id": "1", "status": "failed"}}
         mock_publish_message.assert_called_once_with(
             JsonFormat.json_message(msg),
             '1'
@@ -238,7 +238,6 @@ class TestListenerService(object):
         job.get_job_id.return_value = {'job_id': '1'}
 
         self.service.jobs['1'] = job
-        self.service.scheduler.remove_job.side_effect = JobLookupError('1')
         self.service._delete_job('1')
 
         self.service.log.info.assert_called_once_with(
@@ -257,50 +256,61 @@ class TestListenerService(object):
             extra={'job_id': '1'}
         )
 
-    @patch.object(ListenerService, '_validate_listener_msg')
-    def test_service_handle_listener_message(
-        self, mock_validate_listener_msg
-    ):
-        job = Mock()
-        job.id = '1'
-        job.utctime = 'always'
-        self.service.jobs['1'] = job
-
-        mock_validate_listener_msg.return_value = job
-
-        self.message.body = self.status_message
-        self.service._handle_listener_message(self.message)
-
-        assert self.service.jobs['1'].listener_msg == self.message
-
-    @patch.object(ListenerService, '_validate_listener_msg')
     @patch.object(ListenerService, '_schedule_job')
-    def test_service_handle_listener_message_creds(
-        self, mock_schedule_job, mock_validate_listener_msg
-    ):
+    def test_service_handle_listener_message(self, mock_schedule_job):
         job = Mock()
         job.id = '1'
-        job.utctime = 'always'
+        job.utctime = 'now'
         self.service.jobs['1'] = job
 
-        mock_validate_listener_msg.return_value = job
-
-        self.message.body = self.status_message
+        self.message.body = JsonFormat.json_message({
+            "test_result": {
+                "cloud_image_name": "image123",
+                "id": "1",
+                "status": "success",
+                "errors": []
+            }
+        })
         self.service._handle_listener_message(self.message)
 
         assert self.service.jobs['1'].listener_msg == self.message
         mock_schedule_job.assert_called_once_with('1')
 
-    @patch.object(ListenerService, '_validate_listener_msg')
-    def test_service_handle_listener_msg_invalid(
-        self, mock_validate_listener_msg
-    ):
-        mock_validate_listener_msg.return_value = None
+    def test_service_handle_listener_message_no_job(self):
+        self.message.body = JsonFormat.json_message({
+            "test_result": {
+                "cloud_image_name": "image123",
+                "id": "1",
+                "status": "success",
+                "errors": []
+            }
+        })
+        self.service._handle_listener_message(self.message)
+        self.message.ack.assert_called_once_with()
 
+    def test_service_handle_listener_msg_invalid(self):
         self.message.body = self.status_message
         self.service._handle_listener_message(self.message)
 
         self.message.ack.assert_called_once_with()
+
+    @patch.object(ListenerService, '_cleanup_job')
+    def test_service_handle_listener_message_failed(self, mock_cleanup_job):
+        job = Mock()
+        job.id = '1'
+        job.utctime = 'now'
+        self.service.jobs['1'] = job
+
+        self.message.body = JsonFormat.json_message({
+            "test_result": {
+                "cloud_image_name": "image123",
+                "id": "1",
+                "status": "failed",
+                "errors": ['Something went terribly wrong!']
+            }
+        })
+        self.service._handle_listener_message(self.message)
+        mock_cleanup_job.assert_called_once_with('1')
 
     @patch.object(ListenerService, '_add_job')
     def test_service_handle_service_message(self, mock_add_job):
@@ -325,12 +335,11 @@ class TestListenerService(object):
         )
 
     @patch.object(ListenerService, '_get_status_message')
-    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result(
         self, mock_publish_message, mock_delete_job,
-        mock_send_email_notification, mock_get_status_msg
+        mock_get_status_msg
     ):
         event = Mock()
         event.job_id = '1'
@@ -342,7 +351,6 @@ class TestListenerService(object):
         job.id = '1'
         job.utctime = 'now'
         job.status = 'success'
-        job.iteration_count = 1
         job.listener_msg = msg
         job.get_job_id.return_value = {'job_id': '1'}
 
@@ -353,7 +361,7 @@ class TestListenerService(object):
 
         mock_delete_job.assert_called_once_with('1')
         self.service.log.info.assert_called_once_with(
-            'Pass[1]: replicate successful.',
+            'replicate successful.',
             extra={'job_id': '1'}
         )
         mock_publish_message.assert_called_once_with(
@@ -363,12 +371,11 @@ class TestListenerService(object):
         msg.ack.assert_called_once_with()
 
     @patch.object(ListenerService, '_get_status_message')
-    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_service_process_job_result_exception(
         self, mock_publish_message, mock_delete_job,
-        mock_send_email_notification, mock_get_status_msg
+        mock_get_status_msg
     ):
         event = Mock()
         event.job_id = '1'
@@ -378,7 +385,7 @@ class TestListenerService(object):
         job.id = '1'
         job.utctime = 'now'
         job.status = 2
-        job.iteration_count = 1
+        job.status_msg = {'errors': []}
         job.get_job_id.return_value = {'job_id': '1'}
 
         mock_get_status_msg.return_value = '{"status": "message"}'
@@ -388,7 +395,7 @@ class TestListenerService(object):
 
         mock_delete_job.assert_called_once_with('1')
         self.service.log.error.assert_called_once_with(
-            'Pass[1]: Exception in replicate: Image not found!',
+            'Exception in replicate: Image not found!',
             extra={'job_id': '1'}
         )
         mock_publish_message.assert_called_once_with(
@@ -396,12 +403,10 @@ class TestListenerService(object):
             '1'
         )
 
-    @patch.object(ListenerService, 'send_notification')
     @patch.object(ListenerService, '_delete_job')
     @patch.object(ListenerService, '_publish_message')
     def test_publishing_process_job_result_fail(
-        self, mock_publish_message, mock_delete_job,
-        mock_send_email_notification
+        self, mock_publish_message, mock_delete_job
     ):
         event = Mock()
         event.job_id = '1'
@@ -411,14 +416,14 @@ class TestListenerService(object):
         job.id = '1'
         job.status = 'error'
         job.utctime = 'now'
-        job.iteration_count = 1
         job.get_job_id.return_value = {'job_id': '1'}
+        job.get_status_message.return_value = {"id": "1", "status": "error"}
 
         self.service.jobs['1'] = job
         self.service._process_job_result(event)
 
         self.service.log.error.assert_called_once_with(
-            'Pass[1]: Error occurred in replicate.',
+            'Error occurred in replicate.',
             extra={'job_id': '1'}
         )
         mock_delete_job('1')
@@ -439,7 +444,6 @@ class TestListenerService(object):
         job.id = '1'
         job.utctime = 'now'
         job.status = 'success'
-        job.iteration_count = 1
         job.listener_msg = msg
         job.get_job_id.return_value = {'job_id': '1'}
 
@@ -447,7 +451,7 @@ class TestListenerService(object):
         self.service._process_job_missed(event)
 
         self.service.log.warning.assert_called_once_with(
-            'Pass[1]: Job missed during replicate.',
+            'Job missed during replicate.',
             extra={'job_id': '1'}
         )
 
@@ -464,7 +468,7 @@ class TestListenerService(object):
         mock_get_status_message.return_value = self.status_message
         self.service._publish_message('{"test": "message"}', job.id)
         mock_publish.assert_called_once_with(
-            'publish',
+            'replicate',
             '{"test": "message"}'
         )
 
@@ -492,7 +496,7 @@ class TestListenerService(object):
         self, mock_start_job
     ):
         job = Mock()
-        job.utctime = 'always'
+        job.utctime = 'now'
         self.service.jobs['1'] = job
 
         scheduler = Mock()
@@ -525,11 +529,13 @@ class TestListenerService(object):
         mock_consume_queue.assert_has_calls([
             call(
                 self.service._handle_service_message,
-                queue_name='service'
+                'service',
+                'replicate'
             ),
             call(
                 self.service._handle_listener_message,
-                queue_name='listener'
+                'listener',
+                'test'
             )
         ])
 
@@ -545,104 +551,6 @@ class TestListenerService(object):
 
         mock_close_connection.assert_called_once_with()
         assert 'Cannot start consuming.' == str(error.value)
-
-    def test_service_validate_listener_msg(self):
-        job = MagicMock()
-        self.service.jobs = {'1': job}
-        message = '{' \
-                  '"test_result": {' \
-                  '"status": "success", "id": "1", ' \
-                  '"cloud_image_name": "name"' \
-                  '}}'
-
-        result = self.service._validate_listener_msg(message)
-        assert result == job
-
-    def test_service_validate_listener_msg_invalid(self):
-        message = '{"fake_result": {"status": "success"}}'
-        result = self.service._validate_listener_msg(message)
-        assert result is None
-
-    def test_service_validate_listener_msg_no_job(self):
-        message = '{' \
-                  '"test_result": {' \
-                  '"status": "success", "id": "1", ' \
-                  '"cloud_image_name": "name"' \
-                  '}}'
-        result = self.service._validate_listener_msg(message)
-        assert result is None
-
-    def test_service_validate_base_msg_missing_id(self):
-        message = {'status': 'success'}
-        result = self.service._validate_base_msg(
-            message, ['cloud_image_name']
-        )
-        assert result is False
-
-    @patch.object(ListenerService, '_cleanup_job')
-    def test_service_validate_base_msg_failed(self, mock_cleanup_job):
-        message = {
-            'id': '1',
-            'status': 'failed',
-            'cloud_image_name': 'name'
-        }
-        job = MagicMock()
-        self.service.jobs = {'1': job}
-
-        result = self.service._validate_base_msg(
-            message, ['cloud_image_name']
-        )
-        mock_cleanup_job.assert_called_once_with(job, 'failed')
-        assert result is False
-
-    def test_service_validate_base_msg_missing_arg(self):
-        message = {
-            'id': '1',
-            'status': 'success'
-        }
-        job = MagicMock()
-        self.service.jobs = {'1': job}
-
-        result = self.service._validate_base_msg(
-            message, ['cloud_image_name']
-        )
-        assert result is False
-
-    @patch.object(ListenerService, '_publish_message')
-    @patch.object(ListenerService, '_delete_job')
-    def test_service_validate_base_msg_delete_job(
-        self,
-        mock_delete_job,
-        mock_publish_message
-    ):
-        message = {
-            'id': '1',
-            'status': 'delete'
-        }
-        job = MagicMock()
-        self.service.jobs = {'1': job}
-
-        result = self.service._validate_base_msg(
-            message, ['cloud_image_name']
-        )
-        mock_delete_job.assert_called_once_with('1')
-        msg = {"replicate_result": {"id": "1", "status": 'delete'}}
-        mock_publish_message.assert_called_once_with(
-            JsonFormat.json_message(msg),
-            '1'
-        )
-        assert result is False
-
-    def test_get_next_service_error(self):
-        # Test service with no next service
-        self.service.service_exchange = 'deprecate'
-        next_service = self.service._get_next_service()
-        assert next_service is None
-
-        # Test service not in pipeline
-        self.service.service_exchange = 'credentials'
-        next_service = self.service._get_next_service()
-        assert next_service is None
 
     def test_get_prev_service(self):
         # Test service with prev service
@@ -680,9 +588,11 @@ class TestListenerService(object):
     def test_get_status_message(self):
         job = Mock()
         job.id = '1'
-        job.status = "success"
-        job.cloud_image_name = 'image123'
-        job.source_regions = {'us-east-2': 'ami-123456'}
+        job.get_status_message.return_value = {
+            'id': '1',
+            'status': 'success',
+            'cloud_image_name': 'image123'
+        }
 
         data = self.service._get_status_message(job)
         assert data == self.status_message

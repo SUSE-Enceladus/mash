@@ -50,8 +50,18 @@ class TestOCITestJob(object):
         mock_test_image.return_value = (
             0,
             {
-                'tests': '...',
-                'summary': '...',
+                'tests': [
+                    {
+                        "outcome": "passed",
+                        "test_index": 0,
+                        "name": "test_sles_oci_metadata.py::test_sles_oci_metadata[paramiko://10.0.0.10]"
+                    }
+                ],
+                'summary': {
+                    "duration": 2.839970827102661,
+                    "passed": 1,
+                    "num_tests": 1
+                },
                 'info': {
                     'log_file': 'test.log',
                     'results_file': 'test.results',
@@ -71,10 +81,8 @@ class TestOCITestJob(object):
                 'fingerprint': 'fake fingerprint'
             }
         }
-        job.source_regions = {
-            'cloud_image_name': 'name.qcow2',
-            'image_id': 'ocid1.image.oc1..'
-        }
+        job.status_msg['cloud_image_name'] = 'name.qcow2'
+        job.status_msg['image_id'] = 'ocid1.image.oc1..'
         job.run_job()
 
         mock_test_image.assert_called_once_with(

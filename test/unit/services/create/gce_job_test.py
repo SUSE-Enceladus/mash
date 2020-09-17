@@ -63,34 +63,41 @@ class TestGCECreateJob(object):
         with raises(MashCreateException):
             GCECreateJob(job_doc, self.config)
 
-    @patch('mash.services.create.gce_job.Provider')
-    @patch('mash.services.create.gce_job.get_driver')
+    @patch('mash.services.create.gce_job.get_gce_image')
+    @patch('mash.services.create.gce_job.create_gce_image')
+    @patch('mash.services.create.gce_job.delete_gce_image')
+    @patch('mash.services.create.gce_job.get_gce_compute_driver')
     @patch('builtins.open')
     def test_create(
-        self, mock_open, mock_get_driver, mock_provider
+        self,
+        mock_open,
+        mock_get_driver,
+        mock_delete_image,
+        mock_create_image,
+        mock_get_image
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
 
-        compute_engine = MagicMock()
-        mock_get_driver.return_value = compute_engine
-
         compute_driver = Mock()
-        compute_engine.return_value = compute_driver
+        mock_get_driver.return_value = compute_driver
 
-        self.job.source_regions = {
-            'cloud_image_name': 'sles-12-sp4-v20180909',
-            'object_name': 'sles-12-sp4-v20180909.tar.gz'
-        }
+        self.job.status_msg['cloud_image_name'] = 'sles-12-sp4-v20180909'
+        self.job.status_msg['object_name'] = 'sles-12-sp4-v20180909.tar.gz'
         self.job.run_job()
 
-        compute_driver.ex_create_image.assert_called_once_with(
+        mock_delete_image.assert_called_once_with(
+            compute_driver,
+            'projectid',
+            'sles-12-sp4-v20180909'
+        )
+        mock_create_image.assert_called_once_with(
+            compute_driver,
+            'projectid',
             'sles-12-sp4-v20180909',
-            'https://www.googleapis.com/storage/v1/b/images/o/'
-            'sles-12-sp4-v20180909.tar.gz',
-            description='description 20180909',
-            wait_for_completion=True,
+            'description 20180909',
+            'https://www.googleapis.com/storage/v1/b/images/o/sles-12-sp4-v20180909.tar.gz',
             family='sles-12',
             guest_os_features=['UEFI_COMPATIBLE']
         )

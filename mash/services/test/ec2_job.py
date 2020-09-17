@@ -90,8 +90,6 @@ class EC2TestJob(MashJob):
         if not os.path.exists(self.ssh_private_key_file):
             create_ssh_key_pair(self.ssh_private_key_file)
 
-        self.image_file = None
-
     def run_job(self):
         """
         Tests image with img-proof and update status and results.
@@ -134,7 +132,7 @@ class EC2TestJob(MashJob):
                         cloud=self.cloud,
                         description=self.description,
                         distro=self.distro,
-                        image_id=self.source_regions[region],
+                        image_id=self.status_msg['source_regions'][region],
                         instance_type=self.instance_type,
                         img_proof_timeout=self.img_proof_timeout,
                         region=region,
@@ -147,13 +145,19 @@ class EC2TestJob(MashJob):
                         tests=self.tests,
                         log_callback=self.log_callback
                     )
-                except Exception:
+                except Exception as error:
+                    self.add_error_msg(str(error))
                     result = {
                         'status': EXCEPTION,
                         'msg': str(traceback.format_exc())
                     }
 
-                status = process_test_result(result, self.log_callback, region)
+                status = process_test_result(
+                    result,
+                    self.log_callback,
+                    region,
+                    self.status_msg
+                )
                 if status != SUCCESS:
                     self.status = status
 
@@ -177,5 +181,5 @@ class EC2TestJob(MashJob):
                     credentials['secret_access_key'],
                     self.log_callback,
                     region,
-                    self.source_regions[region]
+                    self.status_msg['source_regions'][region]
                 )

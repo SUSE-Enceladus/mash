@@ -23,7 +23,6 @@ import dateutil.parser
 from mash.services.mash_service import MashService
 from mash.services.obs.build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
-from mash.services.status_levels import DELETE
 from mash.utils.mash_utils import persist_json, restart_jobs, setup_logfile
 
 
@@ -67,7 +66,8 @@ class OBSImageBuildResultService(MashService):
         atexit.register(lambda: os._exit(0))
         self.consume_queue(
             self._process_message,
-            queue_name=self.service_queue
+            self.service_queue,
+            self.service_exchange
         )
 
         try:
@@ -81,12 +81,11 @@ class OBSImageBuildResultService(MashService):
 
     def _send_job_result_for_upload(self, job_id, trigger_info):
         self._publish(
-            'upload',
+            self.service_exchange,
             self.listener_msg_key,
             JsonFormat.json_message(trigger_info)
         )
-        if not self.jobs[job_id].job_nonstop:
-            self._delete_job(job_id)
+        self._delete_job(job_id)
 
     def _send_control_response(self, result, job_id=None):
         message = result['message']
@@ -125,24 +124,6 @@ class OBSImageBuildResultService(MashService):
         if 'obs_job' in job_data:
             job_id = job_data['obs_job'].get('id', None)
             result = self._add_job(job_data)
-        elif job_data.get('obs_job_delete'):
-            job_id = job_data['obs_job_delete']
-            self.log.info(
-                'Deleting Job',
-                extra={'job_id': job_id}
-            )
-            result = self._delete_job(job_id)
-            message = {
-                'obs_result': {
-                    'id': job_id,
-                    'status': DELETE
-                }
-            }
-            self._publish(
-                'upload',
-                self.listener_msg_key,
-                JsonFormat.json_message(message)
-            )
         else:
             result = {
                 'ok': False,
@@ -162,7 +143,7 @@ class OBSImageBuildResultService(MashService):
               :/Stable:/Images12/images",
               "image": "SLES12-Azure-BYOS",
               "last_service": "upload",
-              "utctime": "now|always|timestring_utc_timezone",
+              "utctime": "now|timestring_utc_timezone",
               "conditions": [
                   {
                     "package_name": "kernel-default",
@@ -173,7 +154,7 @@ class OBSImageBuildResultService(MashService):
                   {"version": "8.13.21"}
               ],
               "notification_email": "test@fake.com",
-              "notification_type": "single",
+              "notify": True,
               "conditions_wait_time": 900
           }
         }
@@ -227,12 +208,9 @@ class OBSImageBuildResultService(MashService):
     def _start_job(self, job):
         job_id = job['id']
         time = job['utctime']
-        nonstop = False
+
         if time == 'now':
             time = None
-        elif time == 'always':
-            time = None
-            nonstop = True
         else:
             time = dateutil.parser.parse(job['utctime']).isoformat()
 
@@ -257,7 +235,6 @@ class OBSImageBuildResultService(MashService):
 
         if 'notification_email' in job:
             kwargs['notification_email'] = job['notification_email']
-            kwargs['notification_type'] = job['notification_type']
 
         if 'conditions_wait_time' in job:
             kwargs['conditions_wait_time'] = job['conditions_wait_time']
@@ -270,10 +247,7 @@ class OBSImageBuildResultService(MashService):
 
         job_worker = OBSImageBuildResult(**kwargs)
         job_worker.set_result_handler(self._send_job_result_for_upload)
-        job_worker.set_notification_handler(self.send_notification)
-        job_worker.start_watchdog(
-            nonstop=nonstop, isotime=time
-        )
+        job_worker.start_watchdog(isotime=time)
         self.jobs[job_id] = job_worker
         return {
             'ok': True,

@@ -32,14 +32,15 @@ from werkzeug.local import LocalProxy
 def test_validate_oci_job(
     mock_get_oci_account, mock_get_services, mock_get_current_obj
 ):
-    account = Mock()
-    account.name = 'acnt1'
-    account.region = 'us-phoenix-1'
-    account.bucket = 'images'
-    account.availability_domain = 'Omic:PHX-AD-1'
-    account.compartment_id = 'ocid1.compartment.oc1..'
-    account.oci_user_id = 'ocid1.user.oc1..'
-    account.tenancy = 'ocid1.tenancy.oc1..'
+    account = {
+        'name': 'acnt1',
+        'region': 'us-phoenix-1',
+        'bucket': 'images',
+        'availability_domain': 'Omic:PHX-AD-1',
+        'compartment_id': 'ocid1.compartment.oc1..',
+        'oci_user_id': 'ocid1.user.oc1..',
+        'tenancy': 'ocid1.tenancy.oc1..'
+    }
     mock_get_oci_account.return_value = account
 
     app = Mock()

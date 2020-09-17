@@ -182,3 +182,8 @@ class TestBaseConfig(object):
     def test_get_oauth2_redirect_ports(self):
         with raises(MashConfigException):
             self.config.get_oauth2_redirect_ports()
+
+    def test_get_database_api_url(self):
+        assert self.config.get_database_api_url() == 'http://localhost:5057/'
+        assert self.empty_config.get_database_api_url() == \
+            'http://localhost:5007/'

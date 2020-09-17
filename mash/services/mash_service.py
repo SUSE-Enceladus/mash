@@ -22,10 +22,8 @@ from amqpstorm import Connection
 
 # project
 from mash.log.filter import BaseServiceFilter
-from mash.services.status_levels import SUCCESS
 from mash.mash_exceptions import MashRabbitConnectionException
 from mash.utils.mash_utils import setup_rabbitmq_log_handler
-from mash.utils.email_notification import EmailNotification
 
 
 class MashService(object):
@@ -69,16 +67,6 @@ class MashService(object):
         )
         self.log.addHandler(rabbit_handler)
         self.log.addFilter(BaseServiceFilter())
-
-        # notification settings
-        self.notification_class = EmailNotification(
-            self.config.get_smtp_host(),
-            self.config.get_smtp_port(),
-            self.config.get_smtp_user(),
-            self.config.get_smtp_pass(),
-            self.config.get_smtp_ssl(),
-            log_callback=self.log
-        )
 
         self.post_init()
 
@@ -178,11 +166,11 @@ class MashService(object):
         if self.connection and self.connection.is_open:
             self.connection.close()
 
-    def consume_queue(self, callback, queue_name):
+    def consume_queue(self, callback, queue_name, exchange):
         """
         Declare and consume queue.
         """
-        queue = self._get_queue_name(self.service_exchange, queue_name)
+        queue = self._get_queue_name(exchange, queue_name)
         self._declare_queue(queue)
         self.channel.basic.consume(
             callback=callback, queue=queue
@@ -196,85 +184,3 @@ class MashService(object):
         self.channel.queue.unbind(
             queue=queue, exchange=exchange, routing_key=routing_key
         )
-
-    def _should_notify(
-        self, notification_email, notification_type, utctime, status,
-        last_service
-    ):
-        """
-        Return True if a notification should be sent based on job info.
-        """
-        if not notification_email:
-            return False
-        elif status != SUCCESS:
-            return True
-        elif notification_type == 'periodic' and utctime != 'always':
-            return True
-        elif last_service == self.service_exchange and utctime != 'always':
-            return True
-
-        return False
-
-    def _create_notification_content(
-        self, job_id, status, utctime, last_service, image_name,
-        iteration_count=None, error=None
-    ):
-        """
-        Build content string for job notification message.
-        """
-        msg = [
-            'Job: {job_id}\n'
-            'Image Name: {image_name}\n'
-            'Service: {service}\n'
-            'Log: {job_log}\n\n'
-        ]
-
-        if status == SUCCESS:
-            if self.service_exchange == last_service:
-                msg.append('Job finished successfully.')
-            else:
-                msg.append(
-                    'Job finished through the {service} service.'
-                )
-        else:
-            msg.append('Job failed.')
-
-            if utctime == 'always' and iteration_count:
-                msg.append(' The current pass is #{iteration_count}.')
-
-            if error:
-                msg.append(' The following error was logged: \n\n{error}')
-
-        msg = ''.join(msg)
-
-        return msg.format(
-            job_id=job_id,
-            service=self.service_exchange,
-            job_log=self.config.get_job_log_file(job_id),
-            image_name=image_name,
-            iteration_count=str(iteration_count),
-            error=error
-        )
-
-    def send_notification(
-        self, job_id, notification_email, notification_type, status, utctime,
-        last_service, image_name, iteration_count=None, error=None
-    ):
-        """
-        Send job notification based on result of _should_notify.
-        """
-        notify = self._should_notify(
-            notification_email, notification_type, utctime, status,
-            last_service
-        )
-
-        if notify:
-            content = self._create_notification_content(
-                job_id, status, utctime, last_service, image_name,
-                iteration_count, error
-            )
-            self.notification_class.send_notification(
-                content,
-                self.config.get_notification_subject(),
-                notification_email
-            )

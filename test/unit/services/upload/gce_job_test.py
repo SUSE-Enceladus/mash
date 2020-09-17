@@ -48,7 +48,7 @@ class TestGCEUploadJob(object):
         }
 
         self.job = GCEUploadJob(job_doc, self.config)
-        self.job.image_file = ['sles-12-sp4-v20180909.tar.gz']
+        self.job.status_msg['image_file'] = 'sles-12-sp4-v20180909.tar.gz'
         self.job.credentials = self.credentials
         self.job._log_callback = Mock()
 
@@ -83,19 +83,19 @@ class TestGCEUploadJob(object):
         with raises(MashUploadException):
             GCEUploadJob(job_doc, self.config)
 
-    @patch('mash.services.upload.gce_job.GoogleStorageDriver')
+    @patch('mash.services.upload.gce_job.get_gce_storage_driver')
+    @patch('mash.services.upload.gce_job.upload_image_tarball')
     @patch('builtins.open')
     def test_upload(
-        self, mock_open, mock_storage_driver
+        self, mock_open, mock_upload_image, mock_get_driver
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
 
         storage_driver = Mock()
-        mock_storage_driver.return_value = storage_driver
+        mock_get_driver.return_value = storage_driver
 
         self.job.run_job()
 
-        storage_driver.get_container.assert_called_once_with('images')
-        assert storage_driver.upload_object_via_stream.call_count == 1
+        assert mock_upload_image.call_count == 1

@@ -76,8 +76,8 @@ class AzurePublishJob(MashJob):
         self.request_credentials([self.account])
         credential = self.credentials[self.account]
 
-        self.cloud_image_name = self.source_regions['cloud_image_name']
-        self.blob_name = self.source_regions['blob_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
+        self.blob_name = self.status_msg['blob_name']
 
         with create_json_file(credential) as auth_file:
             self.log_callback.info(
@@ -148,12 +148,12 @@ class AzurePublishJob(MashJob):
                     )
                 )
             except Exception as error:
-                self.log_callback.error(
-                    'There was an error publishing image in {0}: {1}'.format(
-                        self.account,
-                        error
-                    )
+                msg = 'There was an error publishing image in {0}: {1}'.format(
+                    self.account,
+                    error
                 )
+                self.add_error_msg(msg)
+                self.log_callback.error(msg)
                 self.status = FAILED
 
     @staticmethod

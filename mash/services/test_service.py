@@ -59,8 +59,6 @@ def main():
             service_exchange=service_name,
             config=TestConfig(),
             custom_args={
-                'listener_msg_args': ['image_file', 'source_regions'],
-                'status_msg_args': ['image_file', 'source_regions'],
                 'job_factory': job_factory
             }
         )

@@ -36,7 +36,6 @@ class TestMashJob(object):
 
         job = MashJob(self.job_config, self.config)
         job.log_callback = callback
-        job.iteration_count = 0
 
         response = Mock()
         response.json.return_value = {'acnt1': {'super': 'secret'}}
@@ -102,3 +101,18 @@ class TestMashJob(object):
         job._log_callback = Mock()
         job.process_job()
         mock_run_job.assert_called_once_with()
+
+    def test_get_set_status(self):
+        job = MashJob(self.job_config, self.config)
+        assert job.status is None
+
+        job.status = 'success'
+        assert job.status == 'success'
+
+    def test_get_set_status_message(self):
+        job = MashJob(self.job_config, self.config)
+        job.set_status_message({'id': '1', 'status': 'success'})
+        status_msg = job.get_status_message()
+
+        assert status_msg['id'] == '1'
+        assert status_msg['status'] == 'success'

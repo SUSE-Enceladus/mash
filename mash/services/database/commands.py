@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -19,7 +19,7 @@
 import click
 
 from flask.cli import AppGroup, with_appcontext
-from mash.services.api.utils.tokens import prune_expired_tokens
+from mash.services.database.utils.tokens import prune_expired_tokens
 
 tokens_cli = AppGroup('tokens')
 

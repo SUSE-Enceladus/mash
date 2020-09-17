@@ -57,7 +57,7 @@ class EC2PublishJob(MashJob):
             accounts.append(region_info['account'])
 
         self.request_credentials(accounts)
-        cloud_image_name = self.source_regions['cloud_image_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
 
         for region_info in self.publish_regions:
             creds = self.credentials[region_info['account']]
@@ -65,7 +65,7 @@ class EC2PublishJob(MashJob):
             publish = EC2PublishImage(
                 access_key=creds['access_key_id'],
                 allow_copy=self.allow_copy,
-                image_name=cloud_image_name,
+                image_name=self.cloud_image_name,
                 secret_key=creds['secret_access_key'],
                 visibility=self.share_with,
                 log_callback=self.log_callback
@@ -78,6 +78,6 @@ class EC2PublishJob(MashJob):
                 except Exception as error:
                     raise MashPublishException(
                         'An error publishing image {0} in {1}. {2}'.format(
-                            cloud_image_name, region, error
+                            self.cloud_image_name, region, error
                         )
                     )

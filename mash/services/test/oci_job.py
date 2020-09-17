@@ -94,8 +94,8 @@ class OCITestJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        self.cloud_image_name = self.source_regions['cloud_image_name']
-        image_id = self.source_regions['image_id']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
+        image_id = self.status_msg['image_id']
 
         with create_key_file(credentials['signing_key']) as signing_key_file:
             try:
@@ -118,7 +118,8 @@ class OCITestJob(MashJob):
                     tests=self.tests,
                     log_callback=self.log_callback
                 )
-            except Exception:
+            except Exception as error:
+                self.add_error_msg(str(error))
                 result = {
                     'status': EXCEPTION,
                     'msg': str(traceback.format_exc())
@@ -127,7 +128,8 @@ class OCITestJob(MashJob):
         self.status = process_test_result(
             result,
             self.log_callback,
-            self.region
+            self.region,
+            self.status_msg
         )
 
         if self.cleanup_images or \
@@ -170,6 +172,6 @@ class OCITestJob(MashJob):
                 waiter_kwargs={'max_wait_seconds': self.max_oci_wait_seconds}
             )
         except Exception as error:
-            self.log_callback.warning(
-                'Failed to cleanup image: {0}'.format(error)
-            )
+            msg = 'Failed to cleanup image: {0}'.format(error)
+            self.add_error_msg(msg)
+            self.log_callback.warning(msg)

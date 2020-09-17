@@ -23,7 +23,7 @@ import signal
 from amqpstorm import AMQPError
 
 from apscheduler import events
-from apscheduler.jobstores.base import ConflictingIdError, JobLookupError
+from apscheduler.jobstores.base import ConflictingIdError
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 
@@ -31,7 +31,7 @@ from pytz import utc
 
 from mash.mash_exceptions import MashListenerServiceException
 from mash.services.mash_service import MashService
-from mash.services.status_levels import EXCEPTION, SUCCESS, DELETE
+from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import (
     remove_file,
@@ -62,7 +62,6 @@ class ListenerService(MashService):
             self.job_directory, exist_ok=True
         )
 
-        self.next_service = self._get_next_service()
         self.prev_service = self._get_previous_service()
 
         if not self.custom_args:
@@ -75,15 +74,6 @@ class ListenerService(MashService):
         else:
             self.job_factory = self.custom_args['job_factory']
 
-        self.listener_msg_args = []
-        self.status_msg_args = []
-
-        if self.custom_args.get('listener_msg_args'):
-            self.listener_msg_args += self.custom_args['listener_msg_args']
-
-        if self.custom_args.get('status_msg_args'):
-            self.status_msg_args += self.custom_args['status_msg_args']
-
         logfile_handler = setup_logfile(
             self.config.get_log_file(self.service_exchange)
         )
@@ -93,7 +83,7 @@ class ListenerService(MashService):
             self.service_exchange, self.job_document_key, self.service_queue
         )
         self.bind_queue(
-            self.service_exchange, self.listener_msg_key, self.listener_queue
+            self.prev_service, self.listener_msg_key, self.listener_queue
         )
 
         thread_pool_count = self.custom_args.get(
@@ -157,19 +147,19 @@ class ListenerService(MashService):
                 extra={'job_id': job_id}
             )
 
-    def _cleanup_job(self, job, status):
+    def _cleanup_job(self, job_id):
         """
         Job failed upstream.
 
         Delete job and notify the next service.
         """
-        job.status = status
+        job = self.jobs[job_id]
+
         self.log.warning('Failed upstream.', extra=job.get_job_id())
         self._delete_job(job.id)
 
-        if job.last_service != self.service_exchange:
-            message = self._get_status_message(job)
-            self._publish_message(message, job.id)
+        message = self._get_status_message(job)
+        self._publish_message(message, job.id)
 
     def _delete_job(self, job_id):
         """
@@ -177,13 +167,6 @@ class ListenerService(MashService):
 
         Also attempt to remove any running instances of the job.
         """
-        try:
-            # Remove job from scheduler if it has
-            # not started executing yet.
-            self.scheduler.remove_job(job_id)
-        except JobLookupError:
-            pass
-
         if job_id in self.jobs:
             job = self.jobs[job_id]
             self.log.info(
@@ -198,17 +181,6 @@ class ListenerService(MashService):
                 'Job deletion failed, job is not queued.',
                 extra={'job_id': job_id}
             )
-
-    def _get_next_service(self):
-        """Return the next service based on the current exchange."""
-        services = self.config.get_service_names()
-
-        try:
-            next_service = services[services.index(self.service_exchange) + 1]
-        except (IndexError, ValueError):
-            next_service = None
-
-        return next_service
 
     def _get_previous_service(self):
         """
@@ -233,31 +205,38 @@ class ListenerService(MashService):
         Message contains completion status to post to next service exchange.
         """
         key = '{0}_result'.format(self.service_exchange)
-
-        data = {
-            key: {
-                'id': job.id,
-                'status': job.status,
+        return JsonFormat.json_message(
+            {
+                key: job.get_status_message()
             }
-        }
-
-        if job.status == SUCCESS:
-            for arg in self.status_msg_args:
-                data[key][arg] = getattr(job, arg)
-
-        return JsonFormat.json_message(data)
+        )
 
     def _handle_listener_message(self, message):
         """
         Callback for listener messages.
         """
-        job = self._validate_listener_msg(message.body)
+        listener_msg = self._get_listener_msg(
+            message.body,
+            '{0}_result'.format(self.prev_service)
+        )
 
-        if job:
+        job_id = None
+        if listener_msg:
+            status = listener_msg['status']
+            job_id = listener_msg['id']
+
+        if job_id and job_id in self.jobs:
+            job = self.jobs[listener_msg['id']]
             job.listener_msg = message
-            self._schedule_job(job.id)
-        else:
-            message.ack()
+            job.set_status_message(listener_msg)
+
+            if status == SUCCESS:
+                self._schedule_job(job.id)
+                return  # Don't ack message until job finishes
+            else:
+                self._cleanup_job(job_id)
+
+        message.ack()
 
     def _handle_service_message(self, message):
         """
@@ -282,14 +261,13 @@ class ListenerService(MashService):
         job = self.jobs[job_id]
         metadata = job.get_job_id()
 
-        if job.utctime != 'always':
-            self._delete_job(job_id)
+        self._delete_job(job_id)
 
         if event.exception:
             job.status = EXCEPTION
+            job.add_error_msg(str(event.exception))
             self.log.error(
-                'Pass[{0}]: Exception in {1}: {2}'.format(
-                    job.iteration_count,
+                'Exception in {0}: {1}'.format(
                     self.service_exchange,
                     event.exception
                 ),
@@ -297,34 +275,21 @@ class ListenerService(MashService):
             )
         elif job.status == SUCCESS:
             self.log.info(
-                'Pass[{0}]: {1} successful.'.format(
-                    job.iteration_count,
+                '{0} successful.'.format(
                     self.service_exchange
                 ),
                 extra=metadata
             )
         else:
             self.log.error(
-                'Pass[{0}]: Error occurred in {1}.'.format(
-                    job.iteration_count,
+                'Error occurred in {0}.'.format(
                     self.service_exchange
                 ),
                 extra=metadata
             )
 
-        # Don't send failure messages for always jobs and
-        # don't send message if last service.
-        if (job.utctime != 'always' or job.status == SUCCESS) \
-                and job.last_service != self.service_exchange:
-            message = self._get_status_message(job)
-            self._publish_message(message, job.id)
-
-        self.send_notification(
-            job.id, job.notification_email, job.notification_type, job.status,
-            job.utctime, job.last_service, job.cloud_image_name,
-            job.iteration_count, event.exception
-        )
-
+        message = self._get_status_message(job)
+        self._publish_message(message, job.id)
         job.listener_msg.ack()
 
     def _process_job_missed(self, event):
@@ -338,8 +303,7 @@ class ListenerService(MashService):
         metadata = job.get_job_id()
 
         self.log.warning(
-            'Pass[{0}]: Job missed during {1}.'.format(
-                job.iteration_count,
+            'Job missed during {0}.'.format(
                 self.service_exchange
             ),
             extra=metadata
@@ -350,7 +314,7 @@ class ListenerService(MashService):
         Publish message to next service exchange.
         """
         try:
-            self.publish_job_result(self.next_service, message)
+            self.publish_job_result(self.service_exchange, message)
         except AMQPError:
             self.log.warning(
                 'Message not received: {0}'.format(message),
@@ -384,30 +348,6 @@ class ListenerService(MashService):
         job = self.jobs[job_id]
         job.process_job()
 
-    def _validate_listener_msg(self, message):
-        """
-        Validate the required keys are in message dictionary.
-
-        If listener message is valid return the job instance.
-        """
-        listener_msg = self._get_listener_msg(
-            message,
-            '{0}_result'.format(self.prev_service)
-        )
-
-        if not listener_msg:
-            return None
-
-        if self._validate_base_msg(listener_msg, self.listener_msg_args):
-            job = self.jobs[listener_msg['id']]
-
-            for arg in self.listener_msg_args:
-                self._process_msg_arg(listener_msg, arg, job)
-
-            return job
-        else:
-            return None
-
     def _get_listener_msg(self, message, key):
         """Load json and attempt to get message by key."""
         try:
@@ -424,63 +364,6 @@ class ListenerService(MashService):
 
         return listener_msg
 
-    def _validate_base_msg(self, listener_msg, args):
-        """
-        Validate the base message.
-
-        - Message should have an id and status.
-        - The job should exist.
-        - The status should be success.
-
-        Otherwise if the message is a DELETE message delete the job
-        if it exists and pass the message to the next service.
-        """
-        for arg in ['id', 'status']:
-            if arg not in listener_msg:
-                self.log.error('{0} is required in listener message.'.format(arg))
-                return False
-
-        if listener_msg['status'] == DELETE:
-            self.log.info(
-                'Received a job delete message for: {0}.'.format(
-                    listener_msg['id']
-                )
-            )
-
-            if listener_msg['id'] in self.jobs:
-                self._delete_job(listener_msg['id'])
-
-            key = '{0}_result'.format(self.service_exchange)
-            message = JsonFormat.json_message({key: listener_msg})
-            self._publish_message(message, listener_msg['id'])
-
-            return False
-
-        if listener_msg['id'] not in self.jobs:
-            self.log.error(
-                'Invalid listener message with id: {0}.'.format(
-                    listener_msg['id']
-                )
-            )
-            return False
-
-        status = listener_msg['status']
-        if status != SUCCESS:
-            job = self.jobs[listener_msg['id']]
-            self._cleanup_job(job, status)
-            return False
-
-        for arg in args:
-            if arg not in listener_msg:
-                self.log.error('{0} is required in listener message.'.format(arg))
-                return False
-
-        return True
-
-    def _process_msg_arg(self, listener_msg, arg, job):
-        """Set the arg on the job using setter method."""
-        setattr(job, arg, listener_msg[arg])
-
     def publish_job_result(self, exchange, message):
         """
         Publish the result message to the listener queue on given exchange.
@@ -494,11 +377,13 @@ class ListenerService(MashService):
         self.scheduler.start()
         self.consume_queue(
             self._handle_service_message,
-            queue_name=self.service_queue
+            self.service_queue,
+            self.service_exchange
         )
         self.consume_queue(
             self._handle_listener_message,
-            queue_name=self.listener_queue
+            self.listener_queue,
+            self.prev_service
         )
 
         try:

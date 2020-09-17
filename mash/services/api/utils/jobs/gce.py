@@ -45,24 +45,24 @@ def validate_gce_job(job_doc):
 
     for attr in attrs:
         if attr not in job_doc:
-            job_doc[attr] = getattr(cloud_account, attr)
+            job_doc[attr] = cloud_account.get(attr)
 
     services = get_services_by_last_service(job_doc['last_service'])
 
     if 'create' in services:
-        if cloud_account.is_publishing_account and not job_doc.get('family'):
+        if cloud_account['is_publishing_account'] and not job_doc.get('family'):
             raise MashJobException(
                 'Jobs using a GCE publishing account require a family.'
             )
 
     if 'test' in services:
-        if cloud_account.is_publishing_account and not job_doc['testing_account']:
+        if cloud_account['is_publishing_account'] and not job_doc.get('testing_account'):
             raise MashJobException(
                 'Jobs using a GCE publishing account require'
                 ' the use of a test account.'
             )
 
-        if cloud_account.is_publishing_account and not job_doc.get('image_project'):
+        if cloud_account['is_publishing_account'] and not job_doc.get('image_project'):
             raise MashJobException(
                 'Jobs using a GCE publishing account require an image_project.'
             )

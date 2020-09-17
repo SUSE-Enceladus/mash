@@ -18,14 +18,12 @@
 import json
 
 from flask import jsonify, request, make_response, current_app
-from flask_restplus import fields, marshal, Model, Namespace, Resource
+from flask_restplus import Namespace, Resource
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity
 )
-from sqlalchemy.exc import IntegrityError
 
-from mash.mash_exceptions import MashException
 from mash.services.api.schema import (
     default_response,
     validation_error
@@ -41,6 +39,7 @@ from mash.services.api.utils.accounts.azure import (
     delete_azure_account,
     update_azure_account
 )
+from mash.services.database.routes.accounts.azure import azure_account_response
 
 api = Namespace(
     'Azure Accounts',
@@ -53,20 +52,6 @@ update_azure_account_request = api.schema_model(
 )
 validation_error_response = api.schema_model(
     'validation_error', validation_error
-)
-
-azure_account_response = Model(
-    'azure_account_response', {
-        'id': fields.String,
-        'name': fields.String,
-        'region': fields.String,
-        'source_container': fields.String,
-        'source_resource_group': fields.String,
-        'source_storage_account': fields.String,
-        'destination_container': fields.String,
-        'destination_resource_group': fields.String,
-        'destination_storage_account': fields.String
-    }
 )
 
 api.models['azure_account_response'] = azure_account_response
@@ -86,7 +71,6 @@ class AzureAccountCreateAndList(Resource):
     @api.expect(add_azure_account_request)
     @api.response(201, 'Azure account created', azure_account_response)
     @api.response(400, 'Validation error', validation_error_response)
-    @api.response(409, 'Duplicate account', default_response)
     def post(self):
         """
         Create a new Azure account.
@@ -96,41 +80,19 @@ class AzureAccountCreateAndList(Resource):
         try:
             account = create_azure_account(
                 get_jwt_identity(),
-                data['account_name'],
-                data['region'],
-                data['credentials'],
-                data['source_container'],
-                data['source_resource_group'],
-                data['source_storage_account'],
-                data['destination_container'],
-                data['destination_resource_group'],
-                data['destination_storage_account']
-            )
-        except MashException as error:
-            return make_response(
-                jsonify({'msg': str(error)}),
-                400
-            )
-        except IntegrityError:
-            return make_response(
-                jsonify({'msg': 'Account already exists'}),
-                409
+                data
             )
         except Exception as error:
             current_app.logger.warning(error)
             return make_response(
-                jsonify({'msg': 'Failed to add Azure account'}),
+                jsonify({'msg': str(error)}),
                 400
             )
 
-        return make_response(
-            jsonify(marshal(account, azure_account_response, skip_none=True)),
-            201
-        )
+        return make_response(jsonify(account), 201)
 
     @api.doc('get_azure_accounts')
     @jwt_required
-    @api.marshal_list_with(azure_account_response, skip_none=True)
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -182,13 +144,13 @@ class AzureAccount(Resource):
         """
         Get Azure account.
         """
-        account = get_azure_account(name, get_jwt_identity())
+        try:
+            account = get_azure_account(name, get_jwt_identity())
+        except Exception:
+            account = None
 
         if account:
-            return make_response(
-                jsonify(marshal(account, azure_account_response, skip_none=True)),
-                200
-            )
+            return make_response(jsonify(account), 200)
         else:
             return make_response(
                 jsonify({'msg': 'Azure account not found'}),
@@ -211,14 +173,7 @@ class AzureAccount(Resource):
             account = update_azure_account(
                 name,
                 get_jwt_identity(),
-                data.get('region'),
-                data.get('credentials'),
-                data.get('source_container'),
-                data.get('source_resource_group'),
-                data.get('source_storage_account'),
-                data.get('destination_container'),
-                data.get('destination_resource_group'),
-                data.get('destination_storage_account')
+                data
             )
         except Exception as error:
             current_app.logger.warning(error)
@@ -228,10 +183,7 @@ class AzureAccount(Resource):
             )
 
         if account:
-            return make_response(
-                jsonify(marshal(account, azure_account_response, skip_none=True)),
-                200
-            )
+            return make_response(jsonify(account), 200)
         else:
             return make_response(
                 jsonify({'msg': 'Azure account not found'}),

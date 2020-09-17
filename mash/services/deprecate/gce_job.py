@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,17 +16,10 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import datetime
-
-from dateutil.relativedelta import relativedelta
-
-from libcloud.compute.types import Provider
-from libcloud.compute.providers import get_driver
-
 from mash.mash_exceptions import MashDeprecateException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
-from mash.utils.mash_utils import create_json_file
+from mash.utils.gce import get_gce_compute_driver, deprecate_gce_image
 
 
 class GCEDeprecateJob(MashJob):
@@ -66,39 +59,30 @@ class GCEDeprecateJob(MashJob):
         self.request_credentials([self.account])
         credential = self.credentials[self.account]
 
-        self.cloud_image_name = self.source_regions['cloud_image_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
 
-        with create_json_file(credential) as auth_file:
-            try:
-                ComputeEngine = get_driver(Provider.GCE)
-                compute_driver = ComputeEngine(
-                    credential['client_email'],
-                    auth_file,
-                    project=credential['project_id']
-                )
+        try:
+            project = credential.get('project_id')
+            compute_driver = get_gce_compute_driver(credential)
 
-                delete_on = datetime.date.today() + relativedelta(
-                    months=int(self.months_to_deletion)
-                )
-                delete_timestamp = delete_on.isoformat()
-                delete_timestamp += 'T00:00:00.000-00:00'
+            deprecate_gce_image(
+                compute_driver,
+                project,
+                self.old_cloud_image_name,
+                self.cloud_image_name,
+                self.months_to_deletion
+            )
 
-                compute_driver.ex_deprecate_image(
-                    self.old_cloud_image_name,
-                    self.cloud_image_name,
-                    deleted=delete_timestamp
+            self.log_callback.info(
+                'Deprecated image {0}.'.format(
+                    self.old_cloud_image_name
                 )
-                self.log_callback.info(
-                    'Deprecated image {0}.'.format(
-                        self.old_cloud_image_name
-                    )
-                )
-            except Exception as error:
-                self.log_callback.error(
-                    'There was an error deprecating image in {0}:'
-                    ' {1}'.format(
-                        self.account,
-                        error
-                    )
-                )
-                self.status = FAILED
+            )
+        except Exception as error:
+            msg = 'There was an error deprecating image in {0}: {1}'.format(
+                self.account,
+                error
+            )
+            self.add_error_msg(msg)
+            self.log_callback.error(msg)
+            self.status = FAILED

@@ -9,7 +9,6 @@ from test.unit.test_helper import (
 
 from mash.services.obs.service import OBSImageBuildResultService
 from mash.services.mash_service import MashService
-from mash.utils.json_format import JsonFormat
 
 
 class TestOBSImageBuildResultService(object):
@@ -65,7 +64,7 @@ class TestOBSImageBuildResultService(object):
         )
 
         self.obs_result.consume_queue.assert_called_once_with(
-            mock_process_message, queue_name='service'
+            mock_process_message, 'service', 'obs'
         )
         self.obs_result.channel.start_consuming.assert_called_once_with()
 
@@ -87,7 +86,7 @@ class TestOBSImageBuildResultService(object):
         self.obs_result._send_job_result_for_upload('815', {})
         mock_delete_job.assert_called_once_with('815')
         mock_publish.assert_called_once_with(
-            'upload', 'listener_msg', '{}'
+            'obs', 'listener_msg', '{}'
         )
 
     def test_send_control_response_local(self):
@@ -140,25 +139,14 @@ class TestOBSImageBuildResultService(object):
                 }
             }
         )
-        message.body = '{"obs_job_delete": "4711"}'
-        self.obs_result._process_message(message)
-        mock_delete_job.assert_called_once_with(
-            '4711'
-        )
+
         message.body = '{"job_delete": "4711"}'
         self.obs_result._process_message(message)
-        mock_publish.assert_called_once_with(
-            'upload',
-            'listener_msg',
-            JsonFormat.json_message(
-                {'obs_result': {'id': '4711', 'status': 'delete'}}
-            )
-        )
+
         message.body = 'foo'
         self.obs_result._process_message(message)
         assert mock_send_control_response.call_args_list == [
             call(mock_add_job.return_value, '4711'),
-            call(mock_delete_job.return_value, '4711'),
             call(
                 {
                     'message':
@@ -254,7 +242,7 @@ class TestOBSImageBuildResultService(object):
             ],
             "cloud_architecture": "aarch64",
             "notification_email": "test@fake.com",
-            "notification_type": "single",
+            "notify": True,
             "profile": "Proxy",
             "conditions_wait_time": 500,
             "disallow_licenses": ["MIT"],
@@ -265,7 +253,7 @@ class TestOBSImageBuildResultService(object):
             self.obs_result._send_job_result_for_upload
         )
         job_worker.start_watchdog.assert_called_once_with(
-            isotime=None, nonstop=False
+            isotime=None
         )
 
     @patch('mash.services.obs.service.OBSImageBuildResult')
@@ -279,11 +267,11 @@ class TestOBSImageBuildResultService(object):
                             "PubCloud:/Stable:/Images12/images",
             "image": "test-image-oem",
             "last_service": "publish",
-            "utctime": "always"
+            "utctime": "now"
         }
         self.obs_result._start_job(data)
         job_worker.start_watchdog.assert_called_once_with(
-            isotime=None, nonstop=True
+            isotime=None
         )
 
     @patch('mash.services.obs.service.OBSImageBuildResult')
@@ -301,5 +289,5 @@ class TestOBSImageBuildResultService(object):
         }
         self.obs_result._start_job(data)
         job_worker.start_watchdog.assert_called_once_with(
-            isotime='2017-10-11T17:50:26+00:00', nonstop=False
+            isotime='2017-10-11T17:50:26+00:00'
         )

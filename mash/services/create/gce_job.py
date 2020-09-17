@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2020 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -18,14 +18,17 @@
 
 import re
 
-from libcloud.compute.types import Provider
-from libcloud.compute.providers import get_driver
-
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashCreateException
-from mash.utils.mash_utils import format_string_with_date, create_json_file
+from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
+from mash.utils.gce import (
+    get_gce_image,
+    create_gce_image,
+    delete_gce_image,
+    get_gce_compute_driver
+)
 
 
 class GCECreateJob(MashJob):
@@ -56,8 +59,8 @@ class GCECreateJob(MashJob):
         self.status = SUCCESS
         self.log_callback.info('Creating image.')
 
-        self.cloud_image_name = self.source_regions['cloud_image_name']
-        object_name = self.source_regions['object_name']
+        self.cloud_image_name = self.status_msg['cloud_image_name']
+        object_name = self.status_msg['object_name']
 
         timestamp = re.findall(r'\d{8}', self.cloud_image_name)[0]
         self.cloud_image_description = format_string_with_date(
@@ -68,37 +71,35 @@ class GCECreateJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        with create_json_file(credentials) as auth_file:
-            ComputeEngine = get_driver(Provider.GCE)
-            compute_driver = ComputeEngine(
-                credentials['client_email'],
-                auth_file,
-                project=credentials['project_id']
+        project = credentials.get('project_id')
+        compute_driver = get_gce_compute_driver(credentials)
+
+        uri = ''.join([
+            'https://www.googleapis.com/storage/v1/b/',
+            self.bucket,
+            '/o/',
+            object_name
+        ])
+
+        if get_gce_image(compute_driver, project, self.cloud_image_name):
+            self.log_callback.info(
+                'Replacing existing image with the same name.'
+            )
+            delete_gce_image(
+                compute_driver,
+                project,
+                self.cloud_image_name
             )
 
-            uri = ''.join([
-                'https://www.googleapis.com/storage/v1/b/',
-                self.bucket,
-                '/o/',
-                object_name
-            ])
-
-            kwargs = {
-                'description': self.cloud_image_description,
-                'wait_for_completion': True
-            }
-
-            if self.family:
-                kwargs['family'] = self.family
-
-            if self.guest_os_features:
-                kwargs['guest_os_features'] = self.guest_os_features
-
-            compute_driver.ex_create_image(
-                self.cloud_image_name,
-                uri,
-                **kwargs
-            )
+        create_gce_image(
+            compute_driver,
+            project,
+            self.cloud_image_name,
+            self.cloud_image_description,
+            uri,
+            family=self.family,
+            guest_os_features=self.guest_os_features
+        )
 
         self.log_callback.info(
             'Created image has ID: {0}'.format(
