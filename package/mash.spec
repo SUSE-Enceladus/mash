@@ -161,6 +161,9 @@ install -D -m 644 config/mash_publish.service \
 install -D -m 644 config/mash_deprecate.service \
     %{buildroot}%{_unitdir}/mash_deprecate.service
 
+install -D -m 644 config/mash_cleanup.service \
+    %{buildroot}%{_unitdir}/mash_cleanup.service
+
 %pre
 %{_bindir}/getent group mash > /dev/null || %{_sbindir}/groupadd mash
 %{_bindir}/getent passwd mash > /dev/null || %{_sbindir}/useradd -r -g mash -s %{_bindir}/false -c "User for MASH" -d %{_localstatedir}/lib/mash mash
@@ -223,5 +226,8 @@ python3 -m pytest
 
 %{_bindir}/mash-deprecate-service
 %{_unitdir}/mash_deprecate.service
+
+%{_bindir}/mash-cleanup-service
+%{_unitdir}/mash_cleanup.service
 
 %changelog
