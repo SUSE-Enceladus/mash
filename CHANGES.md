@@ -1,3 +1,28 @@
+v9.0.0 (2020-09-30)
+===================
+
+- Update list of valid service names in readme.
+  [\#673](https://github.com/SUSE-Enceladus/mash/pull/673)
+- Cleanup s3 raw image upload.
+  [\#674](https://github.com/SUSE-Enceladus/mash/pull/674)
+- Cloud_image_name and description are not required.
+  [\#675](https://github.com/SUSE-Enceladus/mash/pull/675)
+- Use user email for notifications.
+  [\#676](https://github.com/SUSE-Enceladus/mash/pull/676)
+- Remove deprecated string format usage.
+  [\#682](https://github.com/SUSE-Enceladus/mash/pull/682)
+- Add MASH cleanup service.
+  [\#697](https://github.com/SUSE-Enceladus/mash/pull/697)
+- Cleanup unused share snapshot arg.
+  [\#705](https://github.com/SUSE-Enceladus/mash/pull/705)
+- Set a prefix for img-proof tests.
+  [\#706](https://github.com/SUSE-Enceladus/mash/pull/706)
+- Handle error when getting classic sa keys.
+  [\#713](https://github.com/SUSE-Enceladus/mash/pull/713)
+- Migrate to GCE SDK from Libcloud.
+- Add job status API.
+  [\#716](https://github.com/SUSE-Enceladus/mash/pull/716)
+
 v8.0.0 (2020-06-19)
 ===================
 
