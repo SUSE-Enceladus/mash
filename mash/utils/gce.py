@@ -91,7 +91,9 @@ def create_gce_image(
         kwargs['family'] = family
 
     if guest_os_features:
-        kwargs['guest_os_features'] = guest_os_features
+        kwargs['guestOsFeatures'] = [
+            {'type': feature} for feature in guest_os_features
+        ]
 
     response = compute_driver.images().insert(
         project=project,
