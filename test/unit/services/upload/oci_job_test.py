@@ -30,14 +30,18 @@ class TestOCIUploadJob(object):
             'region': 'us-phoenix-1',
             'account': 'test',
             'bucket': 'images',
-            'cloud_image_name': 'sles-12-sp4-v20180909',
-            'image_description': 'description 20180909',
+            'cloud_image_name': 'sles-12-sp4-v{date}',
+            'image_description': 'description 20200925',
             'oci_user_id': 'ocid1.user.oc1..',
-            'tenancy': 'ocid1.tenancy.oc1..'
+            'tenancy': 'ocid1.tenancy.oc1..',
+            'use_build_time': True
         }
 
         self.job = OCIUploadJob(job_doc, self.config)
-        self.job.status_msg = {'image_file': 'sles-12-sp4-v20180909.qcow2'}
+        self.job.status_msg = {
+            'image_file': 'sles-12-sp4-v20200925.qcow2',
+            'build_time': '1601061355'
+        }
         self.job.credentials = credentials
         self.job._log_callback = Mock()
 
@@ -52,6 +56,12 @@ class TestOCIUploadJob(object):
 
         with raises(MashUploadException):
             OCIUploadJob(job_doc, self.config)
+
+    def test_missing_date_format_exception(self):
+        self.job.status_msg['build_time'] = 'unknown'
+
+        with raises(MashUploadException):
+            self.job.run_job()
 
     @patch('mash.services.upload.oci_job.stat')
     @patch('mash.services.upload.oci_job.UploadManager')
@@ -84,7 +94,7 @@ class TestOCIUploadJob(object):
         upload_manager.upload_stream.assert_called_once_with(
             'namespace name',
             'images',
-            'sles-12-sp4-v20180909.qcow2',
+            'sles-12-sp4-v20200925.qcow2',
             open_handle,
             progress_callback=self.job._progress_callback
         )

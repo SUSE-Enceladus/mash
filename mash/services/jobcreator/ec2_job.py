@@ -186,6 +186,7 @@ class EC2Job(BaseJob):
                 'cloud_image_name': self.cloud_image_name,
                 'cloud': self.cloud,
                 'image_description': self.image_description,
+                'use_build_time': self.use_build_time,
                 'target_regions': self.get_create_regions()
             }
         }

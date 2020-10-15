@@ -144,7 +144,8 @@ class OCIJob(BaseJob):
                 'tenancy': self.tenancy,
                 'raw_image_upload_type': self.raw_image_upload_type,
                 'raw_image_upload_account': self.raw_image_upload_account,
-                'raw_image_upload_location': self.raw_image_upload_location
+                'raw_image_upload_location': self.raw_image_upload_location,
+                'use_build_time': self.use_build_time
             }
         }
         upload_message['upload_job'].update(self.base_message)

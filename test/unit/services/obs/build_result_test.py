@@ -42,7 +42,10 @@ class TestOBSImageBuildResult(object):
     def test_result_callback(self):
         self.obs_result.result_callback = Mock()
         self.obs_result.job_status = 'success'
-        self.downloader.image_status = {'image_source': 'image'}
+        self.downloader.image_status = {
+            'image_source': 'image',
+            'buildtime': '1601061355'
+        }
         self.obs_result._result_callback()
         self.obs_result.result_callback.assert_called_once_with(
             '815', {
@@ -52,7 +55,8 @@ class TestOBSImageBuildResult(object):
                     'status': 'success',
                     'errors': [],
                     'notification_email': 'test@fake.com',
-                    'last_service': 'publish'
+                    'last_service': 'publish',
+                    'build_time': '1601061355'
                 }
             }
         )

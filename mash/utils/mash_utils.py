@@ -122,6 +122,14 @@ def format_string_with_date(value, timestamp=None, date_format='%Y%m%d'):
     return value
 
 
+def timestamp_from_epoch(epoch, date_format='%Y%m%d'):
+    timestamp = datetime.datetime.fromtimestamp(
+        int(epoch),
+        datetime.timezone.utc
+    )
+    return timestamp.strftime(date_format)
+
+
 def remove_file(file_path):
     """
     Remove file from disk if it exists.

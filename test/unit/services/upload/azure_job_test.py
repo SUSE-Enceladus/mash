@@ -42,7 +42,8 @@ class TestAzureUploadJob(object):
             'container': 'container',
             'storage_account': 'storage',
             'region': 'region',
-            'cloud_image_name': 'name'
+            'cloud_image_name': 'name v{date}',
+            'use_build_time': True
         }
 
         self.config = UploadConfig(
@@ -51,6 +52,7 @@ class TestAzureUploadJob(object):
 
         self.job = AzureUploadJob(job_doc, self.config)
         self.job.status_msg['image_file'] = 'file.vhdfixed.xz'
+        self.job.status_msg['build_time'] = '1601061355'
         self.job.credentials = self.credentials
         self.job._log_callback = MagicMock()
 
@@ -67,6 +69,12 @@ class TestAzureUploadJob(object):
         with raises(MashUploadException):
             AzureUploadJob(job_doc, self.config)
 
+    def test_missing_date_format_exception(self):
+        self.job.status_msg['build_time'] = 'unknown'
+
+        with raises(MashUploadException):
+            self.job.run_job()
+
     @patch('mash.services.upload.azure_job.upload_azure_file')
     @patch('builtins.open')
     def test_upload(
@@ -79,7 +87,7 @@ class TestAzureUploadJob(object):
         self.job.run_job()
 
         mock_upload_azure_file.assert_called_once_with(
-            'name.vhd',
+            'name v20200925.vhd',
             'container',
             'file.vhdfixed.xz',
             5,

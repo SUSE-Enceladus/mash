@@ -29,7 +29,11 @@ from mash.utils.ec2 import (
     get_vpc_id_from_subnet,
     cleanup_ec2_image
 )
-from mash.utils.mash_utils import format_string_with_date, generate_name
+from mash.utils.mash_utils import (
+    format_string_with_date,
+    generate_name,
+    timestamp_from_epoch
+)
 from mash.services.status_levels import SUCCESS, FAILED
 
 
@@ -59,6 +63,7 @@ class EC2CreateJob(MashJob):
             )
 
         self.arch = self.job_config.get('cloud_architecture', 'x86_64')
+        self.use_build_time = self.job_config.get('use_build_time')
 
         if self.arch == 'aarch64':
             self.arch = 'arm64'
@@ -68,8 +73,19 @@ class EC2CreateJob(MashJob):
         self.status_msg['source_regions'] = {}
         self.log_callback.info('Creating image.')
 
+        timestamp = None
+        build_time = self.status_msg.get('build_time', 'unknown')
+
+        if self.use_build_time and (build_time != 'unknown'):
+            timestamp = timestamp_from_epoch(build_time)
+        elif self.use_build_time and (build_time == 'unknown'):
+            raise MashUploadException(
+                'use_build_time set for job but build time is unknown.'
+            )
+
         self.cloud_image_name = format_string_with_date(
-            self.base_cloud_image_name
+            self.base_cloud_image_name,
+            timestamp=timestamp
         )
         self.status_msg['cloud_image_name'] = self.cloud_image_name
 

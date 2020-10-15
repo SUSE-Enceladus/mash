@@ -66,6 +66,7 @@ class BaseJob(object):
         self.additional_uploads = kwargs.get('additional_uploads')
         self.cloud_image_name = kwargs.get('cloud_image_name')
         self.image_description = kwargs.get('image_description')
+        self.use_build_time = kwargs.get('use_build_time')
         self.kwargs = kwargs
 
         if self.raw_image_upload_type and self.last_service == 'upload':
