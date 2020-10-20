@@ -100,6 +100,14 @@ def validate_job(data):
     Validate job doc.
     """
     data = normalize_dictionary(data)
+
+    if data.get('use_build_time') and \
+            '{date}' not in data['cloud_image_name']:
+        raise MashJobException(
+            'When use_build_time flag is True the {date} '
+            'format string is required in cloud_image_name.'
+        )
+
     validate_last_service(data)
     services_run = get_services_by_last_service(data['last_service'])
 

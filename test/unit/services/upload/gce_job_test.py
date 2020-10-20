@@ -43,12 +43,14 @@ class TestGCEUploadJob(object):
             'region': 'us-west1-a',
             'account': 'test',
             'bucket': 'images',
-            'cloud_image_name': 'sles-12-sp4-v20180909',
-            'image_description': 'description 20180909'
+            'cloud_image_name': 'sles-12-sp4-v{date}',
+            'image_description': 'description 20180909',
+            'use_build_time': True
         }
 
         self.job = GCEUploadJob(job_doc, self.config)
         self.job.status_msg['image_file'] = 'sles-12-sp4-v20180909.tar.gz'
+        self.job.status_msg['build_time'] = '1601061355'
         self.job.credentials = self.credentials
         self.job._log_callback = Mock()
 
@@ -63,6 +65,12 @@ class TestGCEUploadJob(object):
 
         with raises(MashUploadException):
             GCEUploadJob(job_doc, self.config)
+
+    def test_missing_date_format_exception(self):
+        self.job.status_msg['build_time'] = 'unknown'
+
+        with raises(MashUploadException):
+            self.job.run_job()
 
     def test_post_init_sles_11(self):
         job_doc = {

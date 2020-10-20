@@ -29,7 +29,7 @@ img-proof>=6.2.0
 lxml
 requests
 urllib3
-obs-img-utils<0.3.0,>=0.2.0
+obs-img-utils>=0.3.0
 oci
 werkzeug<1.0.0
 google-auth

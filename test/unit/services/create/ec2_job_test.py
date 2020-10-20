@@ -38,12 +38,14 @@ class TestAmazonCreateJob(object):
                     'subnet': 'subnet-123456789'
                 }
             },
-            'cloud_image_name': 'name',
-            'image_description': 'description'
+            'cloud_image_name': 'name v{date}',
+            'image_description': 'description',
+            'use_build_time': True
         }
         self.job = EC2CreateJob(job_doc, self.config)
         self.job._log_callback = Mock()
         self.job.status_msg['image_file'] = 'file'
+        self.job.status_msg['build_time'] = '1601061355'
         self.job.status_msg['source_regions'] = {'us-east-1': 'ami_id'}
         self.job.credentials = self.credentials
 
@@ -66,6 +68,12 @@ class TestAmazonCreateJob(object):
         job_doc['cloud_image_name'] = 'name'
         with raises(MashUploadException):
             EC2CreateJob(job_doc, self.config)
+
+    def test_missing_date_format_exception(self):
+        self.job.status_msg['build_time'] = 'unknown'
+
+        with raises(MashUploadException):
+            self.job.run_job()
 
     @patch('mash.services.create.ec2_job.cleanup_ec2_image')
     @patch('mash.services.create.ec2_job.get_vpc_id_from_subnet')
@@ -121,7 +129,7 @@ class TestAmazonCreateJob(object):
             ena_support=True,
             image_arch='arm64',
             image_description='description',
-            image_name='name',
+            image_name='name v20200925',
             image_virt_type='hvm',
             inst_user_name='ec2-user',
             launch_ami='ami-bc5b48d0',

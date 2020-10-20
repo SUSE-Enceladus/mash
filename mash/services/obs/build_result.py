@@ -208,7 +208,9 @@ class OBSImageBuildResult(object):
                         'status': self.job_status,
                         'errors': self.errors,
                         'notification_email': self.notification_email,
-                        'last_service': self.last_service
+                        'last_service': self.last_service,
+                        'build_time':
+                            self.downloader.image_status['buildtime'],
                     }
                 }
             )

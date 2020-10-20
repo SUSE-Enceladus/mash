@@ -8,7 +8,8 @@ from mash.services.api.utils.jobs import (
     delete_job,
     validate_last_service,
     validate_create_args,
-    validate_deprecate_args
+    validate_deprecate_args,
+    validate_job
 )
 from mash.mash_exceptions import MashJobException
 
@@ -162,3 +163,15 @@ def test_validate_create_args():
 def test_validate_deprecate_args():
     with raises(MashJobException):
         validate_deprecate_args({})
+
+
+def test_validate_job():
+    # use_build_time missing {date}
+    job = {
+        'last_service': 'test',
+        'use_build_time': True,
+        'cloud_image_name': 'Fake image'
+    }
+
+    with raises(Exception):
+        validate_job(job)

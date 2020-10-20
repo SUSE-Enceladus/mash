@@ -266,6 +266,16 @@ base_job_message = {
             'example': True,
             'description': 'Only validate the job document and return. '
                            'Do not create the job.'
+        },
+        'use_build_time': {
+            'type': 'boolean',
+            'example': True,
+            'description': 'If True and the image build time is available '
+                           'it will be used when formatting the cloud image '
+                           'name. A {date} format is required in the cloud '
+                           'image name for the timestamp to be used. If True '
+                           'and build time is not available the job will '
+                           'fail.'
         }
     },
     'additionalProperties': False,

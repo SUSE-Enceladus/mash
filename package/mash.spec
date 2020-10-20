@@ -50,8 +50,7 @@ BuildRequires:  python3-Flask-SQLAlchemy
 BuildRequires:  python3-Flask-Migrate
 BuildRequires:  python3-flask-jwt-extended
 BuildRequires:  python3-requests
-BuildRequires:  python3-obs-img-utils >= 0.2.0
-BuildRequires:  python3-obs-img-utils < 0.3.0
+BuildRequires:  python3-obs-img-utils >= 0.3.0
 BuildRequires:  python3-oci-sdk
 BuildRequires:  python3-google-auth
 BuildRequires:  python3-google-cloud-storage
@@ -80,8 +79,7 @@ Requires:       python3-Flask-SQLAlchemy
 Requires:       python3-Flask-Migrate
 Requires:       python3-flask-jwt-extended
 Requires:       python3-requests
-Requires:       python3-obs-img-utils >= 0.2.0
-Requires:       python3-obs-img-utils < 0.3.0
+Requires:       python3-obs-img-utils >= 0.3.0
 Requires:       python3-oci-sdk
 Requires:       python3-google-auth
 Requires:       python3-google-cloud-storage

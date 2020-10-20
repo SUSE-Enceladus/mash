@@ -19,7 +19,10 @@
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
-from mash.utils.mash_utils import format_string_with_date
+from mash.utils.mash_utils import (
+    format_string_with_date,
+    timestamp_from_epoch
+)
 from mash.services.status_levels import SUCCESS
 from mash.utils.azure import upload_azure_file
 
@@ -33,9 +36,6 @@ class AzureUploadJob(MashJob):
             self.container = self.job_config['container']
             self.storage_account = self.job_config['storage_account']
             self.base_cloud_image_name = self.job_config['cloud_image_name']
-            self.account = self.job_config.get('account')
-            self.region = self.job_config.get('region')
-            self.resource_group = self.job_config.get('resource_group')
         except KeyError as error:
             raise MashUploadException(
                 'Azure upload jobs require a(n) {0} '
@@ -44,12 +44,28 @@ class AzureUploadJob(MashJob):
                 )
             )
 
+        self.account = self.job_config.get('account')
+        self.region = self.job_config.get('region')
+        self.resource_group = self.job_config.get('resource_group')
+        self.use_build_time = self.job_config.get('use_build_time')
+
     def run_job(self):
         self.status = SUCCESS
         self.log_callback.info('Uploading image.')
 
+        timestamp = None
+        build_time = self.status_msg.get('build_time', 'unknown')
+
+        if self.use_build_time and (build_time != 'unknown'):
+            timestamp = timestamp_from_epoch(build_time)
+        elif self.use_build_time and (build_time == 'unknown'):
+            raise MashUploadException(
+                'use_build_time set for job but build time is unknown.'
+            )
+
         self.cloud_image_name = format_string_with_date(
-            self.base_cloud_image_name
+            self.base_cloud_image_name,
+            timestamp=timestamp
         )
         blob_name = ''.join([self.cloud_image_name, '.vhd'])
 
