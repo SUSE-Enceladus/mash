@@ -108,7 +108,8 @@ class GCEJob(BaseJob):
                 'testing_account': self.testing_account,
                 'distro': self.distro,
                 'instance_type': self.instance_type,
-                'boot_firmware': self.boot_firmware
+                'boot_firmware': self.boot_firmware,
+                'guest_os_features': self.guest_os_features
             }
         }
 

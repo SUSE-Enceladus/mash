@@ -75,6 +75,18 @@ class GCETestJob(MashJob):
         self.test_fallback_regions = self.job_config.get('test_fallback_regions')
         self.boot_firmware = self.job_config.get('boot_firmware', ['bios'])
         self.image_project = self.job_config.get('image_project')
+        self.guest_os_features = self.job_config.get('guest_os_features')
+
+        if self.guest_os_features and 'SEV_CAPABLE' in self.guest_os_features:
+            self.sev_capable = True
+            self.instance_type = 'n2d-standard-2'
+            self.region = 'us-east1-b'
+            self.test_fallback_regions = [
+                'us-central1-a',
+                'us-west1-b'
+            ]
+        else:
+            self.sev_capable = False
 
         if not self.instance_type:
             self.instance_type = random.choice(instance_types)
@@ -141,7 +153,8 @@ class GCETestJob(MashJob):
                             tests=self.tests,
                             boot_firmware=firmware,
                             image_project=self.image_project,
-                            log_callback=self.log_callback
+                            log_callback=self.log_callback,
+                            sev_capable=self.sev_capable
                         )
                     except IpaRetryableError as error:
                         result = {

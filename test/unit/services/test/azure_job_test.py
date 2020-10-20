@@ -114,7 +114,8 @@ class TestAzureTestJob(object):
             enable_secure_boot=False,
             image_project=None,
             log_callback=job._log_callback,
-            prefix_name='mash'
+            prefix_name='mash',
+            sev_capable=None
         )
         job._log_callback.info.reset_mock()
 

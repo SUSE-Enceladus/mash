@@ -131,7 +131,8 @@ class TestGCETestJob(object):
                 enable_secure_boot=True,
                 image_project=None,
                 log_callback=job._log_callback,
-                prefix_name='mash'
+                prefix_name='mash',
+                sev_capable=False
             )
         ])
         job._log_callback.warning.reset_mock()
@@ -217,7 +218,8 @@ class TestGCETestJob(object):
                 enable_secure_boot=True,
                 image_project=None,
                 log_callback=job._log_callback,
-                prefix_name='mash'
+                prefix_name='mash',
+                sev_capable=False
             ),
             call(
                 'gce',
@@ -247,7 +249,8 @@ class TestGCETestJob(object):
                 enable_secure_boot=True,
                 image_project=None,
                 log_callback=job._log_callback,
-                prefix_name='mash'
+                prefix_name='mash',
+                sev_capable=False
             )
         ])
 
@@ -258,3 +261,18 @@ class TestGCETestJob(object):
     def test_test_run_gce_test_explicit_fallback_region(self):
         self.job_config['test_fallback_regions'] = ['us-west1-c']
         self.test_test_run_gce_test()
+
+    @patch('mash.services.test.gce_job.os')
+    def test_test_gce_sev_capable(self, mock_os):
+        mock_os.path.exists.return_value = True
+
+        self.job_config['guest_os_features'] = ['SEV_CAPABLE']
+
+        job = GCETestJob(self.job_config, self.config)
+        assert job.sev_capable
+        assert job.region == 'us-east1-b'
+        assert job.instance_type == 'n2d-standard-2'
+        assert 'us-central1-a' in job.test_fallback_regions
+        assert 'us-west1-b' in job.test_fallback_regions
+
+        self.job_config['guest_os_features'] = None
