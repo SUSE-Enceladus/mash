@@ -32,7 +32,8 @@ from mash.utils.gce import (
     wait_on_image_ready,
     get_gce_compute_driver,
     get_gce_storage_driver,
-    wait_on_operation
+    wait_on_operation,
+    blob_exists
 )
 from mash.mash_exceptions import MashException
 
@@ -55,6 +56,21 @@ def test_delete_gce_image(mock_wait_on_op):
 
     with raises(MashException):
         delete_gce_image(driver, 'project', 'image_123')
+
+
+def test_blob_exists():
+    driver = Mock()
+    bucket = Mock()
+    blob = Mock()
+
+    blob.exists.return_value = True
+    bucket.blob.return_value = blob
+    driver.get_bucket.return_value = bucket
+
+    result = blob_exists(driver, 'image_123', 'bucket')
+
+    assert result
+    driver.get_bucket.assert_called_once_with('bucket')
 
 
 def test_delete_image_tarball():

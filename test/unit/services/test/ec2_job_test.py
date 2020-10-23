@@ -136,7 +136,7 @@ class TestEC2TestJob(object):
             '321',
             job._log_callback,
             'us-east-1',
-            'ami-123'
+            image_id='ami-123'
         )
         job._log_callback.warning.reset_mock()
 

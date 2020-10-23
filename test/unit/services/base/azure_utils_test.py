@@ -25,7 +25,10 @@ from mash.utils.azure import (
     update_cloud_partner_offer_doc,
     wait_on_cloud_partner_operation,
     upload_azure_file,
-    get_blob_service_with_sas_token
+    get_blob_service_with_sas_token,
+    list_blobs,
+    blob_exists,
+    image_exists
 )
 
 
@@ -265,6 +268,32 @@ def test_delete_blob(mock_get_blob_service):
     )
 
 
+@patch('mash.utils.azure.list_blobs')
+def test_blob_exists(mock_list_blobs):
+    mock_list_blobs.return_value = 'blob1'
+
+    result = blob_exists(
+        'test/data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
+    )
+
+    assert result
+
+
+@patch('mash.utils.azure.get_blob_service_with_account_keys')
+def test_list_blobs(mock_get_blob_service):
+    blob = MagicMock()
+    blob.name = 'blob.vhd'
+    blob_service = MagicMock()
+    blob_service.list_blobs.return_value = [blob]
+    mock_get_blob_service.return_value = blob_service
+
+    blobs = list_blobs(
+        'test/data/azure_creds.json', 'container1', 'rg1', 'sa1'
+    )
+
+    assert 'blob.vhd' in blobs
+
+
 @patch('mash.utils.azure.get_client_from_auth_file')
 def test_delete_image(mock_get_client):
     compute_client = MagicMock()
@@ -279,6 +308,22 @@ def test_delete_image(mock_get_client):
         'rg1', 'image123'
     )
     async_wait.wait.assert_called_once_with()
+
+
+@patch('mash.utils.azure.get_client_from_auth_file')
+def test_image_exists(mock_get_client):
+    compute_client = MagicMock()
+    image = MagicMock()
+    image.name = 'image123'
+    compute_client.images.list.return_value = [image]
+    mock_get_client.return_value = compute_client
+
+    result = image_exists(
+        'test/data/azure_creds.json', 'image123'
+    )
+
+    assert result
+    compute_client.images.list.assert_called_once_with()
 
 
 @patch('mash.utils.azure.requests')

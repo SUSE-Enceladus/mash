@@ -181,5 +181,5 @@ class EC2TestJob(MashJob):
                     credentials['secret_access_key'],
                     self.log_callback,
                     region,
-                    self.status_msg['source_regions'][region]
+                    image_id=self.status_msg['source_regions'][region]
                 )

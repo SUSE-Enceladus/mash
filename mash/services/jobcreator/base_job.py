@@ -67,6 +67,7 @@ class BaseJob(object):
         self.cloud_image_name = kwargs.get('cloud_image_name')
         self.image_description = kwargs.get('image_description')
         self.use_build_time = kwargs.get('use_build_time')
+        self.force_replace_image = kwargs.get('force_replace_image')
         self.kwargs = kwargs
 
         if self.raw_image_upload_type and self.last_service == 'upload':
