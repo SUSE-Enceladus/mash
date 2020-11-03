@@ -171,9 +171,10 @@ class TestCredentialsDatastore(object):
             file_handle = mock_open.return_value.__enter__.return_value
             file_handle.write.side_effect = Exception('Cannot write file')
 
-            self.datastore._store_encrypted_credentials(
-                'account1', 'encrypted_secrets', 'ec2', 'user1'
-            )
+            with pytest.raises(Exception):
+                self.datastore._store_encrypted_credentials(
+                    'account1', 'encrypted_secrets', 'ec2', 'user1'
+                )
             self.log_callback.info.assert_called_once_with(
                 'Storing credentials for account: account1, '
                 'cloud: ec2, user: user1.'

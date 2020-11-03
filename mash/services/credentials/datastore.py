@@ -336,6 +336,7 @@ class CredentialsDatastore(object):
             self.log_callback.error(
                 'Unable to store credentials: {0}.'.format(error)
             )
+            raise
 
     def shutdown(self):
         """Shutdown scheduler."""
