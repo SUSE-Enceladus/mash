@@ -27,7 +27,9 @@ from mash.mash_exceptions import MashUploadException
 from mash.utils.ec2 import (
     get_client,
     get_vpc_id_from_subnet,
-    cleanup_ec2_image
+    cleanup_ec2_image,
+    image_exists,
+    cleanup_all_ec2_images
 )
 from mash.utils.mash_utils import (
     format_string_with_date,
@@ -64,6 +66,7 @@ class EC2CreateJob(MashJob):
 
         self.arch = self.job_config.get('cloud_architecture', 'x86_64')
         self.use_build_time = self.job_config.get('use_build_time')
+        self.force_replace_image = self.job_config.get('force_replace_image')
 
         if self.arch == 'aarch64':
             self.arch = 'arm64'
@@ -126,6 +129,7 @@ class EC2CreateJob(MashJob):
 
         for region, info in self.target_regions.items():
             self.status_msg['source_regions'][region] = None
+            ssh_key_pair = None
             account = info['account']
             credentials = self.credentials[account]
 
@@ -144,6 +148,24 @@ class EC2CreateJob(MashJob):
                     'ec2', credentials['access_key_id'],
                     credentials['secret_access_key'], region
                 )
+
+                exists = image_exists(ec2_client, self.cloud_image_name)
+                if exists and not self.force_replace_image:
+                    raise MashUploadException(
+                        '{image_name} already exists. '
+                        'Use force_replace_image to '
+                        'replace the existing image.'.format(
+                            image_name=self.cloud_image_name
+                        )
+                    )
+                elif exists and self.force_replace_image:
+                    cleanup_all_ec2_images(
+                        credentials['access_key_id'],
+                        credentials['secret_access_key'],
+                        self.log_callback,
+                        info['regions'],
+                        self.cloud_image_name
+                    )
 
                 # NOTE: Temporary ssh keys:
                 # The temporary creation and registration of a ssh key pair
@@ -214,10 +236,11 @@ class EC2CreateJob(MashJob):
                 self.add_error_msg(msg)
                 self.log_callback.error(msg)
             finally:
-                self._delete_key_pair(
-                    ec2_client, ssh_key_pair
-                )
-                ec2_setup.clean_up()
+                if ssh_key_pair:
+                    self._delete_key_pair(
+                        ec2_client, ssh_key_pair
+                    )
+                    ec2_setup.clean_up()
 
         if self.status != SUCCESS:
             for region, info in self.target_regions.items():
@@ -225,13 +248,24 @@ class EC2CreateJob(MashJob):
 
                 if self.status_msg['source_regions'].get(region):
                     # Only cleanup regions that passed
-                    cleanup_ec2_image(
-                        credentials['access_key_id'],
-                        credentials['secret_access_key'],
-                        self.log_callback,
-                        region,
-                        self.status_msg['source_regions'][region]
-                    )
+
+                    try:
+                        cleanup_ec2_image(
+                            credentials['access_key_id'],
+                            credentials['secret_access_key'],
+                            self.log_callback,
+                            region,
+                            image_id=self.status_msg['source_regions'][region]
+                        )
+                    except Exception as error:
+                        self.log_callback.warning(
+                            'Failed to cleanup image: {0} in region {1}.'
+                            ' {2}'.format(
+                                self.status_msg['source_regions'][region],
+                                region,
+                                error
+                            )
+                        )
 
     def _create_key_pair(self, ec2_client):
         ssh_key_pair_type = namedtuple(

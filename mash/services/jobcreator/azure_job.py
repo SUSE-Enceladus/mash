@@ -187,7 +187,8 @@ class AzureJob(BaseJob):
                 'raw_image_upload_type': self.raw_image_upload_type,
                 'raw_image_upload_account': self.raw_image_upload_account,
                 'raw_image_upload_location': self.raw_image_upload_location,
-                'use_build_time': self.use_build_time
+                'use_build_time': self.use_build_time,
+                'force_replace_image': self.force_replace_image
             }
         }
 

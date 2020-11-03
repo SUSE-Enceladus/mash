@@ -187,7 +187,8 @@ class EC2Job(BaseJob):
                 'cloud': self.cloud,
                 'image_description': self.image_description,
                 'use_build_time': self.use_build_time,
-                'target_regions': self.get_create_regions()
+                'target_regions': self.get_create_regions(),
+                'force_replace_image': self.force_replace_image
             }
         }
         create_message['create_job'].update(self.base_message)
@@ -210,7 +211,8 @@ class EC2Job(BaseJob):
                 'helper_image': value['helper_image'],
                 'billing_codes': self.billing_codes,
                 'use_root_swap': self.use_root_swap,
-                'subnet': value['subnet']
+                'subnet': value['subnet'],
+                'regions': value['target_regions']
             }
 
         return target_regions

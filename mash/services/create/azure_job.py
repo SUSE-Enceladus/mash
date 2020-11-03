@@ -24,6 +24,7 @@ from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashCreateException
 from mash.utils.mash_utils import create_json_file
 from mash.services.status_levels import SUCCESS
+from mash.utils.azure import image_exists, delete_image
 
 
 class AzureCreateJob(MashJob):
@@ -55,7 +56,20 @@ class AzureCreateJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        self._create_image(self.blob_name, credentials)
+        with create_json_file(credentials) as auth_file:
+            if image_exists(auth_file, self.cloud_image_name):
+                self.log_callback.info(
+                    'Deleting image: {0}, image will be replaced.'.format(
+                        self.cloud_image_name
+                    )
+                )
+                delete_image(
+                    auth_file,
+                    self.resource_group,
+                    self.cloud_image_name
+                )
+
+            self._create_image(self.blob_name, auth_file)
 
         self.log_callback.info(
             'Image has ID: {0} in region {1}'.format(
@@ -64,32 +78,31 @@ class AzureCreateJob(MashJob):
             )
         )
 
-    def _create_image(self, blob_name, credentials):
+    def _create_image(self, blob_name, auth_file):
         """
         Create image in ARM from existing page blob.
         """
-        with create_json_file(credentials) as auth_file:
-            compute_client = get_client_from_auth_file(
-                ComputeManagementClient, auth_path=auth_file
-            )
-            async_create_image = compute_client.images.create_or_update(
-                self.resource_group,
-                self.cloud_image_name, {
-                    'location': self.region,
-                    'hyper_vgeneration': 'V1',
-                    'storage_profile': {
-                        'os_disk': {
-                            'os_type': 'Linux',
-                            'os_state': 'Generalized',
-                            'caching': 'ReadWrite',
-                            'blob_uri': 'https://{0}.{1}/{2}/{3}'.format(
-                                self.storage_account,
-                                'blob.core.windows.net',
-                                self.container,
-                                blob_name
-                            )
-                        }
+        compute_client = get_client_from_auth_file(
+            ComputeManagementClient, auth_path=auth_file
+        )
+        async_create_image = compute_client.images.create_or_update(
+            self.resource_group,
+            self.cloud_image_name, {
+                'location': self.region,
+                'hyper_vgeneration': 'V1',
+                'storage_profile': {
+                    'os_disk': {
+                        'os_type': 'Linux',
+                        'os_state': 'Generalized',
+                        'caching': 'ReadWrite',
+                        'blob_uri': 'https://{0}.{1}/{2}/{3}'.format(
+                            self.storage_account,
+                            'blob.core.windows.net',
+                            self.container,
+                            blob_name
+                        )
                     }
                 }
-            )
-            async_create_image.wait()
+            }
+        )
+        async_create_image.wait()

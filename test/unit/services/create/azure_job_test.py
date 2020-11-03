@@ -65,14 +65,21 @@ class TestAzureCreateJob(object):
         with raises(MashCreateException):
             AzureCreateJob(job_doc, self.config)
 
+    @patch('mash.services.create.azure_job.delete_image')
+    @patch('mash.services.create.azure_job.image_exists')
     @patch('mash.services.create.azure_job.get_client_from_auth_file')
     @patch('builtins.open')
     def test_create(
-        self, mock_open, mock_get_client_from_auth_file
+        self,
+        mock_open,
+        mock_get_client_from_auth_file,
+        mock_image_exists,
+        mock_delete_image
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
+        mock_image_exists.return_value = False
 
         client = MagicMock()
         mock_get_client_from_auth_file.return_value = client
@@ -102,3 +109,9 @@ class TestAzureCreateJob(object):
             }
         )
         async_create_image.wait.assert_called_once_with()
+
+        # Image exists
+        mock_image_exists.return_value = True
+        self.job.run_job()
+
+        assert mock_delete_image.call_count == 1

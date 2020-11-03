@@ -16,12 +16,17 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from pytest import raises
 from unittest.mock import Mock, patch
 from mash.utils.ec2 import (
     get_client,
     get_vpc_id_from_subnet,
-    cleanup_ec2_image
+    cleanup_ec2_image,
+    cleanup_all_ec2_images,
+    get_image,
+    image_exists
 )
+from mash.mash_exceptions import MashGCEUtilsException
 
 
 @patch('mash.utils.ec2.boto3')
@@ -53,13 +58,59 @@ def test_get_vpc_id_from_subnet():
 def test_cleanup_images(mock_rm_img):
     log_callback = Mock()
     rm_img = Mock()
-    rm_img.remove_images.side_effect = Exception('image not found!')
     mock_rm_img.return_value = rm_img
 
     cleanup_ec2_image('123', '321', log_callback, 'us-east-1', 'ami-123')
 
-    log_callback.warning.assert_called_once_with(
-        'Failed to cleanup image: image not found!'
-    )
     rm_img.set_region.assert_called_once_with('us-east-1')
     rm_img.remove_images.assert_called_once_with()
+
+    # Cleanup by name
+    cleanup_ec2_image(
+        '123',
+        '321',
+        log_callback,
+        'us-east-1',
+        image_name='image name'
+    )
+
+    # No image id or name provided
+    with raises(MashGCEUtilsException):
+        cleanup_ec2_image(
+            '123',
+            '321',
+            log_callback,
+            'us-east-1'
+        )
+
+
+@patch('mash.utils.ec2.cleanup_ec2_image')
+def test_cleanup_all_ec2_images(mock_cleanup_image):
+    log = Mock()
+    regions = ['us-east-1']
+    mock_cleanup_image.side_effect = Exception('Failed')
+
+    cleanup_all_ec2_images('123', '321', log, regions, 'image name 123')
+    log.warning.assert_called_once_with(
+        'Failed to cleanup image: Failed'
+    )
+
+
+@patch('mash.utils.ec2.describe_images')
+def test_get_image(mock_describe_images):
+    client = Mock()
+    image = {'Name': 'image name 123'}
+
+    mock_describe_images.return_value = [image]
+    result = get_image(client, 'image name 123')
+    assert result == image
+
+
+@patch('mash.utils.ec2.get_image')
+def test_image_exists(mock_get_image):
+    client = Mock()
+    image = {'Name': 'image name 123'}
+    mock_get_image.return_value = image
+
+    assert image_exists(client, 'image name 123')
+    assert not image_exists(client, 'image name 321')

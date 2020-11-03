@@ -20,6 +20,7 @@ import boto3
 
 from contextlib import contextmanager, suppress
 from mash.utils.mash_utils import generate_name, get_key_from_file
+from mash.mash_exceptions import MashGCEUtilsException
 
 from ec2imgutils.ec2setup import EC2Setup
 from ec2imgutils.ec2removeimg import EC2RemoveImage
@@ -133,27 +134,80 @@ def cleanup_ec2_image(
     secret_access_key,
     log_callback,
     region,
-    image_id
+    image_id=None,
+    image_name=None
 ):
     log_callback.info(
-        'Cleaning up image: {0} in region: {1}.'.format(
-            image_id,
+        'Deleting image: {0} in region: {1}.'.format(
+            image_id or image_name,
             region
         )
     )
 
-    try:
-        ec2_remove_img = EC2RemoveImage(
-            access_key=access_key_id,
-            image_id=image_id,
-            no_confirm=True,
-            remove_all=True,
-            secret_key=secret_access_key,
+    kwargs = {
+        'access_key': access_key_id,
+        'no_confirm': True,
+        'remove_all': True,
+        'secret_key': secret_access_key
+    }
+
+    if image_id:
+        kwargs['image_id'] = image_id
+    elif image_name:
+        kwargs['image_name'] = image_name
+    else:
+        raise MashGCEUtilsException(
+            'Either image_id or image_name is required '
+            'to remove an image.'
         )
 
-        ec2_remove_img.set_region(region)
-        ec2_remove_img.remove_images()
-    except Exception as error:
-        log_callback.warning(
-            'Failed to cleanup image: {0}'.format(error)
-        )
+    ec2_remove_img = EC2RemoveImage(**kwargs)
+    ec2_remove_img.set_region(region)
+    ec2_remove_img.remove_images()
+
+
+def cleanup_all_ec2_images(
+    access_key_id,
+    secret_access_key,
+    log_callback,
+    regions,
+    image_name
+):
+    """
+    Cleanup the image in every region provided if it exists.
+    """
+    for region in regions:
+        try:
+            cleanup_ec2_image(
+                access_key_id,
+                secret_access_key,
+                log_callback,
+                region,
+                image_name=image_name
+            )
+        except Exception as error:
+            log_callback.warning(
+                'Failed to cleanup image: {0}'.format(error)
+            )
+
+
+def get_image(client, cloud_image_name):
+    """
+    Get image if it exists given image name.
+    """
+    images = describe_images(client)
+
+    for image in images:
+        if cloud_image_name == image.get('Name'):
+            return image
+
+
+def image_exists(client, cloud_image_name):
+    """
+    Determine if image exists given image name.
+    """
+    image = get_image(client, cloud_image_name)
+    if image and cloud_image_name == image.get('Name'):
+        return True
+
+    return False

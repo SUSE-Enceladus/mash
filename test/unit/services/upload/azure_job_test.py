@@ -75,14 +75,21 @@ class TestAzureUploadJob(object):
         with raises(MashUploadException):
             self.job.run_job()
 
+    @patch('mash.services.upload.azure_job.delete_blob')
+    @patch('mash.services.upload.azure_job.blob_exists')
     @patch('mash.services.upload.azure_job.upload_azure_file')
     @patch('builtins.open')
     def test_upload(
-        self, mock_open, mock_upload_azure_file
+        self,
+        mock_open,
+        mock_upload_azure_file,
+        mock_blob_exists,
+        mock_delete_blob
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
+        mock_blob_exists.return_value = False
 
         self.job.run_job()
 
@@ -97,3 +104,14 @@ class TestAzureUploadJob(object):
             resource_group='group_name',
             is_page_blob=True
         )
+
+        # Blob exists no force replace
+        mock_blob_exists.return_value = True
+        with raises(MashUploadException):
+            self.job.run_job()
+
+        # Blob exists and force replace
+        self.job.force_replace_image = True
+        self.job.run_job()
+
+        assert mock_delete_blob.call_count == 1

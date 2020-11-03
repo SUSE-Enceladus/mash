@@ -143,6 +143,52 @@ def delete_blob(
     blob_service.delete_blob(container, blob)
 
 
+def list_blobs(
+    auth_file,
+    container,
+    resource_group,
+    storage_account,
+    is_page_blob=False
+):
+    """
+    Return a list of blobs in container.
+    """
+    blob_service = get_blob_service_with_account_keys(
+        auth_file,
+        storage_account,
+        resource_group,
+        is_page_blob=is_page_blob
+    )
+    blobs = blob_service.list_blobs(container)
+
+    names = []
+    for blob in blobs:
+        names.append(blob.name)
+
+    return names
+
+
+def blob_exists(
+    auth_file,
+    blob,
+    container,
+    resource_group,
+    storage_account,
+    is_page_blob=False
+):
+    """
+    Return True if blob exists in container.
+    """
+    blobs = list_blobs(
+        auth_file,
+        container,
+        resource_group,
+        storage_account,
+        is_page_blob
+    )
+    return blob in blobs
+
+
 def delete_image(auth_file, resoure_group, image_name):
     """
     Delete the image from resource group.
@@ -154,6 +200,31 @@ def delete_image(auth_file, resoure_group, image_name):
         resoure_group, image_name
     )
     async_delete_image.wait()
+
+
+def list_images(auth_file):
+    """
+    Returns a list of image names.
+    """
+    compute_client = get_client_from_auth_file(
+        ComputeManagementClient,
+        auth_path=auth_file
+    )
+    images = compute_client.images.list()
+
+    names = []
+    for image in images:
+        names.append(image.name)
+
+    return names
+
+
+def image_exists(auth_file, image_name):
+    """
+    Return True if an image with name image_name exists.
+    """
+    images = list_images(auth_file)
+    return image_name in images
 
 
 def get_blob_url(

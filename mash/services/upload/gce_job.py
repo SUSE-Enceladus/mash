@@ -24,7 +24,12 @@ from mash.utils.mash_utils import (
     timestamp_from_epoch
 )
 from mash.services.status_levels import SUCCESS
-from mash.utils.gce import get_gce_storage_driver, upload_image_tarball
+from mash.utils.gce import (
+    get_gce_storage_driver,
+    upload_image_tarball,
+    delete_image_tarball,
+    blob_exists
+)
 
 
 class GCEUploadJob(MashJob):
@@ -46,6 +51,7 @@ class GCEUploadJob(MashJob):
             )
 
         self.use_build_time = self.job_config.get('use_build_time')
+        self.force_replace_image = self.job_config.get('force_replace_image')
 
         # SLES 11 is EOL, however images remain available in the
         # build service and thus we need to continue to test for
@@ -79,6 +85,30 @@ class GCEUploadJob(MashJob):
         storage_driver = get_gce_storage_driver(credentials)
 
         object_name = ''.join([self.cloud_image_name, '.tar.gz'])
+
+        exists = blob_exists(storage_driver, object_name, self.bucket)
+        if exists and not self.force_replace_image:
+            raise MashUploadException(
+                'Image tarball: {object_name} already exists '
+                'in bucket: {bucket}. Use force_replace_image '
+                'to replace the existing tarball.'.format(
+                    object_name=object_name,
+                    bucket=self.bucket
+                )
+            )
+        elif exists and self.force_replace_image:
+            self.log_callback.info(
+                'Deleting tarball: {0}, in the bucket named: {1}'.format(
+                    object_name,
+                    self.bucket
+                )
+            )
+            delete_image_tarball(
+                storage_driver,
+                object_name,
+                self.bucket
+            )
+
         upload_image_tarball(
             storage_driver,
             object_name,

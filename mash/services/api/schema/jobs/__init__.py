@@ -276,6 +276,14 @@ base_job_message = {
                            'image name for the timestamp to be used. If True '
                            'and build time is not available the job will '
                            'fail.'
+        },
+        'force_replace_image': {
+            'type': 'boolean',
+            'example': True,
+            'description': 'If an image already exists with the same name '
+                           'delete the image and tarball from storage. '
+                           'Default is False and the job will fail if the '
+                           'image already exists.'
         }
     },
     'additionalProperties': False,

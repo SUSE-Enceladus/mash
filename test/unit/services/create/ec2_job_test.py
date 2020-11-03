@@ -35,7 +35,8 @@ class TestAmazonCreateJob(object):
                     'helper_image': 'ami-bc5b48d0',
                     'billing_codes': None,
                     'use_root_swap': False,
-                    'subnet': 'subnet-123456789'
+                    'subnet': 'subnet-123456789',
+                    'regions': ['us-east-1', 'us-east-2']
                 }
             },
             'cloud_image_name': 'name v{date}',
@@ -75,6 +76,8 @@ class TestAmazonCreateJob(object):
         with raises(MashUploadException):
             self.job.run_job()
 
+    @patch('mash.services.create.ec2_job.cleanup_all_ec2_images')
+    @patch('mash.services.create.ec2_job.image_exists')
     @patch('mash.services.create.ec2_job.cleanup_ec2_image')
     @patch('mash.services.create.ec2_job.get_vpc_id_from_subnet')
     @patch('mash.services.create.ec2_job.EC2Setup')
@@ -86,8 +89,11 @@ class TestAmazonCreateJob(object):
     def test_create(
         self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
         mock_generate_name, mock_get_client, mock_ec2_setup,
-        mock_get_vpc_id_from_subnet, mock_cleanup_image
+        mock_get_vpc_id_from_subnet, mock_cleanup_image,
+        mock_image_exists, mock_cleanup_all_images
     ):
+        mock_image_exists.return_value = False
+
         open_context = context_manager()
         mock_open.return_value = open_context.context_manager_mock
 
@@ -155,7 +161,9 @@ class TestAmazonCreateJob(object):
         ec2_upload.create_image.assert_called_once_with('file')
         ec2_setup.clean_up.assert_called_once_with()
 
+        # Image create error
         ec2_upload.create_image.side_effect = ['ami_id', Exception('Failed!')]
+        mock_cleanup_image.side_effect = Exception
         self.job.target_regions['us-east-2'] = {
             'account': 'test',
             'helper_image': 'ami-bc5b48d0',
@@ -174,9 +182,24 @@ class TestAmazonCreateJob(object):
             'secret-access-key',
             self.job._log_callback,
             'us-east-1',
-            'ami_id'
+            image_id='ami_id'
         )
 
+        # Image exists and not force replace image
+        mock_image_exists.return_value = True
+        self.job.run_job()
+
+        msg = 'Image creation in account test failed with: name' \
+              ' v20200925 already exists. Use force_replace_image ' \
+              'to replace the existing image.'
+        assert msg in self.job.status_msg['errors']
+
+        # Image exists and force replace image
+        self.job.force_replace_image = True
+        self.job.run_job()
+        assert mock_cleanup_all_images.call_count == 1
+
+    @patch('mash.services.create.ec2_job.image_exists')
     @patch('mash.services.create.ec2_job.EC2Setup')
     @patch('mash.services.create.ec2_job.get_client')
     @patch('mash.services.create.ec2_job.generate_name')
@@ -185,8 +208,11 @@ class TestAmazonCreateJob(object):
     @patch_open
     def test_create_root_swap(
         self, mock_open, mock_EC2ImageUploader, mock_NamedTemporaryFile,
-        mock_generate_name, mock_get_client, mock_ec2_setup
+        mock_generate_name, mock_get_client, mock_ec2_setup,
+        mock_image_exists
     ):
+        mock_image_exists.return_value = False
+
         job_doc = {
             'cloud_architecture': 'aarch64',
             'id': '1',

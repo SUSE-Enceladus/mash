@@ -39,6 +39,15 @@ def upload_image_tarball(storage_driver, object_name, image_file, bucket):
     blob.upload_from_filename(image_file)
 
 
+def blob_exists(storage_driver, object_name, bucket):
+    """
+    Return True if the blob already exists in the provided bucket.
+    """
+    bucket = storage_driver.get_bucket(bucket)
+    blob = bucket.blob(object_name)
+    return blob.exists()
+
+
 def delete_image_tarball(storage_driver, object_name, bucket):
     """
     Delete image tarball based on object_name from bucket.

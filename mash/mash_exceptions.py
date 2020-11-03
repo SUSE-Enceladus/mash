@@ -183,3 +183,9 @@ class MashCreateException(MashException):
     """
     Base exception for create service.
     """
+
+
+class MashGCEUtilsException(MashException):
+    """
+    Exception raised if an error occurs in GCE Utils.
+    """
