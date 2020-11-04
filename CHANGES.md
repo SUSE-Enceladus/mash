@@ -1,3 +1,21 @@
+v9.1.0 (2020-11-04)
+===================
+
+- Remove reference to iteration.
+  [\#717](https://github.com/SUSE-Enceladus/mash/pull/717)
+- Fix guest os features keys for image creation.
+  [\#718](https://github.com/SUSE-Enceladus/mash/pull/718)
+- Add use_build_time job flag.
+  [\#719](https://github.com/SUSE-Enceladus/mash/pull/719)
+- Test instances with SEV_CAPABLE flag set.
+  [\#720](https://github.com/SUSE-Enceladus/mash/pull/720)
+- Add force replace image option for jobs.
+  [\#721](https://github.com/SUSE-Enceladus/mash/pull/721)
+- Remove upper requirement on crypto package.
+  [\#722](https://github.com/SUSE-Enceladus/mash/pull/722)
+- Raise exception if storing creds fails.
+  [\#723](https://github.com/SUSE-Enceladus/mash/pull/723)
+
 v9.0.0 (2020-09-30)
 ===================
 
