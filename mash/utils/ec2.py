@@ -146,7 +146,6 @@ def cleanup_ec2_image(
 
     kwargs = {
         'access_key': access_key_id,
-        'no_confirm': True,
         'remove_all': True,
         'secret_key': secret_access_key
     }
