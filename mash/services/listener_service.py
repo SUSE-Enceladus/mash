@@ -265,12 +265,13 @@ class ListenerService(MashService):
 
         if event.exception:
             job.status = EXCEPTION
-            job.add_error_msg(str(event.exception))
+            msg = 'Exception in {0}: {1}'.format(
+                self.service_exchange,
+                event.exception
+            )
+            job.add_error_msg(msg)
             self.log.error(
-                'Exception in {0}: {1}'.format(
-                    self.service_exchange,
-                    event.exception
-                ),
+                msg,
                 extra=metadata
             )
         elif job.status == SUCCESS:
