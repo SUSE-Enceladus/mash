@@ -158,8 +158,6 @@ class EC2TestJob(MashJob):
                     region,
                     self.status_msg
                 )
-                if status != SUCCESS:
-                    self.status = status
 
                 instance_id = result.get('instance_id')
                 if instance_id:
@@ -171,6 +169,10 @@ class EC2TestJob(MashJob):
                         region,
                         credentials['secret_access_key']
                     )
+
+                if status != SUCCESS:
+                    self.status = status
+                    break  # Fail eagerly, if the image fails in any partition.
 
         if self.cleanup_images or (self.status != SUCCESS and self.cleanup_images is not False):  # noqa
             for region, info in self.test_regions.items():
