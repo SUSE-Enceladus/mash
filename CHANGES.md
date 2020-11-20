@@ -1,3 +1,11 @@
+v9.1.1 (2020-11-19)
+===================
+
+- Fail eagerly in ec2 testing.
+  [\#724](https://github.com/SUSE-Enceladus/mash/pull/724)
+- Add service name info to msg when jobs fail.
+  [\#725](https://github.com/SUSE-Enceladus/mash/pull/725)
+
 v9.1.0 (2020-11-04)
 ===================
 
