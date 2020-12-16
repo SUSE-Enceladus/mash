@@ -129,7 +129,7 @@ class TestAmazonCreateJob(object):
         )
         mock_EC2ImageUploader.assert_called_once_with(
             access_key='access-key',
-            backing_store='ssd',
+            backing_store='gp3',
             billing_codes=None,
             bootkernel=None,
             ena_support=True,

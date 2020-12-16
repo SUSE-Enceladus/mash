@@ -113,7 +113,7 @@ class EC2CreateJob(MashJob):
             'sriov_type': 'simple',
             'access_key': None,
             'ena_support': True,
-            'backing_store': 'ssd',
+            'backing_store': 'gp3',
             'running_id': None,
             'secret_key': None,
             'billing_codes': None,
