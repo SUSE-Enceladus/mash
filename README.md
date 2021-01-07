@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/SUSE-Enceladus/mash.svg?branch=master)](https://travis-ci.com/SUSE-Enceladus/mash)
+![Continuous testing & Linting](https://github.com/SUSE-Enceladus/mash/workflows/Continuous%20testing%20&%20Linting/badge.svg?branch=master)
 
 # Mash - Public Cloud Release Tool
 
