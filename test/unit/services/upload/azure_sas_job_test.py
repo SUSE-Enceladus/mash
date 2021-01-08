@@ -55,9 +55,9 @@ class TestAzureSASUploadJob(object):
             'name.vhd',
             'container',
             'file.vhdfixed.xz',
-            5,
-            8,
             'storage',
+            max_retry_attempts=5,
+            max_workers=8,
             sas_token='sas_token',
             is_page_blob=True
         )
@@ -80,9 +80,9 @@ class TestAzureSASUploadJob(object):
             'name.vhd',
             'container',
             'file.vhdfixed.xz',
-            5,
-            8,
             'storage',
+            max_retry_attempts=5,
+            max_workers=8,
             sas_token='sas_token',
             is_page_blob=True
         )

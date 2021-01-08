@@ -67,17 +67,14 @@ class TestAzurePublishJob(object):
     @patch(
         'mash.services.publish.azure_job.request_cloud_partner_offer_doc'
     )
-    @patch('mash.services.publish.azure_job.create_json_file')
     @patch.object(AzurePublishJob, '_get_blob_url')
     def test_publish(
-        self, mock_get_blob_url, mock_create_json_file,
+        self, mock_get_blob_url,
         mock_request_doc, mock_put_doc, mock_publish_offer,
         mock_wait_on_operation
     ):
         self.job.vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
         mock_get_blob_url.return_value = 'blob/url/.vhd'
-        mock_create_json_file.return_value.__enter__.return_value = \
-            '/tmp/file.auth'
 
         mock_request_doc.return_value = {
             'definition': {
@@ -101,16 +98,13 @@ class TestAzurePublishJob(object):
     @patch(
         'mash.services.publish.azure_job.request_cloud_partner_offer_doc'
     )
-    @patch('mash.services.publish.azure_job.create_json_file')
     @patch.object(AzurePublishJob, '_get_blob_url')
     def test_publish_exception(
-        self, mock_get_blob_url, mock_create_json_file,
+        self, mock_get_blob_url,
         mock_request_doc, mock_put_doc
     ):
         self.job.vm_images_key = None
         mock_get_blob_url.return_value = 'blob/url/.vhd'
-        mock_create_json_file.return_value.__enter__.return_value = \
-            '/tmp/file.auth'
 
         mock_request_doc.return_value = {
             'definition': {
@@ -131,7 +125,7 @@ class TestAzurePublishJob(object):
         )
 
     @patch('mash.services.publish.azure_job.get_blob_url')
-    @patch('mash.services.publish.azure_job.get_classic_blob_service')
+    @patch('mash.services.publish.azure_job.get_blob_service_with_account_keys')
     def test_get_blob_url(
         self, mock_get_bs, mock_get_blob_url
     ):
