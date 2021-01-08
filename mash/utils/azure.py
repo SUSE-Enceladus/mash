@@ -26,6 +26,7 @@ import time
 
 from datetime import date, datetime, timedelta
 
+from azure.identity import ClientSecretCredential
 from azure.common.client_factory import get_client_from_auth_file
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
@@ -189,26 +190,27 @@ def blob_exists(
     return blob in blobs
 
 
-def delete_image(auth_file, resoure_group, image_name):
+def delete_image(credentials, resource_group, image_name):
     """
     Delete the image from resource group.
     """
-    compute_client = get_client_from_auth_file(
-        ComputeManagementClient, auth_path=auth_file
+    compute_client = get_client_from_json(
+        ComputeManagementClient,
+        credentials
     )
-    async_delete_image = compute_client.images.delete(
-        resoure_group, image_name
+    async_delete_image = compute_client.images.begin_delete(
+        resource_group, image_name
     )
-    async_delete_image.wait()
+    async_delete_image.result()
 
 
-def list_images(auth_file):
+def list_images(credentials):
     """
     Returns a list of image names.
     """
-    compute_client = get_client_from_auth_file(
+    compute_client = get_client_from_json(
         ComputeManagementClient,
-        auth_path=auth_file
+        credentials
     )
     images = compute_client.images.list()
 
@@ -219,11 +221,11 @@ def list_images(auth_file):
     return names
 
 
-def image_exists(auth_file, image_name):
+def image_exists(credentials, image_name):
     """
     Return True if an image with name image_name exists.
     """
-    images = list_images(auth_file)
+    images = list_images(credentials)
     return image_name in images
 
 
@@ -767,4 +769,16 @@ def upload_azure_file(
             file_name,
             msg
         )
+    )
+
+
+def get_client_from_json(client, credentials):
+    credential = ClientSecretCredential(
+        tenant_id=credentials['tenantId'],
+        client_id=credentials['clientId'],
+        client_secret=credentials['clientSecret']
+    )
+    return client(
+        credential,
+        credentials['subscriptionId']
     )

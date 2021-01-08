@@ -104,7 +104,7 @@ class AzureReplicateJob(MashJob):
                         )
                     )
                     delete_image(
-                        auth_file,
+                        credential,
                         self.source_resource_group,
                         self.cloud_image_name
                     )
