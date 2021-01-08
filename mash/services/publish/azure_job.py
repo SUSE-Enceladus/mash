@@ -18,7 +18,7 @@
 
 from mash.utils.azure import (
     get_blob_url,
-    get_classic_blob_service,
+    get_blob_service_with_account_keys,
     publish_cloud_partner_offer,
     put_cloud_partner_offer_doc,
     request_cloud_partner_offer_doc,
@@ -29,7 +29,6 @@ from mash.utils.azure import (
 from mash.mash_exceptions import MashPublishException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
-from mash.utils.mash_utils import create_json_file
 
 
 class AzurePublishJob(MashJob):
@@ -79,102 +78,100 @@ class AzurePublishJob(MashJob):
         self.cloud_image_name = self.status_msg['cloud_image_name']
         self.blob_name = self.status_msg['blob_name']
 
-        with create_json_file(credential) as auth_file:
+        self.log_callback.info(
+            'Publishing image for account: {},'
+            ' using cloud partner API.'.format(
+                self.account
+            )
+        )
+
+        try:
+            blob_url = self._get_blob_url(
+                credential,
+                self.blob_name,
+                self.container,
+                self.resource_group,
+                self.storage_account
+            )
+            offer_doc = request_cloud_partner_offer_doc(
+                credential,
+                self.offer_id,
+                self.publisher_id
+            )
+
+            kwargs = {
+                'generation_id': self.generation_id,
+                'cloud_image_name_generation_suffix': self.cloud_image_name_generation_suffix
+            }
+
+            if self.vm_images_key:
+                kwargs['vm_images_key'] = self.vm_images_key
+
+            offer_doc = update_cloud_partner_offer_doc(
+                offer_doc,
+                blob_url,
+                self.image_description,
+                self.cloud_image_name,
+                self.label,
+                self.sku,
+                **kwargs
+            )
+            put_cloud_partner_offer_doc(
+                credential,
+                offer_doc,
+                self.offer_id,
+                self.publisher_id
+            )
             self.log_callback.info(
-                'Publishing image for account: {},'
-                ' using cloud partner API.'.format(
+                'Updated cloud partner offer doc for account: {}.'.format(
                     self.account
                 )
             )
 
-            try:
-                blob_url = self._get_blob_url(
-                    auth_file,
-                    self.blob_name,
-                    self.container,
-                    self.resource_group,
-                    self.storage_account
-                )
-                offer_doc = request_cloud_partner_offer_doc(
+            if self.publish_offer:
+                operation = publish_cloud_partner_offer(
                     credential,
                     self.offer_id,
                     self.publisher_id
                 )
-
-                kwargs = {
-                    'generation_id': self.generation_id,
-                    'cloud_image_name_generation_suffix': self.cloud_image_name_generation_suffix
-                }
-
-                if self.vm_images_key:
-                    kwargs['vm_images_key'] = self.vm_images_key
-
-                offer_doc = update_cloud_partner_offer_doc(
-                    offer_doc,
-                    blob_url,
-                    self.image_description,
-                    self.cloud_image_name,
-                    self.label,
-                    self.sku,
-                    **kwargs
-                )
-                put_cloud_partner_offer_doc(
+                wait_on_cloud_partner_operation(
                     credential,
-                    offer_doc,
-                    self.offer_id,
-                    self.publisher_id
-                )
-                self.log_callback.info(
-                    'Updated cloud partner offer doc for account: {}.'.format(
-                        self.account
-                    )
+                    operation,
+                    self.log_callback
                 )
 
-                if self.publish_offer:
-                    operation = publish_cloud_partner_offer(
-                        credential,
-                        self.offer_id,
-                        self.publisher_id
-                    )
-                    wait_on_cloud_partner_operation(
-                        credential,
-                        operation,
-                        self.log_callback
-                    )
-
-                self.log_callback.info(
-                    'Publishing finished for account: {}.'.format(
-                        self.account
-                    )
+            self.log_callback.info(
+                'Publishing finished for account: {}.'.format(
+                    self.account
                 )
-            except Exception as error:
-                msg = 'There was an error publishing image in {0}: {1}'.format(
-                    self.account,
-                    error
-                )
-                self.add_error_msg(msg)
-                self.log_callback.error(msg)
-                self.status = FAILED
+            )
+        except Exception as error:
+            msg = 'There was an error publishing image in {0}: {1}'.format(
+                self.account,
+                error
+            )
+            self.add_error_msg(msg)
+            self.log_callback.error(msg)
+            self.status = FAILED
 
     @staticmethod
     def _get_blob_url(
-        auth_file, blob_name, container, resource_group, storage_account
+        credentials, blob_name, container, resource_group, storage_account
     ):
         """
         Return a SAS url that starts 1 day in past and expires in 92 days.
         """
-        pbs = get_classic_blob_service(
-            auth_file,
+        blob_service = get_blob_service_with_account_keys(
+            credentials,
             resource_group,
-            storage_account,
-            is_page_blob=True
+            storage_account
         )
 
         url = get_blob_url(
-            pbs,
+            blob_service,
             blob_name,
+            storage_account,
             container,
-            permissions='rl',
             expire_hours=24 * 92,
             start_hours=24
         )
