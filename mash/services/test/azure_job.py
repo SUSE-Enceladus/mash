@@ -140,7 +140,7 @@ class AzureTestJob(MashJob):
         with create_json_file(credentials) as auth_file:
             try:
                 delete_image(
-                    auth_file,
+                    credentials,
                     self.resource_group,
                     self.cloud_image_name
                 )
