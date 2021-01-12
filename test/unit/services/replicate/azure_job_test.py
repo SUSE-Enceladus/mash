@@ -34,17 +34,7 @@ class TestAzureReplicateJob(object):
                 "clientId": "09876543-1234-1234-1234-123456789012",
                 "clientSecret": "09876543-1234-1234-1234-123456789012",
                 "subscriptionId": "09876543-1234-1234-1234-123456789012",
-                "tenantId": "09876543-1234-1234-1234-123456789012",
-                "activeDirectoryEndpointUrl":
-                    "https://login.microsoftonline.com",
-                "resourceManagerEndpointUrl": "https://management.azure.com/",
-                "activeDirectoryGraphResourceId":
-                    "https://graph.windows.net/",
-                "sqlManagementEndpointUrl":
-                    "https://management.core.windows.net:8443/",
-                "galleryEndpointUrl": "https://gallery.azure.com/",
-                "managementEndpointUrl":
-                    "https://management.core.windows.net/"
+                "tenantId": "09876543-1234-1234-1234-123456789012"
             }
         }
         self.job.status_msg['cloud_image_name'] = 'image123'
@@ -86,7 +76,9 @@ class TestAzureReplicateJob(object):
             'container2', 'rg-2', 'sa2', is_page_blob=True
         )
         mock_delete_image.assert_called_once_with(
-            '/tmp/file.auth', 'rg-1', 'image123'
+            self.job.credentials['acnt1'],
+            'rg-1',
+            'image123'
         )
         mock_delete_blob.assert_called_once_with(
             '/tmp/file.auth', 'image123.vhd', 'container1', 'rg-1', 'sa1',

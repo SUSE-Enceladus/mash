@@ -67,12 +67,12 @@ class TestAzureCreateJob(object):
 
     @patch('mash.services.create.azure_job.delete_image')
     @patch('mash.services.create.azure_job.image_exists')
-    @patch('mash.services.create.azure_job.get_client_from_auth_file')
+    @patch('mash.services.create.azure_job.get_client_from_json')
     @patch('builtins.open')
     def test_create(
         self,
         mock_open,
-        mock_get_client_from_auth_file,
+        mock_get_client_from_json,
         mock_image_exists,
         mock_delete_image
     ):
@@ -82,20 +82,20 @@ class TestAzureCreateJob(object):
         mock_image_exists.return_value = False
 
         client = MagicMock()
-        mock_get_client_from_auth_file.return_value = client
+        mock_get_client_from_json.return_value = client
 
         async_create_image = Mock()
-        client.images.create_or_update.return_value = async_create_image
+        client.images.begin_create_or_update.return_value = async_create_image
 
         self.job.status_msg['cloud_image_name'] = 'name'
         self.job.status_msg['blob_name'] = 'name.vhd'
         self.job.run_job()
 
-        assert mock_get_client_from_auth_file.call_count == 1
-        client.images.create_or_update.assert_called_once_with(
+        assert mock_get_client_from_json.call_count == 1
+        client.images.begin_create_or_update.assert_called_once_with(
             'group_name', 'name', {
                 'location': 'region',
-                'hyper_vgeneration': 'V1',
+                'hyper_v_generation': 'V1',
                 'storage_profile': {
                     'os_disk': {
                         'blob_uri':
@@ -108,7 +108,7 @@ class TestAzureCreateJob(object):
                 }
             }
         )
-        async_create_image.wait.assert_called_once_with()
+        async_create_image.result.assert_called_once_with()
 
         # Image exists
         mock_image_exists.return_value = True

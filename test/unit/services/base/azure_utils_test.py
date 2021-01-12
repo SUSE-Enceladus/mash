@@ -28,8 +28,16 @@ from mash.utils.azure import (
     get_blob_service_with_sas_token,
     list_blobs,
     blob_exists,
-    image_exists
+    image_exists,
+    get_client_from_json
 )
+
+creds = {
+    "clientId": "09876543-1234-1234-1234-123456789012",
+    "clientSecret": "09876543-1234-1234-1234-123456789012",
+    "subscriptionId": "09876543-1234-1234-1234-123456789012",
+    "tenantId": "09876543-1234-1234-1234-123456789012"
+}
 
 
 @patch('mash.utils.azure.adal')
@@ -259,7 +267,7 @@ def test_delete_blob(mock_get_blob_service):
     mock_get_blob_service.return_value = blob_service
 
     delete_blob(
-        'test/data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
+        creds, 'blob1', 'container1', 'rg1', 'sa1'
     )
 
     blob_service.delete_blob.assert_called_once_with(
@@ -294,23 +302,23 @@ def test_list_blobs(mock_get_blob_service):
     assert 'blob.vhd' in blobs
 
 
-@patch('mash.utils.azure.get_client_from_auth_file')
+@patch('mash.utils.azure.get_client_from_json')
 def test_delete_image(mock_get_client):
     compute_client = MagicMock()
     async_wait = MagicMock()
-    compute_client.images.delete.return_value = async_wait
+    compute_client.images.begin_delete.return_value = async_wait
     mock_get_client.return_value = compute_client
 
     delete_image(
-        'test/data/azure_creds.json', 'rg1', 'image123'
+        creds, 'rg1', 'image123'
     )
-    compute_client.images.delete.assert_called_once_with(
+    compute_client.images.begin_delete.assert_called_once_with(
         'rg1', 'image123'
     )
-    async_wait.wait.assert_called_once_with()
+    async_wait.result.assert_called_once_with()
 
 
-@patch('mash.utils.azure.get_client_from_auth_file')
+@patch('mash.utils.azure.get_client_from_json')
 def test_image_exists(mock_get_client):
     compute_client = MagicMock()
     image = MagicMock()
@@ -319,7 +327,7 @@ def test_image_exists(mock_get_client):
     mock_get_client.return_value = compute_client
 
     result = image_exists(
-        'test/data/azure_creds.json', 'image123'
+        creds, 'image123'
     )
 
     assert result
@@ -767,3 +775,18 @@ def test_get_blob_service_with_sas_token(mock_block_blob_service):
     mock_block_blob_service.return_value = blob_service
     service = get_blob_service_with_sas_token('storage', 'sas_token')
     assert service == blob_service
+
+
+@patch('mash.utils.azure.ClientSecretCredential')
+def test_get_client_from_json(mock_cred_client):
+    cred = MagicMock()
+    client = MagicMock()
+    mock_cred_client.return_value = cred
+
+    get_client_from_json(client, creds)
+
+    mock_cred_client.assert_called_once_with(
+        tenant_id=creds['tenantId'],
+        client_id=creds['clientId'],
+        client_secret=creds['clientSecret']
+    )
