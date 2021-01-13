@@ -181,9 +181,6 @@ class AzureAccount(db.Model):
     source_container = db.Column(db.String(64), nullable=False)
     source_resource_group = db.Column(db.String(90), nullable=False)
     source_storage_account = db.Column(db.String(24), nullable=False)
-    destination_container = db.Column(db.String(64), nullable=False)
-    destination_resource_group = db.Column(db.String(90), nullable=False)
-    destination_storage_account = db.Column(db.String(24), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', back_populates='azure_accounts')
     __table_args__ = (

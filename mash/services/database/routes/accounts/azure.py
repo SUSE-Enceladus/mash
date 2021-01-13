@@ -39,10 +39,7 @@ azure_account_response = Model(
         'region': fields.String,
         'source_container': fields.String,
         'source_resource_group': fields.String,
-        'source_storage_account': fields.String,
-        'destination_container': fields.String,
-        'destination_resource_group': fields.String,
-        'destination_storage_account': fields.String
+        'source_storage_account': fields.String
     }
 )
 
@@ -59,10 +56,7 @@ def create_azure_account():
             data['credentials'],
             data['source_container'],
             data['source_resource_group'],
-            data['source_storage_account'],
-            data['destination_container'],
-            data['destination_resource_group'],
-            data['destination_storage_account']
+            data['source_storage_account']
         )
     except IntegrityError:
         return make_response(
@@ -133,10 +127,7 @@ def update_azure_account():
             data.get('credentials'),
             data.get('source_container'),
             data.get('source_resource_group'),
-            data.get('source_storage_account'),
-            data.get('destination_container'),
-            data.get('destination_resource_group'),
-            data.get('destination_storage_account')
+            data.get('source_storage_account')
         )
     except Exception as error:
         current_app.logger.warning(error)
