@@ -45,9 +45,6 @@ class AzureJob(BaseJob):
         self.source_container = self.kwargs.get('source_container')
         self.source_resource_group = self.kwargs.get('source_resource_group')
         self.source_storage_account = self.kwargs.get('source_storage_account')
-        self.destination_container = self.kwargs.get('destination_container')
-        self.destination_resource_group = self.kwargs.get('destination_resource_group')
-        self.destination_storage_account = self.kwargs.get('destination_storage_account')
         self.label = self.kwargs.get('label')
         self.offer_id = self.kwargs.get('offer_id')
         self.publisher_id = self.kwargs.get('publisher_id')
@@ -85,9 +82,9 @@ class AzureJob(BaseJob):
                 'publish_offer': self.publish_offer,
                 'account': self.cloud_account,
                 'region': self.region,
-                'container': self.destination_container,
-                'resource_group': self.destination_resource_group,
-                'storage_account': self.destination_storage_account
+                'container': self.source_container,
+                'resource_group': self.source_resource_group,
+                'storage_account': self.source_storage_account
             }
         }
 
@@ -113,23 +110,10 @@ class AzureJob(BaseJob):
         """
         replicate_message = {
             'replicate_job': {
-                'cloud': self.cloud,
-                'account': self.cloud_account,
-                'region': self.region,
-                'source_container': self.source_container,
-                'source_resource_group': self.source_resource_group,
-                'source_storage_account': self.source_storage_account,
-                'destination_container': self.destination_container,
-                'destination_resource_group': self.destination_resource_group,
-                'destination_storage_account':
-                    self.destination_storage_account
+                'cloud': self.cloud
             }
         }
         replicate_message['replicate_job'].update(self.base_message)
-
-        if self.cleanup_images is not None:
-            replicate_message['replicate_job']['cleanup_images'] = \
-                self.cleanup_images
 
         return JsonFormat.json_message(replicate_message)
 

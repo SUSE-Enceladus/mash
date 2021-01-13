@@ -41,10 +41,7 @@ def validate_azure_job(job_doc):
         'region',
         'source_container',
         'source_resource_group',
-        'source_storage_account',
-        'destination_container',
-        'destination_resource_group',
-        'destination_storage_account'
+        'source_storage_account'
     )
     publish_args = (
         'label',

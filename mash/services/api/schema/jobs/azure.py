@@ -79,24 +79,6 @@ azure_job_message['properties']['source_storage_account'] = string_with_example(
     description='The name of the storage account with which the image storage '
                 'container is associated.'
 )
-azure_job_message['properties']['destination_container'] = string_with_example(
-    'container2',
-    description='The ASM (legacy) storage container where the image will '
-                'be copied to after image has passed test service. The '
-                'destination container is not required for images that are '
-                'not published. Images are required in an ASM container to '
-                'be published through the Cloud Partner Portal.'
-)
-azure_job_message['properties']['destination_resource_group'] = string_with_example(
-    'res_group2',
-    description='The name of the resource group that contains the image '
-                'storage container and storage account.'
-)
-azure_job_message['properties']['destination_storage_account'] = string_with_example(
-    'storage_account2',
-    description='The name of the storage account with which the image storage '
-                'container is associated.'
-)
 azure_job_message['properties']['region'] = string_with_example(
     'westus',
     description='The region to use for launching and test an instance '

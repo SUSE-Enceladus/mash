@@ -20,9 +20,6 @@ def test_add_account_azure(
         "source_container": "string",
         "source_resource_group": "string",
         "source_storage_account": "string",
-        "destination_container": "string",
-        "destination_resource_group": "string",
-        "destination_storage_account": "string",
         "credentials": {
             "clientId": "string",
             "clientSecret": "string",
@@ -87,9 +84,6 @@ def test_delete_account_azure(
     account.source_container = 'container1'
     account.source_resource_group = 'group1'
     account.source_storage_account = 'account1'
-    account.destination_container = 'container2'
-    account.destination_resource_group = 'group2'
-    account.destination_storage_account = 'account2'
 
     mock_get_account.return_value = account
     request = {'name': 'test', 'user_id': 'user1'}
@@ -142,9 +136,6 @@ def test_get_account_azure(
     account.source_container = 'container1'
     account.source_resource_group = 'group1'
     account.source_storage_account = 'account1'
-    account.destination_container = 'container2'
-    account.destination_resource_group = 'group2'
-    account.destination_storage_account = 'account2'
 
     queryset = Mock()
     queryset.one.return_value = account
@@ -165,9 +156,6 @@ def test_get_account_azure(
     assert response.json['source_container'] == "container1"
     assert response.json['source_resource_group'] == "group1"
     assert response.json['source_storage_account'] == "account1"
-    assert response.json['destination_container'] == "container2"
-    assert response.json['destination_resource_group'] == "group2"
-    assert response.json['destination_storage_account'] == "account2"
 
     # Not found
     mock_azure_account.query.filter_by.side_effect = NoResultFound()
@@ -190,9 +178,6 @@ def test_get_account_list_azure(mock_get_user, test_client):
     account.source_container = 'container1'
     account.source_resource_group = 'group1'
     account.source_storage_account = 'account1'
-    account.destination_container = 'container2'
-    account.destination_resource_group = 'group2'
-    account.destination_storage_account = 'account2'
 
     user = Mock()
     user.azure_accounts = [account]
@@ -207,9 +192,6 @@ def test_get_account_list_azure(mock_get_user, test_client):
     assert response.json[0]['source_container'] == "container1"
     assert response.json[0]['source_resource_group'] == "group1"
     assert response.json[0]['source_storage_account'] == "account1"
-    assert response.json[0]['destination_container'] == "container2"
-    assert response.json[0]['destination_resource_group'] == "group2"
-    assert response.json[0]['destination_storage_account'] == "account2"
 
 
 @patch('mash.services.database.utils.accounts.azure.get_azure_account_by_user')
@@ -228,9 +210,6 @@ def test_update_account_azure(
     account.source_container = 'container1'
     account.source_resource_group = 'group1'
     account.source_storage_account = 'account1'
-    account.destination_container = 'container2'
-    account.destination_resource_group = 'group2'
-    account.destination_storage_account = 'account2'
 
     mock_get_account.return_value = account
 
@@ -241,9 +220,6 @@ def test_update_account_azure(
         "source_container": "string",
         "source_resource_group": "string",
         "source_storage_account": "string",
-        "destination_container": "string",
-        "destination_resource_group": "string",
-        "destination_storage_account": "string",
         "credentials": {
             "clientId": "string",
             "clientSecret": "string",
