@@ -10,7 +10,7 @@ azure-identity
 azure-mgmt-compute>=17.0.0
 azure-mgmt-resource
 azure-mgmt-storage
-azure-storage-blob<12.0.0
+azure-storage-blob>=12.0.0
 Flask
 flask-restplus
 flask-sqlalchemy

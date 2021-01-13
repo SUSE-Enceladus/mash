@@ -27,18 +27,16 @@ import time
 from datetime import date, datetime, timedelta
 
 from azure.identity import ClientSecretCredential
-from azure.common.client_factory import get_client_from_auth_file
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.storage.blob import (
-    ContainerPermissions,
-    PageBlobService,
-    BlockBlobService
+    BlobSasPermissions,
+    BlobServiceClient,
+    generate_blob_sas
 )
 
 from mash.mash_exceptions import MashAzureUtilsException
 from mash.utils.filetype import FileType
-from mash.utils.mash_utils import create_json_file
 
 
 def acquire_access_token(credentials, cloud_partner=False):
@@ -69,125 +67,44 @@ def acquire_access_token(credentials, cloud_partner=False):
     return access_token
 
 
-def copy_blob_to_classic_storage(
-    auth_file,
-    blob_name,
-    source_container,
-    source_resource_group,
-    source_storage_account,
-    destination_container,
-    destination_resource_group,
-    destination_storage_account,
-    is_page_blob=False
-):
-    """
-    Copy a blob from ARM based storage account to a classic storage account.
-    """
-    source_blob_service = get_blob_service_with_account_keys(
-        auth_file,
-        source_storage_account,
-        source_resource_group,
-        is_page_blob=is_page_blob
-    )
-
-    source_blob_url = get_blob_url(
-        source_blob_service,
-        blob_name,
-        source_container
-    )
-
-    destination_blob_service = get_classic_blob_service(
-        auth_file,
-        destination_resource_group,
-        destination_storage_account,
-        is_page_blob=is_page_blob
-    )
-
-    copy_response = destination_blob_service.copy_blob(
-        destination_container,
-        blob_name,
-        source_blob_url
-    )
-
-    while True:
-        if copy_response.status == 'success':
-            return
-        elif copy_response.status == 'failed':
-            raise MashAzureUtilsException(
-                'Azure blob copy failed.'
-            )
-        else:
-            time.sleep(60)
-            copy_response = destination_blob_service.get_blob_properties(
-                destination_container,
-                blob_name
-            ).properties.copy
-
-
 def delete_blob(
-    auth_file,
+    credentials,
     blob,
     container,
     resource_group,
-    storage_account,
-    is_page_blob=False
+    storage_account
 ):
     """
     Delete page blob in container.
     """
-    blob_service = get_blob_service_with_account_keys(
-        auth_file,
-        storage_account,
+    blob_service_client = get_blob_service_with_account_keys(
+        credentials,
         resource_group,
-        is_page_blob=is_page_blob
+        storage_account
     )
-    blob_service.delete_blob(container, blob)
-
-
-def list_blobs(
-    auth_file,
-    container,
-    resource_group,
-    storage_account,
-    is_page_blob=False
-):
-    """
-    Return a list of blobs in container.
-    """
-    blob_service = get_blob_service_with_account_keys(
-        auth_file,
-        storage_account,
-        resource_group,
-        is_page_blob=is_page_blob
-    )
-    blobs = blob_service.list_blobs(container)
-
-    names = []
-    for blob in blobs:
-        names.append(blob.name)
-
-    return names
+    container_client = blob_service_client.get_container_client(container)
+    blob_client = container_client.get_blob_client(blob)
+    blob_client.delete_blob()
 
 
 def blob_exists(
-    auth_file,
+    credentials,
     blob,
     container,
     resource_group,
-    storage_account,
-    is_page_blob=False
+    storage_account
 ):
     """
     Return True if blob exists in container.
     """
-    blobs = list_blobs(
-        auth_file,
-        container,
+    blob_service_client = get_blob_service_with_account_keys(
+        credentials,
         resource_group,
-        storage_account,
-        is_page_blob
+        storage_account
     )
-    return blob in blobs
+    container_client = blob_service_client.get_container_client(container)
+    blob_client = container_client.get_blob_client(blob)
+    return blob_client.exists()
 
 
 def delete_image(credentials, resource_group, image_name):
@@ -229,151 +146,117 @@ def image_exists(credentials, image_name):
     return image_name in images
 
 
+def create_sas_token(
+    blob_service,
+    storage_account,
+    container,
+    blob_name,
+    permissions=BlobSasPermissions(read=True),
+    expire_hours=1,
+    start_hours=1
+):
+    expiry_time = datetime.utcnow() + timedelta(hours=expire_hours)
+    start_time = datetime.utcnow() - timedelta(hours=start_hours)
+
+    return generate_blob_sas(
+        storage_account,
+        container,
+        blob_name,
+        permission=permissions,
+        expiry=expiry_time,
+        start=start_time,
+        account_key=blob_service.credential.account_key
+    )
+
+
 def get_blob_url(
     blob_service,
     blob_name,
+    storage_account,
     container,
-    permissions=ContainerPermissions.READ,
+    permissions=BlobSasPermissions(read=True),
     expire_hours=1,
-    start_hours=0
+    start_hours=1
 ):
     """
     Create a URL for the given blob with a shared access signature.
 
     The signature will expire based on expire_hours.
     """
-    sas_token = blob_service.generate_container_shared_access_signature(
-        container,
-        permissions,
-        datetime.utcnow() + timedelta(hours=expire_hours),
-        datetime.utcnow() - timedelta(hours=start_hours)
-    )
-
-    source_blob_url = blob_service.make_blob_url(
+    sas_token = create_sas_token(
+        blob_service,
+        storage_account,
         container,
         blob_name,
-        sas_token=sas_token,
+        permissions=permissions,
+        expire_hours=expire_hours,
+        start_hours=start_hours
+    )
+
+    source_blob_url = (
+        'https://{account}.blob.core.windows.net/'
+        '{container}/{blob}?{token}'.format(
+            account=storage_account,
+            container=container,
+            blob=blob_name,
+            token=sas_token
+        )
     )
 
     return source_blob_url
 
 
+def get_storage_account_key(credentials, resource_group, storage_account):
+    storage_client = get_client_from_json(
+        StorageManagementClient,
+        credentials
+    )
+    storage_key_list = storage_client.storage_accounts.list_keys(
+        resource_group,
+        storage_account
+    )
+    return storage_key_list.keys[0].value
+
+
 def get_blob_service_with_account_keys(
-    auth_file,
-    storage_account,
+    credentials,
     resource_group,
-    is_page_blob=False
+    storage_account
 ):
     """
     Return authenticated blob service instance for the storage account.
 
     Using storage account keys.
     """
-    if is_page_blob:
-        blob_service_type = PageBlobService
-    else:
-        blob_service_type = BlockBlobService
-
-    storage_client = get_client_from_auth_file(
-        StorageManagementClient,
-        auth_path=auth_file
-    )
-    storage_key_list = storage_client.storage_accounts.list_keys(
+    account_key = get_storage_account_key(
+        credentials,
         resource_group,
         storage_account
     )
 
-    return blob_service_type(
-        account_name=storage_account,
-        account_key=storage_key_list.keys[0].value
+    return BlobServiceClient(
+        account_url='https://{account_name}.blob.core.windows.net'.format(
+            account_name=storage_account
+        ),
+        credential=account_key
     )
 
 
 def get_blob_service_with_sas_token(
     storage_account,
-    sas_token,
-    is_page_blob=False
+    sas_token
 ):
     """
     Return authenticated page blob service instance for the storage account.
 
     Using an sas token.
     """
-    if is_page_blob:
-        blob_service_type = PageBlobService
-    else:
-        blob_service_type = BlockBlobService
-
-    return blob_service_type(
-        account_name=storage_account,
-        sas_token=sas_token
+    return BlobServiceClient(
+        account_url='https://{account_name}.blob.core.windows.net'.format(
+            account_name=storage_account
+        ),
+        credential=sas_token
     )
-
-
-def get_classic_blob_service(
-    auth_file,
-    resource_group,
-    storage_account,
-    is_page_blob=False
-):
-    """
-    Return authenticated blob service instance for classic (ASM) account.
-    """
-    if is_page_blob:
-        blob_service_type = PageBlobService
-    else:
-        blob_service_type = BlockBlobService
-
-    keys = get_classic_storage_account_keys(
-        auth_file,
-        resource_group,
-        storage_account
-    )
-
-    if 'error' in keys:
-        try:
-            error = keys['error']['message']
-        except KeyError:
-            error = 'Unable to retrieve storage account keys.'
-
-        raise MashAzureUtilsException(error)
-
-    return blob_service_type(
-        account_name=storage_account,
-        account_key=keys['primaryKey']
-    )
-
-
-def get_classic_storage_account_keys(
-    auth_file,
-    resource_group,
-    storage_account,
-    api_version='2016-11-01'
-):
-    """
-    Acquire classic storage account keys using service account credentials.
-    """
-    with open(auth_file) as sa_file:
-        credentials = json.load(sa_file)
-
-    url = '{resource_url}subscriptions/' \
-          '{subscription_id}/resourceGroups/{resource_group}/' \
-          'providers/Microsoft.ClassicStorage/storageAccounts/' \
-          '{storage_account}/listKeys?api-version={api_version}'
-
-    endpoint = url.format(
-        resource_url=credentials['resourceManagerEndpointUrl'],
-        subscription_id=credentials['subscriptionId'],
-        resource_group=resource_group,
-        storage_account=storage_account,
-        api_version=api_version
-    )
-
-    access_token = acquire_access_token(credentials)
-    headers = {'Authorization': 'Bearer ' + access_token}
-    json_output = requests.post(endpoint, headers=headers).json()
-
-    return json_output
 
 
 def go_live_with_cloud_partner_offer(
@@ -713,9 +596,9 @@ def upload_azure_file(
     blob_name,
     container,
     file_name,
-    max_retry_attempts,
-    max_workers,
     storage_account,
+    max_retry_attempts=5,
+    max_workers=5,
     credentials=None,
     resource_group=None,
     sas_token=None,
@@ -723,24 +606,29 @@ def upload_azure_file(
     expand_image=True
 ):
     if sas_token:
-        blob_service = get_blob_service_with_sas_token(
+        blob_service_client = get_blob_service_with_sas_token(
             storage_account,
-            sas_token,
-            is_page_blob=is_page_blob
+            sas_token
         )
     elif credentials and resource_group:
-        with create_json_file(credentials) as auth_file:
-            blob_service = get_blob_service_with_account_keys(
-                auth_file,
-                storage_account,
-                resource_group,
-                is_page_blob=is_page_blob
-            )
+        blob_service_client = get_blob_service_with_account_keys(
+            credentials,
+            resource_group,
+            storage_account
+        )
     else:
         raise MashAzureUtilsException(
             'Either an sas_token or credentials and resource_group '
             ' is required to upload an azure image to a page blob.'
         )
+
+    container_client = blob_service_client.get_container_client(container)
+    blob_client = container_client.get_blob_client(blob_name)
+
+    if is_page_blob:
+        blob_type = 'PageBlob'
+    else:
+        blob_type = 'BlockBlob'
 
     system_image_file_type = FileType(file_name)
     if system_image_file_type.is_xz() and expand_image:
@@ -752,12 +640,11 @@ def upload_azure_file(
     while max_retry_attempts > 0:
         with open_image(file_name, 'rb') as image_stream:
             try:
-                blob_service.create_blob_from_stream(
-                    container,
-                    blob_name,
+                blob_client.upload_blob(
                     image_stream,
-                    system_image_file_type.get_size(),
-                    max_connections=max_workers
+                    blob_type=blob_type,
+                    length=system_image_file_type.get_size(),
+                    max_concurrency=max_workers
                 )
                 return
             except Exception as error:
@@ -773,12 +660,16 @@ def upload_azure_file(
 
 
 def get_client_from_json(client, credentials):
-    credential = ClientSecretCredential(
-        tenant_id=credentials['tenantId'],
-        client_id=credentials['clientId'],
-        client_secret=credentials['clientSecret']
-    )
+    credential = get_secret_credential(credentials)
     return client(
         credential,
         credentials['subscriptionId']
+    )
+
+
+def get_secret_credential(credentials):
+    return ClientSecretCredential(
+        tenant_id=credentials['tenantId'],
+        client_id=credentials['clientId'],
+        client_secret=credentials['clientSecret']
     )

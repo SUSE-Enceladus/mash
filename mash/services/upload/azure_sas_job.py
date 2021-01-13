@@ -66,9 +66,9 @@ class AzureSASUploadJob(MashJob):
             self.blob_name,
             build.group(2),
             self.status_msg['image_file'],
-            self.config.get_azure_max_retry_attempts(),
-            self.config.get_azure_max_workers(),
             build.group(1),
+            max_retry_attempts=self.config.get_azure_max_retry_attempts(),
+            max_workers=self.config.get_azure_max_workers(),
             sas_token=build.group(3),
             is_page_blob=True
         )
