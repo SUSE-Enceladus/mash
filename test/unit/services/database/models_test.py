@@ -74,9 +74,6 @@ def test_azure_account_model():
         source_container='sc1',
         source_resource_group='srg1',
         source_storage_account='ssa1',
-        destination_container='dc2',
-        destination_resource_group='drg2',
-        destination_storage_account='dsa2',
         user_id='1'
     )
     assert account.__repr__() == '<Azure Account acnt1>'

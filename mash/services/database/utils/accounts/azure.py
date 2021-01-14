@@ -32,10 +32,7 @@ def create_new_azure_account(
     credentials,
     source_container,
     source_resource_group,
-    source_storage_account,
-    destination_container,
-    destination_resource_group,
-    destination_storage_account
+    source_storage_account
 ):
     """
     Create a new Azure account for user.
@@ -53,9 +50,6 @@ def create_new_azure_account(
         source_container=source_container,
         source_resource_group=source_resource_group,
         source_storage_account=source_storage_account,
-        destination_container=destination_container,
-        destination_resource_group=destination_resource_group,
-        destination_storage_account=destination_storage_account,
         user_id=user_id
     )
 
@@ -136,10 +130,7 @@ def update_azure_account_for_user(
     credentials=None,
     source_container=None,
     source_resource_group=None,
-    source_storage_account=None,
-    destination_container=None,
-    destination_resource_group=None,
-    destination_storage_account=None
+    source_storage_account=None
 ):
     """
     Update Azure account for user.
@@ -178,15 +169,6 @@ def update_azure_account_for_user(
 
     if source_storage_account:
         account.source_storage_account = source_storage_account
-
-    if destination_container:
-        account.destination_container = destination_container
-
-    if destination_resource_group:
-        account.destination_resource_group = destination_resource_group
-
-    if destination_storage_account:
-        account.destination_storage_account = destination_storage_account
 
     try:
         db.session.add(account)
