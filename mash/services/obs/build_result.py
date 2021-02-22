@@ -256,6 +256,15 @@ class OBSImageBuildResult(object):
             self.job_status = 'failed'
             self.errors.append(msg)
             self.log_callback.error(msg)
+
+            for condition in self.downloader.image_status['conditions']:
+                if not condition.get('status'):
+                    self.errors.append(
+                        'Condition failed: {condition}'.format(
+                            condition=condition
+                        )
+                    )
+
             self._result_callback()
 
     def progress_callback(self, block_num, read_size, total_size, done=False):
