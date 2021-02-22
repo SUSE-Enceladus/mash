@@ -122,6 +122,13 @@ class AzureTestJob(MashJob):
             self.status_msg
         )
 
+        if self.status != SUCCESS:
+            self.add_error_msg(
+                'Image failed img-proof test suite. '
+                'See "mash job test-results --job-id {GUID} -v" '
+                'for details on the failing tests.'
+            )
+
         if self.cleanup_images or \
                 (self.status != SUCCESS and self.cleanup_images is not False):
             self.cleanup_image()
