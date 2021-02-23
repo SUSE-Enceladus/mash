@@ -235,6 +235,7 @@ class EC2CreateJob(MashJob):
                 )
                 self.add_error_msg(msg)
                 self.log_callback.error(msg)
+                break  # No need to continue if one account fails
             finally:
                 if ssh_key_pair:
                     self._delete_key_pair(
