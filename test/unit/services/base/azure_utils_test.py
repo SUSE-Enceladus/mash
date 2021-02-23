@@ -341,6 +341,30 @@ def test_update_cloud_partner_offer_doc():
     assert plan['diskGenerations'][0][vm_images_key][release]['mediaName'] == \
         'new-image-gen2'
 
+    with raises(MashAzureUtilsException):
+        update_cloud_partner_offer_doc(
+            doc,
+            'blob/url/.vhd',
+            'New image for v123',
+            'new-image',
+            'New Image 123',
+            'gen2',
+            generation_id='image-gen2',
+            cloud_image_name_generation_suffix='gen2'
+        )
+
+    with raises(MashAzureUtilsException):
+        update_cloud_partner_offer_doc(
+            doc,
+            'blob/url/.vhd',
+            'New image for v123',
+            'new-image',
+            'New Image 123',
+            'gen1',
+            generation_id='image-gen3',
+            cloud_image_name_generation_suffix='gen2'
+        )
+
 
 def test_update_cloud_partner_offer_doc_existing_date():
     vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
