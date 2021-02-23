@@ -26,5 +26,8 @@ Session.vim
 ### pycharm ###
 .idea/
 
+### VS Code ###
+.vscode/
+
 ### sqlite ###
 *.db
