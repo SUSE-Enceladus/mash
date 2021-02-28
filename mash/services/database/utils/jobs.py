@@ -21,7 +21,6 @@ from datetime import datetime
 from mash.services.database.extensions import db
 from mash.services.database.models import Job
 from mash.services.status_levels import FAILED, EXCEPTION, RUNNING, FINISHED
-from mash.services.database.utils.users import get_user_by_id
 
 
 def create_new_job(data):
@@ -59,12 +58,17 @@ def get_job_by_user(job_id, user_id):
     return job
 
 
-def get_jobs(user_id):
+def get_jobs(user_id, page=1, per_page=10):
     """
     Retrieve all jobs for user.
     """
-    user = get_user_by_id(user_id)
-    return user.jobs
+    job_query = Job.query.filter_by(user_id=user_id).paginate(
+        page,
+        per_page,
+        error_out=False,  # Return empty set if no results
+        max_per_page=20
+    )
+    return job_query.items
 
 
 def delete_job_for_user(job_id, user_id):

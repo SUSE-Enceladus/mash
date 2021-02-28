@@ -118,7 +118,18 @@ def get_job():
 
 @blueprint.route('/list/<string:user>', methods=['GET'])
 def get_job_list(user):
-    jobs = get_jobs(user)
+    data = json.loads(request.data.decode())
+    page = data.get('page')
+    per_page = data.get('per_page')
+
+    kwargs = {}
+    if page:
+        kwargs['page'] = page
+
+    if per_page:
+        kwargs['per_page'] = per_page
+
+    jobs = get_jobs(user, **kwargs)
     jobs = [marshal(job, job_response, skip_none=True) for job in jobs]
     return make_response(jsonify(jobs), 200)
 
