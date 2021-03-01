@@ -130,6 +130,9 @@ class TestOBSImageBuildResult(object):
     def test_update_image_status_raises(
         self, mock_result_callback
     ):
+        self.downloader.image_status = {
+            'conditions': [{'version': '1.2.3', 'status': False}]
+        }
         self.downloader.get_image.side_effect = Exception(
             'request error'
         )
@@ -141,6 +144,7 @@ class TestOBSImageBuildResult(object):
         assert self.log_callback.error.call_args_list == [
             call('Exception: request error')
         ]
+        assert len(self.obs_result.errors) == 2
 
     def test_progress_callback(self):
         self.obs_result.progress_callback(0, 0, 0, done=True)
