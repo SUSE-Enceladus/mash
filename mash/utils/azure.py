@@ -520,8 +520,22 @@ def update_cloud_partner_offer_doc(
 
                         plan[vm_images_key][release] = generation_version
                         break
+                else:
+                    raise MashAzureUtilsException(
+                        'No Match found for Generation ID: {gen}. '
+                        'Offer doc not updated properly.'.format(
+                            gen=generation_id
+                        )
+                    )
 
             break
+    else:
+        raise MashAzureUtilsException(
+            'No Match found for SKU: {sku}. '
+            'Offer doc not updated properly.'.format(
+                sku=sku
+            )
+        )
 
     return doc
 
