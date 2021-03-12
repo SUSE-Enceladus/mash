@@ -1,3 +1,13 @@
+v9.2.0 (2021-03-12)
+===================
+
+- Use gp3 as the default root volume for EC2 images
+  [\#726](https://github.com/SUSE-Enceladus/mash/pull/726)
+- Add all failed conditions to errors.
+  [\#736](https://github.com/SUSE-Enceladus/mash/pull/736)
+- Break image creation loop on failure.
+  [\#737](https://github.com/SUSE-Enceladus/mash/pull/737)
+
 v9.1.1 (2020-11-19)
 ===================
 
