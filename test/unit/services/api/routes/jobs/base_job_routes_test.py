@@ -1,3 +1,5 @@
+import json
+
 from datetime import datetime
 from unittest.mock import patch, Mock
 
@@ -119,7 +121,11 @@ def test_api_get_job_list(
 
     mock_jwt_identity.return_value = 'user1'
 
-    result = test_client.get('/jobs/')
+    result = test_client.get(
+        '/jobs/',
+        content_type='application/json',
+        data=json.dumps({'page': 1, 'per_page': 10})
+    )
 
     assert result.status_code == 200
     assert result.json[0]['job_id'] == '12345678-1234-1234-1234-123456789012'

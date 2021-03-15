@@ -188,14 +188,15 @@ def get_job(job_id, user_id):
     return response.json()
 
 
-def get_jobs(user_id):
+def get_jobs(user_id, page=None, per_page=None):
     """
     Retrieve all jobs for user.
     """
     response = handle_request(
         current_app.config['DATABASE_API_URL'],
         'jobs/list/{user}'.format(user=user_id),
-        'get'
+        'get',
+        job_data={'page': page, 'per_page': per_page}
     )
 
     return response.json()

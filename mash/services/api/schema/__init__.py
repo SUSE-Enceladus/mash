@@ -139,3 +139,12 @@ oauth2_login_model = {
         'redirect_port'
     ]
 }
+
+job_list = {
+    'type': 'object',
+    'properties': {
+        'page': integer_with_example(1),
+        'per_page': integer_with_example(10)
+    },
+    'additionalProperties': False
+}

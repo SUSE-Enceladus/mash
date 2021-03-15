@@ -164,8 +164,8 @@ def test_get_job(mock_job, test_client):
     assert response.json['msg'] == msg
 
 
-@patch('mash.services.database.utils.jobs.get_user_by_id')
-def test_get_job_list(mock_get_user, test_client):
+@patch('mash.services.database.utils.jobs.Job')
+def test_get_job_list(mock_job, test_client):
     job = Mock()
     job.job_id = '12345678-1234-1234-1234-123456789012'
     job.last_service = 'test'
@@ -178,11 +178,17 @@ def test_get_job_list(mock_get_user, test_client):
     job.finish_time = datetime.now()
     job.errors = []
 
-    user = Mock
-    user.jobs = [job]
-    mock_get_user.return_value = user
+    queryset1 = Mock()
+    queryset2 = Mock()
+    queryset2.items = [job]
+    queryset1.paginate.return_value = queryset2
+    mock_job.query.filter_by.return_value = queryset1
 
-    response = test_client.get('/jobs/list/user1')
+    response = test_client.get(
+        '/jobs/list/user1',
+        content_type='application/json',
+        data=json.dumps({'page': 1, 'per_page': 10})
+    )
 
     assert response.status_code == 200
     assert response.json[0]['job_id'] == '12345678-1234-1234-1234-123456789012'
