@@ -60,6 +60,12 @@ class User(db.Model):
         lazy='select',
         cascade='all, delete, delete-orphan'
     )
+    aliyun_accounts = db.relationship(
+        'AliyunAccount',
+        back_populates='user',
+        lazy='select',
+        cascade='all, delete, delete-orphan'
+    )
     tokens = db.relationship(
         'Token',
         back_populates='user',
@@ -209,6 +215,24 @@ class OCIAccount(db.Model):
 
     def __repr__(self):
         return '<OCI Account {}>'.format(self.name)
+
+
+class AliyunAccount(db.Model):
+    __tablename__ = 'aliyun_account'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    region = db.Column(db.String(32), nullable=False)
+    security_group_id = db.Column(db.String(255))
+    vswitch_id = db.Column(db.String(255))
+    bucket = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', back_populates='aliyun_accounts')
+    __table_args__ = (
+        db.UniqueConstraint('name', 'user_id', name='_aliyun_account_user_uc'),
+    )
+
+    def __repr__(self):
+        return '<Aliyun Account {}>'.format(self.name)
 
 
 class Job(db.Model):
