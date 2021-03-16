@@ -650,3 +650,83 @@ class TestJobCreatorService(object):
             'test_image'
         )
         assert notif_class.send_notification.call_count == 1
+
+    @patch.object(JobCreatorService, '_publish')
+    def test_jobcreator_handle_service_message_aliyun(self, mock_publish):
+        def check_base_attrs(job_data, cloud=True):
+            assert job_data['id'] == '12345678-1234-1234-1234-123456789012'
+            assert job_data['utctime'] == 'now'
+            assert job_data['last_service'] == 'deprecate'
+
+            if cloud:
+                assert job_data['cloud'] == 'aliyun'
+
+        with open('test/data/aliyun_job.json', 'r') as job_doc:
+            job = json.load(job_doc)
+
+        message = MagicMock()
+        message.body = json.dumps(job)
+        self.jobcreator._handle_service_message(message)
+
+        # OBS Job Doc
+
+        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
+        check_base_attrs(data, cloud=False)
+        assert data['cloud_architecture'] == 'x86_64'
+        assert data['download_url'] == \
+            'http://download.opensuse.org/repositories/Cloud:Tools/images'
+        assert data['image'] == 'test_image_oem'
+
+        # Upload Job Doc
+
+        data = json.loads(mock_publish.mock_calls[1][1][2])['upload_job']
+        check_base_attrs(data)
+        assert data['cloud_image_name'] == 'new_image_123'
+        assert data['region'] == 'cn-beijing'
+        assert data['account'] == 'test-aliyun'
+        assert data['bucket'] == 'images'
+
+        # create Job Doc
+
+        data = json.loads(mock_publish.mock_calls[2][1][2])['create_job']
+        check_base_attrs(data)
+        assert data['image_description'] == 'New Image #123'
+        assert data['region'] == 'cn-beijing'
+        assert data['account'] == 'test-aliyun'
+        assert data['bucket'] == 'images'
+        assert data['platform'] == 'SUSE'
+
+        # Test Job Doc
+
+        data = json.loads(mock_publish.mock_calls[3][1][2])['test_job']
+        check_base_attrs(data)
+        assert data['distro'] == 'sles'
+        assert data['instance_type'] == 'ecs.t5-lc1m1.small'
+        assert data['tests'] == ['test_stuff']
+        assert data['region'] == 'cn-beijing'
+        assert data['account'] == 'test-aliyun'
+
+        # Raw Image Upload Job Doc
+        data = json.loads(mock_publish.mock_calls[4][1][2])['raw_image_upload_job']
+        check_base_attrs(data)
+        assert data['raw_image_upload_type'] == 's3bucket'
+
+        # Replicate Job Doc
+
+        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
+        check_base_attrs(data)
+        assert data['account'] == 'test-aliyun'
+
+        # Publish Job Doc
+
+        data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
+        check_base_attrs(data)
+        assert data['account'] == 'test-aliyun'
+        assert data['launch_permission'] == 'HIDDEN'
+
+        # Deprecate Job Doc
+
+        data = json.loads(mock_publish.mock_calls[7][1][2])['deprecate_job']
+        check_base_attrs(data)
+        assert data['old_cloud_image_name'] == 'old_new_image_123'
+        assert data['account'] == 'test-aliyun'

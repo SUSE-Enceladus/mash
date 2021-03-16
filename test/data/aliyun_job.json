@@ -1,0 +1,29 @@
+{
+  "job_id": "12345678-1234-1234-1234-123456789012",
+  "cloud": "aliyun",
+  "cloud_account": "test-aliyun",
+  "region": "cn-beijing",
+  "bucket": "images",
+  "requesting_user": "user1",
+  "last_service": "deprecate",
+  "utctime": "now",
+  "image": "test_image_oem",
+  "cloud_image_name": "new_image_123",
+  "old_cloud_image_name": "old_new_image_123",
+  "conditions": [
+    {"package_name": "openssl", "version": "13.4.3", "release": "1.1"},
+    {"version": "8.13.21"}
+  ],
+  "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
+  "image_description": "New Image #123",
+  "distro": "sles",
+  "instance_type": "ecs.t5-lc1m1.small",
+  "platform": "SUSE",
+  "disk_size": 30,
+  "launch_permission": "HIDDEN",
+  "tests": ["test_stuff"],
+  "notify": true,
+  "raw_image_upload_type": "s3bucket",
+  "raw_image_upload_account": "account",
+  "raw_image_upload_location": "location"
+}
