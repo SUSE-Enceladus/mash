@@ -35,3 +35,4 @@ werkzeug<1.0.0
 google-auth
 google-cloud-storage
 google-api-python-client
+aliyun-img-utils

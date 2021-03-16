@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2021 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -32,6 +32,7 @@ from mash.services.upload.gce_job import GCEUploadJob
 from mash.services.no_op_job import NoOpJob
 from mash.services.upload.s3bucket_job import S3BucketUploadJob
 from mash.services.upload.oci_job import OCIUploadJob
+from mash.services.upload.aliyun_job import AliyunUploadJob
 
 
 def main():
@@ -55,7 +56,8 @@ def main():
                 'ec2': NoOpJob,
                 's3bucket': S3BucketUploadJob,
                 'gce': GCEUploadJob,
-                'oci': OCIUploadJob
+                'oci': OCIUploadJob,
+                'aliyun': AliyunUploadJob
             }
         )
 
