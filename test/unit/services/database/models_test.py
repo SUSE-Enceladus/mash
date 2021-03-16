@@ -6,6 +6,7 @@ from mash.services.database.models import (
     EC2Region,
     GCEAccount,
     AzureAccount,
+    AliyunAccount,
     Job,
     OCIAccount
 )
@@ -80,6 +81,16 @@ def test_azure_account_model():
         user_id='1'
     )
     assert account.__repr__() == '<Azure Account acnt1>'
+
+
+def test_aliyun_account_model():
+    account = AliyunAccount(
+        name='acnt1',
+        bucket='storage-123',
+        region='cn-beijing',
+        user_id='1'
+    )
+    assert account.__repr__() == '<Aliyun Account acnt1>'
 
 
 def test_job_model():
