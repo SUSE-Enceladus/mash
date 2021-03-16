@@ -30,7 +30,8 @@ def img_proof_test(
     ssh_key_name=None, ssh_private_key_file=None, ssh_user=None, subnet_id=None,
     tests=None, availability_domain=None, compartment_id=None, tenancy=None,
     oci_user_id=None, signing_key_file=None, signing_key_fingerprint=None,
-    boot_firmware=None, image_project=None, log_callback=None, sev_capable=None
+    boot_firmware=None, image_project=None, log_callback=None, sev_capable=None,
+    access_key=None, access_secret=None, vswitch_id=None
 ):
     if boot_firmware and boot_firmware == 'uefi':
         enable_secure_boot = True
@@ -66,7 +67,10 @@ def img_proof_test(
         image_project=image_project,
         log_callback=log_callback,
         prefix_name='mash',
-        sev_capable=sev_capable
+        sev_capable=sev_capable,
+        access_key=access_key,
+        access_secret=access_secret,
+        vswitch_id=vswitch_id
     )
 
     status = SUCCESS if status == 0 else FAILED
