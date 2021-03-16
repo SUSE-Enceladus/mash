@@ -46,6 +46,7 @@ from mash.services.api.routes.jobs.ec2 import api as ec2_jobs_api
 from mash.services.api.routes.jobs.gce import api as gce_jobs_api
 from mash.services.api.routes.jobs.azure import api as azure_jobs_api
 from mash.services.api.routes.jobs.oci import api as oci_jobs_api
+from mash.services.api.routes.jobs.aliyun import api as aliyun_jobs_api
 
 
 @jwt.token_in_blacklist_loader
@@ -119,6 +120,7 @@ def register_namespaces():
     api.add_namespace(gce_jobs_api, path='/jobs/gce')
     api.add_namespace(azure_jobs_api, path='/jobs/azure')
     api.add_namespace(oci_jobs_api, path='/jobs/oci')
+    api.add_namespace(aliyun_jobs_api, path='/jobs/aliyun')
 
 
 def register_extensions(app):
