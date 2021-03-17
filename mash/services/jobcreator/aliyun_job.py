@@ -72,7 +72,9 @@ class AliyunJob(BaseJob):
         publish_message = {
             'publish_job': {
                 'cloud': self.cloud,
+                'bucket': self.bucket,
                 'account': self.cloud_account,
+                'region': self.region,
                 'launch_permission': self.launch_permission
             }
         }
