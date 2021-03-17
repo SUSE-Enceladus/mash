@@ -87,7 +87,9 @@ class AliyunJob(BaseJob):
         replicate_message = {
             'replicate_job': {
                 'cloud': self.cloud,
-                'account': self.cloud_account
+                'account': self.cloud_account,
+                'bucket': self.bucket,
+                'region': self.region
             }
         }
         replicate_message['replicate_job'].update(self.base_message)
