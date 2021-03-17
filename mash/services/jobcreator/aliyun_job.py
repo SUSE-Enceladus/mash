@@ -54,7 +54,9 @@ class AliyunJob(BaseJob):
         deprecate_message = {
             'deprecate_job': {
                 'cloud': self.cloud,
-                'account': self.cloud_account
+                'account': self.cloud_account,
+                'bucket': self.bucket,
+                'region': self.region
             }
         }
         deprecate_message['deprecate_job'].update(self.base_message)
