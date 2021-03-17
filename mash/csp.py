@@ -1,4 +1,4 @@
-# Copyright (c) 2017 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2021 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -20,13 +20,14 @@ from collections import namedtuple
 
 class CSP(object):
     Constants = namedtuple(
-        'Constants', ['azure', 'ec2', 'gce', 'oci']
+        'Constants', ['azure', 'ec2', 'gce', 'oci', 'aliyun']
     )
     constants = Constants(
-        'azure', 'ec2', 'gce', 'oci'
+        'azure', 'ec2', 'gce', 'oci', 'aliyun'
     )
 
     azure = constants.azure
     ec2 = constants.ec2
     gce = constants.gce
     oci = constants.oci
+    aliyun = constants.aliyun
