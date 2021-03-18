@@ -30,6 +30,7 @@ from mash.services.test.azure_job import AzureTestJob
 from mash.services.test.ec2_job import EC2TestJob
 from mash.services.test.gce_job import GCETestJob
 from mash.services.test.oci_job import OCITestJob
+from mash.services.test.aliyun_job import AliyunTestJob
 
 
 def main():
@@ -50,7 +51,8 @@ def main():
                 'azure': AzureTestJob,
                 'ec2': EC2TestJob,
                 'gce': GCETestJob,
-                'oci': OCITestJob
+                'oci': OCITestJob,
+                'aliyun': AliyunTestJob
             }
         )
 
