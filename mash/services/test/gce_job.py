@@ -183,6 +183,11 @@ class GCETestJob(MashJob):
                 )
 
                 if self.status != SUCCESS:
+                    self.add_error_msg(
+                        'Image failed img-proof test suite. '
+                        'See "mash job test-results --job-id {GUID} -v" '
+                        'for details on the failing tests.'
+                    )
                     break
 
         if self.cleanup_images or \

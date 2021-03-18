@@ -172,6 +172,11 @@ class EC2TestJob(MashJob):
 
                 if status != SUCCESS:
                     self.status = status
+                    self.add_error_msg(
+                        'Image failed img-proof test suite. '
+                        'See "mash job test-results --job-id {GUID} -v" '
+                        'for details on the failing tests.'
+                    )
                     break  # Fail eagerly, if the image fails in any partition.
 
         if self.cleanup_images or (self.status != SUCCESS and self.cleanup_images is not False):  # noqa
