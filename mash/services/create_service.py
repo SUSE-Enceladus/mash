@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2021 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -29,6 +29,7 @@ from mash.services.create.azure_job import AzureCreateJob
 from mash.services.create.ec2_job import EC2CreateJob
 from mash.services.create.gce_job import GCECreateJob
 from mash.services.create.oci_job import OCICreateJob
+from mash.services.create.aliyun_job import AliyunCreateJob
 
 
 def main():
@@ -49,7 +50,8 @@ def main():
                 'azure': AzureCreateJob,
                 'ec2': EC2CreateJob,
                 'gce': GCECreateJob,
-                'oci': OCICreateJob
+                'oci': OCICreateJob,
+                'aliyun': AliyunCreateJob
             }
         )
 
