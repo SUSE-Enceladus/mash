@@ -28,6 +28,7 @@ from mash.services.job_factory import BaseJobFactory
 
 from mash.services.replicate.azure_job import AzureReplicateJob
 from mash.services.replicate.ec2_job import EC2ReplicateJob
+from mash.services.replicate.aliyun_job import AliyunReplicateJob
 from mash.services.no_op_job import NoOpJob
 
 
@@ -49,7 +50,8 @@ def main():
                 'azure': AzureReplicateJob,
                 'ec2': EC2ReplicateJob,
                 'gce': NoOpJob,
-                'oci': NoOpJob
+                'oci': NoOpJob,
+                'aliyun': AliyunReplicateJob
             }
         )
 
