@@ -12,7 +12,7 @@ class TestAliyunDeprecateJob(object):
             'last_service': 'deprecate',
             'requesting_user': 'user1',
             'cloud': 'aliyun',
-            'cloud_account': 'acnt1',
+            'account': 'acnt1',
             'region': 'cn-beijing',
             'bucket': 'images',
             'old_cloud_image_name': 'old-image-123',

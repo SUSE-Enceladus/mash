@@ -33,7 +33,7 @@ class AliyunPublishJob(MashJob):
         Post initialization method.
         """
         try:
-            self.account = self.job_config['cloud_account']
+            self.account = self.job_config['account']
             self.bucket = self.job_config['bucket']
             self.region = self.job_config['region']
             self.launch_permission = self.job_config['launch_permission']

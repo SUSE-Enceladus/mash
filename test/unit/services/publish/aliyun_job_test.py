@@ -12,7 +12,7 @@ class TestAliyunPublishJob(object):
             'last_service': 'publish',
             'requesting_user': 'user1',
             'cloud': 'aliyun',
-            'cloud_account': 'acnt1',
+            'account': 'acnt1',
             'region': 'cn-beijing',
             'bucket': 'images',
             'launch_permission': 'PERMISSION',
