@@ -135,7 +135,7 @@ class TestGCETestJob(object):
                 sev_capable=False,
                 access_key=None,
                 access_secret=None,
-                vswitch_id=None
+                v_switch_id=None
             )
         ])
         job._log_callback.warning.reset_mock()
@@ -225,7 +225,7 @@ class TestGCETestJob(object):
                 sev_capable=False,
                 access_key=None,
                 access_secret=None,
-                vswitch_id=None
+                v_switch_id=None
             ),
             call(
                 'gce',
@@ -259,7 +259,7 @@ class TestGCETestJob(object):
                 sev_capable=False,
                 access_key=None,
                 access_secret=None,
-                vswitch_id=None
+                v_switch_id=None
             )
         ])
 

@@ -117,7 +117,7 @@ class TestOCITestJob(object):
             sev_capable=None,
             access_key=None,
             access_secret=None,
-            vswitch_id=None
+            v_switch_id=None
         )
         job._log_callback.info.reset_mock()
 
