@@ -69,6 +69,13 @@ class TestAliyunCreateJob(object):
             'great image description',
             'sles-15-sp2-v20210316.qcow2',
             platform='SUSE',
-            cloud_architecture='x86_64',
+            arch='x86_64',
             disk_image_size=20
         )
+
+        # Image doesnt exist
+        aliyun_image.delete_compute_image.reset_mock()
+        aliyun_image.get_compute_image.side_effect = Exception()
+
+        self.job.run_job()
+        assert aliyun_image.delete_compute_image.call_count == 0
