@@ -170,10 +170,13 @@ def test_get_gce_image():
     driver = Mock()
     get_op = Mock()
     response = Mock()
+    http_resp = Mock()
+    http_resp.status = 400
+    http_resp.reason = 'Broken'
 
     driver.images.return_value = get_op
     get_op.get.return_value = response
-    response.execute.side_effect = HttpError('Not found!', content=b'Nothing')
+    response.execute.side_effect = HttpError(http_resp, content=b'Nothing')
 
     get_gce_image(driver, 'project', 'image name')
 
