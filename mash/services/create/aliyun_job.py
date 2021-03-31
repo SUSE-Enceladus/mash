@@ -67,21 +67,29 @@ class AliyunCreateJob(MashJob):
             log_callback=self.log_callback
         )
 
-        if aliyun_image.get_compute_image(image_name=self.cloud_image_name):
+        try:
+            existing_image = aliyun_image.get_compute_image(
+                image_name=self.cloud_image_name
+            )
+        except Exception:
+            existing_image = None
+
+        if existing_image:
             self.log_callback.info(
                 'Replacing existing image with the same name.'
             )
             aliyun_image.delete_compute_image(self.cloud_image_name)
 
+        kwargs = {}
         if self.disk_size:
-            kwargs = {'disk_image_size': self.disk_size}
+            kwargs['disk_image_size'] = self.disk_size
 
         image_id = aliyun_image.create_compute_image(
             self.cloud_image_name,
             self.cloud_image_description,
             object_name,
             platform=self.platform,
-            cloud_architecture=self.cloud_architecture,
+            arch=self.cloud_architecture,
             **kwargs
         )
 
