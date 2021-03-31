@@ -85,11 +85,11 @@ class TestAliyunUploadJob(object):
     def test_progress_callback(self):
         self.job.progress_callback(0, 0, done=True)
         self.log_callback.info.assert_called_once_with(
-            'Image download finished.'
+            'Image upload finished.'
         )
         self.log_callback.info.reset_mock()
 
         self.job.progress_callback(100, 400)
         self.log_callback.info.assert_called_once_with(
-            'Image 25% downloaded.'
+            'Image 25% uploaded.'
         )
