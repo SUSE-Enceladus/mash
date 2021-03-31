@@ -89,6 +89,7 @@ class AliyunTestJob(MashJob):
         credentials = self.credentials[self.account]
 
         self.cloud_image_name = self.status_msg['cloud_image_name']
+        self.object_name = self.status_msg['object_name']
         image_id = self.status_msg['source_regions'][self.region]
 
         try:
@@ -151,11 +152,15 @@ class AliyunTestJob(MashJob):
         )
 
         try:
-            aliyun_image.delete_compute_image(
-                self.cloud_image_name,
-                delete_blob=True
-            )
+            aliyun_image.delete_compute_image(self.cloud_image_name)
         except Exception as error:
             msg = 'Failed to cleanup image: {0}'.format(error)
+            self.log_callback.warning(msg)
+            self.add_error_msg(msg)
+
+        try:
+            aliyun_image.delete_storage_blob(self.object_name)
+        except Exception as error:
+            msg = 'Failed to cleanup image blob: {0}'.format(error)
             self.log_callback.warning(msg)
             self.add_error_msg(msg)

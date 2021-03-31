@@ -78,6 +78,7 @@ class TestAliyunTestJob(object):
             }
         }
         job.status_msg['cloud_image_name'] = 'name.qcow2'
+        job.status_msg['object_name'] = 'name.qcow2'
         job.status_msg['source_regions'] = {'cn-beijing': 'i-123456'}
         job.run_job()
 
@@ -140,6 +141,7 @@ class TestAliyunTestJob(object):
         job = AliyunTestJob(self.job_config, self.config)
         job._log_callback = Mock()
         job.cloud_image_name = 'name.qcow2'
+        job.object_name = 'name.qcow2'
         credentials = {
             'access_key': '123456789',
             'access_secret': '987654321'
@@ -156,11 +158,12 @@ class TestAliyunTestJob(object):
         aliyun_image.delete_compute_image.side_effect = Exception(
             'Image not found!'
         )
+        aliyun_image.delete_storage_blob.side_effect = Exception(
+            'Image not found!'
+        )
         job.cleanup_image(credentials)
 
         job._log_callback.info.assert_called_once_with(
             'Cleaning up image: name.qcow2 in region: cn-beijing.'
         )
-        job._log_callback.warning.assert_called_once_with(
-            'Failed to cleanup image: Image not found!'
-        )
+        assert job._log_callback.warning.call_count == 2
