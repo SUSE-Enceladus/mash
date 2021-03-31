@@ -48,9 +48,9 @@ class AliyunUploadJob(MashJob):
         self.use_build_time = self.job_config.get('use_build_time')
         self.force_replace_image = self.job_config.get('force_replace_image')
 
-        # How often to update log callback with download progress.
+        # How often to update log callback with upload progress.
         # 25 updates every 25%. I.e. 25, 50, 75, 100.
-        self.download_progress_percent = 25
+        self.upload_progress_percent = 25
         self.percent_uploaded = 0
         self.progress_log = {}
 
@@ -127,13 +127,13 @@ class AliyunUploadJob(MashJob):
         Update progress in log callback
         """
         if done:
-            self.log_callback.info('Image download finished.')
+            self.log_callback.info('Image upload finished.')
         else:
             self.percent_uploaded += int(((read_size) / total_size) * 100)
 
-            if self.percent_uploaded % self.download_progress_percent == 0 \
+            if self.percent_uploaded % self.upload_progress_percent == 0 \
                     and self.percent_uploaded not in self.progress_log:
                 self.log_callback.info(
-                    f'Image {str(self.percent_uploaded)}% downloaded.'
+                    f'Image {str(self.percent_uploaded)}% uploaded.'
                 )
                 self.progress_log[self.percent_uploaded] = True
