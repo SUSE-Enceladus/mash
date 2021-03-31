@@ -21,8 +21,7 @@ from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.mash_utils import (
     format_string_with_date,
-    timestamp_from_epoch,
-    create_json_file
+    timestamp_from_epoch
 )
 from mash.services.status_levels import SUCCESS
 from mash.utils.azure import (
@@ -78,49 +77,46 @@ class AzureUploadJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        with create_json_file(credentials) as auth_file:
-            exists = blob_exists(
-                auth_file,
+        exists = blob_exists(
+            credentials,
+            blob_name,
+            self.container,
+            self.resource_group,
+            self.storage_account
+        )
+
+        if exists and not self.force_replace_image:
+            raise MashUploadException(
+                'Image tarball: {blob_name} already exists '
+                'in container: {container}. Use force_replace_image '
+                'to replace the existing tarball.'.format(
+                    blob_name=blob_name,
+                    container=self.container
+                )
+            )
+        elif exists and self.force_replace_image:
+            self.log_callback.info(
+                'Deleting tarball: {0}, in the container named: '
+                '{1}.'.format(
+                    blob_name,
+                    self.container
+                )
+            )
+            delete_blob(
+                credentials,
                 blob_name,
                 self.container,
                 self.resource_group,
-                self.storage_account,
-                is_page_blob=True
+                self.storage_account
             )
-
-            if exists and not self.force_replace_image:
-                raise MashUploadException(
-                    'Image tarball: {blob_name} already exists '
-                    'in container: {container}. Use force_replace_image '
-                    'to replace the existing tarball.'.format(
-                        blob_name=blob_name,
-                        container=self.container
-                    )
-                )
-            elif exists and self.force_replace_image:
-                self.log_callback.info(
-                    'Deleting tarball: {0}, in the container named: '
-                    '{1}.'.format(
-                        blob_name,
-                        self.container
-                    )
-                )
-                delete_blob(
-                    auth_file,
-                    blob_name,
-                    self.container,
-                    self.resource_group,
-                    self.storage_account,
-                    is_page_blob=True
-                )
 
         upload_azure_file(
             blob_name,
             self.container,
             self.status_msg['image_file'],
-            self.config.get_azure_max_retry_attempts(),
-            self.config.get_azure_max_workers(),
             self.storage_account,
+            max_retry_attempts=self.config.get_azure_max_retry_attempts(),
+            max_workers=self.config.get_azure_max_workers(),
             credentials=credentials,
             resource_group=self.resource_group,
             is_page_blob=True

@@ -97,9 +97,9 @@ class TestAzureUploadJob(object):
             'name v20200925.vhd',
             'container',
             'file.vhdfixed.xz',
-            5,
-            8,
             'storage',
+            max_retry_attempts=5,
+            max_workers=8,
             credentials=self.credentials['test'],
             resource_group='group_name',
             is_page_blob=True

@@ -301,20 +301,6 @@ class TestJobCreatorService(object):
         assert data['raw_image_upload_account'] == 'account'
         assert data['raw_image_upload_location'] == 'location'
 
-        # Replicate Job Doc
-
-        data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
-        check_base_attrs(data)
-        assert data['cleanup_images']
-        assert data['region'] == 'southcentralus'
-        assert data['account'] == 'test-azure'
-        assert data['source_container'] == 'container1'
-        assert data['source_resource_group'] == 'rg-1'
-        assert data['source_storage_account'] == 'sa1'
-        assert data['destination_container'] == 'container2'
-        assert data['destination_resource_group'] == 'rg-2'
-        assert data['destination_storage_account'] == 'sa2'
-
         # Publish Job Doc
 
         data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
@@ -328,9 +314,9 @@ class TestJobCreatorService(object):
         assert data['cloud_image_name_generation_suffix'] == 'gen2'
         assert data['vm_images_key'] == 'key123'
         assert data['account'] == 'test-azure'
-        assert data['container'] == 'container2'
-        assert data['resource_group'] == 'rg-2'
-        assert data['storage_account'] == 'sa2'
+        assert data['container'] == 'container1'
+        assert data['resource_group'] == 'rg-1'
+        assert data['storage_account'] == 'sa1'
 
         # Deprecate Job Doc
 

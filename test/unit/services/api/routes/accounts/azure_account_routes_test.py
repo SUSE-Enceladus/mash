@@ -21,9 +21,6 @@ def test_api_add_account_azure(
         "source_container": "string",
         "source_resource_group": "string",
         "source_storage_account": "string",
-        "destination_container": "string",
-        "destination_resource_group": "string",
-        "destination_storage_account": "string",
         "credentials": {
             "clientId": "string",
             "clientSecret": "string",
@@ -115,9 +112,6 @@ def test_api_get_account_azure(
         'source_container': 'container1',
         'source_resource_group': 'group1',
         'source_storage_account': 'account1',
-        'destination_container': 'container2',
-        'destination_resource_group': 'group2',
-        'destination_storage_account': 'account2'
     }
 
     response = Mock()
@@ -135,9 +129,6 @@ def test_api_get_account_azure(
     assert result.json['source_container'] == "container1"
     assert result.json['source_resource_group'] == "group1"
     assert result.json['source_storage_account'] == "account1"
-    assert result.json['destination_container'] == "container2"
-    assert result.json['destination_resource_group'] == "group2"
-    assert result.json['destination_storage_account'] == "account2"
 
     # Not found
     response.json.return_value = {}
@@ -162,10 +153,7 @@ def test_api_get_account_list_azure(
         'region': 'useast',
         'source_container': 'container1',
         'source_resource_group': 'group1',
-        'source_storage_account': 'account1',
-        'destination_container': 'container2',
-        'destination_resource_group': 'group2',
-        'destination_storage_account': 'account2'
+        'source_storage_account': 'account1'
     }
 
     response = Mock()
@@ -183,9 +171,6 @@ def test_api_get_account_list_azure(
     assert result.json[0]['source_container'] == "container1"
     assert result.json[0]['source_resource_group'] == "group1"
     assert result.json[0]['source_storage_account'] == "account1"
-    assert result.json[0]['destination_container'] == "container2"
-    assert result.json[0]['destination_resource_group'] == "group2"
-    assert result.json[0]['destination_storage_account'] == "account2"
 
 
 @patch('mash.services.api.utils.accounts.azure.handle_request')
@@ -203,10 +188,7 @@ def test_api_update_account_azure(
         'region': 'useast',
         'source_container': 'container1',
         'source_resource_group': 'group1',
-        'source_storage_account': 'account1',
-        'destination_container': 'container2',
-        'destination_resource_group': 'group2',
-        'destination_storage_account': 'account2'
+        'source_storage_account': 'account1'
     }
 
     response = Mock()

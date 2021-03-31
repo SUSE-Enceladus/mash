@@ -27,10 +27,7 @@ azure_account = {
         'region': string_with_example('westus'),
         'source_container': string_with_example('container1'),
         'source_resource_group': string_with_example('res_group1'),
-        'source_storage_account': string_with_example('storage_account1'),
-        'destination_container': string_with_example('container2'),
-        'destination_resource_group': string_with_example('res_group2'),
-        'destination_storage_account': string_with_example('storage_account2')
+        'source_storage_account': string_with_example('storage_account1')
     },
     'additionalProperties': False,
     'required': [
@@ -38,10 +35,7 @@ azure_account = {
         'region',
         'source_container',
         'source_resource_group',
-        'source_storage_account',
-        'destination_container',
-        'destination_resource_group',
-        'destination_storage_account'
+        'source_storage_account'
     ]
 }
 
@@ -105,9 +99,6 @@ azure_account_update = {
         'source_container': string_with_example('container1'),
         'source_resource_group': string_with_example('res_group1'),
         'source_storage_account': string_with_example('storage_account1'),
-        'destination_container': string_with_example('container2'),
-        'destination_resource_group': string_with_example('res_group2'),
-        'destination_storage_account': string_with_example('storage_account2'),
         'credentials': azure_credentials
     },
     'additionalProperties': False,
@@ -116,9 +107,6 @@ azure_account_update = {
         {'required': ['source_container']},
         {'required': ['source_resource_group']},
         {'required': ['source_storage_account']},
-        {'required': ['destination_container']},
-        {'required': ['destination_resource_group']},
-        {'required': ['destination_storage_account']},
         {'required': ['credentials']}
     ]
 }

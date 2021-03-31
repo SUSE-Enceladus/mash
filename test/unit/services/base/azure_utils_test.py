@@ -12,12 +12,9 @@ from mash.utils.azure import (
     delete_image,
     delete_blob,
     deprecate_image_in_offer_doc,
-    get_classic_storage_account_keys,
     get_blob_url,
     go_live_with_cloud_partner_offer,
-    copy_blob_to_classic_storage,
     get_blob_service_with_account_keys,
-    get_classic_blob_service,
     log_operation_response_status,
     publish_cloud_partner_offer,
     put_cloud_partner_offer_doc,
@@ -26,10 +23,17 @@ from mash.utils.azure import (
     wait_on_cloud_partner_operation,
     upload_azure_file,
     get_blob_service_with_sas_token,
-    list_blobs,
     blob_exists,
-    image_exists
+    image_exists,
+    get_client_from_json
 )
+
+creds = {
+    "clientId": "09876543-1234-1234-1234-123456789012",
+    "clientSecret": "09876543-1234-1234-1234-123456789012",
+    "subscriptionId": "09876543-1234-1234-1234-123456789012",
+    "tenantId": "09876543-1234-1234-1234-123456789012"
+}
 
 
 @patch('mash.utils.azure.adal')
@@ -80,51 +84,28 @@ def test_acquire_access_token_cloud_partner(mock_adal):
     )
 
 
-@patch('mash.utils.azure.acquire_access_token')
-@patch('mash.utils.azure.requests')
-def test_get_classic_storage_account_keys(
-    mock_requests, mock_acquire_access_token
-):
-    mock_acquire_access_token.return_value = '1234567890'
-    response = MagicMock()
-    response.json.return_value = {'primaryKey': '123', 'secondaryKey': '321'}
-    mock_requests.post.return_value = response
-
-    keys = get_classic_storage_account_keys(
-        'test/data/azure_creds.json', 'rg1', 'sa1'
-    )
-
-    assert keys['primaryKey'] == '123'
-    assert keys['secondaryKey'] == '321'
-
-
-def test_get_blob_url():
-    page_blob_service = MagicMock()
-    page_blob_service.generate_container_shared_access_signature \
-        .return_value = 'token123'
-    page_blob_service.make_blob_url.return_value = 'https://test/url/?token123'
+@patch('mash.utils.azure.generate_blob_sas')
+def test_get_blob_url(mock_generate_blob_sas):
+    blob_service = MagicMock()
+    blob_service.credential.account_key = 'key123'
+    mock_generate_blob_sas.return_value = 'token123'
 
     url = get_blob_url(
-        page_blob_service, 'blob1', 'container1'
+        blob_service, 'blob1', 'sa1', 'container1'
     )
 
-    assert url == 'https://test/url/?token123'
-    page_blob_service.make_blob_url.assert_called_once_with(
-        'container1',
-        'blob1',
-        sas_token='token123'
-    )
+    sas_url = 'https://sa1.blob.core.windows.net/container1/blob1?token123'
+    assert url == sas_url
 
 
-@patch('mash.utils.azure.get_client_from_auth_file')
-@patch('mash.utils.azure.BlockBlobService')
-@patch('mash.utils.azure.PageBlobService')
+@patch('mash.utils.azure.get_client_from_json')
+@patch('mash.utils.azure.BlobServiceClient')
 def test_get_blob_service_with_account_keys(
-    mock_page_blob_service, mock_block_blob_service,
-    mock_get_client_from_auth
+    mock_blob_service,
+    mock_get_client_from_json
 ):
     storage_client = MagicMock()
-    mock_get_client_from_auth.return_value = storage_client
+    mock_get_client_from_json.return_value = storage_client
 
     key1 = MagicMock()
     key1.value = '12345678'
@@ -135,182 +116,74 @@ def test_get_blob_service_with_account_keys(
     storage_client.storage_accounts.list_keys.return_value = key_list
 
     blob_service = MagicMock()
-    mock_page_blob_service.return_value = blob_service
-    mock_block_blob_service.return_value = blob_service
+    mock_blob_service.return_value = blob_service
 
     service = get_blob_service_with_account_keys(
-        'test/data/azure_creds.json', 'sa1', 'rg1', is_page_blob=True
+        creds, 'rg1', 'sa1'
     )
 
     assert service == blob_service
     storage_client.storage_accounts.list_keys.assert_called_once_with(
         'rg1', 'sa1'
     )
-    mock_page_blob_service.assert_called_once_with(
-        account_name='sa1', account_key='12345678'
+    mock_blob_service.assert_called_once_with(
+        account_url='https://sa1.blob.core.windows.net',
+        credential='12345678'
     )
-
-    service = get_blob_service_with_account_keys(
-        'test/data/azure_creds.json', 'sa1', 'rg1'
-    )
-    assert service == blob_service
-
-
-@patch('mash.utils.azure.get_classic_storage_account_keys')
-@patch('mash.utils.azure.BlockBlobService')
-@patch('mash.utils.azure.PageBlobService')
-def test_get_classic_blob_service(
-    mock_page_blob_service, mock_block_blob_service,
-    mock_get_classic_storage_account_keys
-):
-    keys = {'primaryKey': '12345678'}
-    mock_get_classic_storage_account_keys.return_value = keys
-
-    blob_service = MagicMock()
-    mock_page_blob_service.return_value = blob_service
-    mock_block_blob_service.return_value = blob_service
-
-    service = get_classic_blob_service(
-        'test/data/azure_creds.json', 'rg1', 'sa1', is_page_blob=True
-    )
-
-    assert service == blob_service
-    mock_page_blob_service.assert_called_once_with(
-        account_name='sa1', account_key='12345678'
-    )
-
-    service = get_classic_blob_service(
-        'test/data/azure_creds.json', 'rg1', 'sa1'
-    )
-
-    assert service == blob_service
-
-    # Error
-    keys = {'error': {'some': 'data'}}
-    mock_get_classic_storage_account_keys.return_value = keys
-
-    with raises(MashAzureUtilsException):
-        get_classic_blob_service(
-            'test/data/azure_creds.json', 'rg1', 'sa1'
-        )
-
-
-@patch('mash.utils.azure.get_blob_url')
-@patch('mash.utils.azure.get_blob_service_with_account_keys')
-@patch('mash.utils.azure.get_classic_blob_service')
-@patch('mash.utils.azure.time.sleep')
-def test_copy_blob_to_classic_storage(
-    mock_time, mock_get_classic_blob_service,
-    mock_get_blob_service, mock_get_blob_url
-):
-    mock_get_blob_url.return_value = 'https://test/url/?token123'
-
-    copy = MagicMock()
-    copy.status = 'pending'
-
-    props_copy = MagicMock()
-    props_copy.properties.copy.status = 'success'
-
-    blob_service = MagicMock()
-    blob_service.copy_blob.return_value = copy
-    blob_service.get_blob_properties.return_value = props_copy
-    mock_get_classic_blob_service.return_value = blob_service
-
-    mock_get_blob_service.return_value = blob_service
-
-    copy_blob_to_classic_storage(
-        'test/data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
-        'dc2', 'drg2', 'dsa2', is_page_blob=True
-    )
-
-    mock_get_blob_url.assert_called_once_with(
-        blob_service, 'blob1', 'sc1'
-    )
-
-
-@patch('mash.utils.azure.get_blob_url')
-@patch('mash.utils.azure.get_blob_service_with_account_keys')
-@patch('mash.utils.azure.get_classic_blob_service')
-def test_copy_blob_to_classic_storage_failed(
-    mock_get_classic_blob_service, mock_get_blob_service,
-    mock_get_blob_url
-):
-    mock_get_blob_url.return_value = 'https://test/url/?token123'
-
-    copy = MagicMock()
-    copy.status = 'failed'
-
-    blob_service = MagicMock()
-    blob_service.copy_blob.return_value = copy
-    mock_get_classic_blob_service.return_value = blob_service
-
-    with raises(MashAzureUtilsException) as error:
-        copy_blob_to_classic_storage(
-            'test/data/azure_creds.json', 'blob1', 'sc1', 'srg1', 'ssa1',
-            'dc2', 'drg2', 'dsa2', is_page_blob=True
-        )
-
-    assert str(error.value) == 'Azure blob copy failed.'
 
 
 @patch('mash.utils.azure.get_blob_service_with_account_keys')
 def test_delete_blob(mock_get_blob_service):
     blob_service = MagicMock()
+    container_client = MagicMock()
+    blob_client = MagicMock()
+
+    container_client.get_blob_client.return_value = blob_client
+    blob_service.get_container_client.return_value = container_client
     mock_get_blob_service.return_value = blob_service
 
     delete_blob(
-        'test/data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
+        creds, 'blob1', 'container1', 'rg1', 'sa1'
     )
 
-    blob_service.delete_blob.assert_called_once_with(
-        'container1',
-        'blob1'
-    )
+    blob_client.delete_blob.assert_called_once_with()
 
 
-@patch('mash.utils.azure.list_blobs')
-def test_blob_exists(mock_list_blobs):
-    mock_list_blobs.return_value = 'blob1'
+@patch('mash.utils.azure.get_blob_service_with_account_keys')
+def test_blob_exists(mock_get_blob_service):
+    blob_service = MagicMock()
+    container_client = MagicMock()
+    blob_client = MagicMock()
+
+    blob_client.exists.return_value = True
+    container_client.get_blob_client.return_value = blob_client
+    blob_service.get_container_client.return_value = container_client
+    mock_get_blob_service.return_value = blob_service
 
     result = blob_exists(
-        'test/data/azure_creds.json', 'blob1', 'container1', 'rg1', 'sa1'
+        creds, 'blob1', 'container1', 'rg1', 'sa1'
     )
 
     assert result
 
 
-@patch('mash.utils.azure.get_blob_service_with_account_keys')
-def test_list_blobs(mock_get_blob_service):
-    blob = MagicMock()
-    blob.name = 'blob.vhd'
-    blob_service = MagicMock()
-    blob_service.list_blobs.return_value = [blob]
-    mock_get_blob_service.return_value = blob_service
-
-    blobs = list_blobs(
-        'test/data/azure_creds.json', 'container1', 'rg1', 'sa1'
-    )
-
-    assert 'blob.vhd' in blobs
-
-
-@patch('mash.utils.azure.get_client_from_auth_file')
+@patch('mash.utils.azure.get_client_from_json')
 def test_delete_image(mock_get_client):
     compute_client = MagicMock()
     async_wait = MagicMock()
-    compute_client.images.delete.return_value = async_wait
+    compute_client.images.begin_delete.return_value = async_wait
     mock_get_client.return_value = compute_client
 
     delete_image(
-        'test/data/azure_creds.json', 'rg1', 'image123'
+        creds, 'rg1', 'image123'
     )
-    compute_client.images.delete.assert_called_once_with(
+    compute_client.images.begin_delete.assert_called_once_with(
         'rg1', 'image123'
     )
-    async_wait.wait.assert_called_once_with()
+    async_wait.result.assert_called_once_with()
 
 
-@patch('mash.utils.azure.get_client_from_auth_file')
+@patch('mash.utils.azure.get_client_from_json')
 def test_image_exists(mock_get_client):
     compute_client = MagicMock()
     image = MagicMock()
@@ -319,7 +192,7 @@ def test_image_exists(mock_get_client):
     mock_get_client.return_value = compute_client
 
     result = image_exists(
-        'test/data/azure_creds.json', 'image123'
+        creds, 'image123'
     )
 
     assert result
@@ -467,6 +340,30 @@ def test_update_cloud_partner_offer_doc():
     assert plan[vm_images_key][release]['label'] == 'New Image 123'
     assert plan['diskGenerations'][0][vm_images_key][release]['mediaName'] == \
         'new-image-gen2'
+
+    with raises(MashAzureUtilsException):
+        update_cloud_partner_offer_doc(
+            doc,
+            'blob/url/.vhd',
+            'New image for v123',
+            'new-image',
+            'New Image 123',
+            'gen2',
+            generation_id='image-gen2',
+            cloud_image_name_generation_suffix='gen2'
+        )
+
+    with raises(MashAzureUtilsException):
+        update_cloud_partner_offer_doc(
+            doc,
+            'blob/url/.vhd',
+            'New image for v123',
+            'new-image',
+            'New Image 123',
+            'gen1',
+            generation_id='image-gen3',
+            cloud_image_name_generation_suffix='gen2'
+        )
 
 
 def test_update_cloud_partner_offer_doc_existing_date():
@@ -624,23 +521,17 @@ def test_deprecate_image_in_offer_invalid():
 
 
 @patch('builtins.open')
-@patch('mash.utils.azure.create_json_file')
-@patch('mash.utils.azure.get_client_from_auth_file')
-@patch('mash.utils.azure.PageBlobService')
+@patch('mash.utils.azure.get_client_from_json')
+@patch('mash.utils.azure.BlobServiceClient')
 @patch('mash.utils.azure.FileType')
 @patch('mash.utils.azure.lzma')
 def test_upload_azure_file(
     mock_lzma,
     mock_FileType,
-    mock_PageBlobService,
-    mock_get_client_from_auth_file,
-    mock_create_json_file,
+    mock_blob_service,
+    mock_get_client_from_json,
     mock_open
 ):
-    creds_handle = MagicMock()
-    creds_handle.__enter__.return_value = 'tempfile'
-    mock_create_json_file.return_value = creds_handle
-
     lzma_handle = MagicMock()
     lzma_handle.__enter__.return_value = lzma_handle
     mock_lzma.LZMAFile.return_value = lzma_handle
@@ -650,10 +541,15 @@ def test_upload_azure_file(
     mock_open.return_value = open_handle
 
     client = MagicMock()
-    mock_get_client_from_auth_file.return_value = client
+    mock_get_client_from_json.return_value = client
 
-    page_blob_service = MagicMock()
-    mock_PageBlobService.return_value = page_blob_service
+    blob_service = MagicMock()
+    mock_blob_service.return_value = blob_service
+
+    container_client = MagicMock()
+    blob_client = MagicMock()
+    container_client.get_blob_client.return_value = blob_client
+    blob_service.get_container_client.return_value = container_client
 
     key_type = namedtuple('key_type', ['value', 'key_name'])
     async_create_image = MagicMock()
@@ -688,51 +584,54 @@ def test_upload_azure_file(
         'name.vhd',
         'container',
         'file.vhdfixed.xz',
-        5,
-        8,
         'storage',
+        max_retry_attempts=5,
+        max_workers=8,
         credentials=credentials,
         resource_group='group_name',
         is_page_blob=True
     )
 
-    mock_get_client_from_auth_file.assert_called_once_with(
+    mock_get_client_from_json.assert_called_once_with(
         StorageManagementClient,
-        auth_path='tempfile'
+        credentials
     )
     client.storage_accounts.list_keys.assert_called_once_with(
         'group_name', 'storage'
     )
-    mock_PageBlobService.assert_called_once_with(
-        account_key='key', account_name='storage'
+    mock_blob_service.assert_called_once_with(
+        account_url='https://storage.blob.core.windows.net',
+        credential='key'
     )
     mock_FileType.assert_called_once_with('file.vhdfixed.xz')
     system_image_file_type.is_xz.assert_called_once_with()
-    page_blob_service.create_blob_from_stream.assert_called_once_with(
-        'container', 'name.vhd', lzma_handle, 1024,
-        max_connections=8
+    blob_client.upload_blob.assert_called_once_with(
+        lzma_handle,
+        blob_type='PageBlob',
+        length=1024,
+        max_concurrency=8
     )
 
     # Test sas token upload
-    mock_PageBlobService.reset_mock()
+    mock_blob_service.reset_mock()
     upload_azure_file(
         'name.vhd',
         'container',
         'file.vhdfixed.xz',
-        5,
-        8,
         'storage',
+        max_retry_attempts=5,
+        max_workers=8,
         sas_token='sas_token',
         is_page_blob=True
     )
-    mock_PageBlobService.assert_called_once_with(
-        account_name='storage',
-        sas_token='sas_token'
+    mock_blob_service.assert_called_once_with(
+        account_url='https://storage.blob.core.windows.net',
+        credential='sas_token'
     )
 
     # Test image blob create exception
     system_image_file_type.is_xz.return_value = False
-    page_blob_service.create_blob_from_stream.side_effect = Exception
+    blob_client.upload_blob.side_effect = Exception
 
     # Assert raises exception if create blob fails
     with raises(MashAzureUtilsException):
@@ -740,12 +639,11 @@ def test_upload_azure_file(
             'name.vhd',
             'container',
             'file.vhdfixed.xz',
-            5,
-            8,
             'storage',
+            max_retry_attempts=5,
+            max_workers=8,
             credentials=credentials,
-            resource_group='group_name',
-            is_page_blob=True
+            resource_group='group_name'
         )
 
     # Assert raises exception if missing required args
@@ -754,16 +652,31 @@ def test_upload_azure_file(
             'name.vhd',
             'container',
             'file.vhdfixed.xz',
-            5,
-            8,
             'storage',
+            max_retry_attempts=5,
+            max_workers=8,
             is_page_blob=True
         )
 
 
-@patch('mash.utils.azure.BlockBlobService')
-def test_get_blob_service_with_sas_token(mock_block_blob_service):
+@patch('mash.utils.azure.BlobServiceClient')
+def test_get_blob_service_with_sas_token(mock_blob_service):
     blob_service = MagicMock()
-    mock_block_blob_service.return_value = blob_service
+    mock_blob_service.return_value = blob_service
     service = get_blob_service_with_sas_token('storage', 'sas_token')
     assert service == blob_service
+
+
+@patch('mash.utils.azure.ClientSecretCredential')
+def test_get_client_from_json(mock_cred_client):
+    cred = MagicMock()
+    client = MagicMock()
+    mock_cred_client.return_value = cred
+
+    get_client_from_json(client, creds)
+
+    mock_cred_client.assert_called_once_with(
+        tenant_id=creds['tenantId'],
+        client_id=creds['clientId'],
+        client_secret=creds['clientSecret']
+    )

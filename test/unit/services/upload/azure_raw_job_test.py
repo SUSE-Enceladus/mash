@@ -85,9 +85,9 @@ class TestAzureRawUploadJob(object):
                 'file.vhdfixed.xz.sha256.asc',
                 'container',
                 'file.vhdfixed.xz.sha256.asc',
-                5,
-                8,
                 'storage',
+                max_retry_attempts=5,
+                max_workers=8,
                 credentials=self.credentials['test'],
                 resource_group='group_name',
                 expand_image=False
@@ -96,9 +96,9 @@ class TestAzureRawUploadJob(object):
                 'file.vhdfixed.xz',
                 'container',
                 'file.vhdfixed.xz',
-                5,
-                8,
                 'storage',
+                max_retry_attempts=5,
+                max_workers=8,
                 credentials=self.credentials['test'],
                 resource_group='group_name',
                 expand_image=False

@@ -72,9 +72,9 @@ class AzureRawUploadJob(MashJob):
                 upload_file_name,
                 self.container,
                 file_path,
-                self.config.get_azure_max_retry_attempts(),
-                self.config.get_azure_max_workers(),
                 self.storage_account,
+                max_retry_attempts=self.config.get_azure_max_retry_attempts(),
+                max_workers=self.config.get_azure_max_workers(),
                 credentials=credentials,
                 resource_group=self.resource_group,
                 expand_image=False

@@ -28,10 +28,11 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-adal
-BuildRequires:  python3-azure-mgmt-compute < 5.0.0
+BuildRequires:  python3-azure-identity
+BuildRequires:  python3-azure-mgmt-compute >= 17.0.0
 BuildRequires:  python3-azure-mgmt-resource
 BuildRequires:  python3-azure-mgmt-storage
-BuildRequires:  python3-azure-storage-blob < 12.0.0
+BuildRequires:  python3-azure-storage-blob >= 12.0.0
 BuildRequires:  python3-boto3
 BuildRequires:  python3-cryptography >= 2.2.0
 BuildRequires:  python3-PyYAML
@@ -57,10 +58,11 @@ BuildRequires:  python3-google-cloud-storage
 BuildRequires:  python3-google-api-python-client
 Requires:       rabbitmq-server
 Requires:       python3-adal
-Requires:       python3-azure-mgmt-compute < 5.0.0
+Requires:       python3-azure-identity
+Requires:       python3-azure-mgmt-compute >= 17.0.0
 Requires:       python3-azure-mgmt-resource
 Requires:       python3-azure-mgmt-storage
-Requires:       python3-azure-storage-blob < 12.0.0
+Requires:       python3-azure-storage-blob >= 12.0.0
 Requires:       python3-boto3
 Requires:       python3-cryptography >= 2.2.0
 Requires:       python3-PyYAML

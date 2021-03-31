@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2021 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,15 +16,13 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from azure.common.client_factory import get_client_from_auth_file
 from azure.mgmt.compute import ComputeManagementClient
 
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashCreateException
-from mash.utils.mash_utils import create_json_file
 from mash.services.status_levels import SUCCESS
-from mash.utils.azure import image_exists, delete_image
+from mash.utils.azure import image_exists, delete_image, get_client_from_json
 
 
 class AzureCreateJob(MashJob):
@@ -46,8 +44,11 @@ class AzureCreateJob(MashJob):
                 )
             )
 
+        self.boot_firmware = self.job_config.get('boot_firmware', ['bios'])
+
     def run_job(self):
         self.status = SUCCESS
+        self.status_msg['images'] = {}
         self.log_callback.info('Creating image.')
 
         self.cloud_image_name = self.status_msg['cloud_image_name']
@@ -56,20 +57,13 @@ class AzureCreateJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        with create_json_file(credentials) as auth_file:
-            if image_exists(auth_file, self.cloud_image_name):
-                self.log_callback.info(
-                    'Deleting image: {0}, image will be replaced.'.format(
-                        self.cloud_image_name
-                    )
-                )
-                delete_image(
-                    auth_file,
-                    self.resource_group,
-                    self.cloud_image_name
-                )
-
-            self._create_image(self.blob_name, auth_file)
+        for firmware in self.boot_firmware:
+            image_name = self._create_image(
+                self.blob_name,
+                credentials,
+                boot_firmware=firmware
+            )
+            self.status_msg['images'][firmware] = image_name
 
         self.log_callback.info(
             'Image has ID: {0} in region {1}'.format(
@@ -78,18 +72,41 @@ class AzureCreateJob(MashJob):
             )
         )
 
-    def _create_image(self, blob_name, auth_file):
+    def _create_image(self, blob_name, credentials, boot_firmware='bios'):
         """
         Create image in ARM from existing page blob.
+
+        If boot firmware is uefi use hyper v generation of V2.
         """
-        compute_client = get_client_from_auth_file(
-            ComputeManagementClient, auth_path=auth_file
+        if boot_firmware == 'uefi':
+            hyper_v_generation = 'V2'
+            image_name = '{name}_uefi'.format(name=self.cloud_image_name)
+        else:
+            hyper_v_generation = 'V1'
+            image_name = self.cloud_image_name
+
+        if image_exists(credentials, image_name):
+            self.log_callback.info(
+                'Deleting image: {0}, image will be replaced.'.format(
+                    image_name
+                )
+            )
+            delete_image(
+                credentials,
+                self.resource_group,
+                image_name
+            )
+
+        compute_client = get_client_from_json(
+            ComputeManagementClient,
+            credentials
         )
-        async_create_image = compute_client.images.create_or_update(
+
+        async_create_image = compute_client.images.begin_create_or_update(
             self.resource_group,
-            self.cloud_image_name, {
+            image_name, {
                 'location': self.region,
-                'hyper_vgeneration': 'V1',
+                'hyper_v_generation': hyper_v_generation,
                 'storage_profile': {
                     'os_disk': {
                         'os_type': 'Linux',
@@ -105,4 +122,6 @@ class AzureCreateJob(MashJob):
                 }
             }
         )
-        async_create_image.wait()
+        async_create_image.result()
+
+        return image_name
