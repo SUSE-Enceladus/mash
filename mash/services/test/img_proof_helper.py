@@ -70,7 +70,7 @@ def img_proof_test(
         sev_capable=sev_capable,
         access_key=access_key,
         access_secret=access_secret,
-        vswitch_id=vswitch_id
+        v_switch_id=vswitch_id
     )
 
     status = SUCCESS if status == 0 else FAILED

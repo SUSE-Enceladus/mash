@@ -131,7 +131,7 @@ class TestEC2TestJob(object):
             sev_capable=None,
             access_key=None,
             access_secret=None,
-            vswitch_id=None
+            v_switch_id=None
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
         mock_cleanup_image.assert_called_once_with(

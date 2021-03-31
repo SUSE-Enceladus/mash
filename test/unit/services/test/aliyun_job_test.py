@@ -113,7 +113,7 @@ class TestAliyunTestJob(object):
             sev_capable=None,
             access_key='123456789',
             access_secret='987654321',
-            vswitch_id='vs1'
+            v_switch_id='vs1'
         )
         job._log_callback.info.reset_mock()
 
