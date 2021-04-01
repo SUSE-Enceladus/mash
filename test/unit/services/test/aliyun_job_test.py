@@ -83,7 +83,7 @@ class TestAliyunTestJob(object):
         job.run_job()
 
         mock_test_image.assert_called_once_with(
-            'alibaba',
+            'aliyun',
             access_key_id=None,
             availability_domain=None,
             cleanup=True,

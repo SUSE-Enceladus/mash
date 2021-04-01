@@ -94,7 +94,7 @@ class AliyunTestJob(MashJob):
 
         try:
             result = img_proof_test(
-                cloud='alibaba',  # Different name in img-proof
+                cloud=self.cloud,
                 access_key=credentials['access_key'],
                 access_secret=credentials['access_secret'],
                 description=self.description,
