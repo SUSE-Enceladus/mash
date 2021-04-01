@@ -61,7 +61,7 @@ class AliyunTestJob(MashJob):
         self.description = self.job_config.get('description')
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
-        self.ssh_user = self.job_config.get('ssh_user', 'root')
+        self.ssh_user = self.job_config.get('ssh_user', 'ali-user')
         self.cleanup_images = self.job_config.get('cleanup_images')
 
         if not self.instance_type:

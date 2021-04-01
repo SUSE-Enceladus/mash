@@ -102,7 +102,7 @@ class TestAliyunTestJob(object):
             signing_key_fingerprint=None,
             ssh_key_name=None,
             ssh_private_key_file='/var/lib/mash/ssh_key',
-            ssh_user='root',
+            ssh_user='ali-user',
             subnet_id=None,
             tenancy=None,
             tests=['test_stuff'],
