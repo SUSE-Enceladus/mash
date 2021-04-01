@@ -14,7 +14,7 @@ class TestAliyunReplicateJob(object):
             'last_service': 'replicate',
             'requesting_user': 'user1',
             'cloud': 'aliyun',
-            'cloud_account': 'acnt1',
+            'account': 'acnt1',
             'utctime': 'now',
             "region": "cn-beijing"
         }

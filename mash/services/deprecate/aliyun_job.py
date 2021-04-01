@@ -33,7 +33,7 @@ class AliyunDeprecateJob(MashJob):
         Post initialization method.
         """
         try:
-            self.account = self.job_config['cloud_account']
+            self.account = self.job_config['account']
             self.bucket = self.job_config['bucket']
             self.region = self.job_config['region']
         except KeyError as error:
