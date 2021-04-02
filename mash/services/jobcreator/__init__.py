@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2021 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -22,6 +22,7 @@ from mash.services.jobcreator.azure_job import AzureJob
 from mash.services.jobcreator.ec2_job import EC2Job
 from mash.services.jobcreator.gce_job import GCEJob
 from mash.services.jobcreator.oci_job import OCIJob
+from mash.services.jobcreator.aliyun_job import AliyunJob
 
 
 def create_job(job_doc):
@@ -35,6 +36,8 @@ def create_job(job_doc):
         job_class = GCEJob
     elif csp_name == CSP.oci:
         job_class = OCIJob
+    elif csp_name == CSP.aliyun:
+        job_class = AliyunJob
     else:
         raise MashJobCreatorException(
             'Support for {csp} Cloud Service not implemented'.format(

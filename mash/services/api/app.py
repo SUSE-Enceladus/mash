@@ -1,4 +1,4 @@
-# Copyright (c) 2020 SUSE LLC.  All rights reserved.
+# Copyright (c) 2021 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -39,12 +39,14 @@ from mash.services.api.routes.accounts.azure import api as azure_accounts_api
 from mash.services.api.routes.accounts.gce import api as gce_accounts_api
 from mash.services.api.routes.accounts.ec2 import api as ec2_accounts_api
 from mash.services.api.routes.accounts.oci import api as oci_accounts_api
+from mash.services.api.routes.accounts.aliyun import api as aliyun_accounts_api
 
 from mash.services.api.routes.jobs import api as jobs_api
 from mash.services.api.routes.jobs.ec2 import api as ec2_jobs_api
 from mash.services.api.routes.jobs.gce import api as gce_jobs_api
 from mash.services.api.routes.jobs.azure import api as azure_jobs_api
 from mash.services.api.routes.jobs.oci import api as oci_jobs_api
+from mash.services.api.routes.jobs.aliyun import api as aliyun_jobs_api
 
 
 @jwt.token_in_blacklist_loader
@@ -111,12 +113,14 @@ def register_namespaces():
     api.add_namespace(gce_accounts_api, path='/accounts/gce')
     api.add_namespace(ec2_accounts_api, path='/accounts/ec2')
     api.add_namespace(oci_accounts_api, path='/accounts/oci')
+    api.add_namespace(aliyun_accounts_api, path='/accounts/aliyun')
 
     api.add_namespace(jobs_api, path='/jobs')
     api.add_namespace(ec2_jobs_api, path='/jobs/ec2')
     api.add_namespace(gce_jobs_api, path='/jobs/gce')
     api.add_namespace(azure_jobs_api, path='/jobs/azure')
     api.add_namespace(oci_jobs_api, path='/jobs/oci')
+    api.add_namespace(aliyun_jobs_api, path='/jobs/aliyun')
 
 
 def register_extensions(app):

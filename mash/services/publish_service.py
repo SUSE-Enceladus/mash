@@ -27,6 +27,7 @@ from mash.services.job_factory import BaseJobFactory
 
 from mash.services.publish.azure_job import AzurePublishJob
 from mash.services.publish.ec2_job import EC2PublishJob
+from mash.services.publish.aliyun_job import AliyunPublishJob
 from mash.services.no_op_job import NoOpJob
 
 
@@ -48,7 +49,8 @@ def main():
                 'azure': AzurePublishJob,
                 'ec2': EC2PublishJob,
                 'gce': NoOpJob,
-                'oci': NoOpJob
+                'oci': NoOpJob,
+                'aliyun': AliyunPublishJob
             }
         )
 

@@ -15,19 +15,33 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-from collections import namedtuple
+
+from mash.services.api.utils.accounts.aliyun import get_aliyun_account
+from mash.services.api.utils.jobs import validate_job
 
 
-class CSP(object):
-    Constants = namedtuple(
-        'Constants', ['azure', 'ec2', 'gce', 'oci', 'aliyun']
+def validate_aliyun_job(job_doc):
+    """
+    Validate job.
+
+    And update target_account_info for given job doc.
+    """
+    job_doc = validate_job(job_doc)
+
+    cloud_account = get_aliyun_account(
+        job_doc['cloud_account'],
+        job_doc['requesting_user']
     )
-    constants = Constants(
-        'azure', 'ec2', 'gce', 'oci', 'aliyun'
-    )
 
-    azure = constants.azure
-    ec2 = constants.ec2
-    gce = constants.gce
-    oci = constants.oci
-    aliyun = constants.aliyun
+    attrs = [
+        'region',
+        'bucket',
+        'security_group_id',
+        'vswitch_id'
+    ]
+
+    for attr in attrs:
+        if attr not in job_doc:
+            job_doc[attr] = cloud_account.get(attr)
+
+    return job_doc
