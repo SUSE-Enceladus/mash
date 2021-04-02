@@ -1,7 +1,7 @@
 """Add Aliyun Account model
 
 Revision ID: 65c75c1736bf
-Revises: 5b98aeabbf5e
+Revises: c16a9ad64021
 Create Date: 2021-03-15 11:17:45.375986
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '65c75c1736bf'
-down_revision = '5b98aeabbf5e'
+down_revision = 'c16a9ad64021'
 branch_labels = None
 depends_on = None
 
