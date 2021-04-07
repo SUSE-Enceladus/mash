@@ -1,3 +1,17 @@
+v10.0.0 (2021-04-07)
+===================
+
+- Add helper error message when tests fail.
+  [\#735](https://github.com/SUSE-Enceladus/mash/pull/735)
+- Raise exception if offer doc not updated.
+  [\#739](https://github.com/SUSE-Enceladus/mash/pull/739)
+- Add paging for list job route.
+  [\#746](https://github.com/SUSE-Enceladus/mash/pull/746)
+- Use latest Azure SDK packages.
+  [\#757](https://github.com/SUSE-Enceladus/mash/pull/757)
+- Integrate Aliyun cloud.
+  [\#766](https://github.com/SUSE-Enceladus/mash/pull/766)
+
 v9.2.0 (2021-03-12)
 ===================
 
