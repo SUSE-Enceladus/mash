@@ -30,8 +30,8 @@ from mash.services.test.img_proof_helper import img_proof_test
 
 instance_types = [
     'Standard_B1s',
-    'Standard_D2_v3',
-    'Standard_E2_v3',
+    'Standard_D2s_v4',
+    'Standard_E2s_v4',
     'Standard_F2s_v2'
 ]
 
