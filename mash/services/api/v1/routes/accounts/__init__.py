@@ -1,4 +1,4 @@
-# Copyright (c) 2021 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -15,3 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+from flask_restplus import Namespace
+
+from mash.services.api.v1.schema.accounts import delete_account
+
+api = Namespace(
+    'accounts',
+    description='Account related operations'
+)
+delete_account_request = api.schema_model(
+    'delete_account_request',
+    delete_account
+)

@@ -1,4 +1,4 @@
-# Copyright (c) 2021 SUSE LLC.  All rights reserved.
+# Copyright (c) 2019 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -15,3 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+
+from mash.services.api.v1.schema import integer_with_example
+
+delete_account = {
+    'type': 'object',
+    'properties': {
+        'requesting_user': integer_with_example(42)
+    },
+    'additionalProperties': False,
+    'required': ['requesting_user']
+}

@@ -27,26 +27,26 @@ from mash.log.filter import BaseServiceFilter
 from mash.utils.mash_utils import setup_logfile, setup_rabbitmq_log_handler
 from mash.utils.email_notification import EmailNotification
 
-from mash.services.api.utils.tokens import is_token_revoked
+from mash.services.api.v1.utils.tokens import is_token_revoked
 
 from mash.services.api.routes.api_spec import spec_api
-from mash.services.api.routes.user import api as user_api
-from mash.services.api.routes.auth import api as auth_api
-from mash.services.api.routes.token import api as token_api
+from mash.services.api.v1.routes.user import api as v1_user_api
+from mash.services.api.v1.routes.auth import api as v1_auth_api
+from mash.services.api.v1.routes.token import api as v1_token_api
 
-from mash.services.api.routes.accounts import api as accounts_api
-from mash.services.api.routes.accounts.azure import api as azure_accounts_api
-from mash.services.api.routes.accounts.gce import api as gce_accounts_api
-from mash.services.api.routes.accounts.ec2 import api as ec2_accounts_api
-from mash.services.api.routes.accounts.oci import api as oci_accounts_api
-from mash.services.api.routes.accounts.aliyun import api as aliyun_accounts_api
+from mash.services.api.v1.routes.accounts import api as v1_accounts_api
+from mash.services.api.v1.routes.accounts.azure import api as v1_azure_accounts_api
+from mash.services.api.v1.routes.accounts.gce import api as v1_gce_accounts_api
+from mash.services.api.v1.routes.accounts.ec2 import api as v1_ec2_accounts_api
+from mash.services.api.v1.routes.accounts.oci import api as v1_oci_accounts_api
+from mash.services.api.v1.routes.accounts.aliyun import api as v1_aliyun_accounts_api
 
-from mash.services.api.routes.jobs import api as jobs_api
-from mash.services.api.routes.jobs.ec2 import api as ec2_jobs_api
-from mash.services.api.routes.jobs.gce import api as gce_jobs_api
-from mash.services.api.routes.jobs.azure import api as azure_jobs_api
-from mash.services.api.routes.jobs.oci import api as oci_jobs_api
-from mash.services.api.routes.jobs.aliyun import api as aliyun_jobs_api
+from mash.services.api.v1.routes.jobs import api as v1_jobs_api
+from mash.services.api.v1.routes.jobs.ec2 import api as v1_ec2_jobs_api
+from mash.services.api.v1.routes.jobs.gce import api as v1_gce_jobs_api
+from mash.services.api.v1.routes.jobs.azure import api as v1_azure_jobs_api
+from mash.services.api.v1.routes.jobs.oci import api as v1_oci_jobs_api
+from mash.services.api.v1.routes.jobs.aliyun import api as v1_aliyun_jobs_api
 
 
 @jwt.token_in_blacklist_loader
@@ -104,23 +104,25 @@ def configure_mailer(app):
 def register_namespaces():
     """Register Flask restplus namespaces."""
     api.add_namespace(spec_api, path='/api/spec')
-    api.add_namespace(user_api, path='/user')
-    api.add_namespace(auth_api, path='/auth')
-    api.add_namespace(token_api, path='/auth/token')
 
-    api.add_namespace(accounts_api, path='/accounts')
-    api.add_namespace(azure_accounts_api, path='/accounts/azure')
-    api.add_namespace(gce_accounts_api, path='/accounts/gce')
-    api.add_namespace(ec2_accounts_api, path='/accounts/ec2')
-    api.add_namespace(oci_accounts_api, path='/accounts/oci')
-    api.add_namespace(aliyun_accounts_api, path='/accounts/aliyun')
+    # V1
+    api.add_namespace(v1_user_api, path='/v1/user')
+    api.add_namespace(v1_auth_api, path='/v1/auth')
+    api.add_namespace(v1_token_api, path='/v1/auth/token')
 
-    api.add_namespace(jobs_api, path='/jobs')
-    api.add_namespace(ec2_jobs_api, path='/jobs/ec2')
-    api.add_namespace(gce_jobs_api, path='/jobs/gce')
-    api.add_namespace(azure_jobs_api, path='/jobs/azure')
-    api.add_namespace(oci_jobs_api, path='/jobs/oci')
-    api.add_namespace(aliyun_jobs_api, path='/jobs/aliyun')
+    api.add_namespace(v1_accounts_api, path='/v1/accounts')
+    api.add_namespace(v1_azure_accounts_api, path='/v1/accounts/azure')
+    api.add_namespace(v1_gce_accounts_api, path='/v1/accounts/gce')
+    api.add_namespace(v1_ec2_accounts_api, path='/v1/accounts/ec2')
+    api.add_namespace(v1_oci_accounts_api, path='/v1/accounts/oci')
+    api.add_namespace(v1_aliyun_accounts_api, path='/v1/accounts/aliyun')
+
+    api.add_namespace(v1_jobs_api, path='/v1/jobs')
+    api.add_namespace(v1_ec2_jobs_api, path='/v1/jobs/ec2')
+    api.add_namespace(v1_gce_jobs_api, path='/v1/jobs/gce')
+    api.add_namespace(v1_azure_jobs_api, path='/v1/jobs/azure')
+    api.add_namespace(v1_oci_jobs_api, path='/v1/jobs/oci')
+    api.add_namespace(v1_aliyun_jobs_api, path='/v1/jobs/aliyun')
 
 
 def register_extensions(app):
