@@ -19,7 +19,7 @@
 import json
 
 from flask import Blueprint, current_app, jsonify, request, make_response
-from flask_restplus import marshal, fields, Model
+from flask_restx import marshal, fields, Model
 from sqlalchemy.exc import IntegrityError
 
 from mash.services.database.utils.accounts.aliyun import (

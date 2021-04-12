@@ -17,7 +17,7 @@
 #
 
 from flask import jsonify
-from flask_restplus import Namespace, Resource
+from flask_restx import Namespace, Resource
 
 from mash.services.api.extensions import api
 

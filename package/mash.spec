@@ -46,7 +46,7 @@ BuildRequires:  python3-img-proof >= 7.0.0
 BuildRequires:  python3-img-proof-tests >= 7.0.0
 BuildRequires:  python3-lxml
 BuildRequires:  python3-Flask
-BuildRequires:  python3-flask-restplus
+BuildRequires:  python3-flask-restx
 BuildRequires:  python3-Flask-SQLAlchemy
 BuildRequires:  python3-Flask-Migrate
 BuildRequires:  python3-flask-jwt-extended
@@ -77,7 +77,7 @@ Requires:       python3-img-proof >= 7.0.0
 Requires:       python3-img-proof-tests >= 7.0.0
 Requires:       python3-lxml
 Requires:       python3-Flask
-Requires:       python3-flask-restplus
+Requires:       python3-flask-restx
 Requires:       python3-Flask-SQLAlchemy
 Requires:       python3-Flask-Migrate
 Requires:       python3-flask-jwt-extended

@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from flask_restplus import Namespace
+from flask_restx import Namespace
 
 from mash.services.api.v1.schema.accounts import delete_account
 

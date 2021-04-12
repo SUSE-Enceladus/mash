@@ -17,7 +17,7 @@
 #
 
 from flask import jsonify, make_response
-from flask_restplus import fields, Namespace, Resource
+from flask_restx import fields, Namespace, Resource
 
 from flask_jwt_extended import (
     create_access_token,

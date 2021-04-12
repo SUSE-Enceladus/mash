@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from flask_restplus import fields, Model
+from flask_restx import fields, Model
 
 
 def string_with_example(example, description='', min_length=1):
