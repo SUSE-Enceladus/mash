@@ -19,7 +19,7 @@
 import json
 
 from flask import Blueprint, current_app, jsonify, request, make_response
-from flask_restplus import marshal, fields, Model
+from flask_restx import marshal, fields, Model
 
 from mash.services.database.utils.tokens import (
     add_user_token,

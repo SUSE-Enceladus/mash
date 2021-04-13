@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2021 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -17,7 +17,7 @@
 #
 
 from flask import jsonify
-from flask_restplus import Namespace, Resource
+from flask_restx import Namespace, Resource
 
 from mash.services.api.extensions import api
 

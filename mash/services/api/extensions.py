@@ -16,7 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from flask_restplus import Api
+from flask_restx import Api
 from flask_jwt_extended import JWTManager
 
 authorizations = {
