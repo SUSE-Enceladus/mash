@@ -30,9 +30,9 @@ from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.storage.blob import (
-    BlobSasPermissions,
     BlobServiceClient,
-    generate_blob_sas
+    generate_container_sas,
+    ContainerSasPermissions
 )
 
 from mash.mash_exceptions import MashAzureUtilsException
@@ -150,18 +150,16 @@ def create_sas_token(
     blob_service,
     storage_account,
     container,
-    blob_name,
-    permissions=BlobSasPermissions(read=True),
+    permissions=ContainerSasPermissions(read=True, list=True),
     expire_hours=1,
     start_hours=1
 ):
     expiry_time = datetime.utcnow() + timedelta(hours=expire_hours)
     start_time = datetime.utcnow() - timedelta(hours=start_hours)
 
-    return generate_blob_sas(
+    return generate_container_sas(
         storage_account,
         container,
-        blob_name,
         permission=permissions,
         expiry=expiry_time,
         start=start_time,
@@ -174,7 +172,7 @@ def get_blob_url(
     blob_name,
     storage_account,
     container,
-    permissions=BlobSasPermissions(read=True),
+    permissions=ContainerSasPermissions(read=True, list=True),
     expire_hours=1,
     start_hours=1
 ):
@@ -187,7 +185,6 @@ def get_blob_url(
         blob_service,
         storage_account,
         container,
-        blob_name,
         permissions=permissions,
         expire_hours=expire_hours,
         start_hours=start_hours

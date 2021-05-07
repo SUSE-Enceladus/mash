@@ -84,11 +84,11 @@ def test_acquire_access_token_cloud_partner(mock_adal):
     )
 
 
-@patch('mash.utils.azure.generate_blob_sas')
-def test_get_blob_url(mock_generate_blob_sas):
+@patch('mash.utils.azure.generate_container_sas')
+def test_get_blob_url(mock_generate_container_sas):
     blob_service = MagicMock()
     blob_service.credential.account_key = 'key123'
-    mock_generate_blob_sas.return_value = 'token123'
+    mock_generate_container_sas.return_value = 'token123'
 
     url = get_blob_url(
         blob_service, 'blob1', 'sa1', 'container1'
