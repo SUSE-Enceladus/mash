@@ -1,3 +1,16 @@
+v11.0.0 (2021-05-07)
+===================
+
+- Update Azure instance list to handle gen1 and gen2.
+  [\#767](https://github.com/SUSE-Enceladus/mash/pull/767)
+- Add versioning to API (v1).
+- Migrate to flask-restx.
+  [\#768](https://github.com/SUSE-Enceladus/mash/pull/768)
+- Remove any duplicate regions from EC2 list.
+  [\#770](https://github.com/SUSE-Enceladus/mash/pull/770)
+- Fix SAS URL for Azure publish.
+  [\#771](https://github.com/SUSE-Enceladus/mash/pull/771)
+
 v10.0.0 (2021-04-07)
 ===================
 
