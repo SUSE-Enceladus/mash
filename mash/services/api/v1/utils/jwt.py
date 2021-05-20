@@ -44,7 +44,9 @@ def decode_token(provider_url, token, audience):
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
         try:
-            token_json = jwt.decode(token, pem, audience=audience)
+            token_json = jwt.decode(
+                token, pem, audience=audience, algorithms=['HS256']
+            )
             return token_json
         except Exception as e:
             last_exception = e
