@@ -49,9 +49,9 @@ from mash.services.api.v1.routes.jobs.oci import api as v1_oci_jobs_api
 from mash.services.api.v1.routes.jobs.aliyun import api as v1_aliyun_jobs_api
 
 
-@jwt.token_in_blacklist_loader
-def check_if_token_in_blacklist(decoded_token):
-    return is_token_revoked(decoded_token)
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_headers, jwt_payload):
+    return is_token_revoked(jwt_payload)
 
 
 def create_app(config_object):

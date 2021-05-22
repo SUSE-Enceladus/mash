@@ -67,7 +67,7 @@ class AliyunAccountCreateAndList(Resource):
     """
 
     @api.doc('create_aliyun_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(add_aliyun_account_request)
     @api.response(201, 'Aliyun account created', aliyun_account_response)
     @api.response(400, 'Validation error', validation_error_response)
@@ -93,7 +93,7 @@ class AliyunAccountCreateAndList(Resource):
         return make_response(jsonify(account), 201)
 
     @api.doc('get_aliyun_accounts')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -109,7 +109,7 @@ class AliyunAccountCreateAndList(Resource):
 @api.response(422, 'Not processable', default_response)
 class AliyunAccount(Resource):
     @api.doc('delete_aliyun_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Aliyun account deleted', default_response)
     @api.response(400, 'Delete Aliyun account failed', default_response)
     @api.response(404, 'Not found', default_response)
@@ -138,7 +138,7 @@ class AliyunAccount(Resource):
             )
 
     @api.doc('get_aliyun_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', aliyun_account_response)
     @api.response(404, 'Not found', default_response)
     def get(self, name):
@@ -159,7 +159,7 @@ class AliyunAccount(Resource):
             )
 
     @api.doc('update_aliyun_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(update_aliyun_account_request)
     @api.response(200, 'Success', aliyun_account_response)
     @api.response(400, 'Validation error', validation_error_response)

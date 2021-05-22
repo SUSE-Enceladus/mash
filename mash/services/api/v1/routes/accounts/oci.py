@@ -66,7 +66,7 @@ class OCIAccountCreateAndList(Resource):
     """
 
     @api.doc('create_oci_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(add_oci_account_request)
     @api.response(201, 'OCI account created', oci_account_response)
     @api.response(400, 'Validation error', validation_error_response)
@@ -92,7 +92,7 @@ class OCIAccountCreateAndList(Resource):
         return make_response(jsonify(account), 201)
 
     @api.doc('get_oci_accounts')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -108,7 +108,7 @@ class OCIAccountCreateAndList(Resource):
 @api.response(422, 'Not processable', default_response)
 class OCIAccount(Resource):
     @api.doc('delete_oci_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'OCI account deleted', default_response)
     @api.response(400, 'Delete OCI account failed', default_response)
     @api.response(404, 'Not found', default_response)
@@ -137,7 +137,7 @@ class OCIAccount(Resource):
             )
 
     @api.doc('get_oci_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', oci_account_response)
     @api.response(404, 'Not found', default_response)
     def get(self, name):
@@ -158,7 +158,7 @@ class OCIAccount(Resource):
             )
 
     @api.doc('update_oci_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(update_oci_account_request)
     @api.response(200, 'Success', oci_account_response)
     @api.response(400, 'Validation error', validation_error_response)

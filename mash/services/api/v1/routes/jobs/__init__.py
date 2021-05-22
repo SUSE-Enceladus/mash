@@ -20,7 +20,10 @@ import json
 
 from flask import request, jsonify, make_response, current_app
 from flask_restx import Namespace, Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_identity
+)
 
 from mash.services.api.v1.schema import (
     default_response,
@@ -58,7 +61,7 @@ class JobList(Resource):
     """
 
     @api.doc('get_jobs')
-    @jwt_required
+    @jwt_required()
     @api.expect(job_list_request)
     @api.response(200, 'Success', job_response)
     def get(self):
@@ -91,7 +94,7 @@ class JobList(Resource):
 @api.response(422, 'Not processable', default_response)
 class Job(Resource):
     @api.doc('delete_job')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Job deleted', default_response)
     def delete(self, job_id):
         """
@@ -118,7 +121,7 @@ class Job(Resource):
             )
 
     @api.doc('get_job')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', job_response)
     @api.response(404, 'Not found', default_response)
     def get(self, job_id):

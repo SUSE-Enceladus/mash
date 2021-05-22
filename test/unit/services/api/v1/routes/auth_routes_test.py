@@ -86,18 +86,18 @@ def test_api_login(
 
 
 @patch('mash.services.api.v1.routes.auth.revoke_token_by_jti')
-@patch('mash.services.api.v1.routes.auth.get_raw_jwt')
+@patch('mash.services.api.v1.routes.auth.get_jwt')
 @patch('mash.services.api.v1.routes.auth.get_jwt_identity')
-@patch('flask_jwt_extended.view_decorators.verify_jwt_refresh_token_in_request')
+@patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_logout(
         mock_jwt_required,
         mock_jwt_identity,
-        mock_get_raw_jwt,
+        mock_get_jwt,
         mock_revoke_token_by_jti,
         test_client
 ):
     jwt = {'jti': '123'}
-    mock_get_raw_jwt.return_value = jwt
+    mock_get_jwt.return_value = jwt
     mock_jwt_identity.return_value = 'user1'
     mock_revoke_token_by_jti.return_value = 1
 
