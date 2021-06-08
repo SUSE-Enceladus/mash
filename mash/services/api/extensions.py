@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from jwt.exceptions import PyJWTError
+
 from flask_restx import Api
 from flask_jwt_extended import JWTManager
 
@@ -38,4 +40,15 @@ api = Api(
     doc=False,
     authorizations=authorizations
 )
+
+
+@api.errorhandler(PyJWTError)
+def handle_jwt_exception(error):
+    err = '. '.join([
+        str(error),
+        'Log in again with "mash auth login" or "mash auth oidc".'
+    ])
+    return {"msg": err}, 401
+
+
 jwt = JWTManager()

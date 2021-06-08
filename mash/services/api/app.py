@@ -129,6 +129,3 @@ def register_extensions(app):
     """Register Flask extensions."""
     jwt.init_app(app)
     api.init_app(app)
-
-    # Required for flask-restplus to play nicely with flask-jwt-extended
-    jwt._set_error_handler_callbacks(api)
