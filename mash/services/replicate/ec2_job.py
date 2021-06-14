@@ -79,13 +79,17 @@ class EC2ReplicateJob(MashJob):
                 if source_region != target_region:
                     # Replicate image to all target regions
                     # for each source region
+                    image_id = self._replicate_to_region(
+                        credential,
+                        self.status_msg['source_regions'][source_region],
+                        source_region,
+                        target_region
+                    )
+
+                    self.status_msg['source_regions'][target_region] = \
+                        image_id
                     self.source_region_results[target_region]['image_id'] = \
-                        self._replicate_to_region(
-                            credential,
-                            self.status_msg['source_regions'][source_region],
-                            source_region,
-                            target_region
-                        )  # noqa: E123 Suppress erroneous flake8 warning.
+                        image_id
 
                     # Save account along with results to prevent searching dict
                     # twice to find associated credentials on each waiter.
