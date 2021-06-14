@@ -31,7 +31,7 @@ def img_proof_test(
     tests=None, availability_domain=None, compartment_id=None, tenancy=None,
     oci_user_id=None, signing_key_file=None, signing_key_fingerprint=None,
     boot_firmware=None, image_project=None, log_callback=None, sev_capable=None,
-    access_key=None, access_secret=None, vswitch_id=None
+    access_key=None, access_secret=None, vswitch_id=None, use_gvnic=None
 ):
     if boot_firmware and boot_firmware == 'uefi':
         enable_secure_boot = True
@@ -70,7 +70,8 @@ def img_proof_test(
         sev_capable=sev_capable,
         access_key=access_key,
         access_secret=access_secret,
-        v_switch_id=vswitch_id
+        v_switch_id=vswitch_id,
+        use_gvnic=use_gvnic
     )
 
     status = SUCCESS if status == 0 else FAILED

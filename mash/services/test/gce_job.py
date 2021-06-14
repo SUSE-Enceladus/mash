@@ -75,9 +75,9 @@ class GCETestJob(MashJob):
         self.test_fallback_regions = self.job_config.get('test_fallback_regions')
         self.boot_firmware = self.job_config.get('boot_firmware', ['bios'])
         self.image_project = self.job_config.get('image_project')
-        self.guest_os_features = self.job_config.get('guest_os_features')
+        self.guest_os_features = self.job_config.get('guest_os_features', [])
 
-        if self.guest_os_features and 'SEV_CAPABLE' in self.guest_os_features:
+        if 'SEV_CAPABLE' in self.guest_os_features:
             self.sev_capable = True
             self.instance_type = 'n2d-standard-2'
             self.region = 'us-east1-b'
@@ -87,6 +87,11 @@ class GCETestJob(MashJob):
             ]
         else:
             self.sev_capable = False
+
+        if 'GVNIC' in self.guest_os_features:
+            self.test_gvnic_with = random.choice(self.boot_firmware)
+        else:
+            self.test_gvnic_with = None
 
         if not self.instance_type:
             self.instance_type = random.choice(instance_types)
@@ -136,6 +141,11 @@ class GCETestJob(MashJob):
                     )
                 )
 
+                if self.test_gvnic_with == firmware:
+                    test_gvnic = True
+                else:
+                    test_gvnic = False
+
                 retry_region = self.region
                 while fallback_regions:
                     try:
@@ -154,7 +164,8 @@ class GCETestJob(MashJob):
                             boot_firmware=firmware,
                             image_project=self.image_project,
                             log_callback=self.log_callback,
-                            sev_capable=self.sev_capable
+                            sev_capable=self.sev_capable,
+                            use_gvnic=test_gvnic
                         )
                     except IpaRetryableError as error:
                         result = {

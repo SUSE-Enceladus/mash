@@ -119,7 +119,8 @@ class TestAzureTestJob(object):
             sev_capable=None,
             access_key=None,
             access_secret=None,
-            v_switch_id=None
+            v_switch_id=None,
+            use_gvnic=None
         )
         job._log_callback.info.reset_mock()
 

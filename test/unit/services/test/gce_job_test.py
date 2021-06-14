@@ -135,7 +135,8 @@ class TestGCETestJob(object):
                 sev_capable=False,
                 access_key=None,
                 access_secret=None,
-                v_switch_id=None
+                v_switch_id=None,
+                use_gvnic=False
             )
         ])
         job._log_callback.warning.reset_mock()
@@ -225,7 +226,8 @@ class TestGCETestJob(object):
                 sev_capable=False,
                 access_key=None,
                 access_secret=None,
-                v_switch_id=None
+                v_switch_id=None,
+                use_gvnic=False
             ),
             call(
                 'gce',
@@ -259,7 +261,8 @@ class TestGCETestJob(object):
                 sev_capable=False,
                 access_key=None,
                 access_secret=None,
-                v_switch_id=None
+                v_switch_id=None,
+                use_gvnic=False
             )
         ])
 
@@ -285,3 +288,107 @@ class TestGCETestJob(object):
         assert 'us-west1-b' in job.test_fallback_regions
 
         self.job_config['guest_os_features'] = None
+
+    @patch('mash.services.test.gce_job.get_gce_compute_driver')
+    @patch('mash.services.test.gce_job.get_gce_storage_driver')
+    @patch('mash.services.test.gce_job.delete_gce_image')
+    @patch('mash.services.test.gce_job.delete_image_tarball')
+    @patch('mash.services.test.gce_job.get_region_list')
+    @patch('mash.services.test.gce_job.os')
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
+    @patch('mash.services.test.gce_job.random')
+    @patch('mash.utils.mash_utils.NamedTemporaryFile')
+    @patch('mash.services.test.img_proof_helper.test_image')
+    def test_run_gce_gvnic(
+        self, mock_test_image, mock_temp_file, mock_random,
+        mock_create_ssh_key_pair, mock_os, mock_get_region_list,
+        mock_delete_image_tarball, mock_delete_image, mock_get_storage_driver,
+        mock_get_compute_driver
+    ):
+        tmp_file = Mock()
+        tmp_file.name = '/tmp/acnt.file'
+        mock_temp_file.return_value = tmp_file
+        mock_test_image.return_value = (
+            0,
+            {
+                'tests': [
+                    {
+                        "outcome": "passed",
+                        "test_index": 0,
+                        "name": "test_sles_gce_metadata.py::test_sles_gce_metadata[paramiko://10.0.0.10]"
+                    }
+                ],
+                'summary': {
+                    "duration": 2.839970827102661,
+                    "passed": 1,
+                    "num_tests": 1
+                },
+                'info': {
+                    'log_file': 'test.log',
+                    'results_file': 'test.results',
+                    'instance': 'instance-abc'
+                }
+            }
+        )
+        mock_random.choice.side_effect = ['uefi', 'n1-standard-1']
+        mock_os.path.exists.return_value = False
+        mock_get_region_list.return_value = set('us-west1-c')
+        self.job_config['guest_os_features'] = ['GVNIC']
+
+        if 'test_fallback_regions' in self.job_config:
+            mock_test_image.side_effect = IpaRetryableError('quota exceeded')
+
+        job = GCETestJob(self.job_config, self.config)
+        job._log_callback = Mock()
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
+        job.credentials = {
+            'test-gce': {
+                'fake': '123',
+                'credentials': '321'
+            },
+            'testacnt': {
+                'fake': '123',
+                'credentials': '321'
+            }
+        }
+        job.status_msg['cloud_image_name'] = 'ami-123'
+        job.status_msg['object_name'] = 'ami-123.tar.gz'
+        job.run_job()
+
+        mock_test_image.assert_has_calls([
+            call(
+                'gce',
+                access_key_id=None,
+                availability_domain=None,
+                cleanup=True,
+                compartment_id=None,
+                description=job.description,
+                distro='sles',
+                image_id='ami-123',
+                instance_type='n1-standard-1',
+                log_level=10,
+                oci_user_id=None,
+                region='us-west1-c',
+                secret_access_key=None,
+                security_group_id=None,
+                service_account_file='/tmp/acnt.file',
+                signing_key_file=None,
+                signing_key_fingerprint=None,
+                ssh_key_name=None,
+                ssh_private_key_file='private_ssh_key.file',
+                ssh_user='root',
+                subnet_id=None,
+                tenancy=None,
+                tests=['test_stuff'],
+                timeout=None,
+                enable_secure_boot=True,
+                image_project=None,
+                log_callback=job._log_callback,
+                prefix_name='mash',
+                sev_capable=False,
+                access_key=None,
+                access_secret=None,
+                v_switch_id=None,
+                use_gvnic=True
+            )
+        ])
