@@ -1,3 +1,15 @@
+v11.1.0 (2021-06-14)
+===================
+
+- Relax dateutil requirements.
+  [\#773](https://github.com/SUSE-Enceladus/mash/pull/773)
+- Always pass in jwt algorithms for decoding.
+  [\#774](https://github.com/SUSE-Enceladus/mash/pull/774)
+- Drop jwt error routing workaround.
+  [\#776](https://github.com/SUSE-Enceladus/mash/pull/776)
+- Track image id per region for job status.
+  [\#777](https://github.com/SUSE-Enceladus/mash/pull/777)
+
 v11.0.0 (2021-05-07)
 ===================
 
