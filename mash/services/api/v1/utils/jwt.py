@@ -45,7 +45,7 @@ def decode_token(provider_url, token, audience):
         )
         try:
             token_json = jwt.decode(
-                token, pem, audience=audience, algorithms=['HS256']
+                token, pem, audience=audience, algorithms=['HS256', 'RS256']
             )
             return token_json
         except Exception as e:
