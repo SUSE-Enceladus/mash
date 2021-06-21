@@ -17,6 +17,7 @@
 #
 
 import datetime
+import itertools
 import random
 import time
 
@@ -75,6 +76,42 @@ def get_region_list(compute_driver, project):
     return region_names
 
 
+def get_zones(compute_driver, project):
+    """
+    Returns a list of zones for a project.
+    """
+    zones = compute_driver.zones().list(project=project).execute()
+    zones = sorted(zones.get('items'), key=lambda zone: zone.get('name'))
+    zones_map = {}
+    for zone in zones:
+        region = zone.get('region')
+        name = zone.get('name')
+        zones_map.setdefault(region, []).append(name)
+    zones = list(zones_map.values())
+    random.shuffle(zones)
+    return [
+        'zones/%s' % zone for zone in itertools.chain(
+            *itertools.zip_longest(*zones)) if zone is not None]
+
+
+def create_gce_rollout(compute_driver, project):
+    """
+    Create a rollout policy for publishing and deprecating images.
+    """
+    format_str = '%Y-%m-%dT%H:%M:%SZ'
+    now = datetime.datetime.now()
+    zones = zones = get_zones(compute_driver, project)
+    policies = {}
+    for num, zone in enumerate(zones):
+        rollout_time = now + datetime.timedelta(hours=num)
+        policies[zone] = rollout_time.strftime(format_str)
+    default = now + datetime.timedelta(hours=len(zones))
+    return {
+        'defaultRolloutTime': default.strftime(format_str),
+        'locationRolloutPolicies': policies
+    }
+
+
 def create_gce_image(
     compute_driver,
     project,
@@ -82,7 +119,8 @@ def create_gce_image(
     cloud_image_description,
     blob_uri,
     family=None,
-    guest_os_features=None
+    guest_os_features=None,
+    rollout=None
 ):
     """
     Create a GCE framework image for the blob.
@@ -92,12 +130,11 @@ def create_gce_image(
     """
     kwargs = {
         'name': cloud_image_name,
+        'family': family,
         'description': cloud_image_description,
-        'rawDisk': {'source': blob_uri}
+        'rawDisk': {'source': blob_uri},
+        'rolloutOverride': rollout
     }
-
-    if family:
-        kwargs['family'] = family
 
     if guest_os_features:
         kwargs['guestOsFeatures'] = [
@@ -198,11 +235,15 @@ def deprecate_gce_image(
         replacement_image_name
     )
     replacement_image_uri = replacement_image['selfLink']
+    # Image deprecation should follow the same rollout policy as the image it is
+    # replacing.
+    rollout = replacement_image.get('rolloutOverride')
 
     kwargs = {
         'replacement': replacement_image_uri,
         'deleted': delete_timestamp,
-        'state': 'DEPRECATED'
+        'state': 'DEPRECATED',
+        'stateOverride': rollout
     }
 
     compute_driver.images().deprecate(
@@ -230,7 +271,7 @@ def wait_on_image_ready(compute_driver, project, cloud_image_name):
         time.sleep(5)
 
 
-def get_gce_compute_driver(credentials):
+def get_gce_compute_driver(credentials, version='v1'):
     """
     Get an SDK compute driver based on credentials dictionary.
 
@@ -242,7 +283,7 @@ def get_gce_compute_driver(credentials):
 
     return discovery.build(
         'compute',
-        'v1',
+        version,
         credentials=client_creds,
         cache_discovery=False
     )

@@ -72,7 +72,7 @@ class GCECreateJob(MashJob):
         credentials = self.credentials[self.account]
 
         project = credentials.get('project_id')
-        compute_driver = get_gce_compute_driver(credentials)
+        compute_driver = get_gce_compute_driver(credentials, version='alpha')
 
         uri = ''.join([
             'https://www.googleapis.com/storage/v1/b/',
@@ -91,6 +91,8 @@ class GCECreateJob(MashJob):
                 self.cloud_image_name
             )
 
+        rollout = create_gce_rollout(compute_driver, project)
+
         create_gce_image(
             compute_driver,
             project,
@@ -98,7 +100,8 @@ class GCECreateJob(MashJob):
             self.cloud_image_description,
             uri,
             family=self.family,
-            guest_os_features=self.guest_os_features
+            guest_os_features=self.guest_os_features,
+            rollout=rollout
         )
 
         self.log_callback.info(

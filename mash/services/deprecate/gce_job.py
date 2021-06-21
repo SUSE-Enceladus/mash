@@ -63,7 +63,7 @@ class GCEDeprecateJob(MashJob):
 
         try:
             project = credential.get('project_id')
-            compute_driver = get_gce_compute_driver(credential)
+            compute_driver = get_gce_compute_driver(credential, version='alpha')
 
             deprecate_gce_image(
                 compute_driver,
