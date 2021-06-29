@@ -175,7 +175,7 @@ class GCETestJob(MashJob):
                         fallback_regions.remove(retry_region)
 
                         if fallback_regions:
-                            retry_region = random.choice(fallback_regions)
+                            retry_region = random.choice(list(fallback_regions))
                     except Exception as error:
                         self.add_error_msg(str(error))
                         result = {
