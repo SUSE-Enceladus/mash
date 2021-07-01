@@ -87,8 +87,13 @@ def get_zones(compute_driver, project):
         region = zone.get('region')
         name = zone.get('name')
         zones_map.setdefault(region, []).append(name)
+    # Create a list of lists. Each sublist is the zone names in a different
+    # region.
     zones = list(zones_map.values())
+    # Permute the sublists so the region ordering is random, but the zone
+    # ordering is deterministic and sorted.
     random.shuffle(zones)
+    # Interleave varying sized lists of zones adding a 'zones/' prefix.
     return [
         'zones/%s' % zone for zone in itertools.chain(
             *itertools.zip_longest(*zones)) if zone is not None]
@@ -100,7 +105,7 @@ def create_gce_rollout(compute_driver, project):
     """
     format_str = '%Y-%m-%dT%H:%M:%SZ'
     now = datetime.datetime.now()
-    zones = zones = get_zones(compute_driver, project)
+    zones = get_zones(compute_driver, project)
     policies = {}
     for num, zone in enumerate(zones):
         rollout_time = now + datetime.timedelta(hours=num)
