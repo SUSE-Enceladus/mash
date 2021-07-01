@@ -30,6 +30,11 @@ class TestAliyunTestJob(object):
         with pytest.raises(MashTestException):
             AliyunTestJob(self.job_config, self.config)
 
+    @patch('mash.utils.aliyun.import_key_pair')
+    @patch('mash.utils.aliyun.delete_key_pair')
+    @patch('mash.utils.aliyun.get_compute_client')
+    @patch('mash.utils.aliyun.get_key_from_file')
+    @patch('mash.utils.aliyun.generate_name')
     @patch.object(AliyunTestJob, 'cleanup_image')
     @patch('mash.services.test.aliyun_job.os')
     @patch('mash.services.test.aliyun_job.create_ssh_key_pair')
@@ -38,7 +43,9 @@ class TestAliyunTestJob(object):
     @patch('mash.services.test.img_proof_helper.test_image')
     def test_aliyun_image_proof(
         self, mock_test_image, mock_temp_file, mock_random,
-        mock_create_ssh_key_pair, mock_os, mock_cleanup_image
+        mock_create_ssh_key_pair, mock_os, mock_cleanup_image,
+        mock_generate_name, mock_get_key_from_file, mock_get_client,
+        mock_import_key_pair, mock_delete_key_pair
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -67,6 +74,10 @@ class TestAliyunTestJob(object):
         )
         mock_random.choice.return_value = 'ecs.t5-lc1m1.small'
         mock_os.path.exists.return_value = False
+        mock_generate_name.return_value = 'random_name'
+        mock_get_key_from_file.return_value = 'fakekey'
+        client = Mock()
+        mock_get_client.return_value = client
 
         job = AliyunTestJob(self.job_config, self.config)
         job._log_callback = Mock()
@@ -100,7 +111,7 @@ class TestAliyunTestJob(object):
             service_account_file=None,
             signing_key_file=None,
             signing_key_fingerprint=None,
-            ssh_key_name=None,
+            ssh_key_name='random_name',
             ssh_private_key_file='/var/lib/mash/ssh_key',
             ssh_user='ali-user',
             subnet_id=None,
