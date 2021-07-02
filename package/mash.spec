@@ -56,6 +56,7 @@ BuildRequires:  python3-google-auth
 BuildRequires:  python3-google-cloud-storage
 BuildRequires:  python3-google-api-python-client
 BuildRequires:  python3-aliyun-img-utils >= 1.3.0
+BuildRequires:  python3-werkzeug
 Requires:       rabbitmq-server
 Requires:       python3-adal
 Requires:       python3-azure-identity
@@ -86,6 +87,7 @@ Requires:       python3-google-auth
 Requires:       python3-google-cloud-storage
 Requires:       python3-google-api-python-client
 Requires:       python3-aliyun-img-utils >= 1.3.0
+Requires:       python3-werkzeug
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
 Requires(pre):  pwdutils

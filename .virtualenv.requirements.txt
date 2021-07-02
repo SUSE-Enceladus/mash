@@ -32,7 +32,7 @@ requests
 urllib3
 obs-img-utils>=0.3.0
 oci
-werkzeug<1.0.0
+werkzeug
 google-auth
 google-cloud-storage
 google-api-python-client

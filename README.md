@@ -96,7 +96,7 @@ $ zypper in mash
 - urllib3<1.25,>=1.20
 - obs-img-utils<0.3.0,>=0.2.0
 - oci
-- werkzeug<1.0.0
+- werkzeug
 - google-auth
 - google-cloud-storage
 - google-api-python-client
