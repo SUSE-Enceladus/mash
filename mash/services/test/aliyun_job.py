@@ -26,6 +26,7 @@ from mash.mash_exceptions import MashTestException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import process_test_result
+from mash.utils.aliyun import setup_key_pair
 from mash.utils.mash_utils import create_ssh_key_pair
 from mash.services.test.img_proof_helper import img_proof_test
 
@@ -92,30 +93,37 @@ class AliyunTestJob(MashJob):
         self.object_name = self.status_msg['object_name']
         image_id = self.status_msg['source_regions'][self.region]
 
-        try:
-            result = img_proof_test(
-                cloud=self.cloud,
-                access_key=credentials['access_key'],
-                access_secret=credentials['access_secret'],
-                description=self.description,
-                distro=self.distro,
-                image_id=image_id,
-                instance_type=self.instance_type,
-                img_proof_timeout=self.img_proof_timeout,
-                region=self.region,
-                ssh_private_key_file=self.ssh_private_key_file,
-                ssh_user=self.ssh_user,
-                tests=self.tests,
-                security_group_id=self.security_group_id,
-                vswitch_id=self.vswitch_id,
-                log_callback=self.log_callback
-            )
-        except Exception as error:
-            self.add_error_msg(str(error))
-            result = {
-                'status': EXCEPTION,
-                'msg': str(traceback.format_exc())
-            }
+        with setup_key_pair(
+            credentials['access_key'],
+            self.region,
+            credentials['access_secret'],
+            self.ssh_private_key_file
+        ) as key_pair_name:
+            try:
+                result = img_proof_test(
+                    cloud=self.cloud,
+                    access_key=credentials['access_key'],
+                    access_secret=credentials['access_secret'],
+                    description=self.description,
+                    distro=self.distro,
+                    image_id=image_id,
+                    instance_type=self.instance_type,
+                    img_proof_timeout=self.img_proof_timeout,
+                    region=self.region,
+                    ssh_key_name=key_pair_name,
+                    ssh_private_key_file=self.ssh_private_key_file,
+                    ssh_user=self.ssh_user,
+                    tests=self.tests,
+                    security_group_id=self.security_group_id,
+                    vswitch_id=self.vswitch_id,
+                    log_callback=self.log_callback
+                )
+            except Exception as error:
+                self.add_error_msg(str(error))
+                result = {
+                    'status': EXCEPTION,
+                    'msg': str(traceback.format_exc())
+                }
 
         self.status = process_test_result(
             result,

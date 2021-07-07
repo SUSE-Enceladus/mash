@@ -100,6 +100,7 @@ $ zypper in mash
 - google-auth
 - google-cloud-storage
 - google-api-python-client
+- aliyun-img-utils>=1.3.0
 
 ## Issues/Enhancements
 
