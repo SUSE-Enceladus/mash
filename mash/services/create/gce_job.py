@@ -26,6 +26,7 @@ from mash.services.status_levels import SUCCESS
 from mash.utils.gce import (
     get_gce_image,
     create_gce_image,
+    create_gce_rollout,
     delete_gce_image,
     get_gce_compute_driver
 )
