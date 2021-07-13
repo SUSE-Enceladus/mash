@@ -17,7 +17,6 @@ flask-sqlalchemy
 flask-migrate
 flask-jwt-extended<4.0.0
 setuptools>=40.3.0
-idna<2.7
 boto3
 cryptography
 PyYAML
