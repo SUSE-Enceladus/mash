@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from datetime import datetime
+
 from pytest import raises
 
 from googleapiclient.errors import HttpError
@@ -23,6 +25,8 @@ from googleapiclient.errors import HttpError
 from unittest.mock import Mock, patch
 from mash.utils.gce import (
     get_region_list,
+    get_zones,
+    create_gce_rollout,
     create_gce_image,
     delete_gce_image,
     deprecate_gce_image,
@@ -122,6 +126,57 @@ def test_get_region_list():
     zones = get_region_list(driver, 'project')
 
     assert 'us-west1-c' in zones
+
+
+def test_get_zones_list():
+    driver = Mock()
+    zones_op = Mock()
+    response = Mock()
+
+    driver.zones.return_value = zones_op
+    zones_op.list.return_value = response
+    response.execute.return_value = {
+        'items': [
+            {'name': 'r3-d', 'region': 'regions/r3'},
+            {'name': 'r1-b', 'region': 'regions/r1'},
+            {'name': 'r3-a', 'region': 'regions/r2'},
+            {'name': 'r2-a', 'region': 'regions/r2'},
+            {'name': 'r1-c', 'region': 'regions/r1'},
+            {'name': 'r1-a', 'region': 'regions/r1'}
+        ]
+    }
+
+    zones = get_zones(driver, 'project')
+    assert all(zone.startswith('zones/') for zone in zones)
+    assert 'r1-c' in zones[-1]
+
+
+def test_create_gce_rollout():
+    driver = Mock()
+    zones_op = Mock()
+    response = Mock()
+
+    driver.zones.return_value = zones_op
+    zones_op.list.return_value = response
+    response.execute.return_value = {
+        'items': [
+            {'name': 'r1-b', 'region': 'regions/r1'},
+            {'name': 'r1-a', 'region': 'regions/r1'}
+        ]
+    }
+
+    rollout = create_gce_rollout(driver, 'project')
+    keys = rollout.keys()
+    assert 'defaultRolloutTime' in keys
+    assert 'locationRolloutPolicies' in keys
+    policies = rollout.get('locationRolloutPolicies')
+    assert len(policies) == 2
+    format_str = '%Y-%m-%dT%H:%M:%SZ'
+    time1 = datetime.strptime(policies.get('zones/r1-a'), format_str)
+    time2 = datetime.strptime(policies.get('zones/r1-b'), format_str)
+    time3 = datetime.strptime(rollout.get('defaultRolloutTime'), format_str)
+    assert time1 < time2
+    assert time2 < time3
 
 
 @patch('mash.utils.gce.wait_on_image_ready')
