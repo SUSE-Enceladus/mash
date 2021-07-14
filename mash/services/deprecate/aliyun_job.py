@@ -58,6 +58,7 @@ class AliyunDeprecateJob(MashJob):
             # There is no old image that needs deprecate for the job.
             return
 
+        self.cloud_image_name = self.status_msg['cloud_image_name']
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
@@ -70,7 +71,10 @@ class AliyunDeprecateJob(MashJob):
         )
 
         try:
-            aliyun_image.deprecate_image_in_regions(self.old_cloud_image_name)
+            aliyun_image.deprecate_image_in_regions(
+                self.old_cloud_image_name,
+                replacement_image=self.cloud_image_name
+            )
         except Exception as error:
             raise MashDeprecateException(
                 'Failed to deprecate image {0}: {1}'.format(
