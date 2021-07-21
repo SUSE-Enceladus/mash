@@ -1,3 +1,21 @@
+v11.2.0 (2021-07-21)
+====================
+
+- Handle gvnic option for GCE.
+  [\#778](https://github.com/SUSE-Enceladus/mash/pull/778)
+- Allow RS256 signing algorithm.
+  [\#779](https://github.com/SUSE-Enceladus/mash/pull/779)
+- Random choice requires an indexable type.
+  [\#781](https://github.com/SUSE-Enceladus/mash/pull/781)
+- Drop requirement on idna.
+  [\#782](https://github.com/SUSE-Enceladus/mash/pull/782)
+- Drop version limit on werkzeug.
+  [\#783](https://github.com/SUSE-Enceladus/mash/pull/783)
+- Use temporary key pairs for aliyun testing.
+  [\#784](https://github.com/SUSE-Enceladus/mash/pull/784)
+- Provide replacement image for aliyun deprecation.
+  [\#785](https://github.com/SUSE-Enceladus/mash/pull/785)
+
 v11.1.0 (2021-06-14)
 ===================
 
