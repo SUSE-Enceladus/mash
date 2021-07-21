@@ -28,6 +28,7 @@ class TestAliyunDeprecateJob(object):
                 'access_secret': '654321'
             }
         }
+        self.job.status_msg['cloud_image_name'] = 'image_name_123'
         self.job._log_callback = Mock()
 
     def test_deprecate_aliyun_missing_key(self):
@@ -43,7 +44,8 @@ class TestAliyunDeprecateJob(object):
         self.job.run_job()
 
         aliyun_image.deprecate_image_in_regions.assert_called_once_with(
-            'old-image-123'
+            'old-image-123',
+            replacement_image='image_name_123'
         )
 
         assert self.job.status == 'success'
