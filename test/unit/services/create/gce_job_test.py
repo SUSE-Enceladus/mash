@@ -65,6 +65,7 @@ class TestGCECreateJob(object):
 
     @patch('mash.services.create.gce_job.get_gce_image')
     @patch('mash.services.create.gce_job.create_gce_image')
+    @patch('mash.services.create.gce_job.create_gce_rollout')
     @patch('mash.services.create.gce_job.delete_gce_image')
     @patch('mash.services.create.gce_job.get_gce_compute_driver')
     @patch('builtins.open')
@@ -73,6 +74,7 @@ class TestGCECreateJob(object):
         mock_open,
         mock_get_driver,
         mock_delete_image,
+        mock_create_rollout,
         mock_create_image,
         mock_get_image
     ):
@@ -83,6 +85,9 @@ class TestGCECreateJob(object):
         compute_driver = Mock()
         mock_get_driver.return_value = compute_driver
 
+        rollout = {'defaultRolloutTime': '2021-01-01T00:00:00Z'}
+        mock_create_rollout.return_value = rollout
+
         self.job.status_msg['cloud_image_name'] = 'sles-12-sp4-v20180909'
         self.job.status_msg['object_name'] = 'sles-12-sp4-v20180909.tar.gz'
         self.job.run_job()
@@ -92,6 +97,10 @@ class TestGCECreateJob(object):
             'projectid',
             'sles-12-sp4-v20180909'
         )
+        mock_create_rollout.assert_called_once_with(
+            compute_driver,
+            'projectid'
+        )
         mock_create_image.assert_called_once_with(
             compute_driver,
             'projectid',
@@ -99,5 +108,6 @@ class TestGCECreateJob(object):
             'description 20180909',
             'https://www.googleapis.com/storage/v1/b/images/o/sles-12-sp4-v20180909.tar.gz',
             family='sles-12',
-            guest_os_features=['UEFI_COMPATIBLE']
+            guest_os_features=['UEFI_COMPATIBLE'],
+            rollout=rollout
         )

@@ -17,6 +17,7 @@
 #
 
 import datetime
+import itertools
 import random
 import time
 
@@ -75,6 +76,59 @@ def get_region_list(compute_driver, project):
     return region_names
 
 
+def get_zones(compute_driver, project):
+    """
+    Returns a list of zone names for a project.
+    """
+    # The Compute API response is a dictionary containing the key 'items'.
+    zones = compute_driver.zones().list(project=project).execute()
+    # The value of items is a list of dictionary objects, one per each zone.
+    # Each zone dictionary contains the key 'name' and 'region', representing
+    # the zone name and the region where the zone lives.
+    zones = sorted(zones.get('items'), key=lambda zone: zone.get('name'))
+    # Create a dictionary mapping a region name to a sorted list of zone names.
+    # For example:
+    # {'r1': ['r1-a', 'r1-b', 'r1-c'], 'r2': ['r2-a'], 'r3': ['r3-a', 'r3-d']}
+    zones_map = {}
+    for zone in zones:
+        region = zone.get('region')
+        name = zone.get('name')
+        zones_map.setdefault(region, []).append(name)
+    # Create a list of lists. Each sublist is the zone names in a different
+    # region. For example:
+    # [['r1-a', 'r1-b', 'r1-c'], ['r2-a'], ['r3-a', 'r3-d']]
+    zones = list(zones_map.values())
+    # Permute the sublists so the region ordering is random, but the zone
+    # ordering is deterministic and sorted. For example:
+    # [['r3-a', 'r3-d'], ['r2-a'], ['r1-a', 'r1-b', 'r1-c']]
+    random.shuffle(zones)
+    # Interleave varying sized lists of zones adding a 'zones/' prefix.
+    # The final result should look like the following:
+    # ['zones/r3-a', 'zones/r2-a', 'zones/r1-a', 'zones/r3-d', 'zones/r1-b',
+    # 'zones/r1-c']
+    return [
+        'zones/{name}'.format(name=zone) for zone in itertools.chain(
+            *itertools.zip_longest(*zones)) if zone is not None]
+
+
+def create_gce_rollout(compute_driver, project):
+    """
+    Create a rollout policy for publishing and deprecating images.
+    """
+    format_str = '%Y-%m-%dT%H:%M:%SZ'
+    now = datetime.datetime.now()
+    zones = get_zones(compute_driver, project)
+    policies = {}
+    for num, zone in enumerate(zones):
+        rollout_time = now + datetime.timedelta(hours=num)
+        policies[zone] = rollout_time.strftime(format_str)
+    default = now + datetime.timedelta(hours=len(zones))
+    return {
+        'defaultRolloutTime': default.strftime(format_str),
+        'locationRolloutPolicies': policies
+    }
+
+
 def create_gce_image(
     compute_driver,
     project,
@@ -82,7 +136,8 @@ def create_gce_image(
     cloud_image_description,
     blob_uri,
     family=None,
-    guest_os_features=None
+    guest_os_features=None,
+    rollout=None
 ):
     """
     Create a GCE framework image for the blob.
@@ -92,12 +147,11 @@ def create_gce_image(
     """
     kwargs = {
         'name': cloud_image_name,
+        'family': family,
         'description': cloud_image_description,
-        'rawDisk': {'source': blob_uri}
+        'rawDisk': {'source': blob_uri},
+        'rolloutOverride': rollout
     }
-
-    if family:
-        kwargs['family'] = family
 
     if guest_os_features:
         kwargs['guestOsFeatures'] = [
@@ -198,11 +252,15 @@ def deprecate_gce_image(
         replacement_image_name
     )
     replacement_image_uri = replacement_image['selfLink']
+    # Image deprecation should follow the same rollout policy as the image it is
+    # replacing.
+    rollout = replacement_image.get('rolloutOverride')
 
     kwargs = {
         'replacement': replacement_image_uri,
         'deleted': delete_timestamp,
-        'state': 'DEPRECATED'
+        'state': 'DEPRECATED',
+        'stateOverride': rollout
     }
 
     compute_driver.images().deprecate(
@@ -230,7 +288,7 @@ def wait_on_image_ready(compute_driver, project, cloud_image_name):
         time.sleep(5)
 
 
-def get_gce_compute_driver(credentials):
+def get_gce_compute_driver(credentials, version='v1'):
     """
     Get an SDK compute driver based on credentials dictionary.
 
@@ -242,7 +300,7 @@ def get_gce_compute_driver(credentials):
 
     return discovery.build(
         'compute',
-        'v1',
+        version,
         credentials=client_creds,
         cache_discovery=False
     )
