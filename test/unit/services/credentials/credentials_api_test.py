@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from mash.services.credentials.app import create_app
 from mash.services.credentials.flask_config import Config
@@ -50,7 +50,9 @@ def test_add_credentials(mock_app, test_client):
     assert response.data == b'{"msg":"Credentials saved"}\n'
 
     # Error
-    mock_app.credentials_datastore.save_credentials.side_effect = Exception(
+    ds = MagicMock()
+    mock_app.credentials_datastore = ds
+    ds.save_credentials.side_effect = Exception(
         'Permission denied'
     )
 
@@ -76,7 +78,9 @@ def test_get_credentials(mock_app, test_client):
         'cloud_accounts': ['test-aws'],
         'requesting_user': 'user1'
     }
-    mock_app.credentials_datastore.retrieve_credentials.return_value = creds
+    ds = MagicMock()
+    mock_app.credentials_datastore = ds
+    ds.retrieve_credentials.return_value = creds
 
     response = test_client.get(
         '/credentials/',
@@ -88,8 +92,9 @@ def test_get_credentials(mock_app, test_client):
     assert response.data == b'{"test-aws":{"super":"secret"}}\n'
 
     # Error
-    mock_app.credentials_datastore.retrieve_credentials.side_effect = \
-        Exception('Permission denied')
+    ds = MagicMock()
+    mock_app.credentials_datastore = ds
+    ds.retrieve_credentials.side_effect = Exception('Permission denied')
 
     response = test_client.get(
         '/credentials/',
@@ -123,7 +128,9 @@ def test_delete_credentials(mock_app, test_client):
     assert response.data == b'{"msg":"Credentials deleted"}\n'
 
     # Error
-    mock_app.credentials_datastore.delete_credentials.side_effect = Exception(
+    ds = MagicMock()
+    mock_app.credentials_datastore = ds
+    ds.delete_credentials.side_effect = Exception(
         'Permission denied'
     )
 
@@ -149,9 +156,9 @@ def test_delete_user(mock_app, test_client):
     assert response.data == b'{"msg":"User removed"}\n'
 
     # Error
-    mock_app.credentials_datastore.remove_user.side_effect = Exception(
-        'Permission denied'
-    )
+    ds = MagicMock()
+    mock_app.credentials_datastore = ds
+    ds.remove_user.side_effect = Exception('Permission denied')
     response = test_client.delete('credentials/fakeuser101')
 
     mock_app.logger.warning.assert_called_once_with(
