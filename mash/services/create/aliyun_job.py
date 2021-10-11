@@ -16,9 +16,12 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import re
+
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashCreateException
+from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
 from aliyun_img_utils.aliyun_image import AliyunImage
 
@@ -55,6 +58,12 @@ class AliyunCreateJob(MashJob):
 
         self.cloud_image_name = self.status_msg['cloud_image_name']
         object_name = self.status_msg['object_name']
+
+        timestamp = re.findall(r'\d{8}', self.cloud_image_name)[0]
+        self.cloud_image_description = format_string_with_date(
+            self.cloud_image_description,
+            timestamp=timestamp
+        )
 
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
