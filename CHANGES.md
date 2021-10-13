@@ -1,3 +1,11 @@
+v11.3.0 (2021-10-13)
+====================
+
+- Add a slow rollout policy to new GCE images.
+  [\#780](https://github.com/SUSE-Enceladus/mash/pull/780)
+- Format Aliyun date in image description if it exists.
+  [\#789](https://github.com/SUSE-Enceladus/mash/pull/789)
+
 v11.2.0 (2021-07-21)
 ====================
 
