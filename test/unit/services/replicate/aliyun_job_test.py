@@ -51,7 +51,7 @@ class TestAliyunReplicateJob(object):
             'Replicating My image'
         )
         self.job._log_callback.warning.assert_called_once_with(
-            'Replicate to cn-shanghai failed.'
+            'Replicate to cn-shanghai failed: '
         )
         assert self.job.status == FAILED
 
@@ -68,6 +68,6 @@ class TestAliyunReplicateJob(object):
             'Replicating My image'
         )
         self.job._log_callback.warning.assert_called_once_with(
-            'Replicate to cn-shanghai failed.'
+            'Replicate to cn-shanghai failed: Broken!'
         )
         assert self.job.status == FAILED
