@@ -69,17 +69,23 @@ class AliyunReplicateJob(MashJob):
         images = aliyun_image.replicate_image(self.cloud_image_name)
 
         for region, image_id in images.items():
+            error_msg = ''
+
             if image_id:
                 aliyun_image.region = region
                 try:
                     aliyun_image.wait_on_compute_image(image_id)
-                except Exception:
+                except Exception as error:
                     self.status = FAILED
+                    error_msg = str(error)
             else:
                 self.status = FAILED
 
             if self.status == FAILED:
-                msg = 'Replicate to {0} failed.'.format(region)
+                msg = 'Replicate to {0} failed: {1}'.format(
+                    region,
+                    error_msg
+                )
                 self.add_error_msg(msg)
                 self.log_callback.warning(msg)
 
