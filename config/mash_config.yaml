@@ -38,6 +38,7 @@ cloud:
         - ap-south-1
         - ap-southeast-1
         - ap-southeast-2
+        - ap-southeast-3
         - ca-central-1
         - eu-central-1
         - eu-north-1
@@ -64,6 +65,7 @@ cloud:
       ap-northeast-2: ami-249b554a
       ap-southeast-1: ami-c9b572aa
       ap-southeast-2: ami-48d38c2b
+      ap-southeast-3: ami-0013ff7261176fe6e
       ap-south-1: ami-a6d1bac9
       ca-central-1: ami-21d76545
       cn-north-1: ami-bcc45885
