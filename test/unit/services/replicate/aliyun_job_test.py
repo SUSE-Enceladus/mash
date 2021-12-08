@@ -51,7 +51,7 @@ class TestAliyunReplicateJob(object):
             'Replicating My image'
         )
         self.job._log_callback.warning.assert_called_once_with(
-            'Replicate to cn-shanghai failed: '
+            'Replicate to cn-shanghai failed: Image ID is None'
         )
         assert self.job.status == FAILED
 

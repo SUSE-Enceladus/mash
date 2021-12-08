@@ -80,6 +80,7 @@ class AliyunReplicateJob(MashJob):
                     error_msg = str(error)
             else:
                 self.status = FAILED
+                error_msg = str('Image ID is None')
 
             if self.status == FAILED:
                 msg = 'Replicate to {0} failed: {1}'.format(
