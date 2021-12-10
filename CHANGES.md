@@ -1,3 +1,11 @@
+v11.4.0 (2021-12-10)
+====================
+
+- Log Aliyun replication errors.
+  [\#790](https://github.com/SUSE-Enceladus/mash/pull/790)
+- Log if Aliyun image id is None during replication.
+  [\#792](https://github.com/SUSE-Enceladus/mash/pull/792)
+
 v11.3.0 (2021-10-13)
 ====================
 
