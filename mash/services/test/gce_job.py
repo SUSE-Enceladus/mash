@@ -122,7 +122,10 @@ class GCETestJob(MashJob):
             # fallback testing explicitly disabled
             fallback_regions = set()
         elif self.test_fallback_regions is None:
-            fallback_regions = get_region_list(compute_driver, project)
+            try:
+                fallback_regions = get_region_list(compute_driver, project)
+            except Exception:
+                fallback_regions = set()  # Unable to retrieve region list
         else:
             fallback_regions = set(self.test_fallback_regions)
 

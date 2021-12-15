@@ -332,11 +332,9 @@ class TestGCETestJob(object):
         )
         mock_random.choice.side_effect = ['uefi', 'n1-standard-1']
         mock_os.path.exists.return_value = False
-        mock_get_region_list.return_value = set('us-west1-c')
+        # Test exception getting region list
+        mock_get_region_list.side_effect = Exception('Invalid credentials!')
         self.job_config['guest_os_features'] = ['GVNIC']
-
-        if 'test_fallback_regions' in self.job_config:
-            mock_test_image.side_effect = IpaRetryableError('quota exceeded')
 
         job = GCETestJob(self.job_config, self.config)
         job._log_callback = Mock()
