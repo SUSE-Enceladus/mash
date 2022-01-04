@@ -1,3 +1,9 @@
+v11.4.2 (2022-01-04)
+====================
+
+- Fix exception logging for aliyun replicate class 
+  [\#795](https://github.com/SUSE-Enceladus/mash/pull/795)
+
 v11.4.1 (2021-12-17)
 ====================
 
