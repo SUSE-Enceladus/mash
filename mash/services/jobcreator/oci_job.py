@@ -109,6 +109,7 @@ class OCIJob(BaseJob):
                 'region': self.region,
                 'distro': self.distro,
                 'instance_type': self.instance_type,
+                'ssh_user': self.ssh_user,
                 'availability_domain': self.availability_domain,
                 'compartment_id': self.compartment_id,
                 'oci_user_id': self.oci_user_id,

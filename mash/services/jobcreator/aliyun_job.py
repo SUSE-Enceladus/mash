@@ -114,7 +114,8 @@ class AliyunJob(BaseJob):
                 'security_group_id': self.security_group_id,
                 'vswitch_id': self.vswitch_id,
                 'distro': self.distro,
-                'instance_type': self.instance_type
+                'instance_type': self.instance_type,
+                'ssh_user': self.ssh_user
             }
         }
 

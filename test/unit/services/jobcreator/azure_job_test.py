@@ -57,6 +57,7 @@ def test_azure_job_cleanup(mock_init):
     job.tests = ['test1']
     job.distro = 'sles'
     job.instance_type = 'b1'
+    job.ssh_user = 'root'
     job.cloud_architecture = 'x86_64'
     job.base_message = {}
 
