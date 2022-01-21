@@ -108,6 +108,7 @@ class GCEJob(BaseJob):
                 'testing_account': self.testing_account,
                 'distro': self.distro,
                 'instance_type': self.instance_type,
+                'ssh_user': self.ssh_user,
                 'boot_firmware': self.boot_firmware,
                 'guest_os_features': self.guest_os_features
             }

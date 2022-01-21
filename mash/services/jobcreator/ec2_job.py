@@ -143,6 +143,9 @@ class EC2Job(BaseJob):
             test_message['test_job']['instance_type'] = \
                 self.instance_type
 
+        if self.ssh_user:
+            test_message['test_job']['ssh_user'] = self.ssh_user
+
         if self.last_service == 'test' and \
                 self.cleanup_images in [True, None]:
             test_message['test_job']['cleanup_images'] = True

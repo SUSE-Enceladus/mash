@@ -56,6 +56,7 @@ def test_gce_job_test_message(mock_init):
     job.tests = ['test1']
     job.distro = 'sles'
     job.instance_type = 'b1'
+    job.ssh_user = 'root'
     job.cloud_architecture = 'x86_64'
     job.test_fallback = False
     job.test_fallback_regions = None

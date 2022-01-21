@@ -63,6 +63,7 @@ def test_oci_job_test_message(mock_init):
     job.tests = ['test1']
     job.distro = 'sles'
     job.instance_type = 'VM.Standard2.1'
+    job.ssh_user = 'oci'
     job.cloud_architecture = 'x86_64'
     job.base_message = {}
 

@@ -154,6 +154,11 @@ base_job_message = {
                         'a random type will be selected from a pre-configured '
                         'list.'
         ),
+        'ssh_user': string_with_example(
+            'root',
+            description='The SSH user name that will be used when connecting '
+                        'to a test instance.'
+        ),
         'tests': {
             'type': 'array',
             'items': non_empty_string,

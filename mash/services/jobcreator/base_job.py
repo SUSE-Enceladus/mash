@@ -49,6 +49,7 @@ class BaseJob(object):
         self.conditions = kwargs.get('conditions')
         self.distro = kwargs.get('distro')
         self.instance_type = kwargs.get('instance_type')
+        self.ssh_user = kwargs.get('ssh_user')
         self.old_cloud_image_name = kwargs.get('old_cloud_image_name')
         self.cleanup_images = kwargs.get('cleanup_images')
         self.cloud_architecture = kwargs.get('cloud_architecture', 'x86_64')

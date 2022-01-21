@@ -21,7 +21,8 @@ def test_get_test_message_cleanup(mock_get_test_regions):
         'download_url': 'https://download.here',
         'cleanup_images': True,
         'test_fallback_regions': [],
-        'target_account_info': {}
+        'target_account_info': {},
+        'ssh_user': 'root'
     })
 
     message = job.get_test_message()
