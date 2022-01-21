@@ -1,7 +1,13 @@
+v11.5.0 (2022-01-21)
+====================
+
+- Add ssh_user option for all jobs
+  [\#797](https://github.com/SUSE-Enceladus/mash/pull/797)
+
 v11.4.2 (2022-01-04)
 ====================
 
-- Fix exception logging for aliyun replicate class 
+- Fix exception logging for aliyun replicate class
   [\#795](https://github.com/SUSE-Enceladus/mash/pull/795)
 
 v11.4.1 (2021-12-17)
