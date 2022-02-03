@@ -142,7 +142,7 @@ base_job_message = {
         ),
         'distro': {
             'type': 'string',
-            'enum': ['opensuse_leap', 'sles'],
+            'enum': ['opensuse_leap', 'sles', 'sle_micro'],
             'example': 'sles',
             'description': 'The distribution setting used for the img-proof '
                            'tests.'
