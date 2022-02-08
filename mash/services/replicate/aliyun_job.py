@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import time
+
 from aliyun_img_utils.aliyun_image import AliyunImage
 
 from mash.mash_exceptions import MashReplicateException
@@ -67,6 +69,9 @@ class AliyunReplicateJob(MashJob):
         )
 
         images = aliyun_image.replicate_image(self.cloud_image_name)
+
+        # Replication can take time so give it 5 minutes before checking
+        time.sleep(300)
 
         for region, image_id in images.items():
             if image_id:

@@ -39,8 +39,9 @@ class TestAliyunReplicateJob(object):
         with raises(MashReplicateException):
             AliyunReplicateJob(self.job_config, self.config)
 
+    @patch('mash.services.replicate.aliyun_job.time')
     @patch('mash.services.replicate.aliyun_job.AliyunImage')
-    def test_replicate(self, mock_aliyun_image):
+    def test_replicate(self, mock_aliyun_image, mock_time):
         aliyun_image = Mock()
         mock_aliyun_image.return_value = aliyun_image
         aliyun_image.replicate_image.return_value = {'cn-shanghai': None}
@@ -55,8 +56,9 @@ class TestAliyunReplicateJob(object):
         )
         assert self.job.status == FAILED
 
+    @patch('mash.services.replicate.aliyun_job.time')
     @patch('mash.services.replicate.aliyun_job.AliyunImage')
-    def test_replicate_fail(self, mock_aliyun_image):
+    def test_replicate_fail(self, mock_aliyun_image, mock_time):
         aliyun_image = Mock()
         mock_aliyun_image.return_value = aliyun_image
         aliyun_image.replicate_image.return_value = {'cn-shanghai': 'i-8765'}
