@@ -14,7 +14,7 @@ class TestCredentialsDatastore(object):
 
     @patch('mash.services.credentials.datastore.BackgroundScheduler')
     @patch('mash.services.credentials.datastore.os')
-    def setup(self, mock_os, mock_scheduler):
+    def setup_method(self, method, mock_os, mock_scheduler):
         self.log_callback = Mock()
         self.scheduler = MagicMock(BackgroundScheduler)
 

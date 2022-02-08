@@ -11,7 +11,7 @@ from mash.utils.json_format import JsonFormat
 class TestJobCreatorService(object):
 
     @patch.object(MashService, '__init__')
-    def setup(self, mock_base_init):
+    def setup_method(self, method, mock_base_init):
         services = [
             'obs', 'upload', 'create', 'test', 'raw_image_upload',
             'replicate', 'publish', 'deprecate'

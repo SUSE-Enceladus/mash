@@ -7,8 +7,8 @@ from mash.services.mash_service import MashService
 class TestCleanupService(object):
 
     @patch.object(MashService, '__init__')
-    def setup(
-        self, mock_base_init
+    def setup_method(
+        self, method, mock_base_init
     ):
         mock_base_init.return_value = None
 

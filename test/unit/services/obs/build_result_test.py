@@ -13,7 +13,7 @@ from mash.services.obs.build_result import OBSImageBuildResult
 class TestOBSImageBuildResult(object):
     @patch('mash.services.obs.build_result.logging')
     @patch('mash.services.obs.build_result.OBSImageUtil')
-    def setup(self, mock_obs_img_util, mock_logging):
+    def setup_method(self, method, mock_obs_img_util, mock_logging):
         self.logger = MagicMock()
         self.downloader = MagicMock()
         mock_obs_img_util.return_value = self.downloader

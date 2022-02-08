@@ -22,8 +22,8 @@ class TestOBSImageBuildResultService(object):
     @patch('os.listdir')
     @patch('logging.getLogger')
     @patch('atexit.register')
-    def setup(
-        self, mock_register, mock_log, mock_listdir, mock_MashService,
+    def setup_method(
+        self, method, mock_register, mock_log, mock_listdir, mock_MashService,
         mock_restart_jobs, mock_send_job_result_for_upload,
         mock_process_message,
         mock_setup_logfile, mock_makedirs
