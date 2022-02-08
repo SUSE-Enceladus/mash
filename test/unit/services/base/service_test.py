@@ -10,7 +10,7 @@ from mash.mash_exceptions import MashRabbitConnectionException
 class TestBaseService(object):
 
     @patch('mash.services.mash_service.Connection')
-    def setup(self, mock_connection):
+    def setup_method(self, method, mock_connection):
         self.connection = Mock()
         self.channel = Mock()
         self.msg_properties = {
