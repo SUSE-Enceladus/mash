@@ -1,3 +1,13 @@
+v11.6.0 (2022-02-09)
+====================
+
+- Add sle-micro enum to mash job distro arg
+  [\#798](https://github.com/SUSE-Enceladus/mash/pull/798)
+- Add a 5 minute wait before checking images during Aliyun replication
+  [\#799](https://github.com/SUSE-Enceladus/mash/pull/799)
+- Fix pytest 7 compatibility. Use setup_method instead setup
+  [\#800](https://github.com/SUSE-Enceladus/mash/pull/800)
+
 v11.5.0 (2022-01-21)
 ====================
 
