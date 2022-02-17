@@ -4,7 +4,7 @@ from mash.services.api.app import check_if_token_revoked
 
 @patch('mash.services.api.v1.utils.tokens.get_token_by_jti')
 def test_check_if_token_in_blocklist(mock_get_token):
-    decoded_token = {'jti': '123', 'identity': 'user1'}
+    decoded_token = {'jti': '123', 'sub': 'user1'}
     mock_get_token.return_value = decoded_token
 
     result = check_if_token_revoked(None, decoded_token)

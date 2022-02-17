@@ -49,7 +49,7 @@ def is_token_revoked(decoded_token):
     Checks if the given token exists.
     """
     jti = decoded_token['jti']
-    user_id = decoded_token['identity']
+    user_id = decoded_token['sub']
     token = get_token_by_jti(jti, user_id)
 
     if token:
