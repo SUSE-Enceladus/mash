@@ -1,3 +1,9 @@
+v12.0.0 (2022-02-17)
+====================
+
+- Update code for breaking changes in flask-jwt-extended >= 4.0.2
+  [\#796](https://github.com/SUSE-Enceladus/mash/pull/796)
+
 v11.6.0 (2022-02-09)
 ====================
 
