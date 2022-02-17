@@ -73,7 +73,7 @@ class EC2AccountCreateAndList(Resource):
     """
 
     @api.doc('create_ec2_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(add_ec2_account_request)
     @api.response(201, 'Created EC2 account', ec2_account_response)
     @api.response(400, 'Validation error', validation_error_response)
@@ -98,7 +98,7 @@ class EC2AccountCreateAndList(Resource):
         return make_response(jsonify(account), 201)
 
     @api.doc('get_ec2_accounts')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -114,7 +114,7 @@ class EC2AccountCreateAndList(Resource):
 @api.response(422, 'Not processable', default_response)
 class EC2Account(Resource):
     @api.doc('delete_ec2_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'EC2 account deleted', default_response)
     @api.response(400, 'Delete EC2 account failed', default_response)
     @api.response(404, 'Not found', default_response)
@@ -143,7 +143,7 @@ class EC2Account(Resource):
             )
 
     @api.doc('get_ec2_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', ec2_account_response)
     @api.response(404, 'Not found', default_response)
     def get(self, name):
@@ -164,7 +164,7 @@ class EC2Account(Resource):
             )
 
     @api.doc('update_ec2_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(update_ec2_account_request)
     @api.response(200, 'Updated EC2 account', ec2_account_response)
     @api.response(400, 'Validation error', validation_error_response)

@@ -24,8 +24,8 @@ from flask_restx import fields, Namespace, Resource
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
-    jwt_refresh_token_required,
-    get_raw_jwt,
+    jwt_required,
+    get_jwt,
     get_jwt_identity
 )
 
@@ -131,7 +131,7 @@ class Login(Resource):
 @api.route('/logout')
 class Logout(Resource):
     @api.doc('account_login')
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     @api.doc(security='apiKey')
     @api.response(200, 'Logged out', default_response)
     @api.response(400, 'Logout failed', default_response)
@@ -141,7 +141,7 @@ class Logout(Resource):
         Revoke current refresh token.
         """
         user_id = get_jwt_identity()
-        token = get_raw_jwt()
+        token = get_jwt()
         rows_deleted = revoke_token_by_jti(token['jti'], user_id)
 
         if rows_deleted:

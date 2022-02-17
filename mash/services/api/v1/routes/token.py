@@ -22,7 +22,6 @@ from flask_restx import fields, Namespace, Resource
 from flask_jwt_extended import (
     create_access_token,
     jwt_required,
-    jwt_refresh_token_required,
     get_jwt_identity
 )
 
@@ -56,7 +55,7 @@ api.models['token_response'] = token_response
 @api.route('/refresh')
 class RefreshToken(Resource):
     @api.doc('refresh_token')
-    @jwt_refresh_token_required
+    @jwt_required(refresh=True)
     @api.doc(security='apiKey')
     @api.response(200, 'Success', refresh_response)
     @api.response(401, 'Unauthorized', default_response)
@@ -79,7 +78,7 @@ class RefreshToken(Resource):
 @api.response(422, 'Not processable', default_response)
 class ListTokens(Resource):
     @api.doc('list_auth_tokens')
-    @jwt_required
+    @jwt_required()
     def get(self):
         """
         Get list of all authorization tokens.
@@ -88,7 +87,7 @@ class ListTokens(Resource):
         return make_response(jsonify(tokens), 200)
 
     @api.doc('delete_all_auth_tokens')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', default_response)
     def delete(self):
         """
@@ -114,7 +113,7 @@ class ListTokens(Resource):
 @api.response(422, 'Not processable', default_response)
 class Token(Resource):
     @api.doc('revoke_auth_token')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', default_response)
     def delete(self, jti):
         """
@@ -135,7 +134,7 @@ class Token(Resource):
             )
 
     @api.doc('get_auth_token')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', token_response)
     def get(self, jti):
         """

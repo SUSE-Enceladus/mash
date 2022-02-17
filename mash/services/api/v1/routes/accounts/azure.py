@@ -67,7 +67,7 @@ class AzureAccountCreateAndList(Resource):
     """
 
     @api.doc('create_azure_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(add_azure_account_request)
     @api.response(201, 'Azure account created', azure_account_response)
     @api.response(400, 'Validation error', validation_error_response)
@@ -92,7 +92,7 @@ class AzureAccountCreateAndList(Resource):
         return make_response(jsonify(account), 201)
 
     @api.doc('get_azure_accounts')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -108,7 +108,7 @@ class AzureAccountCreateAndList(Resource):
 @api.response(422, 'Not processable', default_response)
 class AzureAccount(Resource):
     @api.doc('delete_azure_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Azure account deleted', default_response)
     @api.response(400, 'Delete Azure account failed', default_response)
     @api.response(404, 'Not found', default_response)
@@ -137,7 +137,7 @@ class AzureAccount(Resource):
             )
 
     @api.doc('get_azure_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', azure_account_response)
     @api.response(404, 'Not found', default_response)
     def get(self, name):
@@ -158,7 +158,7 @@ class AzureAccount(Resource):
             )
 
     @api.doc('update_azure_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(update_azure_account_request)
     @api.response(200, 'Azure account updated', azure_account_response)
     @api.response(400, 'Validation error', validation_error_response)

@@ -67,7 +67,7 @@ class GCEAccountCreateAndList(Resource):
     """
 
     @api.doc('create_gce_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(add_gce_account_request)
     @api.response(201, 'GCE account created', gce_account_response)
     @api.response(400, 'Validation error', validation_error_response)
@@ -93,7 +93,7 @@ class GCEAccountCreateAndList(Resource):
         return make_response(jsonify(account), 201)
 
     @api.doc('get_gce_accounts')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', default_response)
     def get(self):
         """
@@ -109,7 +109,7 @@ class GCEAccountCreateAndList(Resource):
 @api.response(422, 'Not processable', default_response)
 class GCEAccount(Resource):
     @api.doc('delete_gce_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'GCE account deleted', default_response)
     @api.response(400, 'Delete GCE account failed', default_response)
     @api.response(404, 'Not found', default_response)
@@ -138,7 +138,7 @@ class GCEAccount(Resource):
             )
 
     @api.doc('get_gce_account')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Success', gce_account_response)
     @api.response(404, 'Not found', default_response)
     def get(self, name):
@@ -159,7 +159,7 @@ class GCEAccount(Resource):
             )
 
     @api.doc('update_gce_account')
-    @jwt_required
+    @jwt_required()
     @api.expect(update_gce_account_request)
     @api.response(200, 'Success', gce_account_response)
     @api.response(400, 'Validation error', validation_error_response)

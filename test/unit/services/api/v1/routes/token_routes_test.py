@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 @patch('mash.services.api.v1.utils.tokens.decode_token')
 @patch('mash.services.api.v1.routes.token.create_access_token')
 @patch('mash.services.api.v1.routes.token.get_jwt_identity')
-@patch('flask_jwt_extended.view_decorators.verify_jwt_refresh_token_in_request')
+@patch('flask_jwt_extended.view_decorators.verify_jwt_in_request')
 def test_api_refresh_token(
     mock_jwt_required,
     mock_jwt_identity,

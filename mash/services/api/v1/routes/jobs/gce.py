@@ -20,7 +20,10 @@ import json
 
 from flask import jsonify, make_response, request, current_app
 from flask_restx import Namespace, Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_identity
+)
 
 from mash.mash_exceptions import MashException
 from mash.services.api.v1.schema import (
@@ -45,7 +48,7 @@ validation_error_response = api.schema_model(
 @api.route('/')
 class GCEJob(Resource):
     @api.doc('add_gce_job', security='apiKey')
-    @jwt_required
+    @jwt_required()
     @api.expect(gce_job)
     @api.response(201, 'Job added', job_response)
     @api.response(400, 'Validation error', validation_error_response)

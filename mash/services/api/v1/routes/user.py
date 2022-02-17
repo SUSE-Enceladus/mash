@@ -98,7 +98,7 @@ class Account(Resource):
 
     @api.doc('get_mash_account')
     @api.doc(security='apiKey')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Account', user_response)
     @api.response(401, 'Unauthorized', default_response)
     @api.response(422, 'Not processable', default_response)
@@ -111,7 +111,7 @@ class Account(Resource):
 
     @api.doc('delete_mash_account')
     @api.doc(security='apiKey')
-    @jwt_required
+    @jwt_required()
     @api.response(200, 'Account deleted', default_response)
     @api.response(400, 'Delete account failed', default_response)
     @api.response(401, 'Unauthorized', default_response)
