@@ -46,7 +46,7 @@ class GCEJob(BaseJob):
         self.months_to_deletion = self.kwargs.get(
             'months_to_deletion', 6
         )
-        self.guest_os_features = self.kwargs.get('guest_os_features')
+        self.guest_os_features = self.kwargs.get('guest_os_features', [])
         self.image_project = self.kwargs.get('image_project')
 
     def get_deprecate_message(self):
