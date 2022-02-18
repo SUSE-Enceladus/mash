@@ -84,7 +84,7 @@ def create_ssh_key_pair(ssh_private_key_file):
     """
     # Generate private key
     private_key = rsa.generate_private_key(
-        public_exponent=65537, key_size=2048, backend=default_backend()
+        public_exponent=65537, key_size=4096, backend=default_backend()
     )
 
     # Get public key
