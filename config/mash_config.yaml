@@ -90,7 +90,7 @@ upload:
   azure:
     max_retry_attempts: 5
     max_workers: 8
-email_whitelist:
+email_allowlist:
   emails@to.allow.com
-domain_whitelist:
+domain_allowlist:
   suse.com

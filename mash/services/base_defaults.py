@@ -97,11 +97,11 @@ class Defaults(object):
         return 'http://localhost:8080/'
 
     @staticmethod
-    def get_email_whitelist():
+    def get_email_allowlist():
         return []
 
     @staticmethod
-    def get_domain_whitelist():
+    def get_domain_allowlist():
         return []
 
     @staticmethod

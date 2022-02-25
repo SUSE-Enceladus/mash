@@ -42,7 +42,7 @@ from mash.services.api.v1.utils.tokens import (
 )
 from mash.services.api.v1.utils.users import (
     verify_login,
-    email_in_whitelist,
+    email_in_allowlist,
     get_user_by_email
 )
 from mash.services.api.v1.utils.jwt import decode_token
@@ -234,7 +234,7 @@ class OAuth2Request(Resource):
                 500
             )
 
-        if email_in_whitelist(user_email):
+        if email_in_allowlist(user_email):
             user = get_user_by_email(user_email, create=True)
             access_token = create_access_token(identity=user['id'])
             refresh_token = create_refresh_token(identity=user['id'])

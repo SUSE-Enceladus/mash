@@ -148,7 +148,7 @@ def test_api_oauth2_get(
 @patch('mash.services.api.v1.routes.auth.create_refresh_token')
 @patch('mash.services.api.v1.routes.auth.create_access_token')
 @patch('mash.services.api.v1.utils.users.handle_request')
-@patch('mash.services.api.v1.routes.auth.email_in_whitelist')
+@patch('mash.services.api.v1.routes.auth.email_in_allowlist')
 @patch('mash.services.api.v1.routes.auth.decode_token')
 @patch('mash.services.api.v1.routes.auth.OAuth2Session')
 @patch('mash.services.api.v1.routes.auth.current_app')
@@ -156,7 +156,7 @@ def test_oauth2_login(
         mock_current_app,
         mock_oauth2_session,
         mock_decode_token,
-        mock_email_in_whitelist,
+        mock_email_in_allowlist,
         mock_handle_request,
         mock_create_access_token,
         mock_create_refresh_token,
@@ -185,7 +185,7 @@ def test_oauth2_login(
         'id_token': 'id_token_value'
     }
     mock_decode_token.return_value = {'email': 'user1@fake.com'}
-    mock_email_in_whitelist.return_value = False
+    mock_email_in_allowlist.return_value = False
     result = Mock()
     result.json.return_value = {'id': '1'}
     mock_handle_request.return_value = result
@@ -200,7 +200,7 @@ def test_oauth2_login(
     assert response.data == b'{"msg":"Email is invalid"}\n'
 
     # Success
-    mock_email_in_whitelist.return_value = True
+    mock_email_in_allowlist.return_value = True
     access_token = '54321'
     refresh_token = '12345'
 

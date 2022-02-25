@@ -57,12 +57,12 @@ class Config(object):
         return self.config.get_jwt_secret()
 
     @property
-    def EMAIL_WHITELIST(self):
-        return self.config.get_email_whitelist()
+    def EMAIL_ALLOWLIST(self):
+        return self.config.get_email_allowlist()
 
     @property
-    def DOMAIN_WHITELIST(self):
-        return self.config.get_domain_whitelist()
+    def DOMAIN_ALLOWLIST(self):
+        return self.config.get_domain_allowlist()
 
     @property
     def AUTH_METHODS(self):
