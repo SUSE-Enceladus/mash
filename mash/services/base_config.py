@@ -336,29 +336,29 @@ class BaseConfig(object):
         return download_directory if download_directory else \
             Defaults.get_download_dir()
 
-    def get_email_whitelist(self):
+    def get_email_allowlist(self):
         """
-        Return the list of whitelisted emails if it's configured.
+        Return the list of allowlisted emails if it's configured.
 
         :rtype: list of strings
         """
-        email_whitelist = self._get_attribute(
-            attribute='email_whitelist'
+        email_allowlist = self._get_attribute(
+            attribute='email_allowlist'
         )
 
-        return email_whitelist or Defaults.get_email_whitelist()
+        return email_allowlist or Defaults.get_email_allowlist()
 
-    def get_domain_whitelist(self):
+    def get_domain_allowlist(self):
         """
-        Return the list of whitelisted domains if it's configured.
+        Return the list of allowlisted domains if it's configured.
 
         :rtype: list of strings
         """
-        domain_whitelist = self._get_attribute(
-            attribute='domain_whitelist'
+        domain_allowlist = self._get_attribute(
+            attribute='domain_allowlist'
         )
 
-        return domain_whitelist or Defaults.get_domain_whitelist()
+        return domain_allowlist or Defaults.get_domain_allowlist()
 
     def get_max_oci_attempts(self):
         """
