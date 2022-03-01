@@ -140,10 +140,12 @@ def validate_ec2_job(job_doc):
     Once accounts dictionary is built remove cloud_groups
     and cloud_accounts keys from job_doc.
     """
-    job_doc = validate_job(job_doc)
-
     if job_doc.get('publish_in_marketplace'):
+        job_doc['last_service'] = 'publish'  # No deprecation for MP images
+        job_doc['skip_replication'] = True  # No replication for MP images
         validate_mp_fields(job_doc)
+
+    job_doc = validate_job(job_doc)
 
     user_id = job_doc['requesting_user']
 

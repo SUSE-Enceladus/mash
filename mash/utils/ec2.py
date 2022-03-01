@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import json
+
 import boto3
 
 from contextlib import contextmanager, suppress
@@ -210,3 +212,69 @@ def image_exists(client, cloud_image_name):
         return True
 
     return False
+
+
+def start_mp_change_set(
+    client,
+    entity_id,
+    version_title,
+    ami_id,
+    access_role_arn,
+    release_notes=None,
+    os_name=None,
+    os_version=None,
+    usage_instructions=None,
+    recommended_instance_type=None,
+    ssh_user=None
+):
+    data = {
+        'ChangeType': 'AWSMarketplace',
+        'Entity': {
+            'Type': 'AmiProduct@1.0',
+            'Identifier': entity_id
+        }
+    }
+
+    details = {
+        'Version': {
+            'VersionTitle': version_title
+        },
+        'DeliveryOptions': [{
+            'Details': {
+                'AmiDeliveryOptionDetails': {
+                    'AmiSource': {
+                        'AmiId': ami_id,
+                        'AccessRoleArn': access_role_arn
+                    }
+                }
+            }
+        }]
+    }
+
+    if release_notes:
+        details['Version']['ReleaseNotes'] = release_notes
+
+    delivery_options = details['DeliveryOptions'][0]['Details']['AmiDeliveryOptionDetails']
+
+    if ssh_user:
+        delivery_options['AmiSource']['UserName'] = ssh_user
+
+    if os_name:
+        delivery_options['AmiSource']['OperatingSystemName'] = os_name
+
+    if os_version:
+        delivery_options['AmiSource']['OperatingSystemVersion'] = os_version
+
+    if usage_instructions:
+        delivery_options['UsageInstructions'] = usage_instructions
+
+    if recommended_instance_type:
+        delivery_options['RecommendedInstaneType'] = recommended_instance_type
+
+    data['Details'] = json.dumps(details)
+
+    response = client.start_change_set(
+        Catalog=[data]
+    )
+
+    return response

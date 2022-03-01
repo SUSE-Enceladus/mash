@@ -1,5 +1,5 @@
 from pytest import raises
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from mash.mash_exceptions import MashPublishException
 from mash.services.publish.ec2_mp_job import EC2MPPublishJob
@@ -12,12 +12,17 @@ class TestEC2MPPublishJob(object):
             'last_service': 'publish',
             'requesting_user': 'user1',
             'cloud': 'ec2',
-            'publish_regions': [
-                {
-                    'account': 'test-aws',
-                    'target_regions': ['us-east-2']
-                }
-            ],
+            'entity_id': '123',
+            'version_title': 'openSUSE Leap 15.3 - v20220114',
+            'release_notes': 'https://en.opensuse.org/openSUSE:Release_Notes',
+            'access_role_arn': '',
+            'os_name': 'OTHERLINUX',
+            'os_version': '15.3',
+            'usage_instructions': 'Login using SSH...',
+            'recommended_instance_type': 't3.medium',
+            'publish_regions': {'test-aws': 'us-east-2'},
+            'share_with': '123456789',
+            'allow_copy': 'image',
             'utctime': 'now'
         }
 
@@ -34,6 +39,7 @@ class TestEC2MPPublishJob(object):
         }
         self.job.status_msg['cloud_image_name'] = 'image_name_123'
         self.job.status_msg['source_regions'] = {'us-east-2': 'image-id'}
+        self.job.status_msg['publish_date'] = '20220114'
         self.job._log_callback = Mock()
 
     def test_publish_ec2_missing_key(self):
@@ -42,6 +48,40 @@ class TestEC2MPPublishJob(object):
         with raises(MashPublishException):
             EC2MPPublishJob(self.job_config, self.config)
 
-    def test_publish(self):
+    @patch('mash.services.publish.ec2_mp_job.start_mp_change_set')
+    @patch('mash.services.publish.ec2_mp_job.EC2PublishImage')
+    def test_publish(self, mock_ec2_publish_image, mock_start_change_set):
+        publish = Mock()
+        mock_ec2_publish_image.return_value = publish
+        mock_start_change_set.return_value = {'ChangeSetId': '123'}
+
         self.job.run_job()
+
+        mock_ec2_publish_image.assert_called_once_with(
+            access_key='123456',
+            allow_copy='image',
+            image_name='image_name_123',
+            secret_key='654321',
+            visibility='123456789',
+            log_callback=self.job._log_callback
+        )
+
+        publish.set_region.assert_called_once_with('us-east-2')
+
+        assert publish.publish_images.call_count == 1
         assert self.job.status == 'success'
+
+    @patch('mash.services.publish.ec2_mp_job.start_mp_change_set')
+    @patch('mash.services.publish.ec2_mp_job.EC2PublishImage')
+    def test_publish_exception(
+        self,
+        mock_ec2_publish_image,
+        mock_start_change_set
+    ):
+        publish = Mock()
+        publish.publish_images.side_effect = Exception('Failed to publish.')
+        mock_ec2_publish_image.return_value = publish
+        mock_start_change_set.return_value = {'ChangeSetId': '123'}
+
+        with raises(MashPublishException):
+            self.job.run_job()

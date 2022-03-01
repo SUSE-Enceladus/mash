@@ -56,6 +56,7 @@ def test_get_mp_publish_message(mock_get_test_regions):
         'entity_id': '123',
         'ssh_user': 'root'
     })
+    job.target_account_info = {'us-east-2': {'account': 'acnt1'}}
 
     message = job.get_publish_message()
     assert JsonFormat.json_loads(message)['publish_job']['entity_id'] == '123'
