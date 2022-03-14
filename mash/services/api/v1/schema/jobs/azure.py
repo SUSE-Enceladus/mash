@@ -54,10 +54,6 @@ azure_job_message['properties']['vm_images_key'] = string_with_example(
     description='Dictionary key where sku information is found in the '
                 'offer doc.'
 )
-azure_job_message['properties']['publish_offer'] = {
-    'type': 'boolean',
-    'description': 'Whether to start the image publishing process.'
-}
 azure_job_message['properties']['cloud_account'] = string_with_example(
     'account1',
     description='The name of the cloud account to use for image '

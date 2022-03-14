@@ -28,7 +28,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python-rpm-macros
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
-BuildRequires:  python3-adal
 BuildRequires:  python3-azure-identity
 BuildRequires:  python3-azure-mgmt-compute >= 17.0.0
 BuildRequires:  python3-azure-mgmt-resource
@@ -57,9 +56,9 @@ BuildRequires:  python3-google-auth
 BuildRequires:  python3-google-cloud-storage
 BuildRequires:  python3-google-api-python-client
 BuildRequires:  python3-aliyun-img-utils >= 1.4.0
+BuildRequires:  python3-azure-img-utils
 BuildRequires:  python3-Werkzeug
 Requires:       rabbitmq-server
-Requires:       python3-adal
 Requires:       python3-azure-identity
 Requires:       python3-azure-mgmt-compute >= 17.0.0
 Requires:       python3-azure-mgmt-resource
@@ -88,6 +87,7 @@ Requires:       python3-google-auth
 Requires:       python3-google-cloud-storage
 Requires:       python3-google-api-python-client
 Requires:       python3-aliyun-img-utils >= 1.4.0
+Requires:       python3-azure-img-utils
 Requires:       python3-Werkzeug
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3

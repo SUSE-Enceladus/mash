@@ -5,7 +5,6 @@
 # $ pip install -U pip setuptools
 # $ pip install -r .virtualenv.requirements.txt
 
-adal
 azure-identity
 azure-mgmt-compute>=17.0.0
 azure-mgmt-resource
@@ -36,3 +35,4 @@ google-auth
 google-cloud-storage
 google-api-python-client
 aliyun-img-utils>=1.4.0
+azure-img-utils

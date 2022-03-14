@@ -40,7 +40,6 @@ class AzureJob(BaseJob):
             )
 
         self.vm_images_key = self.kwargs.get('vm_images_key')
-        self.publish_offer = self.kwargs.get('publish_offer', False)
         self.region = self.kwargs.get('region')
         self.source_container = self.kwargs.get('source_container')
         self.source_resource_group = self.kwargs.get('source_resource_group')
@@ -79,7 +78,6 @@ class AzureJob(BaseJob):
                 'cloud': self.cloud,
                 'publisher_id': self.publisher_id,
                 'sku': self.sku,
-                'publish_offer': self.publish_offer,
                 'account': self.cloud_account,
                 'region': self.region,
                 'container': self.source_container,

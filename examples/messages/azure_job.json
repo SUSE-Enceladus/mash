@@ -29,7 +29,6 @@
   "cloud_image_name_generation_suffix": "gen2",
   "vm_images_key": "key123",
   "notify": true,
-  "publish_offer": true,
   "cleanup_images": true,
   "additional_uploads": ["sha256"]
 }
