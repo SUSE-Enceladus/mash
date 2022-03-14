@@ -6,7 +6,6 @@ from mash.utils.azure import (
     get_blob_url,
     get_blob_service_with_account_keys,
     get_blob_service_with_sas_token,
-    image_exists,
     get_client_from_json
 )
 
@@ -97,22 +96,6 @@ def test_delete_image(mock_get_client):
         'rg1', 'image123'
     )
     async_wait.result.assert_called_once_with()
-
-
-@patch('mash.utils.azure.get_client_from_json')
-def test_image_exists(mock_get_client):
-    compute_client = MagicMock()
-    image = MagicMock()
-    image.name = 'image123'
-    compute_client.images.list.return_value = [image]
-    mock_get_client.return_value = compute_client
-
-    result = image_exists(
-        creds, 'image123'
-    )
-
-    assert result
-    compute_client.images.list.assert_called_once_with()
 
 
 @patch('mash.utils.azure.BlobServiceClient')
