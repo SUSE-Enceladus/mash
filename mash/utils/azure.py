@@ -16,8 +16,6 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import lzma
-
 from datetime import datetime, timedelta
 
 from azure.identity import ClientSecretCredential
@@ -28,9 +26,6 @@ from azure.storage.blob import (
     generate_container_sas,
     ContainerSasPermissions
 )
-
-from mash.mash_exceptions import MashAzureUtilsException
-from mash.utils.filetype import FileType
 
 
 def delete_blob(
@@ -51,26 +46,6 @@ def delete_blob(
     container_client = blob_service_client.get_container_client(container)
     blob_client = container_client.get_blob_client(blob)
     blob_client.delete_blob()
-
-
-def blob_exists(
-    credentials,
-    blob,
-    container,
-    resource_group,
-    storage_account
-):
-    """
-    Return True if blob exists in container.
-    """
-    blob_service_client = get_blob_service_with_account_keys(
-        credentials,
-        resource_group,
-        storage_account
-    )
-    container_client = blob_service_client.get_container_client(container)
-    blob_client = container_client.get_blob_client(blob)
-    return blob_client.exists()
 
 
 def delete_image(credentials, resource_group, image_name):
@@ -219,73 +194,6 @@ def get_blob_service_with_sas_token(
             account_name=storage_account
         ),
         credential=sas_token
-    )
-
-
-def upload_azure_file(
-    blob_name,
-    container,
-    file_name,
-    storage_account,
-    max_retry_attempts=5,
-    max_workers=5,
-    credentials=None,
-    resource_group=None,
-    sas_token=None,
-    is_page_blob=False,
-    expand_image=True
-):
-    if sas_token:
-        blob_service_client = get_blob_service_with_sas_token(
-            storage_account,
-            sas_token
-        )
-    elif credentials and resource_group:
-        blob_service_client = get_blob_service_with_account_keys(
-            credentials,
-            resource_group,
-            storage_account
-        )
-    else:
-        raise MashAzureUtilsException(
-            'Either an sas_token or credentials and resource_group '
-            ' is required to upload an azure image to a page blob.'
-        )
-
-    container_client = blob_service_client.get_container_client(container)
-    blob_client = container_client.get_blob_client(blob_name)
-
-    if is_page_blob:
-        blob_type = 'PageBlob'
-    else:
-        blob_type = 'BlockBlob'
-
-    system_image_file_type = FileType(file_name)
-    if system_image_file_type.is_xz() and expand_image:
-        open_image = lzma.LZMAFile
-    else:
-        open_image = open
-
-    msg = ''
-    while max_retry_attempts > 0:
-        with open_image(file_name, 'rb') as image_stream:
-            try:
-                blob_client.upload_blob(
-                    image_stream,
-                    blob_type=blob_type,
-                    length=system_image_file_type.get_size(),
-                    max_concurrency=max_workers
-                )
-                return
-            except Exception as error:
-                msg = error
-                max_retry_attempts -= 1
-
-    raise MashAzureUtilsException(
-        'Unable to upload file: {0} to Azure: {1}'.format(
-            file_name,
-            msg
-        )
     )
 
 
