@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2022 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from azure_img_utils.azure_image import AzureImage
+
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
@@ -24,11 +26,6 @@ from mash.utils.mash_utils import (
     timestamp_from_epoch
 )
 from mash.services.status_levels import SUCCESS
-from mash.utils.azure import (
-    upload_azure_file,
-    blob_exists,
-    delete_blob
-)
 
 
 class AzureUploadJob(MashJob):
@@ -77,49 +74,20 @@ class AzureUploadJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
-        exists = blob_exists(
-            credentials,
-            blob_name,
-            self.container,
-            self.resource_group,
-            self.storage_account
-        )
-
-        if exists and not self.force_replace_image:
-            raise MashUploadException(
-                'Image tarball: {blob_name} already exists '
-                'in container: {container}. Use force_replace_image '
-                'to replace the existing tarball.'.format(
-                    blob_name=blob_name,
-                    container=self.container
-                )
-            )
-        elif exists and self.force_replace_image:
-            self.log_callback.info(
-                'Deleting tarball: {0}, in the container named: '
-                '{1}.'.format(
-                    blob_name,
-                    self.container
-                )
-            )
-            delete_blob(
-                credentials,
-                blob_name,
-                self.container,
-                self.resource_group,
-                self.storage_account
-            )
-
-        upload_azure_file(
-            blob_name,
-            self.container,
-            self.status_msg['image_file'],
-            self.storage_account,
-            max_retry_attempts=self.config.get_azure_max_retry_attempts(),
-            max_workers=self.config.get_azure_max_workers(),
+        azure_image = AzureImage(
+            container=self.container,
+            storage_account=self.storage_account,
             credentials=credentials,
             resource_group=self.resource_group,
-            is_page_blob=True
+            log_callback=self.log_callback
+        )
+
+        azure_image.upload_image_blob(
+            self.status_msg['image_file'],
+            max_workers=self.config.get_azure_max_workers(),
+            max_retry_attempts=self.config.get_azure_max_retry_attempts(),
+            blob_name=blob_name,
+            force_replace_image=self.force_replace_image
         )
 
         self.status_msg['cloud_image_name'] = self.cloud_image_name
