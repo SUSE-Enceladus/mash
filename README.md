@@ -73,7 +73,6 @@ $ zypper in mash
 
 ## Requirements
 
-- adal
 - azure-mgmt-compute
 - azure-mgmt-resource
 - azure-mgmt-storage
