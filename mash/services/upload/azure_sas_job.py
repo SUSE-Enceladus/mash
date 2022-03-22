@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2022 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -18,12 +18,14 @@
 
 import re
 
+from azure_img_utils.azure_image import AzureImage
+from azure_img_utils.storage import upload_azure_file
+
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
-from mash.utils.azure import upload_azure_file
 
 
 # https://[storage-account].[maangement-url]/[container]?[SAS token]
@@ -62,14 +64,19 @@ class AzureSASUploadJob(MashJob):
 
         build = re.search(sas_url_match, self.raw_image_upload_location)
 
+        azure_image = AzureImage(
+            container=build.group(2),
+            storage_account=build.group(1),
+            sas_token=build.group(3),
+            log_callback=self.log_callback
+        )
         upload_azure_file(
-            self.blob_name,
-            build.group(2),
-            self.status_msg['image_file'],
-            build.group(1),
+            blob_name=self.blob_name,
+            container=build.group(2),
+            file_name=self.status_msg['image_file'],
+            blob_service_client=azure_image.blob_service_client,
             max_retry_attempts=self.config.get_azure_max_retry_attempts(),
             max_workers=self.config.get_azure_max_workers(),
-            sas_token=build.group(3),
             is_page_blob=True
         )
         self.log_callback.info(

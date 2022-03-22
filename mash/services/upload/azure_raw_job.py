@@ -1,4 +1,4 @@
-# Copyright (c) 2020 SUSE LLC.  All rights reserved.
+# Copyright (c) 2022 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -18,10 +18,12 @@
 
 import os
 
+from azure_img_utils.azure_image import AzureImage
+from azure_img_utils.storage import upload_azure_file
+
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.services.status_levels import SUCCESS
-from mash.utils.azure import upload_azure_file
 
 
 class AzureRawUploadJob(MashJob):
@@ -62,6 +64,14 @@ class AzureRawUploadJob(MashJob):
         )[-1]
         self.additional_uploads.append('')
 
+        azure_image = AzureImage(
+            container=self.container,
+            storage_account=self.storage_account,
+            credentials=credentials,
+            resource_group=self.resource_group,
+            log_callback=self.log_callback
+        )
+
         for extension in self.additional_uploads:
             upload_file_name = '.'.join(filter(None, [file_name, extension]))
             file_path = '.'.join(
@@ -72,11 +82,9 @@ class AzureRawUploadJob(MashJob):
                 upload_file_name,
                 self.container,
                 file_path,
-                self.storage_account,
+                azure_image.blob_service_client,
                 max_retry_attempts=self.config.get_azure_max_retry_attempts(),
                 max_workers=self.config.get_azure_max_workers(),
-                credentials=credentials,
-                resource_group=self.resource_group,
                 expand_image=False
             )
 
