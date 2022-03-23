@@ -1,4 +1,4 @@
-# Copyright (c) 2021 SUSE LLC.  All rights reserved.
+# Copyright (c) 2022 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -16,13 +16,12 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from azure.mgmt.compute import ComputeManagementClient
+from azure_img_utils.azure_image import AzureImage
 
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashCreateException
 from mash.services.status_levels import SUCCESS
-from mash.utils.azure import image_exists, delete_image, get_client_from_json
 
 
 class AzureCreateJob(MashJob):
@@ -57,10 +56,18 @@ class AzureCreateJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
 
+        azure_image = AzureImage(
+            container=self.container,
+            storage_account=self.storage_account,
+            credentials=credentials,
+            resource_group=self.resource_group,
+            log_callback=self.log_callback
+        )
+
         for firmware in self.boot_firmware:
             image_name = self._create_image(
                 self.blob_name,
-                credentials,
+                azure_image,
                 boot_firmware=firmware
             )
             self.status_msg['images'][firmware] = image_name
@@ -72,7 +79,7 @@ class AzureCreateJob(MashJob):
             )
         )
 
-    def _create_image(self, blob_name, credentials, boot_firmware='bios'):
+    def _create_image(self, blob_name, azure_image, boot_firmware='bios'):
         """
         Create image in ARM from existing page blob.
 
@@ -85,43 +92,12 @@ class AzureCreateJob(MashJob):
             hyper_v_generation = 'V1'
             image_name = self.cloud_image_name
 
-        if image_exists(credentials, image_name):
-            self.log_callback.info(
-                'Deleting image: {0}, image will be replaced.'.format(
-                    image_name
-                )
-            )
-            delete_image(
-                credentials,
-                self.resource_group,
-                image_name
-            )
-
-        compute_client = get_client_from_json(
-            ComputeManagementClient,
-            credentials
+        azure_image.create_compute_image(
+            blob_name=blob_name,
+            image_name=image_name,
+            region=self.region,
+            force_replace_image=True,
+            hyper_v_generation=hyper_v_generation
         )
-
-        async_create_image = compute_client.images.begin_create_or_update(
-            self.resource_group,
-            image_name, {
-                'location': self.region,
-                'hyper_v_generation': hyper_v_generation,
-                'storage_profile': {
-                    'os_disk': {
-                        'os_type': 'Linux',
-                        'os_state': 'Generalized',
-                        'caching': 'ReadWrite',
-                        'blob_uri': 'https://{0}.{1}/{2}/{3}'.format(
-                            self.storage_account,
-                            'blob.core.windows.net',
-                            self.container,
-                            blob_name
-                        )
-                    }
-                }
-            }
-        )
-        async_create_image.result()
 
         return image_name

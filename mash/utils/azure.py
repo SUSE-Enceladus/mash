@@ -62,31 +62,6 @@ def delete_image(credentials, resource_group, image_name):
     async_delete_image.result()
 
 
-def list_images(credentials):
-    """
-    Returns a list of image names.
-    """
-    compute_client = get_client_from_json(
-        ComputeManagementClient,
-        credentials
-    )
-    images = compute_client.images.list()
-
-    names = []
-    for image in images:
-        names.append(image.name)
-
-    return names
-
-
-def image_exists(credentials, image_name):
-    """
-    Return True if an image with name image_name exists.
-    """
-    images = list_images(credentials)
-    return image_name in images
-
-
 def create_sas_token(
     blob_service,
     storage_account,
