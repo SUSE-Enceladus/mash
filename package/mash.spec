@@ -28,11 +28,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python-rpm-macros
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
-BuildRequires:  python3-azure-identity
-BuildRequires:  python3-azure-mgmt-compute >= 17.0.0
-BuildRequires:  python3-azure-mgmt-resource
-BuildRequires:  python3-azure-mgmt-storage
-BuildRequires:  python3-azure-storage-blob >= 12.0.0
 BuildRequires:  python3-boto3
 BuildRequires:  python3-cryptography >= 2.2.0
 BuildRequires:  python3-PyYAML
@@ -59,11 +54,6 @@ BuildRequires:  python3-aliyun-img-utils >= 1.4.0
 BuildRequires:  python3-azure-img-utils
 BuildRequires:  python3-Werkzeug
 Requires:       rabbitmq-server
-Requires:       python3-azure-identity
-Requires:       python3-azure-mgmt-compute >= 17.0.0
-Requires:       python3-azure-mgmt-resource
-Requires:       python3-azure-mgmt-storage
-Requires:       python3-azure-storage-blob >= 12.0.0
 Requires:       python3-boto3
 Requires:       python3-cryptography >= 2.2.0
 Requires:       python3-PyYAML
