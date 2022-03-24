@@ -35,6 +35,20 @@ class EC2Job(BaseJob):
         self.allow_copy = self.kwargs.get('allow_copy', 'none')
         self.billing_codes = self.kwargs.get('billing_codes')
         self.use_root_swap = self.kwargs.get('use_root_swap', False)
+        self.entity_id = self.kwargs.get('entity_id')
+        self.version_title = self.kwargs.get('version_title')
+        self.release_notes = self.kwargs.get('release_notes')
+        self.access_role_arn = self.kwargs.get('access_role_arn')
+        self.os_name = self.kwargs.get('os_name')
+        self.os_version = self.kwargs.get('os_version')
+        self.usage_instructions = self.kwargs.get('usage_instructions')
+        self.recommended_instance_type = self.kwargs.get(
+            'recommended_instance_type'
+        )
+        self.publish_in_marketplace = self.kwargs.get(
+            'publish_in_marketplace',
+            False
+        )
 
     def _get_target_regions_list(self):
         """
@@ -76,17 +90,47 @@ class EC2Job(BaseJob):
         """
         Build publish job message.
         """
-        publish_message = {
-            'publish_job': {
-                'cloud': self.cloud,
-                'allow_copy': self.allow_copy,
-                'share_with': self.share_with,
-                'publish_regions': self.get_publish_regions()
+        if self.publish_in_marketplace:
+            publish_message = {
+                'publish_job': {
+                    'cloud': 'ec2_mp',
+                    'ssh_user': self.ssh_user,
+                    'entity_id': self.entity_id,
+                    'version_title': self.version_title,
+                    'release_notes': self.release_notes,
+                    'access_role_arn': self.access_role_arn,
+                    'os_name': self.os_name,
+                    'os_version': self.os_version,
+                    'usage_instructions': self.usage_instructions,
+                    'recommended_instance_type': self.recommended_instance_type,
+                    'allow_copy': self.allow_copy,
+                    'share_with': self.share_with,
+                    'publish_regions': self.get_mp_publish_regions()
+                }
             }
-        }
-        publish_message['publish_job'].update(self.base_message)
+        else:
+            publish_message = {
+                'publish_job': {
+                    'cloud': self.cloud,
+                    'allow_copy': self.allow_copy,
+                    'share_with': self.share_with,
+                    'publish_regions': self.get_publish_regions()
+                }
+            }
 
+        publish_message['publish_job'].update(self.base_message)
         return JsonFormat.json_message(publish_message)
+
+    def get_mp_publish_regions(self):
+        """
+        Return a dictionary of account names to source region names.
+        """
+        target_regions = {}
+
+        for source_region, value in self.target_account_info.items():
+            target_regions[value['account']] = source_region
+
+        return target_regions
 
     def get_publish_regions(self):
         """

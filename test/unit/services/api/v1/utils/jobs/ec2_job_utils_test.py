@@ -229,3 +229,33 @@ def test_validate_ec2_job(
     result = validate_ec2_job(job_doc)
 
     assert 'cloud_account' not in result
+
+
+@patch.object(LocalProxy, '_get_current_object')
+def test_validate_mp_fields(mock_get_current_obj):
+    app = Mock()
+    app.config = {
+        'SERVICE_NAMES': [
+            'obs',
+            'upload',
+            'create',
+            'test',
+            'raw_image_upload',
+            'replicate',
+            'publish',
+            'deprecate'
+        ]
+    }
+    mock_get_current_obj.return_value = app
+
+    job_doc = {
+        'last_service': 'publish',
+        'requesting_user': '1',
+        'cloud_account': 'acnt1',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'publish_in_marketplace': True
+    }
+
+    with raises(MashJobException):
+        validate_ec2_job(job_doc)

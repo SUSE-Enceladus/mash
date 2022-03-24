@@ -24,7 +24,8 @@ from mash.utils.ec2 import (
     cleanup_ec2_image,
     cleanup_all_ec2_images,
     get_image,
-    image_exists
+    image_exists,
+    start_mp_change_set
 )
 from mash.mash_exceptions import MashGCEUtilsException
 
@@ -114,3 +115,24 @@ def test_image_exists(mock_get_image):
 
     assert image_exists(client, 'image name 123')
     assert not image_exists(client, 'image name 321')
+
+
+def test_start_mp_change_set():
+    client = Mock()
+    client.start_change_set.return_value = {'ChangeSetId': '123'}
+
+    response = start_mp_change_set(
+        client,
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
+    assert response['ChangeSetId'] == '123'
