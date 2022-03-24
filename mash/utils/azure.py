@@ -19,47 +19,12 @@
 from datetime import datetime, timedelta
 
 from azure.identity import ClientSecretCredential
-from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.storage.blob import (
     BlobServiceClient,
     generate_container_sas,
     ContainerSasPermissions
 )
-
-
-def delete_blob(
-    credentials,
-    blob,
-    container,
-    resource_group,
-    storage_account
-):
-    """
-    Delete page blob in container.
-    """
-    blob_service_client = get_blob_service_with_account_keys(
-        credentials,
-        resource_group,
-        storage_account
-    )
-    container_client = blob_service_client.get_container_client(container)
-    blob_client = container_client.get_blob_client(blob)
-    blob_client.delete_blob()
-
-
-def delete_image(credentials, resource_group, image_name):
-    """
-    Delete the image from resource group.
-    """
-    compute_client = get_client_from_json(
-        ComputeManagementClient,
-        credentials
-    )
-    async_delete_image = compute_client.images.begin_delete(
-        resource_group, image_name
-    )
-    async_delete_image.result()
 
 
 def create_sas_token(
