@@ -50,9 +50,6 @@ class EC2Job(BaseJob):
             False
         )
 
-        if self.publish_in_marketplace:
-            self.last_service = 'publish'  # No deprecation for MP images
-
     def _get_target_regions_list(self):
         """
         Return list of region info.
@@ -106,7 +103,9 @@ class EC2Job(BaseJob):
                     'os_version': self.os_version,
                     'usage_instructions': self.usage_instructions,
                     'recommended_instance_type': self.recommended_instance_type,
-                    'publish_regions': self.get_publish_regions()
+                    'allow_copy': self.allow_copy,
+                    'share_with': self.share_with,
+                    'publish_regions': self.get_mp_publish_regions()
                 }
             }
         else:
@@ -121,6 +120,17 @@ class EC2Job(BaseJob):
 
         publish_message['publish_job'].update(self.base_message)
         return JsonFormat.json_message(publish_message)
+
+    def get_mp_publish_regions(self):
+        """
+        Return a dictionary of account names to source region names.
+        """
+        target_regions = {}
+
+        for source_region, value in self.target_account_info.items():
+            target_regions[value['account']] = source_region
+
+        return target_regions
 
     def get_publish_regions(self):
         """
