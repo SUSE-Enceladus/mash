@@ -121,6 +121,47 @@ ec2_job_message['properties']['skip_replication'] = {
                    'the image that is uploaded will not be replicated'
                    'to any regions.'
 }
+ec2_job_message['properties']['publish_in_marketplace'] = {
+    'type': 'boolean',
+    'description': 'Whether the image is published in the AWS Marketplace.'
+}
+ec2_job_message['properties']['entity_id'] = string_with_example(
+    '12345678-1234-1234-1234-012345678912',
+    description='The marketplace entity identifier. This is expected '
+                'to be a UUID format ID.'
+)
+ec2_job_message['properties']['version_title'] = string_with_example(
+    'openSUSE Leap 15.3 - v202220114',
+    description='The unique marketplace version title which will be '
+                'displayed to end users.'
+)
+ec2_job_message['properties']['release_notes'] = string_with_example(
+    'Information about a new version',
+    description='Notes for buyers to tell them about changes from one '
+                'version to the next.'
+)
+ec2_job_message['properties']['access_role_arn'] = string_with_example(
+    'arn:aws:iam::123456789012:role/exampleRole',
+    description='The access role that provides the AWS Marketplace with '
+                '"AMI Assets Ingestion" permissions.'
+)
+ec2_job_message['properties']['os_name'] = string_with_example(
+    'OTHERLINUX',
+    description='The name of the operating system for a marketplace image.'
+)
+ec2_job_message['properties']['os_version'] = string_with_example(
+    '15.3',
+    description='The operating system version for a marketplace image.'
+)
+ec2_job_message['properties']['usage_instructions'] = string_with_example(
+    'Instructions on image usage...',
+    description='Instructions for using the marketplace image.'
+)
+ec2_job_message['properties']['recommended_instance_type'] = string_with_example(
+    't3.medium',
+    description='The instance type that is recommended to run the service '
+                'with the marketplace image.'
+)
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},

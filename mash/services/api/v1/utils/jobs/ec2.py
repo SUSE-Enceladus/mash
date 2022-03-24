@@ -110,6 +110,27 @@ def convert_account_dict(accounts):
     return cloud_accounts
 
 
+def validate_mp_fields(job_doc):
+    mp_fields = [
+        'entity_id',
+        'version_title',
+        'access_role_arn'
+    ]
+    missing_mp_fields = []
+
+    for field in mp_fields:
+        if not job_doc.get(field):
+            missing_mp_fields.append(field)
+
+    if missing_mp_fields:
+        raise MashJobException(
+            'The following fields are required to publish a marketplace '
+            'image and are missing in the job doc: {fields}'.format(
+                fields=', '.join(missing_mp_fields)
+            )
+        )
+
+
 def validate_ec2_job(job_doc):
     """
     Validate job.
@@ -120,6 +141,9 @@ def validate_ec2_job(job_doc):
     and cloud_accounts keys from job_doc.
     """
     job_doc = validate_job(job_doc)
+
+    if job_doc.get('publish_in_marketplace'):
+        validate_mp_fields(job_doc)
 
     user_id = job_doc['requesting_user']
 
