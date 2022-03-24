@@ -1,3 +1,18 @@
+v12.1.0 (2022-03-24)
+====================
+
+- The default key for token identity is now "sub"
+  [\#801](https://github.com/SUSE-Enceladus/mash/pull/801)
+- Default guest os features to empty list
+  [\#802](https://github.com/SUSE-Enceladus/mash/pull/802)
+- Bump the size of generated ssh keys to 4096
+  [\#803](https://github.com/SUSE-Enceladus/mash/pull/803)
+- Change whitelist to allowlist
+  [\#804](https://github.com/SUSE-Enceladus/mash/pull/804)
+- Add handling for EC2 MP publishing
+  [\#805](https://github.com/SUSE-Enceladus/mash/pull/805)
+  [\#809](https://github.com/SUSE-Enceladus/mash/pull/809)
+
 v12.0.0 (2022-02-17)
 ====================
 
