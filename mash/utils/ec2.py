@@ -228,7 +228,7 @@ def start_mp_change_set(
     ssh_user=None
 ):
     data = {
-        'ChangeType': 'AWSMarketplace',
+        'ChangeType': 'AddDeliveryOptions',
         'Entity': {
             'Type': 'AmiProduct@1.0',
             'Identifier': entity_id
@@ -274,7 +274,8 @@ def start_mp_change_set(
     data['Details'] = json.dumps(details)
 
     response = client.start_change_set(
-        Catalog=[data]
+        Catalog='AWSMarketplace',
+        ChangeSet=[data]
     )
 
     return response
