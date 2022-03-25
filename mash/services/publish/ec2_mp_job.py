@@ -64,7 +64,7 @@ class EC2MPPublishJob(MashJob):
         self.status = SUCCESS
 
         # Get all account credentials in one request
-        self.request_credentials([self.publish_regions.keys()])
+        self.request_credentials(list(self.publish_regions.keys()))
         self.cloud_image_name = self.status_msg['cloud_image_name']
         self.version_title = format_string_with_date(
             self.version_title,
