@@ -33,8 +33,7 @@ class TestAzureTestJob(object):
         with pytest.raises(MashTestException):
             AzureTestJob(self.job_config, self.config)
 
-    @patch('mash.services.test.azure_job.delete_image')
-    @patch('mash.services.test.azure_job.delete_blob')
+    @patch('mash.services.test.azure_job.AzureImage')
     @patch('mash.services.test.azure_job.os')
     @patch('mash.services.test.azure_job.create_ssh_key_pair')
     @patch('mash.services.test.azure_job.random')
@@ -42,7 +41,7 @@ class TestAzureTestJob(object):
     @patch('mash.services.test.img_proof_helper.test_image')
     def test_test_run_azure_test(
         self, mock_test_image, mock_temp_file, mock_random,
-        mock_create_ssh_key_pair, mock_os, mock_delete_blob, mock_delete_image
+        mock_create_ssh_key_pair, mock_os, mock_azure_image
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -71,6 +70,9 @@ class TestAzureTestJob(object):
         )
         mock_random.choice.return_value = 'Standard_A0'
         mock_os.path.exists.return_value = False
+
+        azure_image = Mock()
+        mock_azure_image.return_value = azure_image
 
         job = AzureTestJob(self.job_config, self.config)
         mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
@@ -126,17 +128,21 @@ class TestAzureTestJob(object):
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
-        mock_delete_blob.side_effect = Exception('Cleanup blob failed!')
+        azure_image.delete_storage_blob.side_effect = Exception(
+            'Cleanup blob failed!'
+        )
 
         job.run_job()
 
         assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
-        assert mock_delete_image.call_count == 1
-        assert mock_delete_blob.call_count == 1
+        assert azure_image.delete_compute_image.call_count == 1
+        assert azure_image.delete_storage_blob.call_count == 1
 
         # Failed cleanup image
-        mock_delete_image.side_effect = Exception('Cleanup image failed!')
-        mock_delete_blob.side_effect = None
+        azure_image.delete_compute_image.side_effect = Exception(
+            'Cleanup image failed!'
+        )
+        azure_image.delete_storage_blob.side_effect = None
 
         job.run_job()
 

@@ -20,11 +20,12 @@ import os
 import random
 import traceback
 
+from azure_img_utils.azure_image import AzureImage
+
 from mash.mash_exceptions import MashTestException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import process_test_result
-from mash.utils.azure import delete_image, delete_blob
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
 from mash.services.test.img_proof_helper import img_proof_test
 
@@ -141,6 +142,14 @@ class AzureTestJob(MashJob):
         credentials = self.credentials[self.account]
         blob_name = self.status_msg['blob_name']
 
+        azure_image = AzureImage(
+            container=self.container,
+            storage_account=self.storage_account,
+            credentials=credentials,
+            resource_group=self.resource_group,
+            log_callback=self.log_callback
+        )
+
         for firmware, image in self.status_msg['images'].items():
             self.log_callback.info(
                 'Cleaning up image: {0} in region: {1}.'.format(
@@ -150,24 +159,14 @@ class AzureTestJob(MashJob):
             )
 
             try:
-                delete_image(
-                    credentials,
-                    self.resource_group,
-                    image
-                )
+                azure_image.delete_compute_image(image)
             except Exception as error:
                 msg = 'Failed to cleanup image: {0}'.format(error)
                 self.log_callback.warning(msg)
                 self.add_error_msg(msg)
 
         try:
-            delete_blob(
-                credentials,
-                blob_name,
-                self.container,
-                self.resource_group,
-                self.storage_account
-            )
+            azure_image.delete_storage_blob(blob_name)
         except Exception as error:
             msg = 'Failed to cleanup image page blob: {0}'.format(error)
             self.log_callback.warning(msg)

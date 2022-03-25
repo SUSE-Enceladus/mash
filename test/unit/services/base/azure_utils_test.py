@@ -1,8 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 from mash.utils.azure import (
-    delete_image,
-    delete_blob,
     get_blob_url,
     get_blob_service_with_account_keys,
     get_blob_service_with_sas_token,
@@ -63,39 +61,6 @@ def test_get_blob_service_with_account_keys(
         account_url='https://sa1.blob.core.windows.net',
         credential='12345678'
     )
-
-
-@patch('mash.utils.azure.get_blob_service_with_account_keys')
-def test_delete_blob(mock_get_blob_service):
-    blob_service = MagicMock()
-    container_client = MagicMock()
-    blob_client = MagicMock()
-
-    container_client.get_blob_client.return_value = blob_client
-    blob_service.get_container_client.return_value = container_client
-    mock_get_blob_service.return_value = blob_service
-
-    delete_blob(
-        creds, 'blob1', 'container1', 'rg1', 'sa1'
-    )
-
-    blob_client.delete_blob.assert_called_once_with()
-
-
-@patch('mash.utils.azure.get_client_from_json')
-def test_delete_image(mock_get_client):
-    compute_client = MagicMock()
-    async_wait = MagicMock()
-    compute_client.images.begin_delete.return_value = async_wait
-    mock_get_client.return_value = compute_client
-
-    delete_image(
-        creds, 'rg1', 'image123'
-    )
-    compute_client.images.begin_delete.assert_called_once_with(
-        'rg1', 'image123'
-    )
-    async_wait.result.assert_called_once_with()
 
 
 @patch('mash.utils.azure.BlobServiceClient')
