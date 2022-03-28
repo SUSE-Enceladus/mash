@@ -270,4 +270,4 @@ def start_mp_change_set(
         ChangeSet=[data]
     )
 
-    return response.get('ResponseMetadata', {})
+    return response
