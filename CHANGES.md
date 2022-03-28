@@ -1,3 +1,8 @@
+v12.2.1 (2022-03-28)
+====================
+
+- ChangeSetId in start_change_set response is not nested
+
 v12.2.0 (2022-03-28)
 ====================
 
