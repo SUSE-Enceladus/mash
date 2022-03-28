@@ -1,3 +1,9 @@
+v12.2.0 (2022-03-28)
+====================
+
+- Migrate to azure-img-utils package for Azure image functions
+  [\#813](https://github.com/SUSE-Enceladus/mash/pull/813)
+
 v12.1.1 (2022-03-28)
 ====================
 
