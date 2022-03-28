@@ -1,3 +1,13 @@
+v12.1.1 (2022-03-28)
+====================
+
+- Fix parameter order in start change set call
+  [\#814](https://github.com/SUSE-Enceladus/mash/pull/814)
+- Fix aws mp bug. Cast dict keys to a list before use
+  [\#815](https://github.com/SUSE-Enceladus/mash/pull/815)
+- Require all change set attrs
+  [\#816](https://github.com/SUSE-Enceladus/mash/pull/816)
+
 v12.1.0 (2022-03-24)
 ====================
 
