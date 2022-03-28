@@ -39,6 +39,12 @@ class EC2MPPublishJob(MashJob):
             self.entity_id = self.job_config['entity_id']
             self.version_title = self.job_config['version_title']
             self.access_role_arn = self.job_config['access_role_arn']
+            self.release_notes = self.job_config['release_notes']
+            self.os_name = self.job_config['os_name']
+            self.os_version = self.job_config['os_version']
+            self.usage_instructions = self.job_config['usage_instructions']
+            self.recommended_instance_type = \
+                self.job_config['recommended_instance_type']
         except KeyError as error:
             raise MashPublishException(
                 'EC2 MP publish Jobs require a(n) {0} '
@@ -47,12 +53,6 @@ class EC2MPPublishJob(MashJob):
                 )
             )
 
-        self.release_notes = self.job_config.get('release_notes')
-        self.os_name = self.job_config.get('os_name')
-        self.os_version = self.job_config.get('os_version')
-        self.usage_instructions = self.job_config.get('usage_instructions')
-        self.recommended_instance_type = \
-            self.job_config.get('recommended_instance_type')
         self.ssh_user = self.job_config.get('ssh_user', 'ec2-user')
         self.allow_copy = self.job_config.get('allow_copy', 'none')
         self.share_with = self.job_config.get('share_with', 'none')

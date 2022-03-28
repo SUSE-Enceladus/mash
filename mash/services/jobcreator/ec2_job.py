@@ -94,7 +94,6 @@ class EC2Job(BaseJob):
             publish_message = {
                 'publish_job': {
                     'cloud': 'ec2_mp',
-                    'ssh_user': self.ssh_user,
                     'entity_id': self.entity_id,
                     'version_title': self.version_title,
                     'release_notes': self.release_notes,
@@ -108,6 +107,9 @@ class EC2Job(BaseJob):
                     'publish_regions': self.get_mp_publish_regions()
                 }
             }
+
+            if self.ssh_user:
+                publish_message['publish_job']['ssh_user'] = self.ssh_user
         else:
             publish_message = {
                 'publish_job': {

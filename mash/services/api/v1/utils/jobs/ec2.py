@@ -114,7 +114,12 @@ def validate_mp_fields(job_doc):
     mp_fields = [
         'entity_id',
         'version_title',
-        'access_role_arn'
+        'release_notes',
+        'access_role_arn',
+        'os_name',
+        'os_version',
+        'usage_instructions',
+        'recommended_instance_type'
     ]
     missing_mp_fields = []
 

@@ -220,12 +220,12 @@ def start_mp_change_set(
     version_title,
     ami_id,
     access_role_arn,
-    release_notes=None,
-    os_name=None,
-    os_version=None,
-    usage_instructions=None,
-    recommended_instance_type=None,
-    ssh_user=None
+    release_notes,
+    os_name,
+    os_version,
+    usage_instructions,
+    recommended_instance_type,
+    ssh_user
 ):
     data = {
         'ChangeType': 'AddDeliveryOptions',
@@ -237,39 +237,31 @@ def start_mp_change_set(
 
     details = {
         'Version': {
-            'VersionTitle': version_title
+            'VersionTitle': version_title,
+            'ReleaseNotes': release_notes
         },
         'DeliveryOptions': [{
             'Details': {
                 'AmiDeliveryOptionDetails': {
+                    'UsageInstructions': usage_instructions,
+                    'RecommendedInstanceType': recommended_instance_type,
                     'AmiSource': {
                         'AmiId': ami_id,
-                        'AccessRoleArn': access_role_arn
-                    }
+                        'AccessRoleArn': access_role_arn,
+                        'UserName': ssh_user,
+                        'OperatingSystemName': os_name,
+                        'OperatingSystemVersion': os_version
+                    },
+                    'SecurityGroups': [{
+                        'FromPort': 22,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': ['0.0.0.0/0'],
+                        'ToPort': 22
+                    }]
                 }
             }
         }]
     }
-
-    if release_notes:
-        details['Version']['ReleaseNotes'] = release_notes
-
-    delivery_options = details['DeliveryOptions'][0]['Details']['AmiDeliveryOptionDetails']
-
-    if ssh_user:
-        delivery_options['AmiSource']['UserName'] = ssh_user
-
-    if os_name:
-        delivery_options['AmiSource']['OperatingSystemName'] = os_name
-
-    if os_version:
-        delivery_options['AmiSource']['OperatingSystemVersion'] = os_version
-
-    if usage_instructions:
-        delivery_options['UsageInstructions'] = usage_instructions
-
-    if recommended_instance_type:
-        delivery_options['RecommendedInstaneType'] = recommended_instance_type
 
     data['Details'] = json.dumps(details)
 
@@ -278,4 +270,4 @@ def start_mp_change_set(
         ChangeSet=[data]
     )
 
-    return response
+    return response.get('ResponseMetadata', {})
