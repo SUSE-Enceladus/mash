@@ -66,71 +66,33 @@ class TestAzureCreateJob(object):
         with raises(MashCreateException):
             AzureCreateJob(job_doc, self.config)
 
-    @patch('mash.services.create.azure_job.delete_image')
-    @patch('mash.services.create.azure_job.image_exists')
-    @patch('mash.services.create.azure_job.get_client_from_json')
+    @patch('mash.services.create.azure_job.AzureImage')
     @patch('builtins.open')
     def test_create(
         self,
         mock_open,
-        mock_get_client_from_json,
-        mock_image_exists,
-        mock_delete_image
+        mock_azure_image,
     ):
-        open_handle = MagicMock()
-        open_handle.__enter__.return_value = open_handle
-        mock_open.return_value = open_handle
-        mock_image_exists.return_value = False
-
-        client = MagicMock()
-        mock_get_client_from_json.return_value = client
-
-        async_create_image = Mock()
-        client.images.begin_create_or_update.return_value = async_create_image
+        azure_image = MagicMock()
+        mock_azure_image.return_value = azure_image
 
         self.job.status_msg['cloud_image_name'] = 'name'
         self.job.status_msg['blob_name'] = 'name.vhd'
         self.job.run_job()
 
-        assert mock_get_client_from_json.call_count == 2
-        client.images.begin_create_or_update.has_calls(
+        azure_image.create_compute_image.has_calls(
             call(
-                'group_name', 'name', {
-                    'location': 'region',
-                    'hyper_v_generation': 'V1',
-                    'storage_profile': {
-                        'os_disk': {
-                            'blob_uri':
-                            'https://storage.blob.core.windows.net/'
-                            'container/name.vhd',
-                            'os_type': 'Linux',
-                            'caching': 'ReadWrite',
-                            'os_state': 'Generalized'
-                        }
-                    }
-                }
+                blob_name='name.vhd',
+                image_name='name',
+                region='region',
+                force_replace_image=True,
+                hyper_v_generation='V1'
             ),
             call(
-                'group_name', 'name_uefi', {
-                    'location': 'region',
-                    'hyper_v_generation': 'V2',
-                    'storage_profile': {
-                        'os_disk': {
-                            'blob_uri':
-                                'https://storage.blob.core.windows.net/'
-                                'container/name.vhd',
-                            'os_type': 'Linux',
-                            'caching': 'ReadWrite',
-                            'os_state': 'Generalized'
-                        }
-                    }
-                }
+                blob_name='name.vhd',
+                image_name='name_uefi',
+                region='region',
+                force_replace_image=True,
+                hyper_v_generation='V2'
             )
         )
-        assert async_create_image.result.call_count == 2
-
-        # Image exists
-        mock_image_exists.return_value = True
-        self.job.run_job()
-
-        assert mock_delete_image.call_count == 2

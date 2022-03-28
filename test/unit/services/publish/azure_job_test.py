@@ -24,8 +24,7 @@ class TestAzurePublishJob(object):
             'publisher_id': 'suse',
             'sku': '123',
             'utctime': 'now',
-            'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure',
-            'publish_offer': True
+            'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure'
         }
 
         self.config = Mock()
@@ -59,86 +58,33 @@ class TestAzurePublishJob(object):
         with raises(MashPublishException):
             AzurePublishJob(self.job_config, self.config)
 
-    @patch(
-        'mash.services.publish.azure_job.wait_on_cloud_partner_operation'
-    )
-    @patch('mash.services.publish.azure_job.publish_cloud_partner_offer')
-    @patch('mash.services.publish.azure_job.put_cloud_partner_offer_doc')
-    @patch(
-        'mash.services.publish.azure_job.request_cloud_partner_offer_doc'
-    )
-    @patch.object(AzurePublishJob, '_get_blob_url')
-    def test_publish(
-        self, mock_get_blob_url,
-        mock_request_doc, mock_put_doc, mock_publish_offer,
-        mock_wait_on_operation
-    ):
-        self.job.vm_images_key = 'microsoft-azure-corevm.vmImagesPublicAzure'
-        mock_get_blob_url.return_value = 'blob/url/.vhd'
-
-        mock_request_doc.return_value = {
-            'definition': {
-                'plans': [
-                    {'planId': '123'}
-                ]
-            }
-        }
-
-        mock_publish_offer.return_value = '/api/operation/url'
+    @patch('mash.services.publish.azure_job.AzureImage')
+    def test_publish(self, mock_azure_image):
+        azure_image = MagicMock()
+        mock_azure_image.return_value = azure_image
 
         self.job.run_job()
 
         self.log.info.assert_has_calls([
-            call('Publishing image for account: acnt1, using cloud partner API.'),
+            call(
+                'Adding image to offer for account: acnt1, '
+                'using cloud partner API.'
+            ),
             call('Updated cloud partner offer doc for account: acnt1.'),
-            call('Publishing finished for account: acnt1.')
         ])
 
-    @patch('mash.services.publish.azure_job.put_cloud_partner_offer_doc')
-    @patch(
-        'mash.services.publish.azure_job.request_cloud_partner_offer_doc'
-    )
-    @patch.object(AzurePublishJob, '_get_blob_url')
-    def test_publish_exception(
-        self, mock_get_blob_url,
-        mock_request_doc, mock_put_doc
-    ):
-        self.job.vm_images_key = None
-        mock_get_blob_url.return_value = 'blob/url/.vhd'
-
-        mock_request_doc.return_value = {
-            'definition': {
-                'plans': [
-                    {'planId': '123'}
-                ]
-            }
-        }
-        mock_put_doc.side_effect = Exception('Invalid doc!')
+    @patch('mash.services.publish.azure_job.AzureImage')
+    def test_publish_exception(self, mock_azure_image):
+        azure_image = MagicMock()
+        mock_azure_image.return_value = azure_image
+        azure_image.add_image_to_offer.side_effect = Exception('Invalid doc!')
 
         self.job.run_job()
 
         self.log.info.assert_called_once_with(
-            'Publishing image for account: acnt1, using cloud partner API.'
+            'Adding image to offer for account: '
+            'acnt1, using cloud partner API.'
         )
         self.log.error.assert_called_once_with(
-            'There was an error publishing image in acnt1: Invalid doc!'
+            'There was an error adding image to offer in acnt1: Invalid doc!'
         )
-
-    @patch('mash.services.publish.azure_job.get_blob_url')
-    @patch('mash.services.publish.azure_job.get_blob_service_with_account_keys')
-    def test_get_blob_url(
-        self, mock_get_bs, mock_get_blob_url
-    ):
-        bs = Mock()
-        mock_get_bs.return_value = bs
-        mock_get_blob_url.return_value = 'blob/url'
-
-        url = self.job._get_blob_url(
-            'path/to/auth',
-            'blob 123',
-            'container',
-            'group1',
-            'account1'
-        )
-
-        assert url == 'blob/url'
