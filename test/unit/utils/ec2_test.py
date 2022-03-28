@@ -120,9 +120,7 @@ def test_image_exists(mock_get_image):
 def test_start_mp_change_set():
     client = Mock()
     client.start_change_set.return_value = {
-        'ResponseMetadata': {
-            'ChangeSetId': '123'
-        }
+        'ChangeSetId': '123'
     }
 
     response = start_mp_change_set(
