@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2022 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -29,12 +29,18 @@ from mash.services.test.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
 from mash.services.test.img_proof_helper import img_proof_test
 
-instance_types = [
-    'Standard_B1s',
-    'Standard_D2s_v4',
-    'Standard_E2s_v4',
-    'Standard_F2s_v2'
-]
+instance_types = {
+    'x86_64': [
+        'Standard_B1s',
+        'Standard_D2s_v4',
+        'Standard_E2s_v4',
+        'Standard_F2s_v2'
+    ],
+    'aarch64': [
+        'Standard_D2ps_v5',
+        'Standard_E2ps_v5'
+    ]
+}
 
 
 class AzureTestJob(MashJob):
@@ -66,9 +72,14 @@ class AzureTestJob(MashJob):
         self.instance_type = self.job_config.get('instance_type')
         self.ssh_user = self.job_config.get('ssh_user', 'azureuser')
         self.cleanup_images = self.job_config.get('cleanup_images')
+        self.cloud_architecture = self.job_config.get(
+            'cloud_architecture', 'x86_64'
+        )
 
         if not self.instance_type:
-            self.instance_type = random.choice(instance_types)
+            self.instance_type = random.choice(
+                instance_types[self.cloud_architecture]
+            )
 
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
         self.img_proof_timeout = self.config.get_img_proof_timeout()
