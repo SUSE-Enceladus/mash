@@ -1,3 +1,9 @@
+v12.3.0 (2022-04-08)
+====================
+
+- Add arm64 instance types to Azure testing
+  [\#817](https://github.com/SUSE-Enceladus/mash/pull/817)
+
 v12.2.2 (2022-03-28)
 ====================
 
