@@ -90,7 +90,6 @@ class EC2CreateJob(MashJob):
             self.base_cloud_image_name,
             timestamp=timestamp
         )
-        self.status_msg['publish_date'] = timestamp
         self.status_msg['cloud_image_name'] = self.cloud_image_name
 
         self.ec2_upload_parameters = {

@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import re
+
 from ec2imgutils.ec2publishimg import EC2PublishImage
 
 from mash.mash_exceptions import MashPublishException
@@ -66,9 +68,11 @@ class EC2MPPublishJob(MashJob):
         # Get all account credentials in one request
         self.request_credentials(list(self.publish_regions.keys()))
         self.cloud_image_name = self.status_msg['cloud_image_name']
+
+        timestamp = re.findall(r'\d{8}', self.cloud_image_name)[0]
         self.version_title = format_string_with_date(
             self.version_title,
-            timestamp=self.status_msg['publish_date']
+            timestamp=timestamp
         )
 
         for account, region in self.publish_regions.items():
