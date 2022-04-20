@@ -37,7 +37,7 @@ class TestEC2MPPublishJob(object):
                 'ssh_private_key': 'key123'
             }
         }
-        self.job.status_msg['cloud_image_name'] = 'image_name_123'
+        self.job.status_msg['cloud_image_name'] = 'image_name_v20220202'
         self.job.status_msg['source_regions'] = {'us-east-2': 'image-id'}
         self.job.status_msg['publish_date'] = '20220114'
         self.job._log_callback = Mock()
@@ -60,7 +60,7 @@ class TestEC2MPPublishJob(object):
         mock_ec2_publish_image.assert_called_once_with(
             access_key='123456',
             allow_copy='image',
-            image_name='image_name_123',
+            image_name='image_name_v20220202',
             secret_key='654321',
             visibility='123456789',
             log_callback=self.job._log_callback
