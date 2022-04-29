@@ -1,3 +1,12 @@
+v12.4.0 (2022-04-29)
+====================
+
+- EC2 MP class: Instead of passing publish date which can be
+  None parse the date timestamp from the image name.
+  [\#818](https://github.com/SUSE-Enceladus/mash/pull/818)
+- Update mash to use latest obs-img-utils v1.0.0
+  [\#819](https://github.com/SUSE-Enceladus/mash/pull/819)
+
 v12.3.0 (2022-04-08)
 ====================
 
