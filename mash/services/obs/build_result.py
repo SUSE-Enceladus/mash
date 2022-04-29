@@ -204,13 +204,13 @@ class OBSImageBuildResult(object):
                     'obs_result': {
                         'id': self.job_id,
                         'image_file':
-                            self.downloader.image_status['image_source'],
+                            self.downloader.image_source,
                         'status': self.job_status,
                         'errors': self.errors,
                         'notification_email': self.notification_email,
                         'last_service': self.last_service,
                         'build_time':
-                            self.downloader.image_status['buildtime'],
+                            self.downloader.build_time,
                     }
                 }
             )
@@ -239,6 +239,8 @@ class OBSImageBuildResult(object):
         self.log_callback.info('Job running')
 
         try:
+            # Force parse of metadata file to get build time
+            self.downloader.packages
             image_source = self.downloader.get_image()
             self.log_callback.info(
                 'Downloaded: {0}'.format(image_source)
@@ -257,7 +259,7 @@ class OBSImageBuildResult(object):
             self.errors.append(msg)
             self.log_callback.error(msg)
 
-            for condition in self.downloader.image_status['conditions']:
+            for condition in self.downloader.conditions:
                 if not condition.get('status'):
                     self.errors.append(
                         'Condition failed: {condition}'.format(

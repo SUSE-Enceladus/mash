@@ -42,10 +42,8 @@ class TestOBSImageBuildResult(object):
     def test_result_callback(self):
         self.obs_result.result_callback = Mock()
         self.obs_result.job_status = 'success'
-        self.downloader.image_status = {
-            'image_source': 'image',
-            'buildtime': '1601061355'
-        }
+        self.downloader.image_source = 'image'
+        self.downloader.build_time = '1601061355'
         self.obs_result._result_callback()
         self.obs_result.result_callback.assert_called_once_with(
             '815', {
@@ -130,9 +128,7 @@ class TestOBSImageBuildResult(object):
     def test_update_image_status_raises(
         self, mock_result_callback
     ):
-        self.downloader.image_status = {
-            'conditions': [{'version': '1.2.3', 'status': False}]
-        }
+        self.downloader.conditions = [{'version': '1.2.3', 'status': False}]
         self.downloader.get_image.side_effect = Exception(
             'request error'
         )
