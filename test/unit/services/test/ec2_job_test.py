@@ -132,7 +132,10 @@ class TestEC2TestJob(object):
             access_key=None,
             access_secret=None,
             v_switch_id=None,
-            use_gvnic=None
+            use_gvnic=None,
+            gallery_name=None,
+            gallery_resource_group=None,
+            image_version=None
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
         mock_cleanup_image.assert_called_once_with(

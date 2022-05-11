@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2022 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -153,6 +153,11 @@ class AzureJob(BaseJob):
         if self.cloud_architecture:
             test_message['test_job']['cloud_architecture'] = \
                 self.cloud_architecture
+
+        if self.gallery_name:
+            test_message['test_job']['cloud'] = 'azure_sig'
+            test_message['test_job']['gallery_name'] = self.gallery_name
+            test_message['test_job']['gallery_resource_group'] = self.gallery_resource_group
 
         test_message['test_job'].update(self.base_message)
 

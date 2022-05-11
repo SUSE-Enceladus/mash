@@ -126,7 +126,10 @@ class TestAliyunTestJob(object):
             access_key='123456789',
             access_secret='987654321',
             v_switch_id='vs1',
-            use_gvnic=None
+            use_gvnic=None,
+            gallery_name=None,
+            gallery_resource_group=None,
+            image_version=None
         )
         job._log_callback.info.reset_mock()
 

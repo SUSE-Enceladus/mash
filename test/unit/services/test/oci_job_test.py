@@ -118,7 +118,10 @@ class TestOCITestJob(object):
             access_key=None,
             access_secret=None,
             v_switch_id=None,
-            use_gvnic=None
+            use_gvnic=None,
+            gallery_name=None,
+            gallery_resource_group=None,
+            image_version=None
         )
         job._log_callback.info.reset_mock()
 
