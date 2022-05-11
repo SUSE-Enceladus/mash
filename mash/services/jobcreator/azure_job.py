@@ -52,6 +52,8 @@ class AzureJob(BaseJob):
         self.cloud_image_name_generation_suffix = self.kwargs.get(
             'cloud_image_name_generation_suffix'
         )
+        self.gallery_name = self.kwargs.get('gallery_name')
+        self.gallery_resource_group = self.kwargs.get('gallery_resource_group')
 
     def get_deprecate_message(self):
         """
@@ -200,6 +202,14 @@ class AzureJob(BaseJob):
                 'boot_firmware': self.boot_firmware
             }
         }
+
+        if self.gallery_name:
+            create_message['create_job']['cloud'] = 'azure_sig'
+            create_message['create_job']['sku'] = self.sku
+            create_message['create_job']['generation_id'] = self.generation_id
+            create_message['create_job']['offer_id'] = self.offer_id
+            create_message['create_job']['gallery_name'] = self.gallery_name
+            create_message['create_job']['gallery_resource_group'] = self.gallery_resource_group
 
         create_message['create_job'].update(self.base_message)
 

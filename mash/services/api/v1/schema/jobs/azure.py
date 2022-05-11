@@ -80,6 +80,17 @@ azure_job_message['properties']['region'] = string_with_example(
     description='The region to use for launching and test an instance '
                 'of the image.'
 )
+azure_job_message['properties']['gallery_name'] = string_with_example(
+    'gallery1',
+    description='The name of the shared image gallery where the image '
+                'defintion version will be created for image testing.'
+)
+azure_job_message['properties']['gallery_resource_group'] = string_with_example(
+    'rg1',
+    description='The name of the resource group where the shared image '
+                'gallery is found. By default the source_resource_group '
+                'is used.'
+)
 
 azure_job_message['required'].append('cloud_account')
 azure_job_message['properties']['image']['example'] = \

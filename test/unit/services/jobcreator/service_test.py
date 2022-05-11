@@ -274,7 +274,8 @@ class TestJobCreatorService(object):
         # create Job Doc
 
         data = json.loads(mock_publish.mock_calls[2][1][2])['create_job']
-        check_base_attrs(data)
+        check_base_attrs(data, cloud=False)
+        assert data['cloud'] == 'azure_sig'
         assert data['account'] == 'test-azure'
         assert data['container'] == 'container1'
         assert data['resource_group'] == 'rg-1'
