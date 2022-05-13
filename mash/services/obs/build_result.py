@@ -250,13 +250,14 @@ class OBSImageBuildResult(object):
             self.errors.append(msg)
             self.log_callback.error(msg)
 
-            for condition in self.downloader.conditions:
-                if not condition.get('status'):
-                    self.errors.append(
-                        'Condition failed: {condition}'.format(
-                            condition=condition
+            if self.downloader.conditions:
+                for condition in self.downloader.conditions:
+                    if not condition.get('status'):
+                        self.errors.append(
+                            'Condition failed: {condition}'.format(
+                                condition=condition
+                            )
                         )
-                    )
 
             self._result_callback()
 
