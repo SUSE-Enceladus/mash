@@ -30,9 +30,12 @@ from mash.services.status_levels import SUCCESS
 
 class AzureSIGCreateJob(MashJob):
     """
-    Implements Azure shared image gallery image creation
+    Implements Azure shared image gallery version creation
 
-    Creates a new version of an image definition.
+    Creates a new version inside the image definition based on
+    the offer_id, sku and generation_id.
+
+    The format of the image defintion name is: offer_id_sku.
     """
     def post_init(self):
         try:
