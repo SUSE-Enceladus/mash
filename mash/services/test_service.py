@@ -27,6 +27,7 @@ from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
 
 from mash.services.test.azure_job import AzureTestJob
+from mash.services.test.azure_sig_job import AzureSIGTestJob
 from mash.services.test.ec2_job import EC2TestJob
 from mash.services.test.gce_job import GCETestJob
 from mash.services.test.oci_job import OCITestJob
@@ -49,6 +50,7 @@ def main():
             service_name=service_name,
             job_types={
                 'azure': AzureTestJob,
+                'azure_sig': AzureSIGTestJob,
                 'ec2': EC2TestJob,
                 'gce': GCETestJob,
                 'oci': OCITestJob,

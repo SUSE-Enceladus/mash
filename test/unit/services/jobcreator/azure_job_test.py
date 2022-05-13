@@ -51,7 +51,7 @@ def test_azure_job_cleanup(mock_init):
         'offer_id': 'sles',
         'publisher_id': 'suse',
         'sku': 'sp1',
-        'cloud': 'azure'
+        'cloud': 'azure',
     }
     job.cloud = 'azure'
     job.tests = ['test1']
