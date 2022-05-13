@@ -17,7 +17,6 @@
 #
 
 import os
-import threading
 import logging
 
 from datetime import datetime
@@ -224,14 +223,6 @@ class OBSImageBuildResult(object):
         # and keep the active job waiting for an obs change
         pass
 
-    def _wait_for_new_image(self):
-        osc_result_thread = threading.Thread(
-            target=self.downloader.wait_for_new_image
-        )
-        osc_result_thread.start()
-        osc_result_thread.join()
-        self._update_image_status()
-
     def _update_image_status(self):
         self.log_callback.extra = {
             'job_id': self.job_id
@@ -259,13 +250,14 @@ class OBSImageBuildResult(object):
             self.errors.append(msg)
             self.log_callback.error(msg)
 
-            for condition in self.downloader.conditions:
-                if not condition.get('status'):
-                    self.errors.append(
-                        'Condition failed: {condition}'.format(
-                            condition=condition
+            if self.downloader.conditions:
+                for condition in self.downloader.conditions:
+                    if not condition.get('status'):
+                        self.errors.append(
+                            'Condition failed: {condition}'.format(
+                                condition=condition
+                            )
                         )
-                    )
 
             self._result_callback()
 
