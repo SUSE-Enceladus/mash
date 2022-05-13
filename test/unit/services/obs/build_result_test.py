@@ -102,19 +102,6 @@ class TestOBSImageBuildResult(object):
     def test_job_skipped_event(self, mock_result_callback):
         self.obs_result._job_skipped_event(Mock())
 
-    @patch('mash.services.obs.build_result.threading.Thread')
-    @patch.object(OBSImageBuildResult, '_update_image_status')
-    def test_wait_for_new_image(self, mock_image_status, mock_Thread):
-        osc_result_thread = Mock()
-        mock_Thread.return_value = osc_result_thread
-        self.obs_result._wait_for_new_image()
-        mock_Thread.assert_called_once_with(
-            target=self.downloader.wait_for_new_image
-        )
-        osc_result_thread.start.assert_called_once_with()
-        osc_result_thread.join.assert_called_once_with()
-        mock_image_status.assert_called_once_with()
-
     @patch.object(OBSImageBuildResult, '_result_callback')
     def test_update_image_status(
         self,

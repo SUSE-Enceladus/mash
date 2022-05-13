@@ -17,7 +17,6 @@
 #
 
 import os
-import threading
 import logging
 
 from datetime import datetime
@@ -223,14 +222,6 @@ class OBSImageBuildResult(object):
         # event was scheduled. In this case we just skip the event
         # and keep the active job waiting for an obs change
         pass
-
-    def _wait_for_new_image(self):
-        osc_result_thread = threading.Thread(
-            target=self.downloader.wait_for_new_image
-        )
-        osc_result_thread.start()
-        osc_result_thread.join()
-        self._update_image_status()
 
     def _update_image_status(self):
         self.log_callback.extra = {
