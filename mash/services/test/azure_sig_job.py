@@ -109,9 +109,6 @@ class AzureSIGTestJob(MashJob):
 
         with create_json_file(credentials) as auth_file:
             for image_definition in self.status_msg['images']:
-                # TODO: Need a way to determine firmware from image_definition
-                boot_firmware = 'uefi' if 'gen2' in image_definition else 'bios'
-
                 try:
                     result = img_proof_test(
                         cloud='azure',
@@ -126,7 +123,6 @@ class AzureSIGTestJob(MashJob):
                         ssh_user=self.ssh_user,
                         tests=self.tests,
                         log_callback=self.log_callback,
-                        boot_firmware=boot_firmware,
                         gallery_name=self.gallery_name,
                         gallery_resource_group=self.gallery_resource_group,
                         image_version=self.image_version

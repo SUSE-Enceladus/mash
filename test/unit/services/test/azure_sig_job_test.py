@@ -114,7 +114,7 @@ class TestAzureSIGTestJob(object):
             tenancy=None,
             tests=['test_stuff'],
             timeout=None,
-            enable_secure_boot=True,
+            enable_secure_boot=False,
             image_project=None,
             log_callback=job._log_callback,
             prefix_name='mash',
