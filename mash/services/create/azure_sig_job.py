@@ -110,7 +110,8 @@ class AzureSIGCreateJob(MashJob):
             gallery_image_name=image_name,
             image_version=self.image_version,
             region=self.region,
-            force_replace_image=True
+            force_replace_image=True,
+            gallery_resource_group=self.gallery_resource_group
         )
 
         self.log_callback.info(
