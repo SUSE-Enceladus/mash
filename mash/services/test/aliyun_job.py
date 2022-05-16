@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import logging
 import os
 import random
 import traceback
@@ -28,7 +29,7 @@ from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import process_test_result
 from mash.utils.aliyun import setup_key_pair
 from mash.utils.mash_utils import create_ssh_key_pair
-from mash.services.test.img_proof_helper import img_proof_test
+from img_proof.ipa_controller import test_image
 
 instance_types = [
     'ecs.t5-lc1m1.small'
@@ -100,8 +101,9 @@ class AliyunTestJob(MashJob):
             self.ssh_private_key_file
         ) as key_pair_name:
             try:
-                result = img_proof_test(
-                    cloud=self.cloud,
+                exit_status, result = test_image(
+                    self.cloud,
+                    cleanup=True,
                     access_key=credentials['access_key'],
                     access_secret=credentials['access_secret'],
                     description=self.description,
@@ -109,6 +111,7 @@ class AliyunTestJob(MashJob):
                     image_id=image_id,
                     instance_type=self.instance_type,
                     img_proof_timeout=self.img_proof_timeout,
+                    log_level=logging.DEBUG,
                     region=self.region,
                     ssh_key_name=key_pair_name,
                     ssh_private_key_file=self.ssh_private_key_file,
@@ -116,16 +119,19 @@ class AliyunTestJob(MashJob):
                     tests=self.tests,
                     security_group_id=self.security_group_id,
                     vswitch_id=self.vswitch_id,
-                    log_callback=self.log_callback
+                    log_callback=self.log_callback,
+                    prefix_name='mash'
                 )
             except Exception as error:
                 self.add_error_msg(str(error))
+                exit_status = 1
                 result = {
                     'status': EXCEPTION,
                     'msg': str(traceback.format_exc())
                 }
 
         self.status = process_test_result(
+            exit_status,
             result,
             self.log_callback,
             self.region,

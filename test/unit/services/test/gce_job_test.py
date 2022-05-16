@@ -27,7 +27,7 @@ class TestGCETestJob(object):
         self.config = Mock()
         self.config.get_ssh_private_key_file.return_value = \
             'private_ssh_key.file'
-        self.config.get_img_proof_timeout.return_value = None
+        self.config.get_img_proof_timeout.return_value = 600
 
     def test_test_gce_missing_key(self):
         del self.job_config['account']
@@ -46,7 +46,7 @@ class TestGCETestJob(object):
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.test.img_proof_helper.test_image')
+    @patch('mash.services.test.gce_job.test_image')
     def test_test_run_gce_test(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_get_region_list,
@@ -105,41 +105,24 @@ class TestGCETestJob(object):
         mock_test_image.assert_has_calls([
             call(
                 'gce',
-                access_key_id=None,
-                availability_domain=None,
                 cleanup=True,
-                compartment_id=None,
                 description=job.description,
                 distro='sles',
                 image_id='ami-123',
                 instance_type='n1-standard-1',
                 log_level=10,
-                oci_user_id=None,
+                img_proof_timeout=600,
                 region='us-west1-c',
-                secret_access_key=None,
-                security_group_id=None,
                 service_account_file='/tmp/acnt.file',
-                signing_key_file=None,
-                signing_key_fingerprint=None,
-                ssh_key_name=None,
                 ssh_private_key_file='private_ssh_key.file',
                 ssh_user='root',
-                subnet_id=None,
-                tenancy=None,
                 tests=['test_stuff'],
-                timeout=None,
                 enable_secure_boot=True,
-                image_project=None,
                 log_callback=job._log_callback,
+                image_project=None,
                 prefix_name='mash',
                 sev_capable=False,
-                access_key=None,
-                access_secret=None,
-                v_switch_id=None,
-                use_gvnic=False,
-                gallery_name=None,
-                gallery_resource_group=None,
-                image_version=None
+                use_gvnic=False
             )
         ])
         job._log_callback.warning.reset_mock()
@@ -164,7 +147,7 @@ class TestGCETestJob(object):
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.test.img_proof_helper.test_image')
+    @patch('mash.services.test.gce_job.test_image')
     def test_test_run_default_fallback(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_get_region_list,
@@ -199,79 +182,45 @@ class TestGCETestJob(object):
         mock_test_image.assert_has_calls([
             call(
                 'gce',
-                access_key_id=None,
-                availability_domain=None,
                 cleanup=True,
-                compartment_id=None,
                 description=job.description,
                 distro='sles',
                 image_id='ami-123',
                 instance_type='n1-standard-1',
                 log_level=10,
-                oci_user_id=None,
+                img_proof_timeout=600,
                 region='us-west1-c',
-                secret_access_key=None,
-                security_group_id=None,
                 service_account_file='/tmp/acnt.file',
-                signing_key_file=None,
-                signing_key_fingerprint=None,
-                ssh_key_name=None,
                 ssh_private_key_file='private_ssh_key.file',
                 ssh_user='root',
-                subnet_id=None,
-                tenancy=None,
                 tests=['test_stuff'],
-                timeout=None,
                 enable_secure_boot=True,
-                image_project=None,
                 log_callback=job._log_callback,
+                image_project=None,
                 prefix_name='mash',
                 sev_capable=False,
-                access_key=None,
-                access_secret=None,
-                v_switch_id=None,
-                use_gvnic=False,
-                gallery_name=None,
-                gallery_resource_group=None,
-                image_version=None
+                use_gvnic=False
             ),
             call(
                 'gce',
-                access_key_id=None,
-                availability_domain=None,
                 cleanup=True,
-                compartment_id=None,
                 description=job.description,
                 distro='sles',
                 image_id='ami-123',
                 instance_type='n1-standard-1',
                 log_level=10,
-                oci_user_id=None,
+                img_proof_timeout=600,
                 region='us-east1-c',
-                secret_access_key=None,
-                security_group_id=None,
                 service_account_file='/tmp/acnt.file',
-                signing_key_file=None,
-                signing_key_fingerprint=None,
-                ssh_key_name=None,
                 ssh_private_key_file='private_ssh_key.file',
                 ssh_user='root',
-                subnet_id=None,
-                tenancy=None,
                 tests=['test_stuff'],
-                timeout=None,
                 enable_secure_boot=True,
-                image_project=None,
                 log_callback=job._log_callback,
+                image_project=None,
                 prefix_name='mash',
                 sev_capable=False,
-                access_key=None,
-                access_secret=None,
-                v_switch_id=None,
-                use_gvnic=False,
-                gallery_name=None,
-                gallery_resource_group=None,
-                image_version=None
+                use_gvnic=False
             )
         ])
 
@@ -307,7 +256,7 @@ class TestGCETestJob(object):
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.test.img_proof_helper.test_image')
+    @patch('mash.services.test.gce_job.test_image')
     def test_run_gce_gvnic(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_get_region_list,
@@ -365,40 +314,23 @@ class TestGCETestJob(object):
         mock_test_image.assert_has_calls([
             call(
                 'gce',
-                access_key_id=None,
-                availability_domain=None,
                 cleanup=True,
-                compartment_id=None,
                 description=job.description,
                 distro='sles',
                 image_id='ami-123',
                 instance_type='n1-standard-1',
                 log_level=10,
-                oci_user_id=None,
+                img_proof_timeout=600,
                 region='us-west1-c',
-                secret_access_key=None,
-                security_group_id=None,
                 service_account_file='/tmp/acnt.file',
-                signing_key_file=None,
-                signing_key_fingerprint=None,
-                ssh_key_name=None,
                 ssh_private_key_file='private_ssh_key.file',
                 ssh_user='root',
-                subnet_id=None,
-                tenancy=None,
                 tests=['test_stuff'],
-                timeout=None,
                 enable_secure_boot=True,
-                image_project=None,
                 log_callback=job._log_callback,
+                image_project=None,
                 prefix_name='mash',
                 sev_capable=False,
-                access_key=None,
-                access_secret=None,
-                v_switch_id=None,
-                use_gvnic=True,
-                gallery_name=None,
-                gallery_resource_group=None,
-                image_version=None
+                use_gvnic=True
             )
         ])

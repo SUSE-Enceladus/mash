@@ -25,21 +25,22 @@ def get_testing_account(account_info):
     return account_info.get('testing_account', account_info['account'])
 
 
-def process_test_result(result, log_callback, region, status_msg):
+def process_test_result(status, result, log_callback, region, status_msg):
     if 'tests' in result:
         status_msg['test_results'] = json.dumps({
             'tests': result['tests'],
             'summary': result['summary']
         })
 
-    if 'results_file' in result:
+    if 'results_file' in result.get('info', {}):
         log_callback.info(
             'Results file for {0} region: {1}'.format(
-                region, result['results_file']
+                region,
+                result['info']['results_file']
             )
         )
 
-    if result['status'] != SUCCESS:
+    if status != 0:
         log_callback.warning(
             'Image tests failed in region: {0}.'.format(region)
         )

@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import logging
 import os
 import random
 import traceback
@@ -27,7 +28,7 @@ from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
-from mash.services.test.img_proof_helper import img_proof_test
+from img_proof.ipa_controller import test_image
 
 instance_types = {
     'x86_64': [
@@ -104,31 +105,35 @@ class AzureTestJob(MashJob):
         self.cloud_image_name = self.status_msg['cloud_image_name']
 
         with create_json_file(credentials) as auth_file:
-            for firmware, image in self.status_msg['images'].items():
+            for image in self.status_msg['images'].values():
                 try:
-                    result = img_proof_test(
-                        cloud=self.cloud,
+                    exit_status, result = test_image(
+                        self.cloud,
+                        cleanup=True,
                         description=self.description,
                         distro=self.distro,
                         image_id=image,
                         instance_type=self.instance_type,
                         img_proof_timeout=self.img_proof_timeout,
+                        log_level=logging.DEBUG,
                         region=self.region,
                         service_account_file=auth_file,
                         ssh_private_key_file=self.ssh_private_key_file,
                         ssh_user=self.ssh_user,
                         tests=self.tests,
                         log_callback=self.log_callback,
-                        boot_firmware=firmware
+                        prefix_name='mash'
                     )
                 except Exception as error:
                     self.add_error_msg(str(error))
+                    exit_status = 1
                     result = {
                         'status': EXCEPTION,
                         'msg': str(traceback.format_exc())
                     }
 
                 self.status = process_test_result(
+                    exit_status,
                     result,
                     self.log_callback,
                     self.region,
@@ -161,7 +166,7 @@ class AzureTestJob(MashJob):
             log_callback=self.log_callback
         )
 
-        for firmware, image in self.status_msg['images'].items():
+        for image in self.status_msg['images'].values():
             self.log_callback.info(
                 'Cleaning up image: {0} in region: {1}.'.format(
                     image,

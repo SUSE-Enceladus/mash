@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import logging
 import os
 import random
 import traceback
@@ -27,7 +28,7 @@ from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
-from mash.services.test.img_proof_helper import img_proof_test
+from img_proof.ipa_controller import test_image
 
 instance_types = {
     'x86_64': [
@@ -110,31 +111,36 @@ class AzureSIGTestJob(MashJob):
         with create_json_file(credentials) as auth_file:
             for image_definition in self.status_msg['images']:
                 try:
-                    result = img_proof_test(
-                        cloud='azure',
+                    exit_status, result = test_image(
+                        'azure',
+                        cleanup=True,
                         description=self.description,
                         distro=self.distro,
                         image_id=image_definition,
                         instance_type=self.instance_type,
                         img_proof_timeout=self.img_proof_timeout,
+                        log_level=logging.DEBUG,
                         region=self.region,
                         service_account_file=auth_file,
                         ssh_private_key_file=self.ssh_private_key_file,
                         ssh_user=self.ssh_user,
                         tests=self.tests,
                         log_callback=self.log_callback,
+                        prefix_name='mash',
                         gallery_name=self.gallery_name,
                         gallery_resource_group=self.gallery_resource_group,
                         image_version=self.image_version
                     )
                 except Exception as error:
                     self.add_error_msg(str(error))
+                    exit_status = 1
                     result = {
                         'status': EXCEPTION,
                         'msg': str(traceback.format_exc())
                     }
 
                 self.status = process_test_result(
+                    exit_status,
                     result,
                     self.log_callback,
                     self.region,

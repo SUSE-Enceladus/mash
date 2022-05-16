@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import logging
 import os
 import random
 import traceback
@@ -33,7 +34,7 @@ from mash.utils.ec2 import (
     wait_for_instance_termination,
     cleanup_ec2_image
 )
-from mash.services.test.img_proof_helper import img_proof_test
+from img_proof.ipa_controller import test_image
 
 instance_types = {
     'x86_64': [
@@ -127,14 +128,16 @@ class EC2TestJob(MashJob):
                 subnet_id=info.get('subnet')
             ) as network_details:
                 try:
-                    result = img_proof_test(
+                    exit_status, result = test_image(
+                        self.cloud,
                         access_key_id=credentials['access_key_id'],
-                        cloud=self.cloud,
+                        cleanup=True,
                         description=self.description,
                         distro=self.distro,
                         image_id=self.status_msg['source_regions'][region],
                         instance_type=self.instance_type,
                         img_proof_timeout=self.img_proof_timeout,
+                        log_level=logging.DEBUG,
                         region=region,
                         secret_access_key=credentials['secret_access_key'],
                         security_group_id=network_details['security_group_id'],
@@ -143,23 +146,26 @@ class EC2TestJob(MashJob):
                         ssh_user=self.ssh_user,
                         subnet_id=network_details['subnet_id'],
                         tests=self.tests,
-                        log_callback=self.log_callback
+                        log_callback=self.log_callback,
+                        prefix_name='mash'
                     )
                 except Exception as error:
                     self.add_error_msg(str(error))
+                    exit_status = 1
                     result = {
                         'status': EXCEPTION,
                         'msg': str(traceback.format_exc())
                     }
 
                 status = process_test_result(
+                    exit_status,
                     result,
                     self.log_callback,
                     region,
                     self.status_msg
                 )
 
-                instance_id = result.get('instance_id')
+                instance_id = result.get('info', {}).get('instance')
                 if instance_id:
                     # Wait until instance is terminated to exit
                     # context manager and cleanup resources.

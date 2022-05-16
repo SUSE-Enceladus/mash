@@ -40,7 +40,7 @@ class TestAliyunTestJob(object):
     @patch('mash.services.test.aliyun_job.create_ssh_key_pair')
     @patch('mash.services.test.aliyun_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.test.img_proof_helper.test_image')
+    @patch('mash.services.test.aliyun_job.test_image')
     def test_aliyun_image_proof(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_cleanup_image,
@@ -95,41 +95,24 @@ class TestAliyunTestJob(object):
 
         mock_test_image.assert_called_once_with(
             'aliyun',
-            access_key_id=None,
-            availability_domain=None,
             cleanup=True,
-            compartment_id=None,
+            access_key='123456789',
+            access_secret='987654321',
             description=job.description,
             distro='sles',
             image_id='i-123456',
             instance_type='ecs.t5-lc1m1.small',
+            img_proof_timeout=600,
             log_level=10,
-            oci_user_id=None,
             region='cn-beijing',
-            secret_access_key=None,
-            security_group_id='sg1',
-            service_account_file=None,
-            signing_key_file=None,
-            signing_key_fingerprint=None,
             ssh_key_name='random_name',
             ssh_private_key_file='/var/lib/mash/ssh_key',
             ssh_user='ali-user',
-            subnet_id=None,
-            tenancy=None,
             tests=['test_stuff'],
-            timeout=600,
-            enable_secure_boot=False,
-            image_project=None,
+            security_group_id='sg1',
+            vswitch_id='vs1',
             log_callback=job._log_callback,
-            prefix_name='mash',
-            sev_capable=None,
-            access_key='123456789',
-            access_secret='987654321',
-            v_switch_id='vs1',
-            use_gvnic=None,
-            gallery_name=None,
-            gallery_resource_group=None,
-            image_version=None
+            prefix_name='mash'
         )
         job._log_callback.info.reset_mock()
 
