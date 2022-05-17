@@ -24,7 +24,7 @@ class TestEC2TestJob(object):
         self.config = Mock()
         self.config.get_ssh_private_key_file.return_value = \
             'private_ssh_key.file'
-        self.config.get_img_proof_timeout.return_value = None
+        self.config.get_img_proof_timeout.return_value = 600
 
     def test_test_ec2_missing_key(self):
         del self.job_config['test_regions']
@@ -41,7 +41,7 @@ class TestEC2TestJob(object):
     @patch('mash.utils.ec2.get_client')
     @patch('mash.utils.ec2.get_key_from_file')
     @patch('mash.utils.ec2.get_vpc_id_from_subnet')
-    @patch('mash.services.test.img_proof_helper.test_image')
+    @patch('mash.services.test.ec2_job.test_image')
     def test_test_run_test(
         self, mock_test_image, mock_get_vpc_id_from_subnet,
         mock_get_key_from_file, mock_get_client, mock_generate_name,
@@ -102,40 +102,23 @@ class TestEC2TestJob(object):
         mock_test_image.assert_called_once_with(
             'ec2',
             access_key_id='123',
-            availability_domain=None,
             cleanup=True,
-            compartment_id=None,
             description=job.description,
             distro='sles',
             image_id='ami-123',
             instance_type='t2.micro',
             log_level=10,
-            oci_user_id=None,
+            img_proof_timeout=600,
             region='us-east-1',
             secret_access_key='321',
             security_group_id='sg-123456789',
-            service_account_file=None,
-            signing_key_file=None,
-            signing_key_fingerprint=None,
             ssh_key_name='random_name',
             ssh_private_key_file='private_ssh_key.file',
             ssh_user='ec2-user',
             subnet_id='subnet-123456789',
-            tenancy=None,
             tests=['test_stuff'],
-            timeout=None,
-            enable_secure_boot=False,
-            image_project=None,
             log_callback=job._log_callback,
-            prefix_name='mash',
-            sev_capable=None,
-            access_key=None,
-            access_secret=None,
-            v_switch_id=None,
-            use_gvnic=None,
-            gallery_name=None,
-            gallery_resource_group=None,
-            image_version=None
+            prefix_name='mash'
         )
         client.delete_key_pair.assert_called_once_with(KeyName='random_name')
         mock_cleanup_image.assert_called_once_with(

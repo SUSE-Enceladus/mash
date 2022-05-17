@@ -26,7 +26,7 @@ class TestAzureSIGTestJob(object):
         self.config = Mock()
         self.config.get_ssh_private_key_file.return_value = \
             'private_ssh_key.file'
-        self.config.get_img_proof_timeout.return_value = None
+        self.config.get_img_proof_timeout.return_value = 600
 
     def test_test_azure_sig_missing_key(self):
         del self.job_config['account']
@@ -39,7 +39,7 @@ class TestAzureSIGTestJob(object):
     @patch('mash.services.test.azure_sig_job.create_ssh_key_pair')
     @patch('mash.services.test.azure_sig_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.test.img_proof_helper.test_image')
+    @patch('mash.services.test.azure_sig_job.test_image')
     def test_run_azure_sig_test(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_azure_image
@@ -91,38 +91,20 @@ class TestAzureSIGTestJob(object):
 
         mock_test_image.assert_called_once_with(
             'azure',
-            access_key_id=None,
-            availability_domain=None,
             cleanup=True,
-            compartment_id=None,
             description=job.description,
             distro='sles',
             image_id='image_123_gen2',
             instance_type='Standard_A0',
             log_level=10,
-            oci_user_id=None,
+            img_proof_timeout=600,
             region='East US',
-            secret_access_key=None,
-            security_group_id=None,
             service_account_file='/tmp/acnt.file',
-            signing_key_file=None,
-            signing_key_fingerprint=None,
-            ssh_key_name=None,
             ssh_private_key_file='private_ssh_key.file',
             ssh_user='azureuser',
-            subnet_id=None,
-            tenancy=None,
             tests=['test_stuff'],
-            timeout=None,
-            enable_secure_boot=False,
-            image_project=None,
             log_callback=job._log_callback,
             prefix_name='mash',
-            sev_capable=None,
-            access_key=None,
-            access_secret=None,
-            v_switch_id=None,
-            use_gvnic=None,
             gallery_name='gallery1',
             gallery_resource_group='srg',
             image_version='2022.02.02'

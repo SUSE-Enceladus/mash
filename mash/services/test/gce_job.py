@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import logging
 import os
 import random
 import traceback
@@ -32,7 +33,7 @@ from mash.utils.gce import (
     get_gce_compute_driver,
     get_gce_storage_driver
 )
-from mash.services.test.img_proof_helper import img_proof_test
+from img_proof.ipa_controller import test_image
 
 from img_proof.ipa_exceptions import IpaRetryableError
 
@@ -149,28 +150,34 @@ class GCETestJob(MashJob):
                 else:
                     test_gvnic = False
 
+                enable_secure_boot = True if firmware == 'uefi' else False
+
                 retry_region = self.region
                 while fallback_regions:
                     try:
-                        result = img_proof_test(
-                            cloud=self.cloud,
+                        exit_status, result = test_image(
+                            self.cloud,
+                            cleanup=True,
                             description=self.description,
                             distro=self.distro,
                             image_id=self.cloud_image_name,
                             instance_type=self.instance_type,
                             img_proof_timeout=self.img_proof_timeout,
+                            log_level=logging.DEBUG,
                             region=retry_region,
                             service_account_file=auth_file,
                             ssh_private_key_file=self.ssh_private_key_file,
                             ssh_user=self.ssh_user,
                             tests=self.tests,
-                            boot_firmware=firmware,
+                            enable_secure_boot=enable_secure_boot,
                             image_project=self.image_project,
                             log_callback=self.log_callback,
+                            prefix_name='mash',
                             sev_capable=self.sev_capable,
                             use_gvnic=test_gvnic
                         )
                     except IpaRetryableError as error:
+                        exit_status = 1
                         result = {
                             'status': EXCEPTION,
                             'msg': str(error)
@@ -181,6 +188,7 @@ class GCETestJob(MashJob):
                             retry_region = random.choice(list(fallback_regions))
                     except Exception as error:
                         self.add_error_msg(str(error))
+                        exit_status = 1
                         result = {
                             'status': EXCEPTION,
                             'msg': str(traceback.format_exc())
@@ -190,6 +198,7 @@ class GCETestJob(MashJob):
                         break
 
                 self.status = process_test_result(
+                    exit_status,
                     result,
                     self.log_callback,
                     self.region,

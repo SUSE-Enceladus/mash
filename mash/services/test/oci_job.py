@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+import logging
 import os
 import random
 import traceback
@@ -29,7 +30,7 @@ from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair, create_key_file
-from mash.services.test.img_proof_helper import img_proof_test
+from img_proof.ipa_controller import test_image
 
 instance_types = [
     'VM.Standard2.1'
@@ -99,15 +100,17 @@ class OCITestJob(MashJob):
 
         with create_key_file(credentials['signing_key']) as signing_key_file:
             try:
-                result = img_proof_test(
+                exit_status, result = test_image(
+                    self.cloud,
                     availability_domain=self.availability_domain,
-                    cloud=self.cloud,
+                    cleanup=True,
                     compartment_id=self.compartment_id,
                     description=self.description,
                     distro=self.distro,
                     image_id=image_id,
                     instance_type=self.instance_type,
                     img_proof_timeout=self.img_proof_timeout,
+                    log_level=logging.DEBUG,
                     oci_user_id=self.oci_user_id,
                     region=self.region,
                     signing_key_file=signing_key_file,
@@ -116,16 +119,19 @@ class OCITestJob(MashJob):
                     ssh_user=self.ssh_user,
                     tenancy=self.tenancy,
                     tests=self.tests,
-                    log_callback=self.log_callback
+                    log_callback=self.log_callback,
+                    prefix_name='mash'
                 )
             except Exception as error:
                 self.add_error_msg(str(error))
+                exit_status = 1
                 result = {
                     'status': EXCEPTION,
                     'msg': str(traceback.format_exc())
                 }
 
         self.status = process_test_result(
+            exit_status,
             result,
             self.log_callback,
             self.region,

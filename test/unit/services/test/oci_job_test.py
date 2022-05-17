@@ -39,7 +39,7 @@ class TestOCITestJob(object):
     @patch('mash.services.test.oci_job.create_ssh_key_pair')
     @patch('mash.services.test.oci_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
-    @patch('mash.services.test.img_proof_helper.test_image')
+    @patch('mash.services.test.oci_job.test_image')
     def test_oci_image_proof(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_cleanup_image
@@ -87,7 +87,6 @@ class TestOCITestJob(object):
 
         mock_test_image.assert_called_once_with(
             'oci',
-            access_key_id=None,
             availability_domain='Omic:PHX-AD-1',
             cleanup=True,
             compartment_id='ocid1.compartment.oc1..',
@@ -96,32 +95,17 @@ class TestOCITestJob(object):
             image_id='ocid1.image.oc1..',
             instance_type='VM.Standard2.1',
             log_level=10,
+            img_proof_timeout=600,
             oci_user_id='ocid1.user.oc1..',
             region='us-phoenix-1',
-            secret_access_key=None,
-            security_group_id=None,
-            service_account_file=None,
             signing_key_file='/tmp/acnt.file',
             signing_key_fingerprint='fake fingerprint',
-            ssh_key_name=None,
             ssh_private_key_file='/var/lib/mash/ssh_key',
             ssh_user='opc',
-            subnet_id=None,
             tenancy='ocid1.tenancy.oc1..',
             tests=['test_stuff'],
-            timeout=600,
-            enable_secure_boot=False,
-            image_project=None,
             log_callback=job._log_callback,
-            prefix_name='mash',
-            sev_capable=None,
-            access_key=None,
-            access_secret=None,
-            v_switch_id=None,
-            use_gvnic=None,
-            gallery_name=None,
-            gallery_resource_group=None,
-            image_version=None
+            prefix_name='mash'
         )
         job._log_callback.info.reset_mock()
 
