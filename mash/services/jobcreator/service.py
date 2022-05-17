@@ -154,6 +154,7 @@ class JobCreatorService(MashService):
                 notification_email,
                 job_doc['status'],
                 job_doc.get('cloud_image_name'),
+                job_doc.get('blob_name'),
                 job_doc['errors']
             )
 
@@ -216,16 +217,21 @@ class JobCreatorService(MashService):
         job_id,
         status,
         image_name,
+        blob_name,
         errors=None
     ):
         """
         Build content string for job notification message.
         """
         msg = [
-            'Job: {job_id}\n'
-            'Image Name: {image_name}\n'
+            f'Job: {job_id}\n'
         ]
         error_msg = ''
+
+        if image_name:
+            msg.append(f'Image Name: {image_name}\n')
+        elif blob_name:
+            msg.append(f'Blob Name: {blob_name}\n')
 
         if status == SUCCESS:
             msg.append('Job finished successfully.')
@@ -234,15 +240,11 @@ class JobCreatorService(MashService):
 
             if errors:
                 error_msg = '\n\n'.join(errors)
-                msg.append(' The following errors were logged: \n\n{error_msg}')
+                msg.append(f' The following errors were logged: \n\n{error_msg}')
 
         msg = ''.join(msg)
 
-        return msg.format(
-            job_id=job_id,
-            image_name=image_name,
-            error_msg=error_msg
-        )
+        return msg
 
     def send_notification(
         self,
@@ -250,6 +252,7 @@ class JobCreatorService(MashService):
         notification_email,
         status,
         image_name,
+        blob_name,
         errors=None
     ):
         """
@@ -259,6 +262,7 @@ class JobCreatorService(MashService):
             job_id,
             status,
             image_name,
+            blob_name,
             errors
         )
         self.notification_class.send_notification(

@@ -607,7 +607,10 @@ class TestJobCreatorService(object):
     def test_create_notification_content(self):
         # Failed message
         msg = self.jobcreator._create_notification_content(
-            '1', 'failed', 'test_image',
+            '1',
+            'failed',
+            'test_image',
+            'blob123',
             ['Invalid publish permissions!']
         )
 
@@ -615,14 +618,20 @@ class TestJobCreatorService(object):
 
         # Job finished with success
         msg = self.jobcreator._create_notification_content(
-            '1', 'success', 'test_image'
+            '1',
+            'success',
+            'test_image',
+            'blob123'
         )
 
         assert 'Job finished successfully' in msg
 
         # Service with success
         msg = self.jobcreator._create_notification_content(
-            '1', 'success', 'test_image'
+            '1',
+            'success',
+            None,
+            'blob123'
         )
 
     def test_send_email_notification(self):
