@@ -69,16 +69,18 @@ class AliyunDeprecateJob(MashJob):
             self.bucket,
             log_callback=self.log_callback
         )
+        regions = aliyun_image.get_regions()
 
-        try:
-            aliyun_image.deprecate_image_in_regions(
-                self.old_cloud_image_name,
-                replacement_image=self.cloud_image_name
-            )
-        except Exception as error:
-            raise MashDeprecateException(
-                'Failed to deprecate image {0}: {1}'.format(
+        for region in regions:
+            try:
+                aliyun_image.deprecate_image(
                     self.old_cloud_image_name,
-                    error
+                    replacement_image=self.cloud_image_name
                 )
-            )
+            except Exception as error:
+                msg = (
+                    f'Failed to deprecate {self.old_cloud_image_name} '
+                    f'in {region}: {error}'
+                )
+                self.add_error_msg(msg)
+                self.log_callback.warning(msg)
