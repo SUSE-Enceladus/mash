@@ -29,7 +29,6 @@ class TestAliyunDeprecateJob(object):
             }
         }
         self.job.status_msg['cloud_image_name'] = 'image_name_123'
-        self.job._log_callback = Mock()
 
     def test_deprecate_aliyun_missing_key(self):
         del self.job_config['bucket']
@@ -40,10 +39,11 @@ class TestAliyunDeprecateJob(object):
     @patch('mash.services.deprecate.aliyun_job.AliyunImage')
     def test_deprecate(self, mock_aliyun_image):
         aliyun_image = Mock()
+        aliyun_image.get_regions.return_value = ['cn-beijing']
         mock_aliyun_image.return_value = aliyun_image
         self.job.run_job()
 
-        aliyun_image.deprecate_image_in_regions.assert_called_once_with(
+        aliyun_image.deprecate_image.assert_called_once_with(
             'old-image-123',
             replacement_image='image_name_123'
         )
@@ -55,15 +55,16 @@ class TestAliyunDeprecateJob(object):
         self, mock_aliyun_image
     ):
         aliyun_image = Mock()
+        aliyun_image.get_regions.return_value = ['cn-beijing']
         mock_aliyun_image.return_value = aliyun_image
-        aliyun_image.deprecate_image_in_regions.side_effect = Exception(
+        aliyun_image.deprecate_image.side_effect = Exception(
             'Invalid credentials.'
         )
 
-        msg = 'Failed to deprecate image old-image-123: Invalid credentials.'
-        with raises(MashDeprecateException) as e:
-            self.job.run_job()
-        assert msg == str(e.value)
+        self.job.run_job()
+        self.job._log_callback.warning.assert_called_once_with(
+            'Failed to deprecate old-image-123 in cn-beijing: Invalid credentials.'
+        )
 
     @patch('mash.services.deprecate.aliyun_job.AliyunImage')
     def test_no_deprecate(

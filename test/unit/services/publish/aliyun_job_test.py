@@ -41,10 +41,11 @@ class TestAliyunPublishJob(object):
     @patch('mash.services.publish.aliyun_job.AliyunImage')
     def test_publish(self, mock_aliyun_image):
         aliyun_image = Mock()
+        aliyun_image.get_regions.return_value = ['cn-beijing']
         mock_aliyun_image.return_value = aliyun_image
         self.job.run_job()
 
-        aliyun_image.publish_image_to_regions.assert_called_once_with(
+        aliyun_image.publish_image.assert_called_once_with(
             'image_name_123',
             'PERMISSION'
         )
@@ -56,12 +57,13 @@ class TestAliyunPublishJob(object):
         self, mock_aliyun_image
     ):
         aliyun_image = Mock()
+        aliyun_image.get_regions.return_value = ['cn-beijing']
         mock_aliyun_image.return_value = aliyun_image
-        aliyun_image.publish_image_to_regions.side_effect = Exception(
+        aliyun_image.publish_image.side_effect = Exception(
             'Invalid credentials.'
         )
 
-        msg = 'Failed to publish image image_name_123: Invalid credentials.'
-        with raises(MashPublishException) as e:
-            self.job.run_job()
-        assert msg == str(e.value)
+        self.job.run_job()
+        self.job._log_callback.warning.assert_called_once_with(
+            'Failed to publish image_name_123 in cn-beijing: Invalid credentials.'
+        )

@@ -20,7 +20,7 @@ from aliyun_img_utils.aliyun_image import AliyunImage
 
 from mash.mash_exceptions import MashPublishException
 from mash.services.mash_job import MashJob
-from mash.services.status_levels import SUCCESS
+from mash.services.status_levels import SUCCESS, FAILED
 
 
 class AliyunPublishJob(MashJob):
@@ -62,16 +62,19 @@ class AliyunPublishJob(MashJob):
             self.bucket,
             log_callback=self.log_callback
         )
+        regions = aliyun_image.get_regions()
 
-        try:
-            aliyun_image.publish_image_to_regions(
-                self.cloud_image_name,
-                self.launch_permission
-            )
-        except Exception as error:
-            raise MashPublishException(
-                'Failed to publish image {0}: {1}'.format(
+        for region in regions:
+            try:
+                aliyun_image.publish_image(
                     self.cloud_image_name,
-                    error
+                    self.launch_permission
                 )
-            )
+            except Exception as error:
+                self.status = FAILED
+                msg = (
+                    f'Failed to publish {self.cloud_image_name} '
+                    f'in {region}: {error}'
+                )
+                self.add_error_msg(msg)
+                self.log_callback.warning(msg)
