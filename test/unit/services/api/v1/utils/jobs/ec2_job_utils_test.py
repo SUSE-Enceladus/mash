@@ -230,6 +230,18 @@ def test_validate_ec2_job(
 
     assert 'cloud_account' not in result
 
+    # Test doc with TPM and no uefi
+    job_doc = {
+        'last_service': 'testing',
+        'requesting_user': '1',
+        'cloud_groups': ['group1'],
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'tpm_support': 'v2.0'
+    }
+    with raises(MashJobException):
+        validate_ec2_job(job_doc)
+
 
 @patch.object(LocalProxy, '_get_current_object')
 def test_validate_mp_fields(mock_get_current_obj):

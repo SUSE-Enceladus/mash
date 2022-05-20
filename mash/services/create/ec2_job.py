@@ -67,6 +67,7 @@ class EC2CreateJob(MashJob):
         self.arch = self.job_config.get('cloud_architecture', 'x86_64')
         self.use_build_time = self.job_config.get('use_build_time')
         self.force_replace_image = self.job_config.get('force_replace_image')
+        self.tpm_support = self.job_config.get('tpm_support')
 
         if self.arch == 'aarch64':
             self.arch = 'arm64'
@@ -119,6 +120,9 @@ class EC2CreateJob(MashJob):
             'billing_codes': None,
             'log_callback': self.log_callback
         }
+
+        if self.tpm_support:
+            self.ec2_upload_parameters['tpm_support'] = self.tpm_support
 
         # Get all account credentials in one request
         accounts = []

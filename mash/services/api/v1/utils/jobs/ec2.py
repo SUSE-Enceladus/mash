@@ -150,6 +150,13 @@ def validate_ec2_job(job_doc):
         job_doc['skip_replication'] = True  # No replication for MP images
         validate_mp_fields(job_doc)
 
+    boot_firmware = job_doc.get('boot_firmware', [])
+    if job_doc.get('tpm_support') and 'uefi' not in boot_firmware:
+        raise MashJobException(
+            'NitroTPM support requires a UEFI compatible image. '
+            'Ensure "uefi" is included in "boot_firmware" list.'
+        )
+
     job_doc = validate_job(job_doc)
 
     user_id = job_doc['requesting_user']
