@@ -18,7 +18,7 @@ PyJWT
 APScheduler
 python-dateutil>=2.6.0
 amqpstorm
-ec2imgutils>=9.0.1
+ec2imgutils>=9.0.3
 img-proof>=7.0.0
 lxml
 requests

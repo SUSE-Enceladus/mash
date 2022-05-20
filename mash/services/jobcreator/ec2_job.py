@@ -239,7 +239,8 @@ class EC2Job(BaseJob):
                 'use_build_time': self.use_build_time,
                 'target_regions': self.get_create_regions(),
                 'force_replace_image': self.force_replace_image,
-                'tpm_support': self.tpm_support
+                'tpm_support': self.tpm_support,
+                'boot_firmware': self.boot_firmware
             }
         }
         create_message['create_job'].update(self.base_message)
