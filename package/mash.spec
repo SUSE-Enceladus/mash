@@ -35,7 +35,7 @@ BuildRequires:  python3-PyJWT
 BuildRequires:  python3-amqpstorm >= 2.4.0
 BuildRequires:  python3-APScheduler >= 3.3.1
 BuildRequires:  python3-python-dateutil >= 2.6.0
-BuildRequires:  python3-ec2imgutils >= 9.0.1
+BuildRequires:  python3-ec2imgutils >= 9.0.3
 BuildRequires:  python3-img-proof >= 7.0.0
 BuildRequires:  python3-img-proof-tests >= 7.0.0
 BuildRequires:  python3-lxml
@@ -61,7 +61,7 @@ Requires:       python3-PyJWT
 Requires:       python3-amqpstorm >= 2.4.0
 Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil >= 2.6.0
-Requires:       python3-ec2imgutils >= 9.0.1
+Requires:       python3-ec2imgutils >= 9.0.3
 Requires:       python3-img-proof >= 7.0.0
 Requires:       python3-img-proof-tests >= 7.0.0
 Requires:       python3-lxml

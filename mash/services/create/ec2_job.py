@@ -68,6 +68,14 @@ class EC2CreateJob(MashJob):
         self.use_build_time = self.job_config.get('use_build_time')
         self.force_replace_image = self.job_config.get('force_replace_image')
         self.tpm_support = self.job_config.get('tpm_support')
+        self.boot_firmware = self.job_config.get('boot_firmware', ['bios'])
+
+        # EC2 images only support one firmware
+        self.boot_firmware = self.boot_firmware[0]
+
+        if self.boot_firmware == 'bios':
+            # Translate to EC2 lingo
+            self.boot_firmware = 'legacy-bios'
 
         if self.arch == 'aarch64':
             self.arch = 'arm64'
@@ -118,7 +126,8 @@ class EC2CreateJob(MashJob):
             'running_id': None,
             'secret_key': None,
             'billing_codes': None,
-            'log_callback': self.log_callback
+            'log_callback': self.log_callback,
+            'boot_mode': self.boot_firmware
         }
 
         if self.tpm_support:
