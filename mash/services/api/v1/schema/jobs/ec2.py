@@ -162,6 +162,10 @@ ec2_job_message['properties']['recommended_instance_type'] = string_with_example
     description='The instance type that is recommended to run the service '
                 'with the marketplace image.'
 )
+ec2_job_message['properties']['tpm_support'] = string_with_example(
+    'v2.0',
+    description='The NitroTPM version supported by the image.'
+)
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},

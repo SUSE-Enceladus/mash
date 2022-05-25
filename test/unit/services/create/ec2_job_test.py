@@ -41,7 +41,8 @@ class TestAmazonCreateJob(object):
             },
             'cloud_image_name': 'name v{date}',
             'image_description': 'description',
-            'use_build_time': True
+            'use_build_time': True,
+            'tpm_support': 'v2.0'
         }
         self.job = EC2CreateJob(job_doc, self.config)
         self.job._log_callback = Mock()
@@ -152,7 +153,8 @@ class TestAmazonCreateJob(object):
             use_private_ip=False,
             vpc_subnet_id='subnet-123456789',
             wait_count=3,
-            log_callback=self.job._log_callback
+            log_callback=self.job._log_callback,
+            tpm_support='v2.0'
         )
         open_context.file_mock.write.assert_called_once_with('pkey')
         ec2_client.create_key_pair.assert_called_once_with(KeyName='mash-xxxx')

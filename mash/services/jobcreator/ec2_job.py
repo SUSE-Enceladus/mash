@@ -35,6 +35,7 @@ class EC2Job(BaseJob):
         self.allow_copy = self.kwargs.get('allow_copy', 'none')
         self.billing_codes = self.kwargs.get('billing_codes')
         self.use_root_swap = self.kwargs.get('use_root_swap', False)
+        self.tpm_support = self.kwargs.get('tpm_support')
         self.entity_id = self.kwargs.get('entity_id')
         self.version_title = self.kwargs.get('version_title')
         self.release_notes = self.kwargs.get('release_notes')
@@ -237,7 +238,8 @@ class EC2Job(BaseJob):
                 'image_description': self.image_description,
                 'use_build_time': self.use_build_time,
                 'target_regions': self.get_create_regions(),
-                'force_replace_image': self.force_replace_image
+                'force_replace_image': self.force_replace_image,
+                'tpm_support': self.tpm_support
             }
         }
         create_message['create_job'].update(self.base_message)
