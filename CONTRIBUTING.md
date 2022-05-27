@@ -1,16 +1,6 @@
 ## Dev Requirements
 
-- pytest
-- pytest-cov
-- coverage
-- flake8
-- bumpversion
-- sphinx
-- sphinx_rtd_theme
-- sphinxcontrib-spelling
-- pyenchant
-- travis-sphinx
-- ghp-import
+See [.virtualenv.dev-requirements.txt](https://github.com/SUSE-Enceladus/mash/.virtualenv.dev-requirements.txt)
 
 ## Contribution Checklist
 
