@@ -20,9 +20,7 @@ python-dateutil>=2.6.0
 amqpstorm
 ec2imgutils>=9.0.3
 img-proof>=7.0.0
-lxml
 requests
-urllib3
 obs-img-utils>=1.0.0
 oci
 werkzeug
