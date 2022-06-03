@@ -68,17 +68,17 @@ pip install mash-client
 ### Configuring Mash Client
 
 The mash command by default reads a configuration file from
-~/.config/mash_client. It is recommended to use the default directory for the
+\~/.config/mash_client. It is recommended to use the default directory for the
 configuration file. Otherwise the configuration directory must be specified
 with every mash command execution. The client supports multiple profiles.
 Each profile is represented by a configuration file in the configuration
 directory in the form of a {profile}.yaml file. Profiles allow you to set up
 an account on different target servers. The default profile name is "default"
-(~/.config/mash_client/default.yaml) and this file is created when using the
+(\~/.config/mash_client/default.yaml) and this file is created when using the
 `mash config setup` command. To create a configuration file with
 a different name use the `--profile` option for the setup command. For example
 `mash config setup --profile prod` would create the
-~/.config/mash_client/prod.yaml file.
+\~/.config/mash_client/prod.yaml file.
 
 ### Login and create a Mash user account
 
