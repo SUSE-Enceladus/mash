@@ -93,7 +93,7 @@ An email is required when not using an oidc provider.
 Credentials for the EC2 API are a set of an access_key_id and
 secret_access_key. These can be for a root account or an IAM account although
 it's recommended to use an IAM account. This adds security and disposability
-to the credentials which will be stored in the Mash server. Accounts for the
+to the credentials which will be stored on the Mash server. Accounts for
 EC2 should normally have the partition set to "aws". A partition is a distinct
 reference implementation of the AWS platform. The three partitions are; China,
 US Gov and AWS (default).
@@ -101,7 +101,7 @@ US Gov and AWS (default).
 #### Requirements
 
 For Mash to successfully test an image it will require SSH access to the
-instance in the accounts chosen region. To ensure this there are two options.
+instance in the account's chosen region. To ensure this, there are two options.
 You can set the default security group for the region to allow ingress for SSH
 (22) for all IP addresses. Or you can create a new subnet for mash and set its
 default security group to allow ingress of SSH for all IP addresses. If you
@@ -116,8 +116,7 @@ up the permissions. The following permissions are required for mash:
 
 #### Creating an IAM account from AWS Console
 
-The credentials for login to each account are found in the teams secrets
-repository. Once logged in the following steps will generate an IAM account
+Once logged in the following steps will generate an IAM account
 and a set of credentials which can be used with Mash:
 
 1. Click the __Services__ dropdown
@@ -188,8 +187,7 @@ Creating an IAM account:
 
 MASH uses service principals for Azure authentication. A service principal
 defines the access policy and permissions for the user/application in the
-Azure AD tenant. The team has a multiple active directories. However,
-there is a single directory for image publishing (Azure Updates).
+Azure AD tenant.
 
 #### Create service principal with Azure CLI
 
@@ -335,7 +333,7 @@ mash account gce add \
 Publishing projects in GCE do not have permissions to create new instances
 for testing. Therefore for any publishing projects a set of testing
 credentials is required for launching and testing images. To add a publishing
-project with a testing account configured there are two more arguments in
+project with a testing account configured there are two more arguments in the
 command line:
 
 ```bash
@@ -389,7 +387,7 @@ Granting roles:
 
 ### Job doc arguments
 
-Mash uses "job docs"for submitting new jobs to the server. The job docs are
+Mash uses "job docs" for submitting new jobs to the server. The job docs are
 json files that contain the necessary information to process a job. There are
 a few options to get job doc arguments/options from the client:
 
@@ -403,7 +401,7 @@ by the server to validate job docs for the given cloud framework.
 
 ### Submitting jobs
 
-When you have a valid job doc you can submit to the pipeline:
+When you have a valid job doc you can submit it to the pipeline:
 
 ```
 mash job {cloud} add /path/to/job.json
@@ -425,12 +423,12 @@ See [.virtualenv.requirements.txt](https://github.com/SUSE-Enceladus/mash/.virtu
 ## Service Design
 
 The implementation of the Mash is based on a collection of services. Each service completes
-an individual task of the process. So far the following services exist:
+an individual task of the process. At present the following services exist:
 
 - __OBS (retrieval) service__:
   
   Images are built in a build service. The retrieval service currently relies
-  on [OBS](https://openbuildservice.org/). The service Validates a compute
+  on [OBS](https://openbuildservice.org/). The service Validates that a compute
   image in OBS meets certain conditions. When conditions are met the image is
   downloaded locally.
 
@@ -469,8 +467,8 @@ chained in a series. As a job finishes in one service it moves to the next servi
   Makes a compute image publically available.
 
   __NOTE__:
-   the publish implementation does not fully cover all registration
-   into the cloud service provider marketplace.
+   the publish implementation does not fully cover all registrations
+   into the cloud service provider marketplaces.
 
 - __Deprecate service__:
 
@@ -524,7 +522,7 @@ Contributions to MASH are welcome and encouraged. See
 ### Making & Propagating DB changes
 
 __Note__: To create DB migrations a running database is required and should be
-configured in the Mash config.
+configured in Mash config.
 
 #### Create database migration:
 
