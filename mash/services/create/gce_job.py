@@ -55,6 +55,9 @@ class GCECreateJob(MashJob):
 
         self.family = self.job_config.get('family')
         self.guest_os_features = self.job_config.get('guest_os_features')
+        self.arch = self.job_config.get('cloud_architecture', 'x86_64')
+        if self.arch == 'aarch64':
+            self.arch = 'arm64'
 
     def run_job(self):
         self.status = SUCCESS
@@ -102,7 +105,8 @@ class GCECreateJob(MashJob):
             uri,
             family=self.family,
             guest_os_features=self.guest_os_features,
-            rollout=rollout
+            rollout=rollout,
+            self.arch
         )
 
         self.log_callback.info(
