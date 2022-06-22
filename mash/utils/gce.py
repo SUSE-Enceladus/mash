@@ -138,7 +138,7 @@ def create_gce_image(
     family=None,
     guest_os_features=None,
     rollout=None,
-    arch='x86_64'    
+    arch='x86_64'
 ):
     """
     Create a GCE framework image for the blob.
