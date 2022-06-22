@@ -131,7 +131,9 @@ class TestGCECreateJob(object):
         self.complete_job_doc['cloud_architecture'] = 'aarch64'
         self.complete_job_doc['cloud_image_name'] = 'sles-15-sp4-v20210731'
         self.complete_job_doc['family'] = 'sles-15-arm64'
-        self.job = GCECreateJob(self.complete_job_doc, self.config)
+        job = GCECreateJob(self.complete_job_doc, self.config)
+        job._log_callback = Mock()
+        job.credentials = self.credentials
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
@@ -142,9 +144,9 @@ class TestGCECreateJob(object):
         rollout = {'defaultRolloutTime': '2021-01-01T00:00:00Z'}
         mock_create_rollout.return_value = rollout
 
-        self.job.status_msg['cloud_image_name'] = 'sles-15-sp4-v20210731'
-        self.job.status_msg['object_name'] = 'sles-15-sp4-v20210731.tar.gz'
-        self.job.run_job()
+        job.status_msg['cloud_image_name'] = 'sles-15-sp4-v20210731'
+        job.status_msg['object_name'] = 'sles-15-sp4-v20210731.tar.gz'
+        job.run_job()
 
         mock_delete_image.assert_called_once_with(
             compute_driver,
