@@ -137,7 +137,8 @@ def create_gce_image(
     blob_uri,
     family=None,
     guest_os_features=None,
-    rollout=None
+    rollout=None,
+    arch='x86_64'
 ):
     """
     Create a GCE framework image for the blob.
@@ -150,7 +151,8 @@ def create_gce_image(
         'family': family,
         'description': cloud_image_description,
         'rawDisk': {'source': blob_uri},
-        'rolloutOverride': rollout
+        'rolloutOverride': rollout,
+        'architecture': arch.upper()
     }
 
     if guest_os_features:
