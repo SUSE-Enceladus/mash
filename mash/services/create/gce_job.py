@@ -106,7 +106,7 @@ class GCECreateJob(MashJob):
             family=self.family,
             guest_os_features=self.guest_os_features,
             rollout=rollout,
-            self.arch
+            arch=self.arch
         )
 
         self.log_callback.info(

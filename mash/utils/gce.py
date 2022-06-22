@@ -151,7 +151,7 @@ def create_gce_image(
         'family': family,
         'description': cloud_image_description,
         'rawDisk': {'source': blob_uri},
-        'rolloutOverride': rollout
+        'rolloutOverride': rollout,
         'architecture': arch.upper()
     }
 
