@@ -109,5 +109,6 @@ class TestGCECreateJob(object):
             'https://www.googleapis.com/storage/v1/b/images/o/sles-12-sp4-v20180909.tar.gz',
             family='sles-12',
             guest_os_features=['UEFI_COMPATIBLE'],
-            rollout=rollout
+            rollout=rollout,
+            arch='x86_64'
         )
