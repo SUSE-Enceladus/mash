@@ -66,7 +66,7 @@ class EC2MPPublishJob(MashJob):
         self.status = SUCCESS
 
         # Get all account credentials in one request
-        self.request_credentials(list(self.publish_regions.keys()))
+        self.request_credentials(list(self.publish_regions.keys()), cloud='ec2')
         self.cloud_image_name = self.status_msg['cloud_image_name']
 
         timestamp = re.findall(r'\d{8}', self.cloud_image_name)[0]
