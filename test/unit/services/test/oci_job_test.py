@@ -161,3 +161,18 @@ class TestOCITestJob(object):
         job._log_callback.warning.assert_called_once_with(
             'Failed to cleanup image: Image not found!'
         )
+
+    @patch('mash.services.test.oci_job.create_ssh_key_pair')
+    def test_oci_skip_test(
+        self,
+        mock_create_ssh_key_pair
+    ):
+        job = OCITestJob(self.job_config, self.config)
+        job._log_callback = Mock()
+        job.tests = []
+
+        job.run_job()
+
+        job._log_callback.info.assert_called_once_with(
+            'Skipping test service, no tests provided.'
+        )

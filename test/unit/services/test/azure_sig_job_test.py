@@ -141,3 +141,18 @@ class TestAzureSIGTestJob(object):
                 'Cleanup image failed!.'
             )
         ])
+
+    @patch('mash.services.test.azure_sig_job.create_ssh_key_pair')
+    def test_azure_sig_skip_test(
+        self,
+        mock_create_ssh_key_pair
+    ):
+        job = AzureSIGTestJob(self.job_config, self.config)
+        job._log_callback = Mock()
+        job.tests = []
+
+        job.run_job()
+
+        job._log_callback.info.assert_called_once_with(
+            'Skipping test service, no tests provided.'
+        )

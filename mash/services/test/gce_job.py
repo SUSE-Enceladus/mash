@@ -109,6 +109,12 @@ class GCETestJob(MashJob):
         """
         self.status = SUCCESS
 
+        if not self.tests:
+            self.log_callback.info(
+                'Skipping test service, no tests provided.'
+            )
+            return
+
         accounts = [self.account]
         if self.testing_account:
             # Get both sets of credentials in case cleanup method is run.

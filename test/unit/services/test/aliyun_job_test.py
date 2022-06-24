@@ -165,3 +165,18 @@ class TestAliyunTestJob(object):
             'Cleaning up image: name.qcow2 in region: cn-beijing.'
         )
         assert job._log_callback.warning.call_count == 2
+
+    @patch('mash.services.test.aliyun_job.create_ssh_key_pair')
+    def test_aliyun_skip_test(
+        self,
+        mock_create_ssh_key_pair
+    ):
+        job = AliyunTestJob(self.job_config, self.config)
+        job._log_callback = Mock()
+        job.tests = []
+
+        job.run_job()
+
+        job._log_callback.info.assert_called_once_with(
+            'Skipping test service, no tests provided.'
+        )
