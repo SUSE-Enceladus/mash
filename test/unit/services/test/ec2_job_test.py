@@ -176,3 +176,18 @@ class TestEC2TestJob(object):
         }
         job.status_msg['source_regions'] = {'cn-east-1': 'ami-123'}
         job.run_job()
+
+    @patch('mash.services.test.ec2_job.create_ssh_key_pair')
+    def test_ec2_skip_test(
+        self,
+        mock_create_ssh_key_pair
+    ):
+        job = EC2TestJob(self.job_config, self.config)
+        job._log_callback = Mock()
+        job.tests = []
+
+        job.run_job()
+
+        job._log_callback.info.assert_called_once_with(
+            'Skipping test service, no tests provided.'
+        )

@@ -85,6 +85,13 @@ class OCITestJob(MashJob):
         Tests image with img-proof and update status and results.
         """
         self.status = SUCCESS
+
+        if not self.tests:
+            self.log_callback.info(
+                'Skipping test service, no tests provided.'
+            )
+            return
+
         self.log_callback.info(
             'Running img-proof tests against image with '
             'type: {inst_type}.'.format(
