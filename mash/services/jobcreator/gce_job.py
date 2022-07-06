@@ -129,6 +129,10 @@ class GCEJob(BaseJob):
             test_message['test_job']['image_project'] = \
                 self.image_project
 
+        if self.cloud_architecture:
+            test_message['test_job']['cloud_architecture'] = \
+                self.cloud_architecture
+
         test_message['test_job'].update(self.base_message)
 
         return JsonFormat.json_message(test_message)
