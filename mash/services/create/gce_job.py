@@ -56,6 +56,8 @@ class GCECreateJob(MashJob):
         self.family = self.job_config.get('family')
         self.guest_os_features = self.job_config.get('guest_os_features')
         self.arch = self.job_config.get('cloud_architecture', 'x86_64')
+        self.skip_rollout = self.job_config.get('skip_rollout', False)
+
         if self.arch == 'aarch64':
             self.arch = 'arm64'
 
@@ -95,7 +97,10 @@ class GCECreateJob(MashJob):
                 self.cloud_image_name
             )
 
-        rollout = create_gce_rollout(compute_driver, project)
+        if self.skip_rollout:
+            rollout = None
+        else:
+            rollout = create_gce_rollout(compute_driver, project)
 
         create_gce_image(
             compute_driver,

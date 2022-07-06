@@ -81,6 +81,12 @@ gce_job_message['properties']['image_project'] = string_with_example(
                 'If using a test project for test the public image '
                 'project where the image is published is required.'
 )
+gce_job_message['properties']['skip_rollout'] = {
+    'type': 'boolean',
+    'example': True,
+    'description': 'Whether to skip the rollout override when creating '
+                   'the compute image.'
+},
 gce_job_message['required'].append('cloud_account')
 gce_job_message['properties']['image']['example'] = 'openSUSE-Leap-15.0-GCE'
 gce_job_message['properties']['cloud_image_name']['example'] = \

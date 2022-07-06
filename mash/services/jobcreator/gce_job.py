@@ -48,6 +48,7 @@ class GCEJob(BaseJob):
         )
         self.guest_os_features = self.kwargs.get('guest_os_features', [])
         self.image_project = self.kwargs.get('image_project')
+        self.skip_rollout = self.kwargs.get('skip_rollout', False)
 
     def get_deprecate_message(self):
         """
@@ -171,7 +172,8 @@ class GCEJob(BaseJob):
                 'guest_os_features': self.guest_os_features,
                 'account': self.cloud_account,
                 'bucket': self.bucket,
-                'region': self.region
+                'region': self.region,
+                'skip_rollout': self.skip_rollout
             }
         }
         create_message['create_job'].update(self.base_message)
