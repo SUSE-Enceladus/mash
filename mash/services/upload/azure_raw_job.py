@@ -19,7 +19,6 @@
 import os
 
 from azure_img_utils.azure_image import AzureImage
-from azure_img_utils.storage import upload_azure_file
 
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
@@ -78,13 +77,12 @@ class AzureRawUploadJob(MashJob):
                 filter(None, [self.status_msg['image_file'], extension])
             )
 
-            upload_azure_file(
-                upload_file_name,
-                self.container,
+            azure_image.upload_image_blob(
                 file_path,
-                azure_image.blob_service_client,
-                max_retry_attempts=self.config.get_azure_max_retry_attempts(),
                 max_workers=self.config.get_azure_max_workers(),
+                max_attempts=self.config.get_azure_max_retry_attempts(),
+                blob_name=upload_file_name,
+                is_page_blob=False,
                 expand_image=False
             )
 

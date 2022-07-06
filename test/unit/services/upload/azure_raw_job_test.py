@@ -70,39 +70,34 @@ class TestAzureRawUploadJob(object):
             AzureRawUploadJob(job_doc, self.config)
 
     @patch('mash.services.upload.azure_raw_job.AzureImage')
-    @patch('mash.services.upload.azure_raw_job.upload_azure_file')
     @patch('builtins.open')
     def test_upload(
-        self, mock_open, mock_upload_azure_file, mock_azure_image
+        self, mock_open, mock_azure_image
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
 
-        bsc = MagicMock()
         client = MagicMock()
         mock_azure_image.return_value = client
-        client.blob_service_client = bsc
 
         self.job.run_job()
 
-        mock_upload_azure_file.assert_has_calls([
+        client.upload_image_blob.assert_has_calls([
             call(
                 'file.vhdfixed.xz.sha256.asc',
-                'container',
-                'file.vhdfixed.xz.sha256.asc',
-                bsc,
-                max_retry_attempts=5,
                 max_workers=8,
+                max_attempts=5,
+                blob_name='file.vhdfixed.xz.sha256.asc',
+                is_page_blob=False,
                 expand_image=False
             ),
             call(
                 'file.vhdfixed.xz',
-                'container',
-                'file.vhdfixed.xz',
-                bsc,
-                max_retry_attempts=5,
                 max_workers=8,
+                max_attempts=5,
+                blob_name='file.vhdfixed.xz',
+                is_page_blob=False,
                 expand_image=False
             )
         ])

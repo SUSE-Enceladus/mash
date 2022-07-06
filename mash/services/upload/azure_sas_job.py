@@ -19,7 +19,6 @@
 import re
 
 from azure_img_utils.azure_image import AzureImage
-from azure_img_utils.storage import upload_azure_file
 
 # project
 from mash.services.mash_job import MashJob
@@ -70,13 +69,11 @@ class AzureSASUploadJob(MashJob):
             sas_token=build.group(3),
             log_callback=self.log_callback
         )
-        upload_azure_file(
-            blob_name=self.blob_name,
-            container=build.group(2),
-            file_name=self.status_msg['image_file'],
-            blob_service_client=azure_image.blob_service_client,
-            max_retry_attempts=self.config.get_azure_max_retry_attempts(),
+        azure_image.upload_image_blob(
+            image_file=self.status_msg['image_file'],
             max_workers=self.config.get_azure_max_workers(),
+            max_attempts=self.config.get_azure_max_retry_attempts(),
+            blob_name=self.blob_name,
             is_page_blob=True
         )
         self.log_callback.info(
