@@ -17,7 +17,7 @@
 
 
 Name:           mash
-Version:        13.0.0
+Version:        13.0.1
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/mash
 Summary:        Public Cloud Release Tool
