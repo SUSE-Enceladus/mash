@@ -1,3 +1,31 @@
+v13.0.0 (2022-07-06)
+====================
+
+- Integrate Azure shared image gallery
+  [\#820](https://github.com/SUSE-Enceladus/mash/pull/820)
+- Skip OBS conditions check if no conditions
+  [\#822](https://github.com/SUSE-Enceladus/mash/pull/822)
+- Add optional gallery resource group
+  [\#823](https://github.com/SUSE-Enceladus/mash/pull/823)
+- Drop img proof helper module
+  [\#824](https://github.com/SUSE-Enceladus/mash/pull/824)
+- Add blob name to notification content
+  [\#825](https://github.com/SUSE-Enceladus/mash/pull/825)
+- Run deprecate and publish in every Aliyun region
+  [\#826](https://github.com/SUSE-Enceladus/mash/pull/826)
+- Add option to set boot firmware mode in EC2
+  [\#827](https://github.com/SUSE-Enceladus/mash/pull/827)
+- Add tpm_support option for EC2 images
+  [\#828](https://github.com/SUSE-Enceladus/mash/pull/828)
+- Cleanup docs
+  [\#829](https://github.com/SUSE-Enceladus/mash/pull/829)
+- Handle aarch64 in GCE
+  [\#830](https://github.com/SUSE-Enceladus/mash/pull/830)
+- Override cloud name when retrieving credentials in ec2_mp class
+  [\#831](https://github.com/SUSE-Enceladus/mash/pull/831)
+- Allow for skipping test service
+  [\#832](https://github.com/SUSE-Enceladus/mash/pull/832)
+
 v12.4.0 (2022-04-29)
 ====================
 
