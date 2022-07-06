@@ -115,7 +115,6 @@ class TestGCECreateJob(object):
 
     @patch('mash.services.create.gce_job.get_gce_image')
     @patch('mash.services.create.gce_job.create_gce_image')
-    @patch('mash.services.create.gce_job.create_gce_rollout')
     @patch('mash.services.create.gce_job.delete_gce_image')
     @patch('mash.services.create.gce_job.get_gce_compute_driver')
     @patch('builtins.open')
@@ -124,13 +123,13 @@ class TestGCECreateJob(object):
         mock_open,
         mock_get_driver,
         mock_delete_image,
-        mock_create_rollout,
         mock_create_image,
         mock_get_image
     ):
         self.complete_job_doc['cloud_architecture'] = 'aarch64'
         self.complete_job_doc['cloud_image_name'] = 'sles-15-sp4-v20210731'
         self.complete_job_doc['family'] = 'sles-15-arm64'
+        self.complete_job_doc['skip_rollout'] = True
         job = GCECreateJob(self.complete_job_doc, self.config)
         job._log_callback = Mock()
         job.credentials = self.credentials
@@ -141,9 +140,6 @@ class TestGCECreateJob(object):
         compute_driver = Mock()
         mock_get_driver.return_value = compute_driver
 
-        rollout = {'defaultRolloutTime': '2021-01-01T00:00:00Z'}
-        mock_create_rollout.return_value = rollout
-
         job.status_msg['cloud_image_name'] = 'sles-15-sp4-v20210731'
         job.status_msg['object_name'] = 'sles-15-sp4-v20210731.tar.gz'
         job.run_job()
@@ -153,10 +149,6 @@ class TestGCECreateJob(object):
             'projectid',
             'sles-15-sp4-v20210731'
         )
-        mock_create_rollout.assert_called_once_with(
-            compute_driver,
-            'projectid'
-        )
         mock_create_image.assert_called_once_with(
             compute_driver,
             'projectid',
@@ -165,6 +157,6 @@ class TestGCECreateJob(object):
             'https://www.googleapis.com/storage/v1/b/images/o/sles-15-sp4-v20210731.tar.gz',
             family='sles-15-arm64',
             guest_os_features=['UEFI_COMPATIBLE'],
-            rollout=rollout,
+            rollout=None,
             arch='arm64'
         )

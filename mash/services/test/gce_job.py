@@ -37,12 +37,17 @@ from img_proof.ipa_controller import test_image
 
 from img_proof.ipa_exceptions import IpaRetryableError
 
-instance_types = [
-    'n1-standard-1',
-    'n1-highmem-2',
-    'n1-highcpu-2',
-    'f1-micro',
-]
+instance_types = {
+    'x86_64': [
+        'n1-standard-1',
+        'n1-highmem-2',
+        'n1-highcpu-2',
+        'f1-micro',
+    ],
+    'aarch64': [
+        't2a-standard-4'
+    ]
+}
 
 
 class GCETestJob(MashJob):
@@ -77,6 +82,9 @@ class GCETestJob(MashJob):
         self.boot_firmware = self.job_config.get('boot_firmware', ['bios'])
         self.image_project = self.job_config.get('image_project')
         self.guest_os_features = self.job_config.get('guest_os_features', [])
+        self.cloud_architecture = self.job_config.get(
+            'cloud_architecture', 'x86_64'
+        )
 
         if 'SEV_CAPABLE' in self.guest_os_features:
             self.sev_capable = True
@@ -95,7 +103,9 @@ class GCETestJob(MashJob):
             self.test_gvnic_with = None
 
         if not self.instance_type:
-            self.instance_type = random.choice(instance_types)
+            self.instance_type = random.choice(
+                instance_types[self.cloud_architecture]
+            )
 
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
         self.img_proof_timeout = self.config.get_img_proof_timeout()
