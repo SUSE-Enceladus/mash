@@ -1,3 +1,11 @@
+v13.1.0 (2022-07-07)
+====================
+
+- Add architecture to GCE test class
+  [\#833](https://github.com/SUSE-Enceladus/mash/pull/833)
+- Add option to skip GCE rollout override.
+  [\#833](https://github.com/SUSE-Enceladus/mash/pull/833)
+
 v13.0.1 (2022-07-06)
 ====================
 
