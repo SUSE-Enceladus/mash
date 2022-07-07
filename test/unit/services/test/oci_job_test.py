@@ -95,7 +95,7 @@ class TestOCITestJob(object):
             image_id='ocid1.image.oc1..',
             instance_type='VM.Standard2.1',
             log_level=10,
-            img_proof_timeout=600,
+            timeout=600,
             oci_user_id='ocid1.user.oc1..',
             region='us-phoenix-1',
             signing_key_file='/tmp/acnt.file',

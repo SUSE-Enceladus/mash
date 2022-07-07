@@ -108,7 +108,7 @@ class TestEC2TestJob(object):
             image_id='ami-123',
             instance_type='t2.micro',
             log_level=10,
-            img_proof_timeout=600,
+            timeout=600,
             region='us-east-1',
             secret_access_key='321',
             security_group_id='sg-123456789',

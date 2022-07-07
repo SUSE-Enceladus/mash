@@ -93,7 +93,7 @@ class TestAzureUploadJob(object):
         client.upload_image_blob.assert_called_once_with(
             'file.vhdfixed.xz',
             max_workers=8,
-            max_retry_attempts=5,
+            max_attempts=5,
             blob_name='name v20200925.vhd',
             force_replace_image=True
         )

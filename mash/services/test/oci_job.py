@@ -116,7 +116,7 @@ class OCITestJob(MashJob):
                     distro=self.distro,
                     image_id=image_id,
                     instance_type=self.instance_type,
-                    img_proof_timeout=self.img_proof_timeout,
+                    timeout=self.img_proof_timeout,
                     log_level=logging.DEBUG,
                     oci_user_id=self.oci_user_id,
                     region=self.region,

@@ -102,7 +102,7 @@ class TestAliyunTestJob(object):
             distro='sles',
             image_id='i-123456',
             instance_type='ecs.t5-lc1m1.small',
-            img_proof_timeout=600,
+            timeout=600,
             log_level=10,
             region='cn-beijing',
             ssh_key_name='random_name',
@@ -110,7 +110,7 @@ class TestAliyunTestJob(object):
             ssh_user='ali-user',
             tests=['test_stuff'],
             security_group_id='sg1',
-            vswitch_id='vs1',
+            v_switch_id='vs1',
             log_callback=job._log_callback,
             prefix_name='mash'
         )

@@ -85,7 +85,7 @@ class AzureUploadJob(MashJob):
         azure_image.upload_image_blob(
             self.status_msg['image_file'],
             max_workers=self.config.get_azure_max_workers(),
-            max_retry_attempts=self.config.get_azure_max_retry_attempts(),
+            max_attempts=self.config.get_azure_max_retry_attempts(),
             blob_name=blob_name,
             force_replace_image=self.force_replace_image
         )

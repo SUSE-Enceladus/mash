@@ -143,7 +143,7 @@ class EC2TestJob(MashJob):
                         distro=self.distro,
                         image_id=self.status_msg['source_regions'][region],
                         instance_type=self.instance_type,
-                        img_proof_timeout=self.img_proof_timeout,
+                        timeout=self.img_proof_timeout,
                         log_level=logging.DEBUG,
                         region=region,
                         secret_access_key=credentials['secret_access_key'],

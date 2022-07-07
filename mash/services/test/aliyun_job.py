@@ -117,7 +117,7 @@ class AliyunTestJob(MashJob):
                     distro=self.distro,
                     image_id=image_id,
                     instance_type=self.instance_type,
-                    img_proof_timeout=self.img_proof_timeout,
+                    timeout=self.img_proof_timeout,
                     log_level=logging.DEBUG,
                     region=self.region,
                     ssh_key_name=key_pair_name,
@@ -125,7 +125,7 @@ class AliyunTestJob(MashJob):
                     ssh_user=self.ssh_user,
                     tests=self.tests,
                     security_group_id=self.security_group_id,
-                    vswitch_id=self.vswitch_id,
+                    v_switch_id=self.vswitch_id,
                     log_callback=self.log_callback,
                     prefix_name='mash'
                 )
