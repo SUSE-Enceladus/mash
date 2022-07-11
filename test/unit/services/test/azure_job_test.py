@@ -96,7 +96,7 @@ class TestAzureTestJob(object):
             distro='sles',
             image_id='name',
             instance_type='Standard_A0',
-            img_proof_timeout=600,
+            timeout=600,
             log_level=10,
             region='East US',
             service_account_file='/tmp/acnt.file',

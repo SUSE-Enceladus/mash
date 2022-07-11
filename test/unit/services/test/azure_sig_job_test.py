@@ -97,7 +97,7 @@ class TestAzureSIGTestJob(object):
             image_id='image_123_gen2',
             instance_type='Standard_A0',
             log_level=10,
-            img_proof_timeout=600,
+            timeout=600,
             region='East US',
             service_account_file='/tmp/acnt.file',
             ssh_private_key_file='private_ssh_key.file',

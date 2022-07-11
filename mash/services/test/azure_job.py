@@ -121,7 +121,7 @@ class AzureTestJob(MashJob):
                         distro=self.distro,
                         image_id=image,
                         instance_type=self.instance_type,
-                        img_proof_timeout=self.img_proof_timeout,
+                        timeout=self.img_proof_timeout,
                         log_level=logging.DEBUG,
                         region=self.region,
                         service_account_file=auth_file,

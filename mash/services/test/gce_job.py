@@ -178,7 +178,7 @@ class GCETestJob(MashJob):
                             distro=self.distro,
                             image_id=self.cloud_image_name,
                             instance_type=self.instance_type,
-                            img_proof_timeout=self.img_proof_timeout,
+                            timeout=self.img_proof_timeout,
                             log_level=logging.DEBUG,
                             region=retry_region,
                             service_account_file=auth_file,
