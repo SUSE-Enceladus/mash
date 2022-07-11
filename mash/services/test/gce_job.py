@@ -38,14 +38,14 @@ from img_proof.ipa_controller import test_image
 from img_proof.ipa_exceptions import IpaRetryableError
 
 instance_types = {
-    'x86_64': [
+    'X86_64': [
         'n1-standard-1',
         'n1-highmem-2',
         'n1-highcpu-2',
         'f1-micro',
     ],
-    'aarch64': [
-        't2a-standard-4'
+    'ARM64': [
+        't2a-standard-2'
     ]
 }
 
@@ -83,8 +83,9 @@ class GCETestJob(MashJob):
         self.image_project = self.job_config.get('image_project')
         self.guest_os_features = self.job_config.get('guest_os_features', [])
         self.cloud_architecture = self.job_config.get(
-            'cloud_architecture', 'x86_64'
-        )
+            'cloud_architecture',
+            'x86_64'
+        ).replace('aarch64', 'arm64').upper()
 
         if 'SEV_CAPABLE' in self.guest_os_features:
             self.sev_capable = True
@@ -190,7 +191,8 @@ class GCETestJob(MashJob):
                             log_callback=self.log_callback,
                             prefix_name='mash',
                             sev_capable=self.sev_capable,
-                            use_gvnic=test_gvnic
+                            use_gvnic=test_gvnic,
+                            architecture=self.cloud_architecture
                         )
                     except IpaRetryableError as error:
                         exit_status = 1

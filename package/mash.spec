@@ -36,8 +36,8 @@ BuildRequires:  python3-amqpstorm >= 2.4.0
 BuildRequires:  python3-APScheduler >= 3.3.1
 BuildRequires:  python3-python-dateutil >= 2.6.0
 BuildRequires:  python3-ec2imgutils >= 9.0.3
-BuildRequires:  python3-img-proof >= 7.0.0
-BuildRequires:  python3-img-proof-tests >= 7.0.0
+BuildRequires:  python3-img-proof >= 7.14.0
+BuildRequires:  python3-img-proof-tests >= 7.14.0
 BuildRequires:  python3-Flask
 BuildRequires:  python3-flask-restx
 BuildRequires:  python3-Flask-SQLAlchemy
@@ -61,8 +61,8 @@ Requires:       python3-amqpstorm >= 2.4.0
 Requires:       python3-APScheduler >= 3.3.1
 Requires:       python3-python-dateutil >= 2.6.0
 Requires:       python3-ec2imgutils >= 9.0.3
-Requires:       python3-img-proof >= 7.0.0
-Requires:       python3-img-proof-tests >= 7.0.0
+Requires:       python3-img-proof >= 7.14.0
+Requires:       python3-img-proof-tests >= 7.14.0
 Requires:       python3-Flask
 Requires:       python3-flask-restx
 Requires:       python3-Flask-SQLAlchemy
