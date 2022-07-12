@@ -173,7 +173,8 @@ class GCEJob(BaseJob):
                 'account': self.cloud_account,
                 'bucket': self.bucket,
                 'region': self.region,
-                'skip_rollout': self.skip_rollout
+                'skip_rollout': self.skip_rollout,
+                'cloud_architecture': self.cloud_architecture
             }
         }
         create_message['create_job'].update(self.base_message)
