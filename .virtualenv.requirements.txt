@@ -19,7 +19,7 @@ APScheduler
 python-dateutil>=2.6.0
 amqpstorm
 ec2imgutils>=9.0.3
-img-proof>=7.0.0
+img-proof>=7.14.0
 requests
 obs-img-utils>=1.0.0
 oci

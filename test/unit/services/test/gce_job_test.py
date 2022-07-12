@@ -122,7 +122,8 @@ class TestGCETestJob(object):
                 image_project=None,
                 prefix_name='mash',
                 sev_capable=False,
-                use_gvnic=False
+                use_gvnic=False,
+                architecture='X86_64'
             )
         ])
         job._log_callback.warning.reset_mock()
@@ -199,7 +200,8 @@ class TestGCETestJob(object):
                 image_project=None,
                 prefix_name='mash',
                 sev_capable=False,
-                use_gvnic=False
+                use_gvnic=False,
+                architecture='X86_64'
             ),
             call(
                 'gce',
@@ -220,7 +222,8 @@ class TestGCETestJob(object):
                 image_project=None,
                 prefix_name='mash',
                 sev_capable=False,
-                use_gvnic=False
+                use_gvnic=False,
+                architecture='X86_64'
             )
         ])
 
@@ -331,7 +334,8 @@ class TestGCETestJob(object):
                 image_project=None,
                 prefix_name='mash',
                 sev_capable=False,
-                use_gvnic=True
+                use_gvnic=True,
+                architecture='X86_64'
             )
         ])
 
