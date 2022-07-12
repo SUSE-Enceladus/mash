@@ -1,3 +1,12 @@
+v13.2.0 (2022-07-12)
+====================
+
+- Handle GCE img-proof arch argument in testing
+  [\#836](https://github.com/SUSE-Enceladus/mash/pull/836)
+- Fix typos and bugs
+  [\#834](https://github.com/SUSE-Enceladus/mash/pull/834)
+  [\#835](https://github.com/SUSE-Enceladus/mash/pull/835)
+
 v13.1.0 (2022-07-07)
 ====================
 
