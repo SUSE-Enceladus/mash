@@ -1,3 +1,9 @@
+v13.2.1 (2022-07-20)
+====================
+
+- Fix bug. Set Aliyun region to instance in for loop
+  in publish and deprecate classes
+
 v13.2.0 (2022-07-12)
 ====================
 

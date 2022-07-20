@@ -65,6 +65,8 @@ class AliyunPublishJob(MashJob):
         regions = aliyun_image.get_regions()
 
         for region in regions:
+            aliyun_image.region = region
+
             try:
                 aliyun_image.publish_image(
                     self.cloud_image_name,
