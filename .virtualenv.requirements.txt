@@ -23,7 +23,7 @@ img-proof>=7.14.0
 requests
 obs-img-utils>=1.0.0
 oci
-werkzeug
+werkzeug==2.0.3
 google-auth
 google-cloud-storage
 google-api-python-client
