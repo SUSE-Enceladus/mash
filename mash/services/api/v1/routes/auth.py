@@ -84,7 +84,7 @@ api.models['default_response'] = default_response
 
 @api.route('/login')
 class Login(Resource):
-    @api.doc('account_logout')
+    @api.doc('account_login')
     @api.expect(login_request)
     @api.response(200, 'Logged in', login_response)
     @api.response(401, 'Unauthorized', default_response)
@@ -130,7 +130,7 @@ class Login(Resource):
 
 @api.route('/logout')
 class Logout(Resource):
-    @api.doc('account_login')
+    @api.doc('account_logout')
     @jwt_required(refresh=True)
     @api.doc(security='apiKey')
     @api.response(200, 'Logged out', default_response)
