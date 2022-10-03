@@ -17,7 +17,11 @@ in the container runtime engine of your choice. The examples provided use
 This directory provides:
 - `launch_mock.sh`: script that runs the mockintosh container with podman and
 makes the mock available in port 8000 of localhost.
-- `launch_tests.sh`: Example requests
+- `launch_tests.sh`: Example requests with curl for every endpoint.
+- `mash_mockintosh_config.yaml`: Configuration file for mockintosh to mock the
+API.
+- `templates`: Directory containing the jinja templates for the endpoint 
+responses.
 
 _Things that have to be taken into account with the mock_:
 - Authentication is not validated, the mock just checks the Authorization
