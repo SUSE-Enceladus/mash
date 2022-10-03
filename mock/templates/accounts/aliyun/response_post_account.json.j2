@@ -1,0 +1,6 @@
+{
+    "id": "{{ random.int(4000, 100000) }}",
+    "name": "{{ request.json.account_name }}",
+    "region": "{{ request.json.region }}",
+    "bucket": "{{ request.json.bucket }}",
+}

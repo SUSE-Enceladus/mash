@@ -1,0 +1,330 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "additional_uploads": {
+      "description": "A list of additional image artifacts to upload to the cloud provider bucket alongside the image tarball. This allows the checksum and/or signature to also be uploaded for image verification.",
+      "example": [
+        "sha256.asc"
+      ],
+      "items": {
+        "enum": [
+          "sha256",
+          "sha256.asc"
+        ],
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "boot_firmware": {
+      "description": "A list of boot firmware settings to test the image with. The default value if left empty is bios only. If both bios and uefi are provided the image is tested once for each firmware setting.",
+      "example": [
+        "bios"
+      ],
+      "items": {
+        "enum": [
+          "bios",
+          "uefi"
+        ],
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "bucket": {
+      "description": "The name of the storage bucket to use for uploading the qcow2 image.",
+      "example": "images",
+      "minLength": 1,
+      "type": "string"
+    },
+    "cleanup_images": {
+      "description": "Whether to cleanup the image artifacts. By default all artifacts are cleaned up when the last service is test or if a publishing job fails.",
+      "example": true,
+      "type": "boolean"
+    },
+    "cloud_account": {
+      "description": "The name of the cloud account to use for image publishing.",
+      "example": "account1",
+      "minLength": 1,
+      "type": "string"
+    },
+    "cloud_architecture": {
+      "description": "The underlying architecture for the image. Valid options are x86_64 and aarch64 and the default architecture is x86_64.",
+      "enum": [
+        "x86_64",
+        "aarch64"
+      ],
+      "example": "x86_64",
+      "type": "string"
+    },
+    "cloud_image_name": {
+      "description": "The name to use for the uploaded image in the cloud framework. The name can have a date of upload inserted such as the example. The {date} will be replaced by the current iso date format at time of upload (20200410).",
+      "example": "opensuse-leap-15-v{date}",
+      "minLength": 1,
+      "type": "string"
+    },
+    "conditions": {
+      "description": "A list of image conditions to check the image against. Providing only the package name will ensure the package is in the image. The version is the package version from the build service whereas the release is the build or release number. At least one of package_name, version or release is required. If no package name is provided then the condition is against the image itself. Valid condition operators are >, <, >=, <=, or ==.",
+      "example": [
+        {
+          "condition": ">=",
+          "package_name": "kernel-default",
+          "version": "4.13.1"
+        }
+      ],
+      "items": {
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "package_name"
+            ]
+          },
+          {
+            "required": [
+              "version"
+            ]
+          },
+          {
+            "required": [
+              "release"
+            ]
+          }
+        ],
+        "properties": {
+          "condition": {
+            "description": "The expression to use for comparing version and/or release.",
+            "enum": [
+              ">=",
+              "==",
+              "<=",
+              ">",
+              "<"
+            ],
+            "example": "==",
+            "type": "string"
+          },
+          "package_name": {
+            "description": "The name of the package for this condition. If no name is provided for a condition then the condition is checked against the image itself.",
+            "example": "kernel-default",
+            "minLength": 1,
+            "type": "string"
+          },
+          "release": {
+            "description": "The build (release) number for the package or image. If no package_name is provided with the condition then the condition is against the image.",
+            "example": "1.1",
+            "minLength": 1,
+            "type": "string"
+          },
+          "version": {
+            "description": "The package or image version from the build service. If no package_name is provided with the condition then the condition is against the image.",
+            "example": "4.13.1",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "conditions_wait_time": {
+      "description": "The time (in seconds) to wait before failing a job on image conditions.",
+      "example": 900,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "disallow_licenses": {
+      "description": "A list of licenses that should not be in the image. If a package is in the manifest that has a matching license the job will fail.",
+      "example": [
+        "MIT"
+      ],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "disallow_packages": {
+      "description": "A list of packages that should not be in the image. If a package is in the manifest that has a matching name the job will fail. The * wildcard can be used to match a package name pattern.",
+      "example": [
+        "*-mini"
+      ],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "disk_size": {
+      "description": "Size root disk in GB. Default is 20GB. ",
+      "example": 20,
+      "minimum": 5,
+      "type": "integer"
+    },
+    "distro": {
+      "description": "The distribution setting used for the img-proof tests.",
+      "enum": [
+        "opensuse_leap",
+        "sles",
+        "sle_micro"
+      ],
+      "example": "sles",
+      "type": "string"
+    },
+    "download_url": {
+      "description": "The URL to a download repository. The URL is expected to have the image tarball, checksum and a packages file.",
+      "example": "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.0/images/",
+      "minLength": 1,
+      "type": "string"
+    },
+    "dry_run": {
+      "description": "Only validate the job document and return. Do not create the job.",
+      "example": true,
+      "type": "boolean"
+    },
+    "force_replace_image": {
+      "description": "If an image already exists with the same name delete the image and tarball from storage. Default is False and the job will fail if the image already exists.",
+      "example": true,
+      "type": "boolean"
+    },
+    "image": {
+      "description": "This should match the name of the tarball file onthe download server prior to the architecture. For a file like openSUSE-Leap-15.0-EC2-HVM.x86_64-1.0.0-Build1.206.vhdfixed.xz.sha256 The \"image\" is openSUSE-Leap-15.0-EC2-HVM.",
+      "example": "openSUSE-Leap-15.0-GCE",
+      "minLength": 1,
+      "type": "string"
+    },
+    "image_description": {
+      "description": "Description to use when creating the image in the cloud framework.",
+      "example": "openSUSE Leap 15",
+      "minLength": 1,
+      "type": "string"
+    },
+    "instance_type": {
+      "description": "Instance size/type img-proof will use when launching a test instance. If no type is provided a random type will be selected from a pre-configured list.",
+      "example": "ecs.t5-lc1m1.small",
+      "minLength": 1,
+      "type": "string"
+    },
+    "last_service": {
+      "description": "The last service in the pipeline to be executed. All services except the OBS service are valid values.",
+      "example": "create",
+      "type": "string"
+    },
+    "launch_permission": {
+      "description": "The launch permission to set for the published image.",
+      "example": "EXAMPLE",
+      "minLength": 1,
+      "type": "string"
+    },
+    "notification_email": {
+      "example": "test@fake.com",
+      "format": "regex",
+      "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$",
+      "type": "string"
+    },
+    "notify": {
+      "description": "If True Send email notification when job finishes.",
+      "example": true,
+      "type": "boolean"
+    },
+    "old_cloud_image_name": {
+      "description": "The cloud image name for the image to be deprecated. This is only required for jobs that run through deprecate service.",
+      "example": "opensuse-leap-15-v20190520",
+      "minLength": 1,
+      "type": "string"
+    },
+    "platform": {
+      "description": "The distribution of the image operating system.",
+      "example": "OpenSUSE",
+      "minLength": 1,
+      "type": "string"
+    },
+    "profile": {
+      "description": "",
+      "example": "Proxy",
+      "minLength": 1,
+      "type": "string"
+    },
+    "raw_image_upload_account": {
+      "description": "The cloud framework account as configured with the mash account add client command when the mash user was setup. The credentials associated with this cloud framework account will be used for the raw image upload.",
+      "example": "my_aws_account",
+      "minLength": 1,
+      "type": "string"
+    },
+    "raw_image_upload_location": {
+      "description": "The location to put the raw image. This is dependent on the cloud framework chosen. For example an S3 upload format would be {bucket_name}/{prefix}/ to denote the bucket and a prefix where the image should be uploaded.",
+      "example": "my-bucket/prefix/",
+      "minLength": 1,
+      "type": "string"
+    },
+    "raw_image_upload_type": {
+      "description": "Cloud framework to use for raw image tarball upload. The image tarball will be uploaded as is to the framework using the cloud image name.",
+      "example": "s3bucket",
+      "minLength": 1,
+      "type": "string"
+    },
+    "region": {
+      "description": "The region to use for launching and testing an instance of the image.",
+      "example": "cn-beijing",
+      "minLength": 1,
+      "type": "string"
+    },
+    "security_group_id": {
+      "description": "The security group to use when launching the test instance.",
+      "example": "sg1",
+      "minLength": 1,
+      "type": "string"
+    },
+    "ssh_user": {
+      "description": "The SSH user name that will be used when connecting to a test instance.",
+      "example": "root",
+      "minLength": 1,
+      "type": "string"
+    },
+    "tests": {
+      "description": "This is a list of img-proof tests or test descriptions. The tests will be run against the instance. If any tests fail the job will fail.",
+      "example": [
+        "test_sles"
+      ],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "use_build_time": {
+      "description": "If True and the image build time is available it will be used when formatting the cloud image name. A {date} format is required in the cloud image name for the timestamp to be used. If True and build time is not available the job will fail.",
+      "example": true,
+      "type": "boolean"
+    },
+    "utctime": {
+      "description": "An RFC3339 date-time string or \"now\".If using a date string it must be in the future and the job will start no sooner than the provided date. Now jobs will run as soon as possible.",
+      "example": "2019-04-28T06:44:50.142Z",
+      "examples": [
+        "now",
+        "2019-04-28T06:44:50.142Z"
+      ],
+      "format": "regex",
+      "pattern": "^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\\.[0-9]+)?(([Zz])|([\\+|\\-]([01][0-9]|2[0-3]):[0-5][0-9]))$|^(now)$",
+      "type": "string"
+    },
+    "vswitch_id": {
+      "description": "The vswitch to use when launching the test instance.",
+      "example": "vs1",
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "last_service",
+    "utctime",
+    "image",
+    "download_url",
+    "cloud_account",
+    "platform",
+    "launch_permission"
+  ],
+  "type": "object"
+}

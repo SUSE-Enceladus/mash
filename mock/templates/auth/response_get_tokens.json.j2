@@ -1,0 +1,9 @@
+[
+    {% for n in range(random.int(2, 5)) %}
+    {
+    "expires": "{{ date.date('%Y-%m-%d %H:%M.%fZ', random.int(0, 280000)) }}",
+    "id": "{{ random.int(4000, 100000) }}",
+    "jti": "{{ random.uuid4() }}",
+    "token_type": "{{ ['refresh', 'access'] | random  }}"
+    }{%- if not loop.last %},{% endif %}{% endfor %}
+]

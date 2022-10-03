@@ -1,0 +1,7 @@
+{
+    "id": "{{ random.int(4000, 100000) }}",
+    "additional_regions": {{ request.json.additional_regions | default([],false) }},
+    "name": "{{ account_name }}",
+    "region": "{{ request.json.region | default("my_default_region",false) }}",
+    "subnet": "{{ request.json.subnet | default("subnet-12kj3h12132",false)}}"
+}

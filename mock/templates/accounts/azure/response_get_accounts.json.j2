@@ -1,0 +1,11 @@
+[
+    {% for n in range(random.int(2, 5)) %}
+    {
+        "id": "{{ random.int(4000, 100000) }}",
+        "name": "{{ fake.first_name() }}_{{ fake.last_name()}}_account",
+        "region": "{{ fake.country_code() | lower }}-{{ ["north", "east", "west", "south"] | random }}-{{ random.int(1,3)}}",
+        "source_container": "{{['test', 'production', 'new'] | random }}-{{ ['images', 'containers', 'distributions'] | random }}",
+        "source_resource_group": "{{['public', 'private', 'preview'] | random }}-{{['publishing', 'testing'] | random }}",
+        "source_storage_account": "{{ ['dev','preprod','staging','obsolete'] | random }}{{['published','pending'] | random }}{{['images','containers','solutions'] | random }}"
+    }{%- if not loop.last %},{% endif %}{% endfor %}
+]

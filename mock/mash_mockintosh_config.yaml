@@ -1,0 +1,670 @@
+templatingEngine: Jinja2
+services:
+  - name: Mash mock
+    hostname: localhost
+    port: 8000
+    #ssl: true
+    managementRoot: __admin  # open http://localhost:8001/__admin it in browser to see the UI
+    endpoints:
+      ###############################
+      # User management endpoints
+      ###############################
+      # GET
+      - path: "/v1/user"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/user/response_get_user1.json.j2"
+      # POST
+      - path: "/v1/user"
+        method: POST
+        body:
+          schema:
+            type: object
+            properties:
+              email: {}
+              password: {}
+            required:
+              - email
+              - password
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/user/response_create_user1.json.j2"
+      # DELETE
+      - path: "/v1/user"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/user/response_delete_user1.json.j2"
+      # PUT PASSWORD
+      - path: "/v1/user/password"
+        method: PUT
+        body:
+          schema:
+            type: object
+            properties:
+              email: {}
+              current_password: {}
+              new_password: {}
+            required:
+              - email
+              - current_password
+              - new_password
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/user/response_update_pass_user1.json.j2"
+      # POST PASSWORD
+      - path: "/v1/user/password"
+        method: POST
+        body:
+          schema:
+            type: object
+            properties:
+              email: {}
+            required:
+              - email
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/user/response_reset_pass_user1.json.j2"
+      ###############################
+      # Job management endpoints
+      ###############################
+      # GET all jobs
+      - path: "/v1/jobs"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              page: {}
+              per_page: {}
+            required:
+              - page
+              - per_page
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/response_get_jobs.json.j2"
+      # GET job
+      - path: "/v1/jobs/{{job_id}}"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/response_get_job_id.json.j2"
+      # DELETE job
+      - path: "/v1/jobs/{{job_id}}"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/response_delete_job_id.json.j2"
+      ###############################
+      # EC2 Jobs endpoints
+      ###############################
+      # GET EC2 job schema
+      - path: "/v1/jobs/ec2"
+        method: GET
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/ec2/ec2_job_schema.json.j2"
+      # CREATE EC2 JOB
+      - path: "/v1/jobs/ec2"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              last_service:
+                type: string
+              utctime:
+                type: string
+              image:
+                type: string
+              download_url:
+                type: string
+            required:
+              - last_service
+              - utctime
+              - image
+              - download_url
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/ec2/response_post_ec2_job.json.j2"
+      ###############################
+      # GCE Jobs endpoints
+      ###############################
+      # GET GCE job schema
+      - path: "/v1/jobs/gce"
+        method: GET
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/gce/gce_job_schema.json.j2"
+      # CREATE GCE JOB
+      - path: "/v1/jobs/gce"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              last_service:
+                type: string
+              utctime:
+                type: string
+              image:
+                type: string
+              download_url:
+                type: string
+              cloud_account:
+                type: string
+            required:
+              - last_service
+              - utctime
+              - image
+              - download_url
+              - cloud_account
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/gce/response_post_gce_job.json.j2"
+      ###############################
+      # Azure Jobs endpoints
+      ###############################
+      # GET AZURE job schema
+      - path: "/v1/jobs/azure"
+        method: GET
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/azure/azure_job_schema.json.j2"
+      # CREATE AZURE JOB
+      - path: "/v1/jobs/azure"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              last_service:
+                type: string
+              utctime:
+                type: string
+              image:
+                type: string
+              download_url:
+                type: string
+              cloud_account:
+                type: string
+            required:
+              - last_service
+              - utctime
+              - image
+              - download_url
+              - cloud_account
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/azure/response_post_azure_job.json.j2"
+      ###############################
+      # Aliyun Jobs endpoints
+      ###############################
+      # GET ALIYUN job schema
+      - path: "/v1/jobs/aliyun"
+        method: GET
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/aliyun/aliyun_job_schema.json.j2"
+      # CREATE ALIYUN JOB
+      - path: "/v1/jobs/aliyun"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              last_service:
+                type: string
+              utctime:
+                type: string
+              image:
+                type: string
+              download_url:
+                type: string
+              cloud_account:
+                type: string
+              platform:
+                type: string
+              launch_permission:
+                type: string
+            required:
+              - last_service
+              - utctime
+              - image
+              - download_url
+              - cloud_account
+              - platform
+              - launch_permission
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/aliyun/response_post_aliyun_job.json.j2"
+      ###############################
+      # Auth endpoints
+      ###############################
+      # LOGIN
+      - path: "/v1/auth/login"
+        method: POST
+        body:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
+            required:
+              - email
+              - password
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/auth/response_post_login.json.j2"
+      # LOGOUT
+      - path: "/v1/auth/logout"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/auth/response_delete_logout.json.j2"
+      # GET oauth2  PENDING
+      # POST oauth2 PENDING
+      # GET AUTH tokens
+      - path: "/v1/auth/token"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/auth/response_get_tokens.json.j2"
+      # DELETE AUTH tokens
+      - path: "/v1/auth/token"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/auth/response_delete_tokens.json.j2"
+      # REFRESH AUTH tokens
+      - path: "/v1/auth/token/refresh"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/auth/response_delete_tokens.json.j2"
+      # GET AUTH token info from jti
+      - path: "/v1/auth/token/{{ jti }}"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/auth/response_get_token_jti.json.j2"
+      # DELETE AUTH token info from jti
+      - path: "/v1/auth/token/{{ jti }}"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/auth/response_delete_token_jti.json.j2"
+      ###############################
+      # Azure account endpoints
+      ###############################
+      # GET Azure accounts
+      - path: "/v1/accounts/azure"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/azure/response_get_accounts.json.j2"
+      # CREATE Azure account
+      - path: "/v1/accounts/azure"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              account_name:
+                type: string
+              region:
+                type: string
+              source_container:
+                type: string
+              source_resource_group:
+                type: string
+              source_storage_account:
+                type: string
+              credentials:
+                type: object
+            required:
+              - account_name
+              - region
+              - source_container
+              - source_resource_group
+              - source_storage_account
+              - credentials
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/azure/response_post_account.json.j2"
+      # GET Azure accounts
+      - path: "/v1/accounts/azure/{{ account_name }}"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/azure/response_get_account.json.j2"
+      # Update Azure account
+      - path: "/v1/accounts/azure/{{ account_name }}"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/azure/response_update_account.json.j2"
+      # Delete Azure account
+      - path: "/v1/accounts/azure/{{ account_name }}"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/azure/response_delete_account.json.j2"
+      ###############################
+      # GCE Account endpoints
+      ###############################
+      # GET GCE accounts
+      - path: "/v1/accounts/gce"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/gce/response_get_accounts.json.j2"
+      # CREATE GCE account
+      - path: "/v1/accounts/gce"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              account_name:
+                type: string
+              region:
+                type: string
+              bucket:
+                type: string
+              credentials:
+                type: object
+            required:
+              - account_name
+              - region
+              - bucket
+              - credentials
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/gce/response_post_account.json.j2"
+      # GET GCE accounts
+      - path: "/v1/accounts/gce/{{ account_name }}"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/gce/response_get_account.json.j2"
+      # Update GCE account
+      - path: "/v1/accounts/gce/{{ account_name }}"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/gce/response_update_account.json.j2"
+      # Delete GCE account
+      - path: "/v1/accounts/gce/{{ account_name }}"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/gce/response_delete_account.json.j2"
+      ###############################
+      # EC2 Account endpoints
+      ###############################
+      # GET EC2 accounts
+      - path: "/v1/accounts/ec2"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/ec2/response_get_accounts.json.j2"
+      # CREATE EC2 account
+      - path: "/v1/accounts/ec2"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              account_name:
+                type: string
+              region:
+                type: string
+              credentials:
+                type: object
+            required:
+              - account_name
+              - region
+              - credentials
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/ec2/response_post_account.json.j2"
+      # GET EC2 account
+      - path: "/v1/accounts/ec2/{{ account_name }}"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/ec2/response_get_account.json.j2"
+      # Update EC2 account
+      - path: "/v1/accounts/ec2/{{ account_name }}"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/ec2/response_update_account.json.j2"
+      # Delete EC2 account
+      - path: "/v1/accounts/ec2/{{ account_name }}"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/ec2/response_delete_account.json.j2"
+      ###############################
+      # Aliyun account endpoints
+      ###############################
+      # GET Aliyun accounts
+      - path: "/v1/accounts/aliyun"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/aliyun/response_get_accounts.json.j2"
+      # CREATE Aliyun account
+      - path: "/v1/accounts/aliyun"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              account_name:
+                type: string
+              region:
+                type: string
+              bucket:
+                type: string
+              credentials:
+                type: object
+            required:
+              - account_name
+              - region
+              - bucket
+              - credentials
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/aliyun/response_post_account.json.j2"
+      # GET Aliyun account
+      - path: "/v1/accounts/aliyun/{{ account_name }}"
+        method: GET
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/aliyun/response_get_account.json.j2"
+      # Update Aliyun account
+      - path: "/v1/accounts/aliyun/{{ account_name }}"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/aliyun/response_update_account.json.j2"
+      # Delete Aliyun account
+      - path: "/v1/accounts/aliyun/{{ account_name }}"
+        method: DELETE
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        response:
+          status: 200
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/accounts/aliyun/response_delete_account.json.j2"

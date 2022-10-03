@@ -1,0 +1,8 @@
+{
+    "id": "{{ random.int(4000, 100000) }}",
+    "name": "{{ account_name }}",
+    "region": "{{ request.json.region | default("my_default_region",false) }}",
+    "bucket": "{{ request.json.bucket | default("my_default_bucket",false)}}",
+    "security_group_id": "{{ request.json.security_group_id | default("sg-132h32uiy231",false) }}",
+    "vswitch_id": "{{ request.json.vswitch_id | default("vsw-123kj321k123h",false)}}"
+}

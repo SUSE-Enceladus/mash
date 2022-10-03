@@ -1,0 +1,6 @@
+{
+    "id": "{{ random.int(4000, 100000) }}",
+    "jti": "{{ jti }}",
+    "token_type": "{{ ['refresh', 'access'] | random  }}"
+    "expires": "{{ date.date('%Y-%m-%d %H:%M.%fZ', random.int(0, 280000)) }}",
+}

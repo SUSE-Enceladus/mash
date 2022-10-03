@@ -1,0 +1,8 @@
+{
+    "id": "{{ random.int(4000, 100000) }}",
+    "name": "{{ request.json.account_name }}",
+    "region": "{{ request.json.region }}",
+    "source_container": "{{ request.json.source_container }}",
+    "source_resource_group": "{{ request.json.source_resource_group }}",
+    "source_storage_account": "{{ request.json.source_storage_account }}"
+}

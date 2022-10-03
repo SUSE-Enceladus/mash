@@ -1,0 +1,8 @@
+{
+    "id": "{{ random.int(4000, 100000) }}",
+    "name": "{{ request.json.account_name }}",
+    "region": "{{ request.json.region }}",
+    "bucket": "{{ request.json.bucket }}",
+    "testing_account": "{{ request.json.testing_account | default("my_default_testing_account",false)}}",
+    {% if request.json.is_publishing_account %}"is_publishing_account": true{% else %}"is_publishing_account": true{% endif %},
+}

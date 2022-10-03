@@ -1,0 +1,13 @@
+{
+  "job_id": "{{ fake.hexify(text='^^^^^^^^') }}-{{ fake.hexify(text='^^^^^^^^')}}-{{ fake.hexify(text='^^^^')}}-{{ fake.hexify(text='^^^^')}}-{{ fake.hexify(text='^^^^^^^^^^^^^^^^')}}",
+  "last_service": "{{ request.json.last_service | default("my_default_last_service", false) }}",
+  "current_service": "{{ request.json.current_service | default("my_default_current_service", false) }}",
+  "prev_service": "{{ request.json.prev_service | default("my_default_prev_service", false) }}",
+  "failed_service": "{{ request.json.failed_service | default("my_default_failed_service", false) }}",
+  "utctime": "{{ request.json.utctime | default("now", false) }}",
+  "image": "{{ request.json.image | default("my_default_image", false) }}",
+  "download_url": "{{ request.json.download_url | default("http://my_example_download_url.com", false) }}",
+  "cloud_architecture": "{{ request.json.cloud_architecture | default("x86_64", false) }}",
+  "profile": "{{ request.json.profile | default("default_profile", false) }}",
+  "state": "{{ request.json.state | default("success", false) }}"
+}
