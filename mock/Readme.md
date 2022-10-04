@@ -59,4 +59,68 @@ the different endpoints mocked are defined and the response is build by means
 of [Jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates.
 
 The mash mock template responses are held in the `templates` directory and can
-be modified easily to meet your needs.
+be modified easily to meet your needs. The update procedure is the following:
+
+1- Check, in [mash_mockintosh_config.yaml](mash_mockintosh_config.yaml) file, 
+what is the template file that rules the response for the endpoint you are 
+modifying. The template will be under the `response->body` section in the yaml
+entry for the endpoint. 
+
+`templates/jobs/gce/response_post_gce_job.json.j2` in the example below.
+
+```
+      # CREATE GCE JOB
+      - path: "/v1/jobs/gce"
+        method: POST
+        headers:
+          Authorization: "{{ regEx('.+') }}"
+        body:
+          schema:
+            type: object
+            properties:
+              last_service:
+                type: string
+              utctime:
+                type: string
+              image:
+                type: string
+              download_url:
+                type: string
+              cloud_account:
+                type: string
+            required:
+              - last_service
+              - utctime
+              - image
+              - download_url
+              - cloud_account
+        response:
+          status: 201
+          headers:
+            Content-Type: "application/json; charset=UTF-8"
+          body: "@templates/jobs/gce/response_post_gce_job.json.j2"
+```
+
+The structure for the `templates` directory is the following, there's a
+directory for each group of endpoints and then a subdirectory per cloud
+provider (if it makes sense for the endpoint group):
+
+```
+templates/
+├── accounts
+│   ├── aliyun
+│   ├── azure
+│   ├── ec2
+│   └── gce
+├── auth
+├── jobs
+│   ├── aliyun
+│   ├── azure
+│   ├── ec2
+│   ├── gce
+└── user
+```
+
+2- Then go modify the template to match the modified behavior in the endpoint.
+The format for the template is Jinja.
+

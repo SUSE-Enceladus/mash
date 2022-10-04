@@ -599,6 +599,10 @@ existing version can be used as this is a non-breaking change.
 The only route which has no version is the API spec. This route provides the
 openAPI spec which is used to host the Swagger based API docs.
 
+When doing an API change, it's required to change the provided mock under
+`mock` directory, for the mock to match the API behavior. You can find 
+additional information about how to update the mock [here](mock/Readme.md).
+
 ## License
 
 Copyright (c) 2022 SUSE LLC.
