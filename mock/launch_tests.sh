@@ -62,7 +62,7 @@ initializeANSI
 # User creation
 TEST='User creation'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/user"
+URL="${BASE_URL}/v1/user/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -75,7 +75,7 @@ print_test_result $?
 # User deletion
 TEST='User deletion'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/user"
+URL="${BASE_URL}/v1/user/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -88,7 +88,7 @@ print_test_result $?
 # GET user
 TEST='User get'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/user"
+URL="${BASE_URL}/v1/user/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -129,7 +129,7 @@ print_test_result $?
 # GET jobs
 TEST='Jobs get'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs"
+URL="${BASE_URL}/v1/jobs/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -182,7 +182,7 @@ print_test_result $?
 # GET EC2 job schema
 TEST='EC2 Job schema get'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs/ec2"
+URL="${BASE_URL}/v1/jobs/ec2/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -193,7 +193,7 @@ print_test_result $?
 # EC2 job post
 TEST='EC2 job post'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs/ec2"
+URL="${BASE_URL}/v1/jobs/ec2/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -210,7 +210,7 @@ print_test_result $?
 # GET GCE job schema
 TEST='GCE Job schema get'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs/gce"
+URL="${BASE_URL}/v1/jobs/gce/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -221,7 +221,7 @@ print_test_result $?
 # GCE job post
 TEST='GCE job post'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs/gce"
+URL="${BASE_URL}/v1/jobs/gce/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -238,7 +238,7 @@ print_test_result $?
 # GET AZURE job schema
 TEST='AZURE Job schema get'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs/azure"
+URL="${BASE_URL}/v1/jobs/azure/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -249,7 +249,7 @@ print_test_result $?
 # AZURE job post
 TEST='AZURE job post'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs/azure"
+URL="${BASE_URL}/v1/jobs/azure/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -266,7 +266,7 @@ print_test_result $?
 # GET ALIYUN job schema
 TEST='ALIYUN Job schema get'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs/aliyun"
+URL="${BASE_URL}/v1/jobs/aliyun/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -277,7 +277,7 @@ print_test_result $?
 # ALIYUN job post
 TEST='ALIYUN job post'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/jobs/aliyun"
+URL="${BASE_URL}/v1/jobs/aliyun/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -368,7 +368,7 @@ print_test_result $?
 # GET Azure accounts
 TEST='ACCOUNTS AZURE get'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/accounts/azure"
+URL="${BASE_URL}/v1/accounts/azure/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -380,7 +380,7 @@ print_test_result $?
 # POST account create
 TEST='ACCOUNTS AZURE create'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/accounts/azure"
+URL="${BASE_URL}/v1/accounts/azure/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -432,7 +432,7 @@ print_test_result $?
 # GET GCE accounts
 TEST='ACCOUNTS GCE get'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/accounts/gce"
+URL="${BASE_URL}/v1/accounts/gce/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -444,7 +444,7 @@ print_test_result $?
 # POST account create
 TEST='ACCOUNTS GCE create'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/accounts/gce"
+URL="${BASE_URL}/v1/accounts/gce/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -496,7 +496,7 @@ print_test_result $?
 # GET EC2 accounts
 TEST='ACCOUNTS EC2 get accounts'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/accounts/ec2"
+URL="${BASE_URL}/v1/accounts/ec2/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -508,7 +508,7 @@ print_test_result $?
 # POST account create
 TEST='ACCOUNTS EC2 create'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/accounts/ec2"
+URL="${BASE_URL}/v1/accounts/ec2/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -560,7 +560,7 @@ print_test_result $?
 # GET ALiyun accounts
 TEST='ACCOUNTS Aliyun get accounts'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/accounts/aliyun"
+URL="${BASE_URL}/v1/accounts/aliyun/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
@@ -572,7 +572,7 @@ print_test_result $?
 # POST account create
 TEST='ACCOUNTS Aliyun create'
 print_test_header "${TEST}"
-URL="${BASE_URL}/v1/accounts/aliyun"
+URL="${BASE_URL}/v1/accounts/aliyun/"
 curl \
   "${CURL_DEBUG_OPTS}" \
   --fail \
