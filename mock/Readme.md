@@ -44,7 +44,7 @@ sudo podman run -it \
    /tmp/mash_mockintosh_config.yaml
 ```
 
-By default, the fake API is listening in the port 8000.
+By default, the fake API is listening on port 8000.
 
 The configuration file also exposes a management interface where the behavior
 of the mock can be modified (or stats of usage can be checked). In the 
@@ -121,6 +121,6 @@ templates/
 └── user
 ```
 
-2- Then go modify the template to match the modified behavior in the endpoint.
+2- Then go modify the template to match the modified behavior of the endpoint.
 The format for the template is Jinja.
 
