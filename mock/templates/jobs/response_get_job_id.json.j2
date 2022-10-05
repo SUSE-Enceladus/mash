@@ -44,4 +44,28 @@
     "state": "success",
     "utctime": "now"
 }
+{% else  %}
+{
+    "download_url": "https://dist.nue.suse.com/ibs/SUSE:/SLE-15-SP4:/Update:/PubClouds:/ReleaseCandidate/images",
+    "last_service": "publish",
+    "notification_email": "public-cloud-dev@suse.de",
+    "notify": true,
+    "utctime": "now",
+    "distro": "sles",
+    "cloud_architecture": "x86_64",
+    "share_with": "679593333241,684062674729,200836235822,955059815031,582767206473",
+    "cloud_image_name": "suse-sles-sap-15-sp4-v20221005-hvm-ssd-x86_64",
+    "image_description": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 (HVM, 64-bit, SSD-Backed)",
+    "tests": [
+        "test_sles",
+        "test_sles_ec2",
+        "test_sles_sap"
+    ],
+    "allow_copy": "image",
+    "cloud_account": "marketplace",
+    "skip_replication": true,
+    "image": "SLES15-SP4-SAP",
+    "profile": "EC2",
+    "old_cloud_image_name": "suse-sles-sap-15-sp4-v20220722-hvm-ssd-x86_64"
+}
 {% endif %}

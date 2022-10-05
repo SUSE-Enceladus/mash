@@ -89,7 +89,7 @@ services:
             Content-Type: "application/json; charset=UTF-8"
           body: "@templates/jobs/response_get_jobs.json.j2"
       # GET job
-      - path: "/v1/jobs/{{job_id}}/"
+      - path: "/v1/jobs/{{job_id}}"
         method: GET
         headers:
           Authorization: "{{ regEx('.+') }}"
