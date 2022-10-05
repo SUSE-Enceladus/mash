@@ -45,6 +45,7 @@ class EC2MPPublishJob(MashJob):
             self.os_name = self.job_config['os_name']
             self.os_version = self.job_config['os_version']
             self.usage_instructions = self.job_config['usage_instructions']
+            self.upgrade_instructions = self.job_config['upgrade_instructions']
             self.recommended_instance_type = \
                 self.job_config['recommended_instance_type']
         except KeyError as error:
@@ -102,6 +103,7 @@ class EC2MPPublishJob(MashJob):
                 self.os_name,
                 self.os_version,
                 self.usage_instructions,
+                self.upgrade_instructions,
                 self.recommended_instance_type,
                 self.ssh_user
             )

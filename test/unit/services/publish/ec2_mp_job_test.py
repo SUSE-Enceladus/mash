@@ -19,6 +19,7 @@ class TestEC2MPPublishJob(object):
             'os_name': 'OTHERLINUX',
             'os_version': '15.3',
             'usage_instructions': 'Login using SSH...',
+            'upgrade_instructions': 'Upgrade using zypper...',
             'recommended_instance_type': 't3.medium',
             'publish_regions': {'test-aws': 'us-east-2'},
             'share_with': '123456789',

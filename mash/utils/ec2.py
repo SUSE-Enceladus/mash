@@ -224,6 +224,7 @@ def start_mp_change_set(
     os_name,
     os_version,
     usage_instructions,
+    upgrade_instructions,
     recommended_instance_type,
     ssh_user
 ):
@@ -244,6 +245,7 @@ def start_mp_change_set(
             'Details': {
                 'AmiDeliveryOptionDetails': {
                     'UsageInstructions': usage_instructions,
+                    'UpgradeInstructions': upgrade_instructions,
                     'RecommendedInstanceType': recommended_instance_type,
                     'AmiSource': {
                         'AmiId': ami_id,

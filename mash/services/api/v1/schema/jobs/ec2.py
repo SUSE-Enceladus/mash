@@ -157,6 +157,11 @@ ec2_job_message['properties']['usage_instructions'] = string_with_example(
     'Instructions on image usage...',
     description='Instructions for using the marketplace image.'
 )
+ec2_job_message['properties']['upgrade_instructions'] = string_with_example(
+    'Upgrade instructions for the image...',
+    description='Information on how a customer can upgrade from one version '
+                'of the product to another.'
+)
 ec2_job_message['properties']['recommended_instance_type'] = string_with_example(
     't3.medium',
     description='The instance type that is recommended to run the service '

@@ -133,6 +133,7 @@ def test_start_mp_change_set():
         os_name='OTHERLINUX',
         os_version='15.3',
         usage_instructions='Login with SSH...',
+        upgrade_instructions='Upgrade with zypper...',
         recommended_instance_type='t3.medium',
         ssh_user='ec2-user'
     )

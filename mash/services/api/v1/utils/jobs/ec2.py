@@ -119,6 +119,7 @@ def validate_mp_fields(job_doc):
         'os_name',
         'os_version',
         'usage_instructions',
+        'upgrade_instructions',
         'recommended_instance_type'
     ]
     missing_mp_fields = []

@@ -43,6 +43,7 @@ class EC2Job(BaseJob):
         self.os_name = self.kwargs.get('os_name')
         self.os_version = self.kwargs.get('os_version')
         self.usage_instructions = self.kwargs.get('usage_instructions')
+        self.upgrade_instructions = self.kwargs.get('upgrade_instructions')
         self.recommended_instance_type = self.kwargs.get(
             'recommended_instance_type'
         )
@@ -102,6 +103,7 @@ class EC2Job(BaseJob):
                     'os_name': self.os_name,
                     'os_version': self.os_version,
                     'usage_instructions': self.usage_instructions,
+                    'upgrade_instructions': self.upgrade_instructions,
                     'recommended_instance_type': self.recommended_instance_type,
                     'allow_copy': self.allow_copy,
                     'share_with': self.share_with,
