@@ -102,7 +102,7 @@ class AzureSIGCreateJob(MashJob):
         """
         Create gallery image version from existing page blob.
         """
-        image_name = '_'.join([self.offer_id.replace('-', '_'), plan_id])
+        image_name = '_'.join([self.offer_id, plan_id]).replace('-', '_')
 
         azure_image.create_gallery_image_version(
             blob_name=self.blob_name,
