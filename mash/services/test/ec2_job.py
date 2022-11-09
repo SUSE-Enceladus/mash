@@ -45,8 +45,8 @@ instance_types = {
         't3.small'
     ],
     'aarch64': [
-        'a1.medium',
-        'a1.large'
+        't4g.small',
+        'm6g.medium'
     ]
 }
 
