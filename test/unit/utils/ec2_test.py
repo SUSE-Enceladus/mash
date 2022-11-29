@@ -27,7 +27,9 @@ from mash.utils.ec2 import (
     image_exists,
     start_mp_change_set
 )
-from mash.mash_exceptions import MashGCEUtilsException
+from mash.mash_exceptions import MashGCEUtilsException, MashEc2UtilsException
+import botocore
+from botocore.stub import Stubber, ANY
 
 
 @patch('mash.utils.ec2.boto3')
@@ -138,3 +140,274 @@ def test_start_mp_change_set():
     )
 
     assert response['ChangeSetId'] == '123'
+
+
+def test_start_mp_change_set_ongoing_change_ResourceInUseException():
+    session = botocore.session.get_session()
+    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    client = session.create_client(
+        'marketplace-catalog',
+        'us-east-1',
+        config=config
+    )
+
+    stubber = Stubber(client)
+    error_code = 'ResourceInUseException'
+    error_message = "Requested change set has entities locked by change sets" \
+                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                    " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+    describe_response = {
+        'Status': 'APPLYING'
+    }
+    # First check will still be applying
+    stubber.add_response(
+        'describe_change_set',
+        describe_response,
+        {
+            'Catalog': 'AWSMarketplace',
+            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+        }
+    )
+    describe_response2 = {
+        'Status': 'SUCCEEDED'
+    }
+    # Second check succeeded
+    stubber.add_response(
+        'describe_change_set',
+        describe_response2,
+        {
+            'Catalog': 'AWSMarketplace',
+            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+        }
+    )
+    start_response1 = {
+        'ChangeSetId': 'myChangeSetId',
+        'ChangeSetArn': 'myChangeSetArn'
+    }
+    # successful response for start_change_set
+    stubber.add_response(
+        'start_change_set',
+        start_response1,
+        {
+            'Catalog': 'AWSMarketplace',
+            'ChangeSet': ANY
+        }
+    )
+    stubber.activate()
+
+    with stubber:
+        start_mp_change_set(
+            client,
+            entity_id='123',
+            version_title='New image',
+            ami_id='ami-123',
+            access_role_arn='arn',
+            release_notes='Release Notes',
+            os_name='OTHERLINUX',
+            os_version='15.3',
+            usage_instructions='Login with SSH...',
+            recommended_instance_type='t3.medium',
+            ssh_user='ec2-user',
+            max_ResInUseExc_rechecks=20,
+            ResInUseExc_rechecks_period=0
+        )
+    stubber.deactivate()
+
+
+def test_start_mp_change_set_ongoing_change_GenericException():
+    session = botocore.session.get_session()
+    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    client = session.create_client(
+        'marketplace-catalog',
+        'us-east-1',
+        config=config
+    )
+
+    stubber = Stubber(client)
+    error_code = 'ServiceQuotaExceededException'
+    error_message = "Quota is exceeded"
+
+    # different exception for start_change_set x3
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+    stubber.activate()
+
+    with stubber:
+        with raises(Exception):
+            start_mp_change_set(
+                client,
+                entity_id='123',
+                version_title='New image',
+                ami_id='ami-123',
+                access_role_arn='arn',
+                release_notes='Release Notes',
+                os_name='OTHERLINUX',
+                os_version='15.3',
+                usage_instructions='Login with SSH...',
+                recommended_instance_type='t3.medium',
+                ssh_user='ec2-user',
+                max_ResInUseExc_rechecks=20,
+                ResInUseExc_rechecks_period=0
+            )
+        stubber.deactivate()
+
+
+def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times():
+    session = botocore.session.get_session()
+    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    client = session.create_client(
+        'marketplace-catalog',
+        'us-east-1',
+        config=config
+    )
+
+    stubber = Stubber(client)
+    error_code = 'ResourceInUseException'
+    error_message = "Requested change set has entities locked by change sets" \
+                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                    " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+    describe_response = {
+        'Status': 'SUCCEEDED'
+    }
+    # check succeeds, blocking changeset finished
+    stubber.add_response(
+        'describe_change_set',
+        describe_response,
+        {
+            'Catalog': 'AWSMarketplace',
+            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+        }
+    )
+    # another time, ResourceInUseException
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+    describe_response = {
+        'Status': 'SUCCEEDED'
+    }
+    # Second check succeeded
+    stubber.add_response(
+        'describe_change_set',
+        describe_response,
+        {
+            'Catalog': 'AWSMarketplace',
+            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+        }
+    )
+    # another time, ResourceInUseException
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+    describe_response = {
+        'Status': 'SUCCEEDED'
+    }
+    # Second check succeeded
+    stubber.add_response(
+        'describe_change_set',
+        describe_response,
+        {
+            'Catalog': 'AWSMarketplace',
+            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+        }
+    )
+    stubber.activate()
+
+    with stubber:
+        with raises(MashEc2UtilsException):
+            start_mp_change_set(
+                client,
+                entity_id='123',
+                version_title='New image',
+                ami_id='ami-123',
+                access_role_arn='arn',
+                release_notes='Release Notes',
+                os_name='OTHERLINUX',
+                os_version='15.3',
+                usage_instructions='Login with SSH...',
+                recommended_instance_type='t3.medium',
+                ssh_user='ec2-user',
+                max_ResInUseExc_rechecks=20,
+                ResInUseExc_rechecks_period=0
+            )
+        stubber.deactivate()
+
+
+def test_start_mp_change_set_ongoing_change_ResInUseExc_genericExc():
+    """Describe generates a generic exception"""
+    session = botocore.session.get_session()
+    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    client = session.create_client(
+        'marketplace-catalog',
+        'us-east-1',
+        config=config
+    )
+
+    stubber = Stubber(client)
+    error_code = 'ResourceInUseException'
+    error_message = "Requested change set has entities locked by change sets" \
+                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                    " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+    # ResourceInUseException
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+
+    # Different exception in describe_change_set
+    error_code2 = 'AccessDeniedException'
+    error_message2 = 'You are not authorized to perform this request'
+    stubber.add_client_error(
+        'describe_change_set',
+        error_code2,
+        error_message2
+    )
+    stubber.activate()
+
+    with stubber:
+        with raises(Exception):
+            start_mp_change_set(
+                client,
+                entity_id='123',
+                version_title='New image',
+                ami_id='ami-123',
+                access_role_arn='arn',
+                release_notes='Release Notes',
+                os_name='OTHERLINUX',
+                os_version='15.3',
+                usage_instructions='Login with SSH...',
+                recommended_instance_type='t3.medium',
+                ssh_user='ec2-user',
+                max_ResInUseExc_rechecks=20,
+                ResInUseExc_rechecks_period=0
+            )
+        stubber.deactivate()

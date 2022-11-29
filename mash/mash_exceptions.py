@@ -189,3 +189,9 @@ class MashGCEUtilsException(MashException):
     """
     Exception raised if an error occurs in GCE Utils.
     """
+
+
+class MashEc2UtilsException(MashException):
+    """
+    Exception raised if an error occurs in EC2 Utils.
+    """

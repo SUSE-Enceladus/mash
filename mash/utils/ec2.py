@@ -17,12 +17,17 @@
 #
 
 import json
+import re
+import time
 
 import boto3
 
 from contextlib import contextmanager, suppress
 from mash.utils.mash_utils import generate_name, get_key_from_file
-from mash.mash_exceptions import MashGCEUtilsException
+from mash.mash_exceptions import (
+    MashEc2UtilsException,
+    MashGCEUtilsException
+)
 
 from ec2imgutils.ec2setup import EC2Setup
 from ec2imgutils.ec2removeimg import EC2RemoveImage
@@ -225,8 +230,21 @@ def start_mp_change_set(
     os_version,
     usage_instructions,
     recommended_instance_type,
-    ssh_user
+    ssh_user,
+    max_ResInUseExc_rechecks=20,
+    ResInUseExc_rechecks_period=300
 ):
+    """
+    Additional params included in this function:
+    - max_ResInUseExc_rechecks is the maximum number of checks that are
+    performed when a marketplace change cannot be applied because some resource
+    is affected by some other ongoing change (and ResourceInUseException is
+    raised by boto3).
+    - ResInUseExc_rechecks_period is the period (in seconds) that is waited
+    between checks for the ongoing mp change to be finished.
+    The maximum time the function will wait for a changeset to finish is
+    max_ResInUseExc_rechecks x ResInUseExc_rechecks_period seconds.
+    """
     data = {
         'ChangeType': 'AddDeliveryOptions',
         'Entity': {
@@ -265,9 +283,67 @@ def start_mp_change_set(
 
     data['Details'] = json.dumps(details)
 
-    response = client.start_change_set(
-        Catalog='AWSMarketplace',
-        ChangeSet=[data]
+    retries = 3
+    while retries > 0:
+        try:
+            response = client.start_change_set(
+                Catalog='AWSMarketplace',
+                ChangeSet=[data]
+            )
+            return response
+        except client.exceptions.ResourceInUseException as e:
+            # As Dec2022 there are no waiters in boto3 for marketplace-catalog
+            # client, implementing our own
+            wait_for_ongoing_change_to_complete(
+                get_ongoing_change_id_from_exc(
+                    e.response['Error']['Message']
+                ),
+                'AWSMarketplace',
+                client,
+                max_rechecks=max_ResInUseExc_rechecks,
+                rechecks_period=ResInUseExc_rechecks_period
+            )
+            retries -= 1
+        except Exception:
+            raise
+
+    raise MashEc2UtilsException(
+        f'Unable to submit the mp change for {ami_id}.'
     )
 
-    return response
+
+def wait_for_ongoing_change_to_complete(
+    change_id,
+    catalog,
+    client,
+    max_rechecks=20,
+    rechecks_period=300
+):
+    while max_rechecks > 0:
+        try:
+            response = client.describe_change_set(
+                Catalog=catalog,
+                ChangeSetId=change_id
+            )
+            # 'Status':'PREPARING'|'APPLYING'|'SUCCEEDED'|'CANCELLED'|'FAILED'
+            if all([
+                response,
+                'Status' in response,
+                response['Status'].lower().endswith('ed')
+            ]):
+                return
+        except Exception:
+            raise
+
+        time.sleep(rechecks_period)
+        max_rechecks -= 1
+
+
+def get_ongoing_change_id_from_exc(message: str) -> str:
+    change_id = ''
+    re_change_id = r'change sets: (\w+)[.,]'
+    match = re.search(re_change_id, message)
+
+    if match:
+        change_id = match.group(1)
+    return change_id
