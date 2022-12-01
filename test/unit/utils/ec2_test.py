@@ -214,8 +214,8 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException():
             usage_instructions='Login with SSH...',
             recommended_instance_type='t3.medium',
             ssh_user='ec2-user',
-            max_ResInUseExc_rechecks=20,
-            ResInUseExc_rechecks_period=0
+            max_rechecks=10,
+            rechecks_period=0
         )
     stubber.deactivate()
 
@@ -252,7 +252,7 @@ def test_start_mp_change_set_ongoing_change_GenericException():
     stubber.activate()
 
     with stubber:
-        with raises(Exception):
+        with raises(Exception) as error:
             start_mp_change_set(
                 client,
                 entity_id='123',
@@ -265,9 +265,10 @@ def test_start_mp_change_set_ongoing_change_GenericException():
                 usage_instructions='Login with SSH...',
                 recommended_instance_type='t3.medium',
                 ssh_user='ec2-user',
-                max_ResInUseExc_rechecks=20,
-                ResInUseExc_rechecks_period=0
+                max_rechecks=20,
+                rechecks_period=0
             )
+            assert 'ServiceQuotaExceededException' in str(error)
         stubber.deactivate()
 
 
@@ -342,7 +343,7 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times():
     stubber.activate()
 
     with stubber:
-        with raises(MashEc2UtilsException):
+        with raises(MashEc2UtilsException) as my_exc:
             start_mp_change_set(
                 client,
                 entity_id='123',
@@ -355,9 +356,11 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times():
                 usage_instructions='Login with SSH...',
                 recommended_instance_type='t3.medium',
                 ssh_user='ec2-user',
-                max_ResInUseExc_rechecks=20,
-                ResInUseExc_rechecks_period=0
+                max_rechecks=20,
+                rechecks_period=0
             )
+            msg = 'Unable to complete successfully the mp change for ami-123'
+            assert msg in str(my_exc)
         stubber.deactivate()
 
 
@@ -407,7 +410,114 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_genericExc():
                 usage_instructions='Login with SSH...',
                 recommended_instance_type='t3.medium',
                 ssh_user='ec2-user',
-                max_ResInUseExc_rechecks=20,
-                ResInUseExc_rechecks_period=0
+                max_rechecks=20,
+                rechecks_period=0
             )
+        stubber.deactivate()
+
+
+def test_start_mp_change_set_ongoing_change_ResInUseExc_waitTimeout():
+    """Describe generates a generic exception"""
+    session = botocore.session.get_session()
+    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    client = session.create_client(
+        'marketplace-catalog',
+        'us-east-1',
+        config=config
+    )
+
+    stubber = Stubber(client)
+    error_code = 'ResourceInUseException'
+    error_message = "Requested change set has entities locked by change sets" \
+                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                    " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+    # ResourceInUseException
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+
+    # Ongoing
+    describe_response = {
+        'Status': 'PENDING'
+    }
+    # Second check succeeded
+    stubber.add_response(
+        'describe_change_set',
+        describe_response,
+        {
+            'Catalog': 'AWSMarketplace',
+            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+        }
+    )
+    stubber.activate()
+
+    with stubber:
+        with raises(MashEc2UtilsException) as error:
+            start_mp_change_set(
+                client,
+                entity_id='123',
+                version_title='New image',
+                ami_id='ami-123',
+                access_role_arn='arn',
+                release_notes='Release Notes',
+                os_name='OTHERLINUX',
+                os_version='15.3',
+                usage_instructions='Login with SSH...',
+                recommended_instance_type='t3.medium',
+                ssh_user='ec2-user',
+                max_rechecks=1,
+                rechecks_period=0
+            )
+            msg = 'Timed out waiting for conflicting mp changeset'
+            msg += ' dgoddlepi9nb3ynwrwlkr3be4 to finish'
+            assert msg in str(error)
+        stubber.deactivate()
+
+
+def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid():
+    """Describe generates a generic exception"""
+    session = botocore.session.get_session()
+    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
+    client = session.create_client(
+        'marketplace-catalog',
+        'us-east-1',
+        config=config
+    )
+
+    stubber = Stubber(client)
+    error_code = 'ResourceInUseException'
+    error_message = "Requested change set has entities locked by change sets" \
+                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                    " change sets are dgoddlepi9nb3ynwrwlkr3be4"
+    # ResourceInUseException
+    stubber.add_client_error(
+        'start_change_set',
+        error_code,
+        error_message
+    )
+    stubber.activate()
+
+    with stubber:
+        with raises(MashEc2UtilsException) as error:
+            start_mp_change_set(
+                client,
+                entity_id='123',
+                version_title='New image',
+                ami_id='ami-123',
+                access_role_arn='arn',
+                release_notes='Release Notes',
+                os_name='OTHERLINUX',
+                os_version='15.3',
+                usage_instructions='Login with SSH...',
+                recommended_instance_type='t3.medium',
+                ssh_user='ec2-user',
+                max_rechecks=1,
+                rechecks_period=0
+            )
+            msg = 'Unable to extract changeset id from aws err response:'
+            msg2 = 'dgoddlepi9nb3ynwrwlkr3be4'
+            assert msg in str(error)
+            assert msg2 in str(error)
         stubber.deactivate()

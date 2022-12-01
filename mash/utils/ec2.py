@@ -231,19 +231,17 @@ def start_mp_change_set(
     usage_instructions,
     recommended_instance_type,
     ssh_user,
-    max_ResInUseExc_rechecks=20,
-    ResInUseExc_rechecks_period=300
+    max_rechecks=10,
+    rechecks_period=900
 ):
     """
     Additional params included in this function:
-    - max_ResInUseExc_rechecks is the maximum number of checks that are
+    - max_rechecks is the maximum number of checks that are
     performed when a marketplace change cannot be applied because some resource
     is affected by some other ongoing change (and ResourceInUseException is
     raised by boto3).
-    - ResInUseExc_rechecks_period is the period (in seconds) that is waited
-    between checks for the ongoing mp change to be finished.
-    The maximum time the function will wait for a changeset to finish is
-    max_ResInUseExc_rechecks x ResInUseExc_rechecks_period seconds.
+    - rechecks_period is the period (in seconds) that is waited
+    between checks for the ongoing mp change to be finished (defaults to 900s).
     """
     data = {
         'ChangeType': 'AddDeliveryOptions',
@@ -283,6 +281,8 @@ def start_mp_change_set(
 
     data['Details'] = json.dumps(details)
 
+    conflicting_changeset = False
+    conflicting_error_message = ''
     retries = 3
     while retries > 0:
         try:
@@ -291,59 +291,76 @@ def start_mp_change_set(
                 ChangeSet=[data]
             )
             return response
-        except client.exceptions.ResourceInUseException as e:
-            # As Dec2022 there are no waiters in boto3 for marketplace-catalog
-            # client, implementing our own
-            wait_for_ongoing_change_to_complete(
-                get_ongoing_change_id_from_exc(
-                    e.response['Error']['Message']
-                ),
-                'AWSMarketplace',
-                client,
-                max_rechecks=max_ResInUseExc_rechecks,
-                rechecks_period=ResInUseExc_rechecks_period
-            )
-            retries -= 1
+        except client.exceptions.ResourceInUseException as error:
+            # Conflicting changeset for some resource
+            conflicting_changeset = True
+            conflicting_error_message = str(error)
         except Exception:
+            # Unexpected exception
             raise
 
+        if conflicting_changeset:
+            conflicting_changeset = False
+            # As Dec2022 there are no waiters in boto3 for marketplace-catalog
+            # client, implementing our own
+            try:
+                ongoing_change_id = get_ongoing_change_id_from_error(
+                    conflicting_error_message
+                )
+                wait_for_ongoing_change_to_be_completed(
+                    ongoing_change_id,
+                    'AWSMarketplace',
+                    client,
+                    max_rechecks=max_rechecks,
+                    rechecks_period=rechecks_period
+                )
+            except Exception:
+                raise
+
+        retries -= 1
+
     raise MashEc2UtilsException(
-        f'Unable to submit the mp change for {ami_id}.'
+        f'Unable to complete successfully the mp change for {ami_id}.'
     )
 
 
-def wait_for_ongoing_change_to_complete(
+def wait_for_ongoing_change_to_be_completed(
     change_id,
     catalog,
     client,
-    max_rechecks=20,
-    rechecks_period=300
+    max_rechecks=10,
+    rechecks_period=900
 ):
     while max_rechecks > 0:
-        try:
-            response = client.describe_change_set(
-                Catalog=catalog,
-                ChangeSetId=change_id
-            )
-            # 'Status':'PREPARING'|'APPLYING'|'SUCCEEDED'|'CANCELLED'|'FAILED'
-            if all([
-                response,
-                'Status' in response,
-                response['Status'].lower().endswith('ed')
-            ]):
-                return
-        except Exception:
-            raise
+        response = client.describe_change_set(
+            Catalog=catalog,
+            ChangeSetId=change_id
+        )
+        # 'Status':'PREPARING'|'APPLYING'|'SUCCEEDED'|'CANCELLED'|'FAILED'
+        if all([
+            response,
+            'Status' in response,
+            response['Status'].lower().endswith('ed')
+        ]):
+            return
 
         time.sleep(rechecks_period)
         max_rechecks -= 1
 
+    raise MashEc2UtilsException(
+        f'Timed out waiting for conflicting mp changeset {change_id}'
+        ' to finish.'
+    )
 
-def get_ongoing_change_id_from_exc(message: str) -> str:
-    change_id = ''
-    re_change_id = r'change sets: (\w+)[.,]'
+
+def get_ongoing_change_id_from_error(message: str):
+    re_change_id = r'change sets: (\w{25})[.,]'
     match = re.search(re_change_id, message)
 
     if match:
         change_id = match.group(1)
-    return change_id
+        return change_id
+    else:
+        raise MashEc2UtilsException(
+            f'Unable to extract changeset id from aws err response: {message}'
+        )
