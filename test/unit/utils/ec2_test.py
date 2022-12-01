@@ -27,7 +27,7 @@ from mash.utils.ec2 import (
     image_exists,
     start_mp_change_set
 )
-from mash.mash_exceptions import MashGCEUtilsException, MashEc2UtilsException
+from mash.mash_exceptions import MashEc2UtilsException
 import botocore
 from botocore.stub import Stubber, ANY
 
@@ -78,7 +78,7 @@ def test_cleanup_images(mock_rm_img):
     )
 
     # No image id or name provided
-    with raises(MashGCEUtilsException):
+    with raises(MashEc2UtilsException):
         cleanup_ec2_image(
             '123',
             '321',
@@ -343,7 +343,7 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times():
     stubber.activate()
 
     with stubber:
-        with raises(MashEc2UtilsException) as my_exc:
+        with raises(MashEc2UtilsException) as error:
             start_mp_change_set(
                 client,
                 entity_id='123',
@@ -360,7 +360,7 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times():
                 rechecks_period=0
             )
             msg = 'Unable to complete successfully the mp change for ami-123'
-            assert msg in str(my_exc)
+            assert msg in str(error)
         stubber.deactivate()
 
 

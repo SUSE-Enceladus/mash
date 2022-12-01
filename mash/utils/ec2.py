@@ -24,10 +24,7 @@ import boto3
 
 from contextlib import contextmanager, suppress
 from mash.utils.mash_utils import generate_name, get_key_from_file
-from mash.mash_exceptions import (
-    MashEc2UtilsException,
-    MashGCEUtilsException
-)
+from mash.mash_exceptions import MashEc2UtilsException
 
 from ec2imgutils.ec2setup import EC2Setup
 from ec2imgutils.ec2removeimg import EC2RemoveImage
@@ -162,7 +159,7 @@ def cleanup_ec2_image(
     elif image_name:
         kwargs['image_name'] = image_name
     else:
-        raise MashGCEUtilsException(
+        raise MashEc2UtilsException(
             'Either image_id or image_name is required '
             'to remove an image.'
         )
