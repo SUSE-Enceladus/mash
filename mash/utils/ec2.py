@@ -21,6 +21,7 @@ import re
 import time
 
 import boto3
+import botocore.exceptions as boto_exceptions
 
 from contextlib import contextmanager, suppress
 from mash.utils.mash_utils import generate_name, get_key_from_file
@@ -217,7 +218,9 @@ def image_exists(client, cloud_image_name):
 
 
 def start_mp_change_set(
-    client,
+    region,
+    access_key_id,
+    secret_access_key,
     entity_id,
     version_title,
     ami_id,
@@ -278,36 +281,43 @@ def start_mp_change_set(
 
     data['Details'] = json.dumps(details)
 
-    conflicting_changeset = False
-    conflicting_error_message = ''
     retries = 3
     while retries > 0:
+        conflicting_changeset = False
+        conflicting_error_message = ''
         try:
+            client = get_client(
+                'marketplace-catalog',
+                access_key_id,
+                secret_access_key,
+                region
+            )
             response = client.start_change_set(
                 Catalog='AWSMarketplace',
                 ChangeSet=[data]
             )
             return response
-        except client.exceptions.ResourceInUseException as error:
-            # Conflicting changeset for some resource
-            conflicting_changeset = True
-            conflicting_error_message = str(error)
-        except Exception:
-            # Unexpected exception
-            raise
+
+        except boto_exceptions.ClientError as error:
+            if error.response['Error']['Code'] == 'ResourceInUseException':
+                # Conflicting changeset for some resource
+                conflicting_changeset = True
+                conflicting_error_message = str(error)
+            else:
+                raise
 
         if conflicting_changeset:
             conflicting_changeset = False
-            # As Dec2022 there are no waiters in boto3 for marketplace-catalog
-            # client, implementing our own
             try:
                 ongoing_change_id = get_ongoing_change_id_from_error(
                     conflicting_error_message
                 )
-                wait_for_ongoing_change_to_be_completed(
+                wait_for_ongoing_mp_change_to_be_completed(
+                    region,
+                    access_key_id,
+                    secret_access_key,
                     ongoing_change_id,
                     'AWSMarketplace',
-                    client,
                     max_rechecks=max_rechecks,
                     rechecks_period=rechecks_period
                 )
@@ -321,25 +331,39 @@ def start_mp_change_set(
     )
 
 
-def wait_for_ongoing_change_to_be_completed(
+def wait_for_ongoing_mp_change_to_be_completed(
+    region,
+    access_key_id,
+    secret_access_key,
     change_id,
     catalog,
-    client,
     max_rechecks=10,
-    rechecks_period=900
+    rechecks_period=60 * 30  # 30 mins
 ):
     while max_rechecks > 0:
-        response = client.describe_change_set(
-            Catalog=catalog,
-            ChangeSetId=change_id
-        )
-        # 'Status':'PREPARING'|'APPLYING'|'SUCCEEDED'|'CANCELLED'|'FAILED'
-        if all([
-            response,
-            'Status' in response,
-            response['Status'].lower().endswith('ed')
-        ]):
-            return
+        try:
+            client = get_client(
+                'marketplace-catalog',
+                access_key_id,
+                secret_access_key,
+                region
+            )
+
+            response = client.describe_change_set(
+                Catalog=catalog,
+                ChangeSetId=change_id
+            )
+            # 'Status':'PREPARING'|'APPLYING'|'SUCCEEDED'|'CANCELLED'|'FAILED'
+            if all([
+                response,
+                'Status' in response,
+                response['Status'].lower().endswith('ed')
+            ]):
+                return
+
+        except Exception:
+            # Any exception in the wait is raised
+            raise
 
         time.sleep(rechecks_period)
         max_rechecks -= 1

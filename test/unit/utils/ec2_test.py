@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
+import json
 
 from pytest import raises
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 from mash.utils.ec2 import (
     get_client,
     get_vpc_id_from_subnet,
@@ -28,10 +29,67 @@ from mash.utils.ec2 import (
     start_mp_change_set
 )
 from mash.mash_exceptions import MashEc2UtilsException
-import botocore
-from botocore.stub import Stubber, ANY
+import botocore.session
+import botocore.errorfactory
+
+# botocore ClientExceptionFactory
+model = botocore.session.get_session().get_service_model('marketplace-catalog')
+factory = botocore.errorfactory.ClientExceptionsFactory()
+exceptions = factory.create_client_exceptions(model)
+
+# Mock calls parameters
+get_client_args = (
+    'marketplace-catalog',
+    '123456',
+    '654321',
+    'us-east-1'
+)
+data = {
+    'ChangeType': 'AddDeliveryOptions',
+    'Entity': {
+        'Type': 'AmiProduct@1.0',
+        'Identifier': '123'
+    }
+}
+details = {
+    'Version': {
+        'VersionTitle': 'New image',
+        'ReleaseNotes': 'Release Notes'
+    },
+    'DeliveryOptions': [{
+        'Details': {
+            'AmiDeliveryOptionDetails': {
+                'UsageInstructions': 'Login with SSH...',
+                'RecommendedInstanceType': 't3.medium',
+                'AmiSource': {
+                    'AmiId': 'ami-123',
+                    'AccessRoleArn': 'arn',
+                    'UserName': 'ec2-user',
+                    'OperatingSystemName': 'OTHERLINUX',
+                    'OperatingSystemVersion': '15.3'
+                },
+                'SecurityGroups': [{
+                    'FromPort': 22,
+                    'IpProtocol': 'tcp',
+                    'IpRanges': ['0.0.0.0/0'],
+                    'ToPort': 22
+                }]
+            }
+        }
+    }]
+}
+data['Details'] = json.dumps(details)
+start_changeset_params = {
+    'Catalog': 'AWSMarketplace',
+    'ChangeSet': [data]
+}
+describe_changeset_params = {
+    'Catalog': 'AWSMarketplace',
+    'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+}
 
 
+# Test Cases
 @patch('mash.utils.ec2.boto3')
 def test_get_client(mock_boto3):
     client = Mock()
@@ -119,14 +177,21 @@ def test_image_exists(mock_get_image):
     assert not image_exists(client, 'image name 321')
 
 
-def test_start_mp_change_set():
+@patch('mash.utils.ec2.get_client')
+def test_start_mp_change_set(mock_get_client):
     client = Mock()
     client.start_change_set.return_value = {
         'ChangeSetId': '123'
     }
+    mock_get_client.return_value = client
 
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
     response = start_mp_change_set(
-        client,
+        region,
+        access_key,
+        secret_access_key,
         entity_id='123',
         version_title='New image',
         ami_id='ami-123',
@@ -140,70 +205,158 @@ def test_start_mp_change_set():
     )
 
     assert response['ChangeSetId'] == '123'
+    client.start_change_set.assert_called_once_with(**start_changeset_params)
+    mock_get_client.assert_called_once_with(*get_client_args)
 
 
-def test_start_mp_change_set_ongoing_change_ResourceInUseException():
-    session = botocore.session.get_session()
-    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-    client = session.create_client(
-        'marketplace-catalog',
-        'us-east-1',
-        config=config
-    )
+@patch('mash.utils.ec2.get_client')
+def test_start_mp_change_set_ongoing_change_ResourceInUseException(
+    mock_get_client
+):
 
-    stubber = Stubber(client)
-    error_code = 'ResourceInUseException'
-    error_message = "Requested change set has entities locked by change sets" \
-                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                    " change sets: dgoddlepi9nb3ynwrwlkr3be4."
-
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-    describe_response = {
-        'Status': 'APPLYING'
-    }
-    # First check will still be applying
-    stubber.add_response(
-        'describe_change_set',
-        describe_response,
-        {
-            'Catalog': 'AWSMarketplace',
-            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+    def generate_exception():
+        error_code = 'ResourceInUseException'
+        error_message = "Requested change set has entities locked by change sets" \
+                        " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                        " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+        exc_data = {
+            "Error": {
+                "Code": error_code,
+                "Message": error_message
+            },
+            "ResponseMetadata": {
+                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
+                "HTTPStatusCode": 400,
+                "HTTPHeaders": {
+                    "transfer-encoding": "chunked",
+                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
+                    "connection": "close",
+                    "server": "AmazonEC2"
+                },
+                "RetryAttempts": 0
+            }
         }
-    )
-    describe_response2 = {
-        'Status': 'SUCCEEDED'
-    }
-    # Second check succeeded
-    stubber.add_response(
-        'describe_change_set',
-        describe_response2,
-        {
-            'Catalog': 'AWSMarketplace',
-            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
-        }
-    )
-    start_response1 = {
-        'ChangeSetId': 'myChangeSetId',
-        'ChangeSetArn': 'myChangeSetArn'
-    }
-    # successful response for start_change_set
-    stubber.add_response(
-        'start_change_set',
-        start_response1,
-        {
-            'Catalog': 'AWSMarketplace',
-            'ChangeSet': ANY
-        }
-    )
-    stubber.activate()
 
-    with stubber:
+        return exceptions.AccessDeniedException(
+            error_response=exc_data,
+            operation_name='start_change_set'
+        )
+
+    client = Mock()
+    client.exceptions.AccessDeniedException = exceptions.AccessDeniedException
+    client.start_change_set.side_effect = [
+        generate_exception(),
+        {
+            'ChangeSetId': 'myChangeSetId',
+            'ChangeSetArn': 'myChangeSetArn'
+        }
+    ]
+    client.describe_change_set.side_effect = [
+        {
+            'Status': 'APPLYING'
+        },
+        {
+            'Status': 'FINISHED'
+        }
+    ]
+    mock_get_client.return_value = client
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    response = start_mp_change_set(
+        region,
+        access_key,
+        secret_access_key,
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user',
+        max_rechecks=10,
+        rechecks_period=0
+    )
+    assert response.get('ChangeSetId') == 'myChangeSetId'
+    # Mock calls assertions
+    mock_get_client.assert_has_calls(
+        [
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+        ],
+        any_order=True
+    )
+    client.start_change_set.assert_has_calls(
+        [
+            call(**start_changeset_params),
+            call(**start_changeset_params)
+        ],
+        any_order=True
+    )
+    client.describe_change_set.assert_has_calls(
+        [
+            call(**describe_changeset_params),
+            call(**describe_changeset_params)
+        ],
+        any_order=True
+    )
+
+
+@patch('mash.utils.ec2.get_client')
+def test_start_mp_change_set_ongoing_change_GenericException(
+    mock_get_client
+):
+
+    def generate_exception():
+        error_code = 'AccessDeniedException'
+        error_message = "AccessDeniedException"
+        exc_data = {
+            "Error": {
+                "Code": error_code,
+                "Message": error_message
+            },
+            "ResponseMetadata": {
+                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
+                "HTTPStatusCode": 400,
+                "HTTPHeaders": {
+                    "transfer-encoding": "chunked",
+                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
+                    "connection": "close",
+                    "server": "AmazonEC2"
+                },
+                "RetryAttempts": 0
+            }
+        }
+
+        return exceptions.AccessDeniedException(
+            error_response=exc_data,
+            operation_name='start_change_set'
+        )
+
+    client = Mock()
+    client.exceptions.AccessDeniedException = exceptions.AccessDeniedException
+    client.start_change_set.side_effect = [
+        generate_exception(),
+    ]
+
+    mock_get_client.return_value = client
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    with raises(Exception) as error:
         start_mp_change_set(
-            client,
+            region,
+            access_key,
+            secret_access_key,
             entity_id='123',
             version_title='New image',
             ami_id='ami-123',
@@ -217,307 +370,442 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException():
             max_rechecks=10,
             rechecks_period=0
         )
-    stubber.deactivate()
+    assert 'AccessDeniedException' in str(error)
 
-
-def test_start_mp_change_set_ongoing_change_GenericException():
-    session = botocore.session.get_session()
-    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-    client = session.create_client(
-        'marketplace-catalog',
-        'us-east-1',
-        config=config
+    # Mock calls assertions
+    mock_get_client.assert_has_calls(
+        [
+            call(*get_client_args),
+        ],
+    )
+    client.start_change_set.assert_has_calls(
+        [
+            call(**start_changeset_params)
+        ],
     )
 
-    stubber = Stubber(client)
-    error_code = 'ServiceQuotaExceededException'
-    error_message = "Quota is exceeded"
 
-    # different exception for start_change_set x3
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-    stubber.activate()
+@patch('mash.utils.ec2.get_client')
+def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
+    mock_get_client
+):
 
-    with stubber:
-        with raises(Exception) as error:
-            start_mp_change_set(
-                client,
-                entity_id='123',
-                version_title='New image',
-                ami_id='ami-123',
-                access_role_arn='arn',
-                release_notes='Release Notes',
-                os_name='OTHERLINUX',
-                os_version='15.3',
-                usage_instructions='Login with SSH...',
-                recommended_instance_type='t3.medium',
-                ssh_user='ec2-user',
-                max_rechecks=20,
-                rechecks_period=0
-            )
-            assert 'ServiceQuotaExceededException' in str(error)
-        stubber.deactivate()
-
-
-def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times():
-    session = botocore.session.get_session()
-    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-    client = session.create_client(
-        'marketplace-catalog',
-        'us-east-1',
-        config=config
-    )
-
-    stubber = Stubber(client)
-    error_code = 'ResourceInUseException'
-    error_message = "Requested change set has entities locked by change sets" \
-                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                    " change sets: dgoddlepi9nb3ynwrwlkr3be4."
-
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-    describe_response = {
-        'Status': 'SUCCEEDED'
-    }
-    # check succeeds, blocking changeset finished
-    stubber.add_response(
-        'describe_change_set',
-        describe_response,
-        {
-            'Catalog': 'AWSMarketplace',
-            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+    def generate_exception():
+        error_code = 'ResourceInUseException'
+        error_message = "Requested change set has entities locked by change sets" \
+                        " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                        " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+        exc_data = {
+            "Error": {
+                "Code": error_code,
+                "Message": error_message
+            },
+            "ResponseMetadata": {
+                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
+                "HTTPStatusCode": 400,
+                "HTTPHeaders": {
+                    "transfer-encoding": "chunked",
+                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
+                    "connection": "close",
+                    "server": "AmazonEC2"
+                },
+                "RetryAttempts": 0
+            }
         }
-    )
-    # another time, ResourceInUseException
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-    describe_response = {
-        'Status': 'SUCCEEDED'
-    }
-    # Second check succeeded
-    stubber.add_response(
-        'describe_change_set',
-        describe_response,
+
+        return exceptions.ResourceInUseException(
+            error_response=exc_data,
+            operation_name='start_change_set'
+        )
+
+    client = Mock()
+    client.exceptions.ResourceInUseException = exceptions.ResourceInUseException
+    client.start_change_set.side_effect = [
+        generate_exception(),
+        generate_exception(),
+        generate_exception()
+    ]
+
+    client.describe_change_set.side_effect = [
         {
-            'Catalog': 'AWSMarketplace',
-            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
-        }
-    )
-    # another time, ResourceInUseException
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-    describe_response = {
-        'Status': 'SUCCEEDED'
-    }
-    # Second check succeeded
-    stubber.add_response(
-        'describe_change_set',
-        describe_response,
+            'Status': 'FINISHED'
+        },
         {
-            'Catalog': 'AWSMarketplace',
-            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+            'Status': 'FINISHED'
+        },
+        {
+            'Status': 'FINISHED'
         }
+    ]
+
+    mock_get_client.return_value = client
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    with raises(MashEc2UtilsException) as error:
+        start_mp_change_set(
+            region,
+            access_key,
+            secret_access_key,
+            entity_id='123',
+            version_title='New image',
+            ami_id='ami-123',
+            access_role_arn='arn',
+            release_notes='Release Notes',
+            os_name='OTHERLINUX',
+            os_version='15.3',
+            usage_instructions='Login with SSH...',
+            recommended_instance_type='t3.medium',
+            ssh_user='ec2-user',
+            max_rechecks=10,
+            rechecks_period=0
+        )
+    assert 'Unable to complete successfully the mp change for ami-123.' \
+        in str(error)
+
+    # Mock calls assertions
+    mock_get_client.assert_has_calls(
+        [
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+        ],
+        any_order=True
     )
-    stubber.activate()
+    client.start_change_set.assert_has_calls(
+        [
+            call(**start_changeset_params),
+            call(**start_changeset_params),
+            call(**start_changeset_params)
 
-    with stubber:
-        with raises(MashEc2UtilsException) as error:
-            start_mp_change_set(
-                client,
-                entity_id='123',
-                version_title='New image',
-                ami_id='ami-123',
-                access_role_arn='arn',
-                release_notes='Release Notes',
-                os_name='OTHERLINUX',
-                os_version='15.3',
-                usage_instructions='Login with SSH...',
-                recommended_instance_type='t3.medium',
-                ssh_user='ec2-user',
-                max_rechecks=20,
-                rechecks_period=0
-            )
-            msg = 'Unable to complete successfully the mp change for ami-123'
-            assert msg in str(error)
-        stubber.deactivate()
+        ],
+    )
+    client.describe_change_set.assert_has_calls(
+        [
+            call(**describe_changeset_params),
+            call(**describe_changeset_params),
+            call(**describe_changeset_params)
+        ],
+        any_order=True
+    )
 
 
-def test_start_mp_change_set_ongoing_change_ResInUseExc_genericExc():
+@patch('mash.utils.ec2.get_client')
+def test_start_mp_change_set_ongoing_change_ResInUseExc_genericExc(
+    mock_get_client
+):
     """Describe generates a generic exception"""
-    session = botocore.session.get_session()
-    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-    client = session.create_client(
-        'marketplace-catalog',
-        'us-east-1',
-        config=config
-    )
 
-    stubber = Stubber(client)
-    error_code = 'ResourceInUseException'
-    error_message = "Requested change set has entities locked by change sets" \
-                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                    " change sets: dgoddlepi9nb3ynwrwlkr3be4."
-    # ResourceInUseException
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-
-    # Different exception in describe_change_set
-    error_code2 = 'AccessDeniedException'
-    error_message2 = 'You are not authorized to perform this request'
-    stubber.add_client_error(
-        'describe_change_set',
-        error_code2,
-        error_message2
-    )
-    stubber.activate()
-
-    with stubber:
-        with raises(Exception):
-            start_mp_change_set(
-                client,
-                entity_id='123',
-                version_title='New image',
-                ami_id='ami-123',
-                access_role_arn='arn',
-                release_notes='Release Notes',
-                os_name='OTHERLINUX',
-                os_version='15.3',
-                usage_instructions='Login with SSH...',
-                recommended_instance_type='t3.medium',
-                ssh_user='ec2-user',
-                max_rechecks=20,
-                rechecks_period=0
-            )
-        stubber.deactivate()
-
-
-def test_start_mp_change_set_ongoing_change_ResInUseExc_waitTimeout():
-    """Describe generates a generic exception"""
-    session = botocore.session.get_session()
-    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-    client = session.create_client(
-        'marketplace-catalog',
-        'us-east-1',
-        config=config
-    )
-
-    stubber = Stubber(client)
-    error_code = 'ResourceInUseException'
-    error_message = "Requested change set has entities locked by change sets" \
-                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                    " change sets: dgoddlepi9nb3ynwrwlkr3be4."
-    # ResourceInUseException
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-
-    # Ongoing
-    describe_response = {
-        'Status': 'PENDING'
-    }
-    # Second check succeeded
-    stubber.add_response(
-        'describe_change_set',
-        describe_response,
-        {
-            'Catalog': 'AWSMarketplace',
-            'ChangeSetId': 'dgoddlepi9nb3ynwrwlkr3be4'
+    def generate_resource_in_use_exception():
+        error_code = 'ResourceInUseException'
+        error_message = "Requested change set has entities locked by change sets" \
+                        " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                        " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+        exc_data = {
+            "Error": {
+                "Code": error_code,
+                "Message": error_message
+            },
+            "ResponseMetadata": {
+                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
+                "HTTPStatusCode": 400,
+                "HTTPHeaders": {
+                    "transfer-encoding": "chunked",
+                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
+                    "connection": "close",
+                    "server": "AmazonEC2"
+                },
+                "RetryAttempts": 0
+            }
         }
+
+        return exceptions.ResourceInUseException(
+            error_response=exc_data,
+            operation_name='start_change_set'
+        )
+
+    def generate_access_denied_exception():
+        error_code = 'AccessDeniedException'
+        error_message = "AccessDenied"
+        exc_data = {
+            "Error": {
+                "Code": error_code,
+                "Message": error_message
+            },
+            "ResponseMetadata": {
+                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
+                "HTTPStatusCode": 400,
+                "HTTPHeaders": {
+                    "transfer-encoding": "chunked",
+                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
+                    "connection": "close",
+                    "server": "AmazonEC2"
+                },
+                "RetryAttempts": 0
+            }
+        }
+
+        return exceptions.AccessDeniedException(
+            error_response=exc_data,
+            operation_name='describe_change_set'
+        )
+
+    client = Mock()
+    client.exceptions.ResourceInUseException = exceptions.ResourceInUseException
+    client.start_change_set.side_effect = [
+        generate_resource_in_use_exception()
+    ]
+
+    client.exceptions.AccessDeniedException = exceptions.AccessDeniedException
+    client.describe_change_set.side_effect = [
+        generate_access_denied_exception()
+    ]
+
+    mock_get_client.return_value = client
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    with raises(Exception) as error:
+        start_mp_change_set(
+            region,
+            access_key,
+            secret_access_key,
+            entity_id='123',
+            version_title='New image',
+            ami_id='ami-123',
+            access_role_arn='arn',
+            release_notes='Release Notes',
+            os_name='OTHERLINUX',
+            os_version='15.3',
+            usage_instructions='Login with SSH...',
+            recommended_instance_type='t3.medium',
+            ssh_user='ec2-user',
+            max_rechecks=10,
+            rechecks_period=0
+        )
+    assert 'AccessDenied' in str(error)
+
+    # mock call asserts
+    mock_get_client.assert_has_calls(
+        [
+            call(*get_client_args),
+            call(*get_client_args),
+        ],
+        any_order=True
     )
-    stubber.activate()
-
-    with stubber:
-        with raises(MashEc2UtilsException) as error:
-            start_mp_change_set(
-                client,
-                entity_id='123',
-                version_title='New image',
-                ami_id='ami-123',
-                access_role_arn='arn',
-                release_notes='Release Notes',
-                os_name='OTHERLINUX',
-                os_version='15.3',
-                usage_instructions='Login with SSH...',
-                recommended_instance_type='t3.medium',
-                ssh_user='ec2-user',
-                max_rechecks=1,
-                rechecks_period=0
-            )
-            msg = 'Timed out waiting for conflicting mp changeset'
-            msg += ' dgoddlepi9nb3ynwrwlkr3be4 to finish'
-            assert msg in str(error)
-        stubber.deactivate()
-
-
-def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid():
-    """Describe generates a generic exception"""
-    session = botocore.session.get_session()
-    config = botocore.config.Config(signature_version=botocore.UNSIGNED)
-    client = session.create_client(
-        'marketplace-catalog',
-        'us-east-1',
-        config=config
+    client.start_change_set.assert_has_calls(
+        [
+            call(**start_changeset_params),
+        ],
+    )
+    client.describe_change_set.assert_has_calls(
+        [
+            call(**describe_changeset_params),
+        ],
+        any_order=True
     )
 
-    stubber = Stubber(client)
-    error_code = 'ResourceInUseException'
-    error_message = "Requested change set has entities locked by change sets" \
-                    " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                    " change sets are dgoddlepi9nb3ynwrwlkr3be4"
-    # ResourceInUseException
-    stubber.add_client_error(
-        'start_change_set',
-        error_code,
-        error_message
-    )
-    stubber.activate()
 
-    with stubber:
-        with raises(MashEc2UtilsException) as error:
-            start_mp_change_set(
-                client,
-                entity_id='123',
-                version_title='New image',
-                ami_id='ami-123',
-                access_role_arn='arn',
-                release_notes='Release Notes',
-                os_name='OTHERLINUX',
-                os_version='15.3',
-                usage_instructions='Login with SSH...',
-                recommended_instance_type='t3.medium',
-                ssh_user='ec2-user',
-                max_rechecks=1,
-                rechecks_period=0
-            )
-            msg = 'Unable to extract changeset id from aws err response:'
-            msg2 = 'dgoddlepi9nb3ynwrwlkr3be4'
-            assert msg in str(error)
-            assert msg2 in str(error)
-        stubber.deactivate()
+@patch('mash.utils.ec2.get_client')
+def test_start_mp_change_set_ongoing_change_ResInUseExc_waitTimeout(
+    mock_get_client
+):
+
+    def generate_resource_in_use_exception():
+        error_code = 'ResourceInUseException'
+        error_message = "Requested change set has entities locked by change sets" \
+                        " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                        " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+        exc_data = {
+            "Error": {
+                "Code": error_code,
+                "Message": error_message
+            },
+            "ResponseMetadata": {
+                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
+                "HTTPStatusCode": 400,
+                "HTTPHeaders": {
+                    "transfer-encoding": "chunked",
+                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
+                    "connection": "close",
+                    "server": "AmazonEC2"
+                },
+                "RetryAttempts": 0
+            }
+        }
+
+        return exceptions.ResourceInUseException(
+            error_response=exc_data,
+            operation_name='start_change_set'
+        )
+
+    client = Mock()
+    client.exceptions.ResourceInUseException = exceptions.ResourceInUseException
+    client.start_change_set.side_effect = [
+        generate_resource_in_use_exception()
+    ]
+
+    client.describe_change_set.side_effect = [
+        {
+            'Status': 'PENDING'
+        },
+        {
+            'Status': 'PENDING'
+        },
+        {
+            'Status': 'PENDING'
+        },
+        {
+            'Status': 'PENDING'
+        },
+        {
+            'Status': 'PENDING'
+        }
+    ]
+
+    mock_get_client.return_value = client
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    with raises(MashEc2UtilsException) as error:
+        start_mp_change_set(
+            region,
+            access_key,
+            secret_access_key,
+            entity_id='123',
+            version_title='New image',
+            ami_id='ami-123',
+            access_role_arn='arn',
+            release_notes='Release Notes',
+            os_name='OTHERLINUX',
+            os_version='15.3',
+            usage_instructions='Login with SSH...',
+            recommended_instance_type='t3.medium',
+            ssh_user='ec2-user',
+            max_rechecks=5,
+            rechecks_period=0
+        )
+    msg = 'Timed out waiting for conflicting mp changeset dgoddlepi9nb3ynwrwlkr3be4'
+    assert msg in str(error)
+
+    # Mock calls asserts
+    mock_get_client.assert_has_calls(
+        [
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args)
+        ],
+        any_order=True
+    )
+    client.start_change_set.assert_has_calls(
+        [
+            call(**start_changeset_params),
+        ],
+        any_order=True
+    )
+    client.describe_change_set.assert_has_calls(
+        [
+            call(**describe_changeset_params),
+            call(**describe_changeset_params),
+            call(**describe_changeset_params),
+            call(**describe_changeset_params),
+            call(**describe_changeset_params),
+        ],
+        any_order=True
+    )
+
+
+@patch('mash.utils.ec2.get_client')
+def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
+    mock_get_client
+):
+
+    def generate_resource_in_use_exception():
+        error_code = 'ResourceInUseException'
+        error_message = "Requested change set has entities locked by change sets" \
+                        " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
+                        " change sets are dgoddlepi9nb3ynwrwlkr3be4."
+        exc_data = {
+            "Error": {
+                "Code": error_code,
+                "Message": error_message
+            },
+            "ResponseMetadata": {
+                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
+                "HTTPStatusCode": 400,
+                "HTTPHeaders": {
+                    "transfer-encoding": "chunked",
+                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
+                    "connection": "close",
+                    "server": "AmazonEC2"
+                },
+                "RetryAttempts": 0
+            }
+        }
+
+        return exceptions.ResourceInUseException(
+            error_response=exc_data,
+            operation_name='start_change_set'
+        )
+
+    client = Mock()
+    client.exceptions.ResourceInUseException = exceptions.ResourceInUseException
+    client.start_change_set.side_effect = [
+        generate_resource_in_use_exception()
+    ]
+
+    mock_get_client.return_value = client
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    with raises(MashEc2UtilsException) as error:
+        start_mp_change_set(
+            region,
+            access_key,
+            secret_access_key,
+            entity_id='123',
+            version_title='New image',
+            ami_id='ami-123',
+            access_role_arn='arn',
+            release_notes='Release Notes',
+            os_name='OTHERLINUX',
+            os_version='15.3',
+            usage_instructions='Login with SSH...',
+            recommended_instance_type='t3.medium',
+            ssh_user='ec2-user',
+            max_rechecks=5,
+            rechecks_period=0
+        )
+    msg = 'Unable to extract changeset id from aws err response:'
+    msg2 = 'dgoddlepi9nb3ynwrwlkr3be4'
+    assert msg in str(error)
+    assert msg2 in str(error)
+
+    # Mock calls asserts
+    mock_get_client.assert_has_calls(
+        [
+            call(*get_client_args),
+        ],
+        any_order=True
+    )
+    client.start_change_set.assert_has_calls(
+        [
+            call(**start_changeset_params),
+        ],
+        any_order=True
+    )
+    client.describe_change_set.assert_not_called()

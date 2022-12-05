@@ -23,7 +23,7 @@ from ec2imgutils.ec2publishimg import EC2PublishImage
 from mash.mash_exceptions import MashPublishException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
-from mash.utils.ec2 import get_client, start_mp_change_set
+from mash.utils.ec2 import start_mp_change_set
 from mash.utils.mash_utils import format_string_with_date
 
 
@@ -85,15 +85,10 @@ class EC2MPPublishJob(MashJob):
                 creds['secret_access_key']
             )
 
-            client = get_client(
-                'marketplace-catalog',
+            response = start_mp_change_set(
+                region,
                 creds['access_key_id'],
                 creds['secret_access_key'],
-                region
-            )
-
-            response = start_mp_change_set(
-                client,
                 self.entity_id,
                 self.version_title,
                 ami_id,
@@ -105,6 +100,7 @@ class EC2MPPublishJob(MashJob):
                 self.recommended_instance_type,
                 self.ssh_user
             )
+
             self.status_msg['change_set_id'] = response.get('ChangeSetId')
             self.log_callback.info(
                 'Marketplace change set submitted. Change set id: '
