@@ -87,7 +87,15 @@ login_request_model = {
     'type': 'object',
     'properties': {
         'email': email,
-        'password': string_with_example('secretpassword123')
+        'password': string_with_example('secretpassword123'),
+        'no_expiry': {
+            'type': 'boolean',
+            'description': 'If True the refresh token will be created with '
+                           'no expiration date. To invalidate the token it '
+                           'requires manual deletion. The default expiry '
+                           'is 30 days.'
+        }
+
     },
     'additionalProperties': False,
     'required': [

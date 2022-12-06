@@ -109,7 +109,12 @@ class Login(Resource):
 
         if user:
             access_token = create_access_token(identity=user['id'])
-            refresh_token = create_refresh_token(identity=user['id'])
+
+            expires = data['no_expiry'] if data.get('no_expiry') else None
+            refresh_token = create_refresh_token(
+                identity=user['id'],
+                expires_delta=expires
+            )
 
             add_token_to_database(access_token, user['id'])
             add_token_to_database(refresh_token, user['id'])
