@@ -1,3 +1,12 @@
+v13.3.0 (2022-12-07)
+====================
+
+- Add me-central-1 to AWS example config
+- Cleanup API docs
+- Use new arm64 types in AWS testing
+- Broader handling for Azure SIG sku and offer id
+- Add no_expiry option to login for refresh tokens
+
 v13.2.1 (2022-07-20)
 ====================
 
