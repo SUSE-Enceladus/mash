@@ -29,7 +29,7 @@ def add_token_to_database(encoded_token, user_id):
     decoded_token = decode_token(encoded_token)
     jti = decoded_token['jti']
     token_type = decoded_token['type']
-    expires = decoded_token['exp']
+    expires = decoded_token.get('exp')
 
     handle_request(
         current_app.config['DATABASE_API_URL'],
