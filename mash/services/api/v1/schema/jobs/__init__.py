@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2023 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -244,7 +244,7 @@ base_job_message = {
             'type': 'array',
             'items': {
                 'type': 'string',
-                'enum': ['bios', 'uefi'],
+                'enum': ['bios', 'uefi', 'uefi-preferred'],
             },
             'example': ['bios'],
             'description': 'A list of boot firmware settings to test the '

@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2023 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -150,7 +150,7 @@ def validate_ec2_job(job_doc):
         job_doc['skip_replication'] = True  # No replication for MP images
         validate_mp_fields(job_doc)
 
-    boot_firmware = job_doc.get('boot_firmware', [])
+    boot_firmware = job_doc.get('boot_firmware', ['uefi-preferred'])
     if job_doc.get('tpm_support') and 'uefi' not in boot_firmware:
         raise MashJobException(
             'NitroTPM support requires a UEFI compatible image. '
