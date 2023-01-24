@@ -1,3 +1,10 @@
+v13.4.0 (2023-01-24)
+====================
+
+- Fix no expiry option for login
+- Update werkzeug requirement to less than clause.
+  Pinning breaks downstream packaging.
+
 v13.3.0 (2022-12-07)
 ====================
 
