@@ -91,11 +91,7 @@ class S3BucketUploadJob(MashJob):
         except IndexError:
             bucket_path = ''
 
-        if (
-            'cloud_image_name' in self.status_msg and self.status_msg[
-                'cloud_image_name']
-        ):
-
+        if self.status_msg.get('cloud_image_name'):
             # take suffix from file name, should always consist of two parts
             suffix = '.'.join(
                 str.split(self.status_msg['image_file'], '.')[-2:]
