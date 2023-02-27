@@ -7,7 +7,7 @@
 
 Flask
 flask-restx
-flask-sqlalchemy<=3.0.0
+flask-sqlalchemy<3.0.0
 flask-migrate
 flask-jwt-extended>=4.0.0
 setuptools>=40.3.0
