@@ -91,7 +91,10 @@ class S3BucketUploadJob(MashJob):
         except IndexError:
             bucket_path = ''
 
-        if 'cloud_image_name' in self.status_msg:
+        if (
+            'cloud_image_name' in self.status_msg and
+            self.status_msg['cloud_image_name']
+        ):
             # take suffix from file name, should always consist of two parts
             suffix = '.'.join(
                 str.split(self.status_msg['image_file'], '.')[-2:]
@@ -112,15 +115,14 @@ class S3BucketUploadJob(MashJob):
 
         if self.use_build_time and (build_time != 'unknown'):
             timestamp = timestamp_from_epoch(build_time)
+            key_name = format_string_with_date(
+                key_name,
+                timestamp=timestamp
+            )
         elif self.use_build_time and (build_time == 'unknown'):
             raise MashUploadException(
                 'use_build_time set for job but build time is unknown.'
             )
-
-        key_name = format_string_with_date(
-            key_name,
-            timestamp=timestamp
-        )
 
         try:
             statinfo = stat(self.status_msg['image_file'])
