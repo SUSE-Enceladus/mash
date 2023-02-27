@@ -164,4 +164,3 @@ class TestS3BucketUploadJob(object):
         self.job._log_callback.info.assert_called_once_with(
             'Raw image 100% uploaded.'
         )
-
