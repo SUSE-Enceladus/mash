@@ -42,7 +42,10 @@ class TestS3BucketUploadJob(object):
             'image_description': 'description',
             'raw_image_upload_type': 's3bucket',
             'raw_image_upload_location': 'my-bucket/some-prefix/',
-            'raw_image_upload_account': 'test'
+            'raw_image_upload_account': 'test',
+            'status_msg': {
+                'build_time': '1677149451'
+            }
         }
         self.job = S3BucketUploadJob(job_doc, self.config)
         self.job.status_msg = {
@@ -58,15 +61,21 @@ class TestS3BucketUploadJob(object):
             'last_service': 'upload',
             'requesting_user': 'user1',
             'cloud': 'ec2',
-            'utctime': 'now'
+            'utctime': 'now',
+            'raw_image_upload_account': "account1",
         }
 
-        with raises(MashUploadException):
+        with raises(MashUploadException) as e:
             S3BucketUploadJob(job_doc, self.config)
+        assert "S3 bucket upload jobs require a(n)" in str(e)
+        assert "raw_image_upload_location" in str(e)
 
-        job_doc['cloud_image_name'] = 'name'
-        with raises(MashUploadException):
+        job_doc['use_build_time'] = True
+        job_doc['raw_image_upload_location'] = 'bucket1'
+
+        with raises(MashUploadException) as e:
             S3BucketUploadJob(job_doc, self.config)
+        assert "When use_build_time flag is True the {date}" in str(e)
 
     @patch('mash.services.upload.s3bucket_job.stat')
     @patch('mash.services.upload.s3bucket_job.get_client')
@@ -104,10 +113,35 @@ class TestS3BucketUploadJob(object):
             Callback=self.job._log_progress
         )
 
+        # test use_build_time in location
+        mock_client.upload_file.reset_mock()
+        self.job.location = 'my-bucket/filename_v{date}.tar.gz'
+        self.job.account = 'test'
+        self.job.use_build_time = True
+        self.job.status_msg['build_time'] = '1677149451'
+        self.job.status_msg['image_file'] = 'file.raw.gz'
+        self.job.run_job()
+        mock_client.upload_file.assert_called_once_with(
+            'file.raw.gz',
+            'my-bucket',
+            'filename_v20230223.tar.gz',
+            Callback=self.job._log_progress
+        )
+        assert self.job.status_msg['key_name'] == 'filename_v20230223.tar.gz'
+        assert self.job.status_msg['bucket_name'] == 'my-bucket'
+
+        # Test exception in use_build_time
+        mock_client.upload_file.reset_mock()
+        del self.job.status_msg['build_time']
+        with raises(MashUploadException) as e:
+            self.job.run_job()
+        assert "use_build_time set for job but build time is unknown" in str(e)
+
         # Test bucket and full name
         mock_client.upload_file.reset_mock()
         self.job.location = 'my-bucket/some-prefix/image.raw.gz'
         self.job.status_msg['cloud_image_name'] = None
+        self.job.use_build_time = False
         self.job.run_job()
 
         mock_client.upload_file.assert_called_once_with(
@@ -117,8 +151,10 @@ class TestS3BucketUploadJob(object):
             Callback=self.job._log_progress
         )
 
+        # Test upload exception
         mock_client.upload_file.side_effect = Exception
 
+        self.job.use_build_time = False
         with raises(MashUploadException):
             self.job.run_job()
 

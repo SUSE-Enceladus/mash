@@ -23,6 +23,10 @@ from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.ec2 import get_client
 from mash.services.status_levels import SUCCESS
+from mash.utils.mash_utils import (
+    format_string_with_date,
+    timestamp_from_epoch
+)
 
 
 class S3BucketUploadJob(MashJob):
@@ -37,6 +41,8 @@ class S3BucketUploadJob(MashJob):
         self._last_percentage_logged = 0
         self._percentage_log_step = 20
 
+        self.use_build_time = self.job_config.get('use_build_time', False)
+
         try:
             self.account = self.job_config['raw_image_upload_account']
             self.location = self.job_config['raw_image_upload_location']
@@ -46,6 +52,12 @@ class S3BucketUploadJob(MashJob):
                 'key in the job doc.'.format(
                     error
                 )
+            )
+
+        if self.use_build_time and '{date}' not in self.location:
+            raise MashUploadException(
+                'When use_build_time flag is True the {date} '
+                'format string is required in raw_image_upload_location.'
             )
 
     def _log_progress(self, bytes_transferred):
@@ -79,9 +91,11 @@ class S3BucketUploadJob(MashJob):
         except IndexError:
             bucket_path = ''
 
-        if self.status_msg['cloud_image_name']:
+        if self.status_msg.get('cloud_image_name'):
             # take suffix from file name, should always consist of two parts
-            suffix = '.'.join(str.split(self.status_msg['image_file'], '.')[-2:])
+            suffix = '.'.join(
+                str.split(self.status_msg['image_file'], '.')[-2:]
+            )
             key_name = '.'.join([self.status_msg['cloud_image_name'], suffix])
         else:
             key_name = path.basename(self.status_msg['image_file'])
@@ -92,6 +106,20 @@ class S3BucketUploadJob(MashJob):
             key_name = ''.join([bucket_path, key_name])
         else:
             key_name = bucket_path
+
+        # replacing key_name {date}
+        build_time = self.status_msg.get('build_time', 'unknown')
+
+        if self.use_build_time and (build_time != 'unknown'):
+            timestamp = timestamp_from_epoch(build_time)
+            key_name = format_string_with_date(
+                key_name,
+                timestamp=timestamp
+            )
+        elif self.use_build_time and (build_time == 'unknown'):
+            raise MashUploadException(
+                'use_build_time set for job but build time is unknown.'
+            )
 
         try:
             statinfo = stat(self.status_msg['image_file'])
@@ -108,6 +136,9 @@ class S3BucketUploadJob(MashJob):
                 key_name,
                 Callback=self._log_progress
             )
+
+            self.status_msg['key_name'] = key_name
+            self.status_msg['bucket_name'] = bucket_name
 
         except Exception as e:
             raise MashUploadException(
