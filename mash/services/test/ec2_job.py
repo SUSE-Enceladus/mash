@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2023 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -37,12 +37,14 @@ from mash.utils.ec2 import (
 from img_proof.ipa_controller import test_image
 
 instance_types = {
-    'x86_64': [
+    'hybrid': [
         'c5.large',
-        'i3.8xlarge',
-        'i3.large',
         'm5.large',
         't3.small'
+    ],
+    'bios': [
+        'i3.large',
+        't2.small'
     ],
     'aarch64': [
         't4g.small',
@@ -79,11 +81,26 @@ class EC2TestJob(MashJob):
         self.cloud_architecture = self.job_config.get(
             'cloud_architecture', 'x86_64'
         )
+        self.boot_firmware = self.job_config.get(
+            'boot_firmware',
+            ['uefi-preferred']
+        )[0]
 
-        if not self.instance_type:
-            self.instance_type = random.choice(
-                instance_types[self.cloud_architecture]
-            )
+        if self.cloud_architecture == 'aarch64':
+            self.instance_types = [
+                random.choice(instance_types['aarch64'])
+            ]
+        elif self.boot_firmware == 'uefi-preferred':
+            self.instance_types = [
+                random.choice(instance_types['bios']),
+                random.choice(instance_types['hybrid'])
+            ]
+        elif not self.instance_type:
+            self.instance_types = [
+                random.choice(instance_types['hybrid'])
+            ]
+        else:
+            self.instance_types = [self.instance_type]
 
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
         self.img_proof_timeout = self.config.get_img_proof_timeout()
@@ -103,13 +120,6 @@ class EC2TestJob(MashJob):
             )
             return
 
-        self.log_callback.info(
-            'Running img-proof tests against image with '
-            'type: {inst_type}.'.format(
-                inst_type=self.instance_type
-            )
-        )
-
         # Get all account credentials in one request
         accounts = []
         for region, info in self.test_regions.items():
@@ -117,80 +127,88 @@ class EC2TestJob(MashJob):
 
         self.request_credentials(accounts)
 
-        for region, info in self.test_regions.items():
-            account = get_testing_account(info)
-            credentials = self.credentials[account]
-
-            if info['partition'] in ('aws-cn', 'aws-us-gov') and \
-                    self.cloud_architecture == 'aarch64':
-                # Skip test aarch64 images in China and GovCloud.
-                # There are no aarch64 based instance types available.
-                continue
-
-            with setup_ec2_networking(
-                credentials['access_key_id'],
-                region,
-                credentials['secret_access_key'],
-                self.ssh_private_key_file,
-                subnet_id=info.get('subnet')
-            ) as network_details:
-                try:
-                    exit_status, result = test_image(
-                        self.cloud,
-                        access_key_id=credentials['access_key_id'],
-                        cleanup=True,
-                        description=self.description,
-                        distro=self.distro,
-                        image_id=self.status_msg['source_regions'][region],
-                        instance_type=self.instance_type,
-                        timeout=self.img_proof_timeout,
-                        log_level=logging.DEBUG,
-                        region=region,
-                        secret_access_key=credentials['secret_access_key'],
-                        security_group_id=network_details['security_group_id'],
-                        ssh_key_name=network_details['ssh_key_name'],
-                        ssh_private_key_file=self.ssh_private_key_file,
-                        ssh_user=self.ssh_user,
-                        subnet_id=network_details['subnet_id'],
-                        tests=self.tests,
-                        log_callback=self.log_callback,
-                        prefix_name='mash'
-                    )
-                except Exception as error:
-                    self.add_error_msg(str(error))
-                    exit_status = 1
-                    result = {
-                        'status': EXCEPTION,
-                        'msg': str(traceback.format_exc())
-                    }
-
-                status = process_test_result(
-                    exit_status,
-                    result,
-                    self.log_callback,
-                    region,
-                    self.status_msg
+        for instance_type in self.instance_types:
+            self.log_callback.info(
+                'Running img-proof tests against image with '
+                'type: {inst_type}.'.format(
+                    inst_type=instance_type
                 )
+            )
 
-                instance_id = result.get('info', {}).get('instance')
-                if instance_id:
-                    # Wait until instance is terminated to exit
-                    # context manager and cleanup resources.
-                    wait_for_instance_termination(
-                        credentials['access_key_id'],
-                        instance_id,
+            for region, info in self.test_regions.items():
+                account = get_testing_account(info)
+                credentials = self.credentials[account]
+
+                if info['partition'] in ('aws-cn', 'aws-us-gov') and \
+                        self.cloud_architecture == 'aarch64':
+                    # Skip test aarch64 images in China and GovCloud.
+                    # There are no aarch64 based instance types available.
+                    continue
+
+                with setup_ec2_networking(
+                    credentials['access_key_id'],
+                    region,
+                    credentials['secret_access_key'],
+                    self.ssh_private_key_file,
+                    subnet_id=info.get('subnet')
+                ) as network_details:
+                    try:
+                        exit_status, result = test_image(
+                            self.cloud,
+                            access_key_id=credentials['access_key_id'],
+                            cleanup=True,
+                            description=self.description,
+                            distro=self.distro,
+                            image_id=self.status_msg['source_regions'][region],
+                            instance_type=instance_type,
+                            timeout=self.img_proof_timeout,
+                            log_level=logging.DEBUG,
+                            region=region,
+                            secret_access_key=credentials['secret_access_key'],
+                            security_group_id=network_details['security_group_id'],
+                            ssh_key_name=network_details['ssh_key_name'],
+                            ssh_private_key_file=self.ssh_private_key_file,
+                            ssh_user=self.ssh_user,
+                            subnet_id=network_details['subnet_id'],
+                            tests=self.tests,
+                            log_callback=self.log_callback,
+                            prefix_name='mash'
+                        )
+                    except Exception as error:
+                        self.add_error_msg(str(error))
+                        exit_status = 1
+                        result = {
+                            'status': EXCEPTION,
+                            'msg': str(traceback.format_exc())
+                        }
+
+                    status = process_test_result(
+                        exit_status,
+                        result,
+                        self.log_callback,
                         region,
-                        credentials['secret_access_key']
+                        self.status_msg
                     )
 
-                if status != SUCCESS:
-                    self.status = status
-                    self.add_error_msg(
-                        'Image failed img-proof test suite. '
-                        'See "mash job test-results --job-id {GUID} -v" '
-                        'for details on the failing tests.'
-                    )
-                    break  # Fail eagerly, if the image fails in any partition.
+                    instance_id = result.get('info', {}).get('instance')
+                    if instance_id:
+                        # Wait until instance is terminated to exit
+                        # context manager and cleanup resources.
+                        wait_for_instance_termination(
+                            credentials['access_key_id'],
+                            instance_id,
+                            region,
+                            credentials['secret_access_key']
+                        )
+
+                    if status != SUCCESS:
+                        self.status = status
+                        self.add_error_msg(
+                            'Image failed img-proof test suite. '
+                            'See "mash job test-results --job-id {GUID} -v" '
+                            'for details on the failing tests.'
+                        )
+                        break  # Fail eagerly, if the image fails in any partition.
 
         if self.cleanup_images or (self.status != SUCCESS and self.cleanup_images is not False):  # noqa
             for region, info in self.test_regions.items():

@@ -1,4 +1,4 @@
-# Copyright (c) 2019 SUSE LLC.  All rights reserved.
+# Copyright (c) 2023 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -68,7 +68,10 @@ class EC2CreateJob(MashJob):
         self.use_build_time = self.job_config.get('use_build_time')
         self.force_replace_image = self.job_config.get('force_replace_image')
         self.tpm_support = self.job_config.get('tpm_support')
-        self.boot_firmware = self.job_config.get('boot_firmware', ['bios'])
+        self.boot_firmware = self.job_config.get(
+            'boot_firmware',
+            ['uefi-preferred']
+        )
 
         # EC2 images only support one firmware
         self.boot_firmware = self.boot_firmware[0]
