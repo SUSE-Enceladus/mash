@@ -1,3 +1,8 @@
+v13.6.0 (2023-04-26)
+====================
+
+- Add uefi_preferred option for Amazon image handling
+
 v13.5.0 (2023-03-06)
 ====================
 
