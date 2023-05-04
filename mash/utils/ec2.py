@@ -282,6 +282,7 @@ def start_mp_change_set(
     data['Details'] = json.dumps(details)
 
     retries = 3
+    conflicting_change_retries = 10
     while retries > 0:
         conflicting_changeset = False
         conflicting_error_message = ''
@@ -308,23 +309,23 @@ def start_mp_change_set(
 
         if conflicting_changeset:
             conflicting_changeset = False
-            try:
-                ongoing_change_id = get_ongoing_change_id_from_error(
-                    conflicting_error_message
-                )
-                wait_for_ongoing_mp_change_to_be_completed(
-                    region,
-                    access_key_id,
-                    secret_access_key,
-                    ongoing_change_id,
-                    'AWSMarketplace',
-                    max_rechecks=max_rechecks,
-                    rechecks_period=rechecks_period
-                )
-            except Exception:
-                raise
-
-        retries -= 1
+            conflict_wait_period = 30 * 60  # 30 mins
+            time.sleep(conflict_wait_period)
+            conflicting_change_retries -= 1
+            if conflicting_change_retries <= 0:
+                try:
+                    ongoing_change_id = get_ongoing_change_id_from_error(
+                        conflicting_error_message
+                    )
+                    raise MashEc2UtilsException(
+                        'Unable to complete successfully the mp change for'
+                        f' {ami_id}. Timed out waiting for {ongoing_change_id}'
+                        ' to finish.'
+                    )
+                except Exception:
+                    raise
+        else:
+            retries -= 1
 
     raise MashEc2UtilsException(
         f'Unable to complete successfully the mp change for {ami_id}.'
@@ -375,7 +376,7 @@ def wait_for_ongoing_mp_change_to_be_completed(
 
 
 def get_ongoing_change_id_from_error(message: str):
-    re_change_id = r'change sets: (\w{25})[.,]'
+    re_change_id = r'change sets: (\w{25})'
     match = re.search(re_change_id, message)
 
     if match:
