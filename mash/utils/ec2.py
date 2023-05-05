@@ -282,7 +282,6 @@ def start_mp_change_set(
 
     data['Details'] = json.dumps(details)
 
-    print("UNO")
     retries = 3
     conflicting_changeset_retries = 10
     while retries > 0:
