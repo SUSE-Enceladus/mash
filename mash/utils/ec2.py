@@ -232,7 +232,8 @@ def start_mp_change_set(
     recommended_instance_type,
     ssh_user,
     max_rechecks=10,
-    rechecks_period=900
+    rechecks_period=900,
+    conflict_wait_period=1800
 ):
     """
     Additional params included in this function:
@@ -281,8 +282,9 @@ def start_mp_change_set(
 
     data['Details'] = json.dumps(details)
 
+    print("UNO")
     retries = 3
-    conflicting_change_retries = 10
+    conflicting_changeset_retries = 10
     while retries > 0:
         conflicting_changeset = False
         conflicting_error_message = ''
@@ -309,10 +311,9 @@ def start_mp_change_set(
 
         if conflicting_changeset:
             conflicting_changeset = False
-            conflict_wait_period = 30 * 60  # 30 mins
             time.sleep(conflict_wait_period)
-            conflicting_change_retries -= 1
-            if conflicting_change_retries <= 0:
+            conflicting_changeset_retries -= 1
+            if conflicting_changeset_retries <= 0:
                 try:
                     ongoing_change_id = get_ongoing_change_id_from_error(
                         conflicting_error_message
@@ -329,49 +330,6 @@ def start_mp_change_set(
 
     raise MashEc2UtilsException(
         f'Unable to complete successfully the mp change for {ami_id}.'
-    )
-
-
-def wait_for_ongoing_mp_change_to_be_completed(
-    region,
-    access_key_id,
-    secret_access_key,
-    change_id,
-    catalog,
-    max_rechecks=10,
-    rechecks_period=60 * 30  # 30 mins
-):
-    while max_rechecks > 0:
-        try:
-            client = get_client(
-                'marketplace-catalog',
-                access_key_id,
-                secret_access_key,
-                region
-            )
-
-            response = client.describe_change_set(
-                Catalog=catalog,
-                ChangeSetId=change_id
-            )
-            # 'Status':'PREPARING'|'APPLYING'|'SUCCEEDED'|'CANCELLED'|'FAILED'
-            if all([
-                response,
-                'Status' in response,
-                response['Status'].lower().endswith('ed')
-            ]):
-                return
-
-        except Exception:
-            # Any exception in the wait is raised
-            raise
-
-        time.sleep(rechecks_period)
-        max_rechecks -= 1
-
-    raise MashEc2UtilsException(
-        f'Timed out waiting for conflicting mp changeset {change_id}'
-        ' to finish.'
     )
 
 
