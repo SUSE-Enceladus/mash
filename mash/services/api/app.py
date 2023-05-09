@@ -43,6 +43,7 @@ from mash.services.api.v1.routes.accounts.aliyun import api as v1_aliyun_account
 
 from mash.services.api.v1.routes.jobs import api as v1_jobs_api
 from mash.services.api.v1.routes.jobs.ec2 import api as v1_ec2_jobs_api
+from mash.services.api.v1.routes.jobs.ec2_container import api as v1_ec2_container_jobs_api
 from mash.services.api.v1.routes.jobs.gce import api as v1_gce_jobs_api
 from mash.services.api.v1.routes.jobs.azure import api as v1_azure_jobs_api
 from mash.services.api.v1.routes.jobs.oci import api as v1_oci_jobs_api
@@ -119,6 +120,7 @@ def register_namespaces():
 
     api.add_namespace(v1_jobs_api, path='/v1/jobs')
     api.add_namespace(v1_ec2_jobs_api, path='/v1/jobs/ec2')
+    api.add_namespace(v1_ec2_container_jobs_api, path='/v1/jobs/ec2_container')
     api.add_namespace(v1_gce_jobs_api, path='/v1/jobs/gce')
     api.add_namespace(v1_azure_jobs_api, path='/v1/jobs/azure')
     api.add_namespace(v1_oci_jobs_api, path='/v1/jobs/oci')

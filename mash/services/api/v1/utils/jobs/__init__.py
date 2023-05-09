@@ -34,6 +34,36 @@ def get_new_job_id():
     return str(uuid.uuid4())
 
 
+def create_container_job(data):
+    """
+    Create a new container job for user.
+    """
+    if data.get('dry_run'):
+        return None
+
+    job_id = get_new_job_id()
+    data['job_id'] = job_id
+
+    user_id = data['requesting_user']
+
+    kwargs = {
+        'job_id': job_id,
+        'last_service': data['last_service'],
+        'utctime': data['utctime'],
+        'user_id': user_id,
+        'state': RUNNING,
+    }
+
+    if data['utctime'] != 'now':
+        kwargs['start_time'] = parser.parse(data['utctime'])
+
+    # Store job in database
+
+    # Publish data in job_document of jobcreator
+
+    return data
+
+
 def create_job(data):
     """
     Create a new job for user.
@@ -93,6 +123,14 @@ def create_job(data):
         raise MashJobException('Failed to initialize job.')
 
     return response.json()
+
+
+def validate_container_job(data):
+    """
+    Validate container job doc.
+    """
+    data = normalize_dictionary(data)
+    return data
 
 
 def validate_job(data):

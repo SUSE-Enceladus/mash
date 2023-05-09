@@ -73,6 +73,7 @@ utctime = {
     'example': '2019-04-28T06:44:50.142Z',
     'examples': ['now', '2019-04-28T06:44:50.142Z']
 }
+
 base_job_message = {
     'type': 'object',
     'properties': {
@@ -297,5 +298,30 @@ base_job_message = {
         'utctime',
         'image',
         'download_url'
+    ]
+}
+
+base_container_job_message = {
+    'type': 'object',
+    'properties': {
+        'last_service': {
+            'type': 'string',
+            'example': 'create',
+            'description': 'The last service in the pipeline to be executed. '
+                           'All services except the OBS service are valid '
+                           'values.'
+        },
+        'utctime': utctime,
+        'dry_run': {
+            'type': 'boolean',
+            'example': True,
+            'description': 'Only validate the job document and return. '
+                           'Do not create the job.'
+        }
+    },
+    'additionalProperties': False,
+    'required': [
+        'last_service',
+        'utctime'
     ]
 }
