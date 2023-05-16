@@ -46,6 +46,7 @@ cloud:
         - eu-west-1
         - eu-west-2
         - eu-west-3
+        - il-central-1
         - me-central-1
         - me-south-1
         - sa-east-1
@@ -60,32 +61,33 @@ cloud:
         - us-gov-east-1
         - us-gov-west-1
     helper_images:
-      af-south-1: ami-0c6b5f01298bd1a1e
-      ap-east-1: ami-024f2681e93e91a81
-      ap-northeast-1: ami-383c1956
-      ap-northeast-2: ami-249b554a
-      ap-southeast-1: ami-c9b572aa
-      ap-southeast-2: ami-48d38c2b
-      ap-southeast-3: ami-0013ff7261176fe6e
-      ap-south-1: ami-a6d1bac9
-      ca-central-1: ami-21d76545
-      cn-north-1: ami-bcc45885
-      cn-northwest-1: ami-23978241
-      eu-central-1: ami-bc5b48d0
-      eu-north-1: ami-4abe3234
-      eu-south-1: ami-0c747453f89f809cd
-      eu-west-1: ami-bff32ccc
-      eu-west-2: ami-2a676d4
-      eu-west-3: ami-7bc17406
-      me-central-1: ami-0aada2fca61c48f6c
-      me-south-1: ami-021eb13384ade48e3
-      sa-east-1: ami-6817af04
-      us-east-1: ami-4b814f22
-      us-east-2: ami-71ca9114
-      us-gov-east-1: ami-43896f32
-      us-gov-west-1: ami-c2b5d7e1
-      us-west-1: ami-d5ea86b5
-      us-west-2: ami-f0091d91
+      af-south-1: ami-093ca241e4c72c205
+      ap-east-1: ami-0e992f1e63814db10
+      ap-northeast-1: ami-0828596b82405edd7
+      ap-northeast-2: ami-087af0192368bc87c
+      ap-southeast-1: ami-0ba98499caf94125a
+      ap-southeast-2: ami-0849cc8fe4ceaf988
+      ap-southeast-3: ami-0cf40308729b83366
+      ap-south-1: ami-0400aca7799d8cf19
+      ca-central-1: ami-0eb3718c42cb70e52
+      cn-north-1: ami-0eb22e95b55ff11f8
+      cn-northwest-1: ami-0e9ed4545da2f2c75
+      eu-central-1: ami-0f7585ae7a0d9a25a
+      eu-north-1: ami-0f58e72599cb99a79
+      eu-south-1: ami-07b2af763a8b958f3
+      eu-west-1: ami-047aad752a426ed48
+      eu-west-2: ami-0dfe6158087b5c0ac
+      eu-west-3: ami-064c70d04ad799d5e
+      il-central-1: ami-056be49b9b86bc189
+      me-central-1: ami-0384959b181e3642a
+      me-south-1: ami-0a31e56929248acca
+      sa-east-1: ami-0df67b3c17f090c24
+      us-east-1: ami-0d52ddcdf3a885741
+      us-east-2: ami-04148302a14f7d12b
+      us-gov-east-1: ami-05146fa6cbcea4b79
+      us-gov-west-1: ami-0e8f52046c02613e9
+      us-west-1: ami-0ee3e1e65adeef858
+      us-west-2: ami-0ec021424fb596d6c
 test:
   img_proof_timeout: 600
 upload:
