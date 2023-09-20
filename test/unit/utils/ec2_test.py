@@ -218,7 +218,7 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
         error_code = 'ResourceInUseException'
         error_message = "Requested change set has entities locked by change sets" \
                         " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                        " change sets: dgoddlepi9nb3ynwrwlkr3be4."
+                        " change sets: dgoddlepi9nb3ynwrwlkr3be4"
         exc_data = {
             "Error": {
                 "Code": error_code,
@@ -251,14 +251,6 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
             'ChangeSetArn': 'myChangeSetArn'
         }
     ]
-    client.describe_change_set.side_effect = [
-        {
-            'Status': 'APPLYING'
-        },
-        {
-            'Status': 'FINISHED'
-        }
-    ]
     mock_get_client.return_value = client
 
     region = 'us-east-1'
@@ -280,14 +272,13 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
         recommended_instance_type='t3.medium',
         ssh_user='ec2-user',
         max_rechecks=10,
-        rechecks_period=0
+        rechecks_period=0,
+        conflict_wait_period=0
     )
     assert response.get('ChangeSetId') == 'myChangeSetId'
     # Mock calls assertions
     mock_get_client.assert_has_calls(
         [
-            call(*get_client_args),
-            call(*get_client_args),
             call(*get_client_args),
             call(*get_client_args),
         ],
@@ -300,17 +291,10 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
         ],
         any_order=True
     )
-    client.describe_change_set.assert_has_calls(
-        [
-            call(**describe_changeset_params),
-            call(**describe_changeset_params)
-        ],
-        any_order=True
-    )
 
 
 @patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set_ongoing_change_GenericException(
+def test_start_mp_change_set_ongoing_change_GenericBotoException(
     mock_get_client
 ):
 
@@ -344,9 +328,15 @@ def test_start_mp_change_set_ongoing_change_GenericException(
     client.exceptions.AccessDeniedException = exceptions.AccessDeniedException
     client.start_change_set.side_effect = [
         generate_exception(),
+        generate_exception(),
+        generate_exception()
     ]
 
-    mock_get_client.return_value = client
+    mock_get_client.side_effect = [
+        client,
+        client,
+        client,
+    ]
 
     region = 'us-east-1'
     access_key = '123456'
@@ -368,7 +358,8 @@ def test_start_mp_change_set_ongoing_change_GenericException(
             recommended_instance_type='t3.medium',
             ssh_user='ec2-user',
             max_rechecks=10,
-            rechecks_period=0
+            rechecks_period=0,
+            conflict_wait_period=0
         )
     assert 'AccessDeniedException' in str(error)
 
@@ -380,7 +371,67 @@ def test_start_mp_change_set_ongoing_change_GenericException(
     )
     client.start_change_set.assert_has_calls(
         [
-            call(**start_changeset_params)
+            call(**start_changeset_params),
+        ],
+    )
+
+
+@patch('mash.utils.ec2.get_client')
+def test_start_mp_change_set_ongoing_change_GenericException(
+    mock_get_client
+):
+
+    def generate_exception():
+        return Exception("This is an unexpected exception")
+
+    client = Mock()
+    # client.exceptions.AccessDeniedException = exceptions.AccessDeniedException
+    client.start_change_set.side_effect = [
+        generate_exception(),
+        generate_exception(),
+        generate_exception()
+    ]
+
+    mock_get_client.side_effect = [
+        client,
+        client,
+        client,
+    ]
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    with raises(Exception) as error:
+        start_mp_change_set(
+            region,
+            access_key,
+            secret_access_key,
+            entity_id='123',
+            version_title='New image',
+            ami_id='ami-123',
+            access_role_arn='arn',
+            release_notes='Release Notes',
+            os_name='OTHERLINUX',
+            os_version='15.3',
+            usage_instructions='Login with SSH...',
+            recommended_instance_type='t3.medium',
+            ssh_user='ec2-user',
+            max_rechecks=10,
+            rechecks_period=0,
+            conflict_wait_period=0
+        )
+    assert 'This is an unexpected exception' in str(error)
+
+    # Mock calls assertions
+    mock_get_client.assert_has_calls(
+        [
+            call(*get_client_args),
+        ],
+    )
+    client.start_change_set.assert_has_calls(
+        [
+            call(**start_changeset_params),
         ],
     )
 
@@ -423,19 +474,14 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
     client.start_change_set.side_effect = [
         generate_exception(),
         generate_exception(),
+        generate_exception(),
+        generate_exception(),
+        generate_exception(),
+        generate_exception(),
+        generate_exception(),
+        generate_exception(),
+        generate_exception(),
         generate_exception()
-    ]
-
-    client.describe_change_set.side_effect = [
-        {
-            'Status': 'FINISHED'
-        },
-        {
-            'Status': 'FINISHED'
-        },
-        {
-            'Status': 'FINISHED'
-        }
     ]
 
     mock_get_client.return_value = client
@@ -460,7 +506,8 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
             recommended_instance_type='t3.medium',
             ssh_user='ec2-user',
             max_rechecks=10,
-            rechecks_period=0
+            rechecks_period=0,
+            conflict_wait_period=0
         )
     assert 'Unable to complete successfully the mp change for ami-123.' \
         in str(error)
@@ -474,256 +521,27 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
             call(*get_client_args),
             call(*get_client_args),
             call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
+            call(*get_client_args),
         ],
         any_order=True
     )
     client.start_change_set.assert_has_calls(
         [
+            call(**start_changeset_params),
+            call(**start_changeset_params),
+            call(**start_changeset_params),
+            call(**start_changeset_params),
+            call(**start_changeset_params),
+            call(**start_changeset_params),
+            call(**start_changeset_params),
             call(**start_changeset_params),
             call(**start_changeset_params),
             call(**start_changeset_params)
 
         ],
-    )
-    client.describe_change_set.assert_has_calls(
-        [
-            call(**describe_changeset_params),
-            call(**describe_changeset_params),
-            call(**describe_changeset_params)
-        ],
-        any_order=True
-    )
-
-
-@patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set_ongoing_change_ResInUseExc_genericExc(
-    mock_get_client
-):
-    """Describe generates a generic exception"""
-
-    def generate_resource_in_use_exception():
-        error_code = 'ResourceInUseException'
-        error_message = "Requested change set has entities locked by change sets" \
-                        " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                        " change sets: dgoddlepi9nb3ynwrwlkr3be4."
-        exc_data = {
-            "Error": {
-                "Code": error_code,
-                "Message": error_message
-            },
-            "ResponseMetadata": {
-                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
-                "HTTPStatusCode": 400,
-                "HTTPHeaders": {
-                    "transfer-encoding": "chunked",
-                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
-                    "connection": "close",
-                    "server": "AmazonEC2"
-                },
-                "RetryAttempts": 0
-            }
-        }
-
-        return exceptions.ResourceInUseException(
-            error_response=exc_data,
-            operation_name='start_change_set'
-        )
-
-    def generate_access_denied_exception():
-        error_code = 'AccessDeniedException'
-        error_message = "AccessDenied"
-        exc_data = {
-            "Error": {
-                "Code": error_code,
-                "Message": error_message
-            },
-            "ResponseMetadata": {
-                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
-                "HTTPStatusCode": 400,
-                "HTTPHeaders": {
-                    "transfer-encoding": "chunked",
-                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
-                    "connection": "close",
-                    "server": "AmazonEC2"
-                },
-                "RetryAttempts": 0
-            }
-        }
-
-        return exceptions.AccessDeniedException(
-            error_response=exc_data,
-            operation_name='describe_change_set'
-        )
-
-    client = Mock()
-    client.exceptions.ResourceInUseException = exceptions.ResourceInUseException
-    client.start_change_set.side_effect = [
-        generate_resource_in_use_exception()
-    ]
-
-    client.exceptions.AccessDeniedException = exceptions.AccessDeniedException
-    client.describe_change_set.side_effect = [
-        generate_access_denied_exception()
-    ]
-
-    mock_get_client.return_value = client
-
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
-    with raises(Exception) as error:
-        start_mp_change_set(
-            region,
-            access_key,
-            secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
-            max_rechecks=10,
-            rechecks_period=0
-        )
-    assert 'AccessDenied' in str(error)
-
-    # mock call asserts
-    mock_get_client.assert_has_calls(
-        [
-            call(*get_client_args),
-            call(*get_client_args),
-        ],
-        any_order=True
-    )
-    client.start_change_set.assert_has_calls(
-        [
-            call(**start_changeset_params),
-        ],
-    )
-    client.describe_change_set.assert_has_calls(
-        [
-            call(**describe_changeset_params),
-        ],
-        any_order=True
-    )
-
-
-@patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set_ongoing_change_ResInUseExc_waitTimeout(
-    mock_get_client
-):
-
-    def generate_resource_in_use_exception():
-        error_code = 'ResourceInUseException'
-        error_message = "Requested change set has entities locked by change sets" \
-                        " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                        " change sets: dgoddlepi9nb3ynwrwlkr3be4."
-        exc_data = {
-            "Error": {
-                "Code": error_code,
-                "Message": error_message
-            },
-            "ResponseMetadata": {
-                "RequestId": "aaaabbbb-cccc-dddd-eeee-ffff00001111",
-                "HTTPStatusCode": 400,
-                "HTTPHeaders": {
-                    "transfer-encoding": "chunked",
-                    "date": "Fri, 01 Jan 2100 00:00:00 GMT",
-                    "connection": "close",
-                    "server": "AmazonEC2"
-                },
-                "RetryAttempts": 0
-            }
-        }
-
-        return exceptions.ResourceInUseException(
-            error_response=exc_data,
-            operation_name='start_change_set'
-        )
-
-    client = Mock()
-    client.exceptions.ResourceInUseException = exceptions.ResourceInUseException
-    client.start_change_set.side_effect = [
-        generate_resource_in_use_exception()
-    ]
-
-    client.describe_change_set.side_effect = [
-        {
-            'Status': 'PENDING'
-        },
-        {
-            'Status': 'PENDING'
-        },
-        {
-            'Status': 'PENDING'
-        },
-        {
-            'Status': 'PENDING'
-        },
-        {
-            'Status': 'PENDING'
-        }
-    ]
-
-    mock_get_client.return_value = client
-
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
-    with raises(MashEc2UtilsException) as error:
-        start_mp_change_set(
-            region,
-            access_key,
-            secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
-            max_rechecks=5,
-            rechecks_period=0
-        )
-    msg = 'Timed out waiting for conflicting mp changeset dgoddlepi9nb3ynwrwlkr3be4'
-    assert msg in str(error)
-
-    # Mock calls asserts
-    mock_get_client.assert_has_calls(
-        [
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args)
-        ],
-        any_order=True
-    )
-    client.start_change_set.assert_has_calls(
-        [
-            call(**start_changeset_params),
-        ],
-        any_order=True
-    )
-    client.describe_change_set.assert_has_calls(
-        [
-            call(**describe_changeset_params),
-            call(**describe_changeset_params),
-            call(**describe_changeset_params),
-            call(**describe_changeset_params),
-            call(**describe_changeset_params),
-        ],
-        any_order=True
     )
 
 
@@ -736,7 +554,7 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
         error_code = 'ResourceInUseException'
         error_message = "Requested change set has entities locked by change sets" \
                         " - entity: '6066beac-a43b-4ad0-b5fe-f503025e4747' " \
-                        " change sets are dgoddlepi9nb3ynwrwlkr3be4."
+                        " change sets are dgoddlepi9nb3ynwrwlkr3b"
         exc_data = {
             "Error": {
                 "Code": error_code,
@@ -763,6 +581,15 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
     client = Mock()
     client.exceptions.ResourceInUseException = exceptions.ResourceInUseException
     client.start_change_set.side_effect = [
+        generate_resource_in_use_exception(),
+        generate_resource_in_use_exception(),
+        generate_resource_in_use_exception(),
+        generate_resource_in_use_exception(),
+        generate_resource_in_use_exception(),
+        generate_resource_in_use_exception(),
+        generate_resource_in_use_exception(),
+        generate_resource_in_use_exception(),
+        generate_resource_in_use_exception(),
         generate_resource_in_use_exception()
     ]
 
@@ -788,10 +615,11 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
             recommended_instance_type='t3.medium',
             ssh_user='ec2-user',
             max_rechecks=5,
-            rechecks_period=0
+            rechecks_period=0,
+            conflict_wait_period=0
         )
     msg = 'Unable to extract changeset id from aws err response:'
-    msg2 = 'dgoddlepi9nb3ynwrwlkr3be4'
+    msg2 = 'dgoddlepi9nb3ynwrwlkr3b'
     assert msg in str(error)
     assert msg2 in str(error)
 
@@ -808,4 +636,3 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
         ],
         any_order=True
     )
-    client.describe_change_set.assert_not_called()
