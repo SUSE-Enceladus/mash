@@ -152,54 +152,24 @@ class EC2TestJob(MashJob):
                     self.ssh_private_key_file,
                     subnet_id=info.get('subnet')
                 ) as network_details:
-                    try:
-                        exit_status, result = test_image(
-                            self.cloud,
-                            access_key_id=credentials['access_key_id'],
-                            cleanup=True,
-                            description=self.description,
-                            distro=self.distro,
-                            image_id=self.status_msg['source_regions'][region],
-                            instance_type=instance_type,
-                            timeout=self.img_proof_timeout,
-                            log_level=logging.DEBUG,
-                            region=region,
-                            secret_access_key=credentials['secret_access_key'],
-                            security_group_id=network_details['security_group_id'],
-                            ssh_key_name=network_details['ssh_key_name'],
-                            ssh_private_key_file=self.ssh_private_key_file,
-                            ssh_user=self.ssh_user,
-                            subnet_id=network_details['subnet_id'],
-                            tests=self.tests,
-                            log_callback=self.log_callback,
-                            prefix_name='mash'
-                        )
-                    except Exception as error:
-                        self.add_error_msg(str(error))
-                        exit_status = 1
-                        result = {
-                            'status': EXCEPTION,
-                            'msg': str(traceback.format_exc())
-                        }
 
-                    status = process_test_result(
-                        exit_status,
-                        result,
-                        self.log_callback,
-                        region,
-                        self.status_msg
+                    status = self.run_tests(
+                        access_key_id=credentials['access_key_id'],
+                        secret_access_key=credentials['secret_access_key'],
+                        region=region,
+                        ssh_private_key_file=self.ssh_private_key_file,
+                        subnet=info.get('subnet'),
+                        cloud=self.cloud,
+                        description=self.description,
+                        distro=self.distro,
+                        image_id=self.status_msg['source_regions'][region],
+                        instance_type=instance_type,
+                        img_proof_timeout=self.img_proof_timeout,
+                        ssh_user=self.ssh_user,
+                        tests=self.tests,
+                        log_callback=self.log_callback,
+                        network_details=network_details
                     )
-
-                    instance_id = result.get('info', {}).get('instance')
-                    if instance_id:
-                        # Wait until instance is terminated to exit
-                        # context manager and cleanup resources.
-                        wait_for_instance_termination(
-                            credentials['access_key_id'],
-                            instance_id,
-                            region,
-                            credentials['secret_access_key']
-                        )
 
                     if status != SUCCESS:
                         self.status = status
@@ -221,3 +191,72 @@ class EC2TestJob(MashJob):
                     region,
                     image_id=self.status_msg['source_regions'][region]
                 )
+
+    def run_tests(
+        self,
+        access_key_id,
+        secret_access_key,
+        region,
+        ssh_private_key_file,
+        subnet,
+        cloud,
+        description,
+        distro,
+        image_id,
+        instance_type,
+        img_proof_timeout,
+        ssh_user,
+        tests,
+        log_callback,
+        network_details
+    ):
+        try:
+            exit_status, result = test_image(
+                cloud,
+                access_key_id=access_key_id,
+                cleanup=True,
+                description=description,
+                distro=distro,
+                image_id=image_id,
+                instance_type=instance_type,
+                timeout=img_proof_timeout,
+                log_level=logging.DEBUG,
+                region=region,
+                secret_access_key=secret_access_key,
+                security_group_id=network_details['security_group_id'],
+                ssh_key_name=network_details['ssh_key_name'],
+                ssh_private_key_file=ssh_private_key_file,
+                ssh_user=ssh_user,
+                subnet_id=network_details['subnet_id'],
+                tests=tests,
+                log_callback=log_callback,
+                prefix_name='mash'
+            )
+        except Exception as error:
+            self.add_error_msg(str(error))
+            exit_status = 1
+            result = {
+                'status': EXCEPTION,
+                'msg': str(traceback.format_exc())
+            }
+
+        status = process_test_result(
+            exit_status,
+            result,
+            log_callback,
+            region,
+            self.status_msg
+        )
+
+        instance_id = result.get('info', {}).get('instance', None)
+        if instance_id:
+            # Wait until instance is terminated to exit
+            # context manager and cleanup resources.
+            wait_for_instance_termination(
+                access_key_id,
+                instance_id,
+                region,
+                secret_access_key
+            )
+
+        return status
