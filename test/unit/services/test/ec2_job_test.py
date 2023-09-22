@@ -96,8 +96,7 @@ class TestEC2TestJob(object):
         job.status_msg['source_regions'] = {'us-east-1': 'ami-123'}
         job.run_job()
 
-        client.import_key_pair.asser_has_calls([
-            call(KeyName='random_name', PublicKeyMaterial='fakekey'),
+        client.import_key_pair.assert_has_calls([
             call(KeyName='random_name', PublicKeyMaterial='fakekey')
         ])
         mock_call = call(
@@ -119,11 +118,11 @@ class TestEC2TestJob(object):
             subnet_id='subnet-123456789',
             tests=['test_stuff'],
             log_callback=job._log_callback,
-            prefix_name='mash'
+            prefix_name='mash',
+            cpu_options={}
         )
         mock_test_image.assert_has_calls([mock_call, mock_call])
         client.delete_key_pair.assert_has_calls([
-            call(KeyName='random_name'),
             call(KeyName='random_name')
         ])
         mock_cleanup_image.assert_called_once_with(
@@ -142,7 +141,7 @@ class TestEC2TestJob(object):
             call('Image tests failed in region: us-east-1.')
         ])
         assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
-        assert ec2_setup.clean_up.call_count == 4
+        assert ec2_setup.clean_up.call_count == 2
 
         # Failed key cleanup
         client.delete_key_pair.side_effect = Exception('Cannot delete key!')
