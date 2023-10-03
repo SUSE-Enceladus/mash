@@ -277,7 +277,6 @@ class TestEC2TestJob(object):
         client.delete_key_pair.side_effect = Exception('Cannot delete key!')
         job.run_job()
 
-
     def test_test_run_test_subnet(self):
         self.job_config['test_regions']['us-east-1']['subnet'] = 'subnet-123456789'
         self.test_test_run_test()
