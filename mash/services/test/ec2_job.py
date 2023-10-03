@@ -100,6 +100,7 @@ class EC2TestJob(MashJob):
         if not os.path.exists(self.ssh_private_key_file):
             create_ssh_key_pair(self.ssh_private_key_file)
         self.guest_os_features = self.job_config.get('guest_os_features', [])
+        self.sev_capable = False
 
     def run_job(self):
         """
