@@ -248,10 +248,7 @@ def create_restrict_version_change_doc(
     return data
 
 
-def start_mp_change_set(
-    region,
-    access_key_id,
-    secret_access_key,
+def create_add_version_change_doc(
     entity_id,
     version_title,
     ami_id,
@@ -262,19 +259,7 @@ def start_mp_change_set(
     usage_instructions,
     recommended_instance_type,
     ssh_user,
-    max_rechecks=10,
-    rechecks_period=900,
-    conflict_wait_period=1800
 ):
-    """
-    Additional params included in this function:
-    - max_rechecks is the maximum number of checks that are
-    performed when a marketplace change cannot be applied because some resource
-    is affected by some other ongoing change (and ResourceInUseException is
-    raised by boto3).
-    - rechecks_period is the period (in seconds) that is waited
-    between checks for the ongoing mp change to be finished (defaults to 900s).
-    """
     data = {
         'ChangeType': 'AddDeliveryOptions',
         'Entity': {
@@ -312,7 +297,27 @@ def start_mp_change_set(
     }
 
     data['Details'] = json.dumps(details)
+    return data
 
+
+def start_mp_change_set(
+    region,
+    access_key_id,
+    secret_access_key,
+    change_set,
+    max_rechecks=10,
+    rechecks_period=900,
+    conflict_wait_period=1800
+):
+    """
+    Additional params included in this function:
+    - max_rechecks is the maximum number of checks that are
+    performed when a marketplace change cannot be applied because some resource
+    is affected by some other ongoing change (and ResourceInUseException is
+    raised by boto3).
+    - rechecks_period is the period (in seconds) that is waited
+    between checks for the ongoing mp change to be finished (defaults to 900s).
+    """
     retries = 3
     conflicting_changeset_retries = 10
     while retries > 0:
@@ -327,7 +332,7 @@ def start_mp_change_set(
             )
             response = client.start_change_set(
                 Catalog='AWSMarketplace',
-                ChangeSet=[data]
+                ChangeSet=change_set
             )
             return response
 
@@ -349,8 +354,8 @@ def start_mp_change_set(
                         conflicting_error_message
                     )
                     raise MashEc2UtilsException(
-                        'Unable to complete successfully the mp change for'
-                        f' {ami_id}. Timed out waiting for {ongoing_change_id}'
+                        'Unable to complete successfully the mp change.'
+                        f' Timed out waiting for {ongoing_change_id}'
                         ' to finish.'
                     )
                 except Exception:
@@ -359,7 +364,7 @@ def start_mp_change_set(
             retries -= 1
 
     raise MashEc2UtilsException(
-        f'Unable to complete successfully the mp change for {ami_id}.'
+        'Unable to complete successfully the mp change.'
     )
 
 
