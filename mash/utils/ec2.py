@@ -217,6 +217,24 @@ def image_exists(client, cloud_image_name):
     return False
 
 
+def create_restrict_version_change_doc(
+    entity_id,
+    delivery_option_id
+):
+    data = {
+        'ChangeType': 'RestrictDeliveryOptions',
+        'Entity': {
+            'Type': 'AmiProduct@1.0',
+            'Identifier': entity_id
+        },
+        'Details': {
+            'DeliveryOptionIds': [delivery_option_id]
+        }
+    }
+
+    return data
+
+
 def start_mp_change_set(
     region,
     access_key_id,

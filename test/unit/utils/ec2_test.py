@@ -26,7 +26,8 @@ from mash.utils.ec2 import (
     cleanup_all_ec2_images,
     get_image,
     image_exists,
-    start_mp_change_set
+    start_mp_change_set,
+    create_restrict_version_change_doc
 )
 from mash.mash_exceptions import MashEc2UtilsException
 import botocore.session
@@ -636,3 +637,19 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
         ],
         any_order=True
     )
+
+
+def test_create_restrict_version_change_doc():
+    expected = {
+        'ChangeType': 'RestrictDeliveryOptions',
+        'Entity': {
+            'Type': 'AmiProduct@1.0',
+            'Identifier': '123456789'
+        },
+        'Details': {
+            'DeliveryOptionIds': ['987654321']
+        }
+    }
+
+    actual = create_restrict_version_change_doc('123456789', '987654321')
+    assert expected == actual
