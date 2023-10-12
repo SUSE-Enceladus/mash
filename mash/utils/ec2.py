@@ -23,6 +23,8 @@ import time
 import boto3
 import botocore.exceptions as boto_exceptions
 
+import jmespath
+
 from contextlib import contextmanager, suppress
 from mash.utils.mash_utils import generate_name, get_key_from_file
 from mash.mash_exceptions import MashEc2UtilsException
@@ -249,6 +251,72 @@ def create_restrict_version_change_doc(
     }
 
     return data
+
+
+def get_delivery_option_id(
+    session,
+    entity_id,
+    ami_id
+):
+    """
+    Return delivery option id for image matching ami id in given offer
+    """
+
+    client = session.client(
+        'marketplace-catalog'
+    )
+    entity = client.describe_entity(
+        Catalog='AWSMarketplace',
+        EntityId=entity_id
+    )
+
+    """
+    Example output format:
+
+    {
+        "Details": {
+            "Versions": [
+                {
+                    "Sources": [
+                        {
+                            "Image": "ami-123",
+                            "Id": "1234"
+                        }
+                    ],
+                    "DeliveryOptions": [
+                        {
+                            "Id": "4321",
+                            "SourceId": "1234"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+    """
+    details = json.loads(entity['Details'])
+
+    result = jmespath.search(
+        f"Versions[].Sources[?Image=='{ami_id}'].Id",
+        details
+    )
+
+    try:
+        source_id = next(source[0] for source in result if source)
+    except StopIteration:
+        return None
+
+    result = jmespath.search(
+        f"Versions[].DeliveryOptions[?SourceId=='{source_id}'].Id",
+        details
+    )
+
+    try:
+        delivery_option_id = next(option[0] for option in result if option)
+    except StopIteration:
+        return None
+
+    return delivery_option_id
 
 
 def create_add_version_change_doc(
