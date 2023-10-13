@@ -163,16 +163,30 @@ def test_get_image(mock_describe_images):
     client = Mock()
     image = {'Name': 'image name 123'}
 
-    mock_describe_images.return_value = [image]
+    mock_describe_images.side_effect = [
+        [image],
+        [image, image],
+        []
+    ]
+
+    # One image found
     result = get_image(client, 'image name 123')
     assert result == image
+
+    # multiple images found
+    with raises(MashEc2UtilsException):
+        get_image(client, 'image name 123')
+
+    # No image found
+    result = get_image(client, 'image name 123')
+    assert result is None
 
 
 @patch('mash.utils.ec2.get_image')
 def test_image_exists(mock_get_image):
     client = Mock()
     image = {'Name': 'image name 123'}
-    mock_get_image.return_value = image
+    mock_get_image.side_effect = [image, None]
 
     assert image_exists(client, 'image name 123')
     assert not image_exists(client, 'image name 321')

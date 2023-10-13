@@ -199,11 +199,24 @@ def get_image(client, cloud_image_name):
     """
     Get image if it exists given image name.
     """
-    images = describe_images(client)
+    filters = [{
+        'Name': 'name',
+        'Values': [
+            cloud_image_name,
+        ]
+    }]
+    images = describe_images(client, filters=filters)
 
-    for image in images:
-        if cloud_image_name == image.get('Name'):
-            return image
+    if images and len(images) > 1:
+        raise MashEc2UtilsException(
+            'Expected only one image but multiple images found'
+            f' using the filter {cloud_image_name}.'
+        )
+
+    if images:
+        return images[0]
+
+    return None
 
 
 def image_exists(client, cloud_image_name):
@@ -211,9 +224,9 @@ def image_exists(client, cloud_image_name):
     Determine if image exists given image name.
     """
     image = get_image(client, cloud_image_name)
-    if image and cloud_image_name == image.get('Name'):
-        return True
 
+    if image:
+        return True
     return False
 
 
