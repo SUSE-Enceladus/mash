@@ -27,7 +27,8 @@ from mash.utils.ec2 import (
     get_image,
     image_exists,
     start_mp_change_set,
-    create_restrict_version_change_doc
+    create_add_version_change_doc,
+    create_restrict_version_change_doc,
 )
 from mash.mash_exceptions import MashEc2UtilsException
 import botocore.session
@@ -200,13 +201,7 @@ def test_start_mp_change_set(mock_get_client):
     }
     mock_get_client.return_value = client
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-    response = start_mp_change_set(
-        region,
-        access_key,
-        secret_access_key,
+    change_set = create_add_version_change_doc(
         entity_id='123',
         version_title='New image',
         ami_id='ami-123',
@@ -217,6 +212,16 @@ def test_start_mp_change_set(mock_get_client):
         usage_instructions='Login with SSH...',
         recommended_instance_type='t3.medium',
         ssh_user='ec2-user'
+    )
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+    response = start_mp_change_set(
+        region,
+        access_key,
+        secret_access_key,
+        [change_set]
     )
 
     assert response['ChangeSetId'] == '123'
@@ -268,14 +273,7 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
     ]
     mock_get_client.return_value = client
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
-    response = start_mp_change_set(
-        region,
-        access_key,
-        secret_access_key,
+    change_set = create_add_version_change_doc(
         entity_id='123',
         version_title='New image',
         ami_id='ami-123',
@@ -285,7 +283,18 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
         os_version='15.3',
         usage_instructions='Login with SSH...',
         recommended_instance_type='t3.medium',
-        ssh_user='ec2-user',
+        ssh_user='ec2-user'
+    )
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    response = start_mp_change_set(
+        region,
+        access_key,
+        secret_access_key,
+        change_set=[change_set],
         max_rechecks=10,
         rechecks_period=0,
         conflict_wait_period=0
@@ -353,6 +362,19 @@ def test_start_mp_change_set_ongoing_change_GenericBotoException(
         client,
     ]
 
+    change_set = create_add_version_change_doc(
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
     region = 'us-east-1'
     access_key = '123456'
     secret_access_key = '654321'
@@ -362,16 +384,7 @@ def test_start_mp_change_set_ongoing_change_GenericBotoException(
             region,
             access_key,
             secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
+            change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
             conflict_wait_period=0
@@ -413,6 +426,19 @@ def test_start_mp_change_set_ongoing_change_GenericException(
         client,
     ]
 
+    change_set = create_add_version_change_doc(
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
     region = 'us-east-1'
     access_key = '123456'
     secret_access_key = '654321'
@@ -422,16 +448,7 @@ def test_start_mp_change_set_ongoing_change_GenericException(
             region,
             access_key,
             secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
+            change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
             conflict_wait_period=0
@@ -501,6 +518,19 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
 
     mock_get_client.return_value = client
 
+    change_set = create_add_version_change_doc(
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
     region = 'us-east-1'
     access_key = '123456'
     secret_access_key = '654321'
@@ -510,21 +540,12 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
             region,
             access_key,
             secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
+            change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
             conflict_wait_period=0
         )
-    assert 'Unable to complete successfully the mp change for ami-123.' \
+    assert 'Unable to complete successfully the mp change.' \
         in str(error)
 
     # Mock calls assertions
@@ -610,6 +631,19 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
 
     mock_get_client.return_value = client
 
+    change_set = create_add_version_change_doc(
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
     region = 'us-east-1'
     access_key = '123456'
     secret_access_key = '654321'
@@ -619,16 +653,7 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
             region,
             access_key,
             secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
+            change_set=[change_set],
             max_rechecks=5,
             rechecks_period=0,
             conflict_wait_period=0
