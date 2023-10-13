@@ -5,7 +5,7 @@
 # $ pip install -U pip setuptools
 # $ pip install -r .virtualenv.requirements.txt
 
-Flask
+Flask<3.0.0
 flask-restx
 flask-sqlalchemy
 flask-migrate
@@ -23,7 +23,7 @@ img-proof>=7.14.0
 requests
 obs-img-utils>=1.0.0
 oci
-werkzeug<2.1.0
+werkzeug
 google-auth
 google-cloud-storage
 google-api-python-client
