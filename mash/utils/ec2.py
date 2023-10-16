@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2023 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -49,7 +49,7 @@ def get_vpc_id_from_subnet(ec2_client, subnet_id):
     return response['Subnets'][0]['VpcId']
 
 
-def describe_images(client, image_ids=None):
+def describe_images(client, image_ids=None, filters=None):
     """
     Return a list of custom images using provided client.
 
@@ -59,6 +59,9 @@ def describe_images(client, image_ids=None):
 
     if image_ids:
         kwargs['ImageIds'] = image_ids
+
+    if filters:
+        kwargs['Filters'] = filters
 
     images = client.describe_images(**kwargs)['Images']
     return images
