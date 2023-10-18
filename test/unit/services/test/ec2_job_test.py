@@ -251,7 +251,7 @@ class TestEC2TestJob(object):
             prefix_name='mash',
             cpu_options={'AmdSevSnp': 'enabled'}
         )
-        mock_test_image.assert_has_calls([mock_call, mock_call])
+        mock_test_image.assert_has_calls([mock_call])
         client.delete_key_pair.assert_has_calls([
             call(KeyName='random_name')
         ])

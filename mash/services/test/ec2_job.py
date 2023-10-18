@@ -43,12 +43,13 @@ instance_types = {
         't3.small'
     ],
     'hybrid-sev': [
+        'm6a.large',
+        'c6a.large',
+        'r6a.large'
     ],
     'bios': [
         'i3.large',
         't2.small'
-    ],
-    'bios-sev': [
     ],
     'aarch64': [
         't4g.small',
@@ -308,12 +309,4 @@ class EC2TestJob(MashJob):
                     random.choice(instance_types['hybrid'])
                 ]
         else:
-            if self.boot_firmware == 'uefi-preferred':
-                return [
-                    random.choice(instance_types['bios-sev']),
-                    random.choice(instance_types['hybrid-sev'])
-                ]
-            else:
-                return [
-                    random.choice(instance_types['hybrid-sev'])
-                ]
+            return [random.choice(instance_types['hybrid-sev'])]
