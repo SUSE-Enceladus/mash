@@ -26,7 +26,9 @@ from mash.utils.ec2 import (
     cleanup_all_ec2_images,
     get_image,
     image_exists,
-    start_mp_change_set
+    start_mp_change_set,
+    create_add_version_change_doc,
+    create_restrict_version_change_doc,
 )
 from mash.mash_exceptions import MashEc2UtilsException
 import botocore.session
@@ -162,16 +164,30 @@ def test_get_image(mock_describe_images):
     client = Mock()
     image = {'Name': 'image name 123'}
 
-    mock_describe_images.return_value = [image]
+    mock_describe_images.side_effect = [
+        [image],
+        [image, image],
+        []
+    ]
+
+    # One image found
     result = get_image(client, 'image name 123')
     assert result == image
+
+    # multiple images found
+    with raises(MashEc2UtilsException):
+        get_image(client, 'image name 123')
+
+    # No image found
+    result = get_image(client, 'image name 123')
+    assert result is None
 
 
 @patch('mash.utils.ec2.get_image')
 def test_image_exists(mock_get_image):
     client = Mock()
     image = {'Name': 'image name 123'}
-    mock_get_image.return_value = image
+    mock_get_image.side_effect = [image, None]
 
     assert image_exists(client, 'image name 123')
     assert not image_exists(client, 'image name 321')
@@ -185,13 +201,7 @@ def test_start_mp_change_set(mock_get_client):
     }
     mock_get_client.return_value = client
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-    response = start_mp_change_set(
-        region,
-        access_key,
-        secret_access_key,
+    change_set = create_add_version_change_doc(
         entity_id='123',
         version_title='New image',
         ami_id='ami-123',
@@ -202,6 +212,16 @@ def test_start_mp_change_set(mock_get_client):
         usage_instructions='Login with SSH...',
         recommended_instance_type='t3.medium',
         ssh_user='ec2-user'
+    )
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+    response = start_mp_change_set(
+        region,
+        access_key,
+        secret_access_key,
+        [change_set]
     )
 
     assert response['ChangeSetId'] == '123'
@@ -253,14 +273,7 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
     ]
     mock_get_client.return_value = client
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
-    response = start_mp_change_set(
-        region,
-        access_key,
-        secret_access_key,
+    change_set = create_add_version_change_doc(
         entity_id='123',
         version_title='New image',
         ami_id='ami-123',
@@ -270,7 +283,18 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
         os_version='15.3',
         usage_instructions='Login with SSH...',
         recommended_instance_type='t3.medium',
-        ssh_user='ec2-user',
+        ssh_user='ec2-user'
+    )
+
+    region = 'us-east-1'
+    access_key = '123456'
+    secret_access_key = '654321'
+
+    response = start_mp_change_set(
+        region,
+        access_key,
+        secret_access_key,
+        change_set=[change_set],
         max_rechecks=10,
         rechecks_period=0,
         conflict_wait_period=0
@@ -338,6 +362,19 @@ def test_start_mp_change_set_ongoing_change_GenericBotoException(
         client,
     ]
 
+    change_set = create_add_version_change_doc(
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
     region = 'us-east-1'
     access_key = '123456'
     secret_access_key = '654321'
@@ -347,16 +384,7 @@ def test_start_mp_change_set_ongoing_change_GenericBotoException(
             region,
             access_key,
             secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
+            change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
             conflict_wait_period=0
@@ -398,6 +426,19 @@ def test_start_mp_change_set_ongoing_change_GenericException(
         client,
     ]
 
+    change_set = create_add_version_change_doc(
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
     region = 'us-east-1'
     access_key = '123456'
     secret_access_key = '654321'
@@ -407,16 +448,7 @@ def test_start_mp_change_set_ongoing_change_GenericException(
             region,
             access_key,
             secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
+            change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
             conflict_wait_period=0
@@ -486,6 +518,19 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
 
     mock_get_client.return_value = client
 
+    change_set = create_add_version_change_doc(
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
     region = 'us-east-1'
     access_key = '123456'
     secret_access_key = '654321'
@@ -495,21 +540,12 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
             region,
             access_key,
             secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
+            change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
             conflict_wait_period=0
         )
-    assert 'Unable to complete successfully the mp change for ami-123.' \
+    assert 'Unable to complete successfully the mp change.' \
         in str(error)
 
     # Mock calls assertions
@@ -595,6 +631,19 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
 
     mock_get_client.return_value = client
 
+    change_set = create_add_version_change_doc(
+        entity_id='123',
+        version_title='New image',
+        ami_id='ami-123',
+        access_role_arn='arn',
+        release_notes='Release Notes',
+        os_name='OTHERLINUX',
+        os_version='15.3',
+        usage_instructions='Login with SSH...',
+        recommended_instance_type='t3.medium',
+        ssh_user='ec2-user'
+    )
+
     region = 'us-east-1'
     access_key = '123456'
     secret_access_key = '654321'
@@ -604,16 +653,7 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
             region,
             access_key,
             secret_access_key,
-            entity_id='123',
-            version_title='New image',
-            ami_id='ami-123',
-            access_role_arn='arn',
-            release_notes='Release Notes',
-            os_name='OTHERLINUX',
-            os_version='15.3',
-            usage_instructions='Login with SSH...',
-            recommended_instance_type='t3.medium',
-            ssh_user='ec2-user',
+            change_set=[change_set],
             max_rechecks=5,
             rechecks_period=0,
             conflict_wait_period=0
@@ -636,3 +676,19 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
         ],
         any_order=True
     )
+
+
+def test_create_restrict_version_change_doc():
+    expected = {
+        'ChangeType': 'RestrictDeliveryOptions',
+        'Entity': {
+            'Type': 'AmiProduct@1.0',
+            'Identifier': '123456789'
+        },
+        'Details': {
+            'DeliveryOptionIds': ['987654321']
+        }
+    }
+
+    actual = create_restrict_version_change_doc('123456789', '987654321')
+    assert expected == actual

@@ -1,4 +1,4 @@
-# Copyright (c) 2018 SUSE Linux GmbH.  All rights reserved.
+# Copyright (c) 2023 SUSE LLC.  All rights reserved.
 #
 # This file is part of mash.
 #
@@ -49,7 +49,7 @@ def get_vpc_id_from_subnet(ec2_client, subnet_id):
     return response['Subnets'][0]['VpcId']
 
 
-def describe_images(client, image_ids=None):
+def describe_images(client, image_ids=None, filters=None):
     """
     Return a list of custom images using provided client.
 
@@ -59,6 +59,9 @@ def describe_images(client, image_ids=None):
 
     if image_ids:
         kwargs['ImageIds'] = image_ids
+
+    if filters:
+        kwargs['Filters'] = filters
 
     images = client.describe_images(**kwargs)['Images']
     return images
@@ -199,11 +202,24 @@ def get_image(client, cloud_image_name):
     """
     Get image if it exists given image name.
     """
-    images = describe_images(client)
+    filters = [{
+        'Name': 'name',
+        'Values': [
+            cloud_image_name,
+        ]
+    }]
+    images = describe_images(client, filters=filters)
 
-    for image in images:
-        if cloud_image_name == image.get('Name'):
-            return image
+    if images and len(images) > 1:
+        raise MashEc2UtilsException(
+            'Expected only one image but multiple images found'
+            f' using the filter {cloud_image_name}.'
+        )
+
+    if images:
+        return images[0]
+
+    return None
 
 
 def image_exists(client, cloud_image_name):
@@ -211,16 +227,31 @@ def image_exists(client, cloud_image_name):
     Determine if image exists given image name.
     """
     image = get_image(client, cloud_image_name)
-    if image and cloud_image_name == image.get('Name'):
-        return True
 
+    if image:
+        return True
     return False
 
 
-def start_mp_change_set(
-    region,
-    access_key_id,
-    secret_access_key,
+def create_restrict_version_change_doc(
+    entity_id,
+    delivery_option_id
+):
+    data = {
+        'ChangeType': 'RestrictDeliveryOptions',
+        'Entity': {
+            'Type': 'AmiProduct@1.0',
+            'Identifier': entity_id
+        },
+        'Details': {
+            'DeliveryOptionIds': [delivery_option_id]
+        }
+    }
+
+    return data
+
+
+def create_add_version_change_doc(
     entity_id,
     version_title,
     ami_id,
@@ -231,19 +262,7 @@ def start_mp_change_set(
     usage_instructions,
     recommended_instance_type,
     ssh_user,
-    max_rechecks=10,
-    rechecks_period=900,
-    conflict_wait_period=1800
 ):
-    """
-    Additional params included in this function:
-    - max_rechecks is the maximum number of checks that are
-    performed when a marketplace change cannot be applied because some resource
-    is affected by some other ongoing change (and ResourceInUseException is
-    raised by boto3).
-    - rechecks_period is the period (in seconds) that is waited
-    between checks for the ongoing mp change to be finished (defaults to 900s).
-    """
     data = {
         'ChangeType': 'AddDeliveryOptions',
         'Entity': {
@@ -281,7 +300,27 @@ def start_mp_change_set(
     }
 
     data['Details'] = json.dumps(details)
+    return data
 
+
+def start_mp_change_set(
+    region,
+    access_key_id,
+    secret_access_key,
+    change_set,
+    max_rechecks=10,
+    rechecks_period=900,
+    conflict_wait_period=1800
+):
+    """
+    Additional params included in this function:
+    - max_rechecks is the maximum number of checks that are
+    performed when a marketplace change cannot be applied because some resource
+    is affected by some other ongoing change (and ResourceInUseException is
+    raised by boto3).
+    - rechecks_period is the period (in seconds) that is waited
+    between checks for the ongoing mp change to be finished (defaults to 900s).
+    """
     retries = 3
     conflicting_changeset_retries = 10
     while retries > 0:
@@ -296,7 +335,7 @@ def start_mp_change_set(
             )
             response = client.start_change_set(
                 Catalog='AWSMarketplace',
-                ChangeSet=[data]
+                ChangeSet=change_set
             )
             return response
 
@@ -318,8 +357,8 @@ def start_mp_change_set(
                         conflicting_error_message
                     )
                     raise MashEc2UtilsException(
-                        'Unable to complete successfully the mp change for'
-                        f' {ami_id}. Timed out waiting for {ongoing_change_id}'
+                        'Unable to complete successfully the mp change.'
+                        f' Timed out waiting for {ongoing_change_id}'
                         ' to finish.'
                     )
                 except Exception:
@@ -328,7 +367,7 @@ def start_mp_change_set(
             retries -= 1
 
     raise MashEc2UtilsException(
-        f'Unable to complete successfully the mp change for {ami_id}.'
+        'Unable to complete successfully the mp change.'
     )
 
 
