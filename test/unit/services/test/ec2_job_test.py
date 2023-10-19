@@ -171,12 +171,12 @@ class TestEC2TestJob(object):
             'requesting_user': 'user1',
             'ssh_private_key_file': 'private_ssh_key.file',
             'test_regions': {
-                'us-east-1': {'account': 'test-aws', 'partition': 'aws'}
+                'us-east-2': {'account': 'test-aws', 'partition': 'aws'}
             },
             'tests': ['test_stuff'],
             'utctime': 'now',
             'cleanup_images': True,
-            'guest_os_features': ['SEV_CAPABLE']
+            'cpu_options': ['AMD_SEV_SNP_ENABLED']
         }
         client = Mock()
         mock_get_client.return_value = client
@@ -223,7 +223,7 @@ class TestEC2TestJob(object):
                 'secret_access_key': '321'
             }
         }
-        job.status_msg['source_regions'] = {'us-east-1': 'ami-123'}
+        job.status_msg['source_regions'] = {'us-east-2': 'ami-123'}
         job.run_job()
 
         client.import_key_pair.assert_has_calls([
@@ -239,7 +239,7 @@ class TestEC2TestJob(object):
             instance_type='t2.micro',
             log_level=10,
             timeout=600,
-            region='us-east-1',
+            region='us-east-2',
             secret_access_key='321',
             security_group_id='sg-123456789',
             ssh_key_name='random_name',
@@ -259,7 +259,7 @@ class TestEC2TestJob(object):
             '123',
             '321',
             job._log_callback,
-            'us-east-1',
+            'us-east-2',
             image_id='ami-123'
         )
         job._log_callback.warning.reset_mock()
@@ -268,7 +268,7 @@ class TestEC2TestJob(object):
         mock_test_image.side_effect = Exception('Tests broken!')
         job.run_job()
         job._log_callback.warning.assert_has_calls([
-            call('Image tests failed in region: us-east-1.')
+            call('Image tests failed in region: us-east-2.')
         ])
         assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
         assert ec2_setup.clean_up.call_count == 2

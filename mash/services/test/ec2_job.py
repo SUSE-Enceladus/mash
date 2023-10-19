@@ -42,7 +42,7 @@ instance_types = {
         'm5.large',
         't3.small'
     ],
-    'hybrid-sev': [
+    'hybrid-sev-snp': [
         'm6a.large',
         'c6a.large',
         'r6a.large'
@@ -57,8 +57,9 @@ instance_types = {
     ]
 }
 
-sev_capable_regions = [
-    'us-east-1'
+sev_snp_supported_regions = [
+    'us-east-2',
+    'eu-west-1'
 ]
 
 
@@ -100,8 +101,8 @@ class EC2TestJob(MashJob):
 
         if not os.path.exists(self.ssh_private_key_file):
             create_ssh_key_pair(self.ssh_private_key_file)
-        self.guest_os_features = self.job_config.get('guest_os_features', [])
-        self.sev_capable = False
+        self.cpu_options = self.job_config.get('cpu_options', [])
+        self.sev_snp_enabled = False
 
     def run_job(self):
         """
@@ -132,18 +133,18 @@ class EC2TestJob(MashJob):
 
             if all([
                 info['partition'] == 'aws',
-                'SEV_CAPABLE' in self.guest_os_features,
-                region in sev_capable_regions,
+                'AMD_SEV_SNP_ENABLED' in self.cpu_options,
+                region in sev_snp_supported_regions,
                 self.cloud_architecture == 'x86_64'
             ]):
-                self.sev_capable = True
+                self.sev_snp_enabled = True
             else:
-                self.sev_capable = False
+                self.sev_snp_enabled = False
 
             test_instance_types = self.select_instance_types(
                 cloud_arch=self.cloud_architecture,
                 boot_firmware=self.boot_firmware,
-                sev_capable=self.sev_capable
+                sev_snp_enabled=self.sev_snp_enabled
             )
 
             account = get_testing_account(info)
@@ -182,7 +183,7 @@ class EC2TestJob(MashJob):
                         tests=self.tests,
                         log_callback=self.log_callback,
                         network_details=network_details,
-                        sev_capable=self.sev_capable
+                        sev_snp_enabled=self.sev_snp_enabled
                     )
 
                     if status != SUCCESS:
@@ -223,11 +224,11 @@ class EC2TestJob(MashJob):
         tests,
         log_callback,
         network_details,
-        sev_capable
+        sev_snp_enabled
     ):
-        # set cpu_options if image is sev_capable
+        # set cpu_options if image can have sev_snp_enabled
         cpu_options = {}
-        if sev_capable:
+        if sev_snp_enabled:
             cpu_options = {
                 'AmdSevSnp': 'enabled'
             }
@@ -288,7 +289,7 @@ class EC2TestJob(MashJob):
         self,
         cloud_arch,
         boot_firmware,
-        sev_capable
+        sev_snp_enabled
     ) -> list:
         '''Selects the instance_types array for the tests'''
 
@@ -298,7 +299,7 @@ class EC2TestJob(MashJob):
         if self.instance_type:
             return [self.instance_type]
 
-        if not sev_capable:
+        if not sev_snp_enabled:
             if self.boot_firmware == 'uefi-preferred':
                 return [
                     random.choice(instance_types['bios']),
@@ -309,4 +310,4 @@ class EC2TestJob(MashJob):
                     random.choice(instance_types['hybrid'])
                 ]
         else:
-            return [random.choice(instance_types['hybrid-sev'])]
+            return [random.choice(instance_types['hybrid-sev-snp'])]
