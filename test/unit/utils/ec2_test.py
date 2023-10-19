@@ -29,6 +29,7 @@ from mash.utils.ec2 import (
     start_mp_change_set,
     create_add_version_change_doc,
     create_restrict_version_change_doc,
+    get_delivery_option_id
 )
 from mash.mash_exceptions import MashEc2UtilsException
 import botocore.session
@@ -692,3 +693,50 @@ def test_create_restrict_version_change_doc():
 
     actual = create_restrict_version_change_doc('123456789', '987654321')
     assert expected == actual
+
+
+def test_get_delivery_option_id():
+    details = {
+        "Versions": [
+            {
+                "Sources": [
+                    {
+                        "Image": "ami-123",
+                        "Id": "1234"
+                    }
+                ],
+                "DeliveryOptions": [
+                    {
+                        "Id": "4321",
+                        "SourceId": "1234"
+                    }
+                ]
+            }
+        ]
+    }
+
+    entity = {
+        'Details': json.dumps(details)
+    }
+    session = Mock()
+    client = Mock()
+    client.describe_entity.return_value = entity
+    session.client.return_value = client
+
+    did = get_delivery_option_id(
+        session,
+        '1234589',
+        'ami-123',
+    )
+    assert did == '4321'
+
+    # Test no image match found
+    details['Versions'][0]['Sources'][0]['Image'] = 'ami-321'
+    entity['Details'] = json.dumps(details)
+
+    did = get_delivery_option_id(
+        session,
+        '1234589',
+        'ami-123',
+    )
+    assert did is None
