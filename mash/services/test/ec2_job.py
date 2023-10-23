@@ -42,6 +42,11 @@ instance_types = {
         'm5.large',
         't3.small'
     ],
+    'hybrid-sev-snp': [
+        'm6a.large',
+        'c6a.large',
+        'r6a.large'
+    ],
     'bios': [
         'i3.large',
         't2.small'
@@ -51,6 +56,11 @@ instance_types = {
         'm6g.medium'
     ]
 }
+
+sev_snp_supported_regions = [
+    'us-east-2',
+    'eu-west-1'
+]
 
 
 class EC2TestJob(MashJob):
@@ -86,27 +96,13 @@ class EC2TestJob(MashJob):
             ['uefi-preferred']
         )[0]
 
-        if self.cloud_architecture == 'aarch64':
-            self.instance_types = [
-                random.choice(instance_types['aarch64'])
-            ]
-        elif self.boot_firmware == 'uefi-preferred':
-            self.instance_types = [
-                random.choice(instance_types['bios']),
-                random.choice(instance_types['hybrid'])
-            ]
-        elif not self.instance_type:
-            self.instance_types = [
-                random.choice(instance_types['hybrid'])
-            ]
-        else:
-            self.instance_types = [self.instance_type]
-
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
         self.img_proof_timeout = self.config.get_img_proof_timeout()
 
         if not os.path.exists(self.ssh_private_key_file):
             create_ssh_key_pair(self.ssh_private_key_file)
+        self.cpu_options = self.job_config.get('cpu_options', [])
+        self.sev_snp_enabled = False
 
     def run_job(self):
         """
@@ -127,31 +123,49 @@ class EC2TestJob(MashJob):
 
         self.request_credentials(accounts)
 
-        for instance_type in self.instance_types:
-            self.log_callback.info(
-                'Running img-proof tests against image with '
-                'type: {inst_type}.'.format(
-                    inst_type=instance_type
-                )
+        for region, info in self.test_regions.items():
+
+            if info['partition'] in ('aws-cn', 'aws-us-gov') and \
+                    self.cloud_architecture == 'aarch64':
+                # Skip test aarch64 images in China and GovCloud.
+                # There are no aarch64 based instance types available.
+                continue
+
+            if all([
+                info['partition'] == 'aws',
+                'AMD_SEV_SNP_ENABLED' in self.cpu_options,
+                region in sev_snp_supported_regions,
+                self.cloud_architecture == 'x86_64'
+            ]):
+                self.sev_snp_enabled = True
+            else:
+                self.sev_snp_enabled = False
+
+            test_instance_types = self.select_instance_types(
+                cloud_arch=self.cloud_architecture,
+                boot_firmware=self.boot_firmware,
+                sev_snp_enabled=self.sev_snp_enabled
             )
 
-            for region, info in self.test_regions.items():
-                account = get_testing_account(info)
-                credentials = self.credentials[account]
+            account = get_testing_account(info)
+            credentials = self.credentials[account]
 
-                if info['partition'] in ('aws-cn', 'aws-us-gov') and \
-                        self.cloud_architecture == 'aarch64':
-                    # Skip test aarch64 images in China and GovCloud.
-                    # There are no aarch64 based instance types available.
-                    continue
+            with setup_ec2_networking(
+                credentials['access_key_id'],
+                region,
+                credentials['secret_access_key'],
+                self.ssh_private_key_file,
+                subnet_id=info.get('subnet')
+            ) as network_details:
 
-                with setup_ec2_networking(
-                    credentials['access_key_id'],
-                    region,
-                    credentials['secret_access_key'],
-                    self.ssh_private_key_file,
-                    subnet_id=info.get('subnet')
-                ) as network_details:
+                for instance_type in test_instance_types:
+                    self.log_callback.info(
+                        'Running img-proof tests in {region} against image '
+                        'with type: {inst_type}.'.format(
+                            region=region,
+                            inst_type=instance_type
+                        )
+                    )
 
                     status = self.run_tests(
                         access_key_id=credentials['access_key_id'],
@@ -168,7 +182,8 @@ class EC2TestJob(MashJob):
                         ssh_user=self.ssh_user,
                         tests=self.tests,
                         log_callback=self.log_callback,
-                        network_details=network_details
+                        network_details=network_details,
+                        sev_snp_enabled=self.sev_snp_enabled
                     )
 
                     if status != SUCCESS:
@@ -208,8 +223,16 @@ class EC2TestJob(MashJob):
         ssh_user,
         tests,
         log_callback,
-        network_details
+        network_details,
+        sev_snp_enabled
     ):
+        # set cpu_options if image can have sev_snp_enabled
+        cpu_options = {}
+        if sev_snp_enabled:
+            cpu_options = {
+                'AmdSevSnp': 'enabled'
+            }
+
         try:
             exit_status, result = test_image(
                 cloud,
@@ -230,7 +253,8 @@ class EC2TestJob(MashJob):
                 subnet_id=network_details['subnet_id'],
                 tests=tests,
                 log_callback=log_callback,
-                prefix_name='mash'
+                prefix_name='mash',
+                cpu_options=cpu_options
             )
         except Exception as error:
             self.add_error_msg(str(error))
@@ -260,3 +284,30 @@ class EC2TestJob(MashJob):
             )
 
         return status
+
+    def select_instance_types(
+        self,
+        cloud_arch,
+        boot_firmware,
+        sev_snp_enabled
+    ) -> list:
+        '''Selects the instance_types array for the tests'''
+
+        if self.cloud_architecture == 'aarch64':
+            return [random.choice(instance_types['aarch64'])]
+
+        if self.instance_type:
+            return [self.instance_type]
+
+        if not sev_snp_enabled:
+            if self.boot_firmware == 'uefi-preferred':
+                return [
+                    random.choice(instance_types['bios']),
+                    random.choice(instance_types['hybrid'])
+                ]
+            else:
+                return [
+                    random.choice(instance_types['hybrid'])
+                ]
+        else:
+            return [random.choice(instance_types['hybrid-sev-snp'])]

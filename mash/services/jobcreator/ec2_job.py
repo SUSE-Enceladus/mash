@@ -50,6 +50,7 @@ class EC2Job(BaseJob):
             'publish_in_marketplace',
             False
         )
+        self.cpu_options = self.kwargs.get('cpu_options', [])
 
     def _get_target_regions_list(self):
         """
@@ -180,6 +181,7 @@ class EC2Job(BaseJob):
                 'cloud': self.cloud,
                 'tests': self.tests,
                 'test_regions': self.get_test_regions(),
+                'cpu_options': self.cpu_options
             }
         }
 
