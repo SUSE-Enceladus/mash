@@ -66,19 +66,39 @@ class EC2Job(BaseJob):
         """
         Build deprecate job message.
         """
-        deprecate_message = {
-            'deprecate_job': {
-                'cloud': self.cloud,
-                'deprecate_regions': self.get_deprecate_regions()
+        if self.publish_in_marketplace:
+            deprecate_message = {
+                'deprecate_job': {
+                    'cloud': self.cloud,
+                    'deprecate_regions': self.get_mp_deprecate_regions(),
+                    'entity_id': self.entity_id
+                }
             }
-        }
-        deprecate_message['deprecate_job'].update(self.base_message)
+        else:
+            deprecate_message = {
+                'deprecate_job': {
+                    'cloud': self.cloud,
+                    'deprecate_regions': self.get_deprecate_regions(),
+                }
+            }
 
         if self.old_cloud_image_name:
             deprecate_message['deprecate_job']['old_cloud_image_name'] = \
                 self.old_cloud_image_name
 
+        deprecate_message['deprecate_job'].update(self.base_message)
         return JsonFormat.json_message(deprecate_message)
+
+    def get_mp_deprecate_regions(self):
+        """
+        Return a dictionary of account names to source region names.
+        """
+        target_regions = {}
+
+        for source_region, value in self.target_account_info.items():
+            target_regions[value['account']] = source_region
+
+        return target_regions
 
     def get_deprecate_regions(self):
         """
@@ -111,6 +131,8 @@ class EC2Job(BaseJob):
 
             if self.ssh_user:
                 publish_message['publish_job']['ssh_user'] = self.ssh_user
+            if not self.old_cloud_image_name:
+                publish_message['publish_job']['submit_change_request'] = True
         else:
             publish_message = {
                 'publish_job': {
