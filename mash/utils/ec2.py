@@ -244,12 +244,13 @@ def create_restrict_version_change_doc(
         'Entity': {
             'Type': 'AmiProduct@1.0',
             'Identifier': entity_id
-        },
-        'Details': {
-            'DeliveryOptionIds': [delivery_option_id]
         }
     }
+    details = {
+        'DeliveryOptionIds': [delivery_option_id]
+    }
 
+    data['Details'] = json.dumps(details)
     return data
 
 
