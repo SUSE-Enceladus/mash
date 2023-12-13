@@ -84,14 +84,15 @@ class TestAzureSIGCreateJob(object):
         self.job.status_msg['blob_name'] = 'name.vhd'
         self.job.run_job()
 
-        azure_image.create_gallery_image_version.has_calls(
+        azure_image.create_gallery_image_version.assert_has_calls([
             call(
                 blob_name='name.vhd',
                 gallery_name='gallery1',
                 gallery_image_name='sles_15_sp3_gen1',
                 image_version='2022.02.02',
                 region='region',
-                force_replace_image=True
+                force_replace_image=True,
+                gallery_resource_group='group_name'
             ),
             call(
                 blob_name='name.vhd',
@@ -99,6 +100,7 @@ class TestAzureSIGCreateJob(object):
                 gallery_image_name='sles_15_sp3_gen2',
                 image_version='2022.02.02',
                 region='region',
-                force_replace_image=True
+                force_replace_image=True,
+                gallery_resource_group='group_name'
             )
-        )
+        ])
