@@ -29,7 +29,8 @@ from mash.utils.ec2 import (
     start_mp_change_set,
     create_add_version_change_doc,
     create_restrict_version_change_doc,
-    get_delivery_option_id
+    get_delivery_option_id,
+    get_session
 )
 from mash.mash_exceptions import MashEc2UtilsException
 import botocore.session
@@ -93,6 +94,16 @@ describe_changeset_params = {
 
 
 # Test Cases
+@patch('mash.utils.ec2.boto3')
+def test_get_session(mock_boto3):
+    session = Mock()
+    mock_boto3.Session.return_value = session
+
+    result = get_session('123456', 'abc123', 'us-east-1')
+
+    assert session == result
+
+
 @patch('mash.utils.ec2.boto3')
 def test_get_client(mock_boto3):
     client = Mock()
