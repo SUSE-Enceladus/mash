@@ -120,9 +120,9 @@ class TestListenerService(object):
             '/var/log/mash/service_service.log'
         )
 
-        mock_bind_queue.has_calls([
+        mock_bind_queue.assert_has_calls([
             call('replicate', 'job_document', 'service'),
-            call('replicate', 'listener_msg', 'listener')
+            call('test', 'listener_msg', 'listener')
         ])
         mock_restart_jobs.assert_called_once_with(
             '/var/lib/mash/replicate_jobs/',

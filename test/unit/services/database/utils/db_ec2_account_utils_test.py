@@ -113,7 +113,7 @@ def test_create_ec2_account(
         job_data=data
     )
 
-    mock_db.session.add.has_calls([
+    mock_db.session.add.assert_has_calls([
         call(group),
         call(account)
     ])

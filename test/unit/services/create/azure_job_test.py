@@ -80,7 +80,7 @@ class TestAzureCreateJob(object):
         self.job.status_msg['blob_name'] = 'name.vhd'
         self.job.run_job()
 
-        azure_image.create_compute_image.has_calls(
+        azure_image.create_compute_image.assert_has_calls([
             call(
                 blob_name='name.vhd',
                 image_name='name',
@@ -95,4 +95,4 @@ class TestAzureCreateJob(object):
                 force_replace_image=True,
                 hyper_v_generation='V2'
             )
-        )
+        ])
