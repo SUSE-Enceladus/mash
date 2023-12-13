@@ -383,9 +383,7 @@ def create_add_version_change_doc(
 
 
 def start_mp_change_set(
-    region,
-    access_key_id,
-    secret_access_key,
+    session,
     change_set,
     max_rechecks=10,
     rechecks_period=900,
@@ -406,12 +404,7 @@ def start_mp_change_set(
         conflicting_changeset = False
         conflicting_error_message = ''
         try:
-            client = get_client(
-                'marketplace-catalog',
-                access_key_id,
-                secret_access_key,
-                region
-            )
+            client = session.client('marketplace-catalog')
             response = client.start_change_set(
                 Catalog='AWSMarketplace',
                 ChangeSet=change_set
