@@ -653,11 +653,12 @@ def test_create_restrict_version_change_doc():
         'Entity': {
             'Type': 'AmiProduct@1.0',
             'Identifier': '123456789'
-        },
-        'Details': {
-            'DeliveryOptionIds': ['987654321']
         }
     }
+    details = {
+        'DeliveryOptionIds': ['987654321']
+    }
+    expected['Details'] = json.dumps(details)
 
     actual = create_restrict_version_change_doc('123456789', '987654321')
     assert expected == actual
