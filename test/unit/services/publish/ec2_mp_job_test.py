@@ -48,9 +48,15 @@ class TestEC2MPPublishJob(object):
         with raises(MashPublishException):
             EC2MPPublishJob(self.job_config, self.config)
 
+    @patch('mash.services.publish.ec2_mp_job.get_session')
     @patch('mash.services.publish.ec2_mp_job.start_mp_change_set')
     @patch('mash.services.publish.ec2_mp_job.EC2PublishImage')
-    def test_publish(self, mock_ec2_publish_image, mock_start_change_set):
+    def test_publish(
+        self,
+        mock_ec2_publish_image,
+        mock_start_change_set,
+        mock_get_session
+    ):
         publish = Mock()
         mock_ec2_publish_image.return_value = publish
         mock_start_change_set.return_value = {'ChangeSetId': '123'}

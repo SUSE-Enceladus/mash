@@ -205,13 +205,14 @@ def test_image_exists(mock_get_image):
     assert not image_exists(client, 'image name 321')
 
 
-@patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set(mock_get_client):
+def test_start_mp_change_set():
     client = Mock()
     client.start_change_set.return_value = {
         'ChangeSetId': '123'
     }
-    mock_get_client.return_value = client
+
+    session = Mock()
+    session.client.return_value = client
 
     change_set = create_add_version_change_doc(
         entity_id='123',
@@ -226,25 +227,17 @@ def test_start_mp_change_set(mock_get_client):
         ssh_user='ec2-user'
     )
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
     response = start_mp_change_set(
-        region,
-        access_key,
-        secret_access_key,
+        session,
         [change_set]
     )
 
     assert response['ChangeSetId'] == '123'
     client.start_change_set.assert_called_once_with(**start_changeset_params)
-    mock_get_client.assert_called_once_with(*get_client_args)
+    session.client.assert_called_once_with('marketplace-catalog')
 
 
-@patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set_ongoing_change_ResourceInUseException(
-    mock_get_client
-):
+def test_start_mp_change_set_ongoing_change_ResourceInUseException():
 
     def generate_exception():
         error_code = 'ResourceInUseException'
@@ -283,7 +276,9 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
             'ChangeSetArn': 'myChangeSetArn'
         }
     ]
-    mock_get_client.return_value = client
+
+    session = Mock()
+    session.client.return_value = client
 
     change_set = create_add_version_change_doc(
         entity_id='123',
@@ -298,14 +293,8 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
         ssh_user='ec2-user'
     )
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
     response = start_mp_change_set(
-        region,
-        access_key,
-        secret_access_key,
+        session,
         change_set=[change_set],
         max_rechecks=10,
         rechecks_period=0,
@@ -313,10 +302,10 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
     )
     assert response.get('ChangeSetId') == 'myChangeSetId'
     # Mock calls assertions
-    mock_get_client.assert_has_calls(
+    session.client.assert_has_calls(
         [
-            call(*get_client_args),
-            call(*get_client_args),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
         ],
         any_order=True
     )
@@ -329,10 +318,7 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException(
     )
 
 
-@patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set_ongoing_change_GenericBotoException(
-    mock_get_client
-):
+def test_start_mp_change_set_ongoing_change_GenericBotoException():
 
     def generate_exception():
         error_code = 'AccessDeniedException'
@@ -368,7 +354,8 @@ def test_start_mp_change_set_ongoing_change_GenericBotoException(
         generate_exception()
     ]
 
-    mock_get_client.side_effect = [
+    session = Mock()
+    session.client.side_effect = [
         client,
         client,
         client,
@@ -387,15 +374,9 @@ def test_start_mp_change_set_ongoing_change_GenericBotoException(
         ssh_user='ec2-user'
     )
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
     with raises(Exception) as error:
         start_mp_change_set(
-            region,
-            access_key,
-            secret_access_key,
+            session,
             change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
@@ -404,9 +385,9 @@ def test_start_mp_change_set_ongoing_change_GenericBotoException(
     assert 'AccessDeniedException' in str(error)
 
     # Mock calls assertions
-    mock_get_client.assert_has_calls(
+    session.client.assert_has_calls(
         [
-            call(*get_client_args),
+            call('marketplace-catalog'),
         ],
     )
     client.start_change_set.assert_has_calls(
@@ -416,10 +397,7 @@ def test_start_mp_change_set_ongoing_change_GenericBotoException(
     )
 
 
-@patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set_ongoing_change_GenericException(
-    mock_get_client
-):
+def test_start_mp_change_set_ongoing_change_GenericException():
 
     def generate_exception():
         return Exception("This is an unexpected exception")
@@ -432,7 +410,8 @@ def test_start_mp_change_set_ongoing_change_GenericException(
         generate_exception()
     ]
 
-    mock_get_client.side_effect = [
+    session = Mock()
+    session.client.side_effect = [
         client,
         client,
         client,
@@ -451,15 +430,9 @@ def test_start_mp_change_set_ongoing_change_GenericException(
         ssh_user='ec2-user'
     )
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
     with raises(Exception) as error:
         start_mp_change_set(
-            region,
-            access_key,
-            secret_access_key,
+            session,
             change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
@@ -468,9 +441,9 @@ def test_start_mp_change_set_ongoing_change_GenericException(
     assert 'This is an unexpected exception' in str(error)
 
     # Mock calls assertions
-    mock_get_client.assert_has_calls(
+    session.client.assert_has_calls(
         [
-            call(*get_client_args),
+            call('marketplace-catalog'),
         ],
     )
     client.start_change_set.assert_has_calls(
@@ -480,10 +453,7 @@ def test_start_mp_change_set_ongoing_change_GenericException(
     )
 
 
-@patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
-    mock_get_client
-):
+def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times():
 
     def generate_exception():
         error_code = 'ResourceInUseException'
@@ -528,7 +498,8 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
         generate_exception()
     ]
 
-    mock_get_client.return_value = client
+    session = Mock()
+    session.client.return_value = client
 
     change_set = create_add_version_change_doc(
         entity_id='123',
@@ -543,15 +514,9 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
         ssh_user='ec2-user'
     )
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
     with raises(MashEc2UtilsException) as error:
         start_mp_change_set(
-            region,
-            access_key,
-            secret_access_key,
+            session,
             change_set=[change_set],
             max_rechecks=10,
             rechecks_period=0,
@@ -561,18 +526,18 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
         in str(error)
 
     # Mock calls assertions
-    mock_get_client.assert_has_calls(
+    session.client.assert_has_calls(
         [
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
-            call(*get_client_args),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
+            call('marketplace-catalog'),
         ],
         any_order=True
     )
@@ -593,10 +558,7 @@ def test_start_mp_change_set_ongoing_change_ResourceInUseException_3times(
     )
 
 
-@patch('mash.utils.ec2.get_client')
-def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
-    mock_get_client
-):
+def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid():
 
     def generate_resource_in_use_exception():
         error_code = 'ResourceInUseException'
@@ -641,7 +603,8 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
         generate_resource_in_use_exception()
     ]
 
-    mock_get_client.return_value = client
+    session = Mock()
+    session.client.return_value = client
 
     change_set = create_add_version_change_doc(
         entity_id='123',
@@ -656,15 +619,9 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
         ssh_user='ec2-user'
     )
 
-    region = 'us-east-1'
-    access_key = '123456'
-    secret_access_key = '654321'
-
     with raises(MashEc2UtilsException) as error:
         start_mp_change_set(
-            region,
-            access_key,
-            secret_access_key,
+            session,
             change_set=[change_set],
             max_rechecks=5,
             rechecks_period=0,
@@ -676,9 +633,9 @@ def test_start_mp_change_set_ongoing_change_ResInUseExc_not_changeid(
     assert msg2 in str(error)
 
     # Mock calls asserts
-    mock_get_client.assert_has_calls(
+    session.client.assert_has_calls(
         [
-            call(*get_client_args),
+            call('marketplace-catalog'),
         ],
         any_order=True
     )
