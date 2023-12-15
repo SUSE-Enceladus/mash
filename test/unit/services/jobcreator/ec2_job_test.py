@@ -22,7 +22,8 @@ def test_get_test_message_cleanup(mock_get_test_regions):
         'cleanup_images': True,
         'test_fallback_regions': [],
         'target_account_info': {},
-        'ssh_user': 'root'
+        'ssh_user': 'root',
+        'launch_inst_type': 'm1.large'
     })
 
     message = job.get_test_message()

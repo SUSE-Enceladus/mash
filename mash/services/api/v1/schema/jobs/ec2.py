@@ -166,6 +166,10 @@ ec2_job_message['properties']['tpm_support'] = string_with_example(
     'v2.0',
     description='The NitroTPM version supported by the image.'
 )
+ec2_job_message['properties']['launch_inst_type'] = string_with_example(
+    'm1.large',
+    description='The helper instance type to use for image creation with ec2uploadimg.'
+)
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},

@@ -50,6 +50,7 @@ class EC2Job(BaseJob):
             'publish_in_marketplace',
             False
         )
+        self.launch_inst_type = self.kwargs.get('launch_inst_type')
 
     def _get_target_regions_list(self):
         """
@@ -240,7 +241,8 @@ class EC2Job(BaseJob):
                 'target_regions': self.get_create_regions(),
                 'force_replace_image': self.force_replace_image,
                 'tpm_support': self.tpm_support,
-                'boot_firmware': self.boot_firmware
+                'boot_firmware': self.boot_firmware,
+                'launch_inst_type': self.launch_inst_type
             }
         }
         create_message['create_job'].update(self.base_message)
