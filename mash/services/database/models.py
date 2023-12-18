@@ -245,7 +245,7 @@ class Job(db.Model):
     failed_service = db.Column(db.String(16))
     utctime = db.Column(db.String(32), nullable=False)
     image = db.Column(db.String(128), nullable=False)
-    download_url = db.Column(db.String(128), nullable=False)
+    download_url = db.Column(db.String(256), nullable=False)
     cloud_architecture = db.Column(db.String(8), default='x86_64')
     profile = db.Column(db.String(32))
     state = db.Column(db.String(12))
