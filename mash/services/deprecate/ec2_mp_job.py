@@ -30,7 +30,7 @@ from mash.utils.ec2 import (
 
 class EC2MPDeprecateJob(MashJob):
     """
-    Class for an EC2 deprecate job.
+    Class for EC2 Marketplace restriction.
     """
 
     def post_init(self):
@@ -54,7 +54,7 @@ class EC2MPDeprecateJob(MashJob):
 
     def run_job(self):
         """
-        Deprecate image in all target regions in each source region.
+        Restrict the image in each source region.
         """
         self.status = SUCCESS
 
