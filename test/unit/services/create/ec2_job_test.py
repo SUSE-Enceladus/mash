@@ -42,7 +42,8 @@ class TestAmazonCreateJob(object):
             'cloud_image_name': 'name v{date}',
             'image_description': 'description',
             'use_build_time': True,
-            'tpm_support': 'v2.0'
+            'tpm_support': 'v2.0',
+            'launch_inst_type': 'm1.large'
         }
         self.job = EC2CreateJob(job_doc, self.config)
         self.job._log_callback = Mock()
@@ -140,7 +141,7 @@ class TestAmazonCreateJob(object):
             image_virt_type='hvm',
             inst_user_name='ec2-user',
             launch_ami='ami-bc5b48d0',
-            launch_inst_type='t2.micro',
+            launch_inst_type='m1.large',
             root_volume_size=10,
             running_id=None,
             secret_key='secret-access-key',

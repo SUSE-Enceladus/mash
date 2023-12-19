@@ -68,6 +68,7 @@ class EC2CreateJob(MashJob):
         self.use_build_time = self.job_config.get('use_build_time')
         self.force_replace_image = self.job_config.get('force_replace_image')
         self.tpm_support = self.job_config.get('tpm_support')
+        self.launch_inst_type = self.job_config.get('launch_inst_type')
         self.boot_firmware = self.job_config.get(
             'boot_firmware',
             ['uefi-preferred']
@@ -114,7 +115,7 @@ class EC2CreateJob(MashJob):
             'use_private_ip': False,
             'root_volume_size': 10,
             'image_virt_type': 'hvm',
-            'launch_inst_type': 't2.micro',
+            'launch_inst_type': self.launch_inst_type or 't2.micro',
             'bootkernel': None,
             'inst_user_name': 'ec2-user',
             'ssh_timeout': 300,
