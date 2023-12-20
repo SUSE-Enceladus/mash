@@ -21,7 +21,7 @@ import dateutil.parser
 
 # project
 from mash.services.mash_service import MashService
-from mash.services.obs.build_result import OBSImageBuildResult
+from mash.services.download.obs_build_result import OBSImageBuildResult
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import persist_json, restart_jobs, setup_logfile
 
@@ -118,11 +118,11 @@ class OBSImageBuildResultService(MashService):
 
     def _handle_jobs(self, job_data):
         """
-        handle obs job document
+        handle download job document for the OBS type
         """
         job_id = None
-        if 'obs_job' in job_data:
-            job_id = job_data['obs_job'].get('id', None)
+        if 'download_job' in job_data:
+            job_id = job_data['download_job'].get('id', None)
             result = self._add_job(job_data)
         else:
             result = {
@@ -137,7 +137,7 @@ class OBSImageBuildResultService(MashService):
 
         job description example:
         {
-          "obs_job": {
+          "download_job": {
               "id": "123",
               "download_url": "http://download.suse.de/ibs/Devel:/PubCloud
               :/Stable:/Images12/images",
@@ -159,7 +159,7 @@ class OBSImageBuildResultService(MashService):
           }
         }
         """
-        data = data['obs_job']
+        data = data['download_job']
         data['job_file'] = '{0}job-{1}.json'.format(
             self.job_directory, data['id']
         )
@@ -174,7 +174,7 @@ class OBSImageBuildResultService(MashService):
 
         delete job description example:
         {
-            "obs_job_delete": "123"
+            "download_job_delete": "123"
         }
         """
         if job_id not in self.jobs:

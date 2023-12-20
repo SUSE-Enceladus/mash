@@ -48,7 +48,7 @@ class Defaults(object):
     @classmethod
     def get_service_names(self):
         return [
-            'obs', 'upload', 'create', 'test', 'raw_image_upload',
+            'download', 'upload', 'create', 'test', 'raw_image_upload',
             'replicate', 'publish', 'deprecate'
         ]
 
@@ -66,7 +66,7 @@ class Defaults(object):
 
     @classmethod
     def get_non_credential_service_names(self):
-        return ['obs']
+        return ['download']
 
     @classmethod
     def get_azure_max_retry_attempts(self):

@@ -28,16 +28,16 @@ class TestBaseService(object):
 
         config = Mock()
         config.get_service_names.return_value = [
-            'obs', 'upload', 'create', 'raw_image_upload', 'test',
+            'download', 'upload', 'create', 'raw_image_upload', 'test',
             'replicate', 'publish', 'deprecate'
         ]
 
-        self.service = MashService('obs', config=config)
+        self.service = MashService('download', config=config)
 
         self.service.log = Mock()
         mock_connection.side_effect = Exception
         with raises(MashRabbitConnectionException):
-            MashService('obs', config=config)
+            MashService('download', config=config)
         self.channel.reset_mock()
 
     def test_post_init(self):
@@ -45,9 +45,9 @@ class TestBaseService(object):
 
     def test_consume_queue(self):
         callback = Mock()
-        self.service.consume_queue(callback, 'service', 'obs')
+        self.service.consume_queue(callback, 'service', 'download')
         self.channel.basic.consume.assert_called_once_with(
-            callback=callback, queue='obs.service'
+            callback=callback, queue='download.service'
         )
 
     def test_close_connection(self):

@@ -200,7 +200,7 @@ class OBSImageBuildResult(object):
         if self.result_callback:
             self.result_callback(
                 self.job_id, {
-                    'obs_result': {
+                    'download_result': {
                         'id': self.job_id,
                         'image_file':
                             self.downloader.image_source,

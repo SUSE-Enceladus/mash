@@ -1,5 +1,5 @@
 {
-  "obsjob": {
+  "downloadjob": {
     "id": "123",
     "download_url": "http://download.opensuse.org/repositories/Cloud:Tools/images",
     "image": "test-image-oem",
