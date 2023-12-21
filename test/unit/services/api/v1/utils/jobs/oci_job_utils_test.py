@@ -46,7 +46,7 @@ def test_validate_oci_job(
     app = Mock()
     app.config = {
         'SERVICE_NAMES': [
-            'obs',
+            'download',
             'upload',
             'create',
             'test',
@@ -59,7 +59,7 @@ def test_validate_oci_job(
     mock_get_current_obj.return_value = app
 
     mock_get_services.return_value = [
-        'obs',
+        'download',
         'upload',
         'create',
         'test'

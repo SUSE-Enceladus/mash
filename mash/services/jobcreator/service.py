@@ -184,9 +184,9 @@ class JobCreatorService(MashService):
                 self.publish_job_doc(
                     'create', job.get_create_message()
                 )
-            elif service == 'obs':
+            elif service == 'download':
                 self.publish_job_doc(
-                    'obs', job.get_obs_message()
+                    'download', job.get_download_message()
                 )
             elif service == 'publish':
                 self.publish_job_doc(

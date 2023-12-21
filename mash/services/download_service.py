@@ -22,20 +22,21 @@ import traceback
 # project
 from mash.mash_exceptions import MashException
 from mash.services.base_config import BaseConfig
-from mash.services.obs.service import OBSImageBuildResultService
+from mash.services.download.obs_job import OBSImageBuildResultService
 
 
 def main():
     """
-    mash - obs service application entry point
+    mash - download service application entry point
     """
     try:
         logging.basicConfig()
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
+        # keeping OBSImageBuildResultService as only entry point for now
         OBSImageBuildResultService(
-            service_exchange='obs',
+            service_exchange='download',
             config=BaseConfig()
         )
     except MashException as e:

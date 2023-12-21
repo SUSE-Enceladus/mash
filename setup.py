@@ -25,7 +25,7 @@ config = {
     'packages': ['mash'],
     'entry_points': {
         'console_scripts': [
-            'mash-obs-service=mash.services.obs_service:main',
+            'mash-download-service=mash.services.download_service:main',
             'mash-logger-service=mash.services.logger_service:main',
             'mash-job-creator-service=mash.services.job_creator_service:main',
             'mash-test-service=mash.services.test_service:main',

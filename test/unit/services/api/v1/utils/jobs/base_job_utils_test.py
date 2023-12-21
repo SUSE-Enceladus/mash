@@ -32,7 +32,7 @@ def test_create_job(
     app.config = {
         'DATABASE_API_URL': 'http://localhost:5007',
         'SERVICE_NAMES': [
-            'obs',
+            'download',
             'uploader',
             'create',
             'testing',
@@ -135,7 +135,7 @@ def test_validate_last_service(mock_get_current_obj):
     app = Mock()
     app.config = {
         'SERVICE_NAMES': [
-            'obs',
+            'download',
             'uploader',
             'create',
             'testing',

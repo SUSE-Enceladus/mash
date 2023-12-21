@@ -44,7 +44,7 @@ def test_update_gce_job_accounts(
     app = Mock()
     app.config = {
         'SERVICE_NAMES': [
-            'obs',
+            'download',
             'upload',
             'create',
             'test',
@@ -57,7 +57,7 @@ def test_update_gce_job_accounts(
     mock_get_current_obj.return_value = app
 
     mock_get_services.return_value = [
-        'obs',
+        'download',
         'upload',
         'create',
         'test'

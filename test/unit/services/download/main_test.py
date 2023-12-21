@@ -1,24 +1,24 @@
 from unittest.mock import patch, Mock
 
 from mash.mash_exceptions import MashException
-from mash.services.obs_service import main
+from mash.services.download_service import main
 
 
-class TestOBS(object):
-    @patch('mash.services.obs_service.BaseConfig')
-    @patch('mash.services.obs_service.OBSImageBuildResultService')
+class TestDownload(object):
+    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.OBSImageBuildResultService')
     def test_main(self, mock_OBSImageBuildResultService, mock_config):
         config = Mock()
         mock_config.return_value = config
 
         main()
         mock_OBSImageBuildResultService.assert_called_once_with(
-            service_exchange='obs',
+            service_exchange='download',
             config=config
         )
 
-    @patch('mash.services.obs_service.BaseConfig')
-    @patch('mash.services.obs_service.OBSImageBuildResultService')
+    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.OBSImageBuildResultService')
     @patch('sys.exit')
     def test_main_mash_error(
         self, mock_exit, mock_OBSImageBuildResultService, mock_conofig
@@ -27,8 +27,8 @@ class TestOBS(object):
         main()
         mock_exit.assert_called_once_with(1)
 
-    @patch('mash.services.obs_service.BaseConfig')
-    @patch('mash.services.obs_service.OBSImageBuildResultService')
+    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.OBSImageBuildResultService')
     @patch('sys.exit')
     def test_main_keyboard_interrupt(
         self, mock_exit, mock_OBSImageBuildResultService, mock_config
@@ -37,8 +37,8 @@ class TestOBS(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.obs_service.BaseConfig')
-    @patch('mash.services.obs_service.OBSImageBuildResultService')
+    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.OBSImageBuildResultService')
     @patch('sys.exit')
     def test_main_system_exit(
         self, mock_exit, mock_OBSImageBuildResultService, mock_config
@@ -47,8 +47,8 @@ class TestOBS(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.obs_service.BaseConfig')
-    @patch('mash.services.obs_service.OBSImageBuildResultService')
+    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.OBSImageBuildResultService')
     @patch('sys.exit')
     def test_main_unexpected_error(
         self, mock_exit, mock_OBSImageBuildResultService, mock_config

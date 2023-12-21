@@ -80,7 +80,7 @@ base_job_message = {
             'type': 'string',
             'example': 'create',
             'description': 'The last service in the pipeline to be executed. '
-                           'All services except the OBS service are valid '
+                           'All services except the download service are valid '
                            'values.'
         },
         'utctime': utctime,

@@ -99,39 +99,39 @@ class BaseJob(object):
             )
         )
 
-    def get_obs_message(self):
+    def get_download_message(self):
         """
-        Build OBS job message.
+        Build download job message.
         """
-        obs_message = {
-            'obs_job': {
+        download_message = {
+            'download_job': {
                 'download_url': self.download_url,
                 'image': self.image
             }
         }
-        obs_message['obs_job'].update(self.base_message)
+        download_message['download_job'].update(self.base_message)
 
         if self.cloud_architecture:
-            obs_message['obs_job']['cloud_architecture'] = \
+            download_message['download_job']['cloud_architecture'] = \
                 self.cloud_architecture
 
         if self.conditions:
-            obs_message['obs_job']['conditions'] = self.conditions
+            download_message['download_job']['conditions'] = self.conditions
 
         if self.profile:
-            obs_message['obs_job']['profile'] = self.profile
+            download_message['download_job']['profile'] = self.profile
 
         if self.conditions_wait_time:
-            obs_message['obs_job']['conditions_wait_time'] = \
+            download_message['download_job']['conditions_wait_time'] = \
                 self.conditions_wait_time
 
         if self.disallow_licenses:
-            obs_message['obs_job']['disallow_licenses'] = self.disallow_licenses
+            download_message['download_job']['disallow_licenses'] = self.disallow_licenses
 
         if self.disallow_packages:
-            obs_message['obs_job']['disallow_packages'] = self.disallow_packages
+            download_message['download_job']['disallow_packages'] = self.disallow_packages
 
-        return JsonFormat.json_message(obs_message)
+        return JsonFormat.json_message(download_message)
 
     def get_publish_message(self):
         """
