@@ -7,17 +7,17 @@ from test.unit.test_helper import (
     patch_open
 )
 
-from mash.services.download.obs_job import OBSImageBuildResultService
+from mash.services.download.service import DownloadService
 from mash.services.mash_service import MashService
 
 
-class TestOBSImageBuildResultService(object):
+class TestDownloadService(object):
 
-    @patch('mash.services.download.obs_job.os.makedirs')
-    @patch('mash.services.download.obs_job.setup_logfile')
-    @patch.object(OBSImageBuildResultService, '_process_message')
-    @patch.object(OBSImageBuildResultService, '_send_job_result_for_upload')
-    @patch('mash.services.download.obs_job.restart_jobs')
+    @patch('mash.services.download.service.os.makedirs')
+    @patch('mash.services.download.service.setup_logfile')
+    @patch.object(DownloadService, '_process_message')
+    @patch.object(DownloadService, '_send_job_result_for_upload')
+    @patch('mash.services.download.service.restart_jobs')
     @patch.object(MashService, '__init__')
     @patch('os.listdir')
     @patch('logging.getLogger')
@@ -35,7 +35,7 @@ class TestOBSImageBuildResultService(object):
         mock_listdir.return_value = ['job']
         mock_MashService.return_value = None
 
-        self.download_result = OBSImageBuildResultService()
+        self.download_result = DownloadService()
 
         self.download_result.log = self.log
         self.download_result.config = config
@@ -77,7 +77,7 @@ class TestOBSImageBuildResultService(object):
         self.download_result.post_init()
 
     @patch.object(MashService, '_publish')
-    @patch.object(OBSImageBuildResultService, '_delete_job')
+    @patch.object(DownloadService, '_delete_job')
     def test_send_job_result_for_upload(
         self, mock_delete_job, mock_publish
     ):
@@ -111,10 +111,10 @@ class TestOBSImageBuildResultService(object):
             extra={}
         )
 
-    @patch.object(OBSImageBuildResultService, '_publish')
-    @patch.object(OBSImageBuildResultService, '_delete_job')
-    @patch.object(OBSImageBuildResultService, '_add_job')
-    @patch.object(OBSImageBuildResultService, '_send_control_response')
+    @patch.object(DownloadService, '_publish')
+    @patch.object(DownloadService, '_delete_job')
+    @patch.object(DownloadService, '_add_job')
+    @patch.object(DownloadService, '_send_control_response')
     def test_process_message(
         self, mock_send_control_response, mock_add_job, mock_delete_job,
         mock_publish
@@ -165,8 +165,8 @@ class TestOBSImageBuildResultService(object):
             )
         ]
 
-    @patch('mash.services.download.obs_job.persist_json')
-    @patch.object(OBSImageBuildResultService, '_start_job')
+    @patch('mash.services.download.service.persist_json')
+    @patch.object(DownloadService, '_start_job')
     @patch_open
     def test_add_job(self, mock_open, mock_start_job, mock_persist_json):
         self.download_result.job_directory = 'tmp/'
@@ -216,10 +216,10 @@ class TestOBSImageBuildResultService(object):
             'message': 'Job deletion failed: remove_error', 'ok': False
         }
 
-    @patch('mash.services.download.obs_job.OBSImageBuildResult')
-    def test_start_job_with_conditions(self, mock_OBSImageBuildResult):
+    @patch('mash.services.download.service.OBSDownloadJob')
+    def test_start_job_with_conditions(self, mock_OBSDownloadJob):
         job_worker = Mock()
-        mock_OBSImageBuildResult.return_value = job_worker
+        mock_OBSDownloadJob.return_value = job_worker
         self.download_result._send_job_response = Mock()
         self.download_result._send_job_result_for_upload = Mock()
         data = {
@@ -256,10 +256,10 @@ class TestOBSImageBuildResultService(object):
             isotime=None
         )
 
-    @patch('mash.services.download.obs_job.OBSImageBuildResult')
-    def test_start_job_without_conditions(self, mock_OBSImageBuildResult):
+    @patch('mash.services.download.service.OBSDownloadJob')
+    def test_start_job_without_conditions(self, mock_OBSDownloadJob):
         job_worker = Mock()
-        mock_OBSImageBuildResult.return_value = job_worker
+        mock_OBSDownloadJob.return_value = job_worker
         data = {
             "id": "123",
             "job_file": "tempfile",
@@ -274,10 +274,10 @@ class TestOBSImageBuildResultService(object):
             isotime=None
         )
 
-    @patch('mash.services.download.obs_job.OBSImageBuildResult')
-    def test_start_job_at_utctime(self, mock_OBSImageBuildResult):
+    @patch('mash.services.download.service.OBSDownloadJob')
+    def test_start_job_at_utctime(self, mock_OBSDownloadJob):
         job_worker = Mock()
-        mock_OBSImageBuildResult.return_value = job_worker
+        mock_OBSDownloadJob.return_value = job_worker
         data = {
             "id": "123",
             "job_file": "tempfile",

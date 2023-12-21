@@ -22,7 +22,7 @@ import traceback
 # project
 from mash.mash_exceptions import MashException
 from mash.services.base_config import BaseConfig
-from mash.services.download.obs_job import OBSImageBuildResultService
+from mash.services.download.service import DownloadService
 
 
 def main():
@@ -34,8 +34,7 @@ def main():
         log = logging.getLogger('MashService')
         log.setLevel(logging.DEBUG)
         # run service, enter main loop
-        # keeping OBSImageBuildResultService as only entry point for now
-        OBSImageBuildResultService(
+        DownloadService(
             service_exchange='download',
             config=BaseConfig()
         )
