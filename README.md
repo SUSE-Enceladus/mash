@@ -425,12 +425,14 @@ See [.virtualenv.requirements.txt](https://github.com/SUSE-Enceladus/mash/.virtu
 The implementation of the Mash is based on a collection of services. Each service completes
 an individual task of the process. At present the following services exist:
 
-- __OBS (retrieval) service__:
-  
-  Images are built in a build service. The retrieval service currently relies
-  on [OBS](https://openbuildservice.org/). The service Validates that a compute
-  image in OBS meets certain conditions. When conditions are met the image is
-  downloaded locally.
+- __Download service__:
+
+  Images are built in a build service or provided from some other source. The
+  download service currently relies on [OBS](https://openbuildservice.org/) or
+  a storage solution (S3 bucket) to provide the image files.
+  For OBS, the service can validate that a compute image in OBS meets certain
+  conditions. When conditions are met the image is downloaded locally.
+  For S3 buckets, the images are downloaded directly from the S3 bucket.
 
 The remaining services have cloud framework specific implementations. The services
 handle communication via a centralized message broker. By default MASH has been
@@ -601,7 +603,7 @@ openAPI spec which is used to host the Swagger based API docs.
 
 ## License
 
-Copyright (c) 2022 SUSE LLC.
+Copyright (c) 2023 SUSE LLC.
 
 Distributed under the terms of GPL-3.0+ license, see
 [LICENSE](LICENSE) for details.

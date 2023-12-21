@@ -44,7 +44,7 @@ class TestOBSImageBuildResultService(object):
         self.download_result.channel = Mock()
         self.download_result.channel.is_open = True
         self.download_result.close_connection = Mock()
-        self.download_result.service_exchange = 'obs'
+        self.download_result.service_exchange = 'download'
         self.download_result.service_queue = 'service'
         self.download_result.next_service = 'upload'
         self.download_result.job_document_key = 'job_document'
@@ -52,7 +52,7 @@ class TestOBSImageBuildResultService(object):
 
         self.download_result.post_init()
 
-        config.get_job_directory.assert_called_once_with('obs')
+        config.get_job_directory.assert_called_once_with('download')
         mock_makedirs.assert_called_once_with(
             '/var/lib/mash/download_jobs/', exist_ok=True
         )
@@ -64,7 +64,7 @@ class TestOBSImageBuildResultService(object):
         )
 
         self.download_result.consume_queue.assert_called_once_with(
-            mock_process_message, 'service', 'obs'
+            mock_process_message, 'service', 'download'
         )
         self.download_result.channel.start_consuming.assert_called_once_with()
 
@@ -86,7 +86,7 @@ class TestOBSImageBuildResultService(object):
         self.download_result._send_job_result_for_upload('815', {})
         mock_delete_job.assert_called_once_with('815')
         mock_publish.assert_called_once_with(
-            'obs', 'listener_msg', '{}'
+            'download', 'listener_msg', '{}'
         )
 
     def test_send_control_response_local(self):
