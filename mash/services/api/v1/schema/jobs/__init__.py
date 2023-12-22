@@ -128,6 +128,15 @@ base_job_message = {
                            'itself. Valid condition operators are >, <, >=, '
                            '<=, or ==.'
         },
+        'download_type': string_with_example(
+            'OBS',
+            description='The type of download to get the source image file.'
+                        'Supported values are:'
+                        '- `OBS` (default) when the image has to be downloaded'
+                        ' from a OpenBuildService instance.'
+                        '- `S3` when the image file to be processed is stored'
+                        ' in a AWS S3 bucket. '
+        ),
         'download_url': string_with_example(
             'https://download.opensuse.org/repositories/'
             'Cloud:/Images:/Leap_15.0/images/',

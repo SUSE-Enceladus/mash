@@ -15,241 +15,266 @@
 # You should have received a copy of the GNU General Public License
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
-import atexit
+
 import os
-import dateutil.parser
+import logging
+
+from datetime import datetime
+from pytz import utc
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.events import EVENT_JOB_SUBMITTED
+
+from obs_img_utils.api import OBSImageUtil
 
 # project
-from mash.services.mash_service import MashService
-from mash.services.download.obs_build_result import OBSImageBuildResult
-from mash.utils.json_format import JsonFormat
-from mash.utils.mash_utils import persist_json, restart_jobs, setup_logfile
+from mash.services.base_defaults import Defaults
 
 
-class OBSImageBuildResultService(MashService):
+class OBSDownloadJob(object):
     """
-    Implements Open BuildService image result network
-    service
+    Implements Open BuildService image download job
+
+    Attributes
+
+    * :attr:`job_id`
+      job id number
+
+    * :attr:`job_file`
+      job file containing the job description
+
+    * :attr:`download_url`
+      Buildservice URL
+
+    * :attr:`image_name`
+      Image name as specified in the KIWI XML description of the
+      Buildservice project and package
+
+    * :attr:`last_service`
+      The last service for the job.
+
+    * :attr:`conditions`
+      Criteria for the image build which is a list of hashes like
+      the following example demonstrates:
+
+      conditions=[
+          # a package condition with version and release spec
+          {
+           'package_name': 'kernel-default',
+           'version': '4.13.1',
+           'release': '1.1'
+          },
+          # a image version condition
+          {"version": "8.13.21"}
+      ]
+
+    * :attr:`arch`
+      Buildservice package architecture, defaults to: x86_64
+
+    * :attr:`download_directory`
+      Download directory name, defaults to: /tmp
+
+    * :attr:`notification_email`
+      Email to send job notifications.
+
+    * :attr:`profile`
+      The multibuild profile name for the image.
+
+    * :attr:`conditions_wait_time`
+      Time to wait for conditions in image to be met.
+
+    * :attr:`disallow_licenses`
+      A list of licenses to disallow in the image.
+
+    * :attr:`disallow_packages`
+      A list of packages to disallow in the image.
     """
-    def post_init(self):
-        self.job_document_key = 'job_document'
-        self.listener_msg_key = 'listener_msg'
-        self.service_queue = 'service'
-
-        # setup service log file
-        logfile_handler = setup_logfile(
-            self.config.get_log_file(self.service_exchange)
+    def __init__(
+        self, job_id, job_file, download_url, image_name, last_service,
+        log_callback, conditions=None, arch='x86_64',
+        download_directory=Defaults.get_download_dir(),
+        notification_email=None,
+        profile=None, conditions_wait_time=900, disallow_licenses=None,
+        disallow_packages=None
+    ):
+        self.arch = arch
+        self.job_id = job_id
+        self.job_file = job_file
+        self.download_directory = os.path.join(download_directory, job_id)
+        self.download_url = download_url
+        self.image_name = image_name
+        self.last_service = last_service
+        self.image_metadata_name = None
+        self.conditions = conditions
+        self.scheduler = None
+        self.job = None
+        self.job_deleted = False
+        self.log_callback = None
+        self.result_callback = None
+        self.notification_email = notification_email
+        self.profile = profile
+        self.job_status = 'prepared'
+        self.progress_log = {}
+        self.conditions_wait_time = conditions_wait_time
+        self.disallow_licenses = disallow_licenses
+        self.disallow_packages = disallow_packages
+        self.log_callback = logging.LoggerAdapter(
+            log_callback,
+            {'job_id': self.job_id}
         )
-        self.log.addHandler(logfile_handler)
+        self.errors = []
 
-        # setup service data directories
-        self.download_directory = self.config.get_download_directory()
-
-        self.jobs = {}
-
-        # setup service job directory
-        self.job_directory = self.config.get_job_directory(
-            self.service_exchange
-        )
-        os.makedirs(
-            self.job_directory, exist_ok=True
-        )
-
-        self.bind_queue(
-            self.service_exchange, self.job_document_key, self.service_queue
-        )
-
-        # read and launch open jobs
-        restart_jobs(self.job_directory, self._start_job)
-
-        # consume on service queue
-        atexit.register(lambda: os._exit(0))
-        self.consume_queue(
-            self._process_message,
-            self.service_queue,
-            self.service_exchange
-        )
-
-        try:
-            self.channel.start_consuming()
-        except KeyboardInterrupt:
-            pass
-        except Exception:
-            raise
-        finally:
-            self.close_connection()
-
-    def _send_job_result_for_upload(self, job_id, trigger_info):
-        self._publish(
-            self.service_exchange,
-            self.listener_msg_key,
-            JsonFormat.json_message(trigger_info)
-        )
-        self._delete_job(job_id)
-
-    def _send_control_response(self, result, job_id=None):
-        message = result['message']
-
-        job_metadata = {}
-        if job_id:
-            job_metadata['job_id'] = job_id
-
-        if result['ok']:
-            self.log.info(message, extra=job_metadata)
-        else:
-            self.log.error(message, extra=job_metadata)
-
-    def _process_message(self, message):
-        try:
-            job_data = JsonFormat.json_loads(format(message.body))
-        except Exception as e:
-            return self._send_control_response(
-                {
-                    'ok': False,
-                    'message': 'JSON:deserialize error: {0} : {1}'.format(
-                        message.body, e
-                    )
-                }
-            )
-        if message.method['routing_key'] == 'job_document':
-            self._handle_jobs(job_data)
-
-        message.ack()
-
-    def _handle_jobs(self, job_data):
-        """
-        handle download job document for the OBS type
-        """
-        job_id = None
-        if 'download_job' in job_data:
-            job_id = job_data['download_job'].get('id', None)
-            result = self._add_job(job_data)
-        else:
-            result = {
-                'ok': False,
-                'message': 'No idea what to do with: {0}'.format(job_data)
-            }
-        self._send_control_response(result, job_id)
-
-    def _add_job(self, data):
-        """
-        Add a new job description file and start a watchdog job
-
-        job description example:
-        {
-          "download_job": {
-              "id": "123",
-              "download_url": "http://download.suse.de/ibs/Devel:/PubCloud
-              :/Stable:/Images12/images",
-              "image": "SLES12-Azure-BYOS",
-              "last_service": "upload",
-              "utctime": "now|timestring_utc_timezone",
-              "conditions": [
-                  {
-                    "package_name": "kernel-default",
-                    "version": "4.13.1",
-                    "release": "1.1",
-                    "condition": ">="
-                  },
-                  {"version": "8.13.21"}
-              ],
-              "notification_email": "test@fake.com",
-              "notify": True,
-              "conditions_wait_time": 900
-          }
-        }
-        """
-        data = data['download_job']
-        data['job_file'] = '{0}job-{1}.json'.format(
-            self.job_directory, data['id']
-        )
-        persist_json(
-            data['job_file'], data
-        )
-        return self._start_job(data)
-
-    def _delete_job(self, job_id):
-        """
-        Delete job description and stop watchdog job
-
-        delete job description example:
-        {
-            "download_job_delete": "123"
-        }
-        """
-        if job_id not in self.jobs:
-            return {
-                'ok': False,
-                'message': 'Job does not exist, can not delete it'
-            }
-        else:
-            job_worker = self.jobs[job_id]
-            # delete job file
-            try:
-                os.remove(job_worker.job_file)
-            except Exception as e:
-                return {
-                    'ok': False,
-                    'message': 'Job deletion failed: {0}'.format(e)
-                }
-            else:
-                # stop running job
-                if job_worker:
-                    job_worker.stop_watchdog()
-
-                # delete obs job instance
-                del self.jobs[job_id]
-
-                return {
-                    'ok': True,
-                    'message': 'Job Deleted'
-                }
-
-    def _start_job(self, job):
-        job_id = job['id']
-        time = job['utctime']
-
-        if time == 'now':
-            time = None
-        else:
-            time = dateutil.parser.parse(job['utctime']).isoformat()
+        # How often to update log callback with download progress.
+        # 25 updates every 25%. I.e. 25, 50, 75, 100.
+        self.download_progress_percent = 25
 
         kwargs = {
-            'job_id': job_id,
-            'job_file': job['job_file'],
-            'download_url': job['download_url'],
-            'image_name': job['image'],
-            'last_service': job['last_service'],
-            'download_directory': self.download_directory,
-            'log_callback': self.log
+            'conditions': self.conditions,
+            'arch': self.arch,
+            'target_directory': self.download_directory,
+            'conditions_wait_time': conditions_wait_time,
+            'log_callback': self.log_callback,
+            'report_callback': self.progress_callback
         }
 
-        if 'conditions' in job:
-            kwargs['conditions'] = job['conditions']
+        if self.profile:
+            kwargs['profile'] = self.profile
 
-        if 'cloud_architecture' in job:
-            kwargs['arch'] = job['cloud_architecture']
+        if self.disallow_licenses:
+            kwargs['filter_licenses'] = self.disallow_licenses
 
-        if 'profile' in job:
-            kwargs['profile'] = job['profile']
+        if self.disallow_packages:
+            kwargs['filter_packages'] = self.disallow_packages
 
-        if 'notification_email' in job:
-            kwargs['notification_email'] = job['notification_email']
+        self.downloader = OBSImageUtil(
+            self.download_url,
+            self.image_name,
+            **kwargs
+        )
 
-        if 'conditions_wait_time' in job:
-            kwargs['conditions_wait_time'] = job['conditions_wait_time']
+    def start_watchdog(self, isotime=None):
+        """
+        Start a background job which triggers the update
+        of the image build data and image fetched from the obs project.
 
-        if 'disallow_licenses' in job:
-            kwargs['disallow_licenses'] = job['disallow_licenses']
+        The job is started at a given data/time which must
+        be the result of a isoformat() call. If no data/time is
+        specified the job runs immediately.
 
-        if 'disallow_packages' in job:
-            kwargs['disallow_packages'] = job['disallow_packages']
+        :param string isotime: data and time by isoformat()
+        """
+        job_time = None
 
-        job_worker = OBSImageBuildResult(**kwargs)
-        job_worker.set_result_handler(self._send_job_result_for_upload)
-        job_worker.start_watchdog(isotime=time)
-        self.jobs[job_id] = job_worker
-        return {
-            'ok': True,
-            'message': 'Job started'
+        if isotime:
+            job_time = datetime.strptime(isotime[:19], '%Y-%m-%dT%H:%M:%S')
+
+        self.scheduler = BackgroundScheduler(timezone=utc)
+
+        self.job = self.scheduler.add_job(
+            self._update_image_status, 'date',
+            run_date=job_time, timezone='utc'
+        )
+        self.scheduler.add_listener(
+            self._job_submit_event, EVENT_JOB_SUBMITTED
+        )
+        self.scheduler.start()
+
+    def stop_watchdog(self):
+        """
+        Remove active job from scheduler
+
+        Current image status is retained
+        """
+        try:
+            self.job.remove()
+            self.job_deleted = True
+        except Exception:
+            pass
+
+    def set_result_handler(self, function):
+        self.result_callback = function
+
+    def call_result_handler(self):
+        self._result_callback()
+
+    def _result_callback(self):
+        if self.result_callback:
+            self.result_callback(
+                self.job_id, {
+                    'download_result': {
+                        'id': self.job_id,
+                        'image_file':
+                            self.downloader.image_source,
+                        'status': self.job_status,
+                        'errors': self.errors,
+                        'notification_email': self.notification_email,
+                        'last_service': self.last_service,
+                        'build_time':
+                            self.downloader.build_time,
+                    }
+                }
+            )
+
+    def _job_submit_event(self, event):
+        self.log_callback.info('Oneshot Job submitted')
+
+    def _job_skipped_event(self, event):
+        # Job is still active while the next _update_image_status
+        # event was scheduled. In this case we just skip the event
+        # and keep the active job waiting for an obs change
+        pass
+
+    def _update_image_status(self):
+        self.log_callback.extra = {
+            'job_id': self.job_id
         }
+        self.log_callback.info('Job running')
+
+        try:
+            # Force parse of metadata file to get build time
+            self.downloader.packages
+            image_source = self.downloader.get_image()
+            self.log_callback.info(
+                'Downloaded: {0}'.format(image_source)
+            )
+
+            self.job_status = 'success'
+            self.log_callback.info(
+                'Job status: {0}'.format(self.job_status)
+            )
+            self._result_callback()
+            self.log_callback.info('Job done')
+        except Exception as issue:
+            msg = '{0}: {1}'.format(type(issue).__name__, issue)
+
+            self.job_status = 'failed'
+            self.errors.append(msg)
+            self.log_callback.error(msg)
+
+            if self.downloader.conditions:
+                for condition in self.downloader.conditions:
+                    if not condition.get('status'):
+                        self.errors.append(
+                            'Condition failed: {condition}'.format(
+                                condition=condition
+                            )
+                        )
+
+            self._result_callback()
+
+    def progress_callback(self, block_num, read_size, total_size, done=False):
+        """
+        Update progress in log callback
+        """
+        if done:
+            self.log_callback.info('Image download finished.')
+        else:
+            percent = int(((block_num * read_size) / total_size) * 100)
+
+            if percent % self.download_progress_percent == 0 \
+                    and percent not in self.progress_log:
+                self.log_callback.info(
+                    'Image {progress}% downloaded.'.format(
+                        progress=str(percent)
+                    )
+                )
+                self.progress_log[percent] = True
