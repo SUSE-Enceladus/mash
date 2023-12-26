@@ -130,12 +130,12 @@ base_job_message = {
         },
         'download_type': string_with_example(
             'OBS',
-            description='The type of download to get the source image file.'
+            description='Service from which to download the image file.'
                         'Supported values are:'
-                        '- `OBS` (default) when the image has to be downloaded'
-                        ' from a OpenBuildService instance.'
-                        '- `S3` when the image file to be processed is stored'
-                        ' in a AWS S3 bucket. '
+                        '- `OBS`: (default) the image is downloaded from an'
+                        ' OpenBuildService instance.'
+                        '- `S3` the image is downloaded from an S3 API'
+                        ' compatible storage service. '
         ),
         'download_url': string_with_example(
             'https://download.opensuse.org/repositories/'
