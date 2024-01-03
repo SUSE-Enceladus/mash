@@ -21,8 +21,7 @@ import logging
 import re
 import os
 
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.events import EVENT_JOB_SUBMITTED
@@ -212,7 +211,7 @@ class S3DownloadJob(object):
             date_str = match.group(1)
             date_str = date_str + 'T00:00:00.000'
             date = datetime.strptime(date_str, '%Y%m%dT%H:%M:%S.%f').replace(
-                tzinfo=ZoneInfo('UTC')
+                tzinfo=timezone.utc
             )
             return date.strftime('%s')
         else:
