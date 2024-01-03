@@ -1,3 +1,13 @@
+v13.7.0 (2024-01-03)
+====================
+
+- Simplify the retry logic for conflicting changesets in AWS MP jobs
+- Encapsulating 'test_image' call into a function for EC2 image tests
+- Fix requirements, python version support matrix and CI/CD testing
+- Increase length of download url in database
+- Add launch instance type option for ec2 jobs
+- Enable version restriction for aws mp jobs
+
 v13.6.0 (2023-04-26)
 ====================
 
