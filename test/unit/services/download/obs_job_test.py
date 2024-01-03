@@ -7,12 +7,12 @@ import dateutil.parser
 
 from apscheduler.events import EVENT_JOB_SUBMITTED
 
-from mash.services.download.obs_build_result import OBSImageBuildResult
+from mash.services.download.obs_job import OBSDownloadJob
 
 
-class TestOBSImageBuildResult(object):
-    @patch('mash.services.download.obs_build_result.logging')
-    @patch('mash.services.download.obs_build_result.OBSImageUtil')
+class TestOBSDownloadJob(object):
+    @patch('mash.services.download.obs_job.logging')
+    @patch('mash.services.download.obs_job.OBSImageUtil')
     def setup_method(self, method, mock_obs_img_util, mock_logging):
         self.logger = MagicMock()
         self.downloader = MagicMock()
@@ -21,7 +21,7 @@ class TestOBSImageBuildResult(object):
         self.log_callback = MagicMock()
         mock_logging.LoggerAdapter.return_value = self.log_callback
 
-        self.download_result = OBSImageBuildResult(
+        self.download_result = OBSDownloadJob(
             '815', 'job_file', 'obs_project', 'obs_package', 'publish',
             self.logger,
             notification_email='test@fake.com',
@@ -34,7 +34,7 @@ class TestOBSImageBuildResult(object):
         self.download_result.set_result_handler(function)
         assert self.download_result.result_callback == function
 
-    @patch.object(OBSImageBuildResult, '_result_callback')
+    @patch.object(OBSDownloadJob, '_result_callback')
     def test_call_result_handler(self, mock_result_callback):
         self.download_result.call_result_handler()
         mock_result_callback.assert_called_once_with()
@@ -59,9 +59,9 @@ class TestOBSImageBuildResult(object):
             }
         )
 
-    @patch('mash.services.download.obs_build_result.BackgroundScheduler')
-    @patch.object(OBSImageBuildResult, '_update_image_status')
-    @patch.object(OBSImageBuildResult, '_job_submit_event')
+    @patch('mash.services.download.obs_job.BackgroundScheduler')
+    @patch.object(OBSDownloadJob, '_update_image_status')
+    @patch.object(OBSDownloadJob, '_job_submit_event')
     def test_start_watchdog_single_shot(
         self, mock_job_submit_event, mock_update_image_status,
         mock_BackgroundScheduler
@@ -98,11 +98,11 @@ class TestOBSImageBuildResult(object):
         self.download_result._job_submit_event(Mock())
         self.log_callback.info.assert_called_once_with('Oneshot Job submitted')
 
-    @patch.object(OBSImageBuildResult, '_result_callback')
+    @patch.object(OBSDownloadJob, '_result_callback')
     def test_job_skipped_event(self, mock_result_callback):
         self.download_result._job_skipped_event(Mock())
 
-    @patch.object(OBSImageBuildResult, '_result_callback')
+    @patch.object(OBSDownloadJob, '_result_callback')
     def test_update_image_status(
         self,
         mock_result_callback
@@ -111,7 +111,7 @@ class TestOBSImageBuildResult(object):
         self.download_result._update_image_status()
         mock_result_callback.assert_called_once_with()
 
-    @patch.object(OBSImageBuildResult, '_result_callback')
+    @patch.object(OBSDownloadJob, '_result_callback')
     def test_update_image_status_raises(
         self, mock_result_callback
     ):
