@@ -62,6 +62,10 @@ class EC2MPPublishJob(MashJob):
         self.ssh_user = self.job_config.get('ssh_user', 'ec2-user')
         self.allow_copy = self.job_config.get('allow_copy', 'none')
         self.share_with = self.job_config.get('share_with', 'none')
+        self.submit_change_request = self.job_config.get(
+            'submit_change_request',
+            False
+        )
 
     def run_job(self):
         """
@@ -101,23 +105,28 @@ class EC2MPPublishJob(MashJob):
                 self.recommended_instance_type,
                 self.ssh_user
             )
-            session = get_session(
-                creds['access_key_id'],
-                creds['secret_access_key'],
-                region
-            )
-            response = start_mp_change_set(
-                session,
-                change_set=[change_doc]
-            )
 
-            self.status_msg['change_set_id'] = response.get('ChangeSetId')
-            self.log_callback.info(
-                'Marketplace change set submitted. Change set id: '
-                '{change_set}'.format(
-                    change_set=self.status_msg['change_set_id']
+            if self.submit_change_request:
+                session = get_session(
+                    creds['access_key_id'],
+                    creds['secret_access_key'],
+                    region
                 )
-            )
+
+                response = start_mp_change_set(
+                    session,
+                    change_set=[change_doc]
+                )
+
+                self.status_msg['change_set_id'] = response.get('ChangeSetId')
+                self.log_callback.info(
+                    'Marketplace change set submitted. Change set id: '
+                    '{change_set}'.format(
+                        change_set=self.status_msg['change_set_id']
+                    )
+                )
+            else:
+                self.status_msg['add_version_doc'] = change_doc
 
     def share_image(self, region, access_key_id, secret_access_key):
         publish = EC2PublishImage(
