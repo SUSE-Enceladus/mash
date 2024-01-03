@@ -70,6 +70,10 @@ class BaseJob(object):
         self.use_build_time = kwargs.get('use_build_time')
         self.force_replace_image = kwargs.get('force_replace_image')
         self.download_type = kwargs.get('download_type', 'OBS')
+        self.s3_download_file_prefix = \
+            kwargs.get('s3_download_file_prefix', '')
+        self.s3_download_file_suffix = \
+            kwargs.get('s3_download_file_suffix', '')
         self.kwargs = kwargs
 
         if self.raw_image_upload_type and self.last_service == 'upload':
@@ -107,7 +111,7 @@ class BaseJob(object):
         download_message = {
             'download_job': {
                 'download_url': self.download_url,
-                'image': self.image
+                'image': self.image,
             }
         }
         download_message['download_job'].update(self.base_message)
@@ -137,6 +141,14 @@ class BaseJob(object):
         if self.download_type:
             download_message['download_job']['download_type'] = \
                 self.download_type
+
+        if self.s3_download_file_prefix:
+            download_message['download_job']['s3_download_file_prefix'] = \
+                self.s3_download_file_prefix
+
+        if self.s3_download_file_suffix:
+            download_message['download_job']['s3_download_file_suffix'] = \
+                self.s3_download_file_suffix
 
         return JsonFormat.json_message(download_message)
 
