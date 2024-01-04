@@ -18,10 +18,9 @@
 
 
 import logging
-import re
 import os
 
-from datetime import datetime, timezone
+from datetime import datetime
 from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.events import EVENT_JOB_SUBMITTED
@@ -206,16 +205,7 @@ class S3DownloadJob(object):
             )
 
     def _get_build_time(self, image_name):
-        match = re.search(r'^.*-v(\d{8})-.*', image_name)
-        if match:
-            date_str = match.group(1)
-            date_str = date_str + 'T00:00:00.000'
-            date = datetime.strptime(date_str, '%Y%m%dT%H:%M:%S.%f').replace(
-                tzinfo=timezone.utc
-            )
-            return date.strftime('%s')
-        else:
-            return 'unknown'
+        return 'unknown'
 
     def _job_skipped_event(self, event):
         # Job is still active while the next _update_image_status

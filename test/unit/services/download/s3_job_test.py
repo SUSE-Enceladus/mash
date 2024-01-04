@@ -65,32 +65,10 @@ class TestS3DownloadJob(object):
                     'errors': [],
                     'notification_email': 'test@fake.com',
                     'last_service': 'upload',
-                    'build_time': '1703977200'
-                }
-            }
-        )
-
-    def test_result_callback_unknown_build_time(self):
-        self.download_result.result_callback = Mock()
-        self.download_result.job_status = 'success'
-        orig_image_name = self.download_result.image_name
-        self.download_result.image_name = 'my_image_name'
-        # self.downloader.build_time = 'unknown'
-        self.download_result._result_callback()
-        self.download_result.result_callback.assert_called_once_with(
-            '815', {
-                'download_result': {
-                    'id': '815',
-                    'image_file': '/tmp/download_directory/815/suse-my_image_name-v20231231-lto-x86_64.raw.xz',  # NOQA
-                    'status': 'success',
-                    'errors': [],
-                    'notification_email': 'test@fake.com',
-                    'last_service': 'upload',
                     'build_time': 'unknown'
                 }
             }
         )
-        self.download_result.image_name = orig_image_name
 
     @patch('mash.services.download.s3_job.BackgroundScheduler')
     @patch.object(S3DownloadJob, '_download_image_file')
@@ -175,7 +153,7 @@ class TestS3DownloadJob(object):
                     'errors': [],
                     'notification_email': 'test@fake.com',
                     'last_service': 'upload',
-                    'build_time': '1703977200'
+                    'build_time': 'unknown'
                 }
             }
         )
@@ -219,44 +197,7 @@ class TestS3DownloadJob(object):
                     'errors': ['Exception: my_exception'],
                     'notification_email': 'test@fake.com',
                     'last_service': 'upload',
-                    'build_time': '1703977200'
+                    'build_time': 'unknown'
                 }
             }
         )
-
-    #     self,
-    #     mock_result_callback
-    # ):
-    #     self.downloader.get_image.return_value = 'new-image.xz'
-    #     self.download_result._update_image_status()
-    #     mock_result_callback.assert_called_once_with()
-
-    # @patch.object(S3DownloadJob, '_result_callback')
-    # def test_update_image_status_raises(
-    #     self, mock_result_callback
-    # ):
-    #     self.downloader.conditions = [{'version': '1.2.3', 'status': False}]
-    #     self.downloader.get_image.side_effect = Exception(
-    #         'request error'
-    #     )
-    #     self.download_result._update_image_status()
-    #     mock_result_callback.assert_called_once_with()
-    #     assert self.log_callback.info.call_args_list == [
-    #         call('Job running')
-    #     ]
-    #     assert self.log_callback.error.call_args_list == [
-    #         call('Exception: request error')
-    #     ]
-    #     assert len(self.download_result.errors) == 2
-
-    # def test_progress_callback(self):
-    #     self.download_result.progress_callback(0, 0, 0, done=True)
-    #     self.log_callback.info.assert_called_once_with(
-    #         'Image download finished.'
-    #     )
-    #     self.log_callback.info.reset_mock()
-
-    #     self.download_result.progress_callback(4, 25, 400)
-    #     self.log_callback.info.assert_called_once_with(
-    #         'Image 25% downloaded.'
-    #     )
