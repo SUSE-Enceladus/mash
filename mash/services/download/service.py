@@ -246,6 +246,12 @@ class DownloadService(MashService):
             kwargs['disallow_packages'] = job['disallow_packages']
 
         if 'download_type' in job and job['download_type'] == 'S3':
+            # Fetching the images from a S3 bucket
+            kwargs['download_account'] = job.get('download_account', 'default')
+            kwargs['download_credentials'] = self.request_credentials(
+                [kwargs['download_account']],
+                'ec2'
+            )
             job_worker = S3DownloadJob(**kwargs)
         else:
             job_worker = OBSDownloadJob(**kwargs)
