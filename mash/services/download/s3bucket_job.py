@@ -28,7 +28,7 @@ from apscheduler.events import EVENT_JOB_SUBMITTED
 from mash.services.base_defaults import Defaults
 
 
-class S3DownloadJob(object):
+class S3BucketDownloadJob(object):
     """
     Implements S3 bucket image download job
 
@@ -42,9 +42,6 @@ class S3DownloadJob(object):
 
     * :attr:`download_url`
       S3 bucket URL
-
-    * :attr:`download_directory`
-      Download directory name, defaults to: /tmp
 
     * :attr:`last_service`
       The last service for the job.
@@ -60,9 +57,12 @@ class S3DownloadJob(object):
 
     * :attr:`download_credentials`
       The dictionary containing the credentials for S3 bucket authentication.
+      Credentials must be setup to provide list and download permission on the
+      S3 bucket.
 
     * :attr:`download_directory`
-      The directory that will be used to download the files to.
+      Target download directory name where the files will be downloaded/stored.
+      Defaults to: '/var/lib/mash/images/'.
     """
 
     def __init__(
@@ -110,10 +110,10 @@ class S3DownloadJob(object):
         Start a background job which fetches the image from the S3 bucket.
 
         The job is started at a given data/time which must
-        be the result of a isoformat() call. If no data/time is
+        be the result of a isoformat() call. If no date/time is
         specified the job runs immediately.
 
-        :param string isotime: data and time by isoformat()
+        :param string isotime: date and time by isoformat()
         """
         job_time = None
 

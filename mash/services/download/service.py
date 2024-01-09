@@ -22,7 +22,7 @@ import dateutil.parser
 # project
 from mash.services.mash_service import MashService
 from mash.services.download.obs_job import OBSDownloadJob
-from mash.services.download.s3_job import S3DownloadJob
+from mash.services.download.s3bucket_job import S3BucketDownloadJob
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import persist_json, restart_jobs, setup_logfile
 
@@ -252,7 +252,7 @@ class DownloadService(MashService):
                 [kwargs['download_account']],
                 'ec2'
             )
-            job_worker = S3DownloadJob(**kwargs)
+            job_worker = S3BucketDownloadJob(**kwargs)
         else:
             job_worker = OBSDownloadJob(**kwargs)
         job_worker.set_result_handler(self._send_job_result_for_upload)

@@ -7,18 +7,18 @@ import dateutil.parser
 
 from apscheduler.events import EVENT_JOB_SUBMITTED
 
-from mash.services.download.s3_job import S3DownloadJob
+from mash.services.download.s3bucket_job import S3BucketDownloadJob
 
 
-class TestS3DownloadJob(object):
-    @patch('mash.services.download.s3_job.logging')
+class TestS3BucketDownloadJob(object):
+    @patch('mash.services.download.s3bucket_job.logging')
     def setup_method(self, method, mock_logging):
         self.logger = MagicMock()
 
         self.log_callback = MagicMock()
         mock_logging.LoggerAdapter.return_value = self.log_callback
 
-        self.download_result = S3DownloadJob(
+        self.download_result = S3BucketDownloadJob(
             '815',
             'job_file',
             's3://my_s3_bucket',
@@ -40,7 +40,7 @@ class TestS3DownloadJob(object):
         self.download_result.set_result_handler(function)
         assert self.download_result.result_callback == function
 
-    @patch.object(S3DownloadJob, '_result_callback')
+    @patch.object(S3BucketDownloadJob, '_result_callback')
     def test_call_result_handler(self, mock_result_callback):
         self.download_result.call_result_handler()
         mock_result_callback.assert_called_once_with()
@@ -63,9 +63,9 @@ class TestS3DownloadJob(object):
             }
         )
 
-    @patch('mash.services.download.s3_job.BackgroundScheduler')
-    @patch.object(S3DownloadJob, '_download_image_file')
-    @patch.object(S3DownloadJob, '_job_submit_event')
+    @patch('mash.services.download.s3bucket_job.BackgroundScheduler')
+    @patch.object(S3BucketDownloadJob, '_download_image_file')
+    @patch.object(S3BucketDownloadJob, '_job_submit_event')
     def test_start_watchdog_single_shot(
         self, mock_job_submit_event, mock_download_image_file,
         mock_BackgroundScheduler
@@ -102,6 +102,6 @@ class TestS3DownloadJob(object):
         self.download_result._job_submit_event(Mock())
         self.log_callback.info.assert_called_once_with('Oneshot Job submitted')
 
-    @patch.object(S3DownloadJob, '_result_callback')
+    @patch.object(S3BucketDownloadJob, '_result_callback')
     def test_job_skipped_event(self, mock_result_callback):
         self.download_result._job_skipped_event(Mock())
