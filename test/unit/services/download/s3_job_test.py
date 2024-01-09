@@ -28,8 +28,7 @@ class TestS3DownloadJob(object):
             's3://my_s3_bucket',
             'my_image_name-v20231231-lto',
             'x86_64',
-            'suse-',
-            '.raw.xz',
+            'ec2',
             'upload',
             self.log_callback,
             notification_email='test@fake.com',
@@ -201,3 +200,172 @@ class TestS3DownloadJob(object):
                 }
             }
         )
+
+    def test_get_regex_for_filename(self):
+        test_params = [
+            (
+                'whatever-my_image-version-flavour-v20240228-suffix',
+                'ec2',
+                r'^whatever\-my_image\-version\-flavour\-v(?P<date>\d{8})\-suffix\.raw\.xz$'
+            ),
+            (
+                'whatever-my_image-version-flavour-v20240128-suffix',
+                'azure',
+                r'^my_image\-version\-flavour\-v(?P<date>\d{8})\-suffix\.vhdfixed\.xz$'
+            ),
+            (
+                'whatever-my_image-version-flavour-v20240328-suffix',
+                'gce',
+                r'^my_image\-version\-flavour\-v(?P<date>\d{8})\-suffix\.tar\.gz$'
+            ),
+        ]
+
+        for (image_name, cloud, expected_regex) in test_params:
+            assert expected_regex == \
+                self.download_result._get_regex_for_filename(image_name, cloud)
+
+    def test_get_matching_filename(self):
+
+        bucket_files = [
+            'whatever-my_image-version-flavour-v20240228-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20240229-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20240128-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20240311-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20240422-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20240508-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20240428-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20240822-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20240901-suffix.raw.xz',
+            'my_image-version-flavour-v20250901-suffix.raw.xz',
+            'whatever-my_image-version-flavour-v20250902-suffix.raw.xz2',
+            'my_image-version-flavour-v20240228-suffix.vhdfixed.xz',
+            'my_image-version-flavour-v20240318-suffix.vhdfixed.xz',
+            'my_image-version-flavour-v20240401-suffix.vhdfixed.xz',
+            'my_image-version-flavour-v20240321-suffix.vhdfixed.xz',
+            'my_image-version-flavour-v20240629-suffix.vhdfixed.xz',
+            'my_image-version-flavour-v20240912-suffix.vhdfixed.xz',
+            'my_image-version-flavour-v20241028-suffix.vhdfixed.xz',
+            'whatever-my_image-version-flavour-v20251028-suffix.vhdfixed.xz',
+            'my_image-version-flavour-v20261028-suffix.vhdfixed.xz2',
+            'my_image-version-flavour-v20240228-suffix.tar.gz',
+            'my_image-version-flavour-v20240418-suffix.tar.gz',
+            'my_image-version-flavour-v20240501-suffix.tar.gz',
+            'my_image-version-flavour-v20240622-suffix.tar.gz',
+            'my_image-version-flavour-v20240528-suffix.tar.gz',
+            'my_image-version-flavour-v20240322-suffix.tar.gz',
+            'my_image-version-flavour-v20241001-suffix.tar.gz',
+            'whatever-my_image-version-flavour-v20260228-suffix.tar.gz',
+            'my_image-version-flavour-v20270228-suffix.tar.gz2',
+        ]
+        test_params = [
+            (
+                'whatever-my_image-version-flavour-v20240228-suffix',
+                'ec2',
+                [
+                    'whatever-my_image-version-flavour-v20240228-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240229-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240128-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240311-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240422-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240508-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240428-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240822-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240901-suffix.raw.xz',
+                ]
+            ),
+            (
+                'whatever-my_image-version-flavour-v20240228-suffix',
+                'azure',
+                [
+                    'my_image-version-flavour-v20240228-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240318-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240401-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240321-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240629-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240912-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20241028-suffix.vhdfixed.xz',
+                ]
+            ),
+            (
+                'whatever-my_image-version-flavour-v20240228-suffix',
+                'gce',
+                [
+                    'my_image-version-flavour-v20240228-suffix.tar.gz',
+                    'my_image-version-flavour-v20240418-suffix.tar.gz',
+                    'my_image-version-flavour-v20240501-suffix.tar.gz',
+                    'my_image-version-flavour-v20240622-suffix.tar.gz',
+                    'my_image-version-flavour-v20240528-suffix.tar.gz',
+                    'my_image-version-flavour-v20240322-suffix.tar.gz',
+                    'my_image-version-flavour-v20241001-suffix.tar.gz',
+                ]
+            )
+        ]
+        for (image_name, cloud, expected_filenames) in test_params:
+            filename_regex = self.download_result._get_regex_for_filename(
+                image_name,
+                cloud
+            )
+            assert expected_filenames == \
+                self.download_result._get_matching_filenames(
+                    bucket_files,
+                    filename_regex
+                )
+
+    def test_get_latest_filename(self):
+
+        test_params = [
+            (
+                'whatever-my_image-version-flavour-v20240228-suffix',
+                'ec2',
+                [
+                    'whatever-my_image-version-flavour-v20240228-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240229-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240128-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240311-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240422-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240508-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240428-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240822-suffix.raw.xz',
+                    'whatever-my_image-version-flavour-v20240901-suffix.raw.xz',
+                ],
+                'whatever-my_image-version-flavour-v20240901-suffix.raw.xz'
+            ),
+            (
+                'whatever-my_image-version-flavour-v20240228-suffix',
+                'azure',
+                [
+                    'my_image-version-flavour-v20240228-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240318-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240401-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240321-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240629-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20240912-suffix.vhdfixed.xz',
+                    'my_image-version-flavour-v20241028-suffix.vhdfixed.xz',
+                ],
+                'my_image-version-flavour-v20241028-suffix.vhdfixed.xz'
+            ),
+            (
+                'whatever-my_image-version-flavour-v20240228-suffix',
+                'gce',
+                [
+                    'my_image-version-flavour-v20240228-suffix.tar.gz',
+                    'my_image-version-flavour-v20240418-suffix.tar.gz',
+                    'my_image-version-flavour-v20240501-suffix.tar.gz',
+                    'my_image-version-flavour-v20240622-suffix.tar.gz',
+                    'my_image-version-flavour-v20240528-suffix.tar.gz',
+                    'my_image-version-flavour-v20240322-suffix.tar.gz',
+                    'my_image-version-flavour-v20241001-suffix.tar.gz',
+                ],
+                'my_image-version-flavour-v20241001-suffix.tar.gz'
+            )
+        ]
+        for (image_name, cloud, filenames, expected_filename) in test_params:
+            filename_regex = self.download_result._get_regex_for_filename(
+                image_name,
+                cloud
+            )
+            assert expected_filename == \
+                self.download_result._get_latest_filename(
+                    filenames,
+                    filename_regex
+                )

@@ -115,6 +115,7 @@ class BaseJob(object):
             }
         }
         download_message['download_job'].update(self.base_message)
+        download_message['download_job']['cloud'] = self.cloud
 
         if self.cloud_architecture:
             download_message['download_job']['cloud_architecture'] = \

@@ -455,3 +455,13 @@ def get_ongoing_change_id_from_error(message: str):
         raise MashEc2UtilsException(
             f'Unable to extract changeset id from aws err response: {message}'
         )
+
+
+def get_file_list_from_s3_bucket(s3_client, bucket_name):
+    # Ignoring for now the 1000 object limit...
+    # If required we should include a paginator
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/paginator/ListObjectsV2.html#  # NOQA
+    response = s3_client.list_objects_v2(Bucket=bucket_name)
+    if 'Contents' in response:
+        return [d['Key'] for d in response['Contents']]
+    return []

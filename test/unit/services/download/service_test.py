@@ -186,7 +186,8 @@ class TestDownloadService(object):
                         "condition": ">="
                     },
                     {"version": "1.42.1"}
-                ]
+                ],
+                "cloud": "azure"
             }
         }
         self.download_result._add_job(job_data)
@@ -224,6 +225,7 @@ class TestDownloadService(object):
         self.download_result._send_job_result_for_upload = Mock()
         data = {
             "id": "123",
+            "cloud": "ec2",
             "job_file": "tempfile",
             "download_url": "http://download.suse.de/ibs/Devel:/"
                             "PubCloud:/Stable:/Images12/images",

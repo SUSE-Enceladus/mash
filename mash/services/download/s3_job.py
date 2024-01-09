@@ -18,6 +18,7 @@
 
 
 import logging
+import re
 import os
 
 from datetime import datetime
@@ -26,7 +27,10 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.events import EVENT_JOB_SUBMITTED
 # project
 from mash.services.base_defaults import Defaults
-from mash.utils.ec2 import get_client
+from mash.utils.ec2 import (
+    get_client,
+    get_file_list_from_s3_bucket
+)
 
 
 class S3DownloadJob(object):
@@ -59,8 +63,7 @@ class S3DownloadJob(object):
         download_url,
         image_name,
         cloud_architecture,
-        s3_download_file_prefix,
-        s3_download_file_suffix,
+        cloud,
         last_service,
         log_callback,
         notification_email,
@@ -86,14 +89,8 @@ class S3DownloadJob(object):
         self.job_deleted = False
         self.download_account = download_account
         self.download_credentials = download_credentials
-        self.s3_download_file_prefix = s3_download_file_prefix
-        self.s3_download_file_suffix = s3_download_file_suffix
-        self.image_filename = (
-            f'{s3_download_file_prefix}'
-            f'{image_name}'
-            f'-{cloud_architecture}'
-            f'{s3_download_file_suffix}'
-        )
+        self.cloud = cloud
+        self.image_filename = ''
 
     def set_result_handler(self, function):
         self.result_callback = function
@@ -212,3 +209,74 @@ class S3DownloadJob(object):
         # event was scheduled. In this case we just skip the event
         # and keep the active job waiting for an obs change
         pass
+
+    def _get_latest_image_filename(self, s3_client, bucket_name, image_name):
+        bucket_filenames = get_file_list_from_s3_bucket(
+            s3_client=s3_client,
+            bucket_name=bucket_name
+        )
+        filename_regex = self.get_regex_for_filename(image_name)
+        matching_filenames = self._get_matching_filenames(
+            bucket_filenames,
+            filename_regex
+        )
+
+    def _get_regex_for_filename(self, image_name, cloud):
+        date = ''
+        extension_name = ''
+        date_regex = r'-v(?P<date>\d{8})-'
+        date_match = re.search(date_regex, image_name)
+        if date_match:
+            date = date_match.group('date')
+        else:
+            self.log_callback(f'Unable to find date pattern in {image_name}')
+            return ''
+
+        if cloud in ['azure', 'gce']:
+            # removing the first '-' delimited segment for these providers
+            image_name = re.sub('^[^-]*-', '', image_name)
+        if cloud == 'ec2':
+            extension_name = '.raw.xz'
+        elif cloud == 'azure':
+            extension_name = '.vhdfixed.xz'
+        elif cloud == 'gce':
+            extension_name = '.tar.gz'
+
+        filename_regex = re.escape(image_name + extension_name)
+
+        filename_regex = \
+            '^' + \
+            filename_regex.replace(
+                date,
+                r'(?P<date>\d{8})'
+            ) + \
+            '$'
+        return filename_regex
+
+    def _get_matching_filenames(self, filenames, regex):
+        matches = []
+        compiled_regex = re.compile(regex)
+        for filename in filenames:
+            if compiled_regex.search(filename):
+                matches.append(filename)
+        return matches
+
+    def _get_latest_filename(self, filenames, filename_regex):
+        compiled_regex = re.compile(filename_regex)
+        latest_image_filename = filenames[0]
+        latest_image_timestamp = datetime.strptime(
+            compiled_regex.search(latest_image_filename).group('date'),
+            '%Y%m%d'
+        )
+        if len(filenames) == 1:
+            return latest_image_filename
+
+        for filename in filenames[1:]:
+            timestamp = datetime.strptime(
+                compiled_regex.search(filename).group('date'),
+                '%Y%m%d'
+            )
+            if timestamp > latest_image_timestamp:
+                latest_image_filename = filename
+                latest_image_timestamp = timestamp
+        return latest_image_filename

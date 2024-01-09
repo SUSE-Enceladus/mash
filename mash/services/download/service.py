@@ -155,7 +155,8 @@ class DownloadService(MashService):
               ],
               "notification_email": "test@fake.com",
               "notify": True,
-              "conditions_wait_time": 900
+              "conditions_wait_time": 900,
+              "cloud": "azure"
           }
         }
         """
@@ -221,8 +222,11 @@ class DownloadService(MashService):
             'image_name': job['image'],
             'last_service': job['last_service'],
             'download_directory': self.download_directory,
-            'log_callback': self.log
+            'log_callback': self.log,
         }
+
+        if 'cloud' in job:
+            kwargs['cloud'] = job['cloud']
 
         if 'conditions' in job:
             kwargs['conditions'] = job['conditions']
@@ -252,8 +256,6 @@ class DownloadService(MashService):
                 [kwargs['download_account']],
                 'ec2'
             )
-            kwargs['s3_download_file_prefix'] = job['s3_download_file_prefix']
-            kwargs['s3_download_file_suffix'] = job['s3_download_file_suffix']
             job_worker = S3DownloadJob(**kwargs)
         else:
             job_worker = OBSDownloadJob(**kwargs)

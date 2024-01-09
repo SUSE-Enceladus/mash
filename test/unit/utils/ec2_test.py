@@ -30,7 +30,8 @@ from mash.utils.ec2 import (
     create_add_version_change_doc,
     create_restrict_version_change_doc,
     get_delivery_option_id,
-    get_session
+    get_session,
+    get_file_list_from_s3_bucket
 )
 from mash.mash_exceptions import MashEc2UtilsException
 import botocore.session
@@ -709,3 +710,29 @@ def test_get_delivery_option_id():
         'ami-123',
     )
     assert did is None
+
+
+def test_file_list_from_s3_bucket():
+    # test set up
+    s3_client = Mock()
+    response = {
+        'Contents': [
+            {
+                'Key': 'file_1'
+            },
+            {
+                'Key': 'file_2'
+            },
+            {
+                'Key': 'file_3'
+            }
+        ]
+    }
+    s3_client.list_objects_v2.return_value = response
+
+    # test
+    response = get_file_list_from_s3_bucket(s3_client, 'my_bucket_name')
+
+    # assertions
+    s3_client.list_objects_v2.assert_called_once_with(Bucket='my_bucket_name')
+    assert response == ['file_1', 'file_2', 'file_3']
