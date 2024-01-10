@@ -461,6 +461,8 @@ def get_file_list_from_s3_bucket(s3_client, bucket_name, filter_regex=None):
     """Provides the list of files in a bucket
     If a regex is provided in filter_regex parameter, only the matching
     files will be included in the list returned.
+    For the file to be included in the returned list, the S3 object name has to
+    be a full match for the regex provided.
     """
     files = []
     if filter_regex:
