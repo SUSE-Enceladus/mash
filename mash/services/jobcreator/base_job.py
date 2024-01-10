@@ -70,6 +70,7 @@ class BaseJob(object):
         self.use_build_time = kwargs.get('use_build_time')
         self.force_replace_image = kwargs.get('force_replace_image')
         self.download_type = kwargs.get('download_type', 'OBS')
+        self.download_account = kwargs.get('download_account', 'default')
         self.kwargs = kwargs
 
         if self.raw_image_upload_type and self.last_service == 'upload':
@@ -137,6 +138,10 @@ class BaseJob(object):
         if self.download_type:
             download_message['download_job']['download_type'] = \
                 self.download_type
+
+        if self.download_account:
+            download_message['download_job']['download_account'] = \
+                self.download_account
 
         return JsonFormat.json_message(download_message)
 

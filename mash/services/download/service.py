@@ -22,7 +22,7 @@ import dateutil.parser
 # project
 from mash.services.mash_service import MashService
 from mash.services.download.obs_job import OBSDownloadJob
-from mash.services.download.s3_job import S3DownloadJob
+from mash.services.download.s3bucket_job import S3BucketDownloadJob
 from mash.utils.json_format import JsonFormat
 from mash.utils.mash_utils import persist_json, restart_jobs, setup_logfile
 
@@ -246,7 +246,13 @@ class DownloadService(MashService):
             kwargs['disallow_packages'] = job['disallow_packages']
 
         if 'download_type' in job and job['download_type'] == 'S3':
-            job_worker = S3DownloadJob(**kwargs)
+            # Fetching the images from a S3 bucket
+            kwargs['download_account'] = job.get('download_account', 'default')
+            kwargs['download_credentials'] = self.request_credentials(
+                [kwargs['download_account']],
+                'ec2'
+            )
+            job_worker = S3BucketDownloadJob(**kwargs)
         else:
             job_worker = OBSDownloadJob(**kwargs)
         job_worker.set_result_handler(self._send_job_result_for_upload)

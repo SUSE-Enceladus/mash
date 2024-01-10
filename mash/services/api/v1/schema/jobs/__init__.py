@@ -128,6 +128,14 @@ base_job_message = {
                            'itself. Valid condition operators are >, <, >=, '
                            '<=, or ==.'
         },
+        'download_account': string_with_example(
+            'my_aws_account',
+            description='The cloud framework account as configured with '
+                        'the mash account add client command when the mash '
+                        'user was setup. The credentials associated with '
+                        'this cloud framework account will be used for the '
+                        'image download.'
+        ),
         'download_type': string_with_example(
             'OBS',
             description='Service from which to download the image file.'
@@ -140,9 +148,12 @@ base_job_message = {
         'download_url': string_with_example(
             'https://download.opensuse.org/repositories/'
             'Cloud:/Images:/Leap_15.0/images/',
-            description='The URL to a download repository. The URL is '
+            description='The URL to a download repository.'
+                        'In the case of OBS download, the URL is '
                         'expected to have the image tarball, checksum and '
                         'a packages file.'
+                        'For the S3 download case, it contains the URL of the'
+                        'S3 bucket containing the image file.'
         ),
         'image_description': string_with_example(
             'openSUSE Leap 15.0 (HVM, 64-bit, SSD-Backed)',
