@@ -747,6 +747,8 @@ def test_get_file_list_from_s3_bucket():
     paginator_mock.paginate.return_value = response_iterator
     s3_client_mock = Mock()
     s3_client_mock.get_paginator.return_value = paginator_mock
+    boto3_session_mock = Mock()
+    boto3_session_mock.client.return_value = s3_client_mock
 
     tests_parameters = [
         (
@@ -774,4 +776,8 @@ def test_get_file_list_from_s3_bucket():
 
     for bucket_name, regex, expected_output in tests_parameters:
         assert expected_output == \
-            get_file_list_from_s3_bucket(s3_client_mock, bucket_name, regex)
+            get_file_list_from_s3_bucket(
+                boto3_session_mock,
+                bucket_name,
+                regex
+            )
