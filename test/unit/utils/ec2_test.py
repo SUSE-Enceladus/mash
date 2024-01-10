@@ -30,7 +30,8 @@ from mash.utils.ec2 import (
     create_add_version_change_doc,
     create_restrict_version_change_doc,
     get_delivery_option_id,
-    get_session
+    get_session,
+    get_file_list_from_s3_bucket
 )
 from mash.mash_exceptions import MashEc2UtilsException
 import botocore.session
@@ -709,3 +710,68 @@ def test_get_delivery_option_id():
         'ami-123',
     )
     assert did is None
+
+
+def test_get_file_list_from_s3_bucket():
+
+    response_iterator = [
+        {
+            'Contents': [
+                {
+                    'Key': 'file_name_1.tar.gz'
+                },
+                {
+                    'Key': 'file_name_2.tar.gz'
+                },
+                {
+                    'Key': 'another_file_name_1.tar.gz'
+                }
+            ]
+        },
+        {
+            'Contents': [
+                {
+                    'Key': 'file_name_5.tar.gz'
+                },
+                {
+                    'Key': 'file_name_22.tar.gz'
+                },
+                {
+                    'Key': 'yet_another_file_name_1.tar.gz'
+                }
+            ]
+        }
+    ]
+
+    paginator_mock = Mock()
+    paginator_mock.paginate.return_value = response_iterator
+    s3_client_mock = Mock()
+    s3_client_mock.get_paginator.return_value = paginator_mock
+
+    tests_parameters = [
+        (
+            'my_bucket_name',
+            '',
+            [
+                'file_name_1.tar.gz',
+                'file_name_2.tar.gz',
+                'another_file_name_1.tar.gz',
+                'file_name_5.tar.gz',
+                'file_name_22.tar.gz',
+                'yet_another_file_name_1.tar.gz'
+            ]
+        ),
+        (
+            'my_bucket_name',
+            r'^file_name_\d\.tar\.gz$',
+            [
+                'file_name_1.tar.gz',
+                'file_name_2.tar.gz',
+                'file_name_5.tar.gz',
+            ]
+        ),
+    ]
+
+    for bucket_name, regex, expected_output in tests_parameters:
+        assert expected_output == \
+            get_file_list_from_s3_bucket(s3_client_mock, bucket_name, regex)

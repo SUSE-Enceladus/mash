@@ -455,3 +455,26 @@ def get_ongoing_change_id_from_error(message: str):
         raise MashEc2UtilsException(
             f'Unable to extract changeset id from aws err response: {message}'
         )
+
+
+def get_file_list_from_s3_bucket(s3_client, bucket_name, filter_regex=None):
+    """Provides the list of files in a bucket
+    If a regex is provided in filter_regex parameter, only the matching
+    files will be included in the list returned.
+    """
+    files = []
+    if filter_regex:
+        regex = re.compile(filter_regex)
+
+    paginator = s3_client.get_paginator('list_objects_v2')
+    response_iterator = paginator.paginate(Bucket=bucket_name)
+
+    for page in response_iterator:
+        for s3_obj in page.get('Contents'):
+            file_name = s3_obj['Key']
+            if not filter_regex:
+                files.append(file_name)
+            elif re.fullmatch(regex, file_name):
+                files.append(file_name)
+
+    return files
