@@ -17,6 +17,7 @@
 #
 
 import json
+import os
 import re
 import time
 
@@ -485,3 +486,20 @@ def get_file_list_from_s3_bucket(
                 files.append(file_name)
 
     return files
+
+
+def download_file_from_s3_bucket(
+    boto3_session,
+    bucket_name,
+    file_name,
+    download_directory
+):
+    """Downloads a file from a S3 bucket to the provided directory"""
+
+    if not os.path.exists(download_directory):
+        os.makedirs(download_directory)
+
+    download_path = os.path.join(download_directory, file_name)
+
+    s3_client = boto3_session.client(service_name='s3')
+    s3_client.download_file(bucket_name, file_name, download_path)
