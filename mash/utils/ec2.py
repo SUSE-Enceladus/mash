@@ -494,8 +494,7 @@ def download_file_from_s3_bucket(
     file_name,
     download_directory
 ):
-    """Downloads a file from a S3 bucket to the provided directory
-    """
+    """Downloads a file from a S3 bucket to the provided directory"""
 
     if not os.path.exists(download_directory):
         os.makedirs(download_directory)
