@@ -499,7 +499,7 @@ def download_file_from_s3_bucket(
     if not os.path.exists(download_directory):
         os.makedirs(download_directory)
 
-    file_full_path = os.path.join(download_directory, file_name)
+    download_path = os.path.join(download_directory, file_name)
 
     s3_client = boto3_session.client(service_name='s3')
-    s3_client.download_file(bucket_name, file_name, file_full_path)
+    s3_client.download_file(bucket_name, file_name, download_path)
