@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 import json
+import os
 
 from pytest import raises
 from unittest.mock import Mock, patch, call
@@ -31,7 +32,8 @@ from mash.utils.ec2 import (
     create_restrict_version_change_doc,
     get_delivery_option_id,
     get_session,
-    get_file_list_from_s3_bucket
+    get_file_list_from_s3_bucket,
+    download_file_from_s3_bucket
 )
 from mash.mash_exceptions import MashEc2UtilsException
 import botocore.session
@@ -781,3 +783,89 @@ def test_get_file_list_from_s3_bucket():
                 bucket_name,
                 regex
             )
+        boto3_session_mock.client.assert_called_once_with(service_name='s3')
+        s3_client_mock.get_paginator.assert_called_once_with('list_objects_v2')
+        paginator_mock.paginate.assert_called_once_with(Bucket=bucket_name)
+        paginator_mock.reset_mock()
+        boto3_session_mock.reset_mock()
+        s3_client_mock.reset_mock()
+
+
+@patch('mash.utils.ec2.os.path.exists')
+def test_download_file_from_s3_bucket(os_path_exists_mock):
+
+    os_path_exists_mock.return_value = True
+
+    s3_client_mock = Mock()
+    s3_client_mock.download_file.return_value = True
+    boto3_session_mock = Mock()
+    boto3_session_mock.client.return_value = s3_client_mock
+
+    tests_parameters = [
+        (
+            'my_bucket_name',
+            'my_file_name',
+            '/my/directory/name'
+        )
+    ]
+
+    for bucket_name, file_name, directory_name in tests_parameters:
+        download_file_from_s3_bucket(
+            boto3_session_mock,
+            bucket_name,
+            file_name,
+            directory_name
+        )
+        boto3_session_mock.client.assert_called_once_with(service_name='s3')
+        s3_client_mock.download_file.assert_called_once_with(
+            bucket_name,
+            file_name,
+            os.path.join(directory_name, file_name)
+        )
+        os_path_exists_mock.assert_called_once_with(directory_name)
+        os_path_exists_mock.reset_mock()
+        boto3_session_mock.reset_mock()
+        s3_client_mock.reset_mock()
+
+
+@patch('mash.utils.ec2.os.makedirs')
+@patch('mash.utils.ec2.os.path.exists')
+def test_download_file_from_s3_bucket_non_existing_directory(
+    os_path_exists_mock,
+    os_makedirs_mock
+):
+
+    os_path_exists_mock.return_value = False
+    os_makedirs_mock.return_value = True
+
+    s3_client_mock = Mock()
+    s3_client_mock.download_file.return_value = True
+    boto3_session_mock = Mock()
+    boto3_session_mock.client.return_value = s3_client_mock
+
+    tests_parameters = [
+        (
+            'my_bucket_name',
+            'my_file_name',
+            '/my/directory/name'
+        )
+    ]
+
+    for bucket_name, file_name, directory_name in tests_parameters:
+        download_file_from_s3_bucket(
+            boto3_session_mock,
+            bucket_name,
+            file_name,
+            directory_name
+        )
+        boto3_session_mock.client.assert_called_once_with(service_name='s3')
+        s3_client_mock.download_file.assert_called_once_with(
+            bucket_name,
+            file_name,
+            os.path.join(directory_name, file_name)
+        )
+        os_path_exists_mock.assert_called_once_with(directory_name)
+        os_makedirs_mock.assert_called_once_with(directory_name)
+        os_path_exists_mock.reset_mock()
+        boto3_session_mock.reset_mock()
+        s3_client_mock.reset_mock()
