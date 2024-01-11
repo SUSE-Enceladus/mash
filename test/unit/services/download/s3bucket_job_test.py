@@ -105,3 +105,26 @@ class TestS3BucketDownloadJob(object):
     @patch.object(S3BucketDownloadJob, '_result_callback')
     def test_job_skipped_event(self, mock_result_callback):
         self.download_result._job_skipped_event(Mock())
+
+    def test_get_regex_for_filename(self):
+        test_params = [
+            (
+                'whatever-my_image-version-flavour-v20240228-suffix',
+                'ec2',
+                r'^whatever\-my_image\-version\-flavour\-v(?P<date>\d{8})\-suffix\.raw\.xz$'
+            ),
+            (
+                'whatever-my_image-version-flavour-v20240128-suffix',
+                'azure',
+                r'^my_image\-version\-flavour\-v(?P<date>\d{8})\-suffix\.vhdfixed\.xz$'
+            ),
+            (
+                'whatever-my_image-version-flavour-v20240328-suffix',
+                'gce',
+                r'^my_image\-version\-flavour\-v(?P<date>\d{8})\-suffix\.tar\.gz$'
+            ),
+        ]
+
+        for (image_name, cloud, expected_regex) in test_params:
+            assert expected_regex == \
+                self.download_result._get_regex_for_filename(image_name, cloud)

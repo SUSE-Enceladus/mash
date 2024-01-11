@@ -19,6 +19,7 @@
 
 import logging
 import os
+import re
 
 from datetime import datetime
 from pytz import utc
@@ -180,3 +181,43 @@ class S3BucketDownloadJob(object):
         # event was scheduled. In this case we just skip the event
         # and keep the active job waiting for an obs change
         pass
+
+    def _get_regex_for_filename(self, image_name, cloud):
+        """
+        Provides the regex to filter all the available images (with different
+        dates) for the image_name and cloud provided
+        """
+        image_name_date = ''
+        file_extension = ''
+        date_regex = r'-v(?P<date>\d{8})-'
+
+        date_match = re.search(date_regex, image_name)
+        if date_match:
+            image_name_date = date_match.group('date')
+        else:
+            self.log_callback(f'Unable to find date pattern in {image_name}')
+            return ''
+
+        # File name adjustments dependant on the cloud
+        if cloud in ['azure', 'gce']:
+            # remove the first '-' delimited segment
+            image_name = re.sub('^[^-]*-', '', image_name)
+
+        if cloud == 'ec2':
+            file_extension = '.raw.xz'
+        elif cloud == 'azure':
+            file_extension = '.vhdfixed.xz'
+        elif cloud == 'gce':
+            file_extension = '.tar.gz'
+
+        filename_regex = re.escape(image_name + file_extension)
+
+        # date part substitution
+        filename_regex = \
+            '^' + \
+            filename_regex.replace(
+                image_name_date,
+                r'(?P<date>\d{8})'
+            ) + \
+            '$'
+        return filename_regex
