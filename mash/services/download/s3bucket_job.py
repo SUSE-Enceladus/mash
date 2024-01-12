@@ -26,6 +26,10 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.events import EVENT_JOB_SUBMITTED
 # project
 from mash.services.base_defaults import Defaults
+from mash.utils.ec2 import (
+    get_session,
+    download_file_from_s3_bucket
+)
 
 
 class S3BucketDownloadJob(object):
@@ -150,7 +154,50 @@ class S3BucketDownloadJob(object):
 
     def _download_image_file(self):
         """ Download the image file to the destination directory"""
-        pass
+        self.log_callback.info('Job running')
+
+        try:
+
+            boto3_session = get_session(
+                self.download_credentials['access_key_id'],
+                self.download_credentials['secret_access_key'],
+                None
+            )
+            bucket_name, object_key = \
+                self._get_bucket_name_and_key_from_download_url()
+
+            destination_file = os.path.join(
+                self.download_directory,
+                object_key
+            )
+            download_file_from_s3_bucket(
+                boto3_session,
+                bucket_name,
+                object_key,
+                self.download_directory
+            )
+            self.log_callback.info(
+                'Downloaded: {0} from {1} S3 bucket to {2}'.format(
+                    object_key,
+                    bucket_name,
+                    destination_file
+                )
+            )
+            self.image_filename = destination_file
+
+            # job finished successfully
+            self.job_status = 'success'
+            self.log_callback.info(
+                'Job status: {0}'.format(self.job_status)
+            )
+            self._result_callback()
+            self.log_callback.info('Job done')
+        except Exception as issue:
+            msg = '{0}: {1}'.format(type(issue).__name__, issue)
+            self.job_status = 'failed'
+            self.errors.append(msg)
+            self.log_callback.error(msg)
+            self._result_callback()
 
     def _result_callback(self):
         if self.result_callback:
@@ -158,10 +205,7 @@ class S3BucketDownloadJob(object):
                 self.job_id, {
                     'download_result': {
                         'id': self.job_id,
-                        'image_file': os.path.join(
-                            self.download_directory,
-                            self.image_filename
-                        ),
+                        'image_file': self.image_filename,
                         'status': self.job_status,
                         'errors': self.errors,
                         'notification_email': self.notification_email,
@@ -180,3 +224,12 @@ class S3BucketDownloadJob(object):
         # event was scheduled. In this case we just skip the event
         # and keep the active job waiting for an obs change
         pass
+
+    def _get_bucket_name_and_key_from_download_url(self) -> (str, str):
+        """Returns the bucket name and s3 object key from download_url param"""
+        s3_prefix = 's3://'
+        download_url = self.download_url
+        if download_url.startswith(s3_prefix):
+            download_url = download_url.removeprefix(s3_prefix)
+        bucket_name, _, object_key = download_url.partition('/')
+        return s3_prefix + bucket_name, object_key
