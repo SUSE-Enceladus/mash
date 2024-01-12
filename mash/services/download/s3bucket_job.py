@@ -230,6 +230,6 @@ class S3BucketDownloadJob(object):
         s3_prefix = 's3://'
         download_url = self.download_url
         if download_url.startswith(s3_prefix):
-            download_url = download_url.removeprefix(s3_prefix)
+            download_url = download_url[len(s3_prefix):]
         bucket_name, _, object_key = download_url.partition('/')
         return s3_prefix + bucket_name, object_key
