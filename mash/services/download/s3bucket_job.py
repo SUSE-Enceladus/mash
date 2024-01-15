@@ -226,10 +226,15 @@ class S3BucketDownloadJob(object):
         pass
 
     def _get_bucket_name_and_key_from_download_url(self) -> (str, str):
-        """Returns the bucket name and s3 object key from download_url param"""
+        """Returns the bucket name and s3 object key from download_url param
+        For example: is the download_url provided is
+            s3://my-bucket-name/directory/my_file_name.tar.gz
+        It will return:
+            s3://my-bucket-name , my_file_name.tar.gz
+        """
         s3_prefix = 's3://'
         download_url = self.download_url
         if download_url.startswith(s3_prefix):
             download_url = download_url[len(s3_prefix):]
-        bucket_name, _, object_key = download_url.partition('/')
-        return s3_prefix + bucket_name, object_key
+        download_url_parts = download_url.split('/')
+        return s3_prefix + download_url_parts[0], download_url_parts[-1]

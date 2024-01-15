@@ -112,12 +112,12 @@ class TestS3BucketDownloadJob(object):
             (
                 's3://my_download_bucket/path/to/object/filename.tar.gz',
                 's3://my_download_bucket',
-                'path/to/object/filename.tar.gz'
+                'filename.tar.gz'
             ),
             (
                 'my_download_bucket/path/to/object/filename.tar.gz',
                 's3://my_download_bucket',
-                'path/to/object/filename.tar.gz'
+                'filename.tar.gz'
             )
         ]
         for download_url, expected_bucket_name, expected_obj_key in tests:
@@ -164,16 +164,16 @@ class TestS3BucketDownloadJob(object):
         )
         client_mock.download_file.assert_called_once_with(
             's3://my_bucket_name',
-            'my_dir/myfile.tar.gz',
-            '/tmp/download_directory/815/my_dir/myfile.tar.gz'
+            'myfile.tar.gz',
+            '/tmp/download_directory/815/myfile.tar.gz'
         )
         mock_os_makedirs.assert_called_once_with(
-            '/tmp/download_directory/815/my_dir'
+            '/tmp/download_directory/815'
         )
         self.log_callback.info.assert_has_calls(
             [
                 call('Job running'),
-                call('Downloaded: my_dir/myfile.tar.gz from s3://my_bucket_name S3 bucket to /tmp/download_directory/815/my_dir/myfile.tar.gz'),  # NOQA
+                call('Downloaded: myfile.tar.gz from s3://my_bucket_name S3 bucket to /tmp/download_directory/815/myfile.tar.gz'),  # NOQA
                 call('Job status: success'),
                 call('Job done')
             ]
@@ -183,7 +183,7 @@ class TestS3BucketDownloadJob(object):
             '815', {
                 'download_result': {
                     'id': '815',
-                    'image_file': '/tmp/download_directory/815/my_dir/myfile.tar.gz',  # NOQA
+                    'image_file': '/tmp/download_directory/815/myfile.tar.gz',  # NOQA
                     'status': 'success',
                     'errors': [],
                     'notification_email': 'test@fake.com',
@@ -210,7 +210,7 @@ class TestS3BucketDownloadJob(object):
         previous_download_url = self.download_result.download_url
 
         self.download_result.download_url = \
-            's3://my_bucket_name/my_dir/myfile.tar.gz'
+            's3://my_bucket_name/myfile.tar.gz'
 
         result_callback_mock = MagicMock()
         self.download_result.result_callback = result_callback_mock
@@ -228,11 +228,11 @@ class TestS3BucketDownloadJob(object):
         )
         client_mock.download_file.assert_called_once_with(
             's3://my_bucket_name',
-            'my_dir/myfile.tar.gz',
-            '/tmp/download_directory/815/my_dir/myfile.tar.gz'
+            'myfile.tar.gz',
+            '/tmp/download_directory/815/myfile.tar.gz'
         )
         mock_os_makedirs.assert_called_once_with(
-            '/tmp/download_directory/815/my_dir'
+            '/tmp/download_directory/815'
         )
         self.log_callback.info.assert_has_calls(
             [
