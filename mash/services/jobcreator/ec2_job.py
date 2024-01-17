@@ -70,7 +70,7 @@ class EC2Job(BaseJob):
         if self.publish_in_marketplace:
             deprecate_message = {
                 'deprecate_job': {
-                    'cloud': self.cloud,
+                    'cloud': 'ec2_mp',
                     'deprecate_regions': self.get_mp_deprecate_regions(),
                     'entity_id': self.entity_id
                 }
