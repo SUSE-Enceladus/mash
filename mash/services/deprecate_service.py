@@ -28,6 +28,7 @@ from mash.services.job_factory import BaseJobFactory
 
 from mash.services.no_op_job import NoOpJob
 from mash.services.deprecate.ec2_job import EC2DeprecateJob
+from mash.services.deprecate.ec2_mp_job import EC2MPDeprecateJob
 from mash.services.deprecate.gce_job import GCEDeprecateJob
 from mash.services.deprecate.aliyun_job import AliyunDeprecateJob
 
@@ -48,6 +49,7 @@ def main():
             job_types={
                 'azure': NoOpJob,
                 'ec2': EC2DeprecateJob,
+                'ec2_mp': EC2MPDeprecateJob,
                 'gce': GCEDeprecateJob,
                 'oci': NoOpJob,
                 'aliyun': AliyunDeprecateJob
