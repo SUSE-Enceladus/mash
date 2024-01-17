@@ -146,7 +146,6 @@ def validate_ec2_job(job_doc):
     and cloud_accounts keys from job_doc.
     """
     if job_doc.get('publish_in_marketplace'):
-        job_doc['last_service'] = 'publish'  # No deprecation for MP images
         job_doc['skip_replication'] = True  # No replication for MP images
         validate_mp_fields(job_doc)
 
