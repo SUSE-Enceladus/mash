@@ -1,3 +1,9 @@
+v13.7.1 (2024-01-17)
+====================
+
+- Removes last_service overwrite in API for aws MP jobs
+- Add ec2 mp class to deprecate factory
+
 v13.7.0 (2024-01-03)
 ====================
 
