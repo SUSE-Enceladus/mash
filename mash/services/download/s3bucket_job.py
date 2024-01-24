@@ -237,4 +237,4 @@ class S3BucketDownloadJob(object):
         if download_url.startswith(s3_prefix):
             download_url = download_url[len(s3_prefix):]
         download_url_parts = download_url.split('/')
-        return s3_prefix + download_url_parts[0], download_url_parts[-1]
+        return download_url_parts[0], download_url_parts[-1]
