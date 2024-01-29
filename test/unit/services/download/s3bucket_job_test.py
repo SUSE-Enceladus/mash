@@ -111,12 +111,12 @@ class TestS3BucketDownloadJob(object):
         tests = [
             (
                 's3://my_download_bucket/path/to/object/filename.tar.gz',
-                's3://my_download_bucket',
+                'my_download_bucket',
                 'filename.tar.gz'
             ),
             (
                 'my_download_bucket/path/to/object/filename.tar.gz',
-                's3://my_download_bucket',
+                'my_download_bucket',
                 'filename.tar.gz'
             )
         ]
@@ -163,7 +163,7 @@ class TestS3BucketDownloadJob(object):
             service_name='s3'
         )
         client_mock.download_file.assert_called_once_with(
-            's3://my_bucket_name',
+            'my_bucket_name',
             'myfile.tar.gz',
             '/tmp/download_directory/815/myfile.tar.gz'
         )
@@ -173,7 +173,7 @@ class TestS3BucketDownloadJob(object):
         self.log_callback.info.assert_has_calls(
             [
                 call('Job running'),
-                call('Downloaded: myfile.tar.gz from s3://my_bucket_name S3 bucket to /tmp/download_directory/815/myfile.tar.gz'),  # NOQA
+                call('Downloaded: myfile.tar.gz from my_bucket_name S3 bucket to /tmp/download_directory/815/myfile.tar.gz'),  # NOQA
                 call('Job status: success'),
                 call('Job done')
             ]
@@ -227,7 +227,7 @@ class TestS3BucketDownloadJob(object):
             service_name='s3'
         )
         client_mock.download_file.assert_called_once_with(
-            's3://my_bucket_name',
+            'my_bucket_name',
             'myfile.tar.gz',
             '/tmp/download_directory/815/myfile.tar.gz'
         )
