@@ -492,14 +492,13 @@ def download_file_from_s3_bucket(
     boto3_session,
     bucket_name,
     obj_key,
-    download_directory
+    download_path
 ):
     """Downloads a file from a S3 bucket to the provided directory"""
 
+    download_directory, download_file = os.path.split(download_path)
     if not os.path.exists(download_directory):
         os.makedirs(download_directory)
-
-    download_path = os.path.join(download_directory, obj_key)
 
     s3_client = boto3_session.client(service_name='s3')
     s3_client.download_file(bucket_name, obj_key, download_path)

@@ -163,18 +163,18 @@ class S3BucketDownloadJob(object):
                 self.download_credentials['secret_access_key'],
                 None
             )
-            bucket_name, object_key = \
+            bucket_name, object_key, filename = \
                 self._get_bucket_name_and_key_from_download_url()
 
             destination_file = os.path.join(
                 self.download_directory,
-                object_key
+                filename
             )
             download_file_from_s3_bucket(
                 boto3_session,
                 bucket_name,
                 object_key,
-                self.download_directory
+                destination_file
             )
             self.log_callback.info(
                 'Downloaded: {0} from {1} S3 bucket to {2}'.format(
@@ -225,16 +225,24 @@ class S3BucketDownloadJob(object):
         # and keep the active job waiting for an obs change
         pass
 
-    def _get_bucket_name_and_key_from_download_url(self) -> (str, str):
-        """Returns the bucket name and s3 object key from download_url param
+    def _get_bucket_name_and_key_from_download_url(self) -> (str, str, str):
+        """
+        Returns the bucket name and s3 object key and filename from
+        download_url param
         For example: is the download_url provided is
             s3://my-bucket-name/directory/my_file_name.tar.gz
         It will return:
-            s3://my-bucket-name , my_file_name.tar.gz
+            s3://my-bucket-name ,
+            /directory/my_file_name.tar.gz,
+            my_file_name.tar.gz
         """
         s3_prefix = 's3://'
         download_url = self.download_url
         if download_url.startswith(s3_prefix):
             download_url = download_url[len(s3_prefix):]
         download_url_parts = download_url.split('/')
-        return download_url_parts[0], download_url_parts[-1]
+        return (
+            download_url_parts[0],
+            download_url[len(download_url_parts[0]) + 1:],
+            download_url_parts[-1]
+        )
