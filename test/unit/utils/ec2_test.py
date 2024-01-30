@@ -792,7 +792,7 @@ def test_get_file_list_from_s3_bucket():
 
 
 @patch('mash.utils.ec2.os.path.exists')
-def test_download_file_from_s3_bucket(os_path_exists_mock):
+def test_download_file_from_s3_bucket2(os_path_exists_mock):
 
     os_path_exists_mock.return_value = True
 
@@ -804,24 +804,26 @@ def test_download_file_from_s3_bucket(os_path_exists_mock):
     tests_parameters = [
         (
             'my_bucket_name',
-            'my_file_name',
-            '/my/directory/name'
+            '/obj_key/my_file_name',
+            '/my/download/directory/my_file_name'
         )
     ]
 
-    for bucket_name, file_name, directory_name in tests_parameters:
+    for bucket_name, object_key, download_path in tests_parameters:
         download_file_from_s3_bucket(
             boto3_session_mock,
             bucket_name,
-            file_name,
-            directory_name
+            object_key,
+            download_path
         )
         boto3_session_mock.client.assert_called_once_with(service_name='s3')
         s3_client_mock.download_file.assert_called_once_with(
             bucket_name,
-            file_name,
-            os.path.join(directory_name, file_name)
+            object_key,
+            download_path
         )
+
+        directory_name, file_name = os.path.split(download_path)
         os_path_exists_mock.assert_called_once_with(directory_name)
         os_path_exists_mock.reset_mock()
         boto3_session_mock.reset_mock()
@@ -846,24 +848,25 @@ def test_download_file_from_s3_bucket_non_existing_directory(
     tests_parameters = [
         (
             'my_bucket_name',
-            'my_file_name',
-            '/my/directory/name'
+            '/my_obj_key/my_file_name',
+            '/my/directory/name/my_destination_filename'
         )
     ]
 
-    for bucket_name, file_name, directory_name in tests_parameters:
+    for bucket_name, obj_key, download_path in tests_parameters:
         download_file_from_s3_bucket(
             boto3_session_mock,
             bucket_name,
-            file_name,
-            directory_name
+            obj_key,
+            download_path
         )
         boto3_session_mock.client.assert_called_once_with(service_name='s3')
         s3_client_mock.download_file.assert_called_once_with(
             bucket_name,
-            file_name,
-            os.path.join(directory_name, file_name)
+            obj_key,
+            download_path
         )
+        directory_name, file_name = os.path.split(download_path)
         os_path_exists_mock.assert_called_once_with(directory_name)
         os_makedirs_mock.assert_called_once_with(directory_name)
         os_path_exists_mock.reset_mock()

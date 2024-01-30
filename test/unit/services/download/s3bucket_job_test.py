@@ -112,20 +112,34 @@ class TestS3BucketDownloadJob(object):
             (
                 's3://my_download_bucket/path/to/object/filename.tar.gz',
                 'my_download_bucket',
+                'path/to/object/filename.tar.gz',
                 'filename.tar.gz'
             ),
             (
                 'my_download_bucket/path/to/object/filename.tar.gz',
                 'my_download_bucket',
+                'path/to/object/filename.tar.gz',
+                'filename.tar.gz'
+            ),
+            (
+                'my_download_bucket/filename.tar.gz',
+                'my_download_bucket',
+                'filename.tar.gz',
                 'filename.tar.gz'
             )
         ]
-        for download_url, expected_bucket_name, expected_obj_key in tests:
+        for (
+            download_url,
+            expected_bucket_name,
+            expected_obj_key,
+            expected_filename
+        ) in tests:
             self.download_result.download_url = download_url
-            bucket_name, obj_key = \
+            bucket_name, obj_key , filename = \
                 self.download_result._get_bucket_name_and_key_from_download_url()  # NOQA
             assert bucket_name == expected_bucket_name
             assert obj_key == expected_obj_key
+            assert filename == expected_filename
 
         self.download_result.download_url = previous_download_url
 
@@ -164,7 +178,7 @@ class TestS3BucketDownloadJob(object):
         )
         client_mock.download_file.assert_called_once_with(
             'my_bucket_name',
-            'myfile.tar.gz',
+            'my_dir/myfile.tar.gz',
             '/tmp/download_directory/815/myfile.tar.gz'
         )
         mock_os_makedirs.assert_called_once_with(
@@ -173,7 +187,7 @@ class TestS3BucketDownloadJob(object):
         self.log_callback.info.assert_has_calls(
             [
                 call('Job running'),
-                call('Downloaded: myfile.tar.gz from my_bucket_name S3 bucket to /tmp/download_directory/815/myfile.tar.gz'),  # NOQA
+                call('Downloaded: my_dir/myfile.tar.gz from my_bucket_name S3 bucket to /tmp/download_directory/815/myfile.tar.gz'),  # NOQA
                 call('Job status: success'),
                 call('Job done')
             ]
