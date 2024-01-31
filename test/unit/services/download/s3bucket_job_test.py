@@ -110,42 +110,38 @@ class TestS3BucketDownloadJob(object):
         previous_download_url = self.download_result.download_url
         tests = [
             (
-                's3://my_download_bucket/path/to/object/filename.tar.gz',
+                's3://my_download_bucket/path/to/object',
                 'my_download_bucket',
-                'path/to/object/filename.tar.gz',
-                'filename.tar.gz'
+                'path/to/object',
+
             ),
             (
-                'my_download_bucket/path/to/object/filename.tar.gz',
+                'my_download_bucket/path/to/object',
                 'my_download_bucket',
-                'path/to/object/filename.tar.gz',
-                'filename.tar.gz'
+                'path/to/object'
             ),
             (
-                'my_download_bucket/filename.tar.gz',
                 'my_download_bucket',
-                'filename.tar.gz',
-                'filename.tar.gz'
+                'my_download_bucket',
+                ''
             )
         ]
         for (
             download_url,
             expected_bucket_name,
-            expected_obj_key,
-            expected_filename
+            expected_dir_part_of_obj_key
         ) in tests:
             self.download_result.download_url = download_url
-            bucket_name, obj_key , filename = \
+            bucket_name, dir_part_of_obj_key = \
                 self.download_result._get_bucket_name_and_key_from_download_url()  # NOQA
             assert bucket_name == expected_bucket_name
-            assert obj_key == expected_obj_key
-            assert filename == expected_filename
+            assert dir_part_of_obj_key == expected_dir_part_of_obj_key
 
         self.download_result.download_url = previous_download_url
 
     @patch('mash.services.download.s3bucket_job.os.makedirs')
     @patch('mash.services.download.s3bucket_job.get_session')
-    def test_download_image_file(
+    def test_download_image_file2(
         self,
         mock_get_session,
         mock_os_makedirs,
@@ -162,7 +158,8 @@ class TestS3BucketDownloadJob(object):
         previous_download_url = self.download_result.download_url
 
         self.download_result.download_url = \
-            's3://my_bucket_name/my_dir/myfile.tar.gz'
+            's3://my_bucket_name/my_dir'
+        self.download_result.image_name = 'myfile.tar.gz'
         self.download_result.result_callback = result_callback_mock
 
         self.download_result._download_image_file()
@@ -224,7 +221,8 @@ class TestS3BucketDownloadJob(object):
         previous_download_url = self.download_result.download_url
 
         self.download_result.download_url = \
-            's3://my_bucket_name/myfile.tar.gz'
+            's3://my_bucket_name/AWS/'
+        self.download_result.image_name = 'myfile.tar.gz'
 
         result_callback_mock = MagicMock()
         self.download_result.result_callback = result_callback_mock
@@ -242,7 +240,7 @@ class TestS3BucketDownloadJob(object):
         )
         client_mock.download_file.assert_called_once_with(
             'my_bucket_name',
-            'myfile.tar.gz',
+            'AWS/myfile.tar.gz',
             '/tmp/download_directory/815/myfile.tar.gz'
         )
         mock_os_makedirs.assert_called_once_with(
