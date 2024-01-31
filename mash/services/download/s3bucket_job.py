@@ -46,7 +46,7 @@ class S3BucketDownloadJob(object):
 
     * :attr:`download_url`
       S3 bucket URL.
-      Includes the `directory` part of the URL iif the key object contains some
+      Includes the `directory` part of the URL if the key object contains some
       directory structure.
 
     * :attr:`image_name`
