@@ -198,7 +198,7 @@ class S3BucketDownloadJob(object):
                     destination_file
                 )
             )
-            self.image_filename = self.image_name
+            self.image_filename = destination_file
 
             # job finished successfully
             self.job_status = 'success'
