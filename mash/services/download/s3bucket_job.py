@@ -178,10 +178,10 @@ class S3BucketDownloadJob(object):
             )
 
             if dir_part_of_object_key:
-                if dir_part_of_object_key.endswith('/'):
-                    dir_part_of_object_key = dir_part_of_object_key[:-1]
-                full_object_key = dir_part_of_object_key + '/' \
-                    + self.image_name
+                full_object_key = os.path.join(
+                    dir_part_of_object_key,
+                    self.image_name
+                )
             else:
                 full_object_key = self.image_name
 
@@ -240,7 +240,7 @@ class S3BucketDownloadJob(object):
         # and keep the active job waiting for an obs change
         pass
 
-    def _get_bucket_name_and_key_from_download_url(self) -> (str, str, str):
+    def _get_bucket_name_and_key_from_download_url(self) -> (str, str):
         """
         Returns the bucket name and the 'directory' part of download_url param
         For example: is the download_url provided is
@@ -249,14 +249,8 @@ class S3BucketDownloadJob(object):
             my-bucket-name ,
             /directory1/directory2
         """
-        s3_prefix = 's3://'
-        download_url = self.download_url
-        if download_url.startswith(s3_prefix):
-            download_url = download_url[len(s3_prefix):]
-        download_url_parts = download_url.split('/')
+        download_url = self.download_url.replace('s3://', '')
+        download_url_parts = download_url.split('/', maxsplit=1)
         if len(download_url_parts) > 1:
-            return (
-                download_url_parts[0],
-                download_url[len(download_url_parts[0]) + 1:]
-            )
+            return (download_url_parts[0], download_url_parts[1])
         return (download_url, '')
