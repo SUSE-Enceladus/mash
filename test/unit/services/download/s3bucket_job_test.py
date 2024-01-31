@@ -197,7 +197,7 @@ class TestS3BucketDownloadJob(object):
             '815', {
                 'download_result': {
                     'id': '815',
-                    'image_file': '/tmp/download_directory/815/myfile.tar.gz',  # NOQA
+                    'image_file': 'myfile.tar.gz',
                     'status': 'success',
                     'errors': [],
                     'notification_email': 'test@fake.com',
