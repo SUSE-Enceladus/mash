@@ -792,7 +792,7 @@ def test_get_file_list_from_s3_bucket():
 
 
 @patch('mash.utils.ec2.os.path.exists')
-def test_download_file_from_s3_bucket2(os_path_exists_mock):
+def test_download_file_from_s3_bucket(os_path_exists_mock):
 
     os_path_exists_mock.return_value = True
 

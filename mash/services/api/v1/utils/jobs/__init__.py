@@ -122,6 +122,13 @@ def validate_job(data):
         user = get_user_by_id(user_id)
         data['notification_email'] = user['email']
 
+    if data.get('download_type') and data.get('download_type') == 'S3':
+        if not data.get('download_account', ''):
+            raise MashJobException(
+                '`download_account` parameter is required for `S3`'
+                ' `download_type` jobs.'
+            )
+
     return data
 
 
