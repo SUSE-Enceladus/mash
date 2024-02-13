@@ -30,6 +30,8 @@ from mash.utils.ec2 import (
     get_session,
     download_file_from_s3_bucket
 )
+from mash.mash_exceptions import MashJobException
+from mash.utils.mash_utils import handle_request
 
 
 class S3BucketDownloadJob(object):
@@ -86,8 +88,9 @@ class S3BucketDownloadJob(object):
         log_callback,
         notification_email,
         download_account,
-        download_credentials,
         download_directory=Defaults.get_download_dir(),
+        requesting_user=None,
+        credentials_url=None
     ):
         self.job_id = job_id
         self.job_file = job_file
@@ -106,7 +109,12 @@ class S3BucketDownloadJob(object):
         self.scheduler = None
         self.job_deleted = False
         self.download_account = download_account
-        self.download_credentials = download_credentials
+        self.credentials_url = credentials_url
+        self.requesting_user = requesting_user
+        self.download_credentials = self._request_credentials(
+            download_account,
+            'ec2'
+        )
         self.image_filename = ''
 
     def set_result_handler(self, function):
@@ -254,3 +262,34 @@ class S3BucketDownloadJob(object):
         if len(download_url_parts) > 1:
             return (download_url_parts[0], download_url_parts[1])
         return (download_url, '')
+
+    def _request_credentials(self, account, cloud=None):
+        """
+        Request credentials from credential service for download_account in aws.
+
+        Only send request if credentials not already populated.
+        """
+        data = {
+            'cloud': cloud,
+            'cloud_accounts': [account],
+            'requesting_user': self.requesting_user
+        }
+
+        try:
+            response = handle_request(
+                self.credentials_url,
+                'credentials/',
+                'get',
+                job_data=data
+            )
+            if response:
+                creds = response.json()
+                return creds[account]
+            return {}
+        except Exception as e:
+            raise MashJobException(
+                'Credentials request failed for account: {account}. {exc}'.format(
+                    account=account,
+                    exc=str(e)
+                )
+            )

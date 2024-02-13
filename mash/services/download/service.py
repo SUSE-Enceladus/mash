@@ -248,10 +248,8 @@ class DownloadService(MashService):
         if 'download_type' in job and job['download_type'] == 'S3':
             # Fetching an image from a S3 bucket
             kwargs['download_account'] = job.get('download_account')
-            kwargs['download_credentials'] = self.request_credentials(
-                [kwargs['download_account']],
-                'ec2'
-            )
+            kwargs['credentials_url'] = self.config.get_credentials_url()
+            kwargs['requesting_user'] = job.get('requesting_user')
             job_worker = S3BucketDownloadJob(**kwargs)
         else:
             job_worker = OBSDownloadJob(**kwargs)

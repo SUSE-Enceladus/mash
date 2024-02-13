@@ -11,12 +11,22 @@ from mash.services.download.s3bucket_job import S3BucketDownloadJob
 
 
 class TestS3BucketDownloadJob(object):
+    @patch('mash.services.download.s3bucket_job.handle_request')
     @patch('mash.services.download.s3bucket_job.logging')
-    def setup_method(self, method, mock_logging):
+    def setup_method(self, method, mock_logging, mock_handle_request):
         self.logger = MagicMock()
 
         self.log_callback = MagicMock()
         mock_logging.LoggerAdapter.return_value = self.log_callback
+        credentials = {
+            'download_account': {
+                'access_key_id': 'my_access_key_id',
+                'secret_access_key': 'my_secret_access_key'
+            }
+        }
+        handle_request_response_mock = Mock()
+        handle_request_response_mock.json.return_value = credentials
+        mock_handle_request.return_value = handle_request_response_mock
 
         self.download_result = S3BucketDownloadJob(
             '815',
@@ -28,11 +38,9 @@ class TestS3BucketDownloadJob(object):
             self.log_callback,
             notification_email='test@fake.com',
             download_account='download_account',
-            download_credentials={
-                'access_key_id': 'my_access_key_id',
-                'secret_access_key': 'my_secret_access_key'
-            },
-            download_directory='/tmp/download_directory'
+            requesting_user='my_request_user',
+            download_directory='/tmp/download_directory',
+            credentials_url='https://credentials_url'
         )
 
     def test_set_result_handler(self):
@@ -141,7 +149,7 @@ class TestS3BucketDownloadJob(object):
 
     @patch('mash.services.download.s3bucket_job.os.makedirs')
     @patch('mash.services.download.s3bucket_job.get_session')
-    def test_download_image_file2(
+    def test_download_image_file(
         self,
         mock_get_session,
         mock_os_makedirs,
