@@ -1,3 +1,9 @@
+v13.8.0 (2024-02-15)
+====================
+
+- Includes extendable download service with S3 bucket download support
+
+
 v13.7.1 (2024-01-17)
 ====================
 
