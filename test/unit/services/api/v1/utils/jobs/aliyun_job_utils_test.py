@@ -40,7 +40,7 @@ def test_update_aliyun_job_accounts(
     app = Mock()
     app.config = {
         'SERVICE_NAMES': [
-            'obs',
+            'download',
             'upload',
             'create',
             'test',

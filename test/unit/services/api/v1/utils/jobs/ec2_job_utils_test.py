@@ -166,7 +166,7 @@ def test_validate_ec2_job(
     app = Mock()
     app.config = {
         'SERVICE_NAMES': [
-            'obs',
+            'download',
             'uploader',
             'create',
             'testing',
@@ -248,7 +248,7 @@ def test_validate_mp_fields(mock_get_current_obj):
     app = Mock()
     app.config = {
         'SERVICE_NAMES': [
-            'obs',
+            'download',
             'upload',
             'create',
             'test',

@@ -98,7 +98,7 @@ class MashService(object):
         """
         Return formatted name based on exchange and queue name.
 
-        Example: obs.service
+        Example download.service
         """
         return '{0}.{1}'.format(exchange, name)
 

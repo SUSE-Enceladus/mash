@@ -6,7 +6,7 @@ class TestJsonFormat(object):
         with open('test/data/job1.json') as file_handle:
             assert JsonFormat.json_load(
                 file_handle
-            )['obsjob']['id'] == '123'
+            )['downloadjob']['id'] == '123'
 
     def test_json_loads(self):
         assert JsonFormat.json_loads('["a", "b"]') == ['a', 'b']
@@ -15,7 +15,7 @@ class TestJsonFormat(object):
         }
 
     def test_json_message(self):
-        message = '{"obsjob_delete": "4711"}'
+        message = '{"downloadjob_delete": "4711"}'
         dump_load = JsonFormat.json_loads(
             JsonFormat.json_message(message)
         )

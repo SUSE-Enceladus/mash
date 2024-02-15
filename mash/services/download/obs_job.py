@@ -30,9 +30,9 @@ from obs_img_utils.api import OBSImageUtil
 from mash.services.base_defaults import Defaults
 
 
-class OBSImageBuildResult(object):
+class OBSDownloadJob(object):
     """
-    Implements Open BuildService image result watchdog
+    Implements Open BuildService image download job
 
     Attributes
 
@@ -200,7 +200,7 @@ class OBSImageBuildResult(object):
         if self.result_callback:
             self.result_callback(
                 self.job_id, {
-                    'obs_result': {
+                    'download_result': {
                         'id': self.job_id,
                         'image_file':
                             self.downloader.image_source,

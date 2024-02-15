@@ -124,8 +124,8 @@ install -D -m 644 config/database.conf \
 install -d -m 755 %{buildroot}%{_localstatedir}/lib/%{name}/database/migrations
 cp -r mash/services/database/migrations/* %{buildroot}%{_localstatedir}/lib/%{name}/database/migrations/
 
-install -D -m 644 config/mash_obs.service \
-    %{buildroot}%{_unitdir}/mash_obs.service
+install -D -m 644 config/mash_download.service \
+    %{buildroot}%{_unitdir}/mash_download.service
 
 install -D -m 644 config/mash_upload.service \
     %{buildroot}%{_unitdir}/mash_upload.service
@@ -190,8 +190,8 @@ python3 -m pytest
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/apache2/vhosts.d/database.conf
 %config(noreplace) %attr(640, mash, mash)%{_sysconfdir}/%{name}/mash_config.yaml
 
-%{_bindir}/mash-obs-service
-%{_unitdir}/mash_obs.service
+%{_bindir}/mash-download-service
+%{_unitdir}/mash_download.service
 
 %{_bindir}/mash-upload-service
 %{_unitdir}/mash_upload.service

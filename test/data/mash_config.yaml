@@ -18,14 +18,14 @@ base_thread_pool_count: 20
 publish_thread_pool_count: 60
 download_directory: /images
 services:
-  - obs
+  - download
   - upload
   - test
   - replicate
   - publish
   - deprecate
 non_cred_services:
-  - obs
+  - download
 cloud:
   ec2:
     regions:

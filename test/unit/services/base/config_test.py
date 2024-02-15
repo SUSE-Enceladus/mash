@@ -52,7 +52,7 @@ class TestBaseConfig(object):
         assert expected == services
 
         # All services
-        expected = ['obs'] + expected
+        expected = ['download'] + expected
         services = self.empty_config.get_service_names()
         assert expected == services
 

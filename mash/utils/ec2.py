@@ -17,6 +17,7 @@
 #
 
 import json
+import os
 import re
 import time
 
@@ -455,3 +456,49 @@ def get_ongoing_change_id_from_error(message: str):
         raise MashEc2UtilsException(
             f'Unable to extract changeset id from aws err response: {message}'
         )
+
+
+def get_file_list_from_s3_bucket(
+    boto3_session,
+    bucket_name,
+    filter_regex=None
+):
+    """Provides the list of files in a bucket
+    If a regex is provided in filter_regex parameter, only the matching
+    files will be included in the list returned.
+    For the file to be included in the returned list, the S3 object name has to
+    be a full match for the regex provided.
+    """
+    s3_client = boto3_session.client(service_name='s3')
+    files = []
+    if filter_regex:
+        regex = re.compile(filter_regex)
+
+    paginator = s3_client.get_paginator('list_objects_v2')
+    response_iterator = paginator.paginate(Bucket=bucket_name)
+
+    for page in response_iterator:
+        for s3_obj in page.get('Contents'):
+            file_name = s3_obj['Key']
+            if not filter_regex:
+                files.append(file_name)
+            elif re.fullmatch(regex, file_name):
+                files.append(file_name)
+
+    return files
+
+
+def download_file_from_s3_bucket(
+    boto3_session,
+    bucket_name,
+    obj_key,
+    download_path
+):
+    """Downloads a file from a S3 bucket to the provided directory"""
+
+    download_directory, download_file = os.path.split(download_path)
+    if not os.path.exists(download_directory):
+        os.makedirs(download_directory)
+
+    s3_client = boto3_session.client(service_name='s3')
+    s3_client.download_file(bucket_name, obj_key, download_path)

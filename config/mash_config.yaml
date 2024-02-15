@@ -15,7 +15,7 @@ database_api_url: http://localhost:5007/
 database_uri: sqlite:////var/lib/mash/app.db
 download_directory: /var/lib/mash/images
 services:
-  - obs
+  - download
   - upload
   - create
   - test
@@ -24,7 +24,7 @@ services:
   - publish
   - deprecate
 non_cred_services:
-  - obs
+  - download
 credentials:
   credentials_directory: /var/lib/mash/credentials/
 cloud:

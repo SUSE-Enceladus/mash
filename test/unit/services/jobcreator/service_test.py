@@ -13,7 +13,7 @@ class TestJobCreatorService(object):
     @patch.object(MashService, '__init__')
     def setup_method(self, method, mock_base_init):
         services = [
-            'obs', 'upload', 'create', 'test', 'raw_image_upload',
+            'download', 'upload', 'create', 'test', 'raw_image_upload',
             'replicate', 'publish', 'deprecate'
         ]
         mock_base_init.return_value = None
@@ -103,9 +103,9 @@ class TestJobCreatorService(object):
         message.body = JsonFormat.json_message(job)
         self.jobcreator._handle_service_message(message)
 
-        # OBS Job Doc
+        # Download Job Doc
 
-        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
+        data = json.loads(mock_publish.mock_calls[0][1][2])['download_job']
         check_base_attrs(data, cloud=False)
         assert data['cloud_architecture'] == 'aarch64'
         assert data['download_url'] == \
@@ -243,9 +243,9 @@ class TestJobCreatorService(object):
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
 
-        # OBS Job Doc
+        # Download Job Doc
 
-        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
+        data = json.loads(mock_publish.mock_calls[0][1][2])['download_job']
         check_base_attrs(data, cloud=False)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['download_url'] == \
@@ -344,9 +344,9 @@ class TestJobCreatorService(object):
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
 
-        # OBS Job Doc
+        # Download Job Doc
 
-        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
+        data = json.loads(mock_publish.mock_calls[0][1][2])['download_job']
         check_base_attrs(data, cloud=False)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['download_url'] == \
@@ -434,9 +434,9 @@ class TestJobCreatorService(object):
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
 
-        # OBS Job Doc
+        # Download Job Doc
 
-        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
+        data = json.loads(mock_publish.mock_calls[0][1][2])['download_job']
         check_base_attrs(data, cloud=False)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['download_url'] == \
@@ -665,9 +665,9 @@ class TestJobCreatorService(object):
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)
 
-        # OBS Job Doc
+        # Download Job Doc
 
-        data = json.loads(mock_publish.mock_calls[0][1][2])['obs_job']
+        data = json.loads(mock_publish.mock_calls[0][1][2])['download_job']
         check_base_attrs(data, cloud=False)
         assert data['cloud_architecture'] == 'x86_64'
         assert data['download_url'] == \
