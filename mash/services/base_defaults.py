@@ -65,10 +65,6 @@ class Defaults(object):
         return 'guest'
 
     @classmethod
-    def get_non_credential_service_names(self):
-        return ['download']
-
-    @classmethod
     def get_azure_max_retry_attempts(self):
         return 5
 
