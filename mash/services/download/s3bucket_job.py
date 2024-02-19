@@ -83,14 +83,15 @@ class S3BucketDownloadJob(object):
         job_file,
         download_url,
         image_name,
-        cloud_architecture,
+        arch,
         last_service,
         log_callback,
         notification_email,
         download_account,
         download_directory=Defaults.get_download_dir(),
         requesting_user=None,
-        credentials_url=None
+        credentials_url=None,
+        profile=None
     ):
         self.job_id = job_id
         self.job_file = job_file
@@ -116,6 +117,8 @@ class S3BucketDownloadJob(object):
             'ec2'
         )
         self.image_filename = ''
+        self.arch = arch
+        self.profile = profile
 
     def set_result_handler(self, function):
         self.result_callback = function
