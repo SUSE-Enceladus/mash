@@ -8,6 +8,7 @@ import dateutil.parser
 from apscheduler.events import EVENT_JOB_SUBMITTED
 
 from mash.services.download.obs_job import OBSDownloadJob
+from mash.services.base_config import BaseConfig
 
 
 class TestOBSDownloadJob(object):
@@ -21,13 +22,20 @@ class TestOBSDownloadJob(object):
         self.log_callback = MagicMock()
         mock_logging.LoggerAdapter.return_value = self.log_callback
 
-        self.download_result = OBSDownloadJob(
-            '815', 'job_file', 'obs_project', 'obs_package', 'publish',
-            self.logger,
-            notification_email='test@fake.com',
-            profile='Proxy', disallow_licenses=["MIT"],
-            disallow_packages=["fake"]
-        )
+        job_config = {
+            'id': '815',
+            'job_file': 'job_file',
+            'download_url': 'obs_project',
+            'image_name': 'obs_package',
+            'last_service': 'publish',
+            'notification_email': 'test@fake.com',
+            'profile': 'Proxy',
+            'disallow_licenses': ['MIT'],
+            'disallow_packages': ['fake']
+        }
+        config = BaseConfig('./test/data/mash_config.yaml')
+
+        self.download_result = OBSDownloadJob(job_config, config)
 
     def test_set_result_handler(self):
         function = Mock()
