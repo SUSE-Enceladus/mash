@@ -134,7 +134,6 @@ class TestJobCreatorService(object):
         check_base_attrs(data)
         assert data['cloud_architecture'] == 'aarch64'
         assert data['cloud_image_name'] == 'new_image_123'
-        assert data['image_description'] == 'New Image #123'
 
         for region, info in data['target_regions'].items():
             if region == 'ap-northeast-1':
@@ -176,7 +175,6 @@ class TestJobCreatorService(object):
 
         data = json.loads(mock_publish.mock_calls[5][1][2])['replicate_job']
         check_base_attrs(data)
-        assert data['image_description'] == 'New Image #123'
 
         for region, info in data['replicate_source_regions'].items():
             if region == 'ap-northeast-1':
@@ -307,14 +305,9 @@ class TestJobCreatorService(object):
 
         data = json.loads(mock_publish.mock_calls[6][1][2])['publish_job']
         check_base_attrs(data)
-        assert data['image_description'] == 'New Image #123'
-        assert data['label'] == 'New Image 123'
         assert data['offer_id'] == 'sles'
-        assert data['publisher_id'] == 'suse'
         assert data['sku'] == '123'
         assert data['generation_id'] == 'image-gen2'
-        assert data['cloud_image_name_generation_suffix'] == 'gen2'
-        assert data['vm_images_key'] == 'key123'
         assert data['account'] == 'test-azure'
         assert data['container'] == 'container1'
         assert data['resource_group'] == 'rg-1'
@@ -374,7 +367,6 @@ class TestJobCreatorService(object):
 
         data = json.loads(mock_publish.mock_calls[2][1][2])['create_job']
         check_base_attrs(data)
-        assert data['image_description'] == 'New Image #123'
         assert data['region'] == 'us-west1'
         assert data['account'] == 'test-gce'
         assert data['bucket'] == 'images'
@@ -460,7 +452,6 @@ class TestJobCreatorService(object):
 
         data = json.loads(mock_publish.mock_calls[2][1][2])['create_job']
         check_base_attrs(data)
-        assert data['image_description'] == 'New Image #123'
         assert data['region'] == 'us-phoenix-1'
         assert data['account'] == 'test-oci'
         assert data['bucket'] == 'images2'
@@ -687,7 +678,6 @@ class TestJobCreatorService(object):
 
         data = json.loads(mock_publish.mock_calls[2][1][2])['create_job']
         check_base_attrs(data)
-        assert data['image_description'] == 'New Image #123'
         assert data['region'] == 'cn-beijing'
         assert data['account'] == 'test-aliyun'
         assert data['bucket'] == 'images'

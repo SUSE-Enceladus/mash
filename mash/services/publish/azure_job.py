@@ -33,10 +33,7 @@ class AzurePublishJob(MashJob):
         Post initialization method.
         """
         try:
-            self.image_description = self.job_config['image_description']
-            self.label = self.job_config['label']
             self.offer_id = self.job_config['offer_id']
-            self.publisher_id = self.job_config['publisher_id']
             self.sku = self.job_config['sku']
             self.account = self.job_config['account']
             self.region = self.job_config['region']
@@ -53,9 +50,6 @@ class AzurePublishJob(MashJob):
 
         self.vm_images_key = self.job_config.get('vm_images_key')
         self.generation_id = self.job_config.get('generation_id')
-        self.cloud_image_name_generation_suffix = self.job_config.get(
-            'cloud_image_name_generation_suffix'
-        )
 
     def run_job(self):
         """
@@ -88,13 +82,9 @@ class AzurePublishJob(MashJob):
             kwargs = {
                 'blob_name': self.blob_name,
                 'image_name': self.cloud_image_name,
-                'image_description': self.image_description,
                 'offer_id': self.offer_id,
-                'publisher_id': self.publisher_id,
-                'label': self.label,
                 'sku': self.sku,
                 'generation_id': self.generation_id,
-                'generation_suffix': self.cloud_image_name_generation_suffix
             }
 
             if self.vm_images_key:

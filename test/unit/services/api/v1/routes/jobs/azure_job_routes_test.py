@@ -78,21 +78,6 @@ def test_api_add_job_azure(
     assert response.status_code == 200
     assert response.data == b'{"msg":"Job doc is valid!"}\n'
 
-    # Missing publish arg
-    del data['label']
-
-    response = test_client.post(
-        '/v1/jobs/azure/',
-        content_type='application/json',
-        data=json.dumps(data, sort_keys=True)
-    )
-    msg = (
-        b'{"msg":"Job failed: Azure publishing jobs require a(n)  '
-        b'label argument in the job document."}\n'
-    )
-    assert response.status_code == 400
-    assert response.data == msg
-
     # Exception
     mock_get_azure_account.side_effect = Exception('Broken')
 

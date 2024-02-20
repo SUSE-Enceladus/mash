@@ -19,7 +19,6 @@ def test_azure_job_missing_keys(mock_init):
         'utctime': 'now',
         'image': 'test-image',
         'cloud_image_name': 'test-cloud-image',
-        'image_description': 'image description',
         'distro': 'sles',
         'download_url': 'https://download.here'
     })
