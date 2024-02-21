@@ -1,3 +1,9 @@
+v13.8.1 (2024-02-21)
+====================
+
+- Includes fix for missing parameters that caused DownloadService not to start
+properly.
+
 v13.8.0 (2024-02-15)
 ====================
 
