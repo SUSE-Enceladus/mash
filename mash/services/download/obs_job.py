@@ -29,6 +29,7 @@ from obs_img_utils.api import OBSImageUtil
 # project
 from mash.log.filter import BaseServiceFilter
 from mash.utils.mash_utils import setup_rabbitmq_log_handler
+from mash.mash_exceptions import MashImageDownloadException
 
 
 class OBSDownloadJob(object):
@@ -92,11 +93,17 @@ class OBSDownloadJob(object):
     def __init__(self, job_config, config):
         self.job_config = job_config
         self.config = config
-        self.job_id = job_config['id']
-        self.job_file = job_config['job_file']
-        self.download_url = job_config['download_url']
-        self.image_name = job_config['image_name']
-        self.last_service = job_config['last_service']
+        try:
+            self.job_id = job_config['id']
+            self.job_file = job_config['job_file']
+            self.download_url = job_config['download_url']
+            self.image_name = job_config['image_name']
+            self.last_service = job_config['last_service']
+        except KeyError as e:
+            missing_key = e.args[0]
+            msg = f'{missing_key} is required in Mash job doc.'
+            raise MashImageDownloadException(msg)
+
         self.download_directory = os.path.join(
             config.get_download_directory(),
             self.job_id
@@ -117,40 +124,13 @@ class OBSDownloadJob(object):
             {'job_id': self.job_id}
         )
 
-        if 'conditions' in job_config:
-            self.conditions = job_config['conditions']
-        else:
-            self.conditions = None
-
-        if 'cloud_architecture' in job_config:
-            self.arch = job_config['cloud_architecture']
-        else:
-            self.arch = 'x86_64'
-
-        if 'profile' in job_config:
-            self.profile = job_config['profile']
-        else:
-            self.profile = None
-
-        if 'notification_email' in job_config:
-            self.notification_email = job_config['notification_email']
-        else:
-            self.notification_email = None
-
-        if 'conditions_wait_time' in job_config:
-            self.conditions_wait_time = job_config['conditions_wait_time']
-        else:
-            self.conditions_wait_time = 900
-
-        if 'disallow_licenses' in job_config:
-            self.disallow_licenses = job_config['disallow_licenses']
-        else:
-            self.disallow_licenses = None
-
-        if 'disallow_packages' in job_config:
-            self.disallow_packages = job_config['disallow_packages']
-        else:
-            self.disallow_packages = None
+        self.conditions = job_config.get('conditions', None)
+        self.arch = job_config.get('cloud_architecture', 'x86_64')
+        self.profile = job_config.get('profile', None)
+        self.notification_email = job_config.get('notification_email', None)
+        self.conditions_wait_time = job_config.get('conditions_wait_time', 900)
+        self.disallow_licenses = job_config.get('disallow_licenses', None)
+        self.disallow_packages = job_config.get('disallow_packages', None)
 
         self.image_metadata_name = None
         self.scheduler = None

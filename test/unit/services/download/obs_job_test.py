@@ -1,6 +1,7 @@
 from unittest.mock import (
     patch, call, MagicMock, Mock
 )
+from pytest import raises
 from pytz import utc
 from datetime import datetime
 import dateutil.parser
@@ -9,6 +10,7 @@ from apscheduler.events import EVENT_JOB_SUBMITTED
 
 from mash.services.download.obs_job import OBSDownloadJob
 from mash.services.base_config import BaseConfig
+from mash.mash_exceptions import MashImageDownloadException
 
 
 class TestOBSDownloadJob(object):
@@ -148,3 +150,58 @@ class TestOBSDownloadJob(object):
         self.log_callback.info.assert_called_once_with(
             'Image 25% downloaded.'
         )
+
+    def test_required_params(self):
+        config = BaseConfig('./test/data/mash_config.yaml')
+        test_params = [
+            (
+                {
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish'
+                },
+                'id field is required in Mash job doc'
+            ),
+            (
+                {
+                    'id': '815',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish'
+                },
+                'job_file field is required in Mash job doc'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish'
+                },
+                'download_url field is required in Mash job doc'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'last_service': 'publish'
+                },
+                'image_name field is required in Mash job doc'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package'
+                },
+                'last_service field is required in Mash job doc'
+            )
+        ]
+
+        for (job_config, expected_output) in test_params:
+            with raises(MashImageDownloadException) as e:
+                OBSDownloadJob(job_config, config)
+                assert str(e) == expected_output
