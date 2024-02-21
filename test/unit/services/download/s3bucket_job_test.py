@@ -1,6 +1,7 @@
 from unittest.mock import (
     patch, MagicMock, Mock, call
 )
+from pytest import raises
 from pytz import utc
 from datetime import datetime
 import dateutil.parser
@@ -8,6 +9,11 @@ import dateutil.parser
 from apscheduler.events import EVENT_JOB_SUBMITTED
 
 from mash.services.download.s3bucket_job import S3BucketDownloadJob
+from mash.services.base_config import BaseConfig
+from mash.mash_exceptions import (
+    MashImageDownloadException,
+    MashJobException
+)
 
 
 class TestS3BucketDownloadJob(object):
@@ -28,20 +34,20 @@ class TestS3BucketDownloadJob(object):
         handle_request_response_mock.json.return_value = credentials
         mock_handle_request.return_value = handle_request_response_mock
 
-        self.download_result = S3BucketDownloadJob(
-            '815',
-            'job_file',
-            's3://my_s3_bucket',
-            'my_image_name-v20231231-lto',
-            'x86_64',
-            'upload',
-            self.log_callback,
-            notification_email='test@fake.com',
-            download_account='download_account',
-            requesting_user='my_request_user',
-            download_directory='/tmp/download_directory',
-            credentials_url='https://credentials_url'
-        )
+        job_config = {
+            'id': '815',
+            'job_file': 'job_file',
+            'download_url': 's3://my_s3_bucket',
+            'image_name': 'my_image_name-v20231231-lto',
+            'last_service': 'upload',
+            'notification_email': 'test@fake.com',
+            'requesting_user': 'my_requesting_user',
+            'download_account': 'download_account',
+            'download_type': 'S3'
+        }
+        config = BaseConfig('./test/data/mash_config.yaml')
+
+        self.download_result = S3BucketDownloadJob(job_config, config)
 
     def test_set_result_handler(self):
         function = Mock()
@@ -184,15 +190,15 @@ class TestS3BucketDownloadJob(object):
         client_mock.download_file.assert_called_once_with(
             'my_bucket_name',
             'my_dir/myfile.tar.gz',
-            '/tmp/download_directory/815/myfile.tar.gz'
+            '/images/815/myfile.tar.gz'
         )
         mock_os_makedirs.assert_called_once_with(
-            '/tmp/download_directory/815'
+            '/images/815'
         )
         self.log_callback.info.assert_has_calls(
             [
                 call('Job running'),
-                call('Downloaded: my_dir/myfile.tar.gz from my_bucket_name S3 bucket to /tmp/download_directory/815/myfile.tar.gz'),  # NOQA
+                call('Downloaded: my_dir/myfile.tar.gz from my_bucket_name S3 bucket to /images/815/myfile.tar.gz'),  # NOQA
                 call('Job status: success'),
                 call('Job done')
             ]
@@ -202,7 +208,7 @@ class TestS3BucketDownloadJob(object):
             '815', {
                 'download_result': {
                     'id': '815',
-                    'image_file': '/tmp/download_directory/815/myfile.tar.gz',  # NOQA
+                    'image_file': '/images/815/myfile.tar.gz',  # NOQA
                     'status': 'success',
                     'errors': [],
                     'notification_email': 'test@fake.com',
@@ -229,7 +235,7 @@ class TestS3BucketDownloadJob(object):
         previous_download_url = self.download_result.download_url
 
         self.download_result.download_url = \
-            's3://my_bucket_name/AWS/'
+            's3://my_bucket_name'
         self.download_result.image_name = 'myfile.tar.gz'
 
         result_callback_mock = MagicMock()
@@ -248,11 +254,11 @@ class TestS3BucketDownloadJob(object):
         )
         client_mock.download_file.assert_called_once_with(
             'my_bucket_name',
-            'AWS/myfile.tar.gz',
-            '/tmp/download_directory/815/myfile.tar.gz'
+            'myfile.tar.gz',
+            '/images/815/myfile.tar.gz'
         )
         mock_os_makedirs.assert_called_once_with(
-            '/tmp/download_directory/815'
+            '/images/815'
         )
         self.log_callback.info.assert_has_calls(
             [
@@ -276,3 +282,134 @@ class TestS3BucketDownloadJob(object):
             }
         )
         self.download_result.download_url = previous_download_url
+
+    def test_required_params(self):
+        config = BaseConfig('./test/data/mash_config.yaml')
+        test_params = [
+            (
+                {
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish',
+                    'download_account': 'download_account',
+                    'requesting_user': 'requesting_user',
+                    'download_type': 'S3'
+                },
+                'id field is required in Mash job doc.'
+            ),
+            (
+                {
+                    'id': '815',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish',
+                    'download_account': 'download_account',
+                    'requesting_user': 'requesting_user',
+                    'download_type': 'S3'
+                },
+                'job_file field is required in Mash job doc.'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish',
+                    'download_account': 'download_account',
+                    'requesting_user': 'requesting_user',
+                    'download_type': 'S3'
+                },
+                'download_url field is required in Mash job doc.'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'last_service': 'publish',
+                    'download_account': 'download_account',
+                    'requesting_user': 'requesting_user',
+                    'download_type': 'S3'
+                },
+                'image_name field is required in Mash job doc.'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package',
+                    'download_account': 'download_account',
+                    'requesting_user': 'requesting_user',
+                    'download_type': 'S3'
+                },
+                'last_service field is required in Mash job doc.'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish',
+                    'requesting_user': 'requesting_user',
+                    'download_type': 'S3'
+                },
+                'download_account field is required in Mash job doc.'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish',
+                    'download_account': 'download_account',
+                    'download_type': 'S3'
+                },
+                'requesting_user field is required in Mash job doc.'
+            ),
+            (
+                {
+                    'id': '815',
+                    'job_file': 'job_file',
+                    'download_url': 'obs_project',
+                    'image_name': 'obs_package',
+                    'last_service': 'publish',
+                    'download_account': 'download_account',
+                    'requesting_user': 'requesting_user'
+                },
+                'download_type field is required in Mash job doc.'
+            )
+        ]
+
+        for (job_config, expected_output) in test_params:
+            with raises(MashImageDownloadException) as e:
+                S3BucketDownloadJob(job_config, config)
+            assert e.value.args[0] == expected_output
+
+    @patch('mash.services.download.s3bucket_job.handle_request')
+    def test_request_credentials_exception(self, handle_request_response_mock):
+        job_config = {
+            'id': '815',
+            'job_file': 'job_file',
+            'download_url': 's3://my_s3_bucket',
+            'image_name': 'my_image_name-v20231231-lto',
+            'last_service': 'upload',
+            'notification_email': 'test@fake.com',
+            'requesting_user': 'my_requesting_user',
+            'download_account': 'download_account',
+            'download_type': 'S3'
+        }
+        config = BaseConfig('./test/data/mash_config.yaml')
+        handle_request_response_mock.side_effect = [
+            Exception('my_test_exception')
+        ]
+
+        with raises(MashJobException) as e:
+            S3BucketDownloadJob(job_config, config)
+        assert e.value.args[0] == (
+            'Credentials request failed for account: download_account. '
+            'my_test_exception'
+        )

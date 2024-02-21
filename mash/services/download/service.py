@@ -214,43 +214,9 @@ class DownloadService(MashService):
         else:
             time = dateutil.parser.parse(job['utctime']).isoformat()
 
-        kwargs = {
-            'job_id': job_id,
-            'job_file': job['job_file'],
-            'download_url': job['download_url'],
-            'image_name': job['image'],
-            'last_service': job['last_service'],
-            'download_directory': self.download_directory,
-            'log_callback': self.log
-        }
-
-        if 'conditions' in job:
-            kwargs['conditions'] = job['conditions']
-
-        if 'cloud_architecture' in job:
-            kwargs['arch'] = job['cloud_architecture']
-
-        if 'profile' in job:
-            kwargs['profile'] = job['profile']
-
-        if 'notification_email' in job:
-            kwargs['notification_email'] = job['notification_email']
-
-        if 'conditions_wait_time' in job:
-            kwargs['conditions_wait_time'] = job['conditions_wait_time']
-
-        if 'disallow_licenses' in job:
-            kwargs['disallow_licenses'] = job['disallow_licenses']
-
-        if 'disallow_packages' in job:
-            kwargs['disallow_packages'] = job['disallow_packages']
-
         if 'download_type' in job and job['download_type'] == 'S3':
             # Fetching an image from a S3 bucket
-            kwargs['download_account'] = job.get('download_account')
-            kwargs['credentials_url'] = self.config.get_credentials_url()
-            kwargs['requesting_user'] = job.get('requesting_user')
-            job_worker = S3BucketDownloadJob(**kwargs)
+            job_worker = S3BucketDownloadJob(job, self.config)
         else:
             job_worker = OBSDownloadJob(job, self.config)
         job_worker.set_result_handler(self._send_job_result_for_upload)
