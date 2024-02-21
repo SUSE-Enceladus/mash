@@ -101,7 +101,7 @@ class OBSDownloadJob(object):
             self.last_service = job_config['last_service']
         except KeyError as e:
             missing_key = e.args[0]
-            msg = f'{missing_key} is required in Mash job doc.'
+            msg = f'{missing_key} field is required in Mash job doc.'
             raise MashImageDownloadException(msg)
 
         self.download_directory = os.path.join(

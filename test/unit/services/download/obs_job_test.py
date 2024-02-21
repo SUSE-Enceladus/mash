@@ -161,7 +161,7 @@ class TestOBSDownloadJob(object):
                     'image_name': 'obs_package',
                     'last_service': 'publish'
                 },
-                'id field is required in Mash job doc'
+                'id field is required in Mash job doc.'
             ),
             (
                 {
@@ -170,7 +170,7 @@ class TestOBSDownloadJob(object):
                     'image_name': 'obs_package',
                     'last_service': 'publish'
                 },
-                'job_file field is required in Mash job doc'
+                'job_file field is required in Mash job doc.'
             ),
             (
                 {
@@ -179,7 +179,7 @@ class TestOBSDownloadJob(object):
                     'image_name': 'obs_package',
                     'last_service': 'publish'
                 },
-                'download_url field is required in Mash job doc'
+                'download_url field is required in Mash job doc.'
             ),
             (
                 {
@@ -188,7 +188,7 @@ class TestOBSDownloadJob(object):
                     'download_url': 'obs_project',
                     'last_service': 'publish'
                 },
-                'image_name field is required in Mash job doc'
+                'image_name field is required in Mash job doc.'
             ),
             (
                 {
@@ -197,11 +197,11 @@ class TestOBSDownloadJob(object):
                     'download_url': 'obs_project',
                     'image_name': 'obs_package'
                 },
-                'last_service field is required in Mash job doc'
+                'last_service field is required in Mash job doc.'
             )
         ]
 
         for (job_config, expected_output) in test_params:
             with raises(MashImageDownloadException) as e:
                 OBSDownloadJob(job_config, config)
-                assert str(e) == expected_output
+            assert e.value.args[0] == expected_output
