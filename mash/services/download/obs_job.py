@@ -27,7 +27,9 @@ from apscheduler.events import EVENT_JOB_SUBMITTED
 from obs_img_utils.api import OBSImageUtil
 
 # project
-from mash.services.base_defaults import Defaults
+from mash.log.filter import BaseServiceFilter
+from mash.utils.mash_utils import setup_rabbitmq_log_handler
+from mash.mash_exceptions import MashImageDownloadException
 
 
 class OBSDownloadJob(object):
@@ -88,39 +90,56 @@ class OBSDownloadJob(object):
     * :attr:`disallow_packages`
       A list of packages to disallow in the image.
     """
-    def __init__(
-        self, job_id, job_file, download_url, image_name, last_service,
-        log_callback, conditions=None, arch='x86_64',
-        download_directory=Defaults.get_download_dir(),
-        notification_email=None,
-        profile=None, conditions_wait_time=900, disallow_licenses=None,
-        disallow_packages=None
-    ):
-        self.arch = arch
-        self.job_id = job_id
-        self.job_file = job_file
-        self.download_directory = os.path.join(download_directory, job_id)
-        self.download_url = download_url
-        self.image_name = image_name
-        self.last_service = last_service
+    def __init__(self, job_config, config):
+        self.job_config = job_config
+        self.config = config
+        try:
+            self.job_id = job_config['id']
+            self.job_file = job_config['job_file']
+            self.download_url = job_config['download_url']
+            self.image_name = job_config['image_name']
+            self.last_service = job_config['last_service']
+        except KeyError as e:
+            missing_key = e.args[0]
+            msg = f'{missing_key} field is required in Mash job doc.'
+            raise MashImageDownloadException(msg)
+
+        self.download_directory = os.path.join(
+            config.get_download_directory(),
+            self.job_id
+        )
+
+        logging.basicConfig()
+        logger = logging.getLogger('DownloadService')
+        logger.setLevel(logging.DEBUG)
+        rabbit_handler = setup_rabbitmq_log_handler(
+            config.get_amqp_host(),
+            config.get_amqp_user(),
+            config.get_amqp_pass()
+        )
+        logger.addHandler(rabbit_handler)
+        logger.addFilter(BaseServiceFilter)
+        self.log_callback = logging.LoggerAdapter(
+            logger,
+            {'job_id': self.job_id}
+        )
+
+        self.conditions = job_config.get('conditions', None)
+        self.arch = job_config.get('cloud_architecture', 'x86_64')
+        self.profile = job_config.get('profile', None)
+        self.notification_email = job_config.get('notification_email', None)
+        self.conditions_wait_time = job_config.get('conditions_wait_time', 900)
+        self.disallow_licenses = job_config.get('disallow_licenses', None)
+        self.disallow_packages = job_config.get('disallow_packages', None)
+
         self.image_metadata_name = None
-        self.conditions = conditions
         self.scheduler = None
         self.job = None
         self.job_deleted = False
-        self.log_callback = None
+
         self.result_callback = None
-        self.notification_email = notification_email
-        self.profile = profile
         self.job_status = 'prepared'
         self.progress_log = {}
-        self.conditions_wait_time = conditions_wait_time
-        self.disallow_licenses = disallow_licenses
-        self.disallow_packages = disallow_packages
-        self.log_callback = logging.LoggerAdapter(
-            log_callback,
-            {'job_id': self.job_id}
-        )
         self.errors = []
 
         # How often to update log callback with download progress.
@@ -131,7 +150,7 @@ class OBSDownloadJob(object):
             'conditions': self.conditions,
             'arch': self.arch,
             'target_directory': self.download_directory,
-            'conditions_wait_time': conditions_wait_time,
+            'conditions_wait_time': self.conditions_wait_time,
             'log_callback': self.log_callback,
             'report_callback': self.progress_callback
         }

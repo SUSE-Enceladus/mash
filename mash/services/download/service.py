@@ -252,7 +252,7 @@ class DownloadService(MashService):
             kwargs['requesting_user'] = job.get('requesting_user')
             job_worker = S3BucketDownloadJob(**kwargs)
         else:
-            job_worker = OBSDownloadJob(**kwargs)
+            job_worker = OBSDownloadJob(job, self.config)
         job_worker.set_result_handler(self._send_job_result_for_upload)
         job_worker.start_watchdog(isotime=time)
         self.jobs[job_id] = job_worker
