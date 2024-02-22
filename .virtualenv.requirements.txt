@@ -28,5 +28,5 @@ google-auth
 google-cloud-storage
 google-api-python-client
 aliyun-img-utils>=1.4.0
-azure-img-utils>=0.4.1
+azure-img-utils>=2.0.0
 jmespath

@@ -50,7 +50,7 @@ BuildRequires:  python3-google-auth
 BuildRequires:  python3-google-cloud-storage
 BuildRequires:  python3-google-api-python-client
 BuildRequires:  python3-aliyun-img-utils >= 1.4.0
-BuildRequires:  python3-azure-img-utils >= 0.4.1
+BuildRequires:  python3-azure-img-utils >= 2.0.0
 BuildRequires:  python3-Werkzeug
 BuildRequires:  python3-jmespath
 Requires:       rabbitmq-server
@@ -76,7 +76,7 @@ Requires:       python3-google-auth
 Requires:       python3-google-cloud-storage
 Requires:       python3-google-api-python-client
 Requires:       python3-aliyun-img-utils >= 1.4.0
-Requires:       python3-azure-img-utils >= 0.4.1
+Requires:       python3-azure-img-utils >= 2.0.0
 Requires:       python3-Werkzeug
 Requires:       python3-jmespath
 Requires:       apache2
