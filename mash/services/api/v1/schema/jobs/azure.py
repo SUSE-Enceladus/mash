@@ -24,7 +24,10 @@ from mash.services.api.v1.schema.jobs import base_job_message
 azure_job_message = copy.deepcopy(base_job_message)
 azure_job_message['properties']['label'] = string_with_example(
     'openSUSE Leap 15',
-    description='The title to be displayed in the marketplace.'
+    description=(
+        'The title to be displayed in the marketplace. '
+        'Deprecated: will be removed in the next major version release.'
+    )
 )
 azure_job_message['properties']['offer_id'] = string_with_example(
     'leap',
@@ -47,12 +50,17 @@ azure_job_message['properties']['generation_id'] = string_with_example(
 )
 azure_job_message['properties']['cloud_image_name_generation_suffix'] = string_with_example(
     'gen2',
-    description='The suffix appended to the cloud image name.'
+    description=(
+        'The suffix appended to the cloud image name. '
+        'Deprecated: will be removed in the next major version release.'
+    )
 )
 azure_job_message['properties']['vm_images_key'] = string_with_example(
     'microsoft-azure-corevm.vmImagesPublicAzure',
-    description='Dictionary key where sku information is found in the '
-                'offer doc.'
+    description=(
+        'Dictionary key where sku information is found in the offer doc. '
+        'Deprecated: will be removed in the next major version release.'
+    )
 )
 azure_job_message['properties']['cloud_account'] = string_with_example(
     'account1',

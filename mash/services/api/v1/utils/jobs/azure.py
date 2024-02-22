@@ -44,9 +44,7 @@ def validate_azure_job(job_doc):
         'source_storage_account'
     )
     publish_args = (
-        'label',
         'offer_id',
-        'publisher_id',
         'sku'
     )
 

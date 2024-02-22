@@ -10,8 +10,6 @@ class TestAzurePublishJob(object):
         self.job_config = {
             'emails': 'jdoe@fake.com',
             'id': '1',
-            'image_description': 'New image for v123',
-            'label': 'New Image 123',
             'last_service': 'publish',
             'requesting_user': 'user1',
             'offer_id': 'sles',
@@ -21,10 +19,8 @@ class TestAzurePublishJob(object):
             'container': 'container2',
             'storage_account': 'sa2',
             'region': 'East US',
-            'publisher_id': 'suse',
             'sku': '123',
             'utctime': 'now',
-            'vm_images_key': 'microsoft-azure-corevm.vmImagesPublicAzure'
         }
 
         self.config = Mock()

@@ -39,19 +39,13 @@ class AzureJob(BaseJob):
                 )
             )
 
-        self.vm_images_key = self.kwargs.get('vm_images_key')
         self.region = self.kwargs.get('region')
         self.source_container = self.kwargs.get('source_container')
         self.source_resource_group = self.kwargs.get('source_resource_group')
         self.source_storage_account = self.kwargs.get('source_storage_account')
-        self.label = self.kwargs.get('label')
         self.offer_id = self.kwargs.get('offer_id')
-        self.publisher_id = self.kwargs.get('publisher_id')
         self.sku = self.kwargs.get('sku')
         self.generation_id = self.kwargs.get('generation_id')
-        self.cloud_image_name_generation_suffix = self.kwargs.get(
-            'cloud_image_name_generation_suffix'
-        )
         self.gallery_name = self.kwargs.get('gallery_name')
         self.gallery_resource_group = self.kwargs.get('gallery_resource_group')
 
@@ -74,11 +68,8 @@ class AzureJob(BaseJob):
         """
         publish_message = {
             'publish_job': {
-                'image_description': self.image_description,
-                'label': self.label,
                 'offer_id': self.offer_id,
                 'cloud': self.cloud,
-                'publisher_id': self.publisher_id,
                 'sku': self.sku,
                 'account': self.cloud_account,
                 'region': self.region,
@@ -88,17 +79,9 @@ class AzureJob(BaseJob):
             }
         }
 
-        if self.vm_images_key:
-            publish_message['publish_job']['vm_images_key'] = \
-                self.vm_images_key
-
         if self.generation_id:
             publish_message['publish_job']['generation_id'] = \
                 self.generation_id
-
-        if self.cloud_image_name_generation_suffix:
-            publish_message['publish_job']['cloud_image_name_generation_suffix'] = \
-                self.cloud_image_name_generation_suffix
 
         publish_message['publish_job'].update(self.base_message)
 
