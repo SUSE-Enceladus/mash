@@ -63,8 +63,8 @@ def get_jobs(user_id, page=1, per_page=10):
     Retrieve all jobs for user.
     """
     job_query = Job.query.filter_by(user_id=user_id).paginate(
-        page,
-        per_page,
+        page=page,
+        per_page=per_page,
         error_out=False,  # Return empty set if no results
         max_per_page=20
     )
