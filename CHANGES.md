@@ -1,3 +1,8 @@
+v13.9.0 (2024-02-22)
+====================
+
+- Update azure publishing to use new graph api in azure-img-utils
+
 v13.8.1 (2024-02-21)
 ====================
 
