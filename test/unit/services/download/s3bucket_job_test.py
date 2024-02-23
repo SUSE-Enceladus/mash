@@ -38,7 +38,7 @@ class TestS3BucketDownloadJob(object):
             'id': '815',
             'job_file': 'job_file',
             'download_url': 's3://my_s3_bucket',
-            'image_name': 'my_image_name-v20231231-lto',
+            'image': 'my_image_name-v20231231-lto',
             'last_service': 'upload',
             'notification_email': 'test@fake.com',
             'requesting_user': 'my_requesting_user',
@@ -48,6 +48,7 @@ class TestS3BucketDownloadJob(object):
         config = BaseConfig('./test/data/mash_config.yaml')
 
         self.download_result = S3BucketDownloadJob(job_config, config)
+        self.download_result.set_log_handler(self.log_callback)
 
     def test_set_result_handler(self):
         function = Mock()
@@ -290,7 +291,7 @@ class TestS3BucketDownloadJob(object):
                 {
                     'job_file': 'job_file',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish',
                     'download_account': 'download_account',
                     'requesting_user': 'requesting_user',
@@ -302,7 +303,7 @@ class TestS3BucketDownloadJob(object):
                 {
                     'id': '815',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish',
                     'download_account': 'download_account',
                     'requesting_user': 'requesting_user',
@@ -314,7 +315,7 @@ class TestS3BucketDownloadJob(object):
                 {
                     'id': '815',
                     'job_file': 'job_file',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish',
                     'download_account': 'download_account',
                     'requesting_user': 'requesting_user',
@@ -332,14 +333,14 @@ class TestS3BucketDownloadJob(object):
                     'requesting_user': 'requesting_user',
                     'download_type': 'S3'
                 },
-                'image_name field is required in Mash job doc.'
+                'image field is required in Mash job doc.'
             ),
             (
                 {
                     'id': '815',
                     'job_file': 'job_file',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'download_account': 'download_account',
                     'requesting_user': 'requesting_user',
                     'download_type': 'S3'
@@ -351,7 +352,7 @@ class TestS3BucketDownloadJob(object):
                     'id': '815',
                     'job_file': 'job_file',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish',
                     'requesting_user': 'requesting_user',
                     'download_type': 'S3'
@@ -363,7 +364,7 @@ class TestS3BucketDownloadJob(object):
                     'id': '815',
                     'job_file': 'job_file',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish',
                     'download_account': 'download_account',
                     'download_type': 'S3'
@@ -375,7 +376,7 @@ class TestS3BucketDownloadJob(object):
                     'id': '815',
                     'job_file': 'job_file',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish',
                     'download_account': 'download_account',
                     'requesting_user': 'requesting_user'
@@ -395,7 +396,7 @@ class TestS3BucketDownloadJob(object):
             'id': '815',
             'job_file': 'job_file',
             'download_url': 's3://my_s3_bucket',
-            'image_name': 'my_image_name-v20231231-lto',
+            'image': 'my_image_name-v20231231-lto',
             'last_service': 'upload',
             'notification_email': 'test@fake.com',
             'requesting_user': 'my_requesting_user',

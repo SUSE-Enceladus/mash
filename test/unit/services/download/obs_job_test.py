@@ -28,7 +28,7 @@ class TestOBSDownloadJob(object):
             'id': '815',
             'job_file': 'job_file',
             'download_url': 'obs_project',
-            'image_name': 'obs_package',
+            'image': 'obs_package',
             'last_service': 'publish',
             'notification_email': 'test@fake.com',
             'profile': 'Proxy',
@@ -38,6 +38,7 @@ class TestOBSDownloadJob(object):
         config = BaseConfig('./test/data/mash_config.yaml')
 
         self.download_result = OBSDownloadJob(job_config, config)
+        self.download_result.set_log_handler(self.log_callback)
 
     def test_set_result_handler(self):
         function = Mock()
@@ -158,7 +159,7 @@ class TestOBSDownloadJob(object):
                 {
                     'job_file': 'job_file',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish'
                 },
                 'id field is required in Mash job doc.'
@@ -167,7 +168,7 @@ class TestOBSDownloadJob(object):
                 {
                     'id': '815',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish'
                 },
                 'job_file field is required in Mash job doc.'
@@ -176,7 +177,7 @@ class TestOBSDownloadJob(object):
                 {
                     'id': '815',
                     'job_file': 'job_file',
-                    'image_name': 'obs_package',
+                    'image': 'obs_package',
                     'last_service': 'publish'
                 },
                 'download_url field is required in Mash job doc.'
@@ -188,14 +189,14 @@ class TestOBSDownloadJob(object):
                     'download_url': 'obs_project',
                     'last_service': 'publish'
                 },
-                'image_name field is required in Mash job doc.'
+                'image field is required in Mash job doc.'
             ),
             (
                 {
                     'id': '815',
                     'job_file': 'job_file',
                     'download_url': 'obs_project',
-                    'image_name': 'obs_package'
+                    'image': 'obs_package'
                 },
                 'last_service field is required in Mash job doc.'
             )

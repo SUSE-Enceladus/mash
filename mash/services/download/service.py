@@ -219,7 +219,9 @@ class DownloadService(MashService):
             job_worker = S3BucketDownloadJob(job, self.config)
         else:
             job_worker = OBSDownloadJob(job, self.config)
+
         job_worker.set_result_handler(self._send_job_result_for_upload)
+        job_worker.set_log_handler(self.log)
         job_worker.start_watchdog(isotime=time)
         self.jobs[job_id] = job_worker
         return {
