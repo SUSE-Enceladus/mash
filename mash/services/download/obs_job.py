@@ -97,7 +97,7 @@ class OBSDownloadJob(object):
             self.job_id = job_config['id']
             self.job_file = job_config['job_file']
             self.download_url = job_config['download_url']
-            self.image_name = job_config['image_name']
+            self.image_name = job_config['image']
             self.last_service = job_config['last_service']
         except KeyError as e:
             missing_key = e.args[0]
