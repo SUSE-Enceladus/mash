@@ -25,13 +25,17 @@ from pytz import utc
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.events import EVENT_JOB_SUBMITTED
 # project
-from mash.services.base_defaults import Defaults
 from mash.utils.ec2 import (
     get_session,
     download_file_from_s3_bucket
 )
-from mash.mash_exceptions import MashJobException
+from mash.mash_exceptions import (
+    MashJobException,
+    MashImageDownloadException
+)
 from mash.utils.mash_utils import handle_request
+from mash.log.filter import BaseServiceFilter
+from mash.utils.mash_utils import setup_rabbitmq_log_handler
 
 
 class S3BucketDownloadJob(object):
@@ -74,51 +78,62 @@ class S3BucketDownloadJob(object):
 
     * :attr:`download_directory`
       Target download directory name where the files will be downloaded/stored.
-      Defaults to: '/var/lib/mash/images/'.
+      Defaults to: '/var/lib/mash/images/{job_id}'.
     """
 
-    def __init__(
-        self,
-        job_id,
-        job_file,
-        download_url,
-        image_name,
-        arch,
-        last_service,
-        log_callback,
-        notification_email,
-        download_account,
-        download_directory=Defaults.get_download_dir(),
-        requesting_user=None,
-        credentials_url=None,
-        profile=None
-    ):
-        self.job_id = job_id
-        self.job_file = job_file
-        self.download_directory = os.path.join(download_directory, job_id)
-        self.download_url = download_url
-        self.image_name = image_name
-        self.last_service = last_service
+    def __init__(self, job_config, config):
+        self.job_config = job_config
+        self.config = config
+        try:
+            self.job_id = job_config['id']
+            self.job_file = job_config['job_file']
+            self.download_url = job_config['download_url']
+            self.image_name = job_config['image_name']
+            self.last_service = job_config['last_service']
+            self.download_account = job_config['download_account']
+            self.requesting_user = job_config['requesting_user']
+            self.download_type = job_config['download_type']
+
+        except KeyError as e:
+            missing_key = e.args[0]
+            msg = f'{missing_key} field is required in Mash job doc.'
+            raise MashImageDownloadException(msg)
+
+        self.download_directory = os.path.join(
+            config.get_download_directory(),
+            self.job_id
+        )
+
+        logging.basicConfig()
+        logger = logging.getLogger('DownloadService')
+        logger.setLevel(logging.DEBUG)
+        rabbit_handler = setup_rabbitmq_log_handler(
+            config.get_amqp_host(),
+            config.get_amqp_user(),
+            config.get_amqp_pass()
+        )
+        logger.addHandler(rabbit_handler)
+        logger.addFilter(BaseServiceFilter)
         self.log_callback = logging.LoggerAdapter(
-            log_callback,
+            logger,
             {'job_id': self.job_id}
         )
-        self.notification_email = notification_email
+
+        self.arch = job_config.get('cloud_architecture', 'x86_64')
+        self.notification_email = job_config.get('notification_email', None)
+        self.credentials_url = config.get_credentials_url()
+
         self.job_status = 'prepared'
         self.progress_log = {}
         self.errors = []
         self.scheduler = None
         self.job_deleted = False
-        self.download_account = download_account
-        self.credentials_url = credentials_url
-        self.requesting_user = requesting_user
+
         self.download_credentials = self._request_credentials(
-            download_account,
+            self.download_account,
             'ec2'
         )
         self.image_filename = ''
-        self.arch = arch
-        self.profile = profile
 
     def set_result_handler(self, function):
         self.result_callback = function
