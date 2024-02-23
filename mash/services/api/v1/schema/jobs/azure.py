@@ -65,7 +65,12 @@ azure_job_message['properties']['vm_images_key'] = string_with_example(
 azure_job_message['properties']['cloud_account'] = string_with_example(
     'account1',
     description='The name of the cloud account to use for image '
-                'publishing.'
+                'storage and gallery image creation.'
+)
+azure_job_message['properties']['partner_center_account'] = string_with_example(
+    'account2',
+    description='The name of the cloud account to use for image '
+                'publishing in partner center.'
 )
 azure_job_message['properties']['source_container'] = string_with_example(
     'container1',
