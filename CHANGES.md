@@ -1,3 +1,12 @@
+v13.10.0 (2024-02-23)
+====================
+
+- Refactor of S3DownloadJob class to be initialized based on job_config
+- Fix parameter name with the image name in obs job class of download service
+- Add partner center account option for azure jobs
+- Drop log handler setup in download job classes. Use set log handler method
+  instead to inherit logger from service module.
+
 v13.9.0 (2024-02-22)
 ====================
 
