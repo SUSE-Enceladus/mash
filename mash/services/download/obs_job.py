@@ -27,8 +27,6 @@ from apscheduler.events import EVENT_JOB_SUBMITTED
 from obs_img_utils.api import OBSImageUtil
 
 # project
-from mash.log.filter import BaseServiceFilter
-from mash.utils.mash_utils import setup_rabbitmq_log_handler
 from mash.mash_exceptions import MashImageDownloadException
 
 
@@ -109,21 +107,6 @@ class OBSDownloadJob(object):
             self.job_id
         )
 
-        logging.basicConfig()
-        logger = logging.getLogger('DownloadService')
-        logger.setLevel(logging.DEBUG)
-        rabbit_handler = setup_rabbitmq_log_handler(
-            config.get_amqp_host(),
-            config.get_amqp_user(),
-            config.get_amqp_pass()
-        )
-        logger.addHandler(rabbit_handler)
-        logger.addFilter(BaseServiceFilter)
-        self.log_callback = logging.LoggerAdapter(
-            logger,
-            {'job_id': self.job_id}
-        )
-
         self.conditions = job_config.get('conditions', None)
         self.arch = job_config.get('cloud_architecture', 'x86_64')
         self.profile = job_config.get('profile', None)
@@ -138,6 +121,7 @@ class OBSDownloadJob(object):
         self.job_deleted = False
 
         self.result_callback = None
+        self.log_callback = None
         self.job_status = 'prepared'
         self.progress_log = {}
         self.errors = []
@@ -232,6 +216,12 @@ class OBSDownloadJob(object):
                     }
                 }
             )
+
+    def set_log_handler(self, function):
+        self.log_callback = logging.LoggerAdapter(
+            function,
+            {'job_id': self.job_id}
+        )
 
     def _job_submit_event(self, event):
         self.log_callback.info('Oneshot Job submitted')

@@ -38,6 +38,7 @@ class TestOBSDownloadJob(object):
         config = BaseConfig('./test/data/mash_config.yaml')
 
         self.download_result = OBSDownloadJob(job_config, config)
+        self.download_result.set_log_handler(self.log_callback)
 
     def test_set_result_handler(self):
         function = Mock()

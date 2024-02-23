@@ -34,8 +34,6 @@ from mash.mash_exceptions import (
     MashImageDownloadException
 )
 from mash.utils.mash_utils import handle_request
-from mash.log.filter import BaseServiceFilter
-from mash.utils.mash_utils import setup_rabbitmq_log_handler
 
 
 class S3BucketDownloadJob(object):
@@ -104,25 +102,11 @@ class S3BucketDownloadJob(object):
             self.job_id
         )
 
-        logging.basicConfig()
-        logger = logging.getLogger('DownloadService')
-        logger.setLevel(logging.DEBUG)
-        rabbit_handler = setup_rabbitmq_log_handler(
-            config.get_amqp_host(),
-            config.get_amqp_user(),
-            config.get_amqp_pass()
-        )
-        logger.addHandler(rabbit_handler)
-        logger.addFilter(BaseServiceFilter)
-        self.log_callback = logging.LoggerAdapter(
-            logger,
-            {'job_id': self.job_id}
-        )
-
         self.arch = job_config.get('cloud_architecture', 'x86_64')
         self.notification_email = job_config.get('notification_email', None)
         self.credentials_url = config.get_credentials_url()
 
+        self.log_callback = None
         self.job_status = 'prepared'
         self.progress_log = {}
         self.errors = []
@@ -140,6 +124,12 @@ class S3BucketDownloadJob(object):
 
     def call_result_handler(self):
         self._result_callback()
+
+    def set_log_handler(self, function):
+        self.log_callback = logging.LoggerAdapter(
+            function,
+            {'job_id': self.job_id}
+        )
 
     def start_watchdog(self, isotime=None):
         """
