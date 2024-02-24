@@ -86,8 +86,27 @@ From here the following setup steps are required:
        "utctime": "now"
    }
    EOF
+   ```
 
+   __NOTE__:
+    The setting for boot_firmware connects to the boot capabilities of the
+    referenced image and should be taken seriously. An image to boot in the
+    AWS cloud can be selected to use either a BIOS+MasterBootRecord interface
+    or an EFI+EFI-binary interface. Images built by SUSE supports both modes
+    and we prefer EFI boot over BIOS boot which is the reason for the above
+    setting. In case a self-built image or other image source should be used
+    with mash, it's important to clarify on the boot capabilities first.
+
+   To put the job into the pipeline call the following command:
+
+   ```bash
    mash job ec2 add example.job
+   ```
+
+   List your job(s) with the following command:
+
+   ```bash
+   mash job list
    ```
 
 ## Installation
