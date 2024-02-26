@@ -51,6 +51,7 @@ def test_azure_job_cleanup(mock_init):
         'publisher_id': 'suse',
         'sku': 'sp1',
         'cloud': 'azure',
+        'partner_center_account': 'acnt2'
     }
     job.cloud = 'azure'
     job.tests = ['test1']

@@ -48,6 +48,7 @@ class AzureJob(BaseJob):
         self.generation_id = self.kwargs.get('generation_id')
         self.gallery_name = self.kwargs.get('gallery_name')
         self.gallery_resource_group = self.kwargs.get('gallery_resource_group')
+        self.partner_center_account = self.kwargs.get('partner_center_account')
 
     def get_deprecate_message(self):
         """
@@ -71,7 +72,7 @@ class AzureJob(BaseJob):
                 'offer_id': self.offer_id,
                 'cloud': self.cloud,
                 'sku': self.sku,
-                'account': self.cloud_account,
+                'account': self.partner_center_account or self.cloud_account,
                 'region': self.region,
                 'container': self.source_container,
                 'resource_group': self.source_resource_group,
