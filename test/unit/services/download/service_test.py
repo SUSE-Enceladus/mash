@@ -216,10 +216,12 @@ class TestDownloadService(object):
             'message': 'Job deletion failed: remove_error', 'ok': False
         }
 
-    @patch('mash.services.download.service.OBSDownloadJob')
-    def test_start_job_with_conditions(self, mock_OBSDownloadJob):
+    def test_start_job_with_conditions(self):
+        # mocks
         job_worker = Mock()
-        mock_OBSDownloadJob.return_value = job_worker
+        job_factory_mock = Mock()
+        job_factory_mock.create_job.return_value = job_worker
+        self.download_result.job_factory = job_factory_mock
         self.download_result._send_job_response = Mock()
         self.download_result._send_job_result_for_upload = Mock()
         data = {
@@ -256,10 +258,11 @@ class TestDownloadService(object):
             isotime=None
         )
 
-    @patch('mash.services.download.service.OBSDownloadJob')
-    def test_start_job_without_conditions(self, mock_OBSDownloadJob):
+    def test_start_job_without_conditions(self):
         job_worker = Mock()
-        mock_OBSDownloadJob.return_value = job_worker
+        job_factory_mock = Mock()
+        job_factory_mock.create_job.return_value = job_worker
+        self.download_result.job_factory = job_factory_mock
         data = {
             "id": "123",
             "job_file": "tempfile",
@@ -274,10 +277,11 @@ class TestDownloadService(object):
             isotime=None
         )
 
-    @patch('mash.services.download.service.OBSDownloadJob')
-    def test_start_job_at_utctime(self, mock_OBSDownloadJob):
+    def test_start_job_at_utctime(self):
         job_worker = Mock()
-        mock_OBSDownloadJob.return_value = job_worker
+        job_factory_mock = Mock()
+        job_factory_mock.create_job.return_value = job_worker
+        self.download_result.job_factory = job_factory_mock
         data = {
             "id": "123",
             "job_file": "tempfile",

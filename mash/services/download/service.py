@@ -21,6 +21,7 @@ import dateutil.parser
 
 # project
 from mash.services.mash_service import MashService
+from mash.services.job_factory import BaseJobFactory
 from mash.services.download.obs_job import OBSDownloadJob
 from mash.services.download.s3bucket_job import S3BucketDownloadJob
 from mash.utils.json_format import JsonFormat
@@ -41,6 +42,16 @@ class DownloadService(MashService):
             self.config.get_log_file(self.service_exchange)
         )
         self.log.addHandler(logfile_handler)
+
+        # setup job factory
+        self.job_factory = BaseJobFactory(
+            'download',
+            job_type_key='download_type',
+            job_types={
+                'OBS': OBSDownloadJob,
+                'S3': S3BucketDownloadJob
+            }
+        )
 
         # setup service data directories
         self.download_directory = self.config.get_download_directory()
@@ -214,12 +225,10 @@ class DownloadService(MashService):
         else:
             time = dateutil.parser.parse(job['utctime']).isoformat()
 
-        if 'download_type' in job and job['download_type'] == 'S3':
-            # Fetching an image from a S3 bucket
-            job_worker = S3BucketDownloadJob(job, self.config)
-        else:
-            job_worker = OBSDownloadJob(job, self.config)
+        if 'download_type' not in job:
+            job['download_type'] = 'OBS'
 
+        job_worker = self.job_factory.create_job(job, self.config)
         job_worker.set_result_handler(self._send_job_result_for_upload)
         job_worker.set_log_handler(self.log)
         job_worker.start_watchdog(isotime=time)
