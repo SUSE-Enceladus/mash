@@ -7,6 +7,108 @@ It is written in Python3 and designed to run as a set of Systemd & HTTP
 services. Mash currently supports a number of Public Cloud Frameworks; such
 as Amazon EC2, Google Compute Engine and Microsoft Azure.
 
+## Quick Start
+
+For a quick start into mash and its service pipeline, an OCI container
+image is provided. The container can be used as a mash development
+environment as well as a server instance for integration testing of
+the mash pipeline. The following steps are needed to get started:
+
+```bash
+podman pull registry.opensuse.org/virtualization/appliances/images/images_tw/opensuse/mash:latest
+podman run -ti mash
+```
+
+The mash instance starts up and a login prompt to the system appears.
+From here the following setup steps are required:
+
+1. Login to the instance
+
+   ```bash
+   login: masher
+   password: linux
+   ```
+
+2. Create a user for mash:
+
+   ```bash
+   mash user create --email test@fake.com
+   ```
+
+3. Login to mash:
+
+   ```bash
+   mash auth login --email test@fake.com
+   ```
+
+4. Setup public cloud account
+
+   For the quick start, an AWS account setup is described. Please
+   refer to [Configuring Mash Client](#configure_mash_client) for more
+   details.
+
+   ```bash
+   mash account ec2 add \
+       --name private \
+       --partition aws \
+       --region eu-central-1 \
+       --subnet ... \
+       --group ... \
+       --access-key-id ... \
+       --secret-access-key ...
+   ```
+
+   The values written as ```...``` are sensitive information
+   from the respective AWS account credentials and account
+   setup.
+
+5. Create a job
+
+   The most simple mash job for AWS covers the upload and registration
+   of an AMI image from a given EC2 disk image URL.
+
+   ```bash
+   cat >example.job <<-EOF
+   {
+       "boot_firmware": [
+           "uefi-preferred"
+       ],
+       "cloud_account": "private",
+       "cloud_architecture": "x86_64",
+       "cloud_image_name": "opensuse-leap-15.5-x86_64-v{date}",
+       "download_url": "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.5/images/",
+       "image": "openSUSE-Leap-15.5",
+       "image_description": "openSUSE Leap 15.5",
+       "last_service": "create",
+       "notification_email": "test@fake.com",
+       "notify": false,
+       "profile": "EC2",
+       "utctime": "now"
+   }
+   EOF
+   ```
+
+   __NOTE__:
+    The setting for boot_firmware connects to the boot capabilities of the
+    referenced image and should be taken seriously. An image to boot in the
+    AWS cloud can be selected to use either a BIOS+MasterBootRecord interface
+    or an EFI+EFI-binary interface. Images built by SUSE supports both modes
+    and we prefer EFI boot over BIOS boot which is the reason for the above
+    setting. In case a self-built image or other image source should be used
+    with mash, it's important to clarify on the boot capabilities first.
+
+   To put the job into the pipeline call the following command:
+
+   ```bash
+   mash job ec2 add example.job
+   ```
+
+   List your job(s) with the following command:
+
+   ```bash
+   mash job list
+   ```
+
 ## Installation
 
 ### openSUSE/SUSE package
@@ -23,26 +125,6 @@ To install Mash run the following commands:
 $ zypper refresh
 $ zypper in mash
 ```
-
-### openSUSE Leap Container (in development)
-
-There is a Podman container in development to simplify deployment. To pull down
-and run the container use the following commands:
-
-```bash
-$ podman pull registry.opensuse.org/virtualization/appliances/images/images/opensuse/mash:latest
-$ podman run --privileged -ti --network=host opensuse/mash
-```
-
-This will start the container and the default login information is:
-
-```
-user: masher
-password: linux
-```
-
-The container image is maintained in the
-[openSUSE build service](https://build.opensuse.org/package/show/Virtualization:Appliances:Images/mash-image-docker).
 
 ## Usage
 
@@ -65,7 +147,7 @@ zypper in mash-client
 pip install mash-client
 ```
 
-### Configuring Mash Client
+### Configuring Mash Client <a name="configure_mash_client"/>
 
 The mash command by default reads a configuration file from
 \~/.config/mash_client. It is recommended to use the default directory for the
