@@ -231,6 +231,9 @@ class EC2Job(BaseJob):
             test_message['test_job']['cloud_architecture'] = \
                 self.cloud_architecture
 
+        if self.boot_firmware:
+            test_message['test_job']['boot_firmware'] = self.boot_firmware
+
         test_message['test_job'].update(self.base_message)
 
         return JsonFormat.json_message(test_message)
