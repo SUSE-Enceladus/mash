@@ -17,6 +17,7 @@
 #
 
 from azure_img_utils.azure_image import AzureImage
+from azure_img_utils.storage import get_blob_url
 
 from mash.mash_exceptions import MashPublishException
 from mash.services.mash_job import MashJob
@@ -50,6 +51,7 @@ class AzurePublishJob(MashJob):
 
         self.vm_images_key = self.job_config.get('vm_images_key')
         self.generation_id = self.job_config.get('generation_id')
+        self.partner_center_account = self.job_config.get('partner_center_account')
 
     def run_job(self):
         """
@@ -57,8 +59,18 @@ class AzurePublishJob(MashJob):
         """
         self.status = SUCCESS
 
-        self.request_credentials([self.account])
-        credential = self.credentials[self.account]
+        accounts = [self.account]
+
+        if self.partner_center_account:
+            accounts.append(self.partner_center_account)
+
+        self.request_credentials(accounts)
+        compute_credential = self.credentials[self.account]
+
+        try:
+            pc_credential = self.credentials[self.partner_center_account]
+        except KeyError:
+            pc_credential = compute_credential
 
         self.cloud_image_name = self.status_msg['cloud_image_name']
         self.blob_name = self.status_msg['blob_name']
@@ -74,7 +86,33 @@ class AzurePublishJob(MashJob):
             azure_image = AzureImage(
                 container=self.container,
                 storage_account=self.storage_account,
-                credentials=credential,
+                credentials=compute_credential,
+                resource_group=self.resource_group,
+                log_callback=self.log_callback
+            )
+            blob_url = get_blob_url(
+                azure_image.blob_service_client,
+                self.blob_name,
+                self.storage_account,
+                self.container,
+                expire_hours=24 * 92,
+                start_hours=24
+            )
+        except Exception as error:
+            msg = (
+                f'There was an error creating a blob url for {self.blob_name}.'
+                f' {error}'
+            )
+            self.add_error_msg(msg)
+            self.log_callback.error(msg)
+            self.status = FAILED
+            return
+
+        try:
+            azure_image = AzureImage(
+                container=self.container,
+                storage_account=self.storage_account,
+                credentials=pc_credential,
                 resource_group=self.resource_group,
                 log_callback=self.log_callback
             )
@@ -84,6 +122,7 @@ class AzurePublishJob(MashJob):
                 'image_name': self.cloud_image_name,
                 'offer_id': self.offer_id,
                 'sku': self.sku,
+                'blob_url': blob_url,
                 'generation_id': self.generation_id,
             }
 

@@ -72,7 +72,7 @@ class AzureJob(BaseJob):
                 'offer_id': self.offer_id,
                 'cloud': self.cloud,
                 'sku': self.sku,
-                'account': self.partner_center_account or self.cloud_account,
+                'account': self.cloud_account,
                 'region': self.region,
                 'container': self.source_container,
                 'resource_group': self.source_resource_group,
@@ -83,6 +83,10 @@ class AzureJob(BaseJob):
         if self.generation_id:
             publish_message['publish_job']['generation_id'] = \
                 self.generation_id
+
+        if self.partner_center_account:
+            publish_message['publish_job']['partner_center_account'] = \
+                self.partner_center_account
 
         publish_message['publish_job'].update(self.base_message)
 
