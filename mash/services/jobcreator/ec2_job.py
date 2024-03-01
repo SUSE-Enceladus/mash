@@ -51,6 +51,7 @@ class EC2Job(BaseJob):
             False
         )
         self.launch_inst_type = self.kwargs.get('launch_inst_type')
+        self.imds_version = self.kwargs.get('imds_version', '')
 
     def _get_target_regions_list(self):
         """
@@ -272,6 +273,9 @@ class EC2Job(BaseJob):
         if self.cloud_architecture:
             create_message['create_job']['cloud_architecture'] = \
                 self.cloud_architecture
+
+        if self.imds_version:
+            create_message['create_job']['imds_version'] = self.imds_version
 
         return JsonFormat.json_message(create_message)
 
