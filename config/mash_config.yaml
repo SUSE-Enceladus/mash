@@ -23,8 +23,6 @@ services:
   - replicate
   - publish
   - deprecate
-non_cred_services:
-  - download
 credentials:
   credentials_directory: /var/lib/mash/credentials/
 cloud:

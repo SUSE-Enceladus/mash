@@ -138,23 +138,13 @@ class BaseConfig(object):
 
         return data
 
-    def get_service_names(self, credentials_required=False):
+    def get_service_names(self):
         """
         Return a list of all service names.
-
-        If credentials_required is True return only services that require
-        credentials to execute.
+.
         """
         services = self._get_attribute(attribute='services') or \
             Defaults.get_service_names()
-
-        if credentials_required:
-            non_cred_services = self._get_attribute(
-                attribute='non_cred_services'
-            ) or Defaults.get_non_credential_service_names()
-            services = [service for service in services
-                        if service not in non_cred_services]
-
         return services
 
     def get_ssh_private_key_file(self):

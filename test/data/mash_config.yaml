@@ -24,8 +24,6 @@ services:
   - replicate
   - publish
   - deprecate
-non_cred_services:
-  - download
 cloud:
   ec2:
     regions:
