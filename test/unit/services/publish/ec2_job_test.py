@@ -6,7 +6,7 @@ from mash.services.publish.ec2_job import EC2PublishJob
 
 
 class TestEC2PublishJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'allow_copy': '123,321',
             'id': '1',

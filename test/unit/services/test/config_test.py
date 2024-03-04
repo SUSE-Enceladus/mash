@@ -2,7 +2,7 @@ from mash.services.test.config import TestConfig
 
 
 class TestTestConfig(object):
-    def setup(self):
+    def setup_method(self):
         self.empty_config = TestConfig('test/data/empty_mash_config.yaml')
         self.config = TestConfig('test/data/mash_config.yaml')
 

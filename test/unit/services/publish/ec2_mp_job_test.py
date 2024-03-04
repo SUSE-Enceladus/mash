@@ -6,7 +6,7 @@ from mash.services.publish.ec2_mp_job import EC2MPPublishJob
 
 
 class TestEC2MPPublishJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'last_service': 'publish',

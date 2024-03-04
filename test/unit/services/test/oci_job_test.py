@@ -8,7 +8,7 @@ from mash.services.test.config import TestConfig
 
 
 class TestOCITestJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'last_service': 'test',

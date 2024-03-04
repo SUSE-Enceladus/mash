@@ -6,7 +6,7 @@ from pytest import raises
 
 
 class TestBaseConfig(object):
-    def setup(self):
+    def setup_method(self):
         self.empty_config = BaseConfig('test/data/empty_mash_config.yaml')
         self.config = BaseConfig('test/data/mash_config.yaml')
 

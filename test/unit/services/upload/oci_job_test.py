@@ -9,7 +9,7 @@ from mash.services.upload.config import UploadConfig
 
 
 class TestOCIUploadJob(object):
-    def setup(self):
+    def setup_method(self):
         self.config = UploadConfig(
             config_file='test/data/mash_config.yaml'
         )

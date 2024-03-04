@@ -6,7 +6,7 @@ from mash.services.upload.config import UploadConfig
 
 
 class TestUploadConfig(object):
-    def setup(self):
+    def setup_method(self):
         self.config = UploadConfig(
             'test/data/mash_config.yaml'
         )

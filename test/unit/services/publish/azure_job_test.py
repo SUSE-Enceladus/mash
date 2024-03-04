@@ -6,7 +6,7 @@ from mash.services.publish.azure_job import AzurePublishJob
 
 
 class TestAzurePublishJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'emails': 'jdoe@fake.com',
             'id': '1',

@@ -6,7 +6,7 @@ from mash.services.deprecate.ec2_mp_job import EC2MPDeprecateJob
 
 
 class TestEC2MPDeprecateJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'last_service': 'deprecate',

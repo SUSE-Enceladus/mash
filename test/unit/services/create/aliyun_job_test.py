@@ -9,7 +9,7 @@ from mash.services.base_config import BaseConfig
 
 
 class TestAliyunCreateJob(object):
-    def setup(self):
+    def setup_method(self):
         self.config = BaseConfig(
             config_file='test/data/mash_config.yaml'
         )

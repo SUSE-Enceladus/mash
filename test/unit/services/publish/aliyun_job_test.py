@@ -6,7 +6,7 @@ from mash.services.publish.aliyun_job import AliyunPublishJob
 
 
 class TestAliyunPublishJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'last_service': 'publish',
