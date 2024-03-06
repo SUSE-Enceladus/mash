@@ -10,7 +10,7 @@ from mash.services.upload.config import UploadConfig
 
 
 class TestAzureSASUploadJob(object):
-    def setup(self):
+    def setup_method(self):
         job_doc = {
             'id': '1',
             'last_service': 'upload',

@@ -8,7 +8,7 @@ from img_proof.ipa_exceptions import IpaRetryableError
 
 
 class TestGCETestJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'last_service': 'test',

@@ -10,7 +10,7 @@ from mash.services.upload.config import UploadConfig
 
 
 class TestAzureUploadJob(object):
-    def setup(self):
+    def setup_method(self):
         self.credentials = {
             'test': {
                 'clientId': 'a',

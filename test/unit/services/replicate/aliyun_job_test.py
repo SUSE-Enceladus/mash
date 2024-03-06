@@ -7,7 +7,7 @@ from mash.services.replicate.aliyun_job import AliyunReplicateJob
 
 
 class TestAliyunReplicateJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'bucket': 'images',

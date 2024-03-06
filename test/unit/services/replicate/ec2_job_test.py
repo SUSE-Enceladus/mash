@@ -7,7 +7,7 @@ from mash.services.replicate.ec2_job import EC2ReplicateJob
 
 
 class TestEC2ReplicateJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'image_description': 'My image',

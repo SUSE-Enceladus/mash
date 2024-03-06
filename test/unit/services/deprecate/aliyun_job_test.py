@@ -6,7 +6,7 @@ from mash.services.deprecate.aliyun_job import AliyunDeprecateJob
 
 
 class TestAliyunDeprecateJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'last_service': 'deprecate',
