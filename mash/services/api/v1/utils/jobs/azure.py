@@ -63,4 +63,13 @@ def validate_azure_job(job_doc):
                     )
                 )
 
+        sku = job_doc.get('sku')
+        generation = job_doc.get('generation_id')
+
+        if sku and generation and sku == generation:
+            raise MashJobException(
+                f'sku and generation_id are both {sku}. '
+                'These are required to be different values.'
+            )
+
     return job_doc
