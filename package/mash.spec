@@ -139,8 +139,14 @@ install -D -m 644 config/mash_logger.service \
 install -D -m 644 config/mash_job_creator.service \
     %{buildroot}%{_unitdir}/mash_job_creator.service
 
+install -D -m 644 config/mash_test_preparation.service \
+    %{buildroot}%{_unitdir}/mash_test_preparation.service
+
 install -D -m 644 config/mash_test.service \
     %{buildroot}%{_unitdir}/mash_test.service
+
+install -D -m 644 config/mash_test_cleanup.service \
+    %{buildroot}%{_unitdir}/mash_test_cleanup.service
 
 install -D -m 644 config/mash_raw_image_upload.service \
     %{buildroot}%{_unitdir}/mash_raw_image_upload.service
@@ -205,8 +211,14 @@ python3 -m pytest
 %{_bindir}/mash-job-creator-service
 %{_unitdir}/mash_job_creator.service
 
+%{_bindir}/mash-test-preparation-service
+%{_unitdir}/mash_test_preparation.service
+
 %{_bindir}/mash-test-service
 %{_unitdir}/mash_test.service
+
+%{_bindir}/mash-test-cleanup-service
+%{_unitdir}/mash_test_cleanup.service
 
 %{_bindir}/mash-raw-image-upload-service
 %{_unitdir}/mash_raw_image_upload.service

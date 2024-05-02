@@ -20,7 +20,9 @@ download_directory: /images
 services:
   - download
   - upload
+  - test_preparation
   - test
+  - test_cleanup
   - replicate
   - publish
   - deprecate

@@ -22,8 +22,8 @@ class TestListenerService(object):
         self.config = Mock()
         self.config.config_data = None
         self.config.get_service_names.return_value = [
-            'download', 'upload', 'test', 'replicate', 'publish',
-            'deprecate'
+            'download', 'upload', 'test_preparation', 'test', 'test_cleanup',
+            'replicate', 'publish', 'deprecate'
         ]
         self.config.get_job_directory.return_value = '/var/lib/mash/replicate_jobs/'
         self.config.get_base_thread_pool_count.return_value = 10
@@ -78,7 +78,7 @@ class TestListenerService(object):
         self.service.listener_queue = 'listener'
         self.service.job_document_key = 'job_document'
         self.service.listener_msg_key = 'listener_msg'
-        self.service.prev_service = 'test'
+        self.service.prev_service = 'test_cleanup'
         self.service.custom_args = None
         self.service.listener_msg_args = ['cloud_image_name']
         self.service.status_msg_args = ['cloud_image_name']
@@ -122,7 +122,7 @@ class TestListenerService(object):
 
         mock_bind_queue.assert_has_calls([
             call('replicate', 'job_document', 'service'),
-            call('test', 'listener_msg', 'listener')
+            call('test_cleanup', 'listener_msg', 'listener')
         ])
         mock_restart_jobs.assert_called_once_with(
             '/var/lib/mash/replicate_jobs/',
@@ -264,7 +264,7 @@ class TestListenerService(object):
         self.service.jobs['1'] = job
 
         self.message.body = JsonFormat.json_message({
-            "test_result": {
+            "test_cleanup_result": {
                 "cloud_image_name": "image123",
                 "id": "1",
                 "status": "success",
@@ -278,7 +278,7 @@ class TestListenerService(object):
 
     def test_service_handle_listener_message_no_job(self):
         self.message.body = JsonFormat.json_message({
-            "test_result": {
+            "test_cleanup_result": {
                 "cloud_image_name": "image123",
                 "id": "1",
                 "status": "success",
@@ -302,7 +302,7 @@ class TestListenerService(object):
         self.service.jobs['1'] = job
 
         self.message.body = JsonFormat.json_message({
-            "test_result": {
+            "test_cleanup_result": {
                 "cloud_image_name": "image123",
                 "id": "1",
                 "status": "failed",
@@ -535,7 +535,7 @@ class TestListenerService(object):
             call(
                 self.service._handle_listener_message,
                 'listener',
-                'test'
+                'test_cleanup'
             )
         ])
 
@@ -556,7 +556,17 @@ class TestListenerService(object):
         # Test service with prev service
         self.service.service_exchange = 'test'
         prev_service = self.service._get_previous_service()
+        assert prev_service == 'test_preparation'
+
+        # Test_preparation service with prev service
+        self.service.service_exchange = 'test_preparation'
+        prev_service = self.service._get_previous_service()
         assert prev_service == 'upload'
+
+        # replicate service with prev service
+        self.service.service_exchange = 'replicate'
+        prev_service = self.service._get_previous_service()
+        assert prev_service == 'test_cleanup'
 
         # Test service not in pipeline
         self.service.service_exchange = 'credentials'
