@@ -38,6 +38,23 @@ def get_ec2_regions_by_partition(partition):
     return regions
 
 
+def get_ec2_test_regions_by_partition(partition):
+    """
+    Get EC2 test regions from config file based on partition.
+    """
+    test_regions = []
+    if (
+        'CLOUD_DATA' in current_app.config and
+        'ec2' in current_app.config['CLOUD_DATA'] and
+        'test_regions' in current_app.config['CLOUD_DATA']['ec2'] and
+        partition in current_app.config['CLOUD_DATA']['ec2']['test_regions']
+    ):
+        test_regions = copy.deepcopy(
+            current_app.config['CLOUD_DATA']['ec2']['test_regions'][partition]
+        )
+    return test_regions
+
+
 def get_ec2_helper_images():
     """
     Get helper image data for EC2 from config file.
@@ -78,6 +95,8 @@ def add_target_ec2_account(
                 helper_images[region['name']] = region['helper_image']
                 regions.append(region['name'])
 
+    test_regions = get_ec2_test_regions_by_partition(account['partition'])
+
     if use_root_swap:
         try:
             helper_image = job_doc_data['root_swap_ami']
@@ -93,6 +112,7 @@ def add_target_ec2_account(
         'account': account['name'],
         'partition': account['partition'],
         'target_regions': list(set(regions)),  # Remove any duplicates
+        'test_regions': list(set(test_regions)),
         'helper_image': helper_image,
         'subnet': subnet
     }

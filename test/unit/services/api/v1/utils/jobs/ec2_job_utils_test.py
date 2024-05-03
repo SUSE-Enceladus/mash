@@ -23,6 +23,7 @@ from pytest import raises
 from mash.mash_exceptions import MashJobException
 from mash.services.api.v1.utils.jobs.ec2 import (
     get_ec2_regions_by_partition,
+    get_ec2_test_regions_by_partition,
     get_ec2_helper_images,
     add_target_ec2_account,
     convert_account_dict,
@@ -50,6 +51,23 @@ def test_get_ec2_regions_by_partition(mock_get_current_object):
 
 
 @patch.object(LocalProxy, '_get_current_object')
+def test_get_ec2_test_regions_by_partition(mock_get_current_object):
+    app = Mock()
+    mock_get_current_object.return_value = app
+    app.config = {
+        'CLOUD_DATA': {
+            'ec2': {
+                'test_regions': {
+                    'aws': ['us-east-77']
+                }
+            }
+        }
+    }
+
+    assert get_ec2_test_regions_by_partition('aws') == ['us-east-77']
+
+
+@patch.object(LocalProxy, '_get_current_object')
 def test_get_ec2_helper_images(mock_get_current_object):
     app = Mock()
     mock_get_current_object.return_value = app
@@ -67,8 +85,12 @@ def test_get_ec2_helper_images(mock_get_current_object):
     assert images['us-east-99'] == 'ami-789'
 
 
+@patch('mash.services.api.v1.utils.jobs.ec2.get_ec2_test_regions_by_partition')
 @patch('mash.services.api.v1.utils.jobs.ec2.get_ec2_regions_by_partition')
-def test_add_target_ec2_account(mock_get_regions):
+def test_add_target_ec2_account(
+    mock_get_regions,
+    mock_get_test_regions,
+):
     account = {
         'region': 'us-east-100',
         'name': 'acnt1',
@@ -82,6 +104,7 @@ def test_add_target_ec2_account(mock_get_regions):
     }
 
     mock_get_regions.return_value = ['us-east-99']
+    mock_get_test_regions.return_value = ['us-east-77']
 
     cloud_accounts = {'acnt1': {'root_swap_ami': 'ami-456'}}
     accounts = {}
@@ -100,6 +123,7 @@ def test_add_target_ec2_account(mock_get_regions):
     assert accounts['us-east-100']['helper_image'] == 'ami-456'
     assert 'us-east-99' in accounts['us-east-100']['target_regions']
     assert 'us-east-100' in accounts['us-east-100']['target_regions']
+    assert 'us-east-77' in accounts['us-east-100']['test_regions']
 
     cloud_accounts = {'acnt1': {}}
 
