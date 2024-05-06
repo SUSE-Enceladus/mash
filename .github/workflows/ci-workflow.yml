@@ -23,8 +23,8 @@ jobs:
         pip install -e .
     - name: Lint with flake8
       run: |
-        flake8 --statistics -j auto --count mash
-        flake8 --statistics -j auto --count test/unit
+        flake8 --statistics -j auto --count --extend-ignore W503,W504 mash
+        flake8 --statistics -j auto --count --extend-ignore W503,W504 test/unit
     - name: Test with pytest
       run: |
         py.test --no-cov-on-fail --cov=mash \
