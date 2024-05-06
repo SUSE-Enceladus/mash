@@ -44,10 +44,10 @@ def get_ec2_test_regions_by_partition(partition):
     """
     test_regions = []
     if (
-        'CLOUD_DATA' in current_app.config and
-        'ec2' in current_app.config['CLOUD_DATA'] and
-        'test_regions' in current_app.config['CLOUD_DATA']['ec2'] and
-        partition in current_app.config['CLOUD_DATA']['ec2']['test_regions']
+        'CLOUD_DATA' in current_app.config
+        and 'ec2' in current_app.config['CLOUD_DATA']
+        and 'test_regions' in current_app.config['CLOUD_DATA']['ec2']
+        and partition in current_app.config['CLOUD_DATA']['ec2']['test_regions']
     ):
         test_regions = copy.deepcopy(
             current_app.config['CLOUD_DATA']['ec2']['test_regions'][partition]
