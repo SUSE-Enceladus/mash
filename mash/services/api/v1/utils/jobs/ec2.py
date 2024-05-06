@@ -112,7 +112,7 @@ def add_target_ec2_account(
         'account': account['name'],
         'partition': account['partition'],
         'target_regions': list(set(regions)),  # Remove any duplicates
-        'test_regions': list(set(test_regions)),
+        'test_regions': test_regions,
         'helper_image': helper_image,
         'subnet': subnet
     }

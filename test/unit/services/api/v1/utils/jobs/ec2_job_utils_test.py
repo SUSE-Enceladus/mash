@@ -41,13 +41,18 @@ def test_get_ec2_regions_by_partition(mock_get_current_object):
         'CLOUD_DATA': {
             'ec2': {
                 'regions': {
-                    'aws': ['us-east-99']
+                    'aws': {
+                        'us-east-99': {
+                            'subnet': 'subnet_1'
+                        }
+                    }
                 }
             }
         }
     }
 
-    assert get_ec2_regions_by_partition('aws') == ['us-east-99']
+    assert get_ec2_regions_by_partition('aws')['us-east-99']['subnet'] == \
+        'subnet_1'
 
 
 @patch.object(LocalProxy, '_get_current_object')

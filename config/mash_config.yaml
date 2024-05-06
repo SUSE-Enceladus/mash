@@ -60,13 +60,17 @@ cloud:
         - us-gov-west-1
     test_regions:
       aws:
-        - us-east-1
-        - us-east-2
-        - us-west-1
-        - us-west-2
+        us-east-1:
+          - subnet: subnet_1
+        us-east-2:
+          - subnet: subnet_2
+        us-west-1:
+          - subnet: subnet_3
       aws-us-gov:
-        - us-gov-east-1
-        - us-gov-west-1
+        us-gov-east-1:
+          - subnet: subnet_4
+        us-gov-west-1:
+          - subnet: subnet_5
     helper_images:
       af-south-1: ami-093ca241e4c72c205
       ap-east-1: ami-0e992f1e63814db10
