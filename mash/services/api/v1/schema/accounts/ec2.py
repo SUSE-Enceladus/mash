@@ -40,6 +40,21 @@ partition = {
     'enum': ['aws', 'aws-cn', 'aws-us-gov']
 }
 
+ec2_subnets = {
+    'type': 'array',
+    'items': {
+        'type': 'object',
+        'properties': {
+            'region': string_with_example('us-east-44'),
+            'subnet': string_with_example('T-12345678')
+        },
+        'required': ['region', 'subnet'],
+        'additionalProperties': False
+    },
+    'minItems': 1,
+    'example': [{'region': 'us-east-44', 'subnet': 'subnet-12345678'}]
+}
+
 ec2_account = {
     'type': 'object',
     'properties': {
@@ -48,7 +63,7 @@ ec2_account = {
         'group': string_with_example('group1'),
         'partition': partition,
         'region': string_with_example('us-east-1'),
-        'subnet': string_with_example('subnet-12345678')
+        'subnets': ec2_subnets
     },
     'additionalProperties': False,
     'required': [
@@ -79,7 +94,7 @@ ec2_account_update = {
         'additional_regions': additional_regions,
         'group': string_with_example('group1'),
         'region': string_with_example('us-east-1'),
-        'subnet': string_with_example('subnet-12345678'),
+        'subnets': ec2_subnets,
         'credentials': ec2_credentials
     },
     'additionalProperties': False,
@@ -87,7 +102,7 @@ ec2_account_update = {
         {'required': ['additional_regions']},
         {'required': ['group']},
         {'required': ['region']},
-        {'required': ['subnet']},
+        {'required': ['subnets']},
         {'required': ['credentials']}
     ]
 }

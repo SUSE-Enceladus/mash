@@ -78,6 +78,12 @@ def test_add_target_ec2_account(mock_get_regions):
                 'name': 'us-east-100',
                 'helper_image': 'ami-987'
             }
+        ],
+        'subnets': [
+            {
+                'subnet': 'subnet-111111',
+                'region': 'us-east-100'
+            }
         ]
     }
 

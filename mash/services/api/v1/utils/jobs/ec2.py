@@ -64,8 +64,9 @@ def add_target_ec2_account(
     """
     job_doc_data = cloud_accounts.get(account['name'], {})
     region_name = job_doc_data.get('region') or account.get('region')
-    subnet = job_doc_data.get('subnet') or account.get('subnet')
-
+    subnet = job_doc_data.get('subnet') or get_subnet_for_region(
+        account.get('subnets'), region_name
+    )
     if skip_replication:
         regions = [region_name]
         if account.get('additional_regions'):  # In case an additional region is used
@@ -202,3 +203,15 @@ def validate_ec2_job(job_doc):
     job_doc['target_account_info'] = accounts
 
     return job_doc
+
+
+def get_subnet_for_region(subnets, region_name):
+    """
+    Provides the subnet configured in some account for a specific region
+    """
+    subnet_name = ''
+    for subnet in subnets:
+        if subnet['region'] == region_name:
+            subnet_name = subnet['subnet']
+            break
+    return subnet_name
