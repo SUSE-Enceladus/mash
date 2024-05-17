@@ -21,7 +21,12 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from mash.services.database.extensions import db
 from mash.services.database.utils.users import get_user_by_id
-from mash.services.database.models import EC2Group, EC2Region, EC2Account
+from mash.services.database.models import (
+    EC2Group,
+    EC2Region,
+    EC2Account,
+    EC2Subnet
+)
 from mash.utils.mash_utils import handle_request
 from mash.mash_exceptions import MashDBException
 
@@ -72,13 +77,26 @@ def create_new_ec2_region(region_name, helper_image, account):
     return region
 
 
+def create_new_ec2_subnet(region, subnet, account):
+    """
+    Creates a new EC2 subnet
+    """
+    new_subnet = EC2Subnet(
+        region=region,
+        subnet=subnet,
+        account=account
+    )
+    db.session.add(new_subnet)
+    return new_subnet
+
+
 def create_new_ec2_account(
     user_id,
     account_name,
     partition,
     region_name,
     credentials,
-    subnet,
+    subnets,
     group_name,
     additional_regions
 ):
@@ -98,7 +116,6 @@ def create_new_ec2_account(
         name=account_name,
         partition=partition,
         region=region_name,
-        subnet=subnet,
         user_id=user_id
     )
 
@@ -112,6 +129,14 @@ def create_new_ec2_account(
                 additional_region['name'],
                 additional_region['helper_image'],
                 account
+            )
+
+    if subnets:
+        for subnet in subnets:
+            create_new_ec2_subnet(
+                region=subnet['region'],
+                subnet=subnet['subnet'],
+                account=account
             )
 
     try:
@@ -191,7 +216,7 @@ def update_ec2_account_for_user(
     credentials=None,
     group=None,
     region=None,
-    subnet=None
+    subnets=None
 ):
     """
     Update an existing EC2 account.
@@ -233,8 +258,13 @@ def update_ec2_account_for_user(
     if region:
         ec2_account.region = region
 
-    if subnet:
-        ec2_account.subnet = subnet
+    if subnets:
+        for subnet in subnets:
+            create_new_ec2_subnet(
+                region=subnet['region'],
+                subnet=subnet['subnet'],
+                account=ec2_account
+            )
 
     try:
         db.session.add(ec2_account)
