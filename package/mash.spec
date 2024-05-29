@@ -19,7 +19,7 @@
 %{?sle15_python_module_pythons}
 
 Name:           mash
-Version:        13.11.0
+Version:        13.12.0
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/mash
 Summary:        Public Cloud Release Tool
