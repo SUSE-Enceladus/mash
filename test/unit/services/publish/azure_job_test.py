@@ -6,7 +6,7 @@ from mash.services.publish.azure_job import AzurePublishJob
 
 
 class TestAzurePublishJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'emails': 'jdoe@fake.com',
             'id': '1',
@@ -54,10 +54,16 @@ class TestAzurePublishJob(object):
         with raises(MashPublishException):
             AzurePublishJob(self.job_config, self.config)
 
+    @patch('mash.services.publish.azure_job.get_blob_url')
     @patch('mash.services.publish.azure_job.AzureImage')
-    def test_publish(self, mock_azure_image):
+    def test_publish(self, mock_azure_image, mock_get_blob_url):
         azure_image = MagicMock()
         mock_azure_image.return_value = azure_image
+        mock_get_blob_url.return_value = (
+            'https://account.blob.core.windows.net/images/image_123.raw?'
+            'sp=rl&st=2021-08-27T20:23:21Z&se=2021-08-28T04:23:21Z&spr=https'
+            '&sv=2020-08-04&sr=c&sig=supersecretstuffhere'
+        )
 
         self.job.run_job()
 
@@ -69,11 +75,17 @@ class TestAzurePublishJob(object):
             call('Updated cloud partner offer doc for account: acnt1.'),
         ])
 
+    @patch('mash.services.publish.azure_job.get_blob_url')
     @patch('mash.services.publish.azure_job.AzureImage')
-    def test_publish_exception(self, mock_azure_image):
+    def test_publish_exception(self, mock_azure_image, mock_get_blob_url):
         azure_image = MagicMock()
         mock_azure_image.return_value = azure_image
         azure_image.add_image_to_offer.side_effect = Exception('Invalid doc!')
+        mock_get_blob_url.return_value = (
+            'https://account.blob.core.windows.net/images/image_123.raw?'
+            'sp=rl&st=2021-08-27T20:23:21Z&se=2021-08-28T04:23:21Z&spr=https'
+            '&sv=2020-08-04&sr=c&sig=supersecretstuffhere'
+        )
 
         self.job.run_job()
 

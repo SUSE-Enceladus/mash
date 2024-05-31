@@ -2,7 +2,7 @@ from mash.services.cleanup.config import CleanupConfig
 
 
 class TestTestConfig(object):
-    def setup(self):
+    def setup_method(self):
         self.empty_config = CleanupConfig('test/data/empty_mash_config.yaml')
         self.config = CleanupConfig('test/data/mash_config.yaml')
 

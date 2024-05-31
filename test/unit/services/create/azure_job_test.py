@@ -9,7 +9,7 @@ from mash.services.base_config import BaseConfig
 
 
 class TestAzureCreateJob(object):
-    def setup(self):
+    def setup_method(self):
         self.credentials = {
             'test': {
                 'clientId': 'a',

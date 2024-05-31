@@ -9,7 +9,7 @@ from mash.log.handler import (
 
 
 class TestRabbitMQHandler(object):
-    def setup(self):
+    def setup_method(self):
         self.connection = Mock()
         self.channel = Mock()
         self.channel.exchange.declare.return_value = None

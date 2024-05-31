@@ -15,9 +15,11 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
+%define python python
+%{?sle15_python_module_pythons}
 
 Name:           mash
-Version:        13.10.0
+Version:        13.12.0
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/mash
 Summary:        Public Cloud Release Tool
@@ -26,63 +28,65 @@ Group:          System/Management
 Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python-rpm-macros
-BuildRequires:  python3-devel
-BuildRequires:  python3-setuptools
-BuildRequires:  python3-boto3
-BuildRequires:  python3-cryptography >= 2.2.0
-BuildRequires:  python3-PyYAML
-BuildRequires:  python3-PyJWT
-BuildRequires:  python3-amqpstorm >= 2.4.0
-BuildRequires:  python3-APScheduler >= 3.3.1
-BuildRequires:  python3-python-dateutil >= 2.6.0
-BuildRequires:  python3-ec2imgutils >= 10.0.3
-BuildRequires:  python3-img-proof >= 7.14.0
-BuildRequires:  python3-img-proof-tests >= 7.14.0
-BuildRequires:  python3-Flask
-BuildRequires:  python3-flask-restx
-BuildRequires:  python3-Flask-SQLAlchemy
-BuildRequires:  python3-Flask-Migrate
-BuildRequires:  python3-flask-jwt-extended
-BuildRequires:  python3-requests
-BuildRequires:  python3-obs-img-utils >= 1.0.0
-BuildRequires:  python3-oci-sdk
-BuildRequires:  python3-google-auth
-BuildRequires:  python3-google-cloud-storage
-BuildRequires:  python3-google-api-python-client
-BuildRequires:  python3-aliyun-img-utils >= 1.4.0
-BuildRequires:  python3-azure-img-utils >= 2.0.0
-BuildRequires:  python3-Werkzeug
-BuildRequires:  python3-jmespath
+BuildRequires:  %{python_module pip}
+BuildRequires:  %{python_module setuptools}
+BuildRequires:  %{python_module wheel}
+BuildRequires:  %{python_module boto3}
+BuildRequires:  %{python_module cryptography >= 2.2.0}
+BuildRequires:  %{python_module PyYAML}
+BuildRequires:  %{python_module PyJWT}
+BuildRequires:  %{python_module amqpstorm >= 2.4.0}
+BuildRequires:  %{python_module APScheduler >= 3.3.1}
+BuildRequires:  %{python_module python-dateutil >= 2.6.0}
+BuildRequires:  %{python_module ec2imgutils >= 10.0.3}
+BuildRequires:  %{python_module img-proof >= 7.14.0}
+BuildRequires:  %{python_module img-proof-tests >= 7.14.0}
+BuildRequires:  %{python_module Flask}
+BuildRequires:  %{python_module flask-restx}
+BuildRequires:  %{python_module Flask-SQLAlchemy}
+BuildRequires:  %{python_module Flask-Migrate}
+BuildRequires:  %{python_module flask-jwt-extended}
+BuildRequires:  %{python_module requests}
+BuildRequires:  %{python_module obs-img-utils >= 1.0.0}
+BuildRequires:  %{python_module oci-sdk}
+BuildRequires:  %{python_module google-auth}
+BuildRequires:  %{python_module google-cloud-storage}
+BuildRequires:  %{python_module google-api-python-client}
+BuildRequires:  %{python_module aliyun-img-utils >= 1.4.0}
+BuildRequires:  %{python_module azure-img-utils >= 2.0.0}
+BuildRequires:  %{python_module Werkzeug}
+BuildRequires:  %{python_module jmespath}
 Requires:       rabbitmq-server
-Requires:       python3-boto3
-Requires:       python3-cryptography >= 2.2.0
-Requires:       python3-PyYAML
-Requires:       python3-PyJWT
-Requires:       python3-amqpstorm >= 2.4.0
-Requires:       python3-APScheduler >= 3.3.1
-Requires:       python3-python-dateutil >= 2.6.0
-Requires:       python3-ec2imgutils >= 10.0.3
-Requires:       python3-img-proof >= 7.14.0
-Requires:       python3-img-proof-tests >= 7.14.0
-Requires:       python3-Flask
-Requires:       python3-flask-restx
-Requires:       python3-Flask-SQLAlchemy
-Requires:       python3-Flask-Migrate
-Requires:       python3-flask-jwt-extended
-Requires:       python3-requests
-Requires:       python3-obs-img-utils >= 1.0.0
-Requires:       python3-oci-sdk
-Requires:       python3-google-auth
-Requires:       python3-google-cloud-storage
-Requires:       python3-google-api-python-client
-Requires:       python3-aliyun-img-utils >= 1.4.0
-Requires:       python3-azure-img-utils >= 2.0.0
-Requires:       python3-Werkzeug
-Requires:       python3-jmespath
+Requires:       python-boto3
+Requires:       python-cryptography >= 2.2.0
+Requires:       python-PyYAML
+Requires:       python-PyJWT
+Requires:       python-amqpstorm >= 2.4.0
+Requires:       python-APScheduler >= 3.3.1
+Requires:       python-python-dateutil >= 2.6.0
+Requires:       python-ec2imgutils >= 10.0.3
+Requires:       python-img-proof >= 7.14.0
+Requires:       python-img-proof-tests >= 7.14.0
+Requires:       python-Flask
+Requires:       python-flask-restx
+Requires:       python-Flask-SQLAlchemy
+Requires:       python-Flask-Migrate
+Requires:       python-flask-jwt-extended
+Requires:       python-requests
+Requires:       python-obs-img-utils >= 1.0.0
+Requires:       python-oci-sdk
+Requires:       python-google-auth
+Requires:       python-google-cloud-storage
+Requires:       python-google-api-python-client
+Requires:       python-aliyun-img-utils >= 1.4.0
+Requires:       python-azure-img-utils >= 2.0.0
+Requires:       python-Werkzeug
+Requires:       python-jmespath
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
 Requires(pre):  pwdutils
 BuildArch:      noarch
+%python_subpackages
 
 %description
 Public Cloud Release Tool for release automation from image
@@ -90,13 +94,13 @@ build in obs to image available for customers in the public
 cloud
 
 %prep
-%setup -q -n mash-%{version}
+%autosetup -n mash-%{version}
 
 %build
-python3 setup.py build
+%pyproject_wheel
 
 %install
-python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
+%pyproject_install
 
 mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 
@@ -163,11 +167,11 @@ install -D -m 644 config/mash_cleanup.service \
 
 %check
 export LANG=en_US.UTF-8
-python3 -m pytest
+%pytest
 
 %files
 %defattr(-,root,root,-)
-%{python3_sitelib}/*
+%{python_sitelib}/*
 %dir %attr(755, mash, mash)%{_localstatedir}/log/%{name}
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/%{name}
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/%{name}/credentials
@@ -224,3 +228,4 @@ python3 -m pytest
 %{_unitdir}/mash_cleanup.service
 
 %changelog
+

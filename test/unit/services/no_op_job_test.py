@@ -4,7 +4,7 @@ from mash.services.no_op_job import NoOpJob
 
 
 class TestNoOpJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'last_service': 'deprecate',

@@ -6,7 +6,7 @@ from mash.services.jobcreator.base_job import BaseJob
 
 class TestJobCreatorBaseJob(object):
 
-    def setup(self):
+    def setup_method(self):
         self.job = BaseJob({
             'job_id': '123',
             'cloud': 'aws',

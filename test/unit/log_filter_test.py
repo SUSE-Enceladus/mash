@@ -9,7 +9,7 @@ import os
 
 
 class TestSchedulerLoggingFilter(object):
-    def setup(self):
+    def setup_method(self):
         self.log_filter = SchedulerLoggingFilter()
         self.record_type = namedtuple(
             'record_type', ['msg']
@@ -27,7 +27,7 @@ class TestSchedulerLoggingFilter(object):
 
 
 class TestBaseServiceFilter(object):
-    def setup(self):
+    def setup_method(self):
         self.log_filter = BaseServiceFilter()
         self.record = Mock()
         self.record.msg = 'Log Message!'

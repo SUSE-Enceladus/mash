@@ -1,3 +1,18 @@
+v13.12.0 (2024-05-29)
+====================
+
+- Update spec to build for python 3.11
+
+v13.11.0 (2024-03-06)
+====================
+
+- Documentation updates
+- Use factory job pattern for download service
+- Create blob url for azure image blob using compute credential
+- Fix issue with test selection for ec2 uefi jobs
+- Removed unused non-credential service code
+- Fix unit tests for deprecated setup method
+
 v13.10.0 (2024-02-23)
 ====================
 

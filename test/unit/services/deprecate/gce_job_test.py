@@ -6,7 +6,7 @@ from mash.mash_exceptions import MashDeprecateException
 
 
 class TestGCEDeprecateJob(object):
-    def setup(self):
+    def setup_method(self):
         self.job_config = {
             'id': '1',
             'last_service': 'deprecate',

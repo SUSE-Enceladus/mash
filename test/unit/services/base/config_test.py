@@ -6,7 +6,7 @@ from pytest import raises
 
 
 class TestBaseConfig(object):
-    def setup(self):
+    def setup_method(self):
         self.empty_config = BaseConfig('test/data/empty_mash_config.yaml')
         self.config = BaseConfig('test/data/mash_config.yaml')
 
@@ -40,19 +40,12 @@ class TestBaseConfig(object):
         assert str(error.value) == \
             'cloud data must be provided in config file.'
 
-    def test_get_services_names(self):
-        # Services requiring credentials
+    def test_get_service_names(self):
+        # Services
         expected = [
-            'upload', 'create', 'test', 'raw_image_upload',
+            'download', 'upload', 'create', 'test', 'raw_image_upload',
             'replicate', 'publish', 'deprecate'
         ]
-        services = self.empty_config.get_service_names(
-            credentials_required=True
-        )
-        assert expected == services
-
-        # All services
-        expected = ['download'] + expected
         services = self.empty_config.get_service_names()
         assert expected == services
 
