@@ -40,7 +40,7 @@ partition = {
     'enum': ['aws', 'aws-cn', 'aws-us-gov']
 }
 
-ec2_subnets = {
+test_regions = {
     'type': 'array',
     'items': {
         'type': 'object',
@@ -63,7 +63,7 @@ ec2_account = {
         'group': string_with_example('group1'),
         'partition': partition,
         'region': string_with_example('us-east-1'),
-        'subnets': ec2_subnets
+        'test_regions': test_regions
     },
     'additionalProperties': False,
     'required': [
