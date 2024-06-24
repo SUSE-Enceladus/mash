@@ -1,3 +1,10 @@
+v13.13.0 (2024-06-24)
+===================
+
+- Update quickstart docs to run mash as container
+- Sets submit_change_request to True for all EC2 jobs with
+- Add imds support to EC2 jobs
+
 v13.12.1 (2024-06-03)
 ===================
 
