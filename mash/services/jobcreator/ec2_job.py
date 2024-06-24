@@ -133,7 +133,9 @@ class EC2Job(BaseJob):
 
             if self.ssh_user:
                 publish_message['publish_job']['ssh_user'] = self.ssh_user
-            if not self.old_cloud_image_name:
+            if (
+                not self.old_cloud_image_name or self.last_service == 'publish'
+            ):
                 publish_message['publish_job']['submit_change_request'] = True
         else:
             publish_message = {
