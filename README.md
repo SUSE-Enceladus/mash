@@ -16,7 +16,7 @@ the mash pipeline. The following steps are needed to get started:
 
 ```bash
 podman pull registry.opensuse.org/virtualization/appliances/images/images_tw/opensuse/mash:latest
-podman run -ti mash
+podman run --cap-add CAP_SYS_ADMIN -ti --name mash_server mash
 ```
 
 The mash instance starts up and a login prompt to the system appears.
