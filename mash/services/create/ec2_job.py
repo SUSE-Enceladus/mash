@@ -73,6 +73,7 @@ class EC2CreateJob(MashJob):
             'boot_firmware',
             ['uefi-preferred']
         )
+        self.imds_version = self.job_config.get('imds_version', 'v2.0')
 
         # EC2 images only support one firmware
         self.boot_firmware = self.boot_firmware[0]
@@ -136,6 +137,9 @@ class EC2CreateJob(MashJob):
 
         if self.tpm_support:
             self.ec2_upload_parameters['tpm_support'] = self.tpm_support
+
+        if self.imds_version:
+            self.ec2_upload_parameters['imds_version'] = self.imds_version
 
         # Get all account credentials in one request
         accounts = []
