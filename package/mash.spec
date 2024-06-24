@@ -19,7 +19,7 @@
 %{?sle15_python_module_pythons}
 
 Name:           mash
-Version:        13.12.0
+Version:        13.12.1
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/mash
 Summary:        Public Cloud Release Tool
@@ -28,65 +28,64 @@ Group:          System/Management
 Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  python-rpm-macros
-BuildRequires:  %{python_module pip}
-BuildRequires:  %{python_module setuptools}
-BuildRequires:  %{python_module wheel}
-BuildRequires:  %{python_module boto3}
-BuildRequires:  %{python_module cryptography >= 2.2.0}
-BuildRequires:  %{python_module PyYAML}
-BuildRequires:  %{python_module PyJWT}
-BuildRequires:  %{python_module amqpstorm >= 2.4.0}
-BuildRequires:  %{python_module APScheduler >= 3.3.1}
-BuildRequires:  %{python_module python-dateutil >= 2.6.0}
-BuildRequires:  %{python_module ec2imgutils >= 10.0.3}
-BuildRequires:  %{python_module img-proof >= 7.14.0}
-BuildRequires:  %{python_module img-proof-tests >= 7.14.0}
-BuildRequires:  %{python_module Flask}
-BuildRequires:  %{python_module flask-restx}
-BuildRequires:  %{python_module Flask-SQLAlchemy}
-BuildRequires:  %{python_module Flask-Migrate}
-BuildRequires:  %{python_module flask-jwt-extended}
-BuildRequires:  %{python_module requests}
-BuildRequires:  %{python_module obs-img-utils >= 1.0.0}
-BuildRequires:  %{python_module oci-sdk}
-BuildRequires:  %{python_module google-auth}
-BuildRequires:  %{python_module google-cloud-storage}
-BuildRequires:  %{python_module google-api-python-client}
-BuildRequires:  %{python_module aliyun-img-utils >= 1.4.0}
-BuildRequires:  %{python_module azure-img-utils >= 2.0.0}
-BuildRequires:  %{python_module Werkzeug}
-BuildRequires:  %{python_module jmespath}
+BuildRequires:  python311-pip
+BuildRequires:  python311-setuptools
+BuildRequires:  python311-wheel
+BuildRequires:  python311-boto3
+BuildRequires:  python311-cryptography >= 2.2.0
+BuildRequires:  python311-PyYAML
+BuildRequires:  python311-PyJWT
+BuildRequires:  python311-amqpstorm >= 2.4.0
+BuildRequires:  python311-APScheduler >= 3.3.1
+BuildRequires:  python311-python-dateutil >= 2.6.0
+BuildRequires:  python311-ec2imgutils >= 9.0.3
+BuildRequires:  python311-img-proof >= 7.14.0
+BuildRequires:  python311-img-proof-tests >= 7.14.0
+BuildRequires:  python311-Flask
+BuildRequires:  python311-flask-restx
+BuildRequires:  python311-Flask-SQLAlchemy
+BuildRequires:  python311-Flask-Migrate
+BuildRequires:  python311-flask-jwt-extended
+BuildRequires:  python311-requests
+BuildRequires:  python311-obs-img-utils >= 1.0.0
+BuildRequires:  python311-oci-sdk
+BuildRequires:  python311-google-auth
+BuildRequires:  python311-google-cloud-storage
+BuildRequires:  python311-google-api-python-client
+BuildRequires:  python311-aliyun-img-utils >= 1.4.0
+BuildRequires:  python311-azure-img-utils >= 2.0.0
+BuildRequires:  python311-Werkzeug
+BuildRequires:  python311-jmespath
 Requires:       rabbitmq-server
-Requires:       python-boto3
-Requires:       python-cryptography >= 2.2.0
-Requires:       python-PyYAML
-Requires:       python-PyJWT
-Requires:       python-amqpstorm >= 2.4.0
-Requires:       python-APScheduler >= 3.3.1
-Requires:       python-python-dateutil >= 2.6.0
-Requires:       python-ec2imgutils >= 10.0.3
-Requires:       python-img-proof >= 7.14.0
-Requires:       python-img-proof-tests >= 7.14.0
-Requires:       python-Flask
-Requires:       python-flask-restx
-Requires:       python-Flask-SQLAlchemy
-Requires:       python-Flask-Migrate
-Requires:       python-flask-jwt-extended
-Requires:       python-requests
-Requires:       python-obs-img-utils >= 1.0.0
-Requires:       python-oci-sdk
-Requires:       python-google-auth
-Requires:       python-google-cloud-storage
-Requires:       python-google-api-python-client
-Requires:       python-aliyun-img-utils >= 1.4.0
-Requires:       python-azure-img-utils >= 2.0.0
-Requires:       python-Werkzeug
-Requires:       python-jmespath
+Requires:       python311-boto3
+Requires:       python311-cryptography >= 2.2.0
+Requires:       python311-PyYAML
+Requires:       python311-PyJWT
+Requires:       python311-amqpstorm >= 2.4.0
+Requires:       python311-APScheduler >= 3.3.1
+Requires:       python311-python-dateutil >= 2.6.0
+Requires:       python311-ec2imgutils >= 9.0.3
+Requires:       python311-img-proof >= 7.14.0
+Requires:       python311-img-proof-tests >= 7.14.0
+Requires:       python311-Flask
+Requires:       python311-flask-restx
+Requires:       python311-Flask-SQLAlchemy
+Requires:       python311-Flask-Migrate
+Requires:       python311-flask-jwt-extended
+Requires:       python311-requests
+Requires:       python311-obs-img-utils >= 1.0.0
+Requires:       python311-oci-sdk
+Requires:       python311-google-auth
+Requires:       python311-google-cloud-storage
+Requires:       python311-google-api-python-client
+Requires:       python311-aliyun-img-utils >= 1.4.0
+Requires:       python311-azure-img-utils >= 2.0.0
+Requires:       python311-Werkzeug
+Requires:       python311-jmespath
 Requires:       apache2
 Requires:       apache2-mod_wsgi-python3
 Requires(pre):  pwdutils
 BuildArch:      noarch
-%python_subpackages
 
 %description
 Public Cloud Release Tool for release automation from image
