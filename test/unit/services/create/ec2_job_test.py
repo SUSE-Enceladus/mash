@@ -158,7 +158,7 @@ class TestAmazonCreateJob(object):
             log_callback=self.job._log_callback,
             tpm_support='v2.0',
             boot_mode='uefi-preferred',
-            imds_version='v2.0',
+            imds_support='v2.0',
         )
         open_context.file_mock.write.assert_called_once_with('pkey')
         ec2_client.create_key_pair.assert_called_once_with(KeyName='mash-xxxx')
