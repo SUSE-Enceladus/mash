@@ -139,7 +139,7 @@ class EC2CreateJob(MashJob):
             self.ec2_upload_parameters['tpm_support'] = self.tpm_support
 
         if self.imds_version:
-            self.ec2_upload_parameters['imds_version'] = self.imds_version
+            self.ec2_upload_parameters['imds_support'] = self.imds_version
 
         # Get all account credentials in one request
         accounts = []
