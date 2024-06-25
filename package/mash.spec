@@ -83,7 +83,7 @@ Requires:       python311-azure-img-utils >= 2.0.0
 Requires:       python311-Werkzeug
 Requires:       python311-jmespath
 Requires:       apache2
-Requires:       apache2-mod_wsgi-python3
+Requires:       apache2-mod_wsgi-python311
 Requires(pre):  pwdutils
 BuildArch:      noarch
 
