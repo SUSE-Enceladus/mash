@@ -79,7 +79,7 @@ def test_add_target_ec2_account(mock_get_regions):
                 'helper_image': 'ami-987'
             }
         ],
-        'subnets': [
+        'test_regions': [
             {
                 'subnet': 'subnet-111111',
                 'region': 'us-east-100'
@@ -106,6 +106,8 @@ def test_add_target_ec2_account(mock_get_regions):
     assert accounts['us-east-100']['helper_image'] == 'ami-456'
     assert 'us-east-99' in accounts['us-east-100']['target_regions']
     assert 'us-east-100' in accounts['us-east-100']['target_regions']
+    assert 'subnet-111111' in \
+        accounts['us-east-100']['test_regions'][0]['subnet']
 
     cloud_accounts = {'acnt1': {}}
 
