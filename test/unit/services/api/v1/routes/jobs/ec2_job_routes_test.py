@@ -39,7 +39,14 @@ def test_api_add_job_ec2(
     account = {
         'region': 'ap-northeast-1',
         'name': 'test-aws-gov',
-        'partition': 'aws'
+        'partition': 'aws',
+        'subnet': 'subnet-1111111',
+        'test_regions': [
+            {
+                'subnet': 'subnet-2222222',
+                'region': 'ap-northeast-2'
+            }
+        ]
     }
     mock_get_account.return_value = account
     mock_get_accounts.return_value = [account]
