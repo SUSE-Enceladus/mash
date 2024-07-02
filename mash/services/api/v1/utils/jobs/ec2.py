@@ -64,20 +64,23 @@ def add_target_ec2_account(
     """
     job_doc_data = cloud_accounts.get(account['name'], {})
     region_name = job_doc_data.get('region') or account.get('region')
-    subnet = job_doc_data.get('subnet') or get_subnet_for_region(
-        account.get('subnets'), region_name
-    )
+    subnet = job_doc_data.get('subnet') or account.get('subnet')
+    test_regions = []
     if skip_replication:
         regions = [region_name]
         if account.get('additional_regions'):  # In case an additional region is used
             for region in account['additional_regions']:
                 helper_images[region['name']] = region['helper_image']
+        if account.get('test_regions', []):
+            test_regions = account.get('test_regions')
     else:
         regions = get_ec2_regions_by_partition(account['partition'])
         if account.get('additional_regions'):
             for region in account['additional_regions']:
                 helper_images[region['name']] = region['helper_image']
                 regions.append(region['name'])
+        if account.get('test_regions', []):
+            test_regions = account.get('test_regions')
 
     if use_root_swap:
         try:
@@ -95,7 +98,8 @@ def add_target_ec2_account(
         'partition': account['partition'],
         'target_regions': list(set(regions)),  # Remove any duplicates
         'helper_image': helper_image,
-        'subnet': subnet
+        'subnet': subnet,
+        'test_regions': test_regions
     }
 
 

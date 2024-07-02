@@ -31,8 +31,7 @@ ec2_job_account = {
         ),
         'region': string_with_example(
             'us-east-1',
-            description='Region to use for initial image creation and '
-                        'test.'
+            description='Region to use for initial image creation.'
         ),
         'root_swap_ami': string_with_example(
             'ami-1234567890',
@@ -41,8 +40,7 @@ ec2_job_account = {
         ),
         'subnet': string_with_example(
             'subnet-12345678',
-            description='The subnet to use for image test and image '
-                        'creation.'
+            description='The subnet to use for image creation.'
         )
     },
     'additionalProperties': False,

@@ -23,7 +23,13 @@ def test_api_add_account_ec2(
         },
         'group': 'group1',
         'partition': 'aws',
-        'region': 'us-east-1'
+        'region': 'us-east-1',
+        'test_regions': [
+            {
+                'region': 'us-east-2',
+                'subnet': 'subnet-12345678'
+            }
+        ]
     }
     response = Mock()
     response.json.return_value = request

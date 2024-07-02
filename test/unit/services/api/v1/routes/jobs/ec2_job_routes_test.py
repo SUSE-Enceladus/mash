@@ -40,10 +40,11 @@ def test_api_add_job_ec2(
         'region': 'ap-northeast-1',
         'name': 'test-aws-gov',
         'partition': 'aws',
-        'subnets': [
+        'subnet': 'subnet-1111111',
+        'test_regions': [
             {
-                'subnet': 'subnet-1111111',
-                'region': 'ap-northeast-1'
+                'subnet': 'subnet-2222222',
+                'region': 'ap-northeast-2'
             }
         ]
     }
