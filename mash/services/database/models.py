@@ -136,13 +136,34 @@ class EC2Region(db.Model):
         return '<EC2 Region {}>'.format(self.name)
 
 
+class EC2Subnet(db.Model):
+    __tablename__ = 'ec2_subnet'
+    id = db.Column(db.Integer, primary_key=True)
+    region = db.Column(db.String(32), nullable=False)
+    subnet = db.Column(db.String(32), nullable=True)
+    account_id = db.Column(
+        db.Integer,
+        db.ForeignKey('ec2_account.id'),
+        nullable=False
+    )
+    account = db.relationship('EC2Account', back_populates='subnets')
+
+    def __repr__(self):
+        return '<EC2 Subnet Region {} {}>'.format(self.region, self.subnet22)
+
+
 class EC2Account(db.Model):
     __tablename__ = 'ec2_account'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
     partition = db.Column(db.String(10), nullable=False)
     region = db.Column(db.String(32), nullable=False)
-    subnet = db.Column(db.String(32))
+    subnets = db.relationship(
+        'EC2Subnet',
+        back_populates='account',
+        lazy='select',
+        cascade="all, delete, delete-orphan"
+    )
     additional_regions = db.relationship(
         'EC2Region',
         back_populates='account',

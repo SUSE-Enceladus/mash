@@ -21,7 +21,13 @@ def test_add_account_ec2(
             'secret_access_key': '654321'
         },
         'partition': 'aws',
-        'region': 'us-east-1'
+        'region': 'us-east-1',
+        'subnets': [
+            {
+                'subnet': 'subnet-111111',
+                'region': 'us-east-1'
+            }
+        ]
     }
 
     response = test_client.post(
@@ -239,7 +245,12 @@ def test_update_account_ec2(
     account.name = 'user1'
     account.partition = 'aws'
     account.region = 'us-east-1'
-    account.subnet = None
+    account.subnets = [
+        {
+            'subnet': 'subnet1',
+            'region': 'us-east-1'
+        }
+    ]
     account.additional_regions = None
     account.group = None
 
@@ -255,7 +266,12 @@ def test_update_account_ec2(
         'partition': 'aws',
         'region': 'us-east-1',
         'group': 'grp1',
-        'subnet': 'subnet1'
+        'subnets': [
+            {
+                'subnet': 'subnet1',
+                'region': 'us-east-1'
+            }
+        ]
     }
 
     response = test_client.put(
