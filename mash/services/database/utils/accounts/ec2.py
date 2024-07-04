@@ -25,7 +25,7 @@ from mash.services.database.models import (
     EC2Group,
     EC2Region,
     EC2Account,
-    EC2Subnet
+    EC2TestRegion
 )
 from mash.utils.mash_utils import handle_request
 from mash.mash_exceptions import MashDBException
@@ -77,17 +77,17 @@ def create_new_ec2_region(region_name, helper_image, account):
     return region
 
 
-def create_new_ec2_subnet(region, subnet, account):
+def create_new_ec2_test_region(region, subnet, account):
     """
-    Creates a new EC2 subnet
+    Creates a new EC2 test region
     """
-    new_subnet = EC2Subnet(
+    ec2_test_region = EC2TestRegion(
         region=region,
         subnet=subnet,
         account=account
     )
-    db.session.add(new_subnet)
-    return new_subnet
+    db.session.add(ec2_test_region)
+    return ec2_test_region
 
 
 def create_new_ec2_account(
@@ -96,9 +96,10 @@ def create_new_ec2_account(
     partition,
     region_name,
     credentials,
-    subnets,
+    subnet,
     group_name,
-    additional_regions
+    additional_regions,
+    test_regions
 ):
     """
     Create a new EC2 account for user.
@@ -116,6 +117,7 @@ def create_new_ec2_account(
         name=account_name,
         partition=partition,
         region=region_name,
+        subnet=subnet,
         user_id=user_id
     )
 
@@ -131,11 +133,11 @@ def create_new_ec2_account(
                 account
             )
 
-    if subnets:
-        for subnet in subnets:
-            create_new_ec2_subnet(
-                region=subnet['region'],
-                subnet=subnet['subnet'],
+    if test_regions:
+        for test_region in test_regions:
+            create_new_ec2_test_region(
+                region=test_region['region'],
+                subnet=test_region['subnet'],
                 account=account
             )
 
@@ -216,7 +218,8 @@ def update_ec2_account_for_user(
     credentials=None,
     group=None,
     region=None,
-    subnets=None
+    subnet=None,
+    test_regions=None
 ):
     """
     Update an existing EC2 account.
@@ -258,11 +261,14 @@ def update_ec2_account_for_user(
     if region:
         ec2_account.region = region
 
-    if subnets:
-        for subnet in subnets:
-            create_new_ec2_subnet(
-                region=subnet['region'],
-                subnet=subnet['subnet'],
+    if subnet:
+        ec2_account.subnet = subnet
+
+    if test_regions:
+        for test_region in test_regions:
+            create_new_ec2_test_region(
+                region=test_region['region'],
+                subnet=test_region['subnet'],
                 account=ec2_account
             )
 

@@ -41,6 +41,13 @@ region = Model(
     }
 )
 
+ec2_test_region = Model(
+    'ec2_test_region', {
+        'region': fields.String,
+        'subnet': fields.String
+    }
+)
+
 group = Model(
     'group', {
         'id': fields.String,
@@ -58,7 +65,11 @@ ec2_account_response = Model(
         'additional_regions': fields.List(
             fields.Nested(region, skip_none=True)
         ),
-        'group': fields.Nested(group, skip_none=True)
+        'group': fields.Nested(group, skip_none=True),
+        'test_regions': fields.List(
+            fields.Nested(ec2_test_region, skip_none=True)
+        ),
+
     }
 )
 
@@ -76,7 +87,8 @@ def create_ec2_account():
             data['credentials'],
             data.get('subnet'),
             data.get('group'),
-            data.get('additional_regions')
+            data.get('additional_regions'),
+            data.get('test_regions')
         )
     except IntegrityError:
         return make_response(

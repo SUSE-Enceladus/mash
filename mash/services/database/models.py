@@ -136,8 +136,8 @@ class EC2Region(db.Model):
         return '<EC2 Region {}>'.format(self.name)
 
 
-class EC2Subnet(db.Model):
-    __tablename__ = 'ec2_subnet'
+class EC2TestRegion(db.Model):
+    __tablename__ = 'ec2_test_region'
     id = db.Column(db.Integer, primary_key=True)
     region = db.Column(db.String(32), nullable=False)
     subnet = db.Column(db.String(32), nullable=True)
@@ -146,10 +146,10 @@ class EC2Subnet(db.Model):
         db.ForeignKey('ec2_account.id'),
         nullable=False
     )
-    account = db.relationship('EC2Account', back_populates='subnets')
+    account = db.relationship('EC2Account', back_populates='test_regions')
 
     def __repr__(self):
-        return '<EC2 Subnet Region {} {}>'.format(self.region, self.subnet22)
+        return '<EC2 Test Region {} {}>'.format(self.region, self.subnet)
 
 
 class EC2Account(db.Model):
@@ -158,8 +158,9 @@ class EC2Account(db.Model):
     name = db.Column(db.String(64), nullable=False)
     partition = db.Column(db.String(10), nullable=False)
     region = db.Column(db.String(32), nullable=False)
-    subnets = db.relationship(
-        'EC2Subnet',
+    subnet = db.Column(db.String(32))
+    test_regions = db.relationship(
+        'EC2TestRegion',
         back_populates='account',
         lazy='select',
         cascade="all, delete, delete-orphan"
