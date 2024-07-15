@@ -1,3 +1,8 @@
+v13.14.0 (2024-07-15)
+=====================
+
+- Fix imds typo and Set default imds setting to v1.0 for ec2 jobs
+
 v13.13.1 (2024-06-25)
 =====================
 
