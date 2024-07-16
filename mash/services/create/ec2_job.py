@@ -73,7 +73,7 @@ class EC2CreateJob(MashJob):
             'boot_firmware',
             ['uefi-preferred']
         )
-        self.imds_version = self.job_config.get('imds_version', 'v1.0')
+        self.imds_version = self.job_config.get('imds_version', '')
 
         # EC2 images only support one firmware
         self.boot_firmware = self.boot_firmware[0]
