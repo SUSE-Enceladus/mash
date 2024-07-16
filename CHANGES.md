@@ -1,3 +1,8 @@
+v13.14.1 (2024-07-16)
+=====================
+
+- Fix bug in imds default version. Default is empty string
+
 v13.14.0 (2024-07-15)
 =====================
 
