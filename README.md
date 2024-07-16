@@ -16,32 +16,13 @@ the mash pipeline. The following steps are needed to get started:
 
 ```bash
 podman pull registry.opensuse.org/virtualization/appliances/images/images_tw/opensuse/mash:latest
-podman run --cap-add CAP_SYS_ADMIN -ti --name mash_server mash
+podman run --cap-add CAP_SYS_ADMIN --rm -ti --name mash_server mash
 ```
 
-The mash instance starts up and a login prompt to the system appears.
+The mash instance starts up in auto-login mode for the **masher** user.
 From here the following setup steps are required:
 
-1. Login to the instance
-
-   ```bash
-   login: masher
-   password: linux
-   ```
-
-2. Create a user for mash:
-
-   ```bash
-   mash user create --email test@fake.com
-   ```
-
-3. Login to mash:
-
-   ```bash
-   mash auth login --email test@fake.com
-   ```
-
-4. Setup public cloud account
+1. Setup public cloud account
 
    For the quick start, an AWS account setup is described. Please
    refer to [Configuring Mash Client](#configure_mash_client) for more
@@ -62,7 +43,7 @@ From here the following setup steps are required:
    from the respective AWS account credentials and account
    setup.
 
-5. Create a job
+2. Create a job
 
    The most simple mash job for AWS covers the upload and registration
    of an AMI image from a given EC2 disk image URL.
