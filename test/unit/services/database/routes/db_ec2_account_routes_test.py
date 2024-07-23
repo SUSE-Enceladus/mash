@@ -21,7 +21,14 @@ def test_add_account_ec2(
             'secret_access_key': '654321'
         },
         'partition': 'aws',
-        'region': 'us-east-1'
+        'region': 'us-east-1',
+        'subnet': 'subnet-111111',
+        'test_regions': [
+            {
+                'subnet': 'subnet-111111',
+                'region': 'us-east-1'
+            }
+        ]
     }
 
     response = test_client.post(
@@ -33,6 +40,8 @@ def test_add_account_ec2(
     assert response.status_code == 201
     assert response.json['name'] == 'test'
     assert response.json['region'] == 'us-east-1'
+    assert response.json['subnet'] == 'subnet-111111'
+    assert response.json['test_regions'][0]['subnet'] == 'subnet-111111'
 
     # Mash Exception
     mock_db.session.commit.side_effect = Exception('Broken')
@@ -240,6 +249,12 @@ def test_update_account_ec2(
     account.partition = 'aws'
     account.region = 'us-east-1'
     account.subnet = None
+    account.test_regions = [
+        {
+            'subnet': 'subnet1',
+            'region': 'us-east-1'
+        }
+    ]
     account.additional_regions = None
     account.group = None
 
@@ -255,7 +270,12 @@ def test_update_account_ec2(
         'partition': 'aws',
         'region': 'us-east-1',
         'group': 'grp1',
-        'subnet': 'subnet1'
+        'test_regions': [
+            {
+                'subnet': 'subnet1',
+                'region': 'us-east-1'
+            }
+        ]
     }
 
     response = test_client.put(
