@@ -25,6 +25,7 @@ from mash.mash_exceptions import MashException
 from mash.services.test_preparation.config import TestPreparationConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
+from mash.services.test_preparation.ec2_job import EC2TestPreparationJob
 
 
 def main():
@@ -43,6 +44,7 @@ def main():
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
+                'ec2': EC2TestPreparationJob
             }
         )
 

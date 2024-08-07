@@ -195,3 +195,9 @@ class MashEc2UtilsException(MashException):
     """
     Exception raised if an error occurs in EC2 Utils.
     """
+
+
+class MashTestPreparationException(MashException):
+    """
+    Base exception for test preparation service.
+    """

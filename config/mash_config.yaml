@@ -18,7 +18,9 @@ services:
   - download
   - upload
   - create
+  - test_preparation
   - test
+  - test_cleanup
   - raw_image_upload
   - replicate
   - publish
