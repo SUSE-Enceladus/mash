@@ -168,6 +168,11 @@ ec2_job_message['properties']['launch_inst_type'] = string_with_example(
     'm1.large',
     description='The helper instance type to use for image creation with ec2uploadimg.'
 )
+ec2_job_message['properties']['imds_version'] = string_with_example(
+    'v2.0',
+    description='Set the protocol version to be used when instances are'
+                'launched from the image, supported values 2.0/v2.0. '
+)
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},

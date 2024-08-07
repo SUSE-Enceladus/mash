@@ -1,4 +1,4 @@
-"""add ec2_subnet table
+"""add ec2_test_region table
 
 Revision ID: 89a2cf1d3255
 Revises: 15d8a6b81095
