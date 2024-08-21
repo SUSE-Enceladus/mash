@@ -313,3 +313,61 @@ class EC2Job(BaseJob):
         upload_message['upload_job'].update(self.base_message)
 
         return JsonFormat.json_message(upload_message)
+
+    def get_test_preparation_message(self):
+        """
+        Build test_preparation message.
+        """
+        image_description = (
+            'Image replicated by mash to allow test execution in this region.'
+        )
+        test_preparation_message = {
+            'test_preparation_job': {
+                'cloud': self.cloud,
+                'cloud_image_name': self.cloud_image_name,
+                'test_preparation_regions':
+                    self.get_test_preparation_regions(),
+                'image_description': image_description,
+                'test_preparation': True
+            }
+        }
+        test_preparation_message['test_preparation_job'].update(
+            self.base_message
+        )
+
+        return JsonFormat.json_message(test_preparation_message)
+
+    def get_test_preparation_regions(self):
+        """
+        Returns a dictionary of the regions where the test_preparation service
+        should replicate the image for the tests.
+        """
+        test_preparation_regions = {}
+
+        for source_region, value in self.target_account_info.items():
+            test_preparation_regions[source_region] = {
+                'account': value['account'],
+                'test_regions': [],
+                'partition': value['partition']
+            }
+            for test_region in value['test_regions']:
+                if test_region['region'] != source_region:
+                    test_preparation_regions[source_region]['test_regions']\
+                        .append(test_region['region'])
+
+        return test_preparation_regions
+
+    def get_test_cleanup_message(self):
+        """
+        Build test_cleanup message.
+        """
+        test_cleanup_message = {
+            'test_cleanup_job': {
+                'cloud': self.cloud,
+                'cloud_image_name': self.cloud_image_name,
+                'test_cleanup_regions': self.get_test_preparation_regions()
+            }
+        }
+        test_cleanup_message['test_cleanup_job'].update(self.base_message)
+
+        return JsonFormat.json_message(test_cleanup_message)

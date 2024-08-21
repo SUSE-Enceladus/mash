@@ -56,8 +56,8 @@ class TestEC2ReplicateJob(object):
         self.job.run_job()
 
         self.job._log_callback.info.assert_called_once_with(
-            'Replicating source region: us-east-1 to the following '
-            'regions: us-east-2.'
+            '(test-preparation=False) Replicating source region: us-east-1 to '
+            'the following regions: us-east-2.'
         )
         self.job._log_callback.warning.assert_called_once_with(
             'Replicate to us-east-2 region failed: Broken!'
@@ -71,7 +71,8 @@ class TestEC2ReplicateJob(object):
             self.job.credentials['test-aws']['access_key_id'],
             self.job.credentials['test-aws']['secret_access_key'],
             'ami-54321',
-            'us-east-2'
+            'us-east-2',
+            False
         )
         assert self.job.status == FAILED
 
@@ -132,8 +133,10 @@ class TestEC2ReplicateJob(object):
         mock_get_client.return_value = client
         mock_image_exists.return_value = False
 
-        msg = 'There was an error replicating image to us-east-2. ' \
-            'Error copying image!'
+        msg = (
+            'There was an error replicating(test_preparation=False) image'
+            ' to us-east-2. Error copying image!'
+        )
         with raises(MashReplicateException) as e:
             self.job._replicate_to_region(
                 self.job.credentials['test-aws'],
