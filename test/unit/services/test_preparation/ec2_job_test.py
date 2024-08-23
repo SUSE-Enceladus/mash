@@ -1,5 +1,5 @@
 from pytest import raises
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 
 from mash.mash_exceptions import MashReplicateException
 from mash.services.status_levels import FAILED
@@ -16,10 +16,10 @@ class TestEC2ReplicateJob(object):
             'cloud': 'ec2',
             'utctime': 'now',
             'test_preparation': True,
-            "test_preparation_regions": {
+            "replicate_source_regions": {
                 "us-east-1": {
                     "account": "test-aws",
-                    "target_regions": ["us-east-2"]
+                    "target_regions": ["us-east-2", 'us-east-3']
                 }
             }
         }
@@ -39,7 +39,7 @@ class TestEC2ReplicateJob(object):
         self.job.status_msg['source_regions'] = {'us-east-1': 'ami-12345'}
 
     def test_replicate_ec2_missing_key(self):
-        del self.job_config['test_preparation_regions']
+        del self.job_config['replicate_source_regions']
 
         with raises(MashReplicateException):
             EC2ReplicateJob(self.job_config, self.config)
@@ -58,21 +58,43 @@ class TestEC2ReplicateJob(object):
 
         self.job._log_callback.info.assert_called_once_with(
             '(test-preparation=True) Replicating source region: us-east-1 to '
-            'the following regions: us-east-2.'
+            'the following regions: us-east-2, us-east-3.'
         )
-        self.job._log_callback.warning.assert_called_once_with(
-            'Replicate to us-east-2 region failed: Broken!'
-        )
+        self.job._log_callback.warning.assert_has_calls([
+            call('Replicate to us-east-2 region failed: Broken!'),
+            call('Replicate to us-east-3 region failed: Broken!')
+        ])
 
-        mock_replicate_to_region.assert_called_once_with(
-            self.job.credentials['test-aws'], 'ami-12345',
-            'us-east-1', 'us-east-2'
-        )
-        mock_wait_on_image.assert_called_once_with(
-            self.job.credentials['test-aws']['access_key_id'],
-            self.job.credentials['test-aws']['secret_access_key'],
-            'ami-54321',
-            'us-east-2',
-            True
-        )
+        mock_replicate_to_region.assert_has_calls([
+            call(
+                self.job.credentials['test-aws'],
+                'ami-12345',
+                'us-east-1',
+                'us-east-2'
+            ),
+            call(
+                self.job.credentials['test-aws'],
+                'ami-12345',
+                'us-east-1',
+                'us-east-3'
+            )
+        ])
+        mock_wait_on_image.assert_has_calls([
+            call(
+                self.job.credentials['test-aws']['access_key_id'],
+                self.job.credentials['test-aws']['secret_access_key'],
+                'ami-54321',
+                'us-east-2',
+                True
+            ),
+            call(
+                self.job.credentials['test-aws']['access_key_id'],
+                self.job.credentials['test-aws']['secret_access_key'],
+                'ami-54321',
+                'us-east-3',
+                True
+            )
+        ])
         assert self.job.status == FAILED
+        assert 'us-east-2' in self.job.status_msg['test_regions']
+        assert 'us-east-3' in self.job.status_msg['test_regions']

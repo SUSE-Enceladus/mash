@@ -325,7 +325,7 @@ class EC2Job(BaseJob):
             'test_preparation_job': {
                 'cloud': self.cloud,
                 'cloud_image_name': self.cloud_image_name,
-                'test_preparation_regions':
+                'replicate_source_regions':
                     self.get_test_preparation_regions(),
                 'image_description': image_description,
                 'test_preparation': True
@@ -347,12 +347,12 @@ class EC2Job(BaseJob):
         for source_region, value in self.target_account_info.items():
             test_preparation_regions[source_region] = {
                 'account': value['account'],
-                'test_regions': [],
+                'target_regions': [],
                 'partition': value['partition']
             }
             for test_region in value['test_regions']:
                 if test_region['region'] != source_region:
-                    test_preparation_regions[source_region]['test_regions']\
+                    test_preparation_regions[source_region]['target_regions']\
                         .append(test_region['region'])
 
         return test_preparation_regions

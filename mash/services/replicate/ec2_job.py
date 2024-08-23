@@ -43,13 +43,14 @@ class EC2ReplicateJob(MashJob):
             # (True)
             self.test_preparation = \
                 self.job_config.get('test_preparation', False)
+
+            self.replicate_source_regions = \
+                self.job_config['replicate_source_regions']
+
             if self.test_preparation:
-                # Class used in the test_preparation service
-                self.replicate_source_regions = \
-                    self.job_config['test_preparation_regions']
+                self.status_msg_result_key = 'test_regions'
             else:
-                self.replicate_source_regions = \
-                    self.job_config['replicate_source_regions']
+                self.status_msg_result_key = 'source_regions'
         except KeyError as error:
             raise MashReplicateException(
                 'EC2 replicate jobs(test_preparation={0}) require a(n) '
@@ -68,6 +69,8 @@ class EC2ReplicateJob(MashJob):
         self.status = SUCCESS
         self.source_region_results = defaultdict(dict)
         self.cloud_image_name = self.status_msg['cloud_image_name']
+        if self.status_msg_result_key not in self.status_msg:
+            self.status_msg[self.status_msg_result_key] = {}
 
         # Get all account credentials in one request
         accounts = []
@@ -90,31 +93,26 @@ class EC2ReplicateJob(MashJob):
             )
 
             for target_region in reg_info['target_regions']:
-                if source_region != target_region:
-                    # Replicate image to all target regions
-                    # for each source region
-                    image_id = self._replicate_to_region(
-                        credential,
-                        self.status_msg['source_regions'][source_region],
-                        source_region,
-                        target_region
-                    )
+                if source_region == target_region:
+                    continue
 
-                    if self.test_preparation:
-                        if 'test_regions' not in self.status_msg:
-                            self.status_msg['test_regions'] = {}
-                        self.status_msg['test_regions'][target_region] = \
-                            image_id
-                    else:
-                        self.status_msg['source_regions'][target_region] = \
-                            image_id
-                    self.source_region_results[target_region]['image_id'] = \
-                        image_id
+                # Replicate image to all target regions
+                # for each source region
+                image_id = self._replicate_to_region(
+                    credential,
+                    self.status_msg['source_regions'][source_region],
+                    source_region,
+                    target_region
+                )
 
-                    # Save account along with results to prevent searching dict
-                    # twice to find associated credentials on each waiter.
-                    self.source_region_results[target_region]['account'] = \
-                        credential
+                self.status_msg[self.status_msg_result_key][target_region] = \
+                    image_id
+                self.source_region_results[target_region]['image_id'] = \
+                    image_id
+                # Save account along with results to prevent searching dict
+                # twice to find associated credentials on each waiter.
+                self.source_region_results[target_region]['account'] = \
+                    credential
 
         if self.source_region_results:
             # Wait for images to replicate, this will take time.
