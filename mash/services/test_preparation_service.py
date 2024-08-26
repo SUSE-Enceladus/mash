@@ -22,9 +22,11 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
+from mash.services.no_op_job import NoOpJob
 from mash.services.test_preparation.config import TestPreparationConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
+from mash.services.replicate.ec2_job import EC2ReplicateJob
 
 
 def main():
@@ -43,6 +45,12 @@ def main():
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
+                'azure': NoOpJob,
+                'ec2': EC2ReplicateJob,
+                'ec2_mp': EC2ReplicateJob,
+                'gce': NoOpJob,
+                'oci': NoOpJob,
+                'aliyun': NoOpJob
             }
         )
 

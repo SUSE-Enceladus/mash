@@ -38,12 +38,24 @@ class EC2ReplicateJob(MashJob):
         """
         try:
             self.image_description = self.job_config['image_description']
+            # Boolean that indicates if we're using the class in the replicate
+            # service (False, default value) or in the test_preparation service
+            # (True)
+            self.test_preparation = \
+                self.job_config.get('test_preparation', False)
+
             self.replicate_source_regions = \
                 self.job_config['replicate_source_regions']
+
+            if self.test_preparation:
+                self.status_msg_result_key = 'test_regions'
+            else:
+                self.status_msg_result_key = 'source_regions'
         except KeyError as error:
             raise MashReplicateException(
-                'EC2 replicate jobs require a(n) {0} '
-                'key in the job doc.'.format(
+                'EC2 replicate jobs(test_preparation={0}) require a(n) '
+                '{1} key in the job doc.'.format(
+                    self.test_preparation,
                     error
                 )
             )
@@ -57,6 +69,8 @@ class EC2ReplicateJob(MashJob):
         self.status = SUCCESS
         self.source_region_results = defaultdict(dict)
         self.cloud_image_name = self.status_msg['cloud_image_name']
+        if self.status_msg_result_key not in self.status_msg:
+            self.status_msg[self.status_msg_result_key] = {}
 
         # Get all account credentials in one request
         accounts = []
@@ -69,32 +83,36 @@ class EC2ReplicateJob(MashJob):
             credential = self.credentials[reg_info['account']]
 
             self.log_callback.info(
-                'Replicating source region: {0} to the following regions: {1}.'
+                '(test-preparation={0}) Replicating source region: {1} to the'
+                ' following regions: {2}.'
                 .format(
-                    source_region, ', '.join(reg_info['target_regions'])
+                    self.test_preparation,
+                    source_region,
+                    ', '.join(reg_info['target_regions'])
                 )
             )
 
             for target_region in reg_info['target_regions']:
-                if source_region != target_region:
-                    # Replicate image to all target regions
-                    # for each source region
-                    image_id = self._replicate_to_region(
-                        credential,
-                        self.status_msg['source_regions'][source_region],
-                        source_region,
-                        target_region
-                    )
+                if source_region == target_region:
+                    continue
 
-                    self.status_msg['source_regions'][target_region] = \
-                        image_id
-                    self.source_region_results[target_region]['image_id'] = \
-                        image_id
+                # Replicate image to all target regions
+                # for each source region
+                image_id = self._replicate_to_region(
+                    credential,
+                    self.status_msg['source_regions'][source_region],
+                    source_region,
+                    target_region
+                )
 
-                    # Save account along with results to prevent searching dict
-                    # twice to find associated credentials on each waiter.
-                    self.source_region_results[target_region]['account'] = \
-                        credential
+                self.status_msg[self.status_msg_result_key][target_region] = \
+                    image_id
+                self.source_region_results[target_region]['image_id'] = \
+                    image_id
+                # Save account along with results to prevent searching dict
+                # twice to find associated credentials on each waiter.
+                self.source_region_results[target_region]['account'] = \
+                    credential
 
         if self.source_region_results:
             # Wait for images to replicate, this will take time.
@@ -110,7 +128,8 @@ class EC2ReplicateJob(MashJob):
                         credential['access_key_id'],
                         credential['secret_access_key'],
                         reg_info['image_id'],
-                        target_region
+                        target_region,
+                        self.test_preparation
                     )
                 except Exception as error:
                     self.status = FAILED
@@ -145,16 +164,25 @@ class EC2ReplicateJob(MashJob):
                 new_image = {'ImageId': None}
         except Exception as e:
             raise MashReplicateException(
-                'There was an error replicating image to {0}. {1}'
+                'There was an error replicating(test_preparation={0})'
+                ' image to {1}. {2}'
                 .format(
-                    target_region, e
+                    self.test_preparation,
+                    target_region,
+                    e
                 )
             )
 
         return new_image['ImageId']
 
     @staticmethod
-    def _wait_on_image(access_key_id, secret_access_key, image_id, region):
+    def _wait_on_image(
+        access_key_id,
+        secret_access_key,
+        image_id,
+        region,
+        test_preparation=False
+    ):
         """
         Wait on image to finish replicating in the given region.
         """
@@ -171,7 +199,9 @@ class EC2ReplicateJob(MashJob):
                 state = images[0]['State']
             except (IndexError, KeyError, ClientError):
                 raise MashReplicateException(
-                    'The image with ID: {0} was not found.'.format(
+                    '(test_preparation={0}) The image with ID: {1} was not '
+                    'found.'.format(
+                        test_preparation,
                         image_id
                     )
                 )
@@ -180,7 +210,9 @@ class EC2ReplicateJob(MashJob):
                 break
             elif state == 'failed':
                 raise MashReplicateException(
-                    'The image with ID: {0} reached a failed state.'.format(
+                    '(test_preparation={0}) The image with ID: {1} reached a '
+                    'failed state.'.format(
+                        test_preparation,
                         image_id
                     )
                 )
