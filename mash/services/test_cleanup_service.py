@@ -20,12 +20,13 @@ import logging
 import sys
 import traceback
 
-
 # project
 from mash.mash_exceptions import MashException
+from mash.services.no_op_job import NoOpJob
 from mash.services.test_cleanup.config import TestCleanupConfig
 from mash.services.listener_service import ListenerService
 from mash.services.job_factory import BaseJobFactory
+from mash.services.test_cleanup.ec2_job import EC2TestCleanupJob
 
 
 def main():
@@ -44,6 +45,12 @@ def main():
         job_factory = BaseJobFactory(
             service_name=service_name,
             job_types={
+                'azure': NoOpJob,
+                'ec2': EC2TestCleanupJob,
+                'ec2_mp': EC2TestCleanupJob,
+                'gce': NoOpJob,
+                'oci': NoOpJob,
+                'aliyun': NoOpJob
             }
         )
 
@@ -70,3 +77,8 @@ def main():
         log.error('Unexpected error: {0}'.format(e))
         traceback.print_exc()
         sys.exit(1)
+
+
+if __name__ == '__main__':
+    print('Ready to R&R')
+    main()
