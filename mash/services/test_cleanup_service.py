@@ -77,8 +77,3 @@ def main():
         log.error('Unexpected error: {0}'.format(e))
         traceback.print_exc()
         sys.exit(1)
-
-
-if __name__ == '__main__':
-    print('Ready to R&R')
-    main()
