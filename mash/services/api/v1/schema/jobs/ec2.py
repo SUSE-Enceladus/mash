@@ -175,6 +175,13 @@ ec2_job_message['properties']['imds_version'] = string_with_example(
     description='Set the protocol version to be used when instances are'
                 'launched from the image, supported values 2.0/v2.0. '
 )
+ec2_job_message['properties']['conditions_wait_time'] = {
+    'type': 'integer',
+    'minimum': 10,
+    'example': 10,
+    'description': 'The size of the root volume for the '
+                   'helper instance used during image creation.'
+}
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},
