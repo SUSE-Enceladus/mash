@@ -175,7 +175,7 @@ ec2_job_message['properties']['imds_version'] = string_with_example(
     description='Set the protocol version to be used when instances are'
                 'launched from the image, supported values 2.0/v2.0. '
 )
-ec2_job_message['properties']['conditions_wait_time'] = {
+ec2_job_message['properties']['root_volume_size'] = {
     'type': 'integer',
     'minimum': 10,
     'example': 10,
