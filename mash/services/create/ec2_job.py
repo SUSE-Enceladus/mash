@@ -74,6 +74,7 @@ class EC2CreateJob(MashJob):
             ['uefi-preferred']
         )
         self.imds_version = self.job_config.get('imds_version', '')
+        self.root_volume_size = self.job_config.get('root_volume_size', 10)
 
         # EC2 images only support one firmware
         self.boot_firmware = self.boot_firmware[0]
@@ -114,7 +115,7 @@ class EC2CreateJob(MashJob):
             'launch_ami': None,
             'use_grub2': True,
             'use_private_ip': False,
-            'root_volume_size': 10,
+            'root_volume_size': self.root_volume_size,
             'image_virt_type': 'hvm',
             'launch_inst_type': self.launch_inst_type or 't2.micro',
             'bootkernel': None,
