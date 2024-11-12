@@ -173,6 +173,22 @@ ec2_job_message['properties']['imds_version'] = string_with_example(
     description='Set the protocol version to be used when instances are'
                 'launched from the image, supported values 2.0/v2.0. '
 )
+
+ec2_job_message['properties']['cpu_options'] = {
+    'type': 'object',
+    'properties': {
+        'AmdSevSnp': string_with_example(
+            'enabled',
+            description='Indicates that the image supports the use of SEV-SNP '
+                        'feature.'
+        ),
+    },
+    'additionalProperties': False,
+    'required': [],
+    'description': 'Cpu options supported in the image for this job.'
+                   'These options are optional.'
+}
+
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},
