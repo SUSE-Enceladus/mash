@@ -51,6 +51,7 @@ class EC2Job(BaseJob):
             False
         )
         self.launch_inst_type = self.kwargs.get('launch_inst_type')
+        self.cpu_options = self.kwargs.get('cpu_options', {})
 
     def _get_target_regions_list(self):
         """
@@ -233,6 +234,9 @@ class EC2Job(BaseJob):
 
         if self.boot_firmware:
             test_message['test_job']['boot_firmware'] = self.boot_firmware
+
+        if self.cpu_options:
+            test_message['test_job']['cpu_options'] = self.cpu_options
 
         test_message['test_job'].update(self.base_message)
 
