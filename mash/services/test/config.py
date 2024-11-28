@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from mash.mash_exceptions import MashConfigException
 from mash.services.base_config import BaseConfig
 from mash.services.test.defaults import Defaults
 
@@ -46,3 +47,17 @@ class TestConfig(BaseConfig):
             element='test'
         )
         return img_proof_timeout or Defaults.get_img_proof_timeout()
+
+    def get_test_ec2_instance_catalog(self):
+        """
+        Return the instance catalog configured for ec2 tests
+        """
+
+        ec2_cloud_info = self.get_cloud_data().get('ec2', {})
+        instance_catalog = ec2_cloud_info.get('test_instance_catalog', [])
+
+        if not instance_catalog:
+            raise MashConfigException(
+                'Ec2 test instance catalog must be provided in config file.'
+            )
+        return instance_catalog
