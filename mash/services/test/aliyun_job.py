@@ -32,7 +32,7 @@ from mash.utils.mash_utils import create_ssh_key_pair
 from img_proof.ipa_controller import test_image
 
 instance_types = [
-    'ecs.t5-lc1m1.small'
+    'ecs.t6-c4m1.large'
 ]
 
 
