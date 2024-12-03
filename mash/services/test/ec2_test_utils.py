@@ -44,7 +44,7 @@ def get_instance_feature_combinations(
     return list(set(compatible_combinations))
 
 
-def extend_boot_types(boot_types: list[str]) -> list[str]:
+def extend_boot_types(boot_types):
     """Extends the list of boot types with the implicit options"""
     if 'uefi-preferred' in boot_types and 'bios' not in boot_types:
         # If uefi-preferred, add bios option
@@ -52,7 +52,7 @@ def extend_boot_types(boot_types: list[str]) -> list[str]:
     return boot_types
 
 
-def extend_cpu_options(cpu_options: dict) -> list[str]:
+def extend_cpu_options(cpu_options):
     """Extends the list of cpu_options with the implicit options"""
     extended_cpu_options = []
     if 'AmdSevSnp' in cpu_options:
@@ -67,7 +67,7 @@ def extend_cpu_options(cpu_options: dict) -> list[str]:
     return extended_cpu_options
 
 
-def remove_incompatible_feature_combinations(feature_combinations) -> list[str]:
+def remove_incompatible_feature_combinations(feature_combinations):
     incompatible_combinations = []
     for feature_combination in feature_combinations:
         arch = feature_combination[0]
