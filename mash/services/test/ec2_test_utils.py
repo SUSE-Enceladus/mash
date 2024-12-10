@@ -107,11 +107,6 @@ def select_instances_for_tests(
     """
     instances = []
     for feature_combination in feature_combinations:
-        if logger:
-            logger.debug(
-                'Selecting instance for feature combination: '
-                f'{feature_combination}'
-            )
         instance = select_instance_for_feature_combination(
             feature_combination=feature_combination,
             instance_catalog=instance_catalog,
@@ -120,7 +115,9 @@ def select_instances_for_tests(
         if instance:
             instances.append(instance)
             if logger:
-                logger.debug(f'The following instance was selected {instance}')
+                logger.debug(
+                    f'Selected instance {instance} for {feature_combination}'
+                )
         else:
             msg = (
                 'Unable to find instance to test this feature combination: '
