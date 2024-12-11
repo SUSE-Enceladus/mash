@@ -17,6 +17,10 @@
 #
 
 import itertools
+import logging
+import random
+
+from mash.mash_exceptions import MashTestException
 
 
 def get_instance_feature_combinations(
@@ -86,3 +90,87 @@ def remove_incompatible_feature_combinations(feature_combinations):
     for incompatible_combination in incompatible_combinations:
         feature_combinations.remove(incompatible_combination)
     return feature_combinations
+
+
+def select_instances_for_tests(
+    instance_catalog: list,
+    feature_combinations: list,
+    logger: logging.Logger = None
+) -> list:
+    """
+    Selects the instance types and configurations used in the tests
+    Taking as input the instance catalog configured and the
+    feature_combinations that are required to be tested, chooses some intances
+    to cover the provided feature combinations.
+    Raises a MashTestException if there's some feature_combination that is not
+    possible to test with the instance_catalog.
+    """
+    instances = []
+    for feature_combination in feature_combinations:
+        instance = select_instance_for_feature_combination(
+            feature_combination=feature_combination,
+            instance_catalog=instance_catalog,
+            logger=logger
+        )
+        if instance:
+            instances.append(instance)
+            if logger:
+                logger.debug(
+                    f'Selected instance {instance} for {feature_combination}'
+                )
+        else:
+            msg = (
+                'Unable to find instance to test this feature combination: '
+                f'{feature_combination}'
+            )
+            if logger:
+                logger.error(msg)
+            raise MashTestException(msg)
+    return instances
+
+
+def select_instance_for_feature_combination(
+    feature_combination: tuple,
+    instance_catalog: list,
+    logger: logging.Logger = None
+):
+    """
+    selects from the instance_catalog one instance that covers the
+    feature_combination provided.
+    Returns None if there's is no instance in the catalog to test that
+    feature combination.
+    """
+
+    candidate_groups = []
+
+    arch = feature_combination[0]
+    boot_type = feature_combination[1]
+    cpu_option = feature_combination[2]
+
+    for instance_group in instance_catalog:
+        if arch != instance_group.get('arch'):
+            # arch not matching the group
+            continue
+
+        if boot_type not in instance_group.get('boot_types', []):
+            # required boot type not supported
+            continue
+
+        if 'enabled' in cpu_option and cpu_option not in instance_group.get(
+            'cpu_options', []
+        ):
+            # required cpu_option enabled not supported
+            continue
+        candidate_groups.append(instance_group)
+
+    instance = None
+    if candidate_groups:
+        selected_group = random.choice(candidate_groups)
+        instance = {
+            'arch': arch,
+            'instance_name': random.choice(selected_group['instance_names']),
+            'boot_type': boot_type,
+            'cpu_option': cpu_option,
+            'region': selected_group['region']
+        }
+    return instance
