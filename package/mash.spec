@@ -27,6 +27,7 @@ License:        GPL-3.0+
 Group:          System/Management
 Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+BuildRequires:  file
 BuildRequires:  python-rpm-macros
 BuildRequires:  python311-pip
 BuildRequires:  python311-setuptools
@@ -56,6 +57,7 @@ BuildRequires:  python311-aliyun-img-utils >= 1.4.0
 BuildRequires:  python311-azure-img-utils >= 2.0.0
 BuildRequires:  python311-Werkzeug
 BuildRequires:  python311-jmespath
+Requires:       file
 Requires:       rabbitmq-server
 Requires:       python311-boto3
 Requires:       python311-cryptography >= 2.2.0
