@@ -48,7 +48,7 @@ class TestEC2TestJob(object):
                 'secret_access_key': '321'
             }
         }
-        job.status_msg['test_regions'] = {
+        job.status_msg['test_replicated_regions'] = {
             'us-east-2': 'ami-111111',
             'eu-central-1': 'ami-222222',
 

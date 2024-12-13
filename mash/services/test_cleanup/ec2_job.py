@@ -51,14 +51,16 @@ class EC2TestCleanupJob(MashJob):
         accounts = []
         region_accounts = {}
         for test_cleanup_region, reg_info in self.test_cleanup_regions.items():
-            accounts.append(reg_info['account'])
+            account = reg_info['account']
+            if account not in accounts:
+                accounts.append(account)
             if 'target_regions' in reg_info:
                 for target_region in reg_info['target_regions']:
-                    region_accounts[target_region] = reg_info['account']
+                    region_accounts[target_region] = account
 
         self.request_credentials(accounts)
 
-        regions_to_cleanup = self.status_msg.get('test_regions', {})
+        regions_to_cleanup = self.status_msg.get('test_replicated_regions', {})
         for region, image_id in regions_to_cleanup.items():
             account = region_accounts[region]
             credentials = self.credentials[account]

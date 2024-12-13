@@ -48,7 +48,7 @@ class EC2ReplicateJob(MashJob):
                 self.job_config['replicate_source_regions']
 
             if self.test_preparation:
-                self.status_msg_result_key = 'test_regions'
+                self.status_msg_result_key = 'test_replicated_regions'
             else:
                 self.status_msg_result_key = 'source_regions'
         except KeyError as error:

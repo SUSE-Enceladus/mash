@@ -249,12 +249,16 @@ class EC2Job(BaseJob):
         test_regions = {}
 
         for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = {
-                'account': value['account'],
-                'subnet': value['subnet'],
-                'partition': value['partition']
-            }
-
+            account = value['account']
+            partition = value['partition']
+            for test_region in value.get('test_regions', []):
+                region = test_region['region']
+                subnet = test_region['subnet']
+                test_regions[region] = {
+                    'account': account,
+                    'partition': partition,
+                    'subnet': subnet
+                }
         return test_regions
 
     def get_create_message(self):
@@ -354,7 +358,7 @@ class EC2Job(BaseJob):
                 'target_regions': [],
                 'partition': value['partition']
             }
-            for test_region in value['test_regions']:
+            for test_region in value.get('test_regions', []):
                 if test_region['region'] != source_region:
                     test_preparation_regions[source_region]['target_regions']\
                         .append(test_region['region'])

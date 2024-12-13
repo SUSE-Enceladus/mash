@@ -123,7 +123,9 @@ cloud:
       instance_names:
       - t4g.small
       - m6g.medium
-      boot_types: []
+      boot_types:
+      - uefi
+      - uefi-preferred
       cpu_options: []
 test:
   img_proof_timeout: 600
