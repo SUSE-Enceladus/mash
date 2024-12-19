@@ -96,5 +96,5 @@ class TestEC2ReplicateJob(object):
             )
         ])
         assert self.job.status == FAILED
-        assert 'us-east-2' in self.job.status_msg['test_regions']
-        assert 'us-east-3' in self.job.status_msg['test_regions']
+        assert 'us-east-2' in self.job.status_msg['test_replicated_regions']
+        assert 'us-east-3' in self.job.status_msg['test_replicated_regions']

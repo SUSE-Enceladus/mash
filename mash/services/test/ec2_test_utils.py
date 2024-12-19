@@ -79,7 +79,7 @@ def remove_incompatible_feature_combinations(feature_combinations):
         sev_snp = feature_combination[2]
         if any([
             # aarch64 requires UEFI boot
-            (arch == 'aarch64' and boot_type != 'uefi'),
+            (arch == 'aarch64' and boot_type == 'bios'),
             # AmdSevSnp is not a aarch64 feature
             (arch == 'aarch64' and sev_snp == 'AmdSevSnp_enabled'),
             # AmdSevSnp enabled requires UEFI boot

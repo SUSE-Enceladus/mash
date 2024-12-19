@@ -244,18 +244,28 @@ class EC2Job(BaseJob):
 
     def get_test_regions(self):
         """
-        Return a dictionary of target test regions.
+        Returns a dictionary of regions for the test service.
+        This dictionary will have as key the region name and as value a nested
+        dictionary with the following fields:
+          - account: which account has to be used for the tests in that region
+            This value is extracted from the target_account_info structure
+          - partition: which partition this region belongs to. Also extracted
+            from the target_account_info struct.
+          - subnet: what is the subnet that needs to be used in the tests for
+            that region. This data is extracted from the `test_regions` list
+            inside the target_account_info dictionary
         """
-        test_regions = {}
+        regions_for_tests = {}
 
-        for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = {
-                'account': value['account'],
-                'subnet': value['subnet'],
-                'partition': value['partition']
-            }
-
-        return test_regions
+        for source_region, account_info in self.target_account_info.items():
+            for test_region in account_info.get('test_regions', []):
+                region_name = test_region['region']
+                regions_for_tests[region_name] = {
+                    'account': account_info['account'],
+                    'partition': account_info['partition'],
+                    'subnet': test_region['subnet']
+                }
+        return regions_for_tests
 
     def get_create_message(self):
         """
@@ -354,7 +364,7 @@ class EC2Job(BaseJob):
                 'target_regions': [],
                 'partition': value['partition']
             }
-            for test_region in value['test_regions']:
+            for test_region in value.get('test_regions', []):
                 if test_region['region'] != source_region:
                     test_preparation_regions[source_region]['target_regions']\
                         .append(test_region['region'])
