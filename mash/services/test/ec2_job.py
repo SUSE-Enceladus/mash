@@ -30,7 +30,8 @@ from mash.services.test.utils import (
 )
 from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
-    select_instances_for_tests
+    select_instances_for_tests,
+    get_partition_test_regions
 )
 from mash.utils.mash_utils import create_ssh_key_pair
 from mash.utils.ec2 import (
@@ -84,6 +85,13 @@ class EC2TestJob(MashJob):
             )
             return
 
+        self.partitions = get_partition_test_regions(self.test_regions)
+        if not self.partitions:
+            msg = 'At least one partition is required for tests.'
+            if self.log_callback:
+                self.log_callback.error(msg)
+            raise MashTestException(msg)
+
         self.cloud_architecture = self.job_config.get(
             'cloud_architecture', 'x86_64'
         )
@@ -94,25 +102,6 @@ class EC2TestJob(MashJob):
         self.cpu_options = self.job_config.get('cpu_options', {})
         self.instance_catalog = self.config.get_test_ec2_instance_catalog()
 
-        self.feature_combinations = get_instance_feature_combinations(
-            self.cloud_architecture,
-            self.boot_firmware,
-            self.cpu_options,
-            logger=self.log_callback
-        )
-        self.instance_types = select_instances_for_tests(
-            instance_catalog=self.instance_catalog,
-            feature_combinations=self.feature_combinations,
-            logger=self.log_callback
-        )
-
-        if not self.instance_types:
-            msg = (
-                'No instances in the instance catalog can cover the required '
-                f'feature combinations: {self.feature_combinations}'
-            )
-            raise MashTestException(msg)
-
         # Get all account credentials in one request
         accounts = []
         for region, info in self.test_regions.items():
@@ -121,31 +110,64 @@ class EC2TestJob(MashJob):
                 accounts.append(account)
         self.request_credentials(accounts)
 
-        for instance_type in self.instance_types:
-            if self.log_callback:
-                self.log_callback.info(
-                    'Running img-proof tests against image with '
-                    'type: {inst_type}.'.format(
-                        inst_type=instance_type
-                    )
+        # Feature combinations are common for all partitions
+        self.feature_combinations = get_instance_feature_combinations(
+            self.cloud_architecture,
+            self.boot_firmware,
+            self.cpu_options,
+            logger=self.log_callback
+        )
+
+        # mash will try to test all the possible features supported in the
+        # available test regions for each partition
+        for partition, test_regions in self.partitions:
+
+            instance_types = select_instances_for_tests(
+                test_regions=test_regions,
+                instance_catalog=self.instance_catalog,
+                feature_combinations=self.feature_combinations,
+                logger=self.log_callback
+            )
+
+            if not instance_types:
+
+                if partition in ('aws-cn', 'aws-us-gov') and \
+                        self.cloud_architecture == 'aarch64':
+                    # Skip test aarch64 images in China and GovCloud.
+                    # There are no aarch64 based instance types available.
+                    continue
+
+                # There are no instance types configured in the test regions
+                # for the partition that can cover a single feat combination
+                msg = (
+                    f'No instances in the instance catalog for {partition}'
+                    f' partition can cover the any feature combination: '
+                    f'{self.feature_combinations}'
                 )
+                if self.log_callback:
+                    self.log_callback.error(msg)
+                raise MashTestException(msg)
+
+            for instance_type in self.instance_types:
+                if self.log_callback:
+                    self.log_callback.info(
+                        'Running img-proof tests for image in {part} with '
+                        'instance type: {inst_type}.'.format(
+                            part=partition,
+                            inst_type=instance_type
+                        )
+                    )
 
             region = instance_type.get('region')
             account = get_testing_account(self.test_regions[region])
             credentials = self.credentials[account]
 
-            if info['partition'] in ('aws-cn', 'aws-us-gov') and \
-                    self.cloud_architecture == 'aarch64':
-                # Skip test aarch64 images in China and GovCloud.
-                # There are no aarch64 based instance types available.
-                continue
-
             # with setup_ec2_networking(
-            #     credentials['access_key_id'],
-            #     region,
-            #     credentials['secret_access_key'],
-            #     self.ssh_private_key_file,
-            #     subnet_id=info.get('subnet')
+            #    credentials['access_key_id'],
+            #    region,
+            #    credentials['secret_access_key'],
+            #    self.ssh_private_key_file,
+            #    subnet_id=info.get('subnet')
             # ) as network_details:
             #     status = self.run_tests(
             #         access_key_id=credentials['access_key_id'],

@@ -5,7 +5,8 @@ from unittest.mock import Mock
 from mash.mash_exceptions import MashTestException
 from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
-    select_instances_for_tests
+    select_instances_for_tests,
+    get_partition_test_regions
 )
 
 
@@ -55,6 +56,7 @@ class TestEC2TestUtils(object):
         instance_catalog = [
             {
                 "region": "us-east-1",
+                "partition": "aws",
                 "arch": "x86_64",
                 "instance_names": [
                         "c5.large"
@@ -67,6 +69,7 @@ class TestEC2TestUtils(object):
             },
             {
                 "region": "us-east-1",
+                "partition": "aws",
                 "arch": "x86_64",
                 "instance_names": [
                     "i3.large"
@@ -78,6 +81,7 @@ class TestEC2TestUtils(object):
             },
             {
                 "region": "us-east-2",
+                "partition": "aws",
                 "arch": "x86_64",
                 "instance_names": [
                     "m6a.large"
@@ -92,6 +96,7 @@ class TestEC2TestUtils(object):
             },
             {
                 "region": "us-east-1",
+                "partition": "aws",
                 "arch": "aarch64",
                 "instance_names": [
                     "t4g.small",
@@ -99,15 +104,31 @@ class TestEC2TestUtils(object):
                 ],
                 "boot_types": [],
                 "cpu_options": []
+            },
+            {
+                "region": "us-gov-west-1",
+                "partition": "us-gov",
+                "arch": "x86_64",
+                "instance_names": [
+                    "t4g.small",
+                    "m6g.medium"
+                ],
+                "boot_types": [
+                    "bios"
+                ],
+                "cpu_options": []
             }
+
         ]
 
         test_cases = [
             (
                 [('x86_64', 'bios', 'AmdSevSnp_disabled')],
+                ['us-east-1'],
                 [
                     {
                         'region': 'us-east-1',
+                        'partition': 'aws',
                         'instance_name': 'i3.large',
                         'boot_type': 'bios',
                         'cpu_option': 'AmdSevSnp_disabled',
@@ -118,10 +139,13 @@ class TestEC2TestUtils(object):
             (
                 [
                     ('x86_64', 'bios', 'AmdSevSnp_disabled'),
-                    ('x86_64', 'uefi-preferred', 'AmdSevSnp_enabled')],
+                    ('x86_64', 'uefi-preferred', 'AmdSevSnp_enabled')
+                ],
+                ['us-east-1', 'us-east-2'],
                 [
                     {
                         'region': 'us-east-1',
+                        'partition': 'aws',
                         'instance_name': 'i3.large',
                         'boot_type': 'bios',
                         'cpu_option': 'AmdSevSnp_disabled',
@@ -130,17 +154,22 @@ class TestEC2TestUtils(object):
                     {
                         'region': 'us-east-2',
                         'instance_name': 'm6a.large',
+                        'partition': 'aws',
                         'boot_type': 'uefi-preferred',
                         'cpu_option': 'AmdSevSnp_enabled',
                         'arch': 'x86_64'
                     }
                 ]
-
             )
         ]
         logger = Mock()
-        for feature_combinations, expected_instances in test_cases:
+        for (
+            feature_combinations,
+            test_regions,
+            expected_instances
+        ) in test_cases:
             selected_instances = select_instances_for_tests(
+                test_regions=test_regions,
                 feature_combinations=feature_combinations,
                 instance_catalog=instance_catalog,
                 logger=logger
@@ -151,7 +180,7 @@ class TestEC2TestUtils(object):
         # error case
         logger.reset_mock()
         feature_combination = (
-            'non_existing_arch',
+            'aarch64',
             'bios',
             'AmdSevSnp_disabled'
         )
@@ -161,9 +190,37 @@ class TestEC2TestUtils(object):
         )
         with pytest.raises(MashTestException) as error:
             select_instances_for_tests(
+                test_regions=['us-gov-west-1'],
                 feature_combinations=[feature_combination],
                 instance_catalog=instance_catalog,
                 logger=logger
             )
             assert msg in str(error)
         logger.error.assert_called_once_with(msg)
+
+    def test_get_partition_test_regions(self):
+        """tests the get_partition_test_regions"""
+        test_cases = [
+            (
+                {
+                    'us-east-1': {
+                        'partition': 'aws'
+                    },
+                    'us-east-2': {
+                        'partition': 'aws'
+                    },
+                    'us-east-3': {
+                        'partition': 'aws'
+                    },
+                },
+                {
+                    'aws': [
+                        'us-east-1',
+                        'us-east-2',
+                        'us-east-3'
+                    ]
+                }
+            )
+        ]
+        for test_regions, expected_output in test_cases:
+            assert expected_output == get_partition_test_regions(test_regions)

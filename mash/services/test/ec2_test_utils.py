@@ -16,6 +16,7 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from collections import defaultdict
 import itertools
 import logging
 import random
@@ -93,6 +94,7 @@ def remove_incompatible_feature_combinations(feature_combinations):
 
 
 def select_instances_for_tests(
+    test_regions: list,
     instance_catalog: list,
     feature_combinations: list,
     logger: logging.Logger = None
@@ -108,6 +110,7 @@ def select_instances_for_tests(
     instances = []
     for feature_combination in feature_combinations:
         instance = select_instance_for_feature_combination(
+            test_regions=test_regions,
             feature_combination=feature_combination,
             instance_catalog=instance_catalog,
             logger=logger
@@ -130,6 +133,7 @@ def select_instances_for_tests(
 
 
 def select_instance_for_feature_combination(
+    test_regions: list,
     feature_combination: tuple,
     instance_catalog: list,
     logger: logging.Logger = None
@@ -148,6 +152,10 @@ def select_instance_for_feature_combination(
     cpu_option = feature_combination[2]
 
     for instance_group in instance_catalog:
+        if instance_group['region'] not in test_regions:
+            # intance belongs to a region not available for tests for this job
+            continue
+
         if arch != instance_group.get('arch'):
             # arch not matching the group
             continue
@@ -171,6 +179,18 @@ def select_instance_for_feature_combination(
             'instance_name': random.choice(selected_group['instance_names']),
             'boot_type': boot_type,
             'cpu_option': cpu_option,
-            'region': selected_group['region']
+            'region': selected_group['region'],
+            'partition': selected_group['partition']
         }
     return instance
+
+
+def get_partition_test_regions(test_regions: dict):
+    """
+    Provides a dictionary with the tests region names available for testing
+    per partitions
+    """
+    partitions = defaultdict(list)
+    for region_name, region in test_regions.items():
+        partitions[region.get('partition')].append(region_name)
+    return partitions

@@ -90,6 +90,7 @@ cloud:
       us-west-2: ami-0ec021424fb596d6c
     test_instance_catalog:
     - region: us-east-1
+      partition: aws
       arch: x86_64
       instance_names:
       - c5.large
@@ -101,6 +102,7 @@ cloud:
       cpu_options: []
     - region: us-east-1
       arch: x86_64
+      partition: aws
       instance_names:
       - i3.large
       - t2.small
@@ -108,6 +110,7 @@ cloud:
         - bios
       cpu_options: []
     - region: us-east-2
+      partition: aws
       arch: x86_64
       instance_names:
       - m6a.large
@@ -119,6 +122,7 @@ cloud:
       cpu_options:
       - AmdSevSnp_enabled
     - region: us-east-1
+      partition: aws
       arch: aarch64
       instance_names:
       - t4g.small
@@ -126,6 +130,44 @@ cloud:
       boot_types:
       - uefi
       - uefi-preferred
+      cpu_options: []
+    - region: cn-north-1
+      partition: aws-cn
+      arch: x86_64
+      instance_names:
+      - t3.small
+      boot_types:
+        - bios
+      cpu_options: []
+    - region: cn-north-1
+      partition: aws-cn
+      arch: x86_64
+      instance_names:
+      - m5.large
+      - t3.small
+      boot_types:
+        - uefi-preferred
+        - uefi
+      cpu_options: []
+    - region: us-gov-east-1
+      partition: aws-us-gov
+      arch: x86_64
+      instance_names:
+      - i3.large
+      - t3.small
+      boot_types:
+        - bios
+      cpu_options: []
+    - region: us-gov-east-1
+      partition: aws-us-gov
+      arch: x86_64
+      instance_names:
+      - c5.large
+      - m5.large
+      - t3.small
+      boot_types:
+        - uefi-preferred
+        - uefi
       cpu_options: []
 test:
   img_proof_timeout: 600
