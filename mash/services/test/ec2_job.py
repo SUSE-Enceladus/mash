@@ -87,7 +87,11 @@ class EC2TestJob(MashJob):
 
         self.partitions = get_partition_test_regions(self.test_regions)
         if not self.partitions:
-            msg = 'At least one partition is required for tests.'
+            msg = (
+                'At least one partition is required for tests.'
+                'Please, configure the test_regions for the aws account in'
+                'mash database through the mash CLI tool.'
+            )
             if self.log_callback:
                 self.log_callback.error(msg)
             raise MashTestException(msg)
@@ -130,19 +134,12 @@ class EC2TestJob(MashJob):
             )
 
             if not instance_types:
-
-                if partition in ('aws-cn', 'aws-us-gov') and \
-                        self.cloud_architecture == 'aarch64':
-                    # Skip test aarch64 images in China and GovCloud.
-                    # There are no aarch64 based instance types available.
-                    continue
-
                 # There are no instance types configured in the test regions
                 # for the partition that can cover a single feat combination
                 msg = (
-                    f'No instances in the instance catalog for {partition}'
-                    f' partition can cover the any feature combination: '
-                    f'{self.feature_combinations}'
+                    'Configuration error. No instances in the instance '
+                    f'catalog for {partition} partition can cover this feature'
+                    f'combination: {self.feature_combinations}'
                 )
                 if self.log_callback:
                     self.log_callback.error(msg)

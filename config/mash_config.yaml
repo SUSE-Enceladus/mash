@@ -149,6 +149,15 @@ cloud:
         - uefi-preferred
         - uefi
       cpu_options: []
+    - region: cn-north-1
+      partition: aws-cn
+      arch: aarch64
+      instance_names:
+      - t4g.small
+      boot_types:
+      - uefi
+      - uefi-preferred
+      cpu_options: []
     - region: us-gov-east-1
       partition: aws-us-gov
       arch: x86_64
@@ -168,6 +177,15 @@ cloud:
       boot_types:
         - uefi-preferred
         - uefi
+      cpu_options: []
+    - region: us-gov-east-1
+      partition: aws-us-gov
+      arch: aarch64
+      instance_names:
+      - t4g.small
+      boot_types:
+      - uefi
+      - uefi-preferred
       cpu_options: []
 test:
   img_proof_timeout: 600
