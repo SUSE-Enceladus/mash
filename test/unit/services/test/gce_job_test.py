@@ -38,7 +38,7 @@ class TestGCETestJob(object):
         self.job_config['account'] = 'test-gce'
 
     @patch('mash.services.test.gce_job.get_gce_compute_driver')
-    @patch('mash.services.test.gce_job.get_gce_storage_driver')
+    @patch('mash.services.test.gce_job.get_storage_client')
     @patch('mash.services.test.gce_job.delete_gce_image')
     @patch('mash.services.test.gce_job.delete_image_tarball')
     @patch('mash.services.test.gce_job.get_region_list')
