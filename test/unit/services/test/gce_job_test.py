@@ -37,10 +37,9 @@ class TestGCETestJob(object):
 
         self.job_config['account'] = 'test-gce'
 
-    @patch('mash.services.test.gce_job.get_gce_compute_driver')
-    @patch('mash.services.test.gce_job.get_storage_client')
-    @patch('mash.services.test.gce_job.delete_gce_image')
-    @patch('mash.services.test.gce_job.delete_image_tarball')
+    @patch('mash.services.test.gce_job.get_regions_client')
+    @patch('mash.services.test.gce_job.GCERemoveImage')
+    @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.get_region_list')
     @patch('mash.services.test.gce_job.os')
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
@@ -50,8 +49,7 @@ class TestGCETestJob(object):
     def test_test_run_gce_test(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_get_region_list,
-        mock_delete_image_tarball, mock_delete_image, mock_get_storage_driver,
-        mock_get_compute_driver
+        mock_blob_remover, mock_image_remover, mock_get_regions_client
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -81,6 +79,11 @@ class TestGCETestJob(object):
         mock_random.choice.return_value = 'n1-standard-1'
         mock_os.path.exists.return_value = False
         mock_get_region_list.return_value = set('us-west1-c')
+
+        image_remover = Mock()
+        blob_remover = Mock()
+        mock_image_remover.return_value = image_remover
+        mock_blob_remover.return_value = blob_remover
 
         if 'test_fallback_regions' in self.job_config:
             mock_test_image.side_effect = IpaRetryableError('quota exceeded')
@@ -128,7 +131,9 @@ class TestGCETestJob(object):
         ])
         job._log_callback.warning.reset_mock()
         job._log_callback.error.reset_mock()
-        mock_delete_image_tarball.side_effect = Exception('Unable to cleanup image!')
+        image_remover.remove_image.side_effect = Exception(
+            'Unable to cleanup image!'
+        )
 
         # Failed job test
         mock_test_image.side_effect = Exception('Tests broken!')
@@ -139,10 +144,9 @@ class TestGCETestJob(object):
         ])
         assert 'Tests broken!' in job._log_callback.error.mock_calls[0][1][0]
 
-    @patch('mash.services.test.gce_job.get_gce_compute_driver')
-    @patch('mash.services.test.gce_job.get_gce_storage_driver')
-    @patch('mash.services.test.gce_job.delete_gce_image')
-    @patch('mash.services.test.gce_job.delete_image_tarball')
+    @patch('mash.services.test.gce_job.get_regions_client')
+    @patch('mash.services.test.gce_job.GCERemoveImage')
+    @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.get_region_list')
     @patch('mash.services.test.gce_job.os')
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
@@ -152,8 +156,7 @@ class TestGCETestJob(object):
     def test_test_run_default_fallback(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_get_region_list,
-        mock_delete_image_tarball, mock_delete_image, mock_get_storage_driver,
-        mock_get_compute_driver
+        mock_blob_remover, mock_image_remover, mock_get_regions_client
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -162,6 +165,11 @@ class TestGCETestJob(object):
         mock_os.path.exists.return_value = False
         mock_get_region_list.return_value = set(['us-west1-c', 'us-east1-c'])
         mock_test_image.side_effect = IpaRetryableError('quota exceeded')
+
+        image_remover = Mock()
+        blob_remover = Mock()
+        mock_image_remover.return_value = image_remover
+        mock_blob_remover.return_value = blob_remover
 
         job = GCETestJob(self.job_config, self.config)
         job._log_callback = Mock()
@@ -250,10 +258,9 @@ class TestGCETestJob(object):
 
         self.job_config['guest_os_features'] = None
 
-    @patch('mash.services.test.gce_job.get_gce_compute_driver')
-    @patch('mash.services.test.gce_job.get_gce_storage_driver')
-    @patch('mash.services.test.gce_job.delete_gce_image')
-    @patch('mash.services.test.gce_job.delete_image_tarball')
+    @patch('mash.services.test.gce_job.get_regions_client')
+    @patch('mash.services.test.gce_job.GCERemoveImage')
+    @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.get_region_list')
     @patch('mash.services.test.gce_job.os')
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
@@ -263,8 +270,7 @@ class TestGCETestJob(object):
     def test_run_gce_gvnic(
         self, mock_test_image, mock_temp_file, mock_random,
         mock_create_ssh_key_pair, mock_os, mock_get_region_list,
-        mock_delete_image_tarball, mock_delete_image, mock_get_storage_driver,
-        mock_get_compute_driver
+        mock_blob_remover, mock_image_remover, mock_get_regions_client
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -296,6 +302,11 @@ class TestGCETestJob(object):
         # Test exception getting region list
         mock_get_region_list.side_effect = Exception('Invalid credentials!')
         self.job_config['guest_os_features'] = ['GVNIC']
+
+        image_remover = Mock()
+        blob_remover = Mock()
+        mock_image_remover.return_value = image_remover
+        mock_blob_remover.return_value = blob_remover
 
         job = GCETestJob(self.job_config, self.config)
         job._log_callback = Mock()
