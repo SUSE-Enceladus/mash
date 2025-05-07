@@ -24,12 +24,9 @@ from mash.utils.mash_utils import (
     timestamp_from_epoch
 )
 from mash.services.status_levels import SUCCESS
-from mash.utils.gce import (
-    get_gce_storage_driver,
-    upload_image_tarball,
-    delete_image_tarball,
-    blob_exists
-)
+from gceimgutils.gceutils import get_storage_client, blob_exists
+from gceimgutils.gceuploadblob import GCEUploadBlob
+from gceimgutils.gceremoveblob import GCERemoveBlob
 
 
 class GCEUploadJob(MashJob):
@@ -82,11 +79,12 @@ class GCEUploadJob(MashJob):
 
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
-        storage_driver = get_gce_storage_driver(credentials)
+        project = credentials['project_id']
+        storage_client = get_storage_client(project, credentials)
 
         object_name = ''.join([self.cloud_image_name, '.tar.gz'])
 
-        exists = blob_exists(storage_driver, object_name, self.bucket)
+        exists = blob_exists(storage_client, self.bucket, object_name)
         if exists and not self.force_replace_image:
             raise MashUploadException(
                 'Image tarball: {object_name} already exists '
@@ -103,18 +101,24 @@ class GCEUploadJob(MashJob):
                     self.bucket
                 )
             )
-            delete_image_tarball(
-                storage_driver,
+            remover = GCERemoveBlob(
                 object_name,
-                self.bucket
+                self.bucket,
+                credentials_info=credentials,
+                project=project,
+                log_callback=self.log_callback
             )
+            remover.remove_blob()
 
-        upload_image_tarball(
-            storage_driver,
-            object_name,
+        uploader = GCEUploadBlob(
+            self.bucket,
             self.status_msg['image_file'],
-            self.bucket
+            blob_name=object_name,
+            credentials_info=credentials,
+            project=project,
+            log_callback=self.log_callback
         )
+        uploader.upload_blob()
 
         self.status_msg['cloud_image_name'] = self.cloud_image_name
         self.status_msg['object_name'] = object_name

@@ -55,9 +55,7 @@ BuildRequires:  %{pythons}-flask-jwt-extended
 BuildRequires:  %{pythons}-requests
 BuildRequires:  python-obs-img-utils >= 1.0.0
 BuildRequires:  %{pythons}-oci-sdk
-BuildRequires:  %{pythons}-google-auth
-BuildRequires:  %{pythons}-google-cloud-storage
-BuildRequires:  %{pythons}-google-api-python-client
+BuildRequires:  python-gceimgutils
 BuildRequires:  python-aliyun-img-utils >= 1.4.0
 BuildRequires:  python-azure-img-utils >= 2.0.0
 BuildRequires:  %{pythons}-Werkzeug
@@ -82,9 +80,7 @@ Requires:       %{pythons}-flask-jwt-extended
 Requires:       %{pythons}-requests
 Requires:       python-obs-img-utils >= 1.0.0
 Requires:       %{pythons}-oci-sdk
-Requires:       %{pythons}-google-auth
-Requires:       %{pythons}-google-cloud-storage
-Requires:       %{pythons}-google-api-python-client
+Requires:       python-gceimgutils
 Requires:       python-aliyun-img-utils >= 1.4.0
 Requires:       python-azure-img-utils >= 2.0.0
 Requires:       %{pythons}-Werkzeug
