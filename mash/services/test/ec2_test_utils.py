@@ -21,8 +21,6 @@ import itertools
 import logging
 import random
 
-from mash.mash_exceptions import MashTestException
-
 
 def get_instance_feature_combinations(
     arch: str,
@@ -122,13 +120,13 @@ def select_instances_for_tests(
                     f'Selected instance {instance} for {feature_combination}'
                 )
         else:
+            # Just writing in the log the issue for now
             msg = (
                 'Unable to find instance to test this feature combination: '
                 f'{feature_combination}'
             )
             if logger:
                 logger.error(msg)
-            raise MashTestException(msg)
     return instances
 
 

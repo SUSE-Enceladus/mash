@@ -145,7 +145,7 @@ class EC2TestJob(MashJob):
                     self.log_callback.error(msg)
                 raise MashTestException(msg)
 
-            for instance_type in self.instance_types:
+            for instance_type in instance_types:
                 if self.log_callback:
                     self.log_callback.info(
                         'Running img-proof tests for image in {part} with '
