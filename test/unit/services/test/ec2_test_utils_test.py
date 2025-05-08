@@ -1,8 +1,5 @@
-import pytest
-
 from unittest.mock import Mock
 
-from mash.mash_exceptions import MashTestException
 from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
     select_instances_for_tests,
@@ -188,14 +185,13 @@ class TestEC2TestUtils(object):
             'Unable to find instance to test this feature combination: '
             f'{feature_combination}'
         )
-        with pytest.raises(MashTestException) as error:
-            select_instances_for_tests(
-                test_regions=['us-gov-west-1'],
-                feature_combinations=[feature_combination],
-                instance_catalog=instance_catalog,
-                logger=logger
-            )
-            assert msg in str(error)
+        instance_types = select_instances_for_tests(
+            test_regions=['us-gov-west-1'],
+            feature_combinations=[feature_combination],
+            instance_catalog=instance_catalog,
+            logger=logger
+        )
+        assert instance_types == []
         logger.error.assert_called_once_with(msg)
 
     def test_get_partition_test_regions(self):
