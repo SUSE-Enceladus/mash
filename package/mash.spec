@@ -50,9 +50,7 @@ BuildRequires:  python311-flask-jwt-extended
 BuildRequires:  python311-requests
 BuildRequires:  python311-obs-img-utils >= 1.0.0
 BuildRequires:  python311-oci-sdk
-BuildRequires:  python311-google-auth
-BuildRequires:  python311-google-cloud-storage
-BuildRequires:  python311-google-api-python-client
+BuildRequires:  python311-gceimgutils
 BuildRequires:  python311-aliyun-img-utils >= 1.4.0
 BuildRequires:  python311-azure-img-utils >= 2.0.0
 BuildRequires:  python311-Werkzeug
@@ -77,9 +75,7 @@ Requires:       python311-flask-jwt-extended
 Requires:       python311-requests
 Requires:       python311-obs-img-utils >= 1.0.0
 Requires:       python311-oci-sdk
-Requires:       python311-google-auth
-Requires:       python311-google-cloud-storage
-Requires:       python311-google-api-python-client
+Requires:       python311-gceimgutils
 Requires:       python311-aliyun-img-utils >= 1.4.0
 Requires:       python311-azure-img-utils >= 2.0.0
 Requires:       python311-Werkzeug

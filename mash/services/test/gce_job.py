@@ -26,15 +26,14 @@ from mash.services.mash_job import MashJob
 from mash.services.status_levels import EXCEPTION, SUCCESS
 from mash.services.test.utils import process_test_result
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
-from mash.utils.gce import (
-    delete_gce_image,
-    delete_image_tarball,
+from gceimgutils.gceutils import (
     get_region_list,
-    get_gce_compute_driver,
-    get_gce_storage_driver
+    get_regions_client
 )
-from img_proof.ipa_controller import test_image
+from gceimgutils.gceremoveblob import GCERemoveBlob
+from gceimgutils.gceremoveimg import GCERemoveImage
 
+from img_proof.ipa_controller import test_image
 from img_proof.ipa_exceptions import IpaRetryableError
 
 instance_types = {
@@ -134,14 +133,14 @@ class GCETestJob(MashJob):
         self.request_credentials(accounts)
         credentials = self.credentials[self.testing_account or self.account]
         project = credentials.get('project_id')
-        compute_driver = get_gce_compute_driver(credentials)
+        regions_client = get_regions_client(credentials)
 
         if self.test_fallback_regions == []:
             # fallback testing explicitly disabled
             fallback_regions = set()
         elif self.test_fallback_regions is None:
             try:
-                fallback_regions = get_region_list(compute_driver, project)
+                fallback_regions = get_region_list(regions_client, project)
             except Exception:
                 fallback_regions = set()  # Unable to retrieve region list
         else:
@@ -239,8 +238,6 @@ class GCETestJob(MashJob):
         credentials = self.credentials[self.account]
         project = credentials.get('project_id')
         object_name = self.status_msg['object_name']
-        compute_driver = get_gce_compute_driver(credentials)
-        storage_driver = get_gce_storage_driver(credentials)
 
         self.log_callback.info(
             'Cleaning up image: {0} in region: {1}.'.format(
@@ -250,16 +247,21 @@ class GCETestJob(MashJob):
         )
 
         try:
-            delete_gce_image(
-                compute_driver,
-                project,
-                self.cloud_image_name
+            remover = GCERemoveImage(
+                image_name=self.cloud_image_name,
+                credentials_info=credentials,
+                project=project,
+                log_callback=self.log_callback
             )
-            delete_image_tarball(
-                storage_driver,
+            remover.remove_image(self.cloud_image_name)
+            remover = GCERemoveBlob(
                 object_name,
-                self.bucket
+                self.bucket,
+                credentials_info=credentials,
+                project=project,
+                log_callback=self.log_callback
             )
+            remover.remove_blob()
         except Exception as error:
             msg = 'Failed to cleanup image: {0}'.format(error)
             self.log_callback.warning(msg)

@@ -63,67 +63,52 @@ class TestGCECreateJob(object):
         with raises(MashCreateException):
             GCECreateJob(job_doc, self.config)
 
-    @patch('mash.services.create.gce_job.get_gce_image')
-    @patch('mash.services.create.gce_job.create_gce_image')
-    @patch('mash.services.create.gce_job.create_gce_rollout')
-    @patch('mash.services.create.gce_job.delete_gce_image')
-    @patch('mash.services.create.gce_job.get_gce_compute_driver')
+    @patch('mash.services.create.gce_job.get_image')
+    @patch('mash.services.create.gce_job.GCECreateImage')
+    @patch('mash.services.create.gce_job.GCERemoveImage')
+    @patch('mash.services.create.gce_job.get_images_client')
     @patch('builtins.open')
     def test_create_default(
         self,
         mock_open,
-        mock_get_driver,
-        mock_delete_image,
-        mock_create_rollout,
-        mock_create_image,
+        mock_get_client,
+        mock_remover,
+        mock_creator,
         mock_get_image
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
 
-        compute_driver = Mock()
-        mock_get_driver.return_value = compute_driver
+        remover = MagicMock()
+        creator = MagicMock()
 
-        rollout = {'defaultRolloutTime': '2021-01-01T00:00:00Z'}
-        mock_create_rollout.return_value = rollout
+        mock_remover.return_value = remover
+        mock_creator.return_value = creator
+
+        compute_client = Mock()
+        mock_get_client.return_value = compute_client
 
         self.job.status_msg['cloud_image_name'] = 'sles-12-sp4-v20180909'
         self.job.status_msg['object_name'] = 'sles-12-sp4-v20180909.tar.gz'
         self.job.run_job()
 
-        mock_delete_image.assert_called_once_with(
-            compute_driver,
-            'projectid',
+        remover.remove_image.assert_called_once_with(
             'sles-12-sp4-v20180909'
         )
-        mock_create_rollout.assert_called_once_with(
-            compute_driver,
-            'projectid'
-        )
-        mock_create_image.assert_called_once_with(
-            compute_driver,
-            'projectid',
-            'sles-12-sp4-v20180909',
-            'description 20180909',
-            'https://www.googleapis.com/storage/v1/b/images/o/sles-12-sp4-v20180909.tar.gz',
-            family='sles-12',
-            guest_os_features=['UEFI_COMPATIBLE'],
-            rollout=rollout,
-            arch='x86_64'
-        )
+        creator.create_image.assert_called_once_with()
 
-    @patch('mash.services.create.gce_job.get_gce_image')
-    @patch('mash.services.create.gce_job.create_gce_image')
-    @patch('mash.services.create.gce_job.delete_gce_image')
-    @patch('mash.services.create.gce_job.get_gce_compute_driver')
+    @patch('mash.services.create.gce_job.get_image')
+    @patch('mash.services.create.gce_job.GCECreateImage')
+    @patch('mash.services.create.gce_job.GCERemoveImage')
+    @patch('mash.services.create.gce_job.get_images_client')
     @patch('builtins.open')
     def test_create_aarch64(
         self,
         mock_open,
-        mock_get_driver,
-        mock_delete_image,
-        mock_create_image,
+        mock_get_client,
+        mock_remover,
+        mock_creator,
         mock_get_image
     ):
         self.complete_job_doc['cloud_architecture'] = 'aarch64'
@@ -137,26 +122,20 @@ class TestGCECreateJob(object):
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
 
-        compute_driver = Mock()
-        mock_get_driver.return_value = compute_driver
+        remover = MagicMock()
+        creator = MagicMock()
+
+        mock_remover.return_value = remover
+        mock_creator.return_value = creator
+
+        compute_client = Mock()
+        mock_get_client.return_value = compute_client
 
         job.status_msg['cloud_image_name'] = 'sles-15-sp4-v20210731'
         job.status_msg['object_name'] = 'sles-15-sp4-v20210731.tar.gz'
         job.run_job()
 
-        mock_delete_image.assert_called_once_with(
-            compute_driver,
-            'projectid',
+        remover.remove_image.assert_called_once_with(
             'sles-15-sp4-v20210731'
         )
-        mock_create_image.assert_called_once_with(
-            compute_driver,
-            'projectid',
-            'sles-15-sp4-v20210731',
-            'description 20180909',
-            'https://www.googleapis.com/storage/v1/b/images/o/sles-15-sp4-v20210731.tar.gz',
-            family='sles-15-arm64',
-            guest_os_features=['UEFI_COMPATIBLE'],
-            rollout=None,
-            arch='arm64'
-        )
+        creator.create_image.assert_called_once_with()

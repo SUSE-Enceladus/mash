@@ -24,9 +24,7 @@ requests
 obs-img-utils>=1.0.0
 oci
 werkzeug
-google-auth
-google-cloud-storage
-google-api-python-client
 aliyun-img-utils>=1.4.0
 azure-img-utils>=2.0.0
 jmespath
+gceimgutils

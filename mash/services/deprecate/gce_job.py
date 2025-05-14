@@ -19,7 +19,7 @@
 from mash.mash_exceptions import MashDeprecateException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import FAILED, SUCCESS
-from mash.utils.gce import get_gce_compute_driver, deprecate_gce_image
+from gceimgutils.gcedeprecateimg import GCEDeprecateImage
 
 
 class GCEDeprecateJob(MashJob):
@@ -63,15 +63,16 @@ class GCEDeprecateJob(MashJob):
 
         try:
             project = credential.get('project_id')
-            compute_driver = get_gce_compute_driver(credential, version='alpha')
 
-            deprecate_gce_image(
-                compute_driver,
-                project,
+            deprecator = GCEDeprecateImage(
                 self.old_cloud_image_name,
-                self.cloud_image_name,
-                self.months_to_deletion
+                project,
+                replacement_image_name=self.cloud_image_name,
+                months_to_deletion=self.months_to_deletion,
+                credentials_info=credential,
+                log_callback=self.log_callback
             )
+            deprecator.deprecate_image()
 
             self.log_callback.info(
                 'Deprecated image {0}.'.format(
