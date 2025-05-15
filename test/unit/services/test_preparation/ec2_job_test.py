@@ -56,10 +56,14 @@ class TestEC2ReplicateJob(object):
 
         self.job.run_job()
 
-        self.job._log_callback.info.assert_called_once_with(
-            '(test-preparation=True) Replicating source region: us-east-1 to '
-            'the following regions: us-east-2, us-east-3.'
-        )
+        self.job._log_callback.info.assert_has_calls([
+            call(
+                '(test-preparation=True) Replicating source region: us-east-1 to '
+                'the following regions: us-east-2, us-east-3.'
+            ),
+            call('Replicated image to us-east-2 region: ami-54321.'),
+            call('Replicated image to us-east-3 region: ami-54321.')
+        ])
         self.job._log_callback.warning.assert_has_calls([
             call('Replicate to us-east-2 region failed: Broken!'),
             call('Replicate to us-east-3 region failed: Broken!')

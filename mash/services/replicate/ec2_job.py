@@ -109,6 +109,15 @@ class EC2ReplicateJob(MashJob):
                     image_id
                 self.source_region_results[target_region]['image_id'] = \
                     image_id
+
+                if self.test_preparation:
+                    self.log_callback.info(
+                        'Replicated image to {0} region: {1}.'
+                        .format(
+                            target_region,
+                            image_id
+                        )
+                    )
                 # Save account along with results to prevent searching dict
                 # twice to find associated credentials on each waiter.
                 self.source_region_results[target_region]['account'] = \
