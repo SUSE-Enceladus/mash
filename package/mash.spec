@@ -1,7 +1,7 @@
 #
 # spec file for package mash
 #
-# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2025 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -15,8 +15,12 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
-%define python python
+%if 0%{?suse_version} >= 1600
+%define pythons %{primary_python}
+%else
 %{?sle15_python_module_pythons}
+%endif
+%global _sitelibdir %{%{pythons}_sitelib}
 
 Name:           mash
 Version:        13.15.0
@@ -29,63 +33,64 @@ Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  file
 BuildRequires:  python-rpm-macros
-BuildRequires:  python311-pip
-BuildRequires:  python311-setuptools
-BuildRequires:  python311-wheel
-BuildRequires:  python311-boto3
-BuildRequires:  python311-cryptography >= 2.2.0
-BuildRequires:  python311-PyYAML
-BuildRequires:  python311-PyJWT
-BuildRequires:  python311-amqpstorm >= 2.4.0
-BuildRequires:  python311-APScheduler >= 3.3.1
-BuildRequires:  python311-python-dateutil >= 2.6.0
-BuildRequires:  python311-ec2imgutils >= 9.0.3
-BuildRequires:  python311-img-proof >= 7.14.0
-BuildRequires:  python311-img-proof-tests >= 7.14.0
-BuildRequires:  python311-Flask
-BuildRequires:  python311-flask-restx
-BuildRequires:  python311-Flask-SQLAlchemy
-BuildRequires:  python311-Flask-Migrate
-BuildRequires:  python311-flask-jwt-extended
-BuildRequires:  python311-requests
-BuildRequires:  python311-obs-img-utils >= 1.0.0
-BuildRequires:  python311-oci-sdk
-BuildRequires:  python311-google-auth
-BuildRequires:  python311-google-cloud-storage
-BuildRequires:  python311-google-api-python-client
-BuildRequires:  python311-aliyun-img-utils >= 1.4.0
-BuildRequires:  python311-azure-img-utils >= 2.0.0
-BuildRequires:  python311-Werkzeug
-BuildRequires:  python311-jmespath
+BuildRequires:  fdupes
+BuildRequires:  %{pythons}-pip
+BuildRequires:  %{pythons}-setuptools
+BuildRequires:  %{pythons}-wheel
+BuildRequires:  %{pythons}-boto3
+BuildRequires:  %{pythons}-cryptography >= 2.2.0
+BuildRequires:  %{pythons}-PyYAML
+BuildRequires:  %{pythons}-PyJWT
+BuildRequires:  %{pythons}-amqpstorm >= 2.4.0
+BuildRequires:  %{pythons}-APScheduler >= 3.3.1
+BuildRequires:  %{pythons}-python-dateutil >= 2.6.0
+BuildRequires:  python-ec2imgutils >= 9.0.3
+BuildRequires:  python-img-proof >= 7.14.0
+BuildRequires:  python-img-proof-tests >= 7.14.0
+BuildRequires:  %{pythons}-Flask
+BuildRequires:  %{pythons}-flask-restx
+BuildRequires:  %{pythons}-Flask-SQLAlchemy
+BuildRequires:  %{pythons}-Flask-Migrate
+BuildRequires:  %{pythons}-flask-jwt-extended
+BuildRequires:  %{pythons}-requests
+BuildRequires:  python-obs-img-utils >= 1.0.0
+BuildRequires:  %{pythons}-oci-sdk
+BuildRequires:  %{pythons}-google-auth
+BuildRequires:  %{pythons}-google-cloud-storage
+BuildRequires:  %{pythons}-google-api-python-client
+BuildRequires:  python-aliyun-img-utils >= 1.4.0
+BuildRequires:  python-azure-img-utils >= 2.0.0
+BuildRequires:  %{pythons}-Werkzeug
+BuildRequires:  %{pythons}-jmespath
 Requires:       file
 Requires:       rabbitmq-server
-Requires:       python311-boto3
-Requires:       python311-cryptography >= 2.2.0
-Requires:       python311-PyYAML
-Requires:       python311-PyJWT
-Requires:       python311-amqpstorm >= 2.4.0
-Requires:       python311-APScheduler >= 3.3.1
-Requires:       python311-python-dateutil >= 2.6.0
-Requires:       python311-ec2imgutils >= 9.0.3
-Requires:       python311-img-proof >= 7.14.0
-Requires:       python311-img-proof-tests >= 7.14.0
-Requires:       python311-Flask
-Requires:       python311-flask-restx
-Requires:       python311-Flask-SQLAlchemy
-Requires:       python311-Flask-Migrate
-Requires:       python311-flask-jwt-extended
-Requires:       python311-requests
-Requires:       python311-obs-img-utils >= 1.0.0
-Requires:       python311-oci-sdk
-Requires:       python311-google-auth
-Requires:       python311-google-cloud-storage
-Requires:       python311-google-api-python-client
-Requires:       python311-aliyun-img-utils >= 1.4.0
-Requires:       python311-azure-img-utils >= 2.0.0
-Requires:       python311-Werkzeug
-Requires:       python311-jmespath
+Requires:       %{pythons}-boto3
+Requires:       %{pythons}-cryptography >= 2.2.0
+Requires:       %{pythons}-PyYAML
+Requires:       %{pythons}-PyJWT
+Requires:       %{pythons}-amqpstorm >= 2.4.0
+Requires:       %{pythons}-APScheduler >= 3.3.1
+Requires:       %{pythons}-python-dateutil >= 2.6.0
+Requires:       python-ec2imgutils >= 9.0.3
+Requires:       python-img-proof >= 7.14.0
+Requires:       python-img-proof-tests >= 7.14.0
+Requires:       %{pythons}-Flask
+Requires:       %{pythons}-flask-restx
+Requires:       %{pythons}-Flask-SQLAlchemy
+Requires:       %{pythons}-Flask-Migrate
+Requires:       %{pythons}-flask-jwt-extended
+Requires:       %{pythons}-requests
+Requires:       python-obs-img-utils >= 1.0.0
+Requires:       %{pythons}-oci-sdk
+Requires:       %{pythons}-google-auth
+Requires:       %{pythons}-google-cloud-storage
+Requires:       %{pythons}-google-api-python-client
+Requires:       python-aliyun-img-utils >= 1.4.0
+Requires:       python-azure-img-utils >= 2.0.0
+Requires:       %{pythons}-Werkzeug
+Requires:       %{pythons}-jmespath
 Requires:       apache2
-Requires:       apache2-mod_wsgi-python311
+Requires:       apache2-mod_wsgi-%{pythons}
 Requires(pre):  pwdutils
 BuildArch:      noarch
 
@@ -162,6 +167,8 @@ install -D -m 644 config/mash_deprecate.service \
 install -D -m 644 config/mash_cleanup.service \
     %{buildroot}%{_unitdir}/mash_cleanup.service
 
+%fdupes %{buildroot}%{_sitelibdir}
+
 %pre
 %{_bindir}/getent group mash > /dev/null || %{_sbindir}/groupadd mash
 %{_bindir}/getent passwd mash > /dev/null || %{_sbindir}/useradd -r -g mash -s %{_bindir}/false -c "User for MASH" -d %{_localstatedir}/lib/mash mash
@@ -172,7 +179,8 @@ export LANG=en_US.UTF-8
 
 %files
 %defattr(-,root,root,-)
-%{python_sitelib}/*
+%{_sitelibdir}/mash/
+%{_sitelibdir}/mash-*.dist-info/
 %dir %attr(755, mash, mash)%{_localstatedir}/log/%{name}
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/%{name}
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/%{name}/credentials
@@ -229,4 +237,3 @@ export LANG=en_US.UTF-8
 %{_unitdir}/mash_cleanup.service
 
 %changelog
-
