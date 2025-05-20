@@ -1,3 +1,12 @@
+v13.16.0 (2025-05-20)
+=====================
+
+- Change alibaba instance types for testing
+- Add file package to spec
+- Updating azure instance types for Azure SIG jobs
+- Updating the instance_type to a family that supports hyperv gen1
+- Build for one version of python
+
 v13.15.0 (2024-11-12)
 =====================
 
