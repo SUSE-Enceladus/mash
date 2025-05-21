@@ -91,29 +91,35 @@ class TestGCEUploadJob(object):
         with raises(MashUploadException):
             GCEUploadJob(job_doc, self.config)
 
-    @patch('mash.services.upload.gce_job.delete_image_tarball')
+    @patch('mash.services.upload.gce_job.GCERemoveBlob')
     @patch('mash.services.upload.gce_job.blob_exists')
-    @patch('mash.services.upload.gce_job.get_gce_storage_driver')
-    @patch('mash.services.upload.gce_job.upload_image_tarball')
+    @patch('mash.services.upload.gce_job.get_storage_client')
+    @patch('mash.services.upload.gce_job.GCEUploadBlob')
     @patch('builtins.open')
     def test_upload(
         self,
         mock_open,
-        mock_upload_image,
-        mock_get_driver,
+        mock_uploader,
+        mock_get_client,
         mock_blob_exists,
-        mock_delete_tarball
+        mock_remover
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
         mock_blob_exists.return_value = False
 
-        storage_driver = Mock()
-        mock_get_driver.return_value = storage_driver
+        uploader = MagicMock()
+        remover = MagicMock()
+
+        mock_remover.return_value = remover
+        mock_uploader.return_value = uploader
+
+        storage_client = Mock()
+        mock_get_client.return_value = storage_client
 
         self.job.run_job()
-        assert mock_upload_image.call_count == 1
+        assert uploader.upload_blob.call_count == 1
 
         # Tarball exists and no force replace
         mock_blob_exists.return_value = True
@@ -124,4 +130,4 @@ class TestGCEUploadJob(object):
         self.job.force_replace_image = True
         self.job.run_job()
 
-        assert mock_delete_tarball.call_count == 1
+        assert remover.remove_blob.call_count == 1
