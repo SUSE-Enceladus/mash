@@ -3,7 +3,8 @@ from unittest.mock import Mock
 from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
     select_instances_for_tests,
-    get_partition_test_regions
+    get_partition_test_regions,
+    get_image_id_for_region
 )
 
 
@@ -220,3 +221,28 @@ class TestEC2TestUtils(object):
         ]
         for test_regions, expected_output in test_cases:
             assert expected_output == get_partition_test_regions(test_regions)
+
+    def test_get_image_id_for_region(self):
+        """tests the get_image_id_for_region"""
+
+        source_regions = {
+            'us-east-1': 'ami-111111',
+            'us-east-2': 'ami-222222',
+        }
+        replicate_regions = {
+            'us-east-3': 'ami-333333'
+        }
+
+        test_cases = [
+            ('us-east-1', 'ami-111111'),
+            ('us-east-2', 'ami-222222'),
+            ('us-east-3', 'ami-333333'),
+            ('us-east-4', '')
+
+        ]
+        for region, expected_output in test_cases:
+            assert expected_output == get_image_id_for_region(
+                region,
+                source_regions,
+                replicate_regions
+            )

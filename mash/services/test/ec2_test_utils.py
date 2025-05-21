@@ -192,3 +192,20 @@ def get_partition_test_regions(test_regions: dict):
     for region_name, region in test_regions.items():
         partitions[region.get('partition')].append(region_name)
     return partitions
+
+
+def get_image_id_for_region(
+    region: str,
+    source_regions: dict,
+    replicate_source_regions: dict
+):
+    """
+    Provides the image_id for the region provided.
+    the image_id is searched in the source_regions dict and if not found
+    in the replicate_source_regions.
+    """
+    if region in source_regions:
+        return source_regions[region]
+    elif region in replicate_source_regions:
+        return replicate_source_regions[region]
+    return ''
