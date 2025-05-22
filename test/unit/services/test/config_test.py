@@ -69,3 +69,12 @@ class TestTestConfig(object):
             }
         ]
         assert self.config.get_test_ec2_instance_catalog() == expected_catalog
+
+    def test_get_ec2_instance_feature_additional_tests(self):
+        expected_additional_tests = {
+            "AmdSevSnp_enabled": [
+                "test_sles_sev_snp"
+            ]
+        }
+        assert self.config.get_ec2_instance_feature_additional_tests() == \
+            expected_additional_tests
