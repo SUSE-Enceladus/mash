@@ -209,3 +209,18 @@ def get_image_id_for_region(
     elif region in replicate_source_regions:
         return replicate_source_regions[region]
     return ''
+
+
+def get_additional_tests_for_instance(
+    arch,
+    boot_type,
+    cpu_option,
+    additional_tests
+):
+    """Provides a list of additional tests configured for each instance type"""
+    tests = []
+
+    tests.extend(additional_tests.get(arch, []))
+    tests.extend(additional_tests.get(boot_type, []))
+    tests.extend(additional_tests.get(cpu_option, []))
+    return tests

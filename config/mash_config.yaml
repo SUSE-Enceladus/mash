@@ -187,6 +187,9 @@ cloud:
       - uefi
       - uefi-preferred
       cpu_options: []
+    instance_feature_additional_tests:
+      AmdSevSnp_enabled:
+        - test_sles_sev_snp
 test:
   img_proof_timeout: 600
 upload:

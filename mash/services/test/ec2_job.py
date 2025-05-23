@@ -32,7 +32,8 @@ from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
     select_instances_for_tests,
     get_partition_test_regions,
-    get_image_id_for_region
+    get_image_id_for_region,
+    get_additional_tests_for_instance
 )
 from mash.utils.mash_utils import create_ssh_key_pair
 from mash.utils.ec2 import (
@@ -172,6 +173,30 @@ class EC2TestJob(MashJob):
                     self.status_msg['source_regions'],
                     self.status_msg['test_replicated_regions']
                 )
+                tests = self.tests.copy()
+                tests.extend(
+                    get_additional_tests_for_instance(
+                        arch=instance_type.get('arch', 'x86_64'),
+                        boot_type=instance_type.get(
+                            'boot_type',
+                            'uefi-preferred'
+                        ),
+                        cpu_option=instance_type.get(
+                            'cpu_option',
+                            []
+                        ),
+                        additional_tests=self.config.get_ec2_instance_feature_additional_tests()  # NOQA
+                    )
+                )
+                if self.log_callback:
+                    self.log_callback.info(
+                        'The tests that will be run for this instance type '
+                        '{inst_type} in {region}: {tests}.'.format(
+                            inst_type=instance_type.get('instance_name'),
+                            region=region,
+                            tests=tests
+                        )
+                    )
 
                 with setup_ec2_networking(
                     credentials['access_key_id'],
@@ -193,7 +218,7 @@ class EC2TestJob(MashJob):
                         instance_type=instance_type.get('instance_name'),
                         img_proof_timeout=self.img_proof_timeout,
                         ssh_user=self.ssh_user,
-                        tests=self.tests,
+                        tests=tests,
                         log_callback=self.log_callback,
                         network_details=network_details
                     )

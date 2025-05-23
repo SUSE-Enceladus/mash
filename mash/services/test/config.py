@@ -61,3 +61,15 @@ class TestConfig(BaseConfig):
                 'Ec2 test instance catalog must be provided in config file.'
             )
         return instance_catalog
+
+    def get_ec2_instance_feature_additional_tests(self):
+        """
+        Returns the additional tests configured for the different instance
+        features (if any).
+        """
+        ec2_cloud_info = self.get_cloud_data().get('ec2', {})
+        instance_feat_additional_tests = ec2_cloud_info.get(
+            'instance_feature_additional_tests',
+            {}
+        )
+        return instance_feat_additional_tests
