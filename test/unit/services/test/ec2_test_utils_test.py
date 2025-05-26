@@ -4,7 +4,8 @@ from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
     select_instances_for_tests,
     get_partition_test_regions,
-    get_image_id_for_region
+    get_image_id_for_region,
+    get_cpu_options
 )
 
 
@@ -246,3 +247,17 @@ class TestEC2TestUtils(object):
                 source_regions,
                 replicate_regions
             )
+
+    def test_get_cpu_options(self):
+        """tests the get_cpu_options"""
+
+        cpu_option = (
+            'cpu-option-1_value1,'
+            'cpu-option-2_disabled,'
+            'cpu-option-3_value3'
+        )
+        expected_result = {
+            'cpu-option-1': 'value1',
+            'cpu-option-3': 'value3'
+        }
+        assert expected_result == get_cpu_options(cpu_option)
