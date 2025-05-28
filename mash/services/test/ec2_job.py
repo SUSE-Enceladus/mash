@@ -33,7 +33,8 @@ from mash.services.test.ec2_test_utils import (
     select_instances_for_tests,
     get_partition_test_regions,
     get_image_id_for_region,
-    get_additional_tests_for_instance
+    get_additional_tests_for_instance,
+    get_cpu_options
 )
 from mash.utils.mash_utils import create_ssh_key_pair
 from mash.utils.ec2 import (
@@ -122,6 +123,7 @@ class EC2TestJob(MashJob):
             self.boot_firmware,
             self.cpu_options
         )
+
         if self.log_callback:
             self.log_callback.info(
                 'The list of features combinations to be tested are:'
@@ -188,6 +190,9 @@ class EC2TestJob(MashJob):
                         additional_tests=self.config.get_ec2_instance_feature_additional_tests()  # NOQA
                     )
                 )
+                cpu_options = get_cpu_options(
+                    instance_type.get('cpu_option', '')
+                )
                 if self.log_callback:
                     self.log_callback.info(
                         'The tests that will be run for this instance type '
@@ -220,7 +225,8 @@ class EC2TestJob(MashJob):
                         ssh_user=self.ssh_user,
                         tests=tests,
                         log_callback=self.log_callback,
-                        network_details=network_details
+                        network_details=network_details,
+                        cpu_options=cpu_options
                     )
                     if status != SUCCESS:
                         self.status = status
@@ -264,7 +270,8 @@ class EC2TestJob(MashJob):
         ssh_user,
         tests,
         log_callback,
-        network_details
+        network_details,
+        cpu_options={}
     ):
         try:
             exit_status, result = test_image(
@@ -286,7 +293,8 @@ class EC2TestJob(MashJob):
                 subnet_id=network_details['subnet_id'],
                 tests=tests,
                 log_callback=log_callback,
-                prefix_name='mash'
+                prefix_name='mash',
+                cpu_options=cpu_options
             )
         except Exception as error:
             self.add_error_msg(str(error))

@@ -224,3 +224,16 @@ def get_additional_tests_for_instance(
     tests.extend(additional_tests.get(boot_type, []))
     tests.extend(additional_tests.get(cpu_option, []))
     return tests
+
+
+def get_cpu_options(
+    cpu_option=''
+):
+    """Provides the cpu_options dictionary as expected by img_utils"""
+    cpu_options = {}
+    for cpu_opt in cpu_option.split(',', maxsplit=-1):
+
+        if cpu_opt and 'disabled' not in cpu_opt.lower():
+            (key, value) = cpu_opt.split('_', 1)
+            cpu_options[key] = value
+    return cpu_options
