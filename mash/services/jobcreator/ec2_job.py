@@ -52,6 +52,8 @@ class EC2Job(BaseJob):
         )
         self.launch_inst_type = self.kwargs.get('launch_inst_type')
         self.cpu_options = self.kwargs.get('cpu_options', {})
+        self.imds_version = self.kwargs.get('imds_version', '')
+        self.root_volume_size = self.kwargs.get('root_volume_size', 10)
 
     def _get_target_regions_list(self):
         """
@@ -133,7 +135,9 @@ class EC2Job(BaseJob):
 
             if self.ssh_user:
                 publish_message['publish_job']['ssh_user'] = self.ssh_user
-            if not self.old_cloud_image_name:
+            if (
+                not self.old_cloud_image_name or self.last_service == 'publish'
+            ):
                 publish_message['publish_job']['submit_change_request'] = True
         else:
             publish_message = {
@@ -281,7 +285,8 @@ class EC2Job(BaseJob):
                 'force_replace_image': self.force_replace_image,
                 'tpm_support': self.tpm_support,
                 'boot_firmware': self.boot_firmware,
-                'launch_inst_type': self.launch_inst_type
+                'launch_inst_type': self.launch_inst_type,
+                'root_volume_size': self.root_volume_size
             }
         }
         create_message['create_job'].update(self.base_message)
@@ -289,6 +294,9 @@ class EC2Job(BaseJob):
         if self.cloud_architecture:
             create_message['create_job']['cloud_architecture'] = \
                 self.cloud_architecture
+
+        if self.imds_version:
+            create_message['create_job']['imds_version'] = self.imds_version
 
         return JsonFormat.json_message(create_message)
 

@@ -34,12 +34,12 @@ instance_types = {
     'x86_64': [
         'Standard_B1s',
         'Standard_D2s_v4',
-        'Standard_E2s_v4',
+        'Standard_E2bds_v5',
         'Standard_F2s_v2'
     ],
     'aarch64': [
-        'Standard_D2ps_v5',
-        'Standard_E2ps_v5'
+        'Standard_D2ps_v6',
+        'Standard_E2ps_v6'
     ]
 }
 

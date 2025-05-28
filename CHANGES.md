@@ -1,3 +1,49 @@
+v13.16.0 (2025-05-20)
+=====================
+
+- Change alibaba instance types for testing
+- Add file package to spec
+- Updating azure instance types for Azure SIG jobs
+- Updating the instance_type to a family that supports hyperv gen1
+- Build for one version of python
+
+v13.15.0 (2024-11-12)
+=====================
+
+- Expose root volume size for ec2 image creation
+
+v13.14.1 (2024-07-16)
+=====================
+
+- Fix bug in imds default version. Default is empty string
+
+v13.14.0 (2024-07-15)
+=====================
+
+- Fix imds typo and Set default imds setting to v1.0 for ec2 jobs
+
+v13.13.1 (2024-06-25)
+=====================
+
+- Fix mod wsgi requirement for python311
+
+v13.13.0 (2024-06-24)
+===================
+
+- Update quickstart docs to run mash as container
+- Sets submit_change_request to True for all EC2 jobs with
+- Add imds support to EC2 jobs
+
+v13.12.1 (2024-06-03)
+===================
+
+- Use explicit python 3.11 requirements in spec file
+
+v13.12.0 (2024-05-29)
+====================
+
+- Update spec to build for python 3.11
+
 v13.11.0 (2024-03-06)
 ====================
 

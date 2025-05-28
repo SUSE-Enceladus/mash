@@ -1,7 +1,7 @@
 #
 # spec file for package mash
 #
-# Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
+# Copyright (c) 2025 SUSE LLC
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -15,9 +15,15 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
+%if 0%{?suse_version} >= 1600
+%define pythons %{primary_python}
+%else
+%{?sle15_python_module_pythons}
+%endif
+%global _sitelibdir %{%{pythons}_sitelib}
 
 Name:           mash
-Version:        13.11.0
+Version:        13.16.0
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/mash
 Summary:        Public Cloud Release Tool
@@ -25,62 +31,62 @@ License:        GPL-3.0+
 Group:          System/Management
 Source:         mash-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+BuildRequires:  file
 BuildRequires:  python-rpm-macros
-BuildRequires:  python3-devel
-BuildRequires:  python3-setuptools
-BuildRequires:  python3-boto3
-BuildRequires:  python3-cryptography >= 2.2.0
-BuildRequires:  python3-PyYAML
-BuildRequires:  python3-PyJWT
-BuildRequires:  python3-amqpstorm >= 2.4.0
-BuildRequires:  python3-APScheduler >= 3.3.1
-BuildRequires:  python3-python-dateutil >= 2.6.0
-BuildRequires:  python3-ec2imgutils >= 9.0.3
-BuildRequires:  python3-img-proof >= 7.14.0
-BuildRequires:  python3-img-proof-tests >= 7.14.0
-BuildRequires:  python3-Flask
-BuildRequires:  python3-flask-restx
-BuildRequires:  python3-Flask-SQLAlchemy
-BuildRequires:  python3-Flask-Migrate
-BuildRequires:  python3-flask-jwt-extended
-BuildRequires:  python3-requests
-BuildRequires:  python3-obs-img-utils >= 1.0.0
-BuildRequires:  python3-oci-sdk
-BuildRequires:  python3-google-auth
-BuildRequires:  python3-google-cloud-storage
-BuildRequires:  python3-google-api-python-client
-BuildRequires:  python3-aliyun-img-utils >= 1.4.0
-BuildRequires:  python3-azure-img-utils >= 2.0.0
-BuildRequires:  python3-Werkzeug
-BuildRequires:  python3-jmespath
+BuildRequires:  fdupes
+BuildRequires:  %{pythons}-pip
+BuildRequires:  %{pythons}-setuptools
+BuildRequires:  %{pythons}-wheel
+BuildRequires:  %{pythons}-boto3
+BuildRequires:  %{pythons}-cryptography >= 2.2.0
+BuildRequires:  %{pythons}-PyYAML
+BuildRequires:  %{pythons}-PyJWT
+BuildRequires:  %{pythons}-amqpstorm >= 2.4.0
+BuildRequires:  %{pythons}-APScheduler >= 3.3.1
+BuildRequires:  %{pythons}-python-dateutil >= 2.6.0
+BuildRequires:  python-ec2imgutils >= 9.0.3
+BuildRequires:  python-img-proof >= 7.14.0
+BuildRequires:  python-img-proof-tests >= 7.14.0
+BuildRequires:  %{pythons}-Flask
+BuildRequires:  %{pythons}-flask-restx
+BuildRequires:  %{pythons}-Flask-SQLAlchemy
+BuildRequires:  %{pythons}-Flask-Migrate
+BuildRequires:  %{pythons}-flask-jwt-extended
+BuildRequires:  %{pythons}-requests
+BuildRequires:  python-obs-img-utils >= 1.0.0
+BuildRequires:  %{pythons}-oci-sdk
+BuildRequires:  python-gceimgutils
+BuildRequires:  python-aliyun-img-utils >= 1.4.0
+BuildRequires:  python-azure-img-utils >= 2.0.0
+BuildRequires:  %{pythons}-Werkzeug
+BuildRequires:  %{pythons}-jmespath
+Requires:       file
 Requires:       rabbitmq-server
-Requires:       python3-boto3
-Requires:       python3-cryptography >= 2.2.0
-Requires:       python3-PyYAML
-Requires:       python3-PyJWT
-Requires:       python3-amqpstorm >= 2.4.0
-Requires:       python3-APScheduler >= 3.3.1
-Requires:       python3-python-dateutil >= 2.6.0
-Requires:       python3-ec2imgutils >= 9.0.3
-Requires:       python3-img-proof >= 7.14.0
-Requires:       python3-img-proof-tests >= 7.14.0
-Requires:       python3-Flask
-Requires:       python3-flask-restx
-Requires:       python3-Flask-SQLAlchemy
-Requires:       python3-Flask-Migrate
-Requires:       python3-flask-jwt-extended
-Requires:       python3-requests
-Requires:       python3-obs-img-utils >= 1.0.0
-Requires:       python3-oci-sdk
-Requires:       python3-google-auth
-Requires:       python3-google-cloud-storage
-Requires:       python3-google-api-python-client
-Requires:       python3-aliyun-img-utils >= 1.4.0
-Requires:       python3-azure-img-utils >= 2.0.0
-Requires:       python3-Werkzeug
-Requires:       python3-jmespath
+Requires:       %{pythons}-boto3
+Requires:       %{pythons}-cryptography >= 2.2.0
+Requires:       %{pythons}-PyYAML
+Requires:       %{pythons}-PyJWT
+Requires:       %{pythons}-amqpstorm >= 2.4.0
+Requires:       %{pythons}-APScheduler >= 3.3.1
+Requires:       %{pythons}-python-dateutil >= 2.6.0
+Requires:       python-ec2imgutils >= 9.0.3
+Requires:       python-img-proof >= 7.14.0
+Requires:       python-img-proof-tests >= 7.14.0
+Requires:       %{pythons}-Flask
+Requires:       %{pythons}-flask-restx
+Requires:       %{pythons}-Flask-SQLAlchemy
+Requires:       %{pythons}-Flask-Migrate
+Requires:       %{pythons}-flask-jwt-extended
+Requires:       %{pythons}-requests
+Requires:       python-obs-img-utils >= 1.0.0
+Requires:       %{pythons}-oci-sdk
+Requires:       python-gceimgutils
+Requires:       python-aliyun-img-utils >= 1.4.0
+Requires:       python-azure-img-utils >= 2.0.0
+Requires:       %{pythons}-Werkzeug
+Requires:       %{pythons}-jmespath
 Requires:       apache2
-Requires:       apache2-mod_wsgi-python3
+Requires:       apache2-mod_wsgi-%{pythons}
 Requires(pre):  pwdutils
 BuildArch:      noarch
 
@@ -90,13 +96,13 @@ build in obs to image available for customers in the public
 cloud
 
 %prep
-%setup -q -n mash-%{version}
+%autosetup -n mash-%{version}
 
 %build
-python3 setup.py build
+%pyproject_wheel
 
 %install
-python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
+%pyproject_install
 
 mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 
@@ -163,17 +169,20 @@ install -D -m 644 config/mash_deprecate.service \
 install -D -m 644 config/mash_cleanup.service \
     %{buildroot}%{_unitdir}/mash_cleanup.service
 
+%fdupes %{buildroot}%{_sitelibdir}
+
 %pre
 %{_bindir}/getent group mash > /dev/null || %{_sbindir}/groupadd mash
 %{_bindir}/getent passwd mash > /dev/null || %{_sbindir}/useradd -r -g mash -s %{_bindir}/false -c "User for MASH" -d %{_localstatedir}/lib/mash mash
 
 %check
 export LANG=en_US.UTF-8
-python3 -m pytest
+%pytest
 
 %files
 %defattr(-,root,root,-)
-%{python3_sitelib}/*
+%{_sitelibdir}/mash/
+%{_sitelibdir}/mash-*.dist-info/
 %dir %attr(755, mash, mash)%{_localstatedir}/log/%{name}
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/%{name}
 %dir %attr(755, mash, mash)%{_localstatedir}/lib/%{name}/credentials

@@ -23,13 +23,9 @@ from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashCreateException
 from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
-from mash.utils.gce import (
-    get_gce_image,
-    create_gce_image,
-    create_gce_rollout,
-    delete_gce_image,
-    get_gce_compute_driver
-)
+from gceimgutils.gceutils import get_images_client, get_image
+from gceimgutils.gcecreateimg import GCECreateImage
+from gceimgutils.gceremoveimg import GCERemoveImage
 
 
 class GCECreateJob(MashJob):
@@ -78,41 +74,40 @@ class GCECreateJob(MashJob):
         credentials = self.credentials[self.account]
 
         project = credentials.get('project_id')
-        compute_driver = get_gce_compute_driver(credentials, version='alpha')
+        compute_client = get_images_client(credentials)
 
-        uri = ''.join([
-            'https://www.googleapis.com/storage/v1/b/',
-            self.bucket,
-            '/o/',
-            object_name
-        ])
-
-        if get_gce_image(compute_driver, project, self.cloud_image_name):
+        if get_image(compute_client, project, self.cloud_image_name):
             self.log_callback.info(
                 'Replacing existing image with the same name.'
             )
-            delete_gce_image(
-                compute_driver,
-                project,
-                self.cloud_image_name
+            remover = GCERemoveImage(
+                image_name=self.cloud_image_name,
+                credentials_info=credentials,
+                project=project,
+                log_callback=self.log_callback
             )
+            remover.remove_image(self.cloud_image_name)
 
-        if self.skip_rollout:
-            rollout = None
-        else:
-            rollout = create_gce_rollout(compute_driver, project)
+        # Rollout option is not available in SDK. This can be added
+        # back in the future when it becomes available.
+        # if self.skip_rollout:
+        #     rollout = None
+        # else:
+        #     rollout = create_gce_rollout(compute_driver, project)
 
-        create_gce_image(
-            compute_driver,
-            project,
+        creator = GCECreateImage(
             self.cloud_image_name,
             self.cloud_image_description,
-            uri,
-            family=self.family,
+            self.family,
+            self.bucket,
+            object_name,
+            arch=self.arch,
             guest_os_features=self.guest_os_features,
-            rollout=rollout,
-            arch=self.arch
+            credentials_info=credentials,
+            project=project,
+            log_callback=self.log_callback
         )
+        creator.create_image()
 
         self.log_callback.info(
             'Created image has ID: {0}'.format(
