@@ -232,6 +232,7 @@ def test_get_accounts_in_ec2_group(mock_group, test_client):
     assert response.data == b'{"msg":"Group test not found."}\n'
 
 
+@patch('mash.services.database.utils.accounts.ec2.create_new_ec2_test_region')
 @patch('mash.services.database.utils.accounts.ec2._get_or_create_ec2_group')
 @patch('mash.services.database.utils.accounts.ec2.get_ec2_account_for_user')
 @patch('mash.services.database.utils.accounts.ec2.handle_request')
@@ -241,6 +242,7 @@ def test_update_account_ec2(
     mock_handle_request,
     mock_get_account,
     mock_get_group,
+    mock_create_test_region,
     test_client
 ):
     account = Mock()
@@ -268,12 +270,11 @@ def test_update_account_ec2(
             'secret_access_key': '654321'
         },
         'partition': 'aws',
-        'region': 'us-east-1',
         'group': 'grp1',
         'test_regions': [
             {
-                'subnet': 'subnet1',
-                'region': 'us-east-1'
+                'region': 'us-east-2',
+                'subnet': 'subnet-2'
             }
         ]
     }

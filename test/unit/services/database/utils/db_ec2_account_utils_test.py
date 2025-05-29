@@ -130,9 +130,10 @@ def test_create_ec2_account(
         'us-east-98', 'ami-789', account
     )
 
-    mock_create_test_region.assert_called_once_with(
-        region='us-east-100', subnet='subnet-54321', account=account
-    )
+    mock_create_test_region.assert_has_calls([
+        call(region='us-east-100', subnet='subnet-54321', account=account),
+        call(region='us-east-99', subnet='subnet-12345', account=account)
+    ])
 
     mock_handle_request.assert_called_once_with(
         'http://localhost:5000/',
