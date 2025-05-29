@@ -51,7 +51,7 @@ test_regions = {
         'required': ['region', 'subnet'],
         'additionalProperties': False
     },
-    'minItems': 1,
+    'minItems': 0,
     'example': [{'region': 'us-east-44', 'subnet': 'subnet-12345678'}]
 }
 

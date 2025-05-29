@@ -180,7 +180,8 @@ def update_ec2_account():
             data.get('credentials'),
             data.get('group'),
             data.get('region'),
-            data.get('subnet')
+            data.get('subnet'),
+            data.get('test_regions')
         )
     except Exception as error:
         current_app.logger.warning(error)
