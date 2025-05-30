@@ -1,3 +1,9 @@
+v14.0.0 (2025-05-30)
+====================
+
+- Migrate to gceimgutils for GCE functions
+- Drop GCE utilities and GCE package requirements
+
 v13.16.0 (2025-05-20)
 =====================
 
