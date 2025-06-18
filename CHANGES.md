@@ -1,3 +1,10 @@
+v14.0.1 (2025-06-18)
+====================
+
+- Fix arguments order for gce create image
+- Handle exception instead of empty response checking for gce image
+- Pass in credentials object to get clients instead of dict
+
 v14.0.0 (2025-05-30)
 ====================
 
