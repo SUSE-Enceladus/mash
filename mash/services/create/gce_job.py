@@ -104,10 +104,10 @@ class GCECreateJob(MashJob):
         creator = GCECreateImage(
             self.cloud_image_name,
             self.cloud_image_description,
-            self.family,
             self.bucket,
             object_name,
-            arch=self.arch,
+            architecture=self.arch,
+            family=self.family,
             guest_os_features=self.guest_os_features,
             credentials_info=credentials,
             project=project,
