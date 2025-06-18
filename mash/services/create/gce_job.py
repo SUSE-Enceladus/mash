@@ -77,7 +77,12 @@ class GCECreateJob(MashJob):
         credentials_obj = get_credentials(project, credentials_info=credentials)
         compute_client = get_images_client(credentials_obj)
 
-        if get_image(compute_client, project, self.cloud_image_name):
+        try:
+            image = get_image(compute_client, project, self.cloud_image_name)
+        except Exception:
+            image = None
+
+        if image:
             self.log_callback.info(
                 'Replacing existing image with the same name.'
             )
