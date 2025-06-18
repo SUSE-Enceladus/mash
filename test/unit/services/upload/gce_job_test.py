@@ -91,6 +91,7 @@ class TestGCEUploadJob(object):
         with raises(MashUploadException):
             GCEUploadJob(job_doc, self.config)
 
+    @patch('mash.services.upload.gce_job.get_credentials')
     @patch('mash.services.upload.gce_job.GCERemoveBlob')
     @patch('mash.services.upload.gce_job.blob_exists')
     @patch('mash.services.upload.gce_job.get_storage_client')
@@ -102,7 +103,8 @@ class TestGCEUploadJob(object):
         mock_uploader,
         mock_get_client,
         mock_blob_exists,
-        mock_remover
+        mock_remover,
+        mock_get_credentials
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle

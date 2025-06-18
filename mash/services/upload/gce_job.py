@@ -24,7 +24,11 @@ from mash.utils.mash_utils import (
     timestamp_from_epoch
 )
 from mash.services.status_levels import SUCCESS
-from gceimgutils.gceutils import get_storage_client, blob_exists
+from gceimgutils.gceutils import (
+    get_storage_client,
+    blob_exists,
+    get_credentials
+)
 from gceimgutils.gceuploadblob import GCEUploadBlob
 from gceimgutils.gceremoveblob import GCERemoveBlob
 
@@ -80,7 +84,8 @@ class GCEUploadJob(MashJob):
         self.request_credentials([self.account])
         credentials = self.credentials[self.account]
         project = credentials['project_id']
-        storage_client = get_storage_client(project, credentials)
+        credentials_obj = get_credentials(project, credentials_info=credentials)
+        storage_client = get_storage_client(project, credentials_obj)
 
         object_name = ''.join([self.cloud_image_name, '.tar.gz'])
 

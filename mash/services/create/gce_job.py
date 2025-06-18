@@ -23,7 +23,7 @@ from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashCreateException
 from mash.utils.mash_utils import format_string_with_date
 from mash.services.status_levels import SUCCESS
-from gceimgutils.gceutils import get_images_client, get_image
+from gceimgutils.gceutils import get_images_client, get_image, get_credentials
 from gceimgutils.gcecreateimg import GCECreateImage
 from gceimgutils.gceremoveimg import GCERemoveImage
 
@@ -74,9 +74,15 @@ class GCECreateJob(MashJob):
         credentials = self.credentials[self.account]
 
         project = credentials.get('project_id')
-        compute_client = get_images_client(credentials)
+        credentials_obj = get_credentials(project, credentials_info=credentials)
+        compute_client = get_images_client(credentials_obj)
 
-        if get_image(compute_client, project, self.cloud_image_name):
+        try:
+            image = get_image(compute_client, project, self.cloud_image_name)
+        except Exception:
+            image = None
+
+        if image:
             self.log_callback.info(
                 'Replacing existing image with the same name.'
             )
@@ -98,10 +104,10 @@ class GCECreateJob(MashJob):
         creator = GCECreateImage(
             self.cloud_image_name,
             self.cloud_image_description,
-            self.family,
             self.bucket,
             object_name,
-            arch=self.arch,
+            architecture=self.arch,
+            family=self.family,
             guest_os_features=self.guest_os_features,
             credentials_info=credentials,
             project=project,
