@@ -1,37 +1,33 @@
 
-# Test strategy flexibilization in AWS
+# Region Flexibility For AWS Instance Testing
 
 ## Intro
-Cloud providers are constantly adding new features in their instance catalog.
-Some of them, for example confidential compute features, are to be tested in
-our images as they are supported.It is necessary to improve the testing phase
-of image publication in mash to cover the most cases and detect issues before
-images are published.
+When AWS introduces new instance types or new features on existing instance
+types these are generally not immediately available in all regions. Examples
+include the introduction of Graviton instances and confidential compute
+features. Therefore it is necessary to support a flexible test approach
+that allows mash to run the specified tests with configured instance types
+in a specific region.
 
-Up to the development of this feature, only the different values in the
-`boot_firmware` parameter (bios/uefi/uefi-preferred) was tested and that
-approach makes not possible to cover these new instance features.
+Prior to the introduction of a flexible testing approach it was only possible
+to test variations for the boot firmware setting, a feature introduced in all
+AWS regions at once.
 
-An additional issue in this area is about the availability of these new
-features in the different regions in the cloud provider. At some point in time
-a feature can be available in some region but not (yet) in the rest of regions.
+Supporting the configuration of specific instance types to test in specified
+regions provides the required felxibility.
 
-## Solution
+## Overview
 
-2 new services have been added to mash:
+2 services handle the flexible test process:
 - *test_preparation*: the image created in the `main` region of the ec2 account
 gets replicated to the test regions provided for the ec2 account.
 - *test_cleanup*: cleans the image that has been replicated to the test regions
-other than the `main` region in the ec2 account profile.
+by the test_preparation service.
 
-For this feature to work properly there's some configurations to be made:
+The configuration example below shows how to associate specific test instance
+types with a given region.
 
-### Test instance catalog
-
-This new feature will select the instance features that will be tested from a
-test instance catalog configured in the mash config file.
-
-Here's an example of a test instance catalog:
+## Configuring The Test Instances
 
 ```
 cloud:
@@ -72,35 +68,40 @@ cloud:
       - AmdSevSnp_enabled
 ```
 
-Under the `test_instance_catalog` key in the file we have to include the
-different instances we want to execute the tests in (including the partition
-and the region) and which features are supported in each type.
+The `test_instance_catalog` key is the beginning of the section that supports
+association of instance types to specific regions as well as specific
+features to be configured when teh test instance is launched.
+
+Test scenarios will be generated based on the possible combinations of the
+specified features and instance types.
 
 For example if the instance supports `uefi-preferred` boot type and the
-`AmdSevSnp` cpu_option in AWS, the following features will be selected for the
+`AmdSevSnp` cpu_option in AWS is set to be tested, the following test
+matrix will be generated
 tests:
   - (bios boot + AmdSevSnp disabled)
   - (uefi-preferred boot + AmdSevSnp disabled)
   - (uefi-preferred boot + AmdSevSnp enabled)
 
-Some instance to cover each feature combination is selected from the catalog
-if there is some instance that supports the combination.
-If there's no instance supporting that combination it will just be logged, but
-there has to be at least one test for a feature combination in the list for the
-partition.
+If the specified instance type does not support the full test matrix
+the combination unsupported combinations will be skipped and the
+information is logged. In case the configured combination, considered
+the primary test case, cannot be tested it is considered an error. For
+example configuring bios boot with AMD SEV would trigger such an error as
+it is required to use UEFI boot to use the SEV SNP feature. Or if the specified
+instance type is an instance type that is based on Intel CPUs.
 
-Note that is required that the instances included in the catalog belong to the
-test regions present in the account's `test_regions`. Additionally, instances
-for different architectures have to be added to the config file if you plan to
-publish images from different architectures.
+Note that it is required that the instance types specified in the catalog
+are present in the test regions as configured in the account's `test_regions`.
+Additionally, instances for different architectures have to be added to the
+config file if you plan to publish images from different architectures.
 
-The format for the each instance group in this config section has to have the
-following fields:
- - *region*: which test region will be used if one of these instances is
+The following settings are required for each instance group:
+ - *region*: the test region to be used if one of these instances is
  selected.
  - *partition*: AWS partition
- - *arch*: instances architecture (x86_64 or aarch64)
- - *instance_names*: name of the instances types. One of these will be selected
+ - *arch*: instance architecture (x86_64 or aarch64)
+ - *instance_names*: name of the instance types. One of these will be selected
  randomly if this group is selected.
  - *boot_types*: which boot types do these isntance types support
  (bios/uefi/uefi-preferred).
@@ -108,13 +109,13 @@ following fields:
  the value required for AMD's Sev Snp feature.
 
 
-### Instance feature tests
+## Instance feature tests
 
-In order to check that the image with some feature is OK, a new feature has
-been implemented. In the mash configuration file, there's a new key under
-`cloud->ec2` that can be used to add additional tests that will be executed
-only in the instances that have a feature active. For example, with this config
-:
+Additional testing for the feature and instance type testing described above
+are invoked using the `cloud->ec2->instance_feature_additional_tests`
+configuration option.
+
+The following example demonstrates the usage:
 
 ```
 cloud:
@@ -125,24 +126,24 @@ cloud:
         - test_sles_sev_snp
 ```
 
-It's specified that in the images that support `AmdSevSnp_enabled` when the
-instance has the feature active, this `test_sles_sev_snp` test will be added on
-top of the test suite provided in the mash  job.
+The above configuration will instruct mash to test images that have the
+`AmdSevSnp_enabled` feature setting using the specified instance type from
+the `test_instance_catalog` in the specified region. In addition to the
+tests specified for the image the additional test wit hthe name
+`test_sles_sev_snp` will be executed.
 
-The goal for this test is to verify that the feature is active in the instance
-and the image is supporting it properly.
+## EC2 account
 
-### Ec2 account
+The final step to tie the `test_instance_catalog` and
+`instance_feature_additional_tests` together is the `test_regions` configuration
+option for the ec2 account. The `test_regions` setting specifies in which
+regions the testing should be executed. This setting has no influence on the
+primary region configured for testing.
 
-There's a new entity in the ec2 account object that contains the `test_regions`.
-These test regions are the regions where all the test instances will be created.
+Regions configured in the `test_instance_catalog` need to match with the
+region sin the `test_regions` setting.
 
-The `main` region for the ec2 account is automatically added to the test regions.
-It's important that the instance catalog and the `test_regions` of the ec2
-account are in sync. That is, all the regions in the instance catalog have to
-be provisioned in the test_regions for the ec2 accounts.
-
-The configured test regions can be checked with:
+Configured test regions can be checked with:
 
 ```
 $ mash account ec2 info --name database-test-1
