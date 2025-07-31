@@ -129,7 +129,7 @@ cloud:
 The above configuration will instruct mash to test images that have the
 `AmdSevSnp_enabled` feature setting using the specified instance type from
 the `test_instance_catalog` in the specified region. In addition to the
-tests specified for the image the additional test wit hthe name
+tests specified for the image the additional test with the name
 `test_sles_sev_snp` will be executed.
 
 ## EC2 account
@@ -141,7 +141,7 @@ regions the testing should be executed. This setting has no influence on the
 primary region configured for testing.
 
 Regions configured in the `test_instance_catalog` need to match with the
-region sin the `test_regions` setting.
+regions in the `test_regions` setting.
 
 Configured test regions can be checked with:
 
