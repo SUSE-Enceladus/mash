@@ -244,9 +244,10 @@ region.
 
  __Test region__
 
-For AWS partitions there may be additional regions which can be configured
-when creating an EC2 account in Mash for those regions to be used when testing
-the images:
+For AWS partitions additional test regions can be configured. Not all instance
+types are guaranteed to be available in all regions. This feature supports
+the association of specific instance types to to specific regions for test
+purposes.
 
 ```bash
 mash account ec2 add \
