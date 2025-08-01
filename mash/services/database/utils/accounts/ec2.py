@@ -133,6 +133,14 @@ def create_new_ec2_account(
                 account
             )
 
+    # add the primary region as test region
+    primary_test_region = {
+        'region': region_name,
+        'subnet': subnet
+    }
+    if primary_test_region not in test_regions:
+        test_regions.append(primary_test_region)
+
     if test_regions:
         for test_region in test_regions:
             create_new_ec2_test_region(
