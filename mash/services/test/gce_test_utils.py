@@ -127,8 +127,10 @@ def remove_incompatible_feature_combinations(feature_combinations):
             (nic == 'gvnic_disabled' and gvnic_disabled_already_included),
             # Only include one combination with securevm_disabled
             (
-                shielded_vm == 'securevm_disabled' and
-                shieldedvm_disabled_already_included
+                all([
+                    shielded_vm == 'securevm_disabled',
+                    shieldedvm_disabled_already_included
+                ])
             )
         ]):
             incompatible_combinations.append(feature_combination)
