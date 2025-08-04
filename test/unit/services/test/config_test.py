@@ -78,3 +78,105 @@ class TestTestConfig(object):
         }
         assert self.config.get_ec2_instance_feature_additional_tests() == \
             expected_additional_tests
+
+    def test_get_test_gce_instance_catalog(self):
+        expected_catalog = [
+            {
+                "region": "us-east1-b",
+                "arch": "X86_64",
+                "instance_names": [
+                    "n1-standard-1",
+                    "n1-highmem-2",
+                    "n1-highcpu-2",
+                    "f1-micro"
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": []
+            },
+            {
+                "region": "us-east1-b",
+                "arch": "X86_64",
+                "instance_names": [
+                    "n2d-standard-2"
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": [
+                    "AmdSevSnp_enabled",
+                    "AmdSev_enabled"
+                ]
+            },
+            {
+                "region": "us-east1-b",
+                "arch": "X86_64",
+                "instance_names": [
+                    "c4d-standard-2",
+                    "c3d-standard-2"
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": [
+                    "AmdSev_enabled"
+                ]
+            },
+            {
+                "region": "us-east1-b",
+                "arch": "X86_64",
+                "instance_names": [
+                    "c3-standard-4"
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": [
+                    "IntelTdx_enabled"
+                ]
+            },
+            {
+                "region": "us-east1-b",
+                "arch": "ARM64",
+                "instance_names": [
+                    "t2a-standard-2"
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": []
+            },
+        ]
+
+        assert self.config.get_test_gce_instance_catalog() == expected_catalog
