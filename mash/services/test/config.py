@@ -73,3 +73,17 @@ class TestConfig(BaseConfig):
             {}
         )
         return instance_feat_additional_tests
+
+    def get_test_gce_instance_catalog(self):
+        """
+        Return the instance catalog configured for gce tests
+        """
+
+        gce_cloud_info = self.get_cloud_data().get('gce', {})
+        instance_catalog = gce_cloud_info.get('test_instance_catalog', [])
+
+        if not instance_catalog:
+            raise MashConfigException(
+                'GCE test instance catalog must be provided in config file.'
+            )
+        return instance_catalog
