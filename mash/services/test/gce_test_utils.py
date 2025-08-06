@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 
 import itertools
+import logging
+import random
 
 
 def get_instance_feature_combinations(
@@ -117,8 +119,12 @@ def remove_incompatible_feature_combinations(feature_combinations):
             (arch == 'aarch64' and boot_type == 'bios'),
             # aarch64 images don't support secure boot
             (arch == 'aarch64' and shielded_vm == 'securevm_enabled'),
+            # AmdSev is not a aarch64 feature
+            (arch == 'aarch64' and conf_compute == 'AmdSev_enabled'),
             # AmdSevSnp is not a aarch64 feature
             (arch == 'aarch64' and conf_compute == 'AmdSevSnp_enabled'),
+            # IntelTdx is not a aarch64 feature
+            (arch == 'aarch64' and conf_compute == 'IntelTdx_enabled'),
             # AmdSevSnp enabled requires UEFI boot
             (boot_type == 'bios' and conf_compute == 'AmdSevSnp_enabled'),
             # AmdSev enabled requires UEFI boot
@@ -145,3 +151,104 @@ def remove_incompatible_feature_combinations(feature_combinations):
     for incompatible_combination in incompatible_combinations:
         feature_combinations.remove(incompatible_combination)
     return feature_combinations
+
+
+def select_instance_configs_for_tests(
+    instance_catalog: list,
+    feature_combinations: list,
+    logger: logging.Logger = None
+) -> list:
+    """
+    Selects the instance types and configurations used in the tests
+    Taking as input the instance catalog configured and the
+    feature_combinations that are required to be tested, chooses some intances
+    to cover the provided feature combinations.
+    Raises a MashTestException if there's some feature_combination that is not
+    possible to test with the instance_catalog.
+    """
+    instance_configs = []
+    for feature_combination in feature_combinations:
+        instance_config = select_instance_config_for_feature_combination(
+            feature_combination=feature_combination,
+            instance_catalog=instance_catalog,
+            logger=logger
+        )
+        if instance_config:
+            instance_configs.append(instance_config)
+            if logger:
+                logger.debug(
+                    f'Selected instance {instance_config} for '
+                    f'{feature_combination}'
+                )
+        else:
+            # Just writing in the log the issue for now
+            msg = (
+                'Unable to find instance to test this feature combination: '
+                f'{feature_combination}'
+            )
+            if logger:
+                logger.error(msg)
+    return instance_configs
+
+
+def select_instance_config_for_feature_combination(
+    feature_combination: tuple,
+    instance_catalog: list,
+    logger: logging.Logger = None
+):
+    """
+    selects from the instance_catalog for GCE one instance that covers the
+    feature_combination provided.
+    Returns None if there's is no instance in the catalog to test that
+    feature combination.
+    """
+
+    candidate_groups = []
+
+    arch = feature_combination[0].upper()
+    boot_type = feature_combination[1]
+    shielded_vm = feature_combination[2]
+    nic = feature_combination[3]
+    confidential_compute = feature_combination[4]
+
+    for instance_group in instance_catalog:
+        if arch != instance_group.get('arch'):
+            # arch not matching the group
+            continue
+
+        if boot_type not in instance_group.get('boot_types', []):
+            # required boot type not supported
+            continue
+
+        if 'enabled' in shielded_vm and shielded_vm not in instance_group.get(
+            'shielded_vm', []
+        ):
+            # required shielded_vm feature not supported
+            continue
+
+        if 'enabled' in nic and nic not in instance_group.get('nic', []):
+            # required nic feature not supported
+            continue
+
+        if (
+            'enabled' in confidential_compute and confidential_compute not in
+            instance_group.get('confidential_compute', [])
+        ):
+            # required confidential_compute feature not supported
+            continue
+
+        candidate_groups.append(instance_group)
+
+    instance_config = None
+    if candidate_groups:
+        selected_group = random.choice(candidate_groups)
+        instance_config = {
+            'arch': arch,
+            'instance_type': random.choice(selected_group['instance_types']),
+            'boot_type': boot_type,
+            'region': selected_group['region'],
+            'shielded_vm': shielded_vm,
+            'nic': nic,
+            'confidential_compute': confidential_compute
+        }
+    return instance_config
