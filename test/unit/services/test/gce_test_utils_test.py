@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from mash.services.test.gce_test_utils import (
     get_instance_feature_combinations,
-    select_instances_for_tests
+    select_instance_configs_for_tests
 )
 
 
@@ -123,8 +123,8 @@ class TestGCETestUtils(object):
                     guest_os_features=guest_os_features
                 ))
 
-    def test_select_instances_for_tests(self):
-        """tests the select_instances_for_tests"""
+    def test_select_instance_configs_for_tests(self):
+        """tests the select_instance_configs_for_tests"""
 
         instance_catalog = [
             {
@@ -296,15 +296,15 @@ class TestGCETestUtils(object):
         logger = Mock()
         for (
             feature_combinations,
-            expected_instances
+            expected_instance_configs
         ) in test_cases:
-            selected_instances = select_instances_for_tests(
+            selected_instance_configs = select_instance_configs_for_tests(
                 feature_combinations=feature_combinations,
                 instance_catalog=instance_catalog,
                 logger=logger
             )
-            for instance in selected_instances:
-                assert instance in expected_instances
+            for instance_config in selected_instance_configs:
+                assert instance_config in expected_instance_configs
 
         # error case
         logger.reset_mock()
@@ -319,10 +319,10 @@ class TestGCETestUtils(object):
             'Unable to find instance to test this feature combination: '
             f'{feature_combination}'
         )
-        instance_types = select_instances_for_tests(
+        instance_configs = select_instance_configs_for_tests(
             feature_combinations=[feature_combination],
             instance_catalog=instance_catalog,
             logger=logger
         )
-        assert instance_types == []
+        assert instance_configs == []
         logger.error.assert_called_once_with(msg)

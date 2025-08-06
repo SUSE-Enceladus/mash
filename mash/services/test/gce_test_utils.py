@@ -153,7 +153,7 @@ def remove_incompatible_feature_combinations(feature_combinations):
     return feature_combinations
 
 
-def select_instances_for_tests(
+def select_instance_configs_for_tests(
     instance_catalog: list,
     feature_combinations: list,
     logger: logging.Logger = None
@@ -166,18 +166,19 @@ def select_instances_for_tests(
     Raises a MashTestException if there's some feature_combination that is not
     possible to test with the instance_catalog.
     """
-    instances = []
+    instance_configs = []
     for feature_combination in feature_combinations:
-        instance = select_instance_for_feature_combination(
+        instance_config = select_instance_config_for_feature_combination(
             feature_combination=feature_combination,
             instance_catalog=instance_catalog,
             logger=logger
         )
-        if instance:
-            instances.append(instance)
+        if instance_config:
+            instance_configs.append(instance_config)
             if logger:
                 logger.debug(
-                    f'Selected instance {instance} for {feature_combination}'
+                    f'Selected instance {instance_config} for '
+                    f'{feature_combination}'
                 )
         else:
             # Just writing in the log the issue for now
@@ -187,10 +188,10 @@ def select_instances_for_tests(
             )
             if logger:
                 logger.error(msg)
-    return instances
+    return instance_configs
 
 
-def select_instance_for_feature_combination(
+def select_instance_config_for_feature_combination(
     feature_combination: tuple,
     instance_catalog: list,
     logger: logging.Logger = None
@@ -238,10 +239,10 @@ def select_instance_for_feature_combination(
 
         candidate_groups.append(instance_group)
 
-    instance = None
+    instance_config = None
     if candidate_groups:
         selected_group = random.choice(candidate_groups)
-        instance = {
+        instance_config = {
             'arch': arch,
             'instance_name': random.choice(selected_group['instance_names']),
             'boot_type': boot_type,
@@ -250,4 +251,4 @@ def select_instance_for_feature_combination(
             'nic': nic,
             'confidential_compute': confidential_compute
         }
-    return instance
+    return instance_config
