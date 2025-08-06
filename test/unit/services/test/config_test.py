@@ -84,7 +84,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east1-b",
                 "arch": "X86_64",
-                "instance_names": [
+                "instance_types": [
                     "n1-standard-1",
                     "n1-highmem-2",
                     "n1-highcpu-2",
@@ -104,7 +104,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east1-b",
                 "arch": "X86_64",
-                "instance_names": [
+                "instance_types": [
                     "n2d-standard-2"
                 ],
                 "boot_types": [
@@ -124,7 +124,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east1-b",
                 "arch": "X86_64",
-                "instance_names": [
+                "instance_types": [
                     "c4d-standard-2",
                     "c3d-standard-2"
                 ],
@@ -144,7 +144,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east1-b",
                 "arch": "X86_64",
-                "instance_names": [
+                "instance_types": [
                     "c3-standard-4"
                 ],
                 "boot_types": [
@@ -163,7 +163,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east1-b",
                 "arch": "ARM64",
-                "instance_names": [
+                "instance_types": [
                     "t2a-standard-2"
                 ],
                 "boot_types": [

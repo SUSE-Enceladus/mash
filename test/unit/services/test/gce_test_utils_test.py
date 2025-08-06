@@ -130,7 +130,7 @@ class TestGCETestUtils(object):
             {
                 "region": "us-east1-b",
                 "arch": "X86_64",
-                "instance_names": [
+                "instance_types": [
                     "n1-standard-1",
                 ],
                 "boot_types": [
@@ -147,7 +147,7 @@ class TestGCETestUtils(object):
             {
                 "region": "us-east1-b",
                 "arch": "X86_64",
-                "instance_names": [
+                "instance_types": [
                     "n2d-standard-2"
                 ],
                 "boot_types": [
@@ -167,7 +167,7 @@ class TestGCETestUtils(object):
             {
                 "region": "us-east1-b",
                 "arch": "X86_64",
-                "instance_names": [
+                "instance_types": [
                     "c3-standard-4"
                 ],
                 "boot_types": [
@@ -186,7 +186,7 @@ class TestGCETestUtils(object):
             {
                 "region": "us-east1-b",
                 "arch": "ARM64",
-                "instance_names": [
+                "instance_types": [
                     "t2a-standard-2"
                 ],
                 "boot_types": [
@@ -217,7 +217,7 @@ class TestGCETestUtils(object):
                 [
                     {
                         'arch': 'X86_64',
-                        'instance_name': 'n2d-standard-2',
+                        'instance_type': 'n2d-standard-2',
                         'region': 'us-east1-b',
                         'boot_type': 'uefi',
                         'shielded_vm': 'securevm_enabled',
@@ -239,7 +239,7 @@ class TestGCETestUtils(object):
                 [
                     {
                         'arch': 'X86_64',
-                        'instance_name': 'n2d-standard-2',
+                        'instance_type': 'n2d-standard-2',
                         'region': 'us-east1-b',
                         'boot_type': 'uefi',
                         'shielded_vm': 'securevm_enabled',
@@ -261,7 +261,7 @@ class TestGCETestUtils(object):
                 [
                     {
                         'arch': 'X86_64',
-                        'instance_name': 'c3-standard-4',
+                        'instance_type': 'c3-standard-4',
                         'region': 'us-east1-b',
                         'boot_type': 'uefi',
                         'shielded_vm': 'securevm_enabled',
@@ -283,7 +283,7 @@ class TestGCETestUtils(object):
                 [
                     {
                         'arch': 'ARM64',
-                        'instance_name': 't2a-standard-2',
+                        'instance_type': 't2a-standard-2',
                         'region': 'us-east1-b',
                         'boot_type': 'uefi',
                         'shielded_vm': 'securevm_disabled',

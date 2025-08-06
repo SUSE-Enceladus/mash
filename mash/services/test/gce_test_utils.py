@@ -244,7 +244,7 @@ def select_instance_config_for_feature_combination(
         selected_group = random.choice(candidate_groups)
         instance_config = {
             'arch': arch,
-            'instance_name': random.choice(selected_group['instance_names']),
+            'instance_type': random.choice(selected_group['instance_types']),
             'boot_type': boot_type,
             'region': selected_group['region'],
             'shielded_vm': shielded_vm,
