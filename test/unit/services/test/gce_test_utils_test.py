@@ -1,5 +1,8 @@
+from unittest.mock import Mock
+
 from mash.services.test.gce_test_utils import (
     get_instance_feature_combinations,
+    select_instances_for_tests
 )
 
 
@@ -119,3 +122,207 @@ class TestGCETestUtils(object):
                     boot_types=boot_types,
                     guest_os_features=guest_os_features
                 ))
+
+    def test_select_instances_for_tests(self):
+        """tests the select_instances_for_tests"""
+
+        instance_catalog = [
+            {
+                "region": "us-east1-b",
+                "arch": "X86_64",
+                "instance_names": [
+                    "n1-standard-1",
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": []
+            },
+            {
+                "region": "us-east1-b",
+                "arch": "X86_64",
+                "instance_names": [
+                    "n2d-standard-2"
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": [
+                    "AmdSevSnp_enabled",
+                    "AmdSev_enabled"
+                ]
+            },
+            {
+                "region": "us-east1-b",
+                "arch": "X86_64",
+                "instance_names": [
+                    "c3-standard-4"
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": [
+                    "IntelTdx_enabled"
+                ],
+            },
+            {
+                "region": "us-east1-b",
+                "arch": "ARM64",
+                "instance_names": [
+                    "t2a-standard-2"
+                ],
+                "boot_types": [
+                    "uefi"
+                ],
+                "shielded_vm": [
+                    "securevm_enabled"
+                ],
+                "nic": [
+                    "gvnic_enabled"
+                ],
+                "confidential_compute": [],
+            },
+
+        ]
+
+        test_cases = [
+            (
+                [
+                    (
+                        'x86_64',
+                        'uefi',
+                        'securevm_enabled',
+                        'gvnic_disabled',
+                        'AmdSev_enabled'
+                    )
+                ],
+                [
+                    {
+                        'arch': 'X86_64',
+                        'instance_name': 'n2d-standard-2',
+                        'region': 'us-east1-b',
+                        'boot_type': 'uefi',
+                        'shielded_vm': 'securevm_enabled',
+                        'nic': 'gvnic_disabled',
+                        'confidential_compute': 'AmdSev_enabled'
+                    }
+                ]
+            ),
+            (
+                [
+                    (
+                        'x86_64',
+                        'uefi',
+                        'securevm_enabled',
+                        'gvnic_enabled',
+                        'AmdSevSnp_enabled'
+                    )
+                ],
+                [
+                    {
+                        'arch': 'X86_64',
+                        'instance_name': 'n2d-standard-2',
+                        'region': 'us-east1-b',
+                        'boot_type': 'uefi',
+                        'shielded_vm': 'securevm_enabled',
+                        'nic': 'gvnic_enabled',
+                        'confidential_compute': 'AmdSevSnp_enabled'
+                    }
+                ]
+            ),
+            (
+                [
+                    (
+                        'x86_64',
+                        'uefi',
+                        'securevm_enabled',
+                        'gvnic_enabled',
+                        'IntelTdx_enabled'
+                    )
+                ],
+                [
+                    {
+                        'arch': 'X86_64',
+                        'instance_name': 'c3-standard-4',
+                        'region': 'us-east1-b',
+                        'boot_type': 'uefi',
+                        'shielded_vm': 'securevm_enabled',
+                        'nic': 'gvnic_enabled',
+                        'confidential_compute': 'IntelTdx_enabled'
+                    }
+                ]
+            ),
+            (
+                [
+                    (
+                        'ARM64',
+                        'uefi',
+                        'securevm_disabled',
+                        'gvnic_disabled',
+                        'confidentialcompute_disabled'
+                    )
+                ],
+                [
+                    {
+                        'arch': 'ARM64',
+                        'instance_name': 't2a-standard-2',
+                        'region': 'us-east1-b',
+                        'boot_type': 'uefi',
+                        'shielded_vm': 'securevm_disabled',
+                        'nic': 'gvnic_disabled',
+                        'confidential_compute': 'confidentialcompute_disabled'
+                    }
+                ]
+            )
+        ]
+        logger = Mock()
+        for (
+            feature_combinations,
+            expected_instances
+        ) in test_cases:
+            selected_instances = select_instances_for_tests(
+                feature_combinations=feature_combinations,
+                instance_catalog=instance_catalog,
+                logger=logger
+            )
+            for instance in selected_instances:
+                assert instance in expected_instances
+
+        # error case
+        logger.reset_mock()
+        feature_combination = (
+            'ARM64',
+            'uefi',
+            'securevm_enabled',
+            'gvnic_disabled',
+            'AmdSev_enabled'
+        )
+        msg = (
+            'Unable to find instance to test this feature combination: '
+            f'{feature_combination}'
+        )
+        instance_types = select_instances_for_tests(
+            feature_combinations=[feature_combination],
+            instance_catalog=instance_catalog,
+            logger=logger
+        )
+        assert instance_types == []
+        logger.error.assert_called_once_with(msg)
