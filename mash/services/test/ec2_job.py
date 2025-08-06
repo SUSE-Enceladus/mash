@@ -30,7 +30,7 @@ from mash.services.test.utils import (
 )
 from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
-    select_instances_for_tests,
+    select_instance_configs_for_tests,
     get_partition_test_regions,
     get_image_id_for_region,
     get_additional_tests_for_instance,
@@ -137,15 +137,15 @@ class EC2TestJob(MashJob):
         # available test regions for each partition
         for partition, test_regions in self.partitions.items():
 
-            instance_types = select_instances_for_tests(
+            instance_configs = select_instance_configs_for_tests(
                 test_regions=test_regions,
                 instance_catalog=self.instance_catalog,
                 feature_combinations=self.feature_combinations,
                 logger=self.log_callback
             )
 
-            if not instance_types:
-                # There are no instance types configured in the test regions
+            if not instance_configs:
+                # There are no instances configured in the test regions
                 # for the partition that can cover a single feat combination
                 msg = (
                     'Configuration error. No instances in the instance '
@@ -156,17 +156,17 @@ class EC2TestJob(MashJob):
                     self.log_callback.error(msg)
                 raise MashTestException(msg)
 
-            for instance_type in instance_types:
+            for instance_config in instance_configs:
                 if self.log_callback:
                     self.log_callback.info(
                         'Running img-proof tests for image in {part} with '
-                        'instance type: {inst_type}.'.format(
+                        'instance type: {inst_cfg}.'.format(
                             part=partition,
-                            inst_type=instance_type
+                            inst_cfg=instance_config
                         )
                     )
 
-                region = instance_type.get('region')
+                region = instance_config.get('region')
                 account = get_testing_account(self.test_regions[region])
                 credentials = self.credentials[account]
                 subnet_id = self.test_regions[region].get('subnet')
@@ -178,12 +178,12 @@ class EC2TestJob(MashJob):
                 tests = self.tests.copy()
                 tests.extend(
                     get_additional_tests_for_instance(
-                        arch=instance_type.get('arch', 'x86_64'),
-                        boot_type=instance_type.get(
+                        arch=instance_config.get('arch', 'x86_64'),
+                        boot_type=instance_config.get(
                             'boot_type',
                             'uefi-preferred'
                         ),
-                        cpu_option=instance_type.get(
+                        cpu_option=instance_config.get(
                             'cpu_option',
                             []
                         ),
@@ -191,13 +191,13 @@ class EC2TestJob(MashJob):
                     )
                 )
                 cpu_options = get_cpu_options(
-                    instance_type.get('cpu_option', '')
+                    instance_config.get('cpu_option', '')
                 )
                 if self.log_callback:
                     self.log_callback.info(
                         'The tests that will be run for this instance type '
                         '{inst_type} in {region}: {tests}.'.format(
-                            inst_type=instance_type.get('instance_name'),
+                            inst_type=instance_config.get('instance_type'),
                             region=region,
                             tests=tests
                         )
@@ -220,7 +220,7 @@ class EC2TestJob(MashJob):
                         description=self.description,
                         distro=self.distro,
                         image_id=image_id,
-                        instance_type=instance_type.get('instance_name'),
+                        instance_type=instance_config.get('instance_type'),
                         img_proof_timeout=self.img_proof_timeout,
                         ssh_user=self.ssh_user,
                         tests=tests,

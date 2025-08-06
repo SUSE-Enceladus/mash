@@ -18,7 +18,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east-1",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                     "c5.large",
                     "m5.large",
                     "t3.small"
@@ -32,7 +32,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east-1",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                     "i3.large",
                     "t2.small"
                 ],
@@ -44,7 +44,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east-2",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                     "m6a.large",
                     "c6a.large",
                     "r6a.large"
@@ -60,7 +60,7 @@ class TestTestConfig(object):
             {
                 "region": "us-east-1",
                 "arch": "aarch64",
-                "instance_names": [
+                "instance_types": [
                     "t4g.small",
                     "m6g.medium"
                 ],

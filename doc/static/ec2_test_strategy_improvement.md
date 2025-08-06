@@ -37,7 +37,7 @@ cloud:
     - region: us-east-1
       partition: aws
       arch: x86_64
-      instance_names:
+      instance_types:
       - c5.large
       - m5.large
       - t3.small
@@ -48,7 +48,7 @@ cloud:
     - region: us-east-1
       arch: x86_64
       partition: aws
-      instance_names:
+      instance_types:
       - i3.large
       - t2.small
       boot_types:
@@ -57,7 +57,7 @@ cloud:
     - region: us-east-2
       partition: aws
       arch: x86_64
-      instance_names:
+      instance_types:
       - m6a.large
       - c6a.large
       - r6a.large
@@ -101,7 +101,7 @@ The following settings are required for each instance group:
  selected.
  - *partition*: AWS partition
  - *arch*: instance architecture (x86_64 or aarch64)
- - *instance_names*: name of the instance types. One of these will be selected
+ - *instance_types*: list of the instance types. One of these will be selected
  randomly if this group is selected.
  - *boot_types*: which boot types do these isntance types support
  (bios/uefi/uefi-preferred).

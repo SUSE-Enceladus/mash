@@ -92,7 +92,7 @@ cloud:
     - region: us-east-1
       partition: aws
       arch: x86_64
-      instance_names:
+      instance_types:
       - c5.large
       - m5.large
       - t3.small
@@ -103,7 +103,7 @@ cloud:
     - region: us-east-1
       arch: x86_64
       partition: aws
-      instance_names:
+      instance_types:
       - i3.large
       - t2.small
       boot_types:
@@ -112,7 +112,7 @@ cloud:
     - region: us-east-2
       partition: aws
       arch: x86_64
-      instance_names:
+      instance_types:
       - m6a.large
       - c6a.large
       - r6a.large
@@ -124,7 +124,7 @@ cloud:
     - region: us-east-1
       partition: aws
       arch: aarch64
-      instance_names:
+      instance_types:
       - t4g.small
       - m6g.medium
       boot_types:
@@ -134,7 +134,7 @@ cloud:
     - region: cn-north-1
       partition: aws-cn
       arch: x86_64
-      instance_names:
+      instance_types:
       - t3.small
       boot_types:
         - bios
@@ -142,7 +142,7 @@ cloud:
     - region: cn-north-1
       partition: aws-cn
       arch: x86_64
-      instance_names:
+      instance_types:
       - m5.large
       - t3.small
       boot_types:
@@ -152,7 +152,7 @@ cloud:
     - region: cn-north-1
       partition: aws-cn
       arch: aarch64
-      instance_names:
+      instance_types:
       - t4g.small
       boot_types:
       - uefi
@@ -161,7 +161,7 @@ cloud:
     - region: us-gov-east-1
       partition: aws-us-gov
       arch: x86_64
-      instance_names:
+      instance_types:
       - i3.large
       - t3.small
       boot_types:
@@ -170,7 +170,7 @@ cloud:
     - region: us-gov-east-1
       partition: aws-us-gov
       arch: x86_64
-      instance_names:
+      instance_types:
       - c5.large
       - m5.large
       - t3.small
@@ -181,7 +181,7 @@ cloud:
     - region: us-gov-east-1
       partition: aws-us-gov
       arch: aarch64
-      instance_names:
+      instance_types:
       - t4g.small
       boot_types:
       - uefi
