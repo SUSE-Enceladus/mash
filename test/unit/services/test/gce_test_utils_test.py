@@ -2,7 +2,8 @@ from unittest.mock import Mock
 
 from mash.services.test.gce_test_utils import (
     get_instance_feature_combinations,
-    select_instance_configs_for_tests
+    select_instance_configs_for_tests,
+    get_additional_tests_for_instance
 )
 
 
@@ -326,3 +327,66 @@ class TestGCETestUtils(object):
         )
         assert instance_configs == []
         logger.error.assert_called_once_with(msg)
+
+    def test_get_additional_tests_for_instance(self):
+        """tests the select_instance_configs_for_tests"""
+
+        additional_tests = {
+            'AmdSev_enabled': [
+                'AmdSev_enabled_test_1',
+                'AmdSev_enabled_test_2',
+            ],
+            'AmdSevSnp_enabled': [
+                'AmdSevSnp_enabled_test_1'
+            ],
+            'IntelTdx_enabled': [],
+            'gvnic_enabled': [
+                'gvnic_enabled_test_1'
+            ]
+        }
+
+        test_cases = [
+            (
+                (
+                    'X86_64',
+                    'uefi',
+                    'securevm_disabled',
+                    'gvnic_enabled',
+                    'IntelTdx_enabled'
+                ),
+                [
+                    'gvnic_enabled_test_1'
+                ]
+            ),
+            (
+                (
+                    'X86_64',
+                    'uefi',
+                    'securevm_disabled',
+                    'gvnic_enabled',
+                    'AmdSev_enabled'
+                ),
+                [
+                    'gvnic_enabled_test_1',
+                    'AmdSev_enabled_test_1',
+                    'AmdSev_enabled_test_2',
+                ]
+            ),
+            (
+                (
+                    'X86_64',
+                    'uefi',
+                    'securevm_disabled',
+                    'gvnic_disabled',
+                    'confidentialcompute_disabled'
+                ),
+                []
+            )
+        ]
+
+        for feature_combination, expected_additional_tests in test_cases:
+            assert expected_additional_tests == \
+                get_additional_tests_for_instance(
+                    feature_combination=feature_combination,
+                    additional_tests=additional_tests
+                )

@@ -255,6 +255,10 @@ cloud:
       nic:
         - gvnic_enabled
       confidential_compute: []
+    instance_feature_additional_tests:
+      AmdSev_enabled: []
+      AmdSevSnp_enabled: []
+      IntelTdx_enabled: []
 test:
   img_proof_timeout: 600
 upload:

@@ -252,3 +252,24 @@ def select_instance_config_for_feature_combination(
             'confidential_compute': confidential_compute
         }
     return instance_config
+
+
+def get_additional_tests_for_instance(
+    feature_combination,
+    additional_tests
+):
+    """Provides a list of additional tests configured for each instance type"""
+    tests = []
+
+    arch = feature_combination[0]
+    boot_type = feature_combination[1]
+    shielded_vm = feature_combination[2]
+    nic = feature_combination[3]
+    conf_compute = feature_combination[4]
+
+    tests.extend(additional_tests.get(arch, []))
+    tests.extend(additional_tests.get(boot_type, []))
+    tests.extend(additional_tests.get(shielded_vm, []))
+    tests.extend(additional_tests.get(nic, []))
+    tests.extend(additional_tests.get(conf_compute, []))
+    return tests
