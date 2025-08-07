@@ -190,5 +190,5 @@ class TestTestConfig(object):
                 "test_gvnic"
             ]
         }
-        assert self.config.get_ec2_instance_feature_additional_tests() == \
+        assert self.config.get_gce_instance_feature_additional_tests() == \
             expected_additional_tests
