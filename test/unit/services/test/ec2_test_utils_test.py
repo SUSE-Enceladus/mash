@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
-    select_instances_for_tests,
+    select_instance_configs_for_tests,
     get_partition_test_regions,
     get_image_id_for_region,
     get_cpu_options
@@ -49,15 +49,15 @@ class TestEC2TestUtils(object):
                     cpu_options=cpu_options
                 ))
 
-    def test_select_instances_for_tests(self):
-        """tests the select_instances_for_tests"""
+    def test_select_instance_configs_for_tests(self):
+        """tests the select_instance_configs_for_tests"""
 
         instance_catalog = [
             {
                 "region": "us-east-1",
                 "partition": "aws",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                         "c5.large"
                 ],
                 "boot_types": [
@@ -70,7 +70,7 @@ class TestEC2TestUtils(object):
                 "region": "us-east-1",
                 "partition": "aws",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                     "i3.large"
                 ],
                 "boot_types": [
@@ -82,7 +82,7 @@ class TestEC2TestUtils(object):
                 "region": "us-east-2",
                 "partition": "aws",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                     "m6a.large"
                 ],
                 "boot_types": [
@@ -97,7 +97,7 @@ class TestEC2TestUtils(object):
                 "region": "us-east-1",
                 "partition": "aws",
                 "arch": "aarch64",
-                "instance_names": [
+                "instance_types": [
                     "t4g.small",
                     "m6g.medium"
                 ],
@@ -108,7 +108,7 @@ class TestEC2TestUtils(object):
                 "region": "us-gov-west-1",
                 "partition": "us-gov",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                     "t4g.small",
                     "m6g.medium"
                 ],
@@ -128,7 +128,7 @@ class TestEC2TestUtils(object):
                     {
                         'region': 'us-east-1',
                         'partition': 'aws',
-                        'instance_name': 'i3.large',
+                        'instance_type': 'i3.large',
                         'boot_type': 'bios',
                         'cpu_option': 'AmdSevSnp_disabled',
                         'arch': 'x86_64'
@@ -145,14 +145,14 @@ class TestEC2TestUtils(object):
                     {
                         'region': 'us-east-1',
                         'partition': 'aws',
-                        'instance_name': 'i3.large',
+                        'instance_type': 'i3.large',
                         'boot_type': 'bios',
                         'cpu_option': 'AmdSevSnp_disabled',
                         'arch': 'x86_64'
                     },
                     {
                         'region': 'us-east-2',
-                        'instance_name': 'm6a.large',
+                        'instance_type': 'm6a.large',
                         'partition': 'aws',
                         'boot_type': 'uefi-preferred',
                         'cpu_option': 'AmdSevSnp_enabled',
@@ -167,7 +167,7 @@ class TestEC2TestUtils(object):
             test_regions,
             expected_instances
         ) in test_cases:
-            selected_instances = select_instances_for_tests(
+            selected_instances = select_instance_configs_for_tests(
                 test_regions=test_regions,
                 feature_combinations=feature_combinations,
                 instance_catalog=instance_catalog,
@@ -187,7 +187,7 @@ class TestEC2TestUtils(object):
             'Unable to find instance to test this feature combination: '
             f'{feature_combination}'
         )
-        instance_types = select_instances_for_tests(
+        instance_types = select_instance_configs_for_tests(
             test_regions=['us-gov-west-1'],
             feature_combinations=[feature_combination],
             instance_catalog=instance_catalog,

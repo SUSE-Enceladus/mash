@@ -39,7 +39,7 @@ class TestEC2TestJob(object):
             {
                 "region": "us-east-2",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                     "m6a.large"
                 ],
                 "boot_types": [
@@ -52,7 +52,7 @@ class TestEC2TestJob(object):
             {
                 "region": "us-east-2",
                 "arch": "x86_64",
-                "instance_names": [
+                "instance_types": [
                     "m6a.large"
                 ],
                 "boot_types": [
@@ -67,7 +67,7 @@ class TestEC2TestJob(object):
             {
                 "region": "us-east-1",
                 "arch": "aarch64",
-                "instance_names": [
+                "instance_types": [
                     "t4g.small",
                     "m6g.medium"
                 ],
