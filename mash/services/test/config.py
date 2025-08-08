@@ -64,8 +64,8 @@ class TestConfig(BaseConfig):
 
     def get_ec2_instance_feature_additional_tests(self):
         """
-        Returns the additional tests configured for the different instance
-        features (if any).
+        Returns the additional tests configured for EC2 and the different
+        instance features (if any).
         """
         ec2_cloud_info = self.get_cloud_data().get('ec2', {})
         instance_feat_additional_tests = ec2_cloud_info.get(
@@ -87,3 +87,15 @@ class TestConfig(BaseConfig):
                 'GCE test instance catalog must be provided in config file.'
             )
         return instance_catalog
+
+    def get_gce_instance_feature_additional_tests(self):
+        """
+        Returns the additional tests configured for GCP and the different
+        instance features (if any).
+        """
+        gce_cloud_info = self.get_cloud_data().get('gce', {})
+        instance_feat_additional_tests = gce_cloud_info.get(
+            'instance_feature_additional_tests',
+            {}
+        )
+        return instance_feat_additional_tests
