@@ -385,8 +385,17 @@ class TestGCETestUtils(object):
         ]
 
         for feature_combination, expected_additional_tests in test_cases:
+            arch = feature_combination[0].upper()
+            boot_type = feature_combination[1]
+            shielded_vm = feature_combination[2]
+            nic = feature_combination[3]
+            confidential_compute = feature_combination[4]
             assert expected_additional_tests == \
                 get_additional_tests_for_instance(
-                    feature_combination=feature_combination,
+                    arch=arch,
+                    boot_type=boot_type,
+                    shielded_vm=shielded_vm,
+                    nic=nic,
+                    confidential_compute=confidential_compute,
                     additional_tests=additional_tests
                 )
