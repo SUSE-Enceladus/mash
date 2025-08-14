@@ -193,12 +193,15 @@ cloud:
   gce:
     test_instance_catalog:
     - region: us-east1-b
+      test_fallback_regions:
+      - us-east1-c
+      - us-east4-a
       arch: X86_64
       instance_types:
       - n1-standard-1
       - n1-highmem-2
       - n1-highcpu-2
-      - f1-micro
+      # - f1-micro
       boot_types:
         - uefi
       shielded_vm:
@@ -207,6 +210,9 @@ cloud:
         - gvnic_enabled
       confidential_compute: []
     - region: us-east1-b
+      test_fallback_regions:
+      - us-central1-a
+      - us-east1-b
       arch: X86_64
       instance_types:
       - n2d-standard-2
@@ -220,6 +226,9 @@ cloud:
         - AmdSevSnp_enabled
         - AmdSev_enabled
     - region: us-east1-b
+      test_fallback_regions:
+      - us-east1-d
+      - us-east1-c
       arch: X86_64
       instance_types:
       - c4d-standard-2
@@ -233,6 +242,9 @@ cloud:
       confidential_compute:
         - AmdSev_enabled
     - region: us-east1-b
+      test_fallback_regions:
+      - us-east1-d
+      - us-east1-c
       arch: X86_64
       instance_types:
       - c3-standard-4
@@ -244,7 +256,10 @@ cloud:
         - gvnic_enabled
       confidential_compute:
         - IntelTdx_enabled
-    - region: us-east1-b
+    - region: us-central1-a
+      test_fallback_regions:
+      - us-central1-f
+      - us-central1-b
       arch: ARM64
       instance_types:
       - t2a-standard-2
