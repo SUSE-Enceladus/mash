@@ -143,7 +143,10 @@ class TestGCETestUtils(object):
                 "nic": [
                     "gvnic_enabled"
                 ],
-                "confidential_compute": []
+                "confidential_compute": [],
+                "test_fallback_regions": [
+                    "test_fallback_region_1"
+                ]
             },
             {
                 "region": "us-east1-b",
@@ -163,6 +166,9 @@ class TestGCETestUtils(object):
                 "confidential_compute": [
                     "AmdSevSnp_enabled",
                     "AmdSev_enabled"
+                ],
+                "test_fallback_regions": [
+                    "test_fallback_region_2"
                 ]
             },
             {
@@ -223,7 +229,8 @@ class TestGCETestUtils(object):
                         'boot_type': 'uefi',
                         'shielded_vm': 'securevm_enabled',
                         'nic': 'gvnic_disabled',
-                        'confidential_compute': 'AmdSev_enabled'
+                        'confidential_compute': 'AmdSev_enabled',
+                        'test_fallback_regions': ['test_fallback_region_2']
                     }
                 ]
             ),
@@ -245,7 +252,8 @@ class TestGCETestUtils(object):
                         'boot_type': 'uefi',
                         'shielded_vm': 'securevm_enabled',
                         'nic': 'gvnic_enabled',
-                        'confidential_compute': 'AmdSevSnp_enabled'
+                        'confidential_compute': 'AmdSevSnp_enabled',
+                        'test_fallback_regions': ['test_fallback_region_2']
                     }
                 ]
             ),
@@ -267,7 +275,8 @@ class TestGCETestUtils(object):
                         'boot_type': 'uefi',
                         'shielded_vm': 'securevm_enabled',
                         'nic': 'gvnic_enabled',
-                        'confidential_compute': 'IntelTdx_enabled'
+                        'confidential_compute': 'IntelTdx_enabled',
+                        'test_fallback_regions': []
                     }
                 ]
             ),
@@ -289,7 +298,8 @@ class TestGCETestUtils(object):
                         'boot_type': 'uefi',
                         'shielded_vm': 'securevm_disabled',
                         'nic': 'gvnic_disabled',
-                        'confidential_compute': 'confidentialcompute_disabled'
+                        'confidential_compute': 'confidentialcompute_disabled',
+                        'test_fallback_regions': []
                     }
                 ]
             )
@@ -396,6 +406,6 @@ class TestGCETestUtils(object):
                     boot_type=boot_type,
                     shielded_vm=shielded_vm,
                     nic=nic,
-                    confidential_compute=confidential_compute,
+                    conf_compute=confidential_compute,
                     additional_tests=additional_tests
                 )
