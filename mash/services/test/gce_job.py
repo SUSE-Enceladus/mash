@@ -32,27 +32,27 @@ from mash.services.test.gce_test_utils import (
     # get_cpu_options
 )
 from mash.utils.mash_utils import create_ssh_key_pair, create_json_file
-from gceimgutils.gceutils import (
-    get_region_list,
-    get_regions_client
-)
+# from gceimgutils.gceutils import (
+#     get_region_list,
+#     get_regions_client
+# )
 from gceimgutils.gceremoveblob import GCERemoveBlob
 from gceimgutils.gceremoveimg import GCERemoveImage
 
 from img_proof.ipa_controller import test_image
 from img_proof.ipa_exceptions import IpaRetryableError
 
-instance_types = {
-    'X86_64': [
-        'n1-standard-1',
-        'n1-highmem-2',
-        'n1-highcpu-2',
-        'f1-micro',
-    ],
-    'ARM64': [
-        't2a-standard-2'
-    ]
-}
+# instance_types = {
+#     'X86_64': [
+#         'n1-standard-1',
+#         'n1-highmem-2',
+#         'n1-highcpu-2',
+#         'f1-micro',
+#     ],
+#     'ARM64': [
+#         't2a-standard-2'
+#     ]
+# }
 
 
 class GCETestJob(MashJob):
@@ -160,7 +160,7 @@ class GCETestJob(MashJob):
         self.feature_combinations = get_instance_feature_combinations(
             self.cloud_architecture,
             self.boot_firmware,
-            self.cpu_options
+            self.guest_os_features
         )
 
         if self.log_callback:
@@ -168,9 +168,9 @@ class GCETestJob(MashJob):
                 'The list of features combinations to be tested are:'
                 f'{self.feature_combinations}'
             )
-            self.log_callback.info(
-                f'The tests_regions dict is {self.test_regions}'
-            )
+            # self.log_callback.info(
+            #     f'The tests_regions dict is {self.test_regions}'
+            # )
 
         # project = credentials.get('project_id')
         # regions_client = get_regions_client(credentials)

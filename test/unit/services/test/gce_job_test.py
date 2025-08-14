@@ -37,19 +37,19 @@ class TestGCETestJob(object):
 
         self.job_config['account'] = 'test-gce'
 
-    @patch('mash.services.test.gce_job.get_regions_client')
+    # @patch('mash.services.test.gce_job.get_regions_client')
     @patch('mash.services.test.gce_job.GCERemoveImage')
     @patch('mash.services.test.gce_job.GCERemoveBlob')
-    @patch('mash.services.test.gce_job.get_region_list')
+    # @patch('mash.services.test.gce_job.get_region_list')
     @patch('mash.services.test.gce_job.os')
     @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.random')
     @patch('mash.utils.mash_utils.NamedTemporaryFile')
     @patch('mash.services.test.gce_job.test_image')
-    def test_test_run_gce_test(
+    def test_test_run_gce_test2(
         self, mock_test_image, mock_temp_file, mock_random,
-        mock_create_ssh_key_pair, mock_os, mock_get_region_list,
-        mock_blob_remover, mock_image_remover, mock_get_regions_client
+        mock_create_ssh_key_pair, mock_os,  # mock_get_region_list,
+        mock_blob_remover, mock_image_remover  #, mock_get_regions_client
     ):
         tmp_file = Mock()
         tmp_file.name = '/tmp/acnt.file'
@@ -78,7 +78,7 @@ class TestGCETestJob(object):
         )
         mock_random.choice.return_value = 'n1-standard-1'
         mock_os.path.exists.return_value = False
-        mock_get_region_list.return_value = set('us-west1-c')
+        # mock_get_region_list.return_value = set('us-west1-c')
 
         image_remover = Mock()
         blob_remover = Mock()

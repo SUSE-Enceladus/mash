@@ -247,7 +247,9 @@ def select_instance_config_for_feature_combination(
             'instance_type': random.choice(selected_group['instance_types']),
             'boot_type': boot_type,
             'region': selected_group['region'],
-            'test_fallback_regions': selected_group['test_fallback_regions'],
+            'test_fallback_regions': selected_group.get(
+                'test_fallback_regions', []
+            ),
             'shielded_vm': shielded_vm,
             'nic': nic,
             'confidential_compute': confidential_compute
