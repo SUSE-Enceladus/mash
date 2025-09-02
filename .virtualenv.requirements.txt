@@ -28,3 +28,4 @@ aliyun-img-utils>=1.4.0
 azure-img-utils>=2.0.0
 jmespath
 gceimgutils
+aws-mp-utils

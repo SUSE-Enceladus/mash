@@ -16,13 +16,16 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from aws_mp_utils.changeset import start_mp_change_set
+from aws_mp_utils.image import (
+    create_restrict_version_change_doc,
+    get_image_delivery_option_id,
+)
+
 from mash.mash_exceptions import MashDeprecateException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 from mash.utils.ec2 import (
-    create_restrict_version_change_doc,
-    start_mp_change_set,
-    get_delivery_option_id,
     get_session,
     get_image
 )
@@ -73,12 +76,13 @@ class EC2MPDeprecateJob(MashJob):
                 credential['secret_access_key'],
                 region
             )
+            mp_client = session.client('marketplace-catalog')
             old_image = get_image(
                 session.client('ec2'),
                 self.old_cloud_image_name
             )
-            delivery_option_id = get_delivery_option_id(
-                session,
+            delivery_option_id = get_image_delivery_option_id(
+                mp_client,
                 self.entity_id,
                 old_image['ImageId']
             )
@@ -88,7 +92,7 @@ class EC2MPDeprecateJob(MashJob):
             )
 
             response = start_mp_change_set(
-                session,
+                mp_client,
                 change_set=[
                     self.status_msg.pop('add_version_doc'),
                     restrict_version_doc
