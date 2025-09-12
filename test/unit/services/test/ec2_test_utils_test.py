@@ -2,10 +2,10 @@ from unittest.mock import Mock
 
 from mash.services.test.ec2_test_utils import (
     get_instance_feature_combinations,
-    select_instance_configs_for_tests,
     get_partition_test_regions,
     get_image_id_for_region,
-    get_cpu_options
+    get_cpu_options,
+    select_instance_configs_for_tests
 )
 
 
