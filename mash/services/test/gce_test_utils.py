@@ -35,7 +35,6 @@ def get_instance_feature_combinations(
     confidential_comp_features = extract_confidential_comp_features(
         guest_os_features
     )
-
     feature_combinations = list(
         itertools.product(
             archs,
@@ -104,7 +103,7 @@ def remove_incompatible_feature_combinations(feature_combinations):
     # Only allowing 1 combination for:
     #  - gvnic_disabled
     #  - securevm_disabled
-    # Not to try a lot of combinations
+    # Not to increase a lot the number of feat combinations to tests
     gvnic_disabled_already_included = False
     shieldedvm_disabled_already_included = False
     for feature_combination in feature_combinations:
@@ -115,20 +114,26 @@ def remove_incompatible_feature_combinations(feature_combinations):
         conf_compute = feature_combination[4]
 
         if any([
-            # aarch64 requires UEFI boot
-            (arch == 'aarch64' and boot_type == 'bios'),
-            # aarch64 images don't support secure boot
-            (arch == 'aarch64' and shielded_vm == 'securevm_enabled'),
-            # AmdSev is not a aarch64 feature
-            (arch == 'aarch64' and conf_compute == 'AmdSev_enabled'),
-            # AmdSevSnp is not a aarch64 feature
-            (arch == 'aarch64' and conf_compute == 'AmdSevSnp_enabled'),
-            # IntelTdx is not a aarch64 feature
-            (arch == 'aarch64' and conf_compute == 'IntelTdx_enabled'),
+            # ARM64 requires UEFI boot
+            (arch == 'ARM64' and boot_type == 'bios'),
+            # AmdSev is not a ARM64 feature
+            (arch == 'ARM64' and conf_compute == 'AmdSev_enabled'),
+            # AmdSevSnp is not a ARM64 feature
+            (arch == 'ARM64' and conf_compute == 'AmdSevSnp_enabled'),
+            # IntelTdx is not a ARM64 feature
+            (arch == 'ARM64' and conf_compute == 'IntelTdx_enabled'),
             # AmdSevSnp enabled requires UEFI boot
             (boot_type == 'bios' and conf_compute == 'AmdSevSnp_enabled'),
             # AmdSev enabled requires UEFI boot
             (boot_type == 'bios' and conf_compute == 'AmdSev_enabled'),
+            # Testing IntelTdx only with UEFI boot
+            (boot_type == 'bios' and conf_compute == 'IntelTdx_enabled'),
+            # Testing Securevm only with UEFI boot
+            (boot_type == 'bios' and shielded_vm == 'securevm_enabled'),
+            # Not testing Securevm disabled with confidential compute
+            ( shielded_vm == 'securevm_disabled' and conf_compute == 'IntelTdx_enabled'), # NOQA
+            ( shielded_vm == 'securevm_disabled' and conf_compute == 'AmdSev_enabled'), # NOQA
+            ( shielded_vm == 'securevm_disabled' and conf_compute == 'AmdSevSnp_enabled'), # NOQA
             # Only include one combination with gvnic_disabled
             (nic == 'gvnic_disabled' and gvnic_disabled_already_included),
             # Only include one combination with securevm_disabled
