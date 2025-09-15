@@ -12,47 +12,47 @@ class TestGCETestUtils(object):
     def test_get_instance_feature_combinations(self):
         """tests get_instance_feature_combinations function"""
         test_cases = [
-            # (
-            #     (
-            #         'x86_64',
-            #         ['uefi'],
-            #         [
-            #             'GVNIC',
-            #             'UEFI_COMPATIBLE',
-            #             'SEV_SNP_CAPABLE'
-            #         ]
-            #     ),
-            #     [
-            #         (
-            #             'x86_64',
-            #             'uefi',
-            #             'securevm_disabled',
-            #             'gvnic_enabled',
-            #             'confidentialcompute_disabled',
-            #         ),
-            #         (
-            #             'x86_64',
-            #             'uefi',
-            #             'securevm_enabled',
-            #             'gvnic_disabled',
-            #             'AmdSevSnp_enabled',
-            #         ),
-            #         (
-            #             'x86_64',
-            #             'uefi',
-            #             'securevm_enabled',
-            #             'gvnic_enabled',
-            #             'AmdSevSnp_enabled',
-            #         ),
-            #         (
-            #             'x86_64',
-            #             'uefi',
-            #             'securevm_enabled',
-            #             'gvnic_enabled',
-            #             'confidentialcompute_disabled',
-            #         ),
-            #     ]
-            # ),
+            (
+                (
+                    'x86_64',
+                    ['uefi'],
+                    [
+                        'GVNIC',
+                        'UEFI_COMPATIBLE',
+                        'SEV_SNP_CAPABLE'
+                    ]
+                ),
+                [
+                    (
+                        'x86_64',
+                        'uefi',
+                        'securevm_disabled',
+                        'gvnic_enabled',
+                        'confidentialcompute_disabled',
+                    ),
+                    (
+                        'x86_64',
+                        'uefi',
+                        'securevm_enabled',
+                        'gvnic_disabled',
+                        'AmdSevSnp_enabled',
+                    ),
+                    (
+                        'x86_64',
+                        'uefi',
+                        'securevm_enabled',
+                        'gvnic_enabled',
+                        'AmdSevSnp_enabled',
+                    ),
+                    (
+                        'x86_64',
+                        'uefi',
+                        'securevm_enabled',
+                        'gvnic_enabled',
+                        'confidentialcompute_disabled',
+                    ),
+                ]
+            ),
             (
                 (
                     'x86_64',
