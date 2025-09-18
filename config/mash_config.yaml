@@ -190,6 +190,8 @@ cloud:
     instance_feature_additional_tests:
       AmdSevSnp_enabled:
         - test_sles_sev_snp
+      IntelTdx_enabled:
+        - test_sles_tdx
   gce:
     test_instance_catalog:
     - region: us-east1-c
@@ -274,7 +276,8 @@ cloud:
         - test_sles_sev
       AmdSevSnp_enabled:
         - test_sles_sev_snp
-      IntelTdx_enabled: []
+      IntelTdx_enabled:
+        - test_sles_tdx
 test:
   img_proof_timeout: 600
 upload:
