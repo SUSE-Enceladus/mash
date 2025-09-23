@@ -19,13 +19,13 @@
 import re
 
 from ec2imgutils.ec2publishimg import EC2PublishImage
+from aws_mp_utils.changeset import start_mp_change_set
+from aws_mp_utils.image import create_add_version_change_doc
 
 from mash.mash_exceptions import MashPublishException
 from mash.services.mash_job import MashJob
 from mash.services.status_levels import SUCCESS
 from mash.utils.ec2 import (
-    start_mp_change_set,
-    create_add_version_change_doc,
     get_session
 )
 from mash.utils.mash_utils import format_string_with_date
@@ -114,7 +114,7 @@ class EC2MPPublishJob(MashJob):
                 )
 
                 response = start_mp_change_set(
-                    session,
+                    session.client('marketplace-catalog'),
                     change_set=[change_doc]
                 )
 

@@ -63,6 +63,7 @@ class TestGCECreateJob(object):
         with raises(MashCreateException):
             GCECreateJob(job_doc, self.config)
 
+    @patch('mash.services.create.gce_job.get_credentials')
     @patch('mash.services.create.gce_job.get_image')
     @patch('mash.services.create.gce_job.GCECreateImage')
     @patch('mash.services.create.gce_job.GCERemoveImage')
@@ -74,7 +75,8 @@ class TestGCECreateJob(object):
         mock_get_client,
         mock_remover,
         mock_creator,
-        mock_get_image
+        mock_get_image,
+        mock_get_credentials
     ):
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
@@ -98,6 +100,7 @@ class TestGCECreateJob(object):
         )
         creator.create_image.assert_called_once_with()
 
+    @patch('mash.services.create.gce_job.get_credentials')
     @patch('mash.services.create.gce_job.get_image')
     @patch('mash.services.create.gce_job.GCECreateImage')
     @patch('mash.services.create.gce_job.GCERemoveImage')
@@ -109,7 +112,8 @@ class TestGCECreateJob(object):
         mock_get_client,
         mock_remover,
         mock_creator,
-        mock_get_image
+        mock_get_image,
+        mock_get_credentials
     ):
         self.complete_job_doc['cloud_architecture'] = 'aarch64'
         self.complete_job_doc['cloud_image_name'] = 'sles-15-sp4-v20210731'

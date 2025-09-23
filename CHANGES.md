@@ -1,3 +1,21 @@
+v14.1.0 (2025-09-02)
+====================
+
+- Migrate to aws-mp-utils for AWS MP images
+
+v14.0.1 (2025-06-18)
+====================
+
+- Fix arguments order for gce create image
+- Handle exception instead of empty response checking for gce image
+- Pass in credentials object to get clients instead of dict
+
+v14.0.0 (2025-05-30)
+====================
+
+- Migrate to gceimgutils for GCE functions
+- Drop GCE utilities and GCE package requirements
+
 v13.16.0 (2025-05-20)
 =====================
 

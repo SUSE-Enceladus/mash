@@ -23,7 +23,7 @@
 %global _sitelibdir %{%{pythons}_sitelib}
 
 Name:           mash
-Version:        13.16.0
+Version:        14.1.0
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/mash
 Summary:        Public Cloud Release Tool
@@ -58,6 +58,7 @@ BuildRequires:  %{pythons}-oci-sdk
 BuildRequires:  python-gceimgutils
 BuildRequires:  python-aliyun-img-utils >= 1.4.0
 BuildRequires:  python-azure-img-utils >= 2.0.0
+BuildRequires:  python-aws-mp-utils
 BuildRequires:  %{pythons}-Werkzeug
 BuildRequires:  %{pythons}-jmespath
 Requires:       file
@@ -83,6 +84,7 @@ Requires:       %{pythons}-oci-sdk
 Requires:       python-gceimgutils
 Requires:       python-aliyun-img-utils >= 1.4.0
 Requires:       python-azure-img-utils >= 2.0.0
+Requires:       python-aws-mp-utils
 Requires:       %{pythons}-Werkzeug
 Requires:       %{pythons}-jmespath
 Requires:       apache2

@@ -45,7 +45,7 @@ class TestEC2MPDeprecateJob(object):
         with raises(MashDeprecateException):
             EC2MPDeprecateJob(self.job_config, self.config)
 
-    @patch('mash.services.deprecate.ec2_mp_job.get_delivery_option_id')
+    @patch('mash.services.deprecate.ec2_mp_job.get_image_delivery_option_id')
     @patch('mash.services.deprecate.ec2_mp_job.get_session')
     @patch('mash.services.deprecate.ec2_mp_job.start_mp_change_set')
     @patch('mash.services.deprecate.ec2_mp_job.get_image')
@@ -60,13 +60,15 @@ class TestEC2MPDeprecateJob(object):
         mock_get_delivery_option_id.return_value = '1234567-12345-23456-23456'
         mock_start_change_set.return_value = {'ChangeSetId': '123'}
 
+        client = Mock()
         session = Mock()
+        session.client.return_value = client
         mock_get_session.return_value = session
 
         self.job.run_job()
 
         mock_start_change_set.assert_called_once_with(
-            session,
+            client,
             change_set=[
                 {
                     'ChangeType': 'AddDeliveryOptions',
