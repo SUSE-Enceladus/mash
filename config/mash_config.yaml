@@ -190,15 +190,19 @@ cloud:
     instance_feature_additional_tests:
       AmdSevSnp_enabled:
         - test_sles_sev_snp
+      IntelTdx_enabled:
+        - test_sles_tdx
   gce:
     test_instance_catalog:
-    - region: us-east1-b
+    - region: us-east1-c
+      test_fallback_regions:
+      - us-east1-b
+      - us-east4-a
       arch: X86_64
       instance_types:
       - n1-standard-1
       - n1-highmem-2
       - n1-highcpu-2
-      - f1-micro
       boot_types:
         - uefi
       shielded_vm:
@@ -206,7 +210,10 @@ cloud:
       nic:
         - gvnic_enabled
       confidential_compute: []
-    - region: us-east1-b
+    - region: us-central1-a
+      test_fallback_regions:
+      - us-central1-b
+      - us-east1-b
       arch: X86_64
       instance_types:
       - n2d-standard-2
@@ -219,11 +226,14 @@ cloud:
       confidential_compute:
         - AmdSevSnp_enabled
         - AmdSev_enabled
-    - region: us-east1-b
+    - region: us-east1-d
+      test_fallback_regions:
+      - us-east1-b
+      - us-east1-c
       arch: X86_64
       instance_types:
-      - c4d-standard-2
-      - c3d-standard-2
+      - c4d-standard-4
+      - c3d-standard-4
       boot_types:
         - uefi
       shielded_vm:
@@ -232,7 +242,10 @@ cloud:
         - gvnic_enabled
       confidential_compute:
         - AmdSev_enabled
-    - region: us-east1-b
+    - region: us-central1-a
+      test_fallback_regions:
+      - us-central1-b
+      - us-central1-c
       arch: X86_64
       instance_types:
       - c3-standard-4
@@ -244,7 +257,10 @@ cloud:
         - gvnic_enabled
       confidential_compute:
         - IntelTdx_enabled
-    - region: us-east1-b
+    - region: us-central1-a
+      test_fallback_regions:
+      - us-central1-f
+      - us-central1-b
       arch: ARM64
       instance_types:
       - t2a-standard-2
@@ -256,9 +272,12 @@ cloud:
         - gvnic_enabled
       confidential_compute: []
     instance_feature_additional_tests:
-      AmdSev_enabled: []
-      AmdSevSnp_enabled: []
-      IntelTdx_enabled: []
+      AmdSev_enabled:
+        - test_sles_sev
+      AmdSevSnp_enabled:
+        - test_sles_sev_snp
+      IntelTdx_enabled:
+        - test_sles_tdx
 test:
   img_proof_timeout: 600
 upload:
