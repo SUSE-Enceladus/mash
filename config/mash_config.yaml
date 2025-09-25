@@ -188,6 +188,8 @@ cloud:
       - uefi-preferred
       cpu_options: []
     instance_feature_additional_tests:
+      AmdSev_enabled:
+        - test_sles_sev
       AmdSevSnp_enabled:
         - test_sles_sev_snp
       IntelTdx_enabled:
