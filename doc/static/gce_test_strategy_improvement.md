@@ -80,7 +80,7 @@ cloud:
 
 The `test_instance_catalog` key is the beginning of the section that supports
 association of instance types to specific regions as well as specific
-features to be configured when teh test instance is launched.
+features to be configured when the test instance is launched.
 
 Test scenarios will be generated based on the possible combinations of the
 specified features and instance types. Some conditions have been included in
@@ -107,8 +107,8 @@ The following settings are required for each instance group:
  - *arch*: instance architecture (x86_64 or aarch64)
  - *instance_types*: list of the instance types. One of these will be selected
  randomly if this group is selected.
- - *boot_types*: which boot types do these isntance types support
- (bios/uefi/uefi-preferred).
+ - *boot_types*: which boot types do these instance types support
+ (bios/uefi).
  - *shielded_vm*: instance type supports the GCE shielded_vm feature.
  - *nic*: instance type supports gvnic feature.
  - *confidential_compute*: Instance features that are supported.
