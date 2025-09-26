@@ -59,6 +59,10 @@ aliyun_job_message['properties']['disk_size'] = {
     'example': 20,
     'description': 'Size root disk in GB. Default is 20GB. '
 }
+aliyun_job_message['properties']['nvme_support'] = {
+    'type': 'boolean',
+    'description': 'Whether the image supports nvme storage or not.'
+}
 aliyun_job_message['required'].append('cloud_account')
 aliyun_job_message['required'].append('platform')
 aliyun_job_message['required'].append('launch_permission')
