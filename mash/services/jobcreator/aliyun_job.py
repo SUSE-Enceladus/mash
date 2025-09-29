@@ -36,6 +36,7 @@ class AliyunJob(BaseJob):
             self.bucket = self.kwargs['bucket']
             self.platform = self.kwargs['platform']
             self.launch_permission = self.kwargs['launch_permission']
+            self.nvme_support = self.kwargs.get('nvme_support', False)
         except KeyError as error:
             raise MashJobCreatorException(
                 'Aliyun jobs require a(n) {0} key in the job doc.'.format(
@@ -164,7 +165,8 @@ class AliyunJob(BaseJob):
                 'bucket': self.bucket,
                 'region': self.region,
                 'platform': self.platform,
-                'cloud_architecture': self.cloud_architecture
+                'cloud_architecture': self.cloud_architecture,
+                'nvme_support': self.nvme_support
             }
         }
         create_message['create_job'].update(self.base_message)

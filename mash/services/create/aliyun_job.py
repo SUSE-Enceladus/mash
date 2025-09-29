@@ -41,6 +41,7 @@ class AliyunCreateJob(MashJob):
                 self.job_config['image_description']
             self.cloud_architecture = self.job_config['cloud_architecture']
             self.platform = self.job_config['platform']
+            self.nvme_support = self.job_config['nvme_support']
         except KeyError as error:
             raise MashCreateException(
                 'Aliyun create jobs require a(n) {0} '
@@ -92,6 +93,9 @@ class AliyunCreateJob(MashJob):
         kwargs = {}
         if self.disk_size:
             kwargs['disk_image_size'] = self.disk_size
+
+        if self.nvme_support:
+            kwargs['nvme_support'] = self.nvme_support
 
         image_id = aliyun_image.create_compute_image(
             self.cloud_image_name,
