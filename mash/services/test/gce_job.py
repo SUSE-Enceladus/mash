@@ -166,7 +166,10 @@ class GCETestJob(MashJob):
                 else:
                     test_gvnic = False
 
-                enable_secure_boot = True if firmware == 'uefi' else False
+                if firmware == 'uefi' and self.cloud_architecture == 'X86_64':
+                    enable_secure_boot = True
+                else:
+                    enable_secure_boot = False
 
                 retry_region = self.region
                 while fallback_regions:
