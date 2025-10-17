@@ -53,6 +53,7 @@ class EC2Job(BaseJob):
         self.launch_inst_type = self.kwargs.get('launch_inst_type')
         self.imds_version = self.kwargs.get('imds_version', '')
         self.root_volume_size = self.kwargs.get('root_volume_size', 10)
+        self.upload_wait_count = self.kwargs.get('upload_wait_count', 3)
 
     def _get_target_regions_list(self):
         """
@@ -272,7 +273,8 @@ class EC2Job(BaseJob):
                 'tpm_support': self.tpm_support,
                 'boot_firmware': self.boot_firmware,
                 'launch_inst_type': self.launch_inst_type,
-                'root_volume_size': self.root_volume_size
+                'root_volume_size': self.root_volume_size,
+                'upload_wait_count': self.upload_wait_count
             }
         }
         create_message['create_job'].update(self.base_message)

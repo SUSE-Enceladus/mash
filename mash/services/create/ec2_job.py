@@ -75,6 +75,7 @@ class EC2CreateJob(MashJob):
         )
         self.imds_version = self.job_config.get('imds_version', '')
         self.root_volume_size = self.job_config.get('root_volume_size', 10)
+        self.upload_wait_count = self.job_config.get('upload_wait_count', 3)
 
         # EC2 images only support one firmware
         self.boot_firmware = self.boot_firmware[0]
@@ -121,7 +122,7 @@ class EC2CreateJob(MashJob):
             'bootkernel': None,
             'inst_user_name': 'ec2-user',
             'ssh_timeout': 300,
-            'wait_count': 3,
+            'wait_count': self.upload_wait_count,
             'vpc_subnet_id': '',
             'ssh_key_private_key_file': None,
             'security_group_ids': '',
