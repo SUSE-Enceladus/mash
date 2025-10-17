@@ -1,3 +1,10 @@
+v14.2.0 (2025-10-17)
+====================
+
+- Pass through wait count option in ec2 create. 
+  This allows the option to be confugured in the job doc.
+- Adds support for a new nvme_support flag for aliyun jobs
+
 v14.1.0 (2025-09-02)
 ====================
 
