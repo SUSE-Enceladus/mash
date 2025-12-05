@@ -84,12 +84,11 @@ tests:
   - (uefi-preferred boot + AmdSevSnp enabled)
 
 If the specified instance type does not support the full test matrix
-the unsupported combinations will be skipped and the information is logged.
-In case the configured combination, considered the primary test case, cannot
-be tested it is considered an error. For example configuring bios boot with
-AMD SEV would trigger such an error as it is required to use UEFI boot to use
-the SEV SNP feature. Or if the specified instance type is an instance type
-that is based on Intel CPUs.
+unsupported combinations will be skipped and the information is logged.
+If the configured test combination is the primary test case and cannot
+be tested no tests are executed and an error is generated.
+For example configuring BIOS boot with AMD SEV would trigger such an error.
+The use of AMD SEC requires UEFI secure boot.
 
 Note that it is required that the instance types specified in the catalog
 are present in the test regions as configured in the account's `test_regions`.

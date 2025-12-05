@@ -13,14 +13,12 @@ regions provides the required felxibility.
 
 ## Overview
 
-As the GCE platform performs automatically the replication of the created
-images in all the available regions, the 2 new services that were included in
-mash with the region flexibility for instance testing in AWS are of no use for
-GCE. Thus *test_preparation* and *test_cleanup* services have no tasks for jobs
-publishing images to GCE.
+GCE replicates created images to all regions. Therefore, mash does not 
+need to perform any special tasks w.r.t. to image creation in the
+configured test regions.
 
-There is a configuration with the instance types that will be used for the
-tests in the different GCE regions.
+Below a configuration example specifying instance types to be used for
+testing.
 
 ## Configuring the Test Instances
 
@@ -88,25 +86,24 @@ the combination generation for the instances as the number of tests with so
 many variables would create an excessive number of combinations.
 
 If the specified instance type does not support the full test matrix
-the combination unsupported combinations will be skipped and the
-information is logged. In case the configured combination, considered
-the primary test case, cannot be tested it is considered an error. For
-example configuring bios boot with AMD SEV would trigger such an error as
-it is required to use UEFI boot to use the SEV SNP feature. Or if the specified
-instance type is an instance type that is based on Intel CPUs.
+unsupported combinations will be skipped and the information is logged.
+If the configured test combination is the primary test case and cannot
+be tested no tests are executed and an error is generated.
+For example configuring BIOS boot with AMD SEV would trigger such an error.
+The use of AMD SEC requires UEFI secure boot.
 
 Note that instances for different architectures have to be added to the
-config file if you plan to publish images from different architectures.
+config file if you plan to publish images for different architectures.
 
 The following settings are required for each instance group:
  - *region*: the test region to be used if one of these instances is
  selected.
- - *test_fallback_regions*: Additional GCE regions that would be used in case
- a error is found in the GCE platform when attempting the tests in the
+ - *test_fallback_regions*: Additional GCE regions that can be used in case
+ an error is found in the GCE platform when attempting the tests in the
  specified region.
  - *arch*: instance architecture (x86_64 or aarch64)
  - *instance_types*: list of the instance types. One of these will be selected
- randomly if this group is selected.
+ randomly.
  - *boot_types*: which boot types do these instance types support
  (bios/uefi).
  - *shielded_vm*: instance type supports the GCE shielded_vm feature.
@@ -117,11 +114,10 @@ The following settings are required for each instance group:
 
 ## Instance feature tests
 
-Additional testing for the feature and instance type testing described above
-are invoked using the `cloud->gce->instance_feature_additional_tests`
-configuration option.
-
-The following example demonstrates the usage:
+In addition to associating specific instance types with specific features
+in designated regions it is also necessary to execute feature specific tests.
+This is accomplished by using the `instance_feature_additional_tests`
+configuration setting as shown in the example configuration snippet below:
 
 ```
 cloud:
@@ -132,13 +128,13 @@ cloud:
         - test_sles_sev
 ```
 
-The above configuration will instruct mash to test images that have the
-`AmdSev_enabled` feature setting using the specified instance type from
-the `test_instance_catalog` in the specified region. In addition to the
-tests specified for the image the additional test with the name
-`test_sles_sev_snp` will be executed.
+With the above configuration any image that is tested on an instance type that
+has `AmdSev_enabled` set will be tested with the tests configured in the
+job doc and additionally the `test_sles_sev` will get executed.
+
+mash uses img-proof as the test framework and as such the named test must be
+available in the img-proof search tree.
 
 ## GCE account
 
-There's no need to do any modification to the mash GCE account to use this
-feature.
+NO additional account parameters are required to use this feature
