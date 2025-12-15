@@ -37,7 +37,7 @@ additional_regions = {
 
 partition = {
     'type': 'string',
-    'enum': ['aws', 'aws-cn', 'aws-us-gov']
+    'enum': ['aws', 'aws-cn', 'aws-us-gov', 'aws-eusc']
 }
 
 ec2_account = {
