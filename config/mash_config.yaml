@@ -58,6 +58,8 @@ cloud:
       aws-us-gov:
         - us-gov-east-1
         - us-gov-west-1
+      aws-eusc:
+        - eusc-de-east-1
     helper_images:
       af-south-1: ami-093ca241e4c72c205
       ap-east-1: ami-0e992f1e63814db10
@@ -86,6 +88,7 @@ cloud:
       us-gov-west-1: ami-0e8f52046c02613e9
       us-west-1: ami-0ee3e1e65adeef858
       us-west-2: ami-0ec021424fb596d6c
+      eusc-de-east-1: ami-0ec021424fb596d6c
 test:
   img_proof_timeout: 600
 upload:
