@@ -33,7 +33,8 @@ class TestAliyunCreateJob(object):
             'bucket': 'images',
             'cloud_image_name': 'sles-15-sp2-v20210316',
             'image_description': 'great image description',
-            'disk_size': 20
+            'disk_size': 20,
+            'nvme_support': True
         }
 
         self.job = AliyunCreateJob(job_doc, self.config)
@@ -70,7 +71,8 @@ class TestAliyunCreateJob(object):
             'sles-15-sp2-v20210316.qcow2',
             platform='SUSE',
             arch='x86_64',
-            disk_image_size=20
+            disk_image_size=20,
+            nvme_support=True
         )
 
         # Image doesnt exist

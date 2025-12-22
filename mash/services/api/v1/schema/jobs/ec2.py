@@ -194,6 +194,13 @@ ec2_job_message['properties']['root_volume_size'] = {
     'description': 'The size of the root volume for the '
                    'helper instance used during image creation.'
 }
+ec2_job_message['properties']['upload_wait_count'] = {
+    'type': 'integer',
+    'minimum': 1,
+    'example': 1,
+    'description': 'Wait N-number of times for AWS operation timeout '
+                   '(Default is 3). The wait time is 600 seconds each count.'
+}
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},

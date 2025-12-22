@@ -36,11 +36,14 @@ cloud:
         - cn-north-1
       aws-us-gov:
         - us-gov-west-1
+      aws-eusc:
+        - eusc-de-east-1
     helper_images:
       ap-northeast-1: ami-383c1956
       ap-northeast-2: ami-249b554a
       cn-north-1: ami-bcc45885
       us-gov-west-1: ami-c2b5d7e1
+      eusc-de-east-1: ami-12345678
     test_instance_catalog:
     - region: us-east-1
       arch: x86_64
