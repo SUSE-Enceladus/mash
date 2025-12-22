@@ -1,11 +1,11 @@
 
-# Region Flexibility For AWS Instance Testing
+# Region Flexibility for AWS Instance Testing
 
 ## Intro
 When AWS introduces new instance types or new features on existing instance
 types these are generally not immediately available in all regions. Examples
 include the introduction of Graviton instances and confidential compute
-features. Therefore it is necessary to support a flexible test approach
+features. Therefore, it is necessary to support a flexible test approach
 that allows mash to run the specified tests with configured instance types
 in a specific region.
 
@@ -14,20 +14,20 @@ to test variations for the boot firmware setting, a feature introduced in all
 AWS regions at once.
 
 Supporting the configuration of specific instance types to test in specified
-regions provides the required felxibility.
+regions provides the required flexibility.
 
 ## Overview
 
 2 services handle the flexible test process:
-- *test_preparation*: the image created in the `main` region of the ec2 account
-gets replicated to the test regions provided for the ec2 account.
+- *test_preparation*: the image created in the `main` region of the EC2 account
+gets replicated to the test regions provided for the EC2 account.
 - *test_cleanup*: cleans the image that has been replicated to the test regions
 by the test_preparation service.
 
 The configuration example below shows how to associate specific test instance
 types with a given region.
 
-## Configuring The Test Instances
+## Configuring the Test Instances
 
 ```
 cloud:
@@ -75,7 +75,7 @@ features to be configured when teh test instance is launched.
 Test scenarios will be generated based on the possible combinations of the
 specified features and instance types.
 
-For example if the instance supports `uefi-preferred` boot type and the
+For example, if the instance supports `uefi-preferred` boot type and the
 `AmdSevSnp` cpu_option in AWS is set to be tested, the following test
 matrix will be generated
 tests:
@@ -84,12 +84,11 @@ tests:
   - (uefi-preferred boot + AmdSevSnp enabled)
 
 If the specified instance type does not support the full test matrix
-the combination unsupported combinations will be skipped and the
-information is logged. In case the configured combination, considered
-the primary test case, cannot be tested it is considered an error. For
-example configuring bios boot with AMD SEV would trigger such an error as
-it is required to use UEFI boot to use the SEV SNP feature. Or if the specified
-instance type is an instance type that is based on Intel CPUs.
+unsupported combinations will be skipped and the information is logged.
+If the configured test combination is the primary test case and cannot
+be tested no tests are executed and an error is generated.
+For example configuring BIOS boot with AMD SEV would trigger such an error.
+The use of AMD SEC requires UEFI secure boot.
 
 Note that it is required that the instance types specified in the catalog
 are present in the test regions as configured in the account's `test_regions`.
@@ -136,7 +135,7 @@ tests specified for the image the additional test with the name
 
 The final step to tie the `test_instance_catalog` and
 `instance_feature_additional_tests` together is the `test_regions` configuration
-option for the ec2 account. The `test_regions` setting specifies in which
+option for the EC2 account. The `test_regions` setting specifies in which
 regions the testing should be executed. This setting has no influence on the
 primary region configured for testing.
 
@@ -175,7 +174,7 @@ Each test region entity is composed of 2 fields:
   - *region*: region name
   - *subnet*: subnet that will be used to test the instances in that region.
 
-The subnet has to be set up in aws and it's important that the
+The subnet has to be set up in AWS and it's important that the
 `auto assign public ip` flag in the subnet is active so `img-proof` can access
 the instances and execute the tests.
 
