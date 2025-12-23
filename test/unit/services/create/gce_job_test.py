@@ -40,6 +40,7 @@ class TestGCECreateJob(object):
             'utctime': 'now',
             'family': 'sles-12',
             'guest_os_features': ['UEFI_COMPATIBLE'],
+            'licenses': ['projects/project-123/global/licenses/123'],
             'region': 'us-west1-a',
             'account': 'test',
             'bucket': 'images',

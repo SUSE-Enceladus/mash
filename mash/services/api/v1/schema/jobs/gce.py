@@ -44,6 +44,14 @@ gce_job_message['properties']['guest_os_features'] = {
     'description': 'A list of guest os features to add when creating the '
                    'image.'
 }
+gce_job_message['properties']['licenses'] = {
+    'type': 'array',
+    'items': string_with_example('projects/project-123/global/licenses/123'),
+    'uniqueItems': True,
+    'minItems': 1,
+    'example': ['projects/project-123/global/licenses/123'],
+    'description': 'A list of applicable license URIs.'
+}
 gce_job_message['properties']['test_fallback_regions'] = {
     'type': 'array',
     'items': string_with_example('us-west1-a'),
