@@ -47,6 +47,7 @@ class GCEJob(BaseJob):
             'months_to_deletion', 6
         )
         self.guest_os_features = self.kwargs.get('guest_os_features', [])
+        self.licenses = self.kwargs.get('licenses', [])
         self.image_project = self.kwargs.get('image_project')
         self.skip_rollout = self.kwargs.get('skip_rollout', False)
 
@@ -111,7 +112,8 @@ class GCEJob(BaseJob):
                 'instance_type': self.instance_type,
                 'ssh_user': self.ssh_user,
                 'boot_firmware': self.boot_firmware,
-                'guest_os_features': self.guest_os_features
+                'guest_os_features': self.guest_os_features,
+                'licenses': self.licenses
             }
         }
 
@@ -170,6 +172,7 @@ class GCEJob(BaseJob):
                 'image_description': self.image_description,
                 'family': self.family,
                 'guest_os_features': self.guest_os_features,
+                'licenses': self.licenses,
                 'account': self.cloud_account,
                 'bucket': self.bucket,
                 'region': self.region,

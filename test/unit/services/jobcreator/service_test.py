@@ -372,6 +372,7 @@ class TestJobCreatorService(object):
         assert data['bucket'] == 'images'
         assert data['family'] == 'sles-15'
         assert data['guest_os_features'] == ['UEFI_COMPATIBLE']
+        assert data['licenses'] == ['projects/project-123/global/licenses/123']
 
         # Test Job Doc
 

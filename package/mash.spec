@@ -55,7 +55,7 @@ BuildRequires:  %{pythons}-flask-jwt-extended
 BuildRequires:  %{pythons}-requests
 BuildRequires:  python-obs-img-utils >= 1.0.0
 BuildRequires:  %{pythons}-oci-sdk
-BuildRequires:  python-gceimgutils
+BuildRequires:  python-gceimgutils >= 1.3.0
 BuildRequires:  python-aliyun-img-utils >= 1.4.0
 BuildRequires:  python-azure-img-utils >= 2.0.0
 BuildRequires:  python-aws-mp-utils
@@ -81,7 +81,7 @@ Requires:       %{pythons}-flask-jwt-extended
 Requires:       %{pythons}-requests
 Requires:       python-obs-img-utils >= 1.0.0
 Requires:       %{pythons}-oci-sdk
-Requires:       python-gceimgutils
+Requires:       python-gceimgutils >= 1.3.0
 Requires:       python-aliyun-img-utils >= 1.4.0
 Requires:       python-azure-img-utils >= 2.0.0
 Requires:       python-aws-mp-utils
