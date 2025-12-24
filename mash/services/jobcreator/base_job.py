@@ -225,3 +225,25 @@ class BaseJob(object):
         Implementation in child class.
         """
         pass
+
+    def get_test_preparation_message(self):
+        """
+        Build test_preparation message.
+        """
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_test_preparation_message method.'.format(
+                self.__class__.__name__
+            )
+        )
+
+    def get_test_cleanup_message(self):
+        """
+        Build test_cleanup message.
+        """
+        raise NotImplementedError(
+            'This {0} class does not implement the '
+            'get_test_cleanup_message method.'.format(
+                self.__class__.__name__
+            )
+        )

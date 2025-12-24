@@ -181,3 +181,29 @@ class OCIJob(BaseJob):
             create_message['create_job']['launch_mode'] = self.launch_mode
 
         return JsonFormat.json_message(create_message)
+
+    def get_test_preparation_message(self):
+        """
+        Build test_preparation message.
+        """
+        test_preparation_message = {
+            'test_preparation_job': {
+                'cloud': self.cloud
+            }
+        }
+        test_preparation_message['test_preparation_job'].update(
+            self.base_message
+        )
+        return JsonFormat.json_message(test_preparation_message)
+
+    def get_test_cleanup_message(self):
+        """
+        Build test_cleanup message.
+        """
+        test_cleanup_message = {
+            'test_cleanup_job': {
+                'cloud': self.cloud
+            }
+        }
+        test_cleanup_message['test_cleanup_job'].update(self.base_message)
+        return JsonFormat.json_message(test_cleanup_message)

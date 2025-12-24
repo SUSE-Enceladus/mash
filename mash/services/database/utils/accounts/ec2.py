@@ -21,7 +21,12 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from mash.services.database.extensions import db
 from mash.services.database.utils.users import get_user_by_id
-from mash.services.database.models import EC2Group, EC2Region, EC2Account
+from mash.services.database.models import (
+    EC2Group,
+    EC2Region,
+    EC2Account,
+    EC2TestRegion
+)
 from mash.utils.mash_utils import handle_request
 from mash.mash_exceptions import MashDBException
 
@@ -72,6 +77,19 @@ def create_new_ec2_region(region_name, helper_image, account):
     return region
 
 
+def create_new_ec2_test_region(region, subnet, account):
+    """
+    Creates a new EC2 test region
+    """
+    ec2_test_region = EC2TestRegion(
+        region=region,
+        subnet=subnet,
+        account=account
+    )
+    db.session.add(ec2_test_region)
+    return ec2_test_region
+
+
 def create_new_ec2_account(
     user_id,
     account_name,
@@ -80,7 +98,8 @@ def create_new_ec2_account(
     credentials,
     subnet,
     group_name,
-    additional_regions
+    additional_regions,
+    test_regions
 ):
     """
     Create a new EC2 account for user.
@@ -112,6 +131,22 @@ def create_new_ec2_account(
                 additional_region['name'],
                 additional_region['helper_image'],
                 account
+            )
+
+    # add the primary region as test region
+    primary_test_region = {
+        'region': region_name,
+        'subnet': subnet
+    }
+    if primary_test_region not in test_regions:
+        test_regions.append(primary_test_region)
+
+    if test_regions:
+        for test_region in test_regions:
+            create_new_ec2_test_region(
+                region=test_region['region'],
+                subnet=test_region['subnet'],
+                account=account
             )
 
     try:
@@ -191,7 +226,8 @@ def update_ec2_account_for_user(
     credentials=None,
     group=None,
     region=None,
-    subnet=None
+    subnet=None,
+    test_regions=None
 ):
     """
     Update an existing EC2 account.
@@ -235,6 +271,14 @@ def update_ec2_account_for_user(
 
     if subnet:
         ec2_account.subnet = subnet
+
+    if test_regions:
+        for test_region in test_regions:
+            create_new_ec2_test_region(
+                region=test_region['region'],
+                subnet=test_region['subnet'],
+                account=ec2_account
+            )
 
     try:
         db.session.add(ec2_account)

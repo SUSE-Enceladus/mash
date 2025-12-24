@@ -43,8 +43,9 @@ class TestBaseConfig(object):
     def test_get_service_names(self):
         # Services
         expected = [
-            'download', 'upload', 'create', 'test', 'raw_image_upload',
-            'replicate', 'publish', 'deprecate'
+            'download', 'upload', 'create', 'test_preparation', 'test',
+            'test_cleanup', 'raw_image_upload', 'replicate', 'publish',
+            'deprecate'
         ]
         services = self.empty_config.get_service_names()
         assert expected == services

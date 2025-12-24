@@ -39,7 +39,12 @@ from mash.services.api.v1.schema.accounts.ec2 import (
     add_account_ec2,
     ec2_account_update
 )
-from mash.services.database.routes.accounts.ec2 import ec2_account_response, region, group
+from mash.services.database.routes.accounts.ec2 import (
+    ec2_account_response,
+    region,
+    group,
+    ec2_test_region
+)
 
 api = Namespace(
     'EC2 Accounts',
@@ -61,6 +66,7 @@ api.models['region'] = region
 api.models['group'] = group
 api.models['ec2_account_response'] = ec2_account_response
 api.models['default_response'] = default_response
+api.models['ec2_test_region'] = ec2_test_region
 
 
 @api.route('/')

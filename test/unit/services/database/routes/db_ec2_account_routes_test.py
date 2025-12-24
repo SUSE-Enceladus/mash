@@ -21,7 +21,14 @@ def test_add_account_ec2(
             'secret_access_key': '654321'
         },
         'partition': 'aws',
-        'region': 'us-east-1'
+        'region': 'us-east-1',
+        'subnet': 'subnet-111111',
+        'test_regions': [
+            {
+                'subnet': 'subnet-111111',
+                'region': 'us-east-1'
+            }
+        ]
     }
 
     response = test_client.post(
@@ -33,6 +40,8 @@ def test_add_account_ec2(
     assert response.status_code == 201
     assert response.json['name'] == 'test'
     assert response.json['region'] == 'us-east-1'
+    assert response.json['subnet'] == 'subnet-111111'
+    assert response.json['test_regions'][0]['subnet'] == 'subnet-111111'
 
     # Mash Exception
     mock_db.session.commit.side_effect = Exception('Broken')
@@ -223,6 +232,7 @@ def test_get_accounts_in_ec2_group(mock_group, test_client):
     assert response.data == b'{"msg":"Group test not found."}\n'
 
 
+@patch('mash.services.database.utils.accounts.ec2.create_new_ec2_test_region')
 @patch('mash.services.database.utils.accounts.ec2._get_or_create_ec2_group')
 @patch('mash.services.database.utils.accounts.ec2.get_ec2_account_for_user')
 @patch('mash.services.database.utils.accounts.ec2.handle_request')
@@ -232,6 +242,7 @@ def test_update_account_ec2(
     mock_handle_request,
     mock_get_account,
     mock_get_group,
+    mock_create_test_region,
     test_client
 ):
     account = Mock()
@@ -240,6 +251,12 @@ def test_update_account_ec2(
     account.partition = 'aws'
     account.region = 'us-east-1'
     account.subnet = None
+    account.test_regions = [
+        {
+            'subnet': 'subnet1',
+            'region': 'us-east-1'
+        }
+    ]
     account.additional_regions = None
     account.group = None
 
@@ -253,9 +270,13 @@ def test_update_account_ec2(
             'secret_access_key': '654321'
         },
         'partition': 'aws',
-        'region': 'us-east-1',
         'group': 'grp1',
-        'subnet': 'subnet1'
+        'test_regions': [
+            {
+                'region': 'us-east-2',
+                'subnet': 'subnet-2'
+            }
+        ]
     }
 
     response = test_client.put(
