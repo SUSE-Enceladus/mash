@@ -51,6 +51,7 @@ class GCECreateJob(MashJob):
 
         self.family = self.job_config.get('family')
         self.guest_os_features = self.job_config.get('guest_os_features')
+        self.licenses = self.job_config.get('licenses')
         self.arch = self.job_config.get('cloud_architecture', 'x86_64')
         self.skip_rollout = self.job_config.get('skip_rollout', False)
 
@@ -109,6 +110,7 @@ class GCECreateJob(MashJob):
             architecture=self.arch,
             family=self.family,
             guest_os_features=self.guest_os_features,
+            licenses=self.licenses,
             credentials_info=credentials,
             project=project,
             log_callback=self.log_callback
