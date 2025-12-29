@@ -18,7 +18,6 @@
 
 import logging
 import os
-# import random
 import traceback
 
 from mash.mash_exceptions import MashTestException
