@@ -66,6 +66,9 @@ gce_credentials = {
         'client_x509_cert_url': string_with_example(
             'https://www.googleapis.com/robot/v1/metadata/x509/'
             'test@test.iam.gserviceaccount.com'
+        ),
+        'universe_domain': string_with_example(
+            'googleapis.com'
         )
     },
     'additionalProperties': False,
