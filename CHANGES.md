@@ -1,3 +1,8 @@
+v14.5.0 (2026-01-08)
+====================
+
+- Add optional arg, universe_domain, for GCE service accounts
+
 v14.4.0 (2025-12-24)
 ====================
 
