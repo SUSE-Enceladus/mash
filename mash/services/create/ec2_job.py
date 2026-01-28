@@ -118,7 +118,7 @@ class EC2CreateJob(MashJob):
             'use_private_ip': False,
             'root_volume_size': self.root_volume_size,
             'image_virt_type': 'hvm',
-            'launch_inst_type': self.launch_inst_type or 't2.micro',
+            'launch_inst_type': self.launch_inst_type or 't3.micro',
             'bootkernel': None,
             'inst_user_name': 'ec2-user',
             'ssh_timeout': 300,
