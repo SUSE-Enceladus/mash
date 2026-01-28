@@ -18,7 +18,6 @@
 
 import logging
 import os
-import random
 import traceback
 
 from mash.mash_exceptions import MashTestException
@@ -28,6 +27,14 @@ from mash.services.test.utils import (
     get_testing_account,
     process_test_result
 )
+from mash.services.test.ec2_test_utils import (
+    get_instance_feature_combinations,
+    select_instance_configs_for_tests,
+    get_partition_test_regions,
+    get_image_id_for_region,
+    get_additional_tests_for_instance,
+    get_cpu_options
+)
 from mash.utils.mash_utils import create_ssh_key_pair
 from mash.utils.ec2 import (
     setup_ec2_networking,
@@ -35,22 +42,6 @@ from mash.utils.ec2 import (
     cleanup_ec2_image
 )
 from img_proof.ipa_controller import test_image
-
-instance_types = {
-    'hybrid': [
-        'c5.large',
-        'm5.large',
-        't3.small'
-    ],
-    'bios': [
-        'i3.large',
-        't2.small'
-    ],
-    'aarch64': [
-        't4g.small',
-        'm6g.medium'
-    ]
-}
 
 
 class EC2TestJob(MashJob):
@@ -78,30 +69,6 @@ class EC2TestJob(MashJob):
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
         self.ssh_user = self.job_config.get('ssh_user', 'ec2-user')
-        self.cloud_architecture = self.job_config.get(
-            'cloud_architecture', 'x86_64'
-        )
-        self.boot_firmware = self.job_config.get(
-            'boot_firmware',
-            ['uefi-preferred']
-        )[0]
-
-        if self.cloud_architecture == 'aarch64':
-            self.instance_types = [
-                random.choice(instance_types['aarch64'])
-            ]
-        elif self.boot_firmware == 'uefi-preferred':
-            self.instance_types = [
-                random.choice(instance_types['bios']),
-                random.choice(instance_types['hybrid'])
-            ]
-        elif not self.instance_type:
-            self.instance_types = [
-                random.choice(instance_types['hybrid'])
-            ]
-        else:
-            self.instance_types = [self.instance_type]
-
         self.ssh_private_key_file = self.config.get_ssh_private_key_file()
         self.img_proof_timeout = self.config.get_img_proof_timeout()
 
@@ -120,57 +87,146 @@ class EC2TestJob(MashJob):
             )
             return
 
+        self.partitions = get_partition_test_regions(self.test_regions)
+        if not self.partitions:
+            msg = (
+                'At least one partition is required for tests.'
+                'Please, configure the test_regions for the aws account in'
+                'mash database through the mash CLI tool.'
+            )
+            if self.log_callback:
+                self.log_callback.error(msg)
+            raise MashTestException(msg)
+
+        self.cloud_architecture = self.job_config.get(
+            'cloud_architecture', 'x86_64'
+        )
+        self.boot_firmware = self.job_config.get(
+            'boot_firmware',
+            ['uefi-preferred']
+        )
+        self.cpu_options = self.job_config.get('cpu_options', {})
+        self.instance_catalog = self.config.get_test_ec2_instance_catalog()
+
         # Get all account credentials in one request
         accounts = []
         for region, info in self.test_regions.items():
-            accounts.append(get_testing_account(info))
-
+            account = get_testing_account(info)
+            if account not in accounts:
+                accounts.append(account)
         self.request_credentials(accounts)
 
-        for instance_type in self.instance_types:
+        # Feature combinations are common for all partitions
+        self.feature_combinations = get_instance_feature_combinations(
+            self.cloud_architecture,
+            self.boot_firmware,
+            self.cpu_options
+        )
+
+        if self.log_callback:
             self.log_callback.info(
-                'Running img-proof tests against image with '
-                'type: {inst_type}.'.format(
-                    inst_type=instance_type
-                )
+                'The list of features combinations to be tested are:'
+                f'{self.feature_combinations}'
+            )
+            self.log_callback.info(
+                f'The tests_regions dict is {self.test_regions}'
             )
 
-            for region, info in self.test_regions.items():
-                account = get_testing_account(info)
-                credentials = self.credentials[account]
+        # mash will try to test all the possible features supported in the
+        # available test regions for each partition
+        for partition, test_regions in self.partitions.items():
 
-                if info['partition'] in ('aws-cn', 'aws-us-gov') and \
-                        self.cloud_architecture == 'aarch64':
-                    # Skip test aarch64 images in China and GovCloud.
-                    # There are no aarch64 based instance types available.
-                    continue
+            instance_configs = select_instance_configs_for_tests(
+                test_regions=test_regions,
+                instance_catalog=self.instance_catalog,
+                feature_combinations=self.feature_combinations,
+                logger=self.log_callback
+            )
+
+            if not instance_configs:
+                # There are no instances configured in the test regions
+                # for the partition that can cover a single feat combination
+                msg = (
+                    'Configuration error. No instances in the instance '
+                    f'catalog for {partition} partition can cover any of '
+                    f'these feat combinations: {self.feature_combinations}'
+                )
+                if self.log_callback:
+                    self.log_callback.error(msg)
+                raise MashTestException(msg)
+
+            for instance_config in instance_configs:
+                if self.log_callback:
+                    self.log_callback.info(
+                        'Running img-proof tests for image in {part} with '
+                        'instance type: {inst_cfg}.'.format(
+                            part=partition,
+                            inst_cfg=instance_config
+                        )
+                    )
+
+                region = instance_config.get('region')
+                account = get_testing_account(self.test_regions[region])
+                credentials = self.credentials[account]
+                subnet_id = self.test_regions[region].get('subnet')
+                image_id = get_image_id_for_region(
+                    region,
+                    self.status_msg['source_regions'],
+                    self.status_msg['test_replicated_regions']
+                )
+                tests = self.tests.copy()
+                tests.extend(
+                    get_additional_tests_for_instance(
+                        arch=instance_config.get('arch', 'x86_64'),
+                        boot_type=instance_config.get(
+                            'boot_type',
+                            'uefi-preferred'
+                        ),
+                        cpu_option=instance_config.get(
+                            'cpu_option',
+                            []
+                        ),
+                        additional_tests=self.config.get_ec2_instance_feature_additional_tests()  # NOQA
+                    )
+                )
+                cpu_options = get_cpu_options(
+                    instance_config.get('cpu_option', '')
+                )
+                if self.log_callback:
+                    self.log_callback.info(
+                        'The tests that will be run for this instance type '
+                        '{inst_type} in {region}: {tests}.'.format(
+                            inst_type=instance_config.get('instance_type'),
+                            region=region,
+                            tests=tests
+                        )
+                    )
 
                 with setup_ec2_networking(
                     credentials['access_key_id'],
                     region,
                     credentials['secret_access_key'],
                     self.ssh_private_key_file,
-                    subnet_id=info.get('subnet')
+                    subnet_id=subnet_id
                 ) as network_details:
-
                     status = self.run_tests(
                         access_key_id=credentials['access_key_id'],
                         secret_access_key=credentials['secret_access_key'],
                         region=region,
                         ssh_private_key_file=self.ssh_private_key_file,
-                        subnet=info.get('subnet'),
+                        subnet=subnet_id,
                         cloud=self.cloud,
                         description=self.description,
                         distro=self.distro,
-                        image_id=self.status_msg['source_regions'][region],
-                        instance_type=instance_type,
+                        image_id=image_id,
+                        instance_type=instance_config.get('instance_type'),
                         img_proof_timeout=self.img_proof_timeout,
                         ssh_user=self.ssh_user,
-                        tests=self.tests,
+                        tests=tests,
                         log_callback=self.log_callback,
-                        network_details=network_details
+                        network_details=network_details,
+                        cpu_options=cpu_options
                     )
-
                     if status != SUCCESS:
                         self.status = status
                         self.add_error_msg(
@@ -184,12 +240,17 @@ class EC2TestJob(MashJob):
             for region, info in self.test_regions.items():
                 credentials = self.credentials[info['account']]
 
+                image_id = get_image_id_for_region(
+                    region,
+                    self.status_msg['source_regions'],
+                    self.status_msg['test_replicated_regions']
+                )
                 cleanup_ec2_image(
                     credentials['access_key_id'],
                     credentials['secret_access_key'],
                     self.log_callback,
                     region,
-                    image_id=self.status_msg['source_regions'][region]
+                    image_id=image_id
                 )
 
     def run_tests(
@@ -208,7 +269,8 @@ class EC2TestJob(MashJob):
         ssh_user,
         tests,
         log_callback,
-        network_details
+        network_details,
+        cpu_options={}
     ):
         try:
             exit_status, result = test_image(
@@ -230,7 +292,8 @@ class EC2TestJob(MashJob):
                 subnet_id=network_details['subnet_id'],
                 tests=tests,
                 log_callback=log_callback,
-                prefix_name='mash'
+                prefix_name='mash',
+                cpu_options=cpu_options
             )
         except Exception as error:
             self.add_error_msg(str(error))

@@ -241,6 +241,28 @@ mash account ec2 add \
 The additional regions option will provide a REPL style workflow to add the
 region.
 
+
+ __Test region__
+
+For AWS partitions additional test regions can be configured. Not all instance
+types are guaranteed to be available in all regions. This feature supports
+the association of specific instance types to to specific regions for test
+purposes.
+
+```bash
+mash account ec2 add \
+  --name {account name} \
+  --region {region name} \
+  --access-key-id {access key id} \
+  --secret-access-key {secret access key} \
+  --partition {partition name} \
+  --test-regions
+```
+
+The test regions option will provide a REPL style workflow to add the
+region(s). More info about this feature can be found
+[here](https://github.com/SUSE-Enceladus/mash/blob/main/doc/static/ec2_test_strategy_improvement.md)
+
 __More info__
 
 Creating an IAM account:

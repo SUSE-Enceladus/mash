@@ -18,7 +18,9 @@ services:
   - download
   - upload
   - create
+  - test_preparation
   - test
+  - test_cleanup
   - raw_image_upload
   - replicate
   - publish
@@ -89,6 +91,198 @@ cloud:
       us-west-1: ami-0ee3e1e65adeef858
       us-west-2: ami-0ec021424fb596d6c
       eusc-de-east-1: ami-0ec021424fb596d6c
+    test_instance_catalog:
+    - region: us-east-1
+      partition: aws
+      arch: x86_64
+      instance_types:
+      - c5.large
+      - m5.large
+      - t3.small
+      boot_types:
+        - uefi-preferred
+        - uefi
+      cpu_options: []
+    - region: us-east-1
+      arch: x86_64
+      partition: aws
+      instance_types:
+      - i3.large
+      - t2.small
+      boot_types:
+        - bios
+      cpu_options: []
+    - region: us-east-2
+      partition: aws
+      arch: x86_64
+      instance_types:
+      - m6a.large
+      - c6a.large
+      - r6a.large
+      boot_types:
+      - uefi-preferred
+      - uefi
+      cpu_options:
+      - AmdSevSnp_enabled
+    - region: us-east-1
+      partition: aws
+      arch: aarch64
+      instance_types:
+      - t4g.small
+      - m6g.medium
+      boot_types:
+      - uefi
+      - uefi-preferred
+      cpu_options: []
+    - region: cn-north-1
+      partition: aws-cn
+      arch: x86_64
+      instance_types:
+      - t3.small
+      boot_types:
+        - bios
+      cpu_options: []
+    - region: cn-north-1
+      partition: aws-cn
+      arch: x86_64
+      instance_types:
+      - m5.large
+      - t3.small
+      boot_types:
+        - uefi-preferred
+        - uefi
+      cpu_options: []
+    - region: cn-north-1
+      partition: aws-cn
+      arch: aarch64
+      instance_types:
+      - t4g.small
+      boot_types:
+      - uefi
+      - uefi-preferred
+      cpu_options: []
+    - region: us-gov-east-1
+      partition: aws-us-gov
+      arch: x86_64
+      instance_types:
+      - i3.large
+      - t3.small
+      boot_types:
+        - bios
+      cpu_options: []
+    - region: us-gov-east-1
+      partition: aws-us-gov
+      arch: x86_64
+      instance_types:
+      - c5.large
+      - m5.large
+      - t3.small
+      boot_types:
+        - uefi-preferred
+        - uefi
+      cpu_options: []
+    - region: us-gov-east-1
+      partition: aws-us-gov
+      arch: aarch64
+      instance_types:
+      - t4g.small
+      boot_types:
+      - uefi
+      - uefi-preferred
+      cpu_options: []
+    instance_feature_additional_tests:
+      AmdSev_enabled:
+        - test_sles_sev
+      AmdSevSnp_enabled:
+        - test_sles_sev_snp
+      IntelTdx_enabled:
+        - test_sles_tdx
+  gce:
+    test_instance_catalog:
+    - region: us-east1-c
+      test_fallback_regions:
+      - us-east1-b
+      - us-east4-a
+      arch: X86_64
+      instance_types:
+      - n1-standard-1
+      - n1-highmem-2
+      - n1-highcpu-2
+      boot_types:
+        - uefi
+      shielded_vm:
+        - securevm_enabled
+      nic:
+        - gvnic_enabled
+      confidential_compute: []
+    - region: us-central1-a
+      test_fallback_regions:
+      - us-central1-b
+      - us-east1-b
+      arch: X86_64
+      instance_types:
+      - n2d-standard-2
+      boot_types:
+        - uefi
+      shielded_vm:
+        - securevm_enabled
+      nic:
+        - gvnic_enabled
+      confidential_compute:
+        - AmdSevSnp_enabled
+        - AmdSev_enabled
+    - region: us-east1-d
+      test_fallback_regions:
+      - us-east1-b
+      - us-east1-c
+      arch: X86_64
+      instance_types:
+      - c4d-standard-4
+      - c3d-standard-4
+      boot_types:
+        - uefi
+      shielded_vm:
+        - securevm_enabled
+      nic:
+        - gvnic_enabled
+      confidential_compute:
+        - AmdSev_enabled
+    - region: us-central1-a
+      test_fallback_regions:
+      - us-central1-b
+      - us-central1-c
+      arch: X86_64
+      instance_types:
+      - c3-standard-4
+      boot_types:
+        - uefi
+      shielded_vm:
+        - securevm_enabled
+      nic:
+        - gvnic_enabled
+      confidential_compute:
+        - IntelTdx_enabled
+    - region: us-central1-a
+      test_fallback_regions:
+      - us-central1-f
+      - us-central1-b
+      arch: ARM64
+      instance_types:
+      - t2a-standard-2
+      boot_types:
+        - uefi
+      shielded_vm:
+        - securevm_enabled
+      nic:
+        - gvnic_enabled
+      confidential_compute: []
+    instance_feature_additional_tests:
+      AmdSev_enabled:
+        - test_sles_sev
+      AmdSevSnp_enabled:
+        - test_sles_sev_snp
+      IntelTdx_enabled:
+        - test_sles_tdx
 test:
   img_proof_timeout: 600
 upload:

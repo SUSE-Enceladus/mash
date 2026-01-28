@@ -196,9 +196,17 @@ class JobCreatorService(MashService):
                 self.publish_job_doc(
                     'replicate', job.get_replicate_message()
                 )
+            elif service == 'test_preparation':
+                self.publish_job_doc(
+                    'test_preparation', job.get_test_preparation_message()
+                )
             elif service == 'test':
                 self.publish_job_doc(
                     'test', job.get_test_message()
+                )
+            elif service == 'test_cleanup':
+                self.publish_job_doc(
+                    'test_cleanup', job.get_test_cleanup_message()
                 )
             elif service == 'upload':
                 self.publish_job_doc(

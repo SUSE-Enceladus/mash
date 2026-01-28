@@ -51,6 +51,7 @@ class EC2Job(BaseJob):
             False
         )
         self.launch_inst_type = self.kwargs.get('launch_inst_type')
+        self.cpu_options = self.kwargs.get('cpu_options', {})
         self.imds_version = self.kwargs.get('imds_version', '')
         self.root_volume_size = self.kwargs.get('root_volume_size', 10)
         self.upload_wait_count = self.kwargs.get('upload_wait_count', 3)
@@ -239,24 +240,37 @@ class EC2Job(BaseJob):
         if self.boot_firmware:
             test_message['test_job']['boot_firmware'] = self.boot_firmware
 
+        if self.cpu_options:
+            test_message['test_job']['cpu_options'] = self.cpu_options
+
         test_message['test_job'].update(self.base_message)
 
         return JsonFormat.json_message(test_message)
 
     def get_test_regions(self):
         """
-        Return a dictionary of target test regions.
+        Returns a dictionary of regions for the test service.
+        This dictionary will have as key the region name and as value a nested
+        dictionary with the following fields:
+          - account: which account has to be used for the tests in that region
+            This value is extracted from the target_account_info structure
+          - partition: which partition this region belongs to. Also extracted
+            from the target_account_info struct.
+          - subnet: what is the subnet that needs to be used in the tests for
+            that region. This data is extracted from the `test_regions` list
+            inside the target_account_info dictionary
         """
-        test_regions = {}
+        regions_for_tests = {}
 
-        for source_region, value in self.target_account_info.items():
-            test_regions[source_region] = {
-                'account': value['account'],
-                'subnet': value['subnet'],
-                'partition': value['partition']
-            }
-
-        return test_regions
+        for source_region, account_info in self.target_account_info.items():
+            for test_region in account_info.get('test_regions', []):
+                region_name = test_region['region']
+                regions_for_tests[region_name] = {
+                    'account': account_info['account'],
+                    'partition': account_info['partition'],
+                    'subnet': test_region['subnet']
+                }
+        return regions_for_tests
 
     def get_create_message(self):
         """
@@ -323,3 +337,61 @@ class EC2Job(BaseJob):
         upload_message['upload_job'].update(self.base_message)
 
         return JsonFormat.json_message(upload_message)
+
+    def get_test_preparation_message(self):
+        """
+        Build test_preparation message.
+        """
+        image_description = (
+            'Image replicated by mash to allow test execution in this region.'
+        )
+        test_preparation_message = {
+            'test_preparation_job': {
+                'cloud': self.cloud,
+                'cloud_image_name': self.cloud_image_name,
+                'replicate_source_regions':
+                    self.get_test_preparation_regions(),
+                'image_description': image_description,
+                'test_preparation': True
+            }
+        }
+        test_preparation_message['test_preparation_job'].update(
+            self.base_message
+        )
+
+        return JsonFormat.json_message(test_preparation_message)
+
+    def get_test_preparation_regions(self):
+        """
+        Returns a dictionary of the regions where the test_preparation service
+        should replicate the image for the tests.
+        """
+        test_preparation_regions = {}
+
+        for source_region, value in self.target_account_info.items():
+            test_preparation_regions[source_region] = {
+                'account': value['account'],
+                'target_regions': [],
+                'partition': value['partition']
+            }
+            for test_region in value.get('test_regions', []):
+                if test_region['region'] != source_region:
+                    test_preparation_regions[source_region]['target_regions']\
+                        .append(test_region['region'])
+
+        return test_preparation_regions
+
+    def get_test_cleanup_message(self):
+        """
+        Build test_cleanup message.
+        """
+        test_cleanup_message = {
+            'test_cleanup_job': {
+                'cloud': self.cloud,
+                'cloud_image_name': self.cloud_image_name,
+                'test_cleanup_regions': self.get_test_preparation_regions()
+            }
+        }
+        test_cleanup_message['test_cleanup_job'].update(self.base_message)
+
+        return JsonFormat.json_message(test_cleanup_message)
