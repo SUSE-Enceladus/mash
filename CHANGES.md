@@ -1,3 +1,9 @@
+v15.0.0 (2026-02-09)
+====================
+
+- Test strategy improvement for AWS and GCP jobs. Allows validate some cloud
+  instance features in the tests.
+
 v14.5.0 (2026-01-08)
 ====================
 
@@ -16,7 +22,7 @@ v14.3.0 (2025-12-16)
 v14.2.0 (2025-10-17)
 ====================
 
-- Pass through wait count option in ec2 create. 
+- Pass through wait count option in ec2 create.
   This allows the option to be confugured in the job doc.
 - Adds support for a new nvme_support flag for aliyun jobs
 
