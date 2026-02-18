@@ -77,12 +77,20 @@ class Config(object):
         return self.config.get_oauth2_client_secret()
 
     @property
+    def OAUTH2_JWKS_URI(self):
+        return self.config.get_oauth2_jwks_uri()
+
+    @property
     def OAUTH2_PROVIDER_URL(self):
         return self.config.get_oauth2_provider_url()
 
     @property
     def OAUTH2_REDIRECT_PORTS(self):
         return self.config.get_oauth2_redirect_ports()
+
+    @property
+    def OAUTH2_TENANT_ID(self):
+        return self.config.get_oauth2_tenant_id()
 
     @property
     def SMTP_HOST(self):

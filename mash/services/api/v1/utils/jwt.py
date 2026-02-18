@@ -17,17 +17,25 @@
 #
 
 import jwt
-import json
 import requests
 
-from cryptography.hazmat.primitives import serialization
+from jwt import PyJWK
+
+from urllib.parse import urljoin
 
 
-def decode_token(provider_url, token, audience):
+def decode_token(
+    provider_url,
+    token,
+    audience,
+    tenant=None,
+    jwks_uri='keys'
+):
     """
     Decode given Java Web Token
     """
-    response = requests.get('{}/keys'.format(provider_url))
+    url = urljoin(provider_url, '/'.join(filter(None, [tenant, jwks_uri, '/'])))
+    response = requests.get(url)
 
     if response.status_code not in (200, 201):
         response.raise_for_status()
@@ -38,14 +46,14 @@ def decode_token(provider_url, token, audience):
         raise Exception('no keys retrieved from authentication provider')
 
     for jwk in keys:
-        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
-        pem = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        )
         try:
+            jwk_obj = PyJWK(jwk)
+            algorithm = jwk.get('alg', 'RS256')
             token_json = jwt.decode(
-                token, pem, audience=audience, algorithms=['HS256', 'RS256']
+                token,
+                jwk_obj.key,
+                audience=audience,
+                algorithms=[algorithm]
             )
             return token_json
         except Exception as e:

@@ -449,6 +449,18 @@ class BaseConfig(object):
 
         return client_secret
 
+    def get_oauth2_jwks_uri(self):
+        """
+        Return the optional OAuth2 jwks_uri.
+
+        :rtype: string
+        """
+        jwks_uri = self._get_attribute(
+            attribute='oauth2_jwks_uri'
+        )
+
+        return jwks_uri or Defaults.get_oauth2_jwks_uri()
+
     def get_oauth2_provider_url(self):
         """
         Return the OAuth2 provider URL.
@@ -465,6 +477,18 @@ class BaseConfig(object):
             )
 
         return provider_url
+
+    def get_oauth2_tenant_id(self):
+        """
+        Return the optional OAuth2 tenant id.
+
+        :rtype: string
+        """
+        tenant_id = self._get_attribute(
+            attribute='oauth2_tenant_id'
+        )
+
+        return tenant_id
 
     def get_oauth2_redirect_ports(self):
         """

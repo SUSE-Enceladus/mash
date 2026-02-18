@@ -5,11 +5,11 @@ import jwt
 import time
 
 from mash.services.api.v1.utils.jwt import decode_token
+from jwt import PyJWK
 
 
-@patch('mash.services.api.v1.utils.jwt.jwt.algorithms.RSAAlgorithm.from_jwk')
 @patch('mash.services.api.v1.utils.jwt.requests')
-def test_decode_token(mock_requests, mock_from_jwt):
+def test_decode_token(mock_requests):
     now = int(time.time())
     token = {
         'iss': 'iss-1234',
@@ -19,17 +19,20 @@ def test_decode_token(mock_requests, mock_from_jwt):
         'iat': now,
         'exp': now + 3600 * 24
     }
-    key = 'secret'
+    key = {
+        'kty': 'oct',
+        'kid': '0afee142-a0af-4410-abcc-9f2d44ff45b5',
+        'alg': 'HS256',
+        'k': 'FdFYFzERwC2uCBB46pZQi4GG85LujR8obt-KWRBICVQ'
+    }
     mock_response = Mock()
-    mock_response.json.return_value = {'keys': [{'foo': 'bar'}]}
+    mock_response.json.return_value = {'keys': [key]}
     mock_response.status_code.return_value = 200
     mock_requests.get.return_value = mock_response
-    mock_key = Mock()
-    mock_key.public_bytes.return_value = key
-    mock_from_jwt.return_value = mock_key
+    jwk = PyJWK.from_dict(key)
 
     # test success
-    jw_token = jwt.encode(token, key)
+    jw_token = jwt.encode(token, jwk.key)
     dec_token = decode_token('https://fake.com/ouath2/v1', jw_token, 'aud-1234')
 
     assert dec_token == token

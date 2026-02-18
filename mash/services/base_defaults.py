@@ -132,3 +132,7 @@ class Defaults(object):
     @staticmethod
     def get_database_api_url():
         return 'http://localhost:5007/'
+
+    @staticmethod
+    def get_oauth2_jwks_uri():
+        return 'jwks'
