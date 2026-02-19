@@ -38,7 +38,13 @@ def decode_token(
         provider_url + '/',
         '/'.join(filter(None, [tenant, jwks_uri, '/']))
     )
-    response = requests.get(url)
+
+    try:
+        response = requests.get(url)
+    except Exception as error:
+        raise Exception(
+            f'Unable to retreive signing keys from {url}: {str(error)}'
+        )
 
     if response.status_code not in (200, 201):
         response.raise_for_status()
