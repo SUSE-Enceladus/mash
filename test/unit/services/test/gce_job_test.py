@@ -104,7 +104,8 @@ class TestGCETestJob(object):
 
         self.job_config['account'] = 'test-gce'
 
-    def test_test_run_empty_tests(self):
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
+    def test_test_run_empty_tests(self, mock_create_ssh_key_pair):
         """Test run attempt with empty tests"""
         self.job_config['tests'] = []
 
@@ -119,7 +120,8 @@ class TestGCETestJob(object):
         )
         self.job_config['tests'] = ['test_stuff']
 
-    def test_test_run_empty_test_instance_catalog(self):
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
+    def test_test_run_empty_test_instance_catalog(self, mock_create_ssh_key_pair):
         """Test run attempt with empty test_instance catalog"""
         self.job_config['boot_firmware'] = ['bios']
         test_job = GCETestJob(self.job_config, self.config)
@@ -141,6 +143,7 @@ class TestGCETestJob(object):
         assert 'Configuration error' in str(e)
         self.job_config['boot_firmware'] = ['uefi']
 
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.GCERemoveImage')
     @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.os')
@@ -152,7 +155,8 @@ class TestGCETestJob(object):
         mock_test_image,
         mock_os,
         mock_blob_remover,
-        mock_image_remover
+        mock_image_remover,
+        mock_create_ssh_key_pair
     ):
         """Test run """
         successful_test = {
@@ -190,6 +194,7 @@ class TestGCETestJob(object):
         mock_os.path.exists.return_value = False
 
         test_job = GCETestJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         test_job.credentials = {
             'test-gce': {
                 'fake': '123',
@@ -303,6 +308,7 @@ class TestGCETestJob(object):
             instance_options=['GVNIC']
         ) in mock_test_image.mock_calls
 
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.GCERemoveImage')
     @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.os')
@@ -314,7 +320,8 @@ class TestGCETestJob(object):
         mock_test_image,
         mock_os,
         mock_blob_remover,
-        mock_image_remover
+        mock_image_remover,
+        mock_create_ssh_key_pair
     ):
         """Test run """
         successful_test = {
@@ -356,6 +363,7 @@ class TestGCETestJob(object):
             'UEFI_COMPATIBLE'
         ]
         test_job = GCETestJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         test_job.credentials = {
             'test-gce': {
                 'fake': '123',
@@ -469,6 +477,7 @@ class TestGCETestJob(object):
             instance_options=['GVNIC']
         ) in mock_test_image.mock_calls
 
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.GCERemoveImage')
     @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.os')
@@ -480,7 +489,8 @@ class TestGCETestJob(object):
         mock_test_image,
         mock_os,
         mock_blob_remover,
-        mock_image_remover
+        mock_image_remover,
+        mock_create_ssh_key_pair
     ):
         """Test run """
         successful_test = {
@@ -522,6 +532,7 @@ class TestGCETestJob(object):
             'UEFI_COMPATIBLE'
         ]
         test_job = GCETestJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         test_job.credentials = {
             'test-gce': {
                 'fake': '123',
@@ -635,6 +646,7 @@ class TestGCETestJob(object):
             instance_options=['GVNIC']
         ) in mock_test_image.mock_calls
 
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.GCERemoveImage')
     @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.os')
@@ -646,7 +658,8 @@ class TestGCETestJob(object):
         mock_test_image,
         mock_os,
         mock_blob_remover,
-        mock_image_remover
+        mock_image_remover,
+        mock_create_ssh_key_pair
     ):
         """Test run """
         successful_test = {
@@ -684,6 +697,7 @@ class TestGCETestJob(object):
         mock_os.path.exists.return_value = False
 
         test_job = GCETestJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         test_job.credentials = {
             'test-gce': {
                 'fake': '123',
@@ -799,6 +813,7 @@ class TestGCETestJob(object):
         assert test_job.status == 'failed'
         assert 'This is an exception' in str(test_job.status_msg)
 
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.GCERemoveImage')
     @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.os')
@@ -810,7 +825,8 @@ class TestGCETestJob(object):
         mock_test_image,
         mock_os,
         mock_blob_remover,
-        mock_image_remover
+        mock_image_remover,
+        mock_create_ssh_key_pair
     ):
         """Test run """
         successful_test = {
@@ -849,6 +865,7 @@ class TestGCETestJob(object):
         mock_os.path.exists.return_value = False
 
         test_job = GCETestJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         test_job.credentials = {
             'test-gce': {
                 'fake': '123',
@@ -988,6 +1005,7 @@ class TestGCETestJob(object):
         assert test_job.status == 'success'
         assert [] == test_job.status_msg['errors']
 
+    @patch('mash.services.test.gce_job.create_ssh_key_pair')
     @patch('mash.services.test.gce_job.GCERemoveImage')
     @patch('mash.services.test.gce_job.GCERemoveBlob')
     @patch('mash.services.test.gce_job.os')
@@ -999,7 +1017,8 @@ class TestGCETestJob(object):
         mock_test_image,
         mock_os,
         mock_blob_remover,
-        mock_image_remover
+        mock_image_remover,
+        mock_create_ssh_key_pair
     ):
         """Test run """
         successful_test = {
@@ -1040,6 +1059,7 @@ class TestGCETestJob(object):
         mock_os.path.exists.return_value = False
 
         test_job = GCETestJob(self.job_config, self.config)
+        mock_create_ssh_key_pair.assert_called_once_with('private_ssh_key.file')
         test_job.credentials = {
             'test-gce': {
                 'fake': '123',
