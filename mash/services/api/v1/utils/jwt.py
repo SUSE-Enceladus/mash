@@ -34,7 +34,10 @@ def decode_token(
     """
     Decode given Java Web Token
     """
-    url = urljoin(provider_url, '/'.join(filter(None, [tenant, jwks_uri, '/'])))
+    url = urljoin(
+        provider_url + '/',
+        '/'.join(filter(None, [tenant, jwks_uri, '/']))
+    )
     response = requests.get(url)
 
     if response.status_code not in (200, 201):
