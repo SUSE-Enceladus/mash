@@ -1,3 +1,12 @@
+v16.0.0 (2026-02-20)
+====================
+
++ Breaking change to oauth2 login workflow. The oauth2 login code now
+  leverages jwks directly and pins the signing algorithm for more
+  security. The jwk uri is defaulted to jwks instead of keys. New config
+  arguments allow for more customizability in obtaining jwks via
+  oauth2_jwks_uri and oauth2_tenant_id.
+
 v15.0.0 (2026-02-09)
 ====================
 
