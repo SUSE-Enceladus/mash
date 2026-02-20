@@ -168,6 +168,10 @@ class TestBaseConfig(object):
             self.config.get_oauth2_client_secret()
 
     @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
+    def test_get_oauth2_jwks_uri(self):
+        assert self.config.get_oauth2_jwks_uri() == 'jwks'
+
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
     def test_get_oauth2_provider_url(self):
         with raises(MashConfigException):
             self.config.get_oauth2_provider_url()
@@ -176,6 +180,10 @@ class TestBaseConfig(object):
     def test_get_oauth2_redirect_ports(self):
         with raises(MashConfigException):
             self.config.get_oauth2_redirect_ports()
+
+    @patch.object(BaseConfig, 'get_auth_methods', lambda x: ['oauth2'])
+    def test_get_oauth2_tenant_id(self):
+        assert self.config.get_oauth2_tenant_id() is None
 
     def test_get_database_api_url(self):
         assert self.config.get_database_api_url() == 'http://localhost:5057/'

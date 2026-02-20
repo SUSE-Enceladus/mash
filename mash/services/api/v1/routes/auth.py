@@ -18,6 +18,8 @@
 
 import json
 
+from urllib.parse import urljoin
+
 from flask import jsonify, request, make_response, current_app
 from flask_restx import fields, Namespace, Resource
 
@@ -174,8 +176,9 @@ class OAuth2Request(Resource):
         if 'oauth2' not in current_app.config['AUTH_METHODS']:
             return make_response(jsonify({'msg': 'OAuth2 login is disabled'}), 403)
 
-        oauth2_auth_url = '{}/authorize'.format(
-            current_app.config['OAUTH2_PROVIDER_URL'],
+        oauth2_auth_url = urljoin(
+            current_app.config['OAUTH2_PROVIDER_URL'] + '/',
+            'authorize/'
         )
         oauth2_client_id = current_app.config['OAUTH2_CLIENT_ID']
         oauth2_redirect_ports = current_app.config['OAUTH2_REDIRECT_PORTS']
@@ -209,8 +212,9 @@ class OAuth2Request(Resource):
         oauth2_redirect_uri = 'http://localhost:{}'.format(redirect_port)
         oauth2_client_id = current_app.config['OAUTH2_CLIENT_ID']
         oauth2_client_secret = current_app.config['OAUTH2_CLIENT_SECRET']
-        oauth2_token_url = '{}/token'.format(
-            current_app.config['OAUTH2_PROVIDER_URL'],
+        oauth2_token_url = urljoin(
+            current_app.config['OAUTH2_PROVIDER_URL'] + '/',
+            'token/'
         )
 
         oauth2 = OAuth2Session(
@@ -229,7 +233,9 @@ class OAuth2Request(Resource):
             user_email = decode_token(
                 current_app.config['OAUTH2_PROVIDER_URL'],
                 token['id_token'],
-                audience=current_app.config['OAUTH2_CLIENT_ID']
+                audience=current_app.config['OAUTH2_CLIENT_ID'],
+                tenant=current_app.config.get('OAUTH2_TENANT_ID'),
+                jwks_uri=current_app.config.get('OAUTH2_JWKS_URI')
             )['email']
         except Exception as e:
             msg = 'ERROR decoding JWT: {}'.format(str(e))
