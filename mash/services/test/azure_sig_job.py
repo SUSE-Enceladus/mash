@@ -32,10 +32,7 @@ from img_proof.ipa_controller import test_image
 
 instance_types = {
     'x86_64': [
-        'Standard_B1s',
-        'Standard_D2s_v4',
-        'Standard_E2bds_v5',
-        'Standard_F2s_v2'
+        'Standard_D2s_v3'
     ],
     'aarch64': [
         'Standard_D2ps_v6',
