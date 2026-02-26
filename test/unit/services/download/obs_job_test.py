@@ -88,7 +88,7 @@ class TestOBSDownloadJob(object):
         )
         scheduler.add_job.assert_called_once_with(
             mock_update_image_status, 'date', run_date=run_time,
-            timezone='utc'
+            timezone=utc
         )
         scheduler.add_listener.assert_called_once_with(
             mock_job_submit_event, EVENT_JOB_SUBMITTED

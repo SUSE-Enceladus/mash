@@ -174,7 +174,7 @@ class OBSDownloadJob(object):
 
         self.job = self.scheduler.add_job(
             self._update_image_status, 'date',
-            run_date=job_time, timezone='utc'
+            run_date=job_time, timezone=utc
         )
         self.scheduler.add_listener(
             self._job_submit_event, EVENT_JOB_SUBMITTED
