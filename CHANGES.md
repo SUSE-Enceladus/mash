@@ -1,3 +1,8 @@
+v16.1.1 (2026-02-26)
+====================
+
+- Pass utc timezone object not utc string in obs job class
+
 v16.1.0 (2026-02-26)
 ====================
 
