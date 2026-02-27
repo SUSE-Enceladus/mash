@@ -165,6 +165,19 @@ class EC2TestJob(MashJob):
                         )
                     )
 
+                # Better error message if the test_preparation service is
+                # not running
+                if 'test_replicated_regions' not in self.status_msg:
+                    msg = (
+                        'In MASH v15.0.0 2 new services (test_preparation and'
+                        ' test_cleanup) were added to mash. Those services are'
+                        ' probably not running. Check the MASH documentation'
+                        ' for more details.'
+                    )
+                    if self.log_callback:
+                        self.log_callback.error(msg)
+                    raise MashTestException(msg)
+
                 region = instance_config.get('region')
                 account = get_testing_account(self.test_regions[region])
                 credentials = self.credentials[account]
