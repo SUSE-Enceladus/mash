@@ -131,6 +131,32 @@ the `test_instance_catalog` in the specified region. In addition to the
 tests specified for the image the additional test with the name
 `test_sles_sev_snp` will be executed.
 
+## Limit the amount of instance configurations tested
+
+The `max_instance_tests` configuration option allows limiting the number of
+test instances launched in the test service. This can be useful when the test
+matrix generated from the 'test_instance_catalog` results in a large number of
+instance feature combinations and we want to limit the amount of tests.
+If the number of generated test cases exceeds the configured limit, a random
+subset of the test cases is selected for execution.
+
+The configuration of that parameter, available for ec2 and gce is shown in the
+following example:
+
+```
+cloud:
+  ec2:
+  ...
+    max_instance_tests: 4
+  gce:
+  ...
+    max_instance_tests: 4
+```
+
+With that configuration of the example, there will be, at most, 4 different
+instance configurations tested. If the configured value is 0 or the
+configuration is not present, the amount of tests will not be limited.
+
 ## EC2 account
 
 The final step to tie the `test_instance_catalog` and
@@ -177,4 +203,3 @@ Each test region entity is composed of 2 fields:
 The subnet has to be set up in AWS and it's important that the
 `auto assign public ip` flag in the subnet is active so `img-proof` can access
 the instances and execute the tests.
-

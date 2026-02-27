@@ -137,6 +137,22 @@ class GCETestJob(MashJob):
                 self.log_callback.error(msg)
             raise MashTestException(msg)
 
+        # trim the instance_configs to the max instance tests configured
+        #  if required
+        max_test_instances = self.config.get_gce_max_instance_tests()
+        if max_test_instances and len(instance_configs) > max_test_instances:
+            instance_configs = random.sample(
+                instance_configs,
+                max_test_instances
+            )
+            msg = (
+                'Selecting a subset of instance_configurations for tests.'
+                'These are the instance configurations for the tests:'
+                f' {instance_configs}'
+            )
+            if self.log_callback:
+                self.log_callback.info(msg)
+
         # create  json file with creds
         with create_json_file(credentials) as auth_file:
             # test each instance configuration selected

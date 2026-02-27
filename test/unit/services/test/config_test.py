@@ -4,6 +4,7 @@ from mash.services.test.config import TestConfig
 class TestTestConfig(object):
     def setup_method(self):
         self.empty_config = TestConfig('test/data/empty_mash_config.yaml')
+        self.minimal_config = TestConfig('test/data/minimal_config.yaml')
         self.config = TestConfig('test/data/mash_config.yaml')
 
     def test_get_log_file(self):
@@ -192,3 +193,11 @@ class TestTestConfig(object):
         }
         assert self.config.get_gce_instance_feature_additional_tests() == \
             expected_additional_tests
+
+    def test_get_ec2_max_instance_tests(self):
+        assert self.config.get_ec2_max_instance_tests() == 3
+        assert self.minimal_config.get_ec2_max_instance_tests() == 0
+
+    def test_get_gce_max_instance_tests(self):
+        assert self.config.get_gce_max_instance_tests() == 5
+        assert self.minimal_config.get_gce_max_instance_tests() == 0

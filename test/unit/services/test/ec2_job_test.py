@@ -79,6 +79,7 @@ class TestEC2TestJob(object):
         self.config.get_ec2_instance_feature_additional_tests.return_value = {
             'AmdSevSnp_enabled': ['test_sev_snp']
         }
+        self.config.get_ec2_max_instance_tests.return_value = 0
 
     def test_test_ec2_missing_key(self):
         del self.job_config['test_regions']

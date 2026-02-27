@@ -155,6 +155,25 @@ class EC2TestJob(MashJob):
                     self.log_callback.error(msg)
                 raise MashTestException(msg)
 
+            # trim the instance_configs to the max instance tests configured
+            #  if required
+            max_test_instances = self.config.get_ec2_max_instance_tests()
+            if (
+                max_test_instances > 0 and
+                len(instance_configs) > max_test_instances
+            ):
+                instance_configs = random.sample(
+                    instance_configs,
+                    max_test_instances
+                )
+                msg = (
+                    'Selecting a subset of instance_configurations for tests.'
+                    'These are the instance configurations for the tests:'
+                    f' {instance_configs}'
+                )
+                if self.log_callback:
+                    self.log_callback.info(msg)
+
             for instance_config in instance_configs:
                 if self.log_callback:
                     self.log_callback.info(

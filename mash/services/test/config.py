@@ -74,6 +74,18 @@ class TestConfig(BaseConfig):
         )
         return instance_feat_additional_tests
 
+    def get_ec2_max_instance_tests(self):
+        """
+        Return the maximum number of instance types to be tested.
+
+        A return value of 0 means unlimited.
+        """
+        ec2_cloud_info = self.get_cloud_data().get('ec2', {})
+        ec2_max_instance_tests = int(
+            ec2_cloud_info.get('max_instance_tests', '0')
+        )
+        return ec2_max_instance_tests
+
     def get_test_gce_instance_catalog(self):
         """
         Return the instance catalog configured for gce tests
@@ -99,3 +111,15 @@ class TestConfig(BaseConfig):
             {}
         )
         return instance_feat_additional_tests
+
+    def get_gce_max_instance_tests(self):
+        """
+        Return the maximum number of instance types to be tested.
+
+        A return value of 0 means unlimited.
+        """
+        gce_cloud_info = self.get_cloud_data().get('gce', {})
+        gce_max_instance_tests = int(
+            gce_cloud_info.get('max_instance_tests', '0')
+        )
+        return gce_max_instance_tests

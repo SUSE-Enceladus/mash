@@ -1,0 +1,5 @@
+cloud:
+  ec2:
+    test_instance_catalog:
+  gce:
+    test_instance_catalog:
