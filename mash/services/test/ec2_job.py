@@ -18,6 +18,7 @@
 
 import logging
 import os
+import random
 import traceback
 
 from mash.mash_exceptions import MashTestException
@@ -158,10 +159,10 @@ class EC2TestJob(MashJob):
             # trim the instance_configs to the max instance tests configured
             #  if required
             max_test_instances = self.config.get_ec2_max_instance_tests()
-            if (
-                max_test_instances > 0 and
+            if all([
+                max_test_instances > 0,
                 len(instance_configs) > max_test_instances
-            ):
+            ]):
                 instance_configs = random.sample(
                     instance_configs,
                     max_test_instances

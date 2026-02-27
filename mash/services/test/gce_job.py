@@ -140,7 +140,10 @@ class GCETestJob(MashJob):
         # trim the instance_configs to the max instance tests configured
         #  if required
         max_test_instances = self.config.get_gce_max_instance_tests()
-        if max_test_instances and len(instance_configs) > max_test_instances:
+        if all([
+            max_test_instances > 0,
+            len(instance_configs) > max_test_instances
+        ]):
             instance_configs = random.sample(
                 instance_configs,
                 max_test_instances
