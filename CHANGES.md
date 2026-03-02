@@ -1,3 +1,8 @@
+v16.2.0 (2026-03-02)
+====================
+
+- Improves error message if test_preparation service is not running
+
 v16.1.1 (2026-02-26)
 ====================
 
