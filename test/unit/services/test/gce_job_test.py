@@ -88,12 +88,12 @@ class TestGCETestJob(object):
                     'AmdSevSnp_enabled'
                 ]
             },
-
         ]
         self.config.get_gce_instance_feature_additional_tests.return_value = {
             'AmdSev_enabled': ['additional_sev_test_1'],
             'AmdSevSnp_enabled': ['additional_sev_snp_test_1']
         }
+        self.config.get_gce_max_instance_tests.return_value = 0
 
     def test_test_gce_missing_key(self):
         """Test class creation with missing key"""

@@ -84,6 +84,7 @@ cloud:
     instance_feature_additional_tests:
       AmdSevSnp_enabled:
         - test_sles_sev_snp
+    max_instance_tests: 3
   gce:
     test_instance_catalog:
     - region: us-east1-b
@@ -154,6 +155,7 @@ cloud:
         - test_sles_sev_snp
       gvnic_enabled:
         - test_gvnic
+    max_instance_tests: 5
 test:
   img_proof_timeout: 600
 upload:

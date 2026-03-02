@@ -197,6 +197,7 @@ cloud:
         - test_sles_sev_snp
       IntelTdx_enabled:
         - test_sles_tdx
+    max_instance_tests: 3
   gce:
     test_instance_catalog:
     - region: us-east1-c
@@ -283,6 +284,7 @@ cloud:
         - test_sles_sev_snp
       IntelTdx_enabled:
         - test_sles_tdx
+    max_instance_tests: 3
 test:
   img_proof_timeout: 600
 upload:
