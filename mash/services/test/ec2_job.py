@@ -137,6 +137,11 @@ class EC2TestJob(MashJob):
         # available test regions for each partition
         for partition, test_regions in self.partitions.items():
 
+            if self.status != SUCCESS:
+                # Tests already failed in some partition
+                # Skipping tests in the rest of partitions
+                break
+
             instance_configs = select_instance_configs_for_tests(
                 test_regions=test_regions,
                 instance_catalog=self.instance_catalog,
@@ -267,7 +272,9 @@ class EC2TestJob(MashJob):
                             'See "mash job test-results --job-id {GUID} -v" '
                             'for details on the failing tests.'
                         )
-                        break  # Fail eagerly, if the image fails in any partition.
+                        # Fail eagerly, if the image fails in any partition.
+                        # This only breaks the instances loop!
+                        break
 
         if self.cleanup_images or (self.status != SUCCESS and self.cleanup_images is not False):  # noqa
             for region, info in self.test_regions.items():

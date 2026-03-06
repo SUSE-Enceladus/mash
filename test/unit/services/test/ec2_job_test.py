@@ -281,6 +281,109 @@ class TestEC2TestJob(object):
         assert 'At least one partition is required' in str(exc)
         assert job._log_callback.error.called
 
+    @patch('mash.services.test.ec2_job.get_partition_test_regions')
+    @patch('mash.services.test.ec2_job.cleanup_ec2_image')
+    @patch('mash.services.test.ec2_job.os')
+    @patch('mash.utils.ec2.EC2Setup')
+    @patch('mash.utils.ec2.generate_name')
+    @patch('mash.utils.ec2.get_client')
+    @patch('mash.utils.ec2.get_key_from_file')
+    @patch('mash.utils.ec2.get_vpc_id_from_subnet')
+    @patch('mash.services.test.ec2_job.test_image')
+    @patch('mash.services.test.ec2_job.create_ssh_key_pair')
+    def test_run_job_multi_partition_skip(
+        self,
+        mock_create_ssh_key_pair,
+        mock_test_image,
+        mock_get_vpc_id_from_subnet,
+        mock_get_key_from_file,
+        mock_get_client,
+        mock_generate_name,
+        mock_ec2_setup,
+        mock_os,
+        mock_cleanup_image,
+        mock_get_partition_test_regions
+    ):
+        client = Mock()
+        mock_get_client.return_value = client
+        mock_generate_name.return_value = 'random_name'
+        mock_get_key_from_file.return_value = 'fakekey'
+        mock_get_vpc_id_from_subnet.return_value = 'vpc-123456789'
+
+        ec2_setup = Mock()
+        ec2_setup.create_vpc_subnet.return_value = 'subnet-1111111'
+        ec2_setup.create_security_group.return_value = 'sg-11111111'
+        mock_ec2_setup.return_value = ec2_setup
+
+        mock_os.path.exists.return_value = False
+
+        self.config.get_test_ec2_instance_catalog.return_value = [
+            {
+                "region": "us-east-2",
+                "arch": "x86_64",
+                "instance_types": ["m6a.large"],
+                "boot_types": ["uefi-preferred"],
+                "cpu_options": [],
+                "partition": "aws"
+            },
+            {
+                "region": "us-west-1",
+                "arch": "x86_64",
+                "instance_types": ["m6a.large"],
+                "boot_types": ["uefi-preferred"],
+                "cpu_options": [],
+                "partition": "aws"
+            }
+        ]
+
+        job = EC2TestJob(self.job_config, self.config)
+        job._log_callback = Mock()
+        job.request_credentials = Mock()
+
+        partitions = {
+            'partition1': {
+                'us-east-2': {'account': 'acc1', 'subnet': 'sub1'}
+            },
+            'partition2': {
+                'us-west-1': {'account': 'acc2', 'subnet': 'sub2'}
+            }
+        }
+        mock_get_partition_test_regions.return_value = partitions
+
+        job.test_regions = {
+            'us-east-2': {'account': 'acc1', 'subnet': 'sub1'},
+            'us-west-1': {'account': 'acc2', 'subnet': 'sub2'}
+        }
+        job.credentials = {
+            'acc1': {'access_key_id': 'ak1', 'secret_access_key': 'sk1'},
+            'acc2': {'access_key_id': 'ak2', 'secret_access_key': 'sk2'}
+        }
+        job.status_msg.update({
+            'source_regions': {'us-east-1': 'ami-src'},
+            'test_replicated_regions': {
+                'us-east-2': 'ami-1',
+                'us-west-1': 'ami-2'
+            }
+        })
+
+        failure_result = (
+            1,
+            {
+                'tests': [{'outcome': 'failed', 'name': 'test1'}],
+                'summary': {'passed': 0, 'num_tests': 1},
+                'info': {'instance': 'i-1'}
+            }
+        )
+        mock_test_image.side_effect = [failure_result, Exception("Should not be called")]
+
+        job.run_job()
+
+        assert mock_test_image.call_count == 1
+        args, kwargs = mock_test_image.call_args
+        assert kwargs['region'] == 'us-east-2'
+
+        assert mock_cleanup_image.call_count == 2
+
     @patch('mash.services.test.ec2_job.create_ssh_key_pair')
     def test_ec2_skip_test(
         self,
