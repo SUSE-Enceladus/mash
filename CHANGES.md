@@ -1,7 +1,13 @@
+v16.3.0 (2026-03-09)
+====================
+
+- Skips test in other AWS partitions if some test already failed
+
 v16.2.0 (2026-03-02)
 ====================
 
 - Improves error message if test_preparation service is not running
+- Includes config param to limit the amount of different instance configs tested
 
 v16.1.1 (2026-02-26)
 ====================
