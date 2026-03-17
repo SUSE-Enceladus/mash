@@ -287,6 +287,15 @@ cloud:
     max_instance_tests: 3
 test:
   img_proof_timeout: 600
+download:
+  additional_file_extensions:
+    - cdx.json
+    - spdx.json
+    - packages
+  additional_prefixed_files:
+    ChangeLog.:
+      - txt
+      - json
 upload:
   azure:
     max_retry_attempts: 5

@@ -53,7 +53,7 @@ BuildRequires:  %{pythons}-Flask-SQLAlchemy
 BuildRequires:  %{pythons}-Flask-Migrate
 BuildRequires:  %{pythons}-flask-jwt-extended
 BuildRequires:  %{pythons}-requests
-BuildRequires:  python-obs-img-utils >= 1.0.0
+BuildRequires:  python-obs-img-utils >= 1.12.0
 BuildRequires:  %{pythons}-oci-sdk
 BuildRequires:  python-gceimgutils >= 1.3.0
 BuildRequires:  python-aliyun-img-utils >= 1.4.0
@@ -79,7 +79,7 @@ Requires:       %{pythons}-Flask-SQLAlchemy
 Requires:       %{pythons}-Flask-Migrate
 Requires:       %{pythons}-flask-jwt-extended
 Requires:       %{pythons}-requests
-Requires:       python-obs-img-utils >= 1.0.0
+Requires:       python-obs-img-utils >= 1.12.0
 Requires:       %{pythons}-oci-sdk
 Requires:       python-gceimgutils >= 1.3.0
 Requires:       python-aliyun-img-utils >= 1.4.0

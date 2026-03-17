@@ -5,7 +5,7 @@ from mash.services.download_service import main
 
 
 class TestDownload(object):
-    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.DownloadConfig')
     @patch('mash.services.download_service.DownloadService')
     def test_main(self, mock_DownloadService, mock_config):
         config = Mock()
@@ -17,7 +17,7 @@ class TestDownload(object):
             config=config
         )
 
-    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.DownloadConfig')
     @patch('mash.services.download_service.DownloadService')
     @patch('sys.exit')
     def test_main_mash_error(
@@ -27,7 +27,7 @@ class TestDownload(object):
         main()
         mock_exit.assert_called_once_with(1)
 
-    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.DownloadConfig')
     @patch('mash.services.download_service.DownloadService')
     @patch('sys.exit')
     def test_main_keyboard_interrupt(
@@ -37,7 +37,7 @@ class TestDownload(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.DownloadConfig')
     @patch('mash.services.download_service.DownloadService')
     @patch('sys.exit')
     def test_main_system_exit(
@@ -47,7 +47,7 @@ class TestDownload(object):
         main()
         mock_exit.assert_called_once_with(0)
 
-    @patch('mash.services.download_service.BaseConfig')
+    @patch('mash.services.download_service.DownloadConfig')
     @patch('mash.services.download_service.DownloadService')
     @patch('sys.exit')
     def test_main_unexpected_error(

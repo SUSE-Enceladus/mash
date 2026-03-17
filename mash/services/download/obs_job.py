@@ -241,6 +241,44 @@ class OBSDownloadJob(object):
         try:
             # Force parse of metadata file to get build time
             self.downloader.packages
+            try:
+                # Download any metadata package specified in config
+                # Files with image name and different extension
+                for file_extension in \
+                        self.config.get_download_additional_file_extensions():
+                    try:
+                        self.downloader.download_metadata_file(
+                            ext=file_extension
+                        )
+                    except Exception:
+                        self.log_callback.info(
+                            'Unable to download file with extension:'
+                            ' {0}'.format(
+                                file_extension
+                            )
+                        )
+                # Files with prefix and extension
+                for prefix, extensions in \
+                        self.config.get_download_additional_prefixed_files().items():  # NOQA
+                    for extension in extensions:
+                        try:
+                            self.downloader.download_metadata_file(
+                                prefix=prefix,
+                                ext=extension
+                            )
+                        except Exception:
+                            self.log_callback.info(
+                                'Unable to download file with prefix {0} '
+                                'and extension {1}'.format(
+                                    prefix,
+                                    extension
+                                )
+                            )
+            except Exception:
+                # assure we don't block the download if something goes wrong
+                # with metadata files downloads
+                pass
+
             image_source = self.downloader.get_image()
             self.log_callback.info(
                 'Downloaded: {0}'.format(image_source)
