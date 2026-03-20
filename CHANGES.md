@@ -1,3 +1,9 @@
+v16.4.0 (2026-03-20)
+====================
+
+- Implements the option to download additional metadata files from OBS in the
+ download service
+
 v16.3.0 (2026-03-09)
 ====================
 
