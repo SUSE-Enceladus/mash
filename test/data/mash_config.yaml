@@ -156,6 +156,15 @@ cloud:
       gvnic_enabled:
         - test_gvnic
     max_instance_tests: 5
+download:
+  additional_file_extensions:
+    - cdx.json
+    - spdx.json
+    - packages
+  additional_prefixed_files:
+    ChangeLog.:
+      - txt
+      - json
 test:
   img_proof_timeout: 600
 upload:

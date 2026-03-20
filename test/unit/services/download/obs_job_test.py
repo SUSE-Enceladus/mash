@@ -9,7 +9,7 @@ import dateutil.parser
 from apscheduler.events import EVENT_JOB_SUBMITTED
 
 from mash.services.download.obs_job import OBSDownloadJob
-from mash.services.base_config import BaseConfig
+from mash.services.download.config import DownloadConfig
 from mash.mash_exceptions import MashImageDownloadException
 
 
@@ -35,7 +35,7 @@ class TestOBSDownloadJob(object):
             'disallow_licenses': ['MIT'],
             'disallow_packages': ['fake']
         }
-        config = BaseConfig('./test/data/mash_config.yaml')
+        config = DownloadConfig('./test/data/mash_config.yaml')
 
         self.download_result = OBSDownloadJob(job_config, config)
         self.download_result.set_log_handler(self.log_callback)
@@ -121,6 +121,49 @@ class TestOBSDownloadJob(object):
         self.downloader.get_image.return_value = 'new-image.xz'
         self.download_result._update_image_status()
         mock_result_callback.assert_called_once_with()
+        assert self.downloader.download_metadata_file.call_args_list == [
+            call(ext='cdx.json'),
+            call(ext='spdx.json'),
+            call(ext='packages'),
+            call(prefix='ChangeLog.', ext='txt'),
+            call(prefix='ChangeLog.', ext='json')
+        ]
+
+    @patch.object(OBSDownloadJob, '_result_callback')
+    def test_update_image_status_metadata_exception(
+        self,
+        mock_result_callback
+    ):
+        self.downloader.download_metadata_file.side_effect = Exception(
+            'request error'
+        )
+        self.downloader.get_image.return_value = 'new-image.xz'
+        self.download_result._update_image_status()
+        mock_result_callback.assert_called_once_with()
+        assert self.downloader.download_metadata_file.call_args_list == [
+            call(ext='cdx.json'),
+            call(ext='spdx.json'),
+            call(ext='packages'),
+            call(prefix='ChangeLog.', ext='txt'),
+            call(prefix='ChangeLog.', ext='json')
+        ]
+        assert self.log_callback.info.call_args_list == [
+            call('Job running'),
+            call('Unable to download file with extension: cdx.json'),
+            call('Unable to download file with extension: spdx.json'),
+            call('Unable to download file with extension: packages'),
+            call(
+                'Unable to download file with prefix ChangeLog. '
+                'and extension txt'
+            ),
+            call(
+                'Unable to download file with prefix ChangeLog. '
+                'and extension json'
+            ),
+            call('Downloaded: new-image.xz'),
+            call('Job status: success'),
+            call('Job done')
+        ]
 
     @patch.object(OBSDownloadJob, '_result_callback')
     def test_update_image_status_raises(
@@ -153,7 +196,7 @@ class TestOBSDownloadJob(object):
         )
 
     def test_required_params(self):
-        config = BaseConfig('./test/data/mash_config.yaml')
+        config = DownloadConfig('./test/data/mash_config.yaml')
         test_params = [
             (
                 {

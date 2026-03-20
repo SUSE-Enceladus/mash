@@ -21,7 +21,7 @@ import traceback
 
 # project
 from mash.mash_exceptions import MashException
-from mash.services.base_config import BaseConfig
+from mash.services.download.config import DownloadConfig
 from mash.services.download.service import DownloadService
 
 
@@ -36,7 +36,7 @@ def main():
         # run service, enter main loop
         DownloadService(
             service_exchange='download',
-            config=BaseConfig()
+            config=DownloadConfig()
         )
     except MashException as e:
         # known exception
