@@ -1,3 +1,9 @@
+v16.5.0 (2026-03-27)
+====================
+
+- For azure shared image gallery jobs add the image to the marketplace
+  offer using the shared image gallery.
+
 v16.4.0 (2026-03-20)
 ====================
 
