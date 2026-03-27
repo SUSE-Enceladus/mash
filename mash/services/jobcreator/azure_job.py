@@ -71,11 +71,8 @@ class AzureJob(BaseJob):
             'publish_job': {
                 'offer_id': self.offer_id,
                 'cloud': self.cloud,
-                'sku': self.sku,
-                'account': self.cloud_account,
-                'region': self.region,
                 'container': self.source_container,
-                'resource_group': self.source_resource_group,
+                'sku': self.sku,
                 'storage_account': self.source_storage_account
             }
         }
@@ -84,9 +81,21 @@ class AzureJob(BaseJob):
             publish_message['publish_job']['generation_id'] = \
                 self.generation_id
 
-        if self.partner_center_account:
-            publish_message['publish_job']['partner_center_account'] = \
-                self.partner_center_account
+        if self.gallery_name:
+            publish_message['publish_job']['account'] = \
+                self.partner_center_account or self.cloud_account
+            publish_message['publish_job']['cloud'] = 'azure_sig'
+            publish_message['publish_job']['gallery_name'] = self.gallery_name
+            publish_message['publish_job']['resource_group'] = \
+                self.gallery_resource_group or self.source_resource_group
+        else:
+            publish_message['publish_job']['account'] = self.cloud_account
+            publish_message['publish_job']['region'] = self.region
+            publish_message['publish_job']['resource_group'] = self.source_resource_group
+
+            if self.partner_center_account:
+                publish_message['publish_job']['partner_center_account'] = \
+                    self.partner_center_account
 
         publish_message['publish_job'].update(self.base_message)
 

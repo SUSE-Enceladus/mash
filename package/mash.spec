@@ -57,7 +57,7 @@ BuildRequires:  python-obs-img-utils >= 1.12.0
 BuildRequires:  %{pythons}-oci-sdk
 BuildRequires:  python-gceimgutils >= 1.3.0
 BuildRequires:  python-aliyun-img-utils >= 1.4.0
-BuildRequires:  python-azure-img-utils >= 2.0.0
+BuildRequires:  python-azure-img-utils >= 2.6.0
 BuildRequires:  python-aws-mp-utils
 BuildRequires:  %{pythons}-Werkzeug
 BuildRequires:  %{pythons}-jmespath
@@ -83,7 +83,7 @@ Requires:       python-obs-img-utils >= 1.12.0
 Requires:       %{pythons}-oci-sdk
 Requires:       python-gceimgutils >= 1.3.0
 Requires:       python-aliyun-img-utils >= 1.4.0
-Requires:       python-azure-img-utils >= 2.0.0
+Requires:       python-azure-img-utils >= 2.6.0
 Requires:       python-aws-mp-utils
 Requires:       %{pythons}-Werkzeug
 Requires:       %{pythons}-jmespath

@@ -372,14 +372,13 @@ class TestJobCreatorService(object):
         # Publish Job Doc
 
         data = json.loads(mock_publish.mock_calls[8][1][2])['publish_job']
-        check_base_attrs(data)
+        check_base_attrs(data, cloud=False)
+        assert data['cloud'] == 'azure_sig'
         assert data['offer_id'] == 'sles'
         assert data['sku'] == '123'
         assert data['generation_id'] == 'image-gen2'
         assert data['account'] == 'test-azure'
-        assert data['container'] == 'container1'
         assert data['resource_group'] == 'rg-1'
-        assert data['storage_account'] == 'sa1'
 
         # Deprecate Job Doc
 
