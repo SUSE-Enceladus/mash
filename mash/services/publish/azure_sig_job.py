@@ -59,7 +59,7 @@ class AzureSIGPublishJob(MashJob):
 
         accounts = [self.account]
 
-        self.request_credentials(accounts)
+        self.request_credentials(accounts, cloud='azure')
         credential = self.credentials[self.account]
 
         self.cloud_image_name = self.status_msg['cloud_image_name']
