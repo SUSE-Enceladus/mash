@@ -37,6 +37,7 @@ class EC2Job(BaseJob):
         self.use_root_swap = self.kwargs.get('use_root_swap', False)
         self.tpm_support = self.kwargs.get('tpm_support')
         self.entity_id = self.kwargs.get('entity_id')
+        self.entity_ids = self.kwargs.get('entity_ids')
         self.version_title = self.kwargs.get('version_title')
         self.release_notes = self.kwargs.get('release_notes')
         self.access_role_arn = self.kwargs.get('access_role_arn')
@@ -76,7 +77,8 @@ class EC2Job(BaseJob):
                 'deprecate_job': {
                     'cloud': 'ec2_mp',
                     'deprecate_regions': self.get_mp_deprecate_regions(),
-                    'entity_id': self.entity_id
+                    'entity_id': self.entity_id,
+                    'entity_ids': self.entity_ids
                 }
             }
         else:
@@ -121,6 +123,7 @@ class EC2Job(BaseJob):
                 'publish_job': {
                     'cloud': 'ec2_mp',
                     'entity_id': self.entity_id,
+                    'entity_ids': self.entity_ids,
                     'version_title': self.version_title,
                     'release_notes': self.release_notes,
                     'access_role_arn': self.access_role_arn,
