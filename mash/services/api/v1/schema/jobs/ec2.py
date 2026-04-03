@@ -50,6 +50,27 @@ ec2_job_account = {
                    'optional. If supplied region, root_swap_ami and '
                    'subnet will override the account default values.'
 }
+ec2_entity = {
+    'type': 'object',
+    'properties': {
+        'entity_id': string_with_example(
+            '12345678-1234-1234-1234-012345678912',
+            description='The marketplace entity identifier. This is expected '
+                        'to be a UUID format ID.'
+        ),
+        'catalog': {
+            'type': 'string',
+            'enum': ['AWSMarketplace', 'AWSMarketplace-aws-eusc'],
+            'example': 'AWSMarketplace',
+            'description': 'The catalog related to the request.'
+        }
+    },
+    'additionalProperties': False,
+    'required': ['entity_id', 'catalog'],
+    'description': 'EC2 marketplace entity to use for the job. '
+                   'This is where the images will be published.'
+}
+
 
 ec2_job_message = copy.deepcopy(base_job_message)
 ec2_job_message['properties']['share_with'] = {
@@ -128,6 +149,18 @@ ec2_job_message['properties']['entity_id'] = string_with_example(
     description='The marketplace entity identifier. This is expected '
                 'to be a UUID format ID.'
 )
+ec2_job_message['properties']['entity_ids'] = {
+    'type': 'array',
+    'items': ec2_entity,
+    'minItems': 1,
+    'example': [
+        {
+            'entity_id': '12345678-1234-1234-1234-012345678912',
+            'catalog': 'AWSMarketplace'
+        }
+    ],
+    'description': 'The marketplace entity identifiers.'
+}
 ec2_job_message['properties']['version_title'] = string_with_example(
     'openSUSE Leap 15.3 - v202220114',
     description='The unique marketplace version title which will be '

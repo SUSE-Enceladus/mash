@@ -251,8 +251,26 @@ def test_validate_ec2_job(
         validate_ec2_job(job_doc)
 
 
+@patch('mash.services.api.v1.utils.jobs.ec2.get_ec2_account')
+@patch('mash.services.api.v1.utils.jobs.ec2.get_ec2_helper_images')
 @patch.object(LocalProxy, '_get_current_object')
-def test_validate_mp_fields(mock_get_current_obj):
+def test_validate_mp_fields(
+    mock_get_current_obj,
+    mock_get_helper_images,
+    mock_get_ec2_account
+):
+    account = {
+        'region': 'us-east-100',
+        'name': 'acnt1',
+        'partition': 'aws',
+        'additional_regions': [
+            {
+                'name': 'us-east-100',
+                'helper_image': 'ami-987'
+            }
+        ]
+    }
+    mock_get_ec2_account.return_value = account
     app = Mock()
     app.config = {
         'SERVICE_NAMES': [
@@ -267,6 +285,7 @@ def test_validate_mp_fields(mock_get_current_obj):
         ]
     }
     mock_get_current_obj.return_value = app
+    mock_get_helper_images.return_value = {'us-east-99': 'ami-789'}
 
     job_doc = {
         'last_service': 'publish',
@@ -279,3 +298,68 @@ def test_validate_mp_fields(mock_get_current_obj):
 
     with raises(MashJobException):
         validate_ec2_job(job_doc)
+
+    # Validate exception raised with no entity field
+
+    job_doc = {
+        'last_service': 'publish',
+        'requesting_user': '1',
+        'cloud_account': 'acnt1',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'publish_in_marketplace': True,
+        'version_title': 'Version 123',
+        'access_role_arn': 'ar:123:aws',
+        'release_notes': 'Upgrade with zypper',
+        'os_name': 'SLES',
+        'os_version': '15SP5',
+        'usage_instructions': 'Login via SSH',
+        'recommended_instance_type': 't2.micro'
+    }
+
+    with raises(MashJobException):
+        validate_ec2_job(job_doc)
+
+    # Validate exception raised with both entity fields
+
+    job_doc = {
+        'last_service': 'publish',
+        'requesting_user': '1',
+        'cloud_account': 'acnt1',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'publish_in_marketplace': True,
+        'version_title': 'Version 123',
+        'access_role_arn': 'ar:123:aws',
+        'release_notes': 'Upgrade with zypper',
+        'os_name': 'SLES',
+        'os_version': '15SP5',
+        'usage_instructions': 'Login via SSH',
+        'recommended_instance_type': 't2.micro',
+        'entity_id': '213',
+        'entity_ids': {'catalog': 'AWSMarketplace', 'entity_id': '231'},
+    }
+
+    with raises(MashJobException):
+        validate_ec2_job(job_doc)
+
+    # Valid MP job
+
+    job_doc = {
+        'last_service': 'publish',
+        'requesting_user': '1',
+        'cloud_account': 'acnt1',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'publish_in_marketplace': True,
+        'version_title': 'Version 123',
+        'access_role_arn': 'ar:123:aws',
+        'release_notes': 'Upgrade with zypper',
+        'os_name': 'SLES',
+        'os_version': '15SP5',
+        'usage_instructions': 'Login via SSH',
+        'recommended_instance_type': 't2.micro',
+        'entity_id': '213'
+    }
+
+    validate_ec2_job(job_doc)
