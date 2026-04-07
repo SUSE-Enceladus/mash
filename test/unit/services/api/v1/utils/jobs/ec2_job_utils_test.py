@@ -235,8 +235,32 @@ def test_validate_ec2_job(
     }
 
     result = validate_ec2_job(job_doc)
-
     assert 'cloud_account' not in result
+
+    # Test doc with valid image tags
+    job_doc = {
+        'last_service': 'testing',
+        'requesting_user': '1',
+        'cloud_account': 'acnt1',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'image_tags': '[{"Key": "key", "Value": "value"}]'
+    }
+
+    result = validate_ec2_job(job_doc)
+
+    # Test doc with invalid image tags
+    job_doc = {
+        'last_service': 'testing',
+        'requesting_user': '1',
+        'cloud_account': 'acnt1',
+        'cloud_image_name': 'Test OEM Image',
+        'image_description': 'Description of an image',
+        'image_tags': 'Image tags'
+    }
+
+    with raises(MashJobException):
+        result = validate_ec2_job(job_doc)
 
     # Test doc with TPM and no uefi
     job_doc = {

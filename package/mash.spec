@@ -44,7 +44,7 @@ BuildRequires:  %{pythons}-PyJWT
 BuildRequires:  %{pythons}-amqpstorm >= 2.4.0
 BuildRequires:  %{pythons}-APScheduler >= 3.3.1
 BuildRequires:  %{pythons}-python-dateutil >= 2.6.0
-BuildRequires:  python-ec2imgutils >= 9.0.3
+BuildRequires:  python-ec2imgutils >= 10.0.5
 BuildRequires:  python-img-proof >= 7.14.0
 BuildRequires:  python-img-proof-tests >= 7.14.0
 BuildRequires:  %{pythons}-Flask
@@ -70,7 +70,7 @@ Requires:       %{pythons}-PyJWT
 Requires:       %{pythons}-amqpstorm >= 2.4.0
 Requires:       %{pythons}-APScheduler >= 3.3.1
 Requires:       %{pythons}-python-dateutil >= 2.6.0
-Requires:       python-ec2imgutils >= 9.0.3
+Requires:       python-ec2imgutils >= 10.0.5
 Requires:       python-img-proof >= 7.14.0
 Requires:       python-img-proof-tests >= 7.14.0
 Requires:       %{pythons}-Flask

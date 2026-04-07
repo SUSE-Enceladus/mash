@@ -201,6 +201,12 @@ ec2_job_message['properties']['upload_wait_count'] = {
     'description': 'Wait N-number of times for AWS operation timeout '
                    '(Default is 3). The wait time is 600 seconds each count.'
 }
+ec2_job_message['properties']['image_tags'] = string_with_example(
+    '[{"Key": "date", "Value": "20220202"}]',
+    description='A valid json list of tags as dictionaries. Each dictionary '
+                'requires a "Key" and "Value" representing the key and '
+                'value of the tag to apply to the image.',
+)
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},

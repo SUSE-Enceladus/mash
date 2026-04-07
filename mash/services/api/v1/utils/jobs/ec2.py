@@ -17,6 +17,7 @@
 #
 
 import copy
+import json
 
 from flask import current_app
 
@@ -160,6 +161,14 @@ def validate_ec2_job(job_doc):
             'NitroTPM support requires a UEFI compatible image. '
             'Ensure "uefi" is included in "boot_firmware" list.'
         )
+
+    if job_doc.get('image_tags'):
+        try:
+            json.loads(job_doc['image_tags'])
+        except json.decoder.JSONDecodeError:
+            raise MashJobException(
+                'The image tags option is required to be a valid json string.'
+            )
 
     job_doc = validate_job(job_doc)
 
