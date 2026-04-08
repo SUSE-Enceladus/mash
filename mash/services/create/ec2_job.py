@@ -76,6 +76,7 @@ class EC2CreateJob(MashJob):
         self.imds_version = self.job_config.get('imds_version', '')
         self.root_volume_size = self.job_config.get('root_volume_size', 10)
         self.upload_wait_count = self.job_config.get('upload_wait_count', 3)
+        self.image_tags = self.job_config.get('image_tags')
 
         # EC2 images only support one firmware
         self.boot_firmware = self.boot_firmware[0]
@@ -134,7 +135,8 @@ class EC2CreateJob(MashJob):
             'secret_key': None,
             'billing_codes': None,
             'log_callback': self.log_callback,
-            'boot_mode': self.boot_firmware
+            'boot_mode': self.boot_firmware,
+            'image_tags': self.image_tags
         }
 
         if self.tpm_support:

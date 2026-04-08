@@ -156,6 +156,7 @@ class TestAmazonCreateJob(object):
             vpc_subnet_id='subnet-123456789',
             wait_count=3,
             log_callback=self.job._log_callback,
+            image_tags=None,
             tpm_support='v2.0',
             boot_mode='uefi-preferred',
             imds_support='v2.0',
