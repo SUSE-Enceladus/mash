@@ -29,14 +29,17 @@ class TestEC2MPDeprecateJob(object):
                 'ssh_private_key': 'key123'
             }
         }
-        self.job.status_msg['add_version_doc'] = {
-            'ChangeType': 'AddDeliveryOptions',
-            'Entity': {
-                'Type': 'AmiProduct@1.0',
-                'Identifier': '123'
-            },
-            'Details': '{"new": "version"}'
+        self.job.status_msg['add_version_docs'] = {
+            '123': {
+                'ChangeType': 'AddDeliveryOptions',
+                'Entity': {
+                    'Type': 'AmiProduct@1.0',
+                    'Identifier': '123'
+                },
+                'Details': '{"new": "version"}'
+            }
         }
+        self.job.status_msg['change_set_ids'] = {}
         self.job._log_callback = Mock()
 
     def test_deprecate_ec2_missing_key(self):
@@ -86,11 +89,12 @@ class TestEC2MPDeprecateJob(object):
                     },
                     'Details': '{"DeliveryOptionIds": ["1234567-12345-23456-23456"]}'
                 }
-            ]
+            ],
+            catalog='AWSMarketplace'
         )
 
         assert self.job.status == 'success'
-        assert self.job.status_msg['change_set_id'] == '123'
+        assert self.job.status_msg['change_set_ids']['123'] == '123'
 
     @patch('mash.services.deprecate.ec2_mp_job.get_image')
     def test_deprecate_exception(

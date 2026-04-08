@@ -118,7 +118,6 @@ def convert_account_dict(accounts):
 
 def validate_mp_fields(job_doc):
     mp_fields = [
-        'entity_id',
         'version_title',
         'release_notes',
         'access_role_arn',
@@ -139,6 +138,18 @@ def validate_mp_fields(job_doc):
             'image and are missing in the job doc: {fields}'.format(
                 fields=', '.join(missing_mp_fields)
             )
+        )
+
+    if not (job_doc.get('entity_id') or job_doc.get('entity_ids')):
+        raise MashJobException(
+            'One of entity_id or entity_ids is required to publish a '
+            'marketplace image and both are missing in the job doc.'
+        )
+
+    if job_doc.get('entity_id') and job_doc.get('entity_ids'):
+        raise MashJobException(
+            'Only one of entity_id or entity_ids can be provided to publish '
+            'a marketplace image and both are in the job doc.'
         )
 
 
