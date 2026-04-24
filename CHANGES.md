@@ -1,3 +1,9 @@
+v16.7.0 (2026-04-24)
+====================
+
+- Change EC2 image tags option to be a list of dictionarys.
+  This allows for better data validation.
+
 v16.6.0 (2026-04-08)
 ====================
 
