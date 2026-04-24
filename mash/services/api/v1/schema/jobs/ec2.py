@@ -201,12 +201,32 @@ ec2_job_message['properties']['upload_wait_count'] = {
     'description': 'Wait N-number of times for AWS operation timeout '
                    '(Default is 3). The wait time is 600 seconds each count.'
 }
-ec2_job_message['properties']['image_tags'] = string_with_example(
-    '[{"Key": "date", "Value": "20220202"}]',
-    description='A valid json list of tags as dictionaries. Each dictionary '
-                'requires a "Key" and "Value" representing the key and '
-                'value of the tag to apply to the image.',
-)
+image_tag = {
+    'type': 'object',
+    'properties': {
+        'Key': string_with_example(
+            'date',
+            description='Name of cloud account as associated with the mash '
+                        'user account.'
+        ),
+        'Value': string_with_example(
+            '20220202',
+            description='Region to use for initial image creation.'
+        )
+    },
+    'additionalProperties': False,
+    'required': ['Key', 'Value'],
+    'description': 'A valid key value tag object. Each tag '
+                   'requires a "Key" and "Value" representing the key and '
+                   'value of the tag to apply to the image.'
+}
+ec2_job_message['properties']['image_tags'] = {
+    'type': 'array',
+    'items': image_tag,
+    'minItems': 1,
+    'example': [{'Key': 'date', 'Value': '20220202'}],
+    'description': 'A list of image tags to apply to the image at creation.'
+}
 ec2_job_message['anyOf'] = [
     {'required': ['cloud_account']},
     {'required': ['cloud_accounts']},
