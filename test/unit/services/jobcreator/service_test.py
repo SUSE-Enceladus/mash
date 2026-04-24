@@ -300,6 +300,7 @@ class TestJobCreatorService(object):
             job = json.load(job_doc)
 
         job['notification_email'] = 'test@fake.com'
+        job['publish_from_sig'] = True
         message = MagicMock()
         message.body = json.dumps(job)
         self.jobcreator._handle_service_message(message)

@@ -104,6 +104,13 @@ azure_job_message['properties']['gallery_resource_group'] = string_with_example(
                 'gallery is found. By default the source_resource_group '
                 'is used.'
 )
+azure_job_message['properties']['publish_from_sig'] = {
+    'type': 'boolean',
+    'example': True,
+    'description': 'If True the image version will be published to the '
+                   'offer in the Partner Center from the provided shared '
+                   'image gallery.'
+}
 
 azure_job_message['required'].append('cloud_account')
 azure_job_message['properties']['image']['example'] = \
