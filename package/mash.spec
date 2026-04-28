@@ -23,7 +23,7 @@
 %global _sitelibdir %{%{pythons}_sitelib}
 
 Name:           mash
-Version:        Version:        16.7.0
+Version:        Version:        16.8.0
 Release:        0
 Url:            https://github.com/SUSE-Enceladus/mash
 Summary:        Public Cloud Release Tool
