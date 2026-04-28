@@ -49,6 +49,7 @@ class AzureJob(BaseJob):
         self.gallery_name = self.kwargs.get('gallery_name')
         self.gallery_resource_group = self.kwargs.get('gallery_resource_group')
         self.partner_center_account = self.kwargs.get('partner_center_account')
+        self.publish_from_sig = self.kwargs.get('publish_from_sig', False)
 
     def get_deprecate_message(self):
         """
@@ -81,7 +82,7 @@ class AzureJob(BaseJob):
             publish_message['publish_job']['generation_id'] = \
                 self.generation_id
 
-        if self.gallery_name:
+        if self.gallery_name and self.publish_from_sig:
             publish_message['publish_job']['account'] = \
                 self.partner_center_account or self.cloud_account
             publish_message['publish_job']['cloud'] = 'azure_sig'
