@@ -1,3 +1,9 @@
+v16.8.0 (2026-04-28)
+====================
+
+- Add a flag to enable/disable publishingto partner center
+  from a shared image gallery.
+
 v16.7.0 (2026-04-24)
 ====================
 
