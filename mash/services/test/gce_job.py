@@ -64,7 +64,7 @@ class GCETestJob(MashJob):
         self.description = self.job_config.get('description')
         self.distro = self.job_config.get('distro', 'sles')
         self.instance_type = self.job_config.get('instance_type')
-        self.ssh_user = self.job_config.get('ssh_user', 'root')
+        self.ssh_user = self.job_config.get('ssh_user', 'gceuser')
         self.cleanup_images = self.job_config.get('cleanup_images')
         self.test_fallback_regions = self.job_config.get('test_fallback_regions')
         self.boot_firmware = self.job_config.get('boot_firmware', ['bios'])
