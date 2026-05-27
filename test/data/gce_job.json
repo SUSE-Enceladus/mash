@@ -24,6 +24,7 @@
   "notify": true,
   "guest_os_features": ["UEFI_COMPATIBLE"],
   "licenses": ["projects/project-123/global/licenses/123"],
+  "labels": {"key1": "value1", "key2": "value2"},
   "raw_image_upload_type": "s3bucket",
   "raw_image_upload_account": "account",
   "raw_image_upload_location": "location",
