@@ -80,3 +80,45 @@ def test_gce_job_test_message(mock_init):
 
     test_message = json.loads(job.get_test_message())
     assert test_message['test_job']['cleanup_images'] is True
+
+
+@patch.object(GCEJob, '__init__')
+def test_gce_job_create_message(mock_init):
+    mock_init.return_value = None
+
+    job = GCEJob({
+        'job_id': '123',
+        'cloud': 'gce',
+        'requesting_user': 'test-user',
+        'last_service': 'create',
+        'utctime': 'now',
+        'image': 'test-image',
+        'cloud_image_name': 'test-cloud-image',
+        'image_description': 'image description',
+        'distro': 'sles',
+        'download_url': 'https://download.here'
+    })
+    job.kwargs = {
+        'cloud_account': 'acnt1',
+        'bucket': 'images',
+        'cloud': 'gce',
+        'region': 'westus',
+        'testing_account': None,
+        'labels': {'foo': 'bar'}
+    }
+    job.cloud = 'gce'
+    job.image_description = 'image description'
+    job.cloud_architecture = 'x86_64'
+    job.base_message = {}
+
+    job.post_init()
+
+    create_message = json.loads(job.get_create_message())
+    assert create_message['create_job']['labels'] == {'foo': 'bar'}
+
+    # Default labels to None when not provided
+    del job.kwargs['labels']
+    job.post_init()
+
+    create_message = json.loads(job.get_create_message())
+    assert create_message['create_job']['labels'] is None

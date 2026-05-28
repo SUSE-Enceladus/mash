@@ -52,6 +52,14 @@ gce_job_message['properties']['licenses'] = {
     'example': ['projects/project-123/global/licenses/123'],
     'description': 'A list of applicable license URIs.'
 }
+gce_job_message['properties']['labels'] = {
+    'type': 'object',
+    'additionalProperties': {'type': 'string'},
+    'example': {'key1': 'value1', 'key2': 'value2'},
+    'description': 'A dictionary of key/value label pairs to apply to '
+                   'the image when creating it. Keys and values must be '
+                   'strings.'
+}
 gce_job_message['properties']['test_fallback_regions'] = {
     'type': 'array',
     'items': string_with_example('us-west1-a'),
