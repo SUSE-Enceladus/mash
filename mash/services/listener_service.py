@@ -20,7 +20,7 @@ import json
 import os
 import signal
 
-from amqpstorm import AMQPError
+from mash.utils.kombu_conn import AMQPError
 
 from apscheduler import events
 from apscheduler.jobstores.base import ConflictingIdError

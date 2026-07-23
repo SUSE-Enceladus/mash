@@ -18,7 +18,7 @@
 
 import sys
 
-from amqpstorm import Connection
+from mash.utils.kombu_conn import Connection
 from flask import current_app
 
 module = sys.modules[__name__]

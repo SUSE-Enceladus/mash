@@ -18,7 +18,7 @@
 
 import json
 
-from amqpstorm import Connection
+from mash.utils.kombu_conn import Connection
 
 from logging.handlers import SocketHandler
 

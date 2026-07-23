@@ -41,7 +41,7 @@ BuildRequires:  %{pythons}-boto3
 BuildRequires:  %{pythons}-cryptography >= 2.2.0
 BuildRequires:  %{pythons}-PyYAML
 BuildRequires:  %{pythons}-PyJWT
-BuildRequires:  %{pythons}-amqpstorm >= 2.4.0
+BuildRequires:  %{pythons}-kombu
 BuildRequires:  %{pythons}-APScheduler >= 3.3.1
 BuildRequires:  %{pythons}-python-dateutil >= 2.6.0
 BuildRequires:  python-ec2imgutils >= 10.0.5
@@ -67,7 +67,7 @@ Requires:       %{pythons}-boto3
 Requires:       %{pythons}-cryptography >= 2.2.0
 Requires:       %{pythons}-PyYAML
 Requires:       %{pythons}-PyJWT
-Requires:       %{pythons}-amqpstorm >= 2.4.0
+Requires:       %{pythons}-kombu
 Requires:       %{pythons}-APScheduler >= 3.3.1
 Requires:       %{pythons}-python-dateutil >= 2.6.0
 Requires:       python-ec2imgutils >= 10.0.5

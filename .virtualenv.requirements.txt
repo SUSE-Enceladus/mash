@@ -17,7 +17,7 @@ PyYAML
 PyJWT
 APScheduler
 python-dateutil>=2.6.0
-amqpstorm
+kombu
 ec2imgutils>=10.0.5
 img-proof>=7.14.0
 requests

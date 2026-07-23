@@ -18,7 +18,7 @@
 
 import logging
 
-from amqpstorm import Connection
+from mash.utils.kombu_conn import Connection
 
 # project
 from mash.log.filter import BaseServiceFilter

@@ -2,7 +2,7 @@ import pytest
 
 from unittest.mock import call, MagicMock, Mock, patch
 
-from amqpstorm import AMQPError
+from mash.utils.kombu_conn import AMQPError
 
 from apscheduler.jobstores.base import ConflictingIdError
 
