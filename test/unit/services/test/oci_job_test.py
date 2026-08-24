@@ -2,11 +2,12 @@ import pytest
 
 from unittest.mock import Mock, patch
 
-from mash.services.test.oci_job import OCITestJob
+from mash.services.test.oci_job import OCITestJob, HAS_OCI
 from mash.mash_exceptions import MashTestException
 from mash.services.test.config import TestConfig
 
 
+@pytest.mark.skipif(not HAS_OCI, reason="oci package is not installed")
 class TestOCITestJob(object):
     def setup_method(self):
         self.job_config = {
@@ -176,3 +177,9 @@ class TestOCITestJob(object):
         job._log_callback.info.assert_called_once_with(
             'Skipping test service, no tests provided.'
         )
+
+    @patch('mash.services.test.oci_job.HAS_OCI', False)
+    def test_test_job_missing_oci_package(self):
+        with pytest.raises(MashTestException) as excinfo:
+            OCITestJob(self.job_config, self.config)
+        assert "missing 'oci' package" in str(excinfo.value)

@@ -1,6 +1,12 @@
 import json
+import pytest
 
 from unittest.mock import patch
+
+try:
+    import oci  # noqa: F401
+except ImportError:
+    pytest.skip("oci package is not installed", allow_module_level=True)
 
 from mash.mash_exceptions import MashException
 

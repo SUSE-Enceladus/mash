@@ -41,6 +41,7 @@ BuildRequires:  %{pythons}-boto3
 BuildRequires:  %{pythons}-cryptography >= 2.2.0
 BuildRequires:  %{pythons}-PyYAML
 BuildRequires:  %{pythons}-PyJWT
+BuildRequires:  %{pythons}-pytz
 BuildRequires:  %{pythons}-amqpstorm >= 2.4.0
 BuildRequires:  %{pythons}-APScheduler >= 3.3.1
 BuildRequires:  %{pythons}-python-dateutil >= 2.6.0
@@ -54,7 +55,6 @@ BuildRequires:  %{pythons}-Flask-Migrate
 BuildRequires:  %{pythons}-flask-jwt-extended
 BuildRequires:  %{pythons}-requests
 BuildRequires:  python-obs-img-utils >= 1.12.0
-BuildRequires:  %{pythons}-oci-sdk
 BuildRequires:  python-gceimgutils >= 1.5.0
 BuildRequires:  python-aliyun-img-utils >= 1.4.0
 BuildRequires:  python-azure-img-utils >= 2.6.0
@@ -67,6 +67,7 @@ Requires:       %{pythons}-boto3
 Requires:       %{pythons}-cryptography >= 2.2.0
 Requires:       %{pythons}-PyYAML
 Requires:       %{pythons}-PyJWT
+Requires:       %{pythons}-pytz
 Requires:       %{pythons}-amqpstorm >= 2.4.0
 Requires:       %{pythons}-APScheduler >= 3.3.1
 Requires:       %{pythons}-python-dateutil >= 2.6.0
@@ -80,7 +81,6 @@ Requires:       %{pythons}-Flask-Migrate
 Requires:       %{pythons}-flask-jwt-extended
 Requires:       %{pythons}-requests
 Requires:       python-obs-img-utils >= 1.12.0
-Requires:       %{pythons}-oci-sdk
 Requires:       python-gceimgutils >= 1.5.0
 Requires:       python-aliyun-img-utils >= 1.4.0
 Requires:       python-azure-img-utils >= 2.6.0
@@ -90,6 +90,7 @@ Requires:       %{pythons}-jmespath
 Requires:       apache2
 Requires:       apache2-mod_wsgi-%{pythons}
 Requires(pre):  pwdutils
+Suggests:       %{pythons}-oci-sdk
 BuildArch:      noarch
 
 %description

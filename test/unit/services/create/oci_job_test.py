@@ -1,13 +1,15 @@
+import pytest
 from pytest import raises
 from unittest.mock import (
     MagicMock, Mock, patch
 )
 
-from mash.services.create.oci_job import OCICreateJob
+from mash.services.create.oci_job import OCICreateJob, HAS_OCI
 from mash.mash_exceptions import MashCreateException
 from mash.services.base_config import BaseConfig
 
 
+@pytest.mark.skipif(not HAS_OCI, reason="oci package is not installed")
 class TestOCICreateJob(object):
     def setup_method(self):
         self.config = BaseConfig(
@@ -76,3 +78,26 @@ class TestOCICreateJob(object):
         self.job.run_job()
 
         compute_composite_client.create_image_and_wait_for_state.call_count == 1
+
+    @patch('mash.services.create.oci_job.HAS_OCI', False)
+    def test_create_job_missing_oci_package(self):
+        job_doc = {
+            'id': '1',
+            'last_service': 'create',
+            'cloud': 'oci',
+            'requesting_user': 'user1',
+            'utctime': 'now',
+            'region': 'us-phoenix-1',
+            'account': 'test',
+            'bucket': 'images',
+            'cloud_image_name': 'sles-12-sp4-v20180909',
+            'image_description': 'description 20180909',
+            'oci_user_id': 'ocid1.user.oc1..',
+            'tenancy': 'ocid1.tenancy.oc1..',
+            'compartment_id': 'ocid1.compartment.oc1..',
+            'operating_system': 'SLES',
+            'operating_system_version': '12SP2'
+        }
+        with raises(MashCreateException) as excinfo:
+            OCICreateJob(job_doc, self.config)
+        assert "missing 'oci' package" in str(excinfo.value)

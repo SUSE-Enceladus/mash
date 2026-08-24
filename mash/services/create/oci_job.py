@@ -16,13 +16,23 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from oci.retry import RetryStrategyBuilder
-from oci.core import ComputeClient, ComputeClientCompositeOperations
-from oci.core.models import (
-    CreateImageDetails,
-    Image,
-    ImageSourceViaObjectStorageTupleDetails
-)
+try:
+    from oci.retry import RetryStrategyBuilder
+    from oci.core import ComputeClient, ComputeClientCompositeOperations
+    from oci.core.models import (
+        CreateImageDetails,
+        Image,
+        ImageSourceViaObjectStorageTupleDetails
+    )
+    HAS_OCI = True
+except ImportError:
+    RetryStrategyBuilder = None
+    ComputeClient = None
+    ComputeClientCompositeOperations = None
+    CreateImageDetails = None
+    Image = None
+    ImageSourceViaObjectStorageTupleDetails = None
+    HAS_OCI = False
 
 # project
 from mash.services.mash_job import MashJob
@@ -35,6 +45,10 @@ class OCICreateJob(MashJob):
     Implements VM image create in OCI.
     """
     def post_init(self):
+        if not HAS_OCI:
+            raise MashCreateException(
+                "Oracle OCI support is not enabled: missing 'oci' package."
+            )
         try:
             self.account = self.job_config['account']
             self.region = self.job_config['region']

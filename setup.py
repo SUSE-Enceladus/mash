@@ -22,6 +22,9 @@ config = {
     'author_email': 'public-cloud-dev@susecloud.net',
     'version': __VERSION__,
     'install_requires': requirements,
+    'extras_require': {
+        'oci': ['oci']
+    },
     'packages': ['mash'],
     'entry_points': {
         'console_scripts': [

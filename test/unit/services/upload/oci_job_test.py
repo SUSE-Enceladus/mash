@@ -1,13 +1,15 @@
+import pytest
 from pytest import raises
 from unittest.mock import (
     MagicMock, Mock, patch
 )
 
-from mash.services.upload.oci_job import OCIUploadJob
+from mash.services.upload.oci_job import OCIUploadJob, HAS_OCI
 from mash.mash_exceptions import MashUploadException
 from mash.services.upload.config import UploadConfig
 
 
+@pytest.mark.skipif(not HAS_OCI, reason="oci package is not installed")
 class TestOCIUploadJob(object):
     def setup_method(self):
         self.config = UploadConfig(
@@ -105,3 +107,24 @@ class TestOCIUploadJob(object):
 
         self.job._log_callback.info.assert_called_once_with('Image 0% uploaded.')
         assert self.job._total_bytes_transferred == 400
+
+    @patch('mash.services.upload.oci_job.HAS_OCI', False)
+    def test_upload_job_missing_oci_package(self):
+        job_doc = {
+            'id': '1',
+            'last_service': 'upload',
+            'cloud': 'oci',
+            'requesting_user': 'user1',
+            'utctime': 'now',
+            'region': 'us-phoenix-1',
+            'account': 'test',
+            'bucket': 'images',
+            'cloud_image_name': 'sles-12-sp4-v{date}',
+            'image_description': 'description 20200925',
+            'oci_user_id': 'ocid1.user.oc1..',
+            'tenancy': 'ocid1.tenancy.oc1..',
+            'use_build_time': True
+        }
+        with raises(MashUploadException) as excinfo:
+            OCIUploadJob(job_doc, self.config)
+        assert "missing 'oci' package" in str(excinfo.value)

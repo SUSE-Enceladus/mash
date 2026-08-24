@@ -18,7 +18,14 @@
 
 from unittest.mock import patch, Mock
 
+import pytest
 from pytest import raises
+
+try:
+    import oci  # noqa: F401
+    HAS_OCI = True
+except ImportError:
+    HAS_OCI = False
 
 from mash.mash_exceptions import MashJobException
 from mash.services.api.v1.utils.jobs.oci import validate_oci_job
@@ -26,6 +33,7 @@ from mash.services.api.v1.utils.jobs.oci import validate_oci_job
 from werkzeug.local import LocalProxy
 
 
+@pytest.mark.skipif(not HAS_OCI, reason="oci package is not installed")
 @patch.object(LocalProxy, '_get_current_object')
 @patch('mash.services.api.v1.utils.jobs.oci.get_services_by_last_service')
 @patch('mash.services.api.v1.utils.jobs.oci.get_oci_account')
@@ -88,3 +96,24 @@ def test_validate_oci_job(
     del job_doc['operating_system']
     with raises(MashJobException):
         validate_oci_job(job_doc)
+
+
+@patch('builtins.__import__')
+def test_validate_oci_job_missing_package(mock_import):
+    real_import = __import__
+
+    def side_effect(name, *args, **kwargs):
+        if name == 'oci':
+            raise ImportError("Mocked ImportError")
+        return real_import(name, *args, **kwargs)
+
+    mock_import.side_effect = side_effect
+
+    job_doc = {
+        'last_service': 'test',
+        'requesting_user': 1,
+        'cloud_account': 'acnt1'
+    }
+    with raises(MashJobException) as excinfo:
+        validate_oci_job(job_doc)
+    assert "missing 'oci' package" in str(excinfo.value)

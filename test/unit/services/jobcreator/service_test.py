@@ -1,4 +1,5 @@
 import json
+import pytest
 
 from pytest import raises
 from unittest.mock import MagicMock, Mock, patch
@@ -6,6 +7,12 @@ from unittest.mock import MagicMock, Mock, patch
 from mash.services.mash_service import MashService
 from mash.services.jobcreator.service import JobCreatorService
 from mash.utils.json_format import JsonFormat
+
+try:
+    import oci  # noqa: F401
+    HAS_OCI = True
+except ImportError:
+    HAS_OCI = False
 
 
 class TestJobCreatorService(object):
@@ -482,6 +489,7 @@ class TestJobCreatorService(object):
         assert data['old_cloud_image_name'] == 'old_new_image_123'
         assert data['account'] == 'test-gce'
 
+    @pytest.mark.skipif(not HAS_OCI, reason="oci package is not installed")
     @patch.object(JobCreatorService, '_publish')
     def test_jobcreator_handle_service_message_oci(self, mock_publish):
         def check_base_attrs(job_data, cloud=True):

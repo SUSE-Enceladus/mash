@@ -15,6 +15,7 @@ boto3
 cryptography
 PyYAML
 PyJWT
+pytz
 APScheduler
 python-dateutil>=2.6.0
 amqpstorm
@@ -22,7 +23,6 @@ ec2imgutils>=10.0.5
 img-proof>=7.14.0
 requests
 obs-img-utils>=1.12.0
-oci
 werkzeug
 aliyun-img-utils>=1.4.0
 azure-img-utils>=2.6.0
