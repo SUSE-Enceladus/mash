@@ -35,6 +35,12 @@ def create_job(job_doc):
     elif csp_name == CSP.gce:
         job_class = GCEJob
     elif csp_name == CSP.oci:
+        try:
+            import oci  # noqa: F401
+        except ImportError:
+            raise MashJobCreatorException(
+                "Oracle OCI support is not enabled: missing 'oci' package."
+            )
         job_class = OCIJob
     elif csp_name == CSP.aliyun:
         job_class = AliyunJob

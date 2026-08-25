@@ -18,7 +18,13 @@
 
 from os import stat
 
-from oci.object_storage import ObjectStorageClient, UploadManager
+try:
+    from oci.object_storage import ObjectStorageClient, UploadManager
+    HAS_OCI = True
+except ImportError:
+    ObjectStorageClient = None
+    UploadManager = None
+    HAS_OCI = False
 
 # project
 from mash.services.mash_job import MashJob
@@ -35,6 +41,10 @@ class OCIUploadJob(MashJob):
     Implements VM image upload to OCI
     """
     def post_init(self):
+        if not HAS_OCI:
+            raise MashUploadException(
+                "Oracle OCI support is not enabled: missing 'oci' package."
+            )
         self._image_size = 0
         self._total_bytes_transferred = 0
         self._next_percent = 0

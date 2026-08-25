@@ -28,6 +28,13 @@ def validate_oci_job(job_doc):
     """
     Update target_account_info for given job doc.
     """
+    try:
+        import oci  # noqa: F401
+    except ImportError:
+        raise MashJobException(
+            "Oracle OCI support is not enabled: missing 'oci' package."
+        )
+
     job_doc = validate_job(job_doc)
 
     user_id = job_doc['requesting_user']

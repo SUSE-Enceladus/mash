@@ -21,9 +21,17 @@ import os
 import random
 import traceback
 
-from oci.retry import RetryStrategyBuilder
-from oci.core import ComputeClient, ComputeClientCompositeOperations
-from oci.core.models import Image
+try:
+    from oci.retry import RetryStrategyBuilder
+    from oci.core import ComputeClient, ComputeClientCompositeOperations
+    from oci.core.models import Image
+    HAS_OCI = True
+except ImportError:
+    RetryStrategyBuilder = None
+    ComputeClient = None
+    ComputeClientCompositeOperations = None
+    Image = None
+    HAS_OCI = False
 
 from mash.mash_exceptions import MashTestException
 from mash.services.mash_job import MashJob
@@ -46,6 +54,10 @@ class OCITestJob(MashJob):
         """
         Post initialization method.
         """
+        if not HAS_OCI:
+            raise MashTestException(
+                "Oracle OCI support is not enabled: missing 'oci' package."
+            )
         try:
             self.account = self.job_config['account']
             self.region = self.job_config['region']
