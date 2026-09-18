@@ -156,6 +156,9 @@ cloud:
       gvnic_enabled:
         - test_gvnic
     max_instance_tests: 5
+  aliyun:
+    ignored_regions:
+      - cn-hongkong
 download:
   additional_file_extensions:
     - cdx.json

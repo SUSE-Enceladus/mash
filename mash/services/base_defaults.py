@@ -136,3 +136,7 @@ class Defaults(object):
     @staticmethod
     def get_oauth2_jwks_uri():
         return 'jwks'
+
+    @staticmethod
+    def get_aliyun_ignored_regions():
+        return []

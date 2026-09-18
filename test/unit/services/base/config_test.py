@@ -189,3 +189,10 @@ class TestBaseConfig(object):
         assert self.config.get_database_api_url() == 'http://localhost:5057/'
         assert self.empty_config.get_database_api_url() == \
             'http://localhost:5007/'
+
+    def test_get_aliyun_ignored_regions(self):
+        assert self.config.get_aliyun_ignored_regions() == ['cn-hongkong']
+
+    @patch.object(BaseConfig, 'get_cloud_data', lambda x: {})
+    def test_get_aliyun_ignored_regions_default(self):
+        assert self.config.get_aliyun_ignored_regions() == []

@@ -20,6 +20,7 @@ class TestAliyunDeprecateJob(object):
         }
 
         self.config = Mock()
+        self.config.get_aliyun_ignored_regions.return_value = ['region1']
         self.job = AliyunDeprecateJob(self.job_config, self.config)
         self.job._log_callback = Mock()
         self.job.credentials = {
@@ -43,6 +44,15 @@ class TestAliyunDeprecateJob(object):
         mock_aliyun_image.return_value = aliyun_image
         self.job.run_job()
 
+        mock_aliyun_image.assert_called_once_with(
+            '123456',
+            '654321',
+            'cn-beijing',
+            'images',
+            log_callback=self.job.log_callback,
+            ignored_regions=['region1']
+        )
+
         aliyun_image.deprecate_image.assert_called_once_with(
             'old-image-123',
             replacement_image='image_name_123'
@@ -62,6 +72,16 @@ class TestAliyunDeprecateJob(object):
         )
 
         self.job.run_job()
+
+        mock_aliyun_image.assert_called_once_with(
+            '123456',
+            '654321',
+            'cn-beijing',
+            'images',
+            log_callback=self.job.log_callback,
+            ignored_regions=['region1']
+        )
+
         self.job._log_callback.warning.assert_called_once_with(
             'Failed to deprecate old-image-123 in cn-beijing: Invalid credentials.'
         )
