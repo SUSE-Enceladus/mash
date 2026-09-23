@@ -20,6 +20,7 @@ class TestAliyunPublishJob(object):
         }
 
         self.config = Mock()
+        self.config.get_aliyun_ignored_regions.return_value = ['cn-hangzhou']
         self.job = AliyunPublishJob(self.job_config, self.config)
         self.job._log_callback = Mock()
         self.job.credentials = {
@@ -44,6 +45,15 @@ class TestAliyunPublishJob(object):
         aliyun_image.get_regions.return_value = ['cn-beijing']
         mock_aliyun_image.return_value = aliyun_image
         self.job.run_job()
+
+        mock_aliyun_image.assert_called_once_with(
+            '123456',
+            '654321',
+            'cn-beijing',
+            'images',
+            log_callback=self.job.log_callback,
+            ignored_regions=['cn-hangzhou']
+        )
 
         aliyun_image.publish_image.assert_called_once_with(
             'image_name_123',

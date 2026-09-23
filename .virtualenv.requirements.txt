@@ -24,7 +24,7 @@ img-proof>=7.14.0
 requests
 obs-img-utils>=1.12.0
 werkzeug
-aliyun-img-utils>=1.4.0
+aliyun-img-utils>=2.6.0
 azure-img-utils>=2.6.0
 jmespath
 gceimgutils>=1.5.0
