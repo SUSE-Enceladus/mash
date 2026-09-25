@@ -108,6 +108,7 @@ class OCIUploadJob(MashJob):
         object_name = ''.join([self.cloud_image_name, '.qcow2'])
         self._image_size = stat(self.status_msg['image_file']).st_size
 
+        self.start_upload_timing()
         with open(self.status_msg['image_file'], 'rb') as image_stream:
             upload_manager.upload_stream(
                 namespace,
@@ -116,6 +117,7 @@ class OCIUploadJob(MashJob):
                 image_stream,
                 progress_callback=self._progress_callback
             )
+        self.log_upload_throughput(self._image_size)
 
         self.status_msg['cloud_image_name'] = self.cloud_image_name
         self.status_msg['object_name'] = object_name

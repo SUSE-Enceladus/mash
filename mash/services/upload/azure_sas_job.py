@@ -18,6 +18,8 @@
 
 import re
 
+from os import stat
+
 from azure_img_utils.azure_image import AzureImage
 
 # project
@@ -69,6 +71,9 @@ class AzureSASUploadJob(MashJob):
             sas_token=build.group(3),
             log_callback=self.log_callback
         )
+        image_size = stat(self.status_msg['image_file']).st_size
+
+        self.start_upload_timing()
         azure_image.upload_image_blob(
             image_file=self.status_msg['image_file'],
             max_workers=self.config.get_azure_max_workers(),
@@ -76,6 +81,8 @@ class AzureSASUploadJob(MashJob):
             blob_name=self.blob_name,
             is_page_blob=True
         )
+        self.log_upload_throughput(image_size)
+
         self.log_callback.info(
             'Uploaded blob: {blob} using sas token.'.format(
                 blob=self.blob_name

@@ -17,6 +17,7 @@
 #
 
 import logging
+import time
 
 from mash.mash_exceptions import MashJobException
 from mash.services.status_levels import UNKOWN
@@ -38,6 +39,7 @@ class MashJob(object):
 
         self.config = config
         self.status_msg = {'status': UNKOWN, 'errors': []}
+        self._upload_start_time = None
 
         try:
             self.id = job_config['id']
@@ -194,3 +196,31 @@ class MashJob(object):
         Implementation in child class.
         """
         pass
+
+    def start_upload_timing(self):
+        """
+        Mark the start of an upload transfer for throughput reporting.
+        """
+        self._upload_start_time = time.monotonic()
+
+    def log_upload_throughput(self, total_bytes):
+        """
+        Log the mean upload throughput since start_upload_timing was called.
+        """
+        if self._upload_start_time is None:
+            return
+
+        elapsed_seconds = time.monotonic() - self._upload_start_time
+        self._upload_start_time = None
+
+        if elapsed_seconds <= 0:
+            return
+
+        mean_rate = (total_bytes / elapsed_seconds) / (1024 * 1024)
+        self.log_callback.info(
+            'Upload finished in {elapsed:.1f}s, '
+            'mean throughput: {rate:.2f} MB/s.'.format(
+                elapsed=elapsed_seconds,
+                rate=mean_rate
+            )
+        )

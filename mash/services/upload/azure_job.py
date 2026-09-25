@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from os import stat
+
 from azure_img_utils.azure_image import AzureImage
 
 # project
@@ -82,6 +84,9 @@ class AzureUploadJob(MashJob):
             log_callback=self.log_callback
         )
 
+        image_size = stat(self.status_msg['image_file']).st_size
+
+        self.start_upload_timing()
         azure_image.upload_image_blob(
             self.status_msg['image_file'],
             max_workers=self.config.get_azure_max_workers(),
@@ -89,6 +94,7 @@ class AzureUploadJob(MashJob):
             blob_name=blob_name,
             force_replace_image=self.force_replace_image
         )
+        self.log_upload_throughput(image_size)
 
         self.status_msg['cloud_image_name'] = self.cloud_image_name
         self.status_msg['blob_name'] = blob_name

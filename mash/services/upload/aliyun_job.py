@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from os import stat
+
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
@@ -107,11 +109,15 @@ class AliyunUploadJob(MashJob):
             )
             aliyun_image.delete_storage_blob(object_name)
 
+        image_size = stat(self.status_msg['image_file']).st_size
+
+        self.start_upload_timing()
         aliyun_image.upload_image_tarball(
             self.status_msg['image_file'],
             blob_name=object_name,
             progress_callback=self.progress_callback
         )
+        self.log_upload_throughput(image_size)
 
         self.status_msg['cloud_image_name'] = self.cloud_image_name
         self.status_msg['object_name'] = object_name

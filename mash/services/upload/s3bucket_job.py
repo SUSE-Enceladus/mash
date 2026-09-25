@@ -130,12 +130,14 @@ class S3BucketUploadJob(MashJob):
                 credentials['secret_access_key'], None
             )
 
+            self.start_upload_timing()
             client.upload_file(
                 self.status_msg['image_file'],
                 bucket_name,
                 key_name,
                 Callback=self._log_progress
             )
+            self.log_upload_throughput(self._image_size)
 
             self.status_msg['key_name'] = key_name
             self.status_msg['bucket_name'] = bucket_name
