@@ -71,11 +71,14 @@ class AzureRawUploadJob(MashJob):
             log_callback=self.log_callback
         )
 
+        total_bytes = 0
+        self.start_upload_timing()
         for extension in self.additional_uploads:
             upload_file_name = '.'.join(filter(None, [file_name, extension]))
             file_path = '.'.join(
                 filter(None, [self.status_msg['image_file'], extension])
             )
+            total_bytes += os.stat(file_path).st_size
 
             azure_image.upload_image_blob(
                 file_path,
@@ -85,6 +88,7 @@ class AzureRawUploadJob(MashJob):
                 is_page_blob=False,
                 expand_image=False
             )
+        self.log_upload_throughput(total_bytes)
 
         self.status_msg['blob_name'] = file_name
         self.log_callback.info(

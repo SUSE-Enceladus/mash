@@ -1,6 +1,7 @@
 from pytest import raises
 from unittest.mock import (
     MagicMock,
+    Mock,
     patch
 )
 
@@ -41,11 +42,16 @@ class TestAzureSASUploadJob(object):
         with raises(MashUploadException):
             AzureSASUploadJob(job_doc, self.config)
 
+    @patch('mash.services.upload.azure_sas_job.stat')
     @patch('mash.services.upload.azure_sas_job.AzureImage')
     @patch('builtins.open')
     def test_sas_upload_only(
-        self, mock_open, mock_azure_image
+        self, mock_open, mock_azure_image, mock_stat
     ):
+        image_info = Mock()
+        image_info.st_size = 400
+        mock_stat.return_value = image_info
+
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle
@@ -62,11 +68,16 @@ class TestAzureSASUploadJob(object):
             is_page_blob=True
         )
 
+    @patch('mash.services.upload.azure_sas_job.stat')
     @patch('mash.services.upload.azure_sas_job.AzureImage')
     @patch('builtins.open')
     def test_sas_upload(
-        self, mock_open, mock_azure_image
+        self, mock_open, mock_azure_image, mock_stat
     ):
+        image_info = Mock()
+        image_info.st_size = 400
+        mock_stat.return_value = image_info
+
         open_handle = MagicMock()
         open_handle.__enter__.return_value = open_handle
         mock_open.return_value = open_handle

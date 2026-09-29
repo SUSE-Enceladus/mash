@@ -1,6 +1,7 @@
 from pytest import raises
 from unittest.mock import (
     MagicMock,
+    Mock,
     patch
 )
 
@@ -75,13 +76,19 @@ class TestAzureUploadJob(object):
         with raises(MashUploadException):
             self.job.run_job()
 
+    @patch('mash.services.upload.azure_job.stat')
     @patch('mash.services.upload.azure_job.AzureImage')
     @patch('builtins.open')
     def test_upload(
         self,
         mock_open,
-        mock_azure_image
+        mock_azure_image,
+        mock_stat
     ):
+        image_info = Mock()
+        image_info.st_size = 400
+        mock_stat.return_value = image_info
+
         bsc = MagicMock()
         client = MagicMock()
         mock_azure_image.return_value = client

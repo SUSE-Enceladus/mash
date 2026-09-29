@@ -16,6 +16,8 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
+from os import stat
+
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
@@ -123,7 +125,11 @@ class GCEUploadJob(MashJob):
             project=project,
             log_callback=self.log_callback
         )
+        image_size = stat(self.status_msg['image_file']).st_size
+
+        self.start_upload_timing()
         uploader.upload_blob()
+        self.log_upload_throughput(image_size)
 
         self.status_msg['cloud_image_name'] = self.cloud_image_name
         self.status_msg['object_name'] = object_name

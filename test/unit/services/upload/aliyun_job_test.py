@@ -59,11 +59,17 @@ class TestAliyunUploadJob(object):
         with raises(MashUploadException):
             self.job.run_job()
 
+    @patch('mash.services.upload.aliyun_job.stat')
     @patch('mash.services.upload.aliyun_job.AliyunImage')
     def test_upload(
         self,
-        mock_aliyun_image
+        mock_aliyun_image,
+        mock_stat
     ):
+        image_info = Mock()
+        image_info.st_size = 400
+        mock_stat.return_value = image_info
+
         aliyun_image = MagicMock()
         mock_aliyun_image.return_value = aliyun_image
         aliyun_image.image_tarball_exists.return_value = False
