@@ -20,6 +20,7 @@ class TestAliyunReplicateJob(object):
         }
 
         self.config = Mock()
+        self.config.get_aliyun_ignored_regions.return_value = ['region1']
         self.job = AliyunReplicateJob(self.job_config, self.config)
         self.job._log_callback = Mock()
 
@@ -48,6 +49,15 @@ class TestAliyunReplicateJob(object):
 
         self.job.run_job()
 
+        mock_aliyun_image.assert_called_once_with(
+            '123456',
+            '654321',
+            'cn-beijing',
+            'images',
+            log_callback=self.job.log_callback,
+            ignored_regions=['region1']
+        )
+
         self.job._log_callback.info.assert_called_once_with(
             'Replicating My image'
         )
@@ -65,6 +75,15 @@ class TestAliyunReplicateJob(object):
         aliyun_image.wait_on_compute_image.side_effect = Exception('Broken!')
 
         self.job.run_job()
+
+        mock_aliyun_image.assert_called_once_with(
+            '123456',
+            '654321',
+            'cn-beijing',
+            'images',
+            log_callback=self.job.log_callback,
+            ignored_regions=['region1']
+        )
 
         self.job._log_callback.info.assert_called_once_with(
             'Replicating My image'

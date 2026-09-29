@@ -285,6 +285,9 @@ cloud:
       IntelTdx_enabled:
         - test_sles_tdx
     max_instance_tests: 3
+  aliyun:
+    ignored_regions:
+      - cn-fuzhou
 test:
   img_proof_timeout: 600
 download:

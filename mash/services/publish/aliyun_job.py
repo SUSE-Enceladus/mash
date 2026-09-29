@@ -60,7 +60,8 @@ class AliyunPublishJob(MashJob):
             credentials['access_secret'],
             self.region,
             self.bucket,
-            log_callback=self.log_callback
+            log_callback=self.log_callback,
+            ignored_regions=self.config.get_aliyun_ignored_regions()
         )
         regions = aliyun_image.get_regions()
 

@@ -138,6 +138,16 @@ class BaseConfig(object):
 
         return data
 
+    def get_aliyun_ignored_regions(self):
+        """
+        Return the list of aliyun regions to ignore for aliyun jobs.
+
+        :rtype: list of strings
+        """
+        aliyun_cloud_info = self.get_cloud_data().get('aliyun', {})
+        return aliyun_cloud_info.get('ignored_regions') or \
+            Defaults.get_aliyun_ignored_regions()
+
     def get_service_names(self):
         """
         Return a list of all service names.
