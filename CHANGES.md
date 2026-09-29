@@ -1,3 +1,9 @@
+v16.12.0 (2026-09-29)
+====================
+
+- Includes a new configuration parameter to allow ignoring Alibaba regions
+- Logs the upload throughput for the upload service
+
 v16.11.0 (2026-08-25)
 ====================
 
