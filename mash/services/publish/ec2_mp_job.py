@@ -42,7 +42,6 @@ class EC2MPPublishJob(MashJob):
         """
         try:
             self.publish_regions = self.job_config['publish_regions']
-            self.entity_id = self.job_config['entity_id']
             self.version_title = self.job_config['version_title']
             self.access_role_arn = self.job_config['access_role_arn']
             self.release_notes = self.job_config['release_notes']
@@ -67,6 +66,21 @@ class EC2MPPublishJob(MashJob):
             False
         )
 
+        if self.job_config.get('entity_id'):
+            self.entity_ids = [
+                {
+                    'entity_id': self.job_config['entity_id'],
+                    'catalog': 'AWSMarketplace'
+                }
+            ]
+        elif self.job_config.get('entity_ids'):
+            self.entity_ids = self.job_config['entity_ids']
+        else:
+            raise MashPublishException(
+                'EC2 MP publish Jobs require either an entity_id '
+                'key or entity_ids key in the job doc.'
+            )
+
     def run_job(self):
         """
         Publish image and update status.
@@ -86,6 +100,8 @@ class EC2MPPublishJob(MashJob):
         for account, region in self.publish_regions.items():
             creds = self.credentials[account]
             ami_id = self.status_msg['source_regions'][region]
+            self.status_msg['change_set_ids'] = {}
+            self.status_msg['add_version_docs'] = {}
 
             self.share_image(
                 region,
@@ -93,40 +109,44 @@ class EC2MPPublishJob(MashJob):
                 creds['secret_access_key']
             )
 
-            change_doc = create_add_version_change_doc(
-                self.entity_id,
-                self.version_title,
-                ami_id,
-                self.access_role_arn,
-                self.release_notes,
-                self.os_name,
-                self.os_version,
-                self.usage_instructions,
-                self.recommended_instance_type,
-                self.ssh_user
-            )
-
-            if self.submit_change_request:
-                session = get_session(
-                    creds['access_key_id'],
-                    creds['secret_access_key'],
-                    region
+            for entity in self.entity_ids:
+                entity_id = entity['entity_id']
+                change_doc = create_add_version_change_doc(
+                    entity_id,
+                    self.version_title,
+                    ami_id,
+                    self.access_role_arn,
+                    self.release_notes,
+                    self.os_name,
+                    self.os_version,
+                    self.usage_instructions,
+                    self.recommended_instance_type,
+                    self.ssh_user
                 )
 
-                response = start_mp_change_set(
-                    session.client('marketplace-catalog'),
-                    change_set=[change_doc]
-                )
-
-                self.status_msg['change_set_id'] = response.get('ChangeSetId')
-                self.log_callback.info(
-                    'Marketplace change set submitted. Change set id: '
-                    '{change_set}'.format(
-                        change_set=self.status_msg['change_set_id']
+                if self.submit_change_request:
+                    session = get_session(
+                        creds['access_key_id'],
+                        creds['secret_access_key'],
+                        region
                     )
-                )
-            else:
-                self.status_msg['add_version_doc'] = change_doc
+
+                    response = start_mp_change_set(
+                        session.client('marketplace-catalog'),
+                        change_set=[change_doc],
+                        catalog=entity['catalog']
+                    )
+
+                    change_set_id = response.get('ChangeSetId')
+                    self.status_msg['change_set_ids'][entity_id] = change_set_id
+                    self.log_callback.info(
+                        'Marketplace change set submitted. Change set id: '
+                        '{change_set}'.format(
+                            change_set=change_set_id
+                        )
+                    )
+                else:
+                    self.status_msg['add_version_docs'][entity_id] = change_doc
 
     def share_image(self, region, access_key_id, secret_access_key):
         publish = EC2PublishImage(

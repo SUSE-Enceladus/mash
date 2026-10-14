@@ -42,7 +42,6 @@ class EC2MPDeprecateJob(MashJob):
         """
         try:
             self.deprecate_regions = self.job_config['deprecate_regions']
-            self.entity_id = self.job_config['entity_id']
         except KeyError as error:
             raise MashDeprecateException(
                 'EC2 deprecate Jobs require a(n) {0} '
@@ -54,6 +53,21 @@ class EC2MPDeprecateJob(MashJob):
         self.old_cloud_image_name = self.job_config.get(
             'old_cloud_image_name'
         )
+
+        if self.job_config.get('entity_id'):
+            self.entity_ids = [
+                {
+                    'entity_id': self.job_config['entity_id'],
+                    'catalog': 'AWSMarketplace'
+                }
+            ]
+        elif self.job_config.get('entity_ids'):
+            self.entity_ids = self.job_config['entity_ids']
+        else:
+            raise MashDeprecateException(
+                'EC2 MP publish Jobs require either an entity_id '
+                'key or entity_ids key in the job doc.'
+            )
 
     def run_job(self):
         """
@@ -81,28 +95,35 @@ class EC2MPDeprecateJob(MashJob):
                 session.client('ec2'),
                 self.old_cloud_image_name
             )
-            delivery_option_id = get_image_delivery_option_id(
-                mp_client,
-                self.entity_id,
-                old_image['ImageId']
-            )
-            restrict_version_doc = create_restrict_version_change_doc(
-                entity_id=self.entity_id,
-                delivery_option_id=delivery_option_id
-            )
 
-            response = start_mp_change_set(
-                mp_client,
-                change_set=[
-                    self.status_msg.pop('add_version_doc'),
-                    restrict_version_doc
-                ]
-            )
-
-            self.status_msg['change_set_id'] = response.get('ChangeSetId')
-            self.log_callback.info(
-                'Marketplace change set submitted. Change set id: '
-                '{change_set}'.format(
-                    change_set=self.status_msg['change_set_id']
+            for entity in self.entity_ids:
+                entity_id = entity['entity_id']
+                delivery_option_id = get_image_delivery_option_id(
+                    mp_client,
+                    entity_id,
+                    old_image['ImageId']
                 )
-            )
+                restrict_version_doc = create_restrict_version_change_doc(
+                    entity_id=entity_id,
+                    delivery_option_id=delivery_option_id
+                )
+
+                response = start_mp_change_set(
+                    mp_client,
+                    change_set=[
+                        self.status_msg['add_version_docs'][entity_id],
+                        restrict_version_doc
+                    ],
+                    catalog=entity['catalog']
+                )
+
+                change_set_id = response.get('ChangeSetId')
+                self.status_msg['change_set_ids'][entity_id] = change_set_id
+                self.log_callback.info(
+                    'Marketplace change set submitted. Change set id: '
+                    '{change_set}'.format(
+                        change_set=change_set_id
+                    )
+                )
+
+            self.status_msg.pop('add_version_docs')
