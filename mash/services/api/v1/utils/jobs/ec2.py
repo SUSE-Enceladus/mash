@@ -38,67 +38,34 @@ def get_ec2_regions_by_partition(partition):
     return regions
 
 
-def get_ec2_helper_images():
-    """
-    Get helper image data for EC2 from config file.
-    """
-    helper_images = copy.deepcopy(
-        current_app.config['CLOUD_DATA']['ec2']['helper_images']
-    )
-    return helper_images
-
-
 def add_target_ec2_account(
     account,
     accounts,
     cloud_accounts,
-    helper_images,
-    use_root_swap=None,
     skip_replication=False
 ):
     """
     Update job with account information.
 
     - Append any additional regions
-    - Update ami for root swap if use_root_swap set
     """
     job_doc_data = cloud_accounts.get(account['name'], {})
     region_name = job_doc_data.get('region') or account.get('region')
-    subnet = job_doc_data.get('subnet') or account.get('subnet')
     test_regions = []
     if skip_replication:
         regions = [region_name]
-        if account.get('additional_regions'):  # In case an additional region is used
-            for region in account['additional_regions']:
-                helper_images[region['name']] = region['helper_image']
-        if account.get('test_regions', []):
-            test_regions = account.get('test_regions')
     else:
         regions = get_ec2_regions_by_partition(account['partition'])
-        if account.get('additional_regions'):
-            for region in account['additional_regions']:
-                helper_images[region['name']] = region['helper_image']
-                regions.append(region['name'])
-        if account.get('test_regions', []):
-            test_regions = account.get('test_regions')
+        for region in account.get('additional_regions') or []:
+            regions.append(region['name'])
 
-    if use_root_swap:
-        try:
-            helper_image = job_doc_data['root_swap_ami']
-        except KeyError:
-            raise MashJobException(
-                'root_swap_ami is required for account {0},'
-                ' when using root swap.'.format(account['name'])
-            )
-    else:
-        helper_image = helper_images[region_name]
+    if account.get('test_regions', []):
+        test_regions = account.get('test_regions')
 
     accounts[region_name] = {
         'account': account['name'],
         'partition': account['partition'],
         'target_regions': list(set(regions)),  # Remove any duplicates
-        'helper_image': helper_image,
-        'subnet': subnet,
         'test_regions': test_regions
     }
 
@@ -141,6 +108,34 @@ def validate_mp_fields(job_doc):
         )
 
 
+def remove_deprecated_ec2_settings(job_doc):
+    """
+    Remove the settings that only configured the helper instance.
+
+    Images are written directly to an EBS snapshot, no helper instance
+    is used anymore. The settings are still accepted so existing clients
+    keep working but they are ignored.
+    """
+    deprecated = []
+
+    for key in ('use_root_swap', 'launch_inst_type'):
+        if key in job_doc:
+            del job_doc[key]
+            deprecated.append(key)
+
+    for cloud_account in job_doc.get('cloud_accounts', []):
+        for key in ('root_swap_ami', 'subnet'):
+            if key in cloud_account:
+                del cloud_account[key]
+                deprecated.append('cloud_accounts.{0}'.format(key))
+
+    if deprecated:
+        current_app.logger.warning(
+            'The following EC2 job settings are deprecated and ignored: '
+            '{0}'.format(', '.join(sorted(set(deprecated))))
+        )
+
+
 def validate_ec2_job(job_doc):
     """
     Validate job.
@@ -154,18 +149,20 @@ def validate_ec2_job(job_doc):
         job_doc['skip_replication'] = True  # No replication for MP images
         validate_mp_fields(job_doc)
 
-    boot_firmware = job_doc.get('boot_firmware', ['uefi-preferred'])
-    if job_doc.get('tpm_support') and 'uefi' not in boot_firmware:
+    # The create service uses the first boot firmware entry only and AWS
+    # refuses TPM support for any boot mode other than uefi.
+    boot_firmware = job_doc.get('boot_firmware') or ['uefi-preferred']
+    if job_doc.get('tpm_support') and boot_firmware[0] != 'uefi':
         raise MashJobException(
             'NitroTPM support requires a UEFI compatible image. '
-            'Ensure "uefi" is included in "boot_firmware" list.'
+            'Ensure "uefi" is the first item in the "boot_firmware" list.'
         )
 
     job_doc = validate_job(job_doc)
+    remove_deprecated_ec2_settings(job_doc)
 
     user_id = job_doc['requesting_user']
 
-    helper_images = get_ec2_helper_images()
     cloud_accounts = convert_account_dict(job_doc.get('cloud_accounts', []))
 
     accounts = {}
@@ -190,8 +187,6 @@ def validate_ec2_job(job_doc):
                 account,
                 accounts,
                 cloud_accounts,
-                helper_images,
-                job_doc.get('use_root_swap'),
                 job_doc.get('skip_replication', False)
             )
 
@@ -207,15 +202,3 @@ def validate_ec2_job(job_doc):
     job_doc['target_account_info'] = accounts
 
     return job_doc
-
-
-def get_subnet_for_region(subnets, region_name):
-    """
-    Provides the subnet configured in some account for a specific region
-    """
-    subnet_name = ''
-    for subnet in subnets:
-        if subnet['region'] == region_name:
-            subnet_name = subnet['subnet']
-            break
-    return subnet_name

@@ -19,7 +19,7 @@ pytz
 APScheduler
 python-dateutil>=2.6.0
 amqpstorm
-ec2imgutils>=10.0.5
+ec2imgutils>=10.1.0
 img-proof>=7.14.0
 requests
 obs-img-utils>=1.12.0

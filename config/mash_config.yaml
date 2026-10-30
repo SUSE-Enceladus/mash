@@ -62,35 +62,6 @@ cloud:
         - us-gov-west-1
       aws-eusc:
         - eusc-de-east-1
-    helper_images:
-      af-south-1: ami-093ca241e4c72c205
-      ap-east-1: ami-0e992f1e63814db10
-      ap-northeast-1: ami-0828596b82405edd7
-      ap-northeast-2: ami-087af0192368bc87c
-      ap-southeast-1: ami-0ba98499caf94125a
-      ap-southeast-2: ami-0849cc8fe4ceaf988
-      ap-southeast-3: ami-0cf40308729b83366
-      ap-south-1: ami-0400aca7799d8cf19
-      ca-central-1: ami-0eb3718c42cb70e52
-      cn-north-1: ami-0eb22e95b55ff11f8
-      cn-northwest-1: ami-0e9ed4545da2f2c75
-      eu-central-1: ami-0f7585ae7a0d9a25a
-      eu-north-1: ami-0f58e72599cb99a79
-      eu-south-1: ami-07b2af763a8b958f3
-      eu-west-1: ami-047aad752a426ed48
-      eu-west-2: ami-0dfe6158087b5c0ac
-      eu-west-3: ami-064c70d04ad799d5e
-      il-central-1: ami-056be49b9b86bc189
-      me-central-1: ami-0384959b181e3642a
-      me-south-1: ami-0a31e56929248acca
-      sa-east-1: ami-0df67b3c17f090c24
-      us-east-1: ami-0d52ddcdf3a885741
-      us-east-2: ami-04148302a14f7d12b
-      us-gov-east-1: ami-05146fa6cbcea4b79
-      us-gov-west-1: ami-0e8f52046c02613e9
-      us-west-1: ami-0ee3e1e65adeef858
-      us-west-2: ami-0ec021424fb596d6c
-      eusc-de-east-1: ami-0ec021424fb596d6c
     test_instance_catalog:
     - region: us-east-1
       partition: aws

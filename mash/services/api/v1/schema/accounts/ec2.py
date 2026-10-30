@@ -26,13 +26,17 @@ additional_regions = {
         'type': 'object',
         'properties': {
             'name': string_with_example('us-east-44'),
-            'helper_image': string_with_example('ami-1234567890')
+            'helper_image': string_with_example(
+                'ami-1234567890',
+                description='Deprecated and ignored. No helper instance '
+                            'is used for image creation.'
+            )
         },
-        'required': ['name', 'helper_image'],
+        'required': ['name'],
         'additionalProperties': False
     },
     'minItems': 1,
-    'example': [{'name': 'us-east-44', 'helper_image': 'ami-1234567890'}]
+    'example': [{'name': 'us-east-44'}]
 }
 
 partition = {
@@ -63,7 +67,11 @@ ec2_account = {
         'group': string_with_example('group1'),
         'partition': partition,
         'region': string_with_example('us-east-1'),
-        'subnet': string_with_example('subnet-12345678'),
+        'subnet': string_with_example(
+            'subnet-12345678',
+            description='The subnet used for testing in the account '
+                        'region. It is no longer used for image creation.'
+        ),
         'test_regions': test_regions
     },
     'additionalProperties': False,
@@ -95,7 +103,11 @@ ec2_account_update = {
         'additional_regions': additional_regions,
         'group': string_with_example('group1'),
         'region': string_with_example('us-east-1'),
-        'subnet': string_with_example('subnet-12345678'),
+        'subnet': string_with_example(
+            'subnet-12345678',
+            description='The subnet used for testing in the account '
+                        'region. It is no longer used for image creation.'
+        ),
         'test_regions': test_regions,
         'credentials': ec2_credentials
     },

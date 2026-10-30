@@ -16,24 +16,19 @@
 # along with mash.  If not, see <http://www.gnu.org/licenses/>
 #
 
-from tempfile import NamedTemporaryFile
-from collections import namedtuple
 from ec2imgutils.ec2uploadimg import EC2ImageUploader
-from ec2imgutils.ec2setup import EC2Setup
 
 # project
 from mash.services.mash_job import MashJob
 from mash.mash_exceptions import MashUploadException
 from mash.utils.ec2 import (
     get_client,
-    get_vpc_id_from_subnet,
     cleanup_ec2_image,
     image_exists,
     cleanup_all_ec2_images
 )
 from mash.utils.mash_utils import (
     format_string_with_date,
-    generate_name,
     timestamp_from_epoch
 )
 from mash.services.status_levels import SUCCESS, FAILED
@@ -46,8 +41,10 @@ class EC2CreateJob(MashJob):
     Amazon specific custom arguments:
 
     For upload to Amazon the ec2uploadimg python interface
-    is used. The custom parameters are passed in one by one
-    to this application.
+    is used. The image is written directly to an EBS snapshot
+    using the EBS direct APIs, no helper instance is needed.
+    The custom parameters are passed in one by one to this
+    application.
     """
 
     def post_init(self):
@@ -68,7 +65,6 @@ class EC2CreateJob(MashJob):
         self.use_build_time = self.job_config.get('use_build_time')
         self.force_replace_image = self.job_config.get('force_replace_image')
         self.tpm_support = self.job_config.get('tpm_support')
-        self.launch_inst_type = self.job_config.get('launch_inst_type')
         self.boot_firmware = self.job_config.get(
             'boot_firmware',
             ['uefi-preferred']
@@ -77,6 +73,13 @@ class EC2CreateJob(MashJob):
         self.root_volume_size = self.job_config.get('root_volume_size', 10)
         self.upload_wait_count = self.job_config.get('upload_wait_count', 3)
         self.image_tags = self.job_config.get('image_tags')
+        self.upload_options = {
+            option: self.job_config[option]
+            for option in (
+                'upload_workers', 'upload_retries', 'upload_timeout'
+            )
+            if self.job_config.get(option)
+        }
 
         # EC2 images only support one firmware
         self.boot_firmware = self.boot_firmware[0]
@@ -112,32 +115,20 @@ class EC2CreateJob(MashJob):
         self.ec2_upload_parameters = {
             'image_name': self.cloud_image_name,
             'image_description': self.cloud_image_description,
-            'ssh_key_pair_name': None,
             'image_arch': self.arch,
-            'launch_ami': None,
-            'use_grub2': True,
-            'use_private_ip': False,
             'root_volume_size': self.root_volume_size,
-            'image_virt_type': 'hvm',
-            'launch_inst_type': self.launch_inst_type or 't3.micro',
-            'bootkernel': None,
-            'inst_user_name': 'ec2-user',
-            'ssh_timeout': 300,
             'wait_count': self.upload_wait_count,
-            'vpc_subnet_id': '',
-            'ssh_key_private_key_file': None,
-            'security_group_ids': '',
             'sriov_type': 'simple',
             'access_key': None,
             'ena_support': True,
             'backing_store': 'gp3',
-            'running_id': None,
             'secret_key': None,
             'billing_codes': None,
             'log_callback': self.log_callback,
             'boot_mode': self.boot_firmware,
             'image_tags': self.image_tags
         }
+        self.ec2_upload_parameters.update(self.upload_options)
 
         if self.tpm_support:
             self.ec2_upload_parameters['tpm_support'] = self.tpm_support
@@ -154,12 +145,9 @@ class EC2CreateJob(MashJob):
 
         for region, info in self.target_regions.items():
             self.status_msg['source_regions'][region] = None
-            ssh_key_pair = None
             account = info['account']
             credentials = self.credentials[account]
 
-            use_root_swap = info['use_root_swap']
-            self.ec2_upload_parameters['launch_ami'] = info['helper_image']
             self.ec2_upload_parameters['billing_codes'] = \
                 info['billing_codes']
 
@@ -192,59 +180,15 @@ class EC2CreateJob(MashJob):
                         self.cloud_image_name
                     )
 
-                # NOTE: Temporary ssh keys:
-                # The temporary creation and registration of a ssh key pair
-                # is considered a workaround implementation which should be better
-                # covered by the EC2ImageUploader code. Due to a lack of
-                # development resources in the ec2utils.ec2uploadimg project and
-                # other peoples concerns for just using a generic mash ssh key
-                # for the upload, the private _create_key_pair and _delete_key_pair
-                # methods exists and could be hopefully replaced by a better
-                # concept in the near future.
-                ssh_key_pair = self._create_key_pair(ec2_client)
-
-                self.ec2_upload_parameters['ssh_key_pair_name'] = \
-                    ssh_key_pair.name
-                self.ec2_upload_parameters['ssh_key_private_key_file'] = \
-                    ssh_key_pair.private_key_file.name
-
-                # Create a temporary vpc, subnet and security group for the
-                # helper image, unless a subnet was specified.
-                # This provides a security group with an open ssh port.
-                ec2_setup = EC2Setup(
-                    credentials['access_key_id'],
-                    region,
-                    credentials['secret_access_key'],
-                    None,
-                    log_callback=self.log_callback
-                )
-
-                subnet_id = info.get('subnet')
-                if subnet_id:
-                    vpc_id = get_vpc_id_from_subnet(ec2_client, subnet_id)
-                    security_group_id = ec2_setup.create_security_group(vpc_id=vpc_id)
-                else:
-                    subnet_id = ec2_setup.create_vpc_subnet()
-                    security_group_id = ec2_setup.create_security_group()
-
-                self.ec2_upload_parameters['vpc_subnet_id'] = subnet_id
-                self.ec2_upload_parameters['security_group_ids'] = \
-                    security_group_id
-
                 ec2_upload = EC2ImageUploader(
                     **self.ec2_upload_parameters
                 )
 
                 ec2_upload.set_region(region)
 
-                if use_root_swap:
-                    ami_id = ec2_upload.create_image_use_root_swap(
-                        self.status_msg['image_file']
-                    )
-                else:
-                    ami_id = ec2_upload.create_image(
-                        self.status_msg['image_file']
-                    )
+                ami_id = ec2_upload.create_image(
+                    self.status_msg['image_file']
+                )
 
                 self.status_msg['source_regions'][region] = ami_id
                 self.log_callback.info(
@@ -261,12 +205,6 @@ class EC2CreateJob(MashJob):
                 self.add_error_msg(msg)
                 self.log_callback.error(msg)
                 break  # No need to continue if one account fails
-            finally:
-                if ssh_key_pair:
-                    self._delete_key_pair(
-                        ec2_client, ssh_key_pair
-                    )
-                    ec2_setup.clean_up()
 
         if self.status != SUCCESS:
             for region, info in self.target_regions.items():
@@ -292,22 +230,3 @@ class EC2CreateJob(MashJob):
                                 error
                             )
                         )
-
-    def _create_key_pair(self, ec2_client):
-        ssh_key_pair_type = namedtuple(
-            'ssh_key_pair_type', ['name', 'private_key_file']
-        )
-        private_key_file = NamedTemporaryFile()
-        key_pair_name = 'mash-{0}'.format(generate_name())
-        ssh_key = ec2_client.create_key_pair(KeyName=key_pair_name)
-        with open(private_key_file.name, 'w') as private_key:
-            private_key.write(ssh_key['KeyMaterial'])
-        return ssh_key_pair_type(
-            name=key_pair_name,
-            private_key_file=private_key_file
-        )
-
-    def _delete_key_pair(self, ec2_client, ssh_key_pair):
-        ec2_client.delete_key_pair(KeyName=ssh_key_pair.name)
-        private_key_file = ssh_key_pair.private_key_file
-        del private_key_file
