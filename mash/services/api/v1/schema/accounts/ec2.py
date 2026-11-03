@@ -70,7 +70,8 @@ ec2_account = {
         'subnet': string_with_example(
             'subnet-12345678',
             description='The subnet used for testing in the account '
-                        'region. It is no longer used for image creation.'
+                        'region and for the donor instance of the root '
+                        'swap image creation method.'
         ),
         'test_regions': test_regions
     },
@@ -106,7 +107,8 @@ ec2_account_update = {
         'subnet': string_with_example(
             'subnet-12345678',
             description='The subnet used for testing in the account '
-                        'region. It is no longer used for image creation.'
+                        'region and for the donor instance of the root '
+                        'swap image creation method.'
         ),
         'test_regions': test_regions,
         'credentials': ec2_credentials

@@ -43,6 +43,9 @@ class EC2CreateJob(MashJob):
     For upload to Amazon the ec2uploadimg python interface
     is used. The image is written directly to an EBS snapshot
     using the EBS direct APIs, no helper instance is needed.
+    With the root swap method the image is written the same way
+    and a donor instance, which is never accessed, provides the
+    meta data of the new image.
     The custom parameters are passed in one by one to this
     application.
     """
@@ -65,6 +68,7 @@ class EC2CreateJob(MashJob):
         self.use_build_time = self.job_config.get('use_build_time')
         self.force_replace_image = self.job_config.get('force_replace_image')
         self.tpm_support = self.job_config.get('tpm_support')
+        self.launch_inst_type = self.job_config.get('launch_inst_type')
         self.boot_firmware = self.job_config.get(
             'boot_firmware',
             ['uefi-preferred']
@@ -148,6 +152,8 @@ class EC2CreateJob(MashJob):
             account = info['account']
             credentials = self.credentials[account]
 
+            use_root_swap = info.get('use_root_swap', False)
+
             self.ec2_upload_parameters['billing_codes'] = \
                 info['billing_codes']
 
@@ -180,15 +186,29 @@ class EC2CreateJob(MashJob):
                         self.cloud_image_name
                     )
 
-                ec2_upload = EC2ImageUploader(
-                    **self.ec2_upload_parameters
-                )
+                upload_parameters = dict(self.ec2_upload_parameters)
+                if use_root_swap:
+                    # The donor instance provides the meta data of the
+                    # image. It is launched in the subnet if one is set,
+                    # otherwise in the default VPC of the region.
+                    upload_parameters['launch_ami'] = info.get('helper_image')
+                    upload_parameters['launch_inst_type'] = \
+                        self.launch_inst_type or 't3.micro'
+                    upload_parameters['vpc_subnet_id'] = \
+                        info.get('subnet') or ''
+
+                ec2_upload = EC2ImageUploader(**upload_parameters)
 
                 ec2_upload.set_region(region)
 
-                ami_id = ec2_upload.create_image(
-                    self.status_msg['image_file']
-                )
+                if use_root_swap:
+                    ami_id = ec2_upload.create_image_use_root_swap(
+                        self.status_msg['image_file']
+                    )
+                else:
+                    ami_id = ec2_upload.create_image(
+                        self.status_msg['image_file']
+                    )
 
                 self.status_msg['source_regions'][region] = ami_id
                 self.log_callback.info(

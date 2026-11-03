@@ -42,15 +42,18 @@ def add_target_ec2_account(
     account,
     accounts,
     cloud_accounts,
+    use_root_swap=None,
     skip_replication=False
 ):
     """
     Update job with account information.
 
     - Append any additional regions
+    - Set the donor image (root_swap_ami) if use_root_swap is set
     """
     job_doc_data = cloud_accounts.get(account['name'], {})
     region_name = job_doc_data.get('region') or account.get('region')
+    subnet = job_doc_data.get('subnet') or account.get('subnet')
     test_regions = []
     if skip_replication:
         regions = [region_name]
@@ -62,10 +65,22 @@ def add_target_ec2_account(
     if account.get('test_regions', []):
         test_regions = account.get('test_regions')
 
+    helper_image = None
+    if use_root_swap:
+        try:
+            helper_image = job_doc_data['root_swap_ami']
+        except KeyError:
+            raise MashJobException(
+                'root_swap_ami is required for account {0},'
+                ' when using root swap.'.format(account['name'])
+            )
+
     accounts[region_name] = {
         'account': account['name'],
         'partition': account['partition'],
         'target_regions': list(set(regions)),  # Remove any duplicates
+        'helper_image': helper_image,
+        'subnet': subnet,
         'test_regions': test_regions
     }
 
@@ -108,34 +123,6 @@ def validate_mp_fields(job_doc):
         )
 
 
-def remove_deprecated_ec2_settings(job_doc):
-    """
-    Remove the settings that only configured the helper instance.
-
-    Images are written directly to an EBS snapshot, no helper instance
-    is used anymore. The settings are still accepted so existing clients
-    keep working but they are ignored.
-    """
-    deprecated = []
-
-    for key in ('use_root_swap', 'launch_inst_type'):
-        if key in job_doc:
-            del job_doc[key]
-            deprecated.append(key)
-
-    for cloud_account in job_doc.get('cloud_accounts', []):
-        for key in ('root_swap_ami', 'subnet'):
-            if key in cloud_account:
-                del cloud_account[key]
-                deprecated.append('cloud_accounts.{0}'.format(key))
-
-    if deprecated:
-        current_app.logger.warning(
-            'The following EC2 job settings are deprecated and ignored: '
-            '{0}'.format(', '.join(sorted(set(deprecated))))
-        )
-
-
 def validate_ec2_job(job_doc):
     """
     Validate job.
@@ -159,7 +146,6 @@ def validate_ec2_job(job_doc):
         )
 
     job_doc = validate_job(job_doc)
-    remove_deprecated_ec2_settings(job_doc)
 
     user_id = job_doc['requesting_user']
 
@@ -187,6 +173,7 @@ def validate_ec2_job(job_doc):
                 account,
                 accounts,
                 cloud_accounts,
+                job_doc.get('use_root_swap'),
                 job_doc.get('skip_replication', False)
             )
 

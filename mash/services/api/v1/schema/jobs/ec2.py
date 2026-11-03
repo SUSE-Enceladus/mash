@@ -35,23 +35,25 @@ ec2_job_account = {
         ),
         'root_swap_ami': string_with_example(
             'ami-1234567890',
-            description='Deprecated and ignored. Images are written '
-                        'directly to an EBS snapshot, the root swap image '
-                        'creation method is no longer used.'
+            description='The image AMI to use for the root swap image '
+                        'creation method. It is the donor instance image, '
+                        'its meta data is used for the new image.'
         ),
         'subnet': string_with_example(
             'subnet-12345678',
-            description='Deprecated and ignored. No helper instance is '
-                        'launched for image creation.'
+            description='The subnet to use for the root swap donor '
+                        'instance. Without a subnet the default VPC of '
+                        'the region is used.'
         )
     },
     'additionalProperties': False,
     'required': ['name'],
     'description': 'EC2 account credentials to use for the job. '
                    'Name is required and the other properties are '
-                   'optional. If supplied region will override the '
-                   'account default value. The root_swap_ami and subnet '
-                   'properties are deprecated and ignored.'
+                   'optional. If supplied region, root_swap_ami and '
+                   'subnet will override the account default values. '
+                   'The root_swap_ami and subnet properties are only '
+                   'used with use_root_swap.'
 }
 
 ec2_job_message = copy.deepcopy(base_job_message)
@@ -87,8 +89,12 @@ ec2_job_message['properties']['billing_codes'] = string_with_example(
 )
 ec2_job_message['properties']['use_root_swap'] = {
     'type': 'boolean',
-    'description': 'Deprecated and ignored. Images are always created by '
-                   'writing directly to an EBS snapshot.'
+    'description': 'Whether to use root swap technique during image '
+                   'creation in ec2imgutils package. By default the image '
+                   'is written directly to an EBS snapshot. With root swap '
+                   'the image is written the same way and a donor instance '
+                   'launched from root_swap_ami provides the meta data '
+                   'of the new image.'
 }
 ec2_job_message['properties']['cloud_accounts'] = {
     'type': 'array',
@@ -169,8 +175,9 @@ ec2_job_message['properties']['tpm_support'] = string_with_example(
 )
 ec2_job_message['properties']['launch_inst_type'] = string_with_example(
     'm1.large',
-    description='Deprecated and ignored. No helper instance is launched '
-                'for image creation.'
+    description='The donor instance type to use with the root swap '
+                'image creation method. It is ignored without '
+                'use_root_swap.'
 )
 ec2_job_message['properties']['imds_version'] = string_with_example(
     'v2.0',

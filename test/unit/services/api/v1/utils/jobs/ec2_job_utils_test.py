@@ -25,7 +25,6 @@ from mash.services.api.v1.utils.jobs.ec2 import (
     get_ec2_regions_by_partition,
     add_target_ec2_account,
     convert_account_dict,
-    remove_deprecated_ec2_settings,
     validate_ec2_job
 )
 
@@ -85,20 +84,50 @@ def test_add_target_ec2_account(mock_get_regions):
         'account': 'acnt1',
         'partition': 'aws',
         'target_regions': accounts['us-east-100']['target_regions'],
+        'helper_image': None,
+        'subnet': 'subnet-222222',
         'test_regions': account['test_regions']
     }
     assert sorted(accounts['us-east-100']['target_regions']) == [
         'us-east-101', 'us-east-102', 'us-east-99'
     ]
 
-    # Region override from the job doc
+    # Region and subnet override from the job doc
     accounts = {}
     add_target_ec2_account(
         account,
         accounts,
-        {'acnt1': {'region': 'us-east-103'}}
+        {'acnt1': {'region': 'us-east-103', 'subnet': 'subnet-333333'}}
     )
-    assert 'us-east-103' in accounts
+    assert accounts['us-east-103']['subnet'] == 'subnet-333333'
+
+    # Root swap uses the root swap AMI of the job doc as donor image
+    accounts = {}
+    add_target_ec2_account(
+        account,
+        accounts,
+        {'acnt1': {'root_swap_ami': 'ami-456'}},
+        use_root_swap=True
+    )
+    assert accounts['us-east-100']['helper_image'] == 'ami-456'
+
+    # Root swap without root swap AMI
+    with raises(MashJobException):
+        add_target_ec2_account(
+            account,
+            {},
+            cloud_accounts,
+            use_root_swap=True
+        )
+
+    # The root swap AMI is ignored without root swap
+    accounts = {}
+    add_target_ec2_account(
+        account,
+        accounts,
+        {'acnt1': {'root_swap_ami': 'ami-456'}}
+    )
+    assert accounts['us-east-100']['helper_image'] is None
 
     accounts = {}
     add_target_ec2_account(
@@ -110,43 +139,6 @@ def test_add_target_ec2_account(mock_get_regions):
 
     assert accounts['us-east-100']['target_regions'] == ['us-east-100']
     assert accounts['us-east-100']['test_regions'] == account['test_regions']
-
-
-@patch.object(LocalProxy, '_get_current_object')
-def test_remove_deprecated_ec2_settings(mock_get_current_obj):
-    app = Mock()
-    mock_get_current_obj.return_value = app
-
-    job_doc = {
-        'use_root_swap': True,
-        'launch_inst_type': 'm1.large',
-        'root_volume_size': 12,
-        'cloud_accounts': [
-            {
-                'name': 'acnt1',
-                'region': 'us-east-1',
-                'root_swap_ami': 'ami-456',
-                'subnet': 'subnet-123'
-            }
-        ]
-    }
-
-    remove_deprecated_ec2_settings(job_doc)
-
-    assert job_doc == {
-        'root_volume_size': 12,
-        'cloud_accounts': [{'name': 'acnt1', 'region': 'us-east-1'}]
-    }
-    app.logger.warning.assert_called_once_with(
-        'The following EC2 job settings are deprecated and ignored: '
-        'cloud_accounts.root_swap_ami, cloud_accounts.subnet, '
-        'launch_inst_type, use_root_swap'
-    )
-
-    # Nothing deprecated, nothing logged
-    app.logger.warning.reset_mock()
-    remove_deprecated_ec2_settings({'cloud_accounts': [{'name': 'acnt1'}]})
-    app.logger.warning.assert_not_called()
 
 
 def test_convert_account_dict():
@@ -273,7 +265,8 @@ def test_validate_ec2_job(
     job_doc['boot_firmware'] = ['uefi', 'uefi-preferred']
     validate_ec2_job(job_doc)
 
-    # Test doc with deprecated settings, they are ignored
+    # Root swap settings are kept and passed on
+    mock_add_target_account.reset_mock()
     job_doc = {
         'last_service': 'testing',
         'requesting_user': '1',
@@ -284,8 +277,9 @@ def test_validate_ec2_job(
         'launch_inst_type': 'm1.large'
     }
     result = validate_ec2_job(job_doc)
-    assert 'use_root_swap' not in result
-    assert 'launch_inst_type' not in result
+    assert result['use_root_swap'] is True
+    assert result['launch_inst_type'] == 'm1.large'
+    assert mock_add_target_account.call_args[0][3] is True
 
 
 @patch.object(LocalProxy, '_get_current_object')

@@ -166,8 +166,19 @@ US Gov and AWS (default).
 Images are created by writing the raw image directly to an EBS snapshot with
 the EBS direct APIs and registering an AMI from the snapshot. No helper
 instance, key pair, subnet or security group is needed for image creation.
-The `helper_image` of additional regions, the `root_swap_ami`, `subnet`,
-`use_root_swap` and `launch_inst_type` job settings are deprecated and ignored.
+The `helper_image` of additional regions is deprecated and ignored.
+
+The optional root swap method (`use_root_swap` job setting) writes the image
+the same way, to a temporary snapshot. A donor instance is launched from the
+`root_swap_ami` AMI of the cloud account in the job, with the instance type
+`launch_inst_type` (default t3.micro), and its root volume is replaced with a
+volume created from the snapshot. The new image is created from the donor
+instance, which provides the meta data of the image (billing information for
+example). The donor instance is never accessed, no SSH connection, key pair or
+security group is used. It is launched in the `subnet` given for the cloud
+account in the job, or else the subnet of the mash account, or in the default
+VPC of the region if no subnet is set. An account without a default VPC must set a subnet to use root
+swap. The donor instance and the temporary snapshot are removed afterwards.
 
 The `root_volume_size` job setting (default 10) is the size in GiB of the
 snapshot and root volume. The raw image must fit in it. The upload can be
@@ -191,6 +202,9 @@ up the permissions. The following permissions are required for mash:
 * Image creation (new): `ebs:StartSnapshot`, `ebs:PutSnapshotBlock` and
   `ebs:CompleteSnapshot`, in addition to the EC2 permissions to describe
   snapshots, register, tag and deregister images and delete snapshots
+* Root swap image creation additionally needs the permissions to launch, stop
+  and terminate instances, to create, attach, detach and delete volumes, to
+  describe subnets and to create images
 * The existing EC2 and S3 permissions used by the other services
 
 #### Creating an IAM account from AWS Console
@@ -256,7 +270,7 @@ mash account ec2 add \
 
 The additional regions option will provide a REPL style workflow to add the
 region. The helper image is deprecated and ignored, only the region name is
-required.
+required. The root swap AMI is set per job with `root_swap_ami`.
 
 
  __Test region__

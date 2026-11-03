@@ -34,6 +34,7 @@ class EC2Job(BaseJob):
         self.share_with = self.kwargs.get('share_with', 'all')
         self.allow_copy = self.kwargs.get('allow_copy', 'none')
         self.billing_codes = self.kwargs.get('billing_codes')
+        self.use_root_swap = self.kwargs.get('use_root_swap', False)
         self.tpm_support = self.kwargs.get('tpm_support')
         self.entity_id = self.kwargs.get('entity_id')
         self.version_title = self.kwargs.get('version_title')
@@ -49,6 +50,7 @@ class EC2Job(BaseJob):
             'publish_in_marketplace',
             False
         )
+        self.launch_inst_type = self.kwargs.get('launch_inst_type')
         self.cpu_options = self.kwargs.get('cpu_options', {})
         self.imds_version = self.kwargs.get('imds_version', '')
         self.root_volume_size = self.kwargs.get('root_volume_size', 10)
@@ -288,6 +290,7 @@ class EC2Job(BaseJob):
                 'force_replace_image': self.force_replace_image,
                 'tpm_support': self.tpm_support,
                 'boot_firmware': self.boot_firmware,
+                'launch_inst_type': self.launch_inst_type,
                 'root_volume_size': self.root_volume_size,
                 'upload_wait_count': self.upload_wait_count,
                 'image_tags': self.image_tags
@@ -317,7 +320,10 @@ class EC2Job(BaseJob):
         for source_region, value in self.target_account_info.items():
             target_regions[source_region] = {
                 'account': value['account'],
+                'helper_image': value.get('helper_image'),
                 'billing_codes': self.billing_codes,
+                'use_root_swap': self.use_root_swap,
+                'subnet': value.get('subnet'),
                 'regions': value['target_regions']
             }
 

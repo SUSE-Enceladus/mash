@@ -135,16 +135,14 @@ def test_get_create_message_upload_options():
         'upload_workers': 4,
         'upload_retries': 6,
         'upload_timeout': 120,
-        # Deprecated and ignored
-        'launch_inst_type': 'm1.large',
-        'use_root_swap': True
+        'launch_inst_type': 'm1.large'
     })
 
     create_job = JsonFormat.json_loads(job.get_create_message())['create_job']
     assert create_job['upload_workers'] == 4
     assert create_job['upload_retries'] == 6
     assert create_job['upload_timeout'] == 120
-    assert 'launch_inst_type' not in create_job
+    assert create_job['launch_inst_type'] == 'm1.large'
 
     # Not sent when not set so ec2imgutils keeps its defaults
     job.upload_workers = None
@@ -168,11 +166,11 @@ def test_get_create_regions():
         'image_description': 'image description',
         'download_url': 'https://download.here',
         'billing_codes': 'bp-123',
+        'use_root_swap': True,
         'target_account_info': {
             'us-east-1': {
                 'account': 'acnt1',
                 'target_regions': ['us-east-1', 'us-east-2'],
-                # Old job docs may still carry these, they are ignored
                 'helper_image': 'ami-123',
                 'subnet': 'subnet-123'
             }
@@ -182,7 +180,34 @@ def test_get_create_regions():
     assert job.get_create_regions() == {
         'us-east-1': {
             'account': 'acnt1',
+            'helper_image': 'ami-123',
             'billing_codes': 'bp-123',
+            'use_root_swap': True,
+            'subnet': 'subnet-123',
             'regions': ['us-east-1', 'us-east-2']
         }
     }
+
+    # Without root swap and without helper image or subnet
+    job = EC2Job({
+        'job_id': '123',
+        'cloud': 'ec2',
+        'requesting_user': 'test-user',
+        'last_service': 'test',
+        'utctime': 'now',
+        'image': 'test-image',
+        'cloud_image_name': 'test-cloud-image',
+        'image_description': 'image description',
+        'download_url': 'https://download.here',
+        'target_account_info': {
+            'us-east-1': {
+                'account': 'acnt1',
+                'target_regions': ['us-east-1']
+            }
+        }
+    })
+
+    info = job.get_create_regions()['us-east-1']
+    assert info['use_root_swap'] is False
+    assert info['helper_image'] is None
+    assert info['subnet'] is None

@@ -154,18 +154,7 @@ class TestAmazonCreateJob(object):
         self.job.run_job()
         assert mock_cleanup_all_images.call_count == 1
 
-    @patch('mash.services.create.ec2_job.image_exists')
-    @patch('mash.services.create.ec2_job.get_client')
-    @patch('mash.services.create.ec2_job.EC2ImageUploader')
-    def test_create_deprecated_target_region_info_ignored(
-        self, mock_EC2ImageUploader, mock_get_client, mock_image_exists
-    ):
-        """
-        Job docs created before the EBS direct upload still carry the
-        helper instance and root swap settings, they must be ignored.
-        """
-        mock_image_exists.return_value = False
-
+    def _root_swap_job(self, region_info, **kwargs):
         job_doc = {
             'cloud_architecture': 'aarch64',
             'id': '1',
@@ -173,37 +162,115 @@ class TestAmazonCreateJob(object):
             'cloud': 'ec2',
             'requesting_user': 'user1',
             'utctime': 'now',
-            'target_regions': {
-                'us-east-1': {
-                    'account': 'test',
-                    'helper_image': 'ami-bc5b48d0',
-                    'billing_codes': None,
-                    'use_root_swap': True,
-                    'subnet': 'subnet-123456789',
-                    'regions': ['us-east-1']
-                }
-            },
+            'target_regions': {'us-east-1': region_info},
             'cloud_image_name': 'name',
             'image_description': 'description',
-            'launch_inst_type': 'm1.large'
+            'upload_workers': 4
         }
+        job_doc.update(kwargs)
         job = EC2CreateJob(job_doc, self.config)
         job._log_callback = Mock()
         job.status_msg['image_file'] = 'file'
         job.credentials = self.credentials
+        return job
+
+    @patch('mash.services.create.ec2_job.image_exists')
+    @patch('mash.services.create.ec2_job.get_client')
+    @patch('mash.services.create.ec2_job.EC2ImageUploader')
+    def test_create_root_swap(
+        self, mock_EC2ImageUploader, mock_get_client, mock_image_exists
+    ):
+        mock_image_exists.return_value = False
+
+        ec2_upload = Mock()
+        ec2_upload.create_image_use_root_swap.return_value = 'ami_id'
+        mock_EC2ImageUploader.return_value = ec2_upload
+
+        job = self._root_swap_job(
+            {
+                'account': 'test',
+                'helper_image': 'ami-bc5b48d0',
+                'billing_codes': None,
+                'use_root_swap': True,
+                'subnet': 'subnet-123456789',
+                'regions': ['us-east-1']
+            },
+            launch_inst_type='m1.large'
+        )
+        job.run_job()
+
+        kwargs = mock_EC2ImageUploader.call_args[1]
+        assert kwargs['launch_ami'] == 'ami-bc5b48d0'
+        assert kwargs['launch_inst_type'] == 'm1.large'
+        assert kwargs['vpc_subnet_id'] == 'subnet-123456789'
+        assert kwargs['upload_workers'] == 4
+        # The donor instance is not accessed, no ssh or security group
+        for key in (
+            'security_group_ids', 'ssh_key_pair_name', 'use_grub2',
+            'ssh_key_private_key_file', 'bootkernel', 'image_virt_type',
+            'inst_user_name', 'ssh_timeout', 'use_private_ip'
+        ):
+            assert key not in kwargs
+        ec2_upload.create_image_use_root_swap.assert_called_once_with('file')
+        ec2_upload.create_image.assert_not_called()
+        assert job.status_msg['source_regions'] == {'us-east-1': 'ami_id'}
+
+    @patch('mash.services.create.ec2_job.image_exists')
+    @patch('mash.services.create.ec2_job.get_client')
+    @patch('mash.services.create.ec2_job.EC2ImageUploader')
+    def test_create_root_swap_defaults(
+        self, mock_EC2ImageUploader, mock_get_client, mock_image_exists
+    ):
+        """No subnet and no instance type, default VPC and instance type"""
+        mock_image_exists.return_value = False
+
+        ec2_upload = Mock()
+        ec2_upload.create_image_use_root_swap.return_value = 'ami_id'
+        mock_EC2ImageUploader.return_value = ec2_upload
+
+        job = self._root_swap_job({
+            'account': 'test',
+            'helper_image': 'ami-bc5b48d0',
+            'billing_codes': None,
+            'use_root_swap': True,
+            'subnet': None,
+            'regions': ['us-east-1']
+        })
+        job.run_job()
+
+        kwargs = mock_EC2ImageUploader.call_args[1]
+        assert kwargs['launch_inst_type'] == 't3.micro'
+        assert kwargs['vpc_subnet_id'] == ''
+        ec2_upload.create_image_use_root_swap.assert_called_once_with('file')
+
+    @patch('mash.services.create.ec2_job.image_exists')
+    @patch('mash.services.create.ec2_job.get_client')
+    @patch('mash.services.create.ec2_job.EC2ImageUploader')
+    def test_create_no_root_swap_ignores_helper_settings(
+        self, mock_EC2ImageUploader, mock_get_client, mock_image_exists
+    ):
+        """Without root swap the helper settings are not passed on"""
+        mock_image_exists.return_value = False
 
         ec2_upload = Mock()
         ec2_upload.create_image.return_value = 'ami_id'
         mock_EC2ImageUploader.return_value = ec2_upload
 
+        job = self._root_swap_job(
+            {
+                'account': 'test',
+                'helper_image': 'ami-bc5b48d0',
+                'billing_codes': None,
+                'use_root_swap': False,
+                'subnet': 'subnet-123456789',
+                'regions': ['us-east-1']
+            },
+            launch_inst_type='m1.large'
+        )
         job.run_job()
 
         kwargs = mock_EC2ImageUploader.call_args[1]
-        for key in (
-            'launch_ami', 'launch_inst_type', 'vpc_subnet_id',
-            'security_group_ids', 'ssh_key_pair_name', 'use_grub2',
-            'bootkernel', 'image_virt_type', 'upload_workers'
-        ):
+        for key in ('launch_ami', 'launch_inst_type', 'vpc_subnet_id'):
             assert key not in kwargs
         ec2_upload.create_image.assert_called_once_with('file')
         ec2_upload.create_image_use_root_swap.assert_not_called()
