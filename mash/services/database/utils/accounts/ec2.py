@@ -129,7 +129,7 @@ def create_new_ec2_account(
         for additional_region in additional_regions:
             create_new_ec2_region(
                 additional_region['name'],
-                additional_region['helper_image'],
+                additional_region.get('helper_image'),
                 account
             )
 
@@ -262,7 +262,7 @@ def update_ec2_account_for_user(
         for additional_region in additional_regions:
             create_new_ec2_region(
                 additional_region['name'],
-                additional_region['helper_image'],
+                additional_region.get('helper_image'),
                 ec2_account
             )
 
