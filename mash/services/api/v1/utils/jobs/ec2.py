@@ -136,8 +136,8 @@ def validate_ec2_job(job_doc):
         job_doc['skip_replication'] = True  # No replication for MP images
         validate_mp_fields(job_doc)
 
-    # The create service uses the first boot firmware entry only and AWS
-    # refuses TPM support for any boot mode other than uefi.
+    # The create service uses the first boot firmware entry only and
+    # TPM support is only compatible uefi.
     boot_firmware = job_doc.get('boot_firmware') or ['uefi-preferred']
     if job_doc.get('tpm_support') and boot_firmware[0] != 'uefi':
         raise MashJobException(

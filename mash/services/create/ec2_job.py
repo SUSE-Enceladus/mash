@@ -44,8 +44,7 @@ class EC2CreateJob(MashJob):
     is used. The image is written directly to an EBS snapshot
     using the EBS direct APIs, no helper instance is needed.
     With the root swap method the image is written the same way
-    and a donor instance, which is never accessed, provides the
-    meta data of the new image.
+    and a donor instance provides the meta data of the new image.
     The custom parameters are passed in one by one to this
     application.
     """
