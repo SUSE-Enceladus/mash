@@ -59,6 +59,7 @@ class EC2Job(BaseJob):
         self.upload_workers = self.kwargs.get('upload_workers')
         self.upload_retries = self.kwargs.get('upload_retries')
         self.upload_timeout = self.kwargs.get('upload_timeout')
+        self.write_zero_blocks = self.kwargs.get('write_zero_blocks')
 
     def _get_target_regions_list(self):
         """
@@ -305,7 +306,10 @@ class EC2Job(BaseJob):
         if self.imds_version:
             create_message['create_job']['imds_version'] = self.imds_version
 
-        for option in ('upload_workers', 'upload_retries', 'upload_timeout'):
+        for option in (
+            'upload_workers', 'upload_retries', 'upload_timeout',
+            'write_zero_blocks'
+        ):
             if getattr(self, option):
                 create_message['create_job'][option] = getattr(self, option)
 

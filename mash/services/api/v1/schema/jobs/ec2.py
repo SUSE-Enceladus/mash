@@ -233,6 +233,13 @@ ec2_job_message['properties']['upload_timeout'] = {
     'description': 'The read timeout in seconds for writing a block to the '
                    'EBS snapshot (Default is 300).'
 }
+ec2_job_message['properties']['write_zero_blocks'] = {
+    'type': 'boolean',
+    'description': 'Whether to write all blocks of the image to the EBS '
+                   'snapshot, including the blocks that contain only zeros. '
+                   'By default the blocks with only zeros are skipped and '
+                   'the snapshot returns zeros for them.'
+}
 image_tag = {
     'type': 'object',
     'properties': {

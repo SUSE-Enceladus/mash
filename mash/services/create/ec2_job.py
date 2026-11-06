@@ -79,7 +79,8 @@ class EC2CreateJob(MashJob):
         self.upload_options = {
             option: self.job_config[option]
             for option in (
-                'upload_workers', 'upload_retries', 'upload_timeout'
+                'upload_workers', 'upload_retries', 'upload_timeout',
+                'write_zero_blocks'
             )
             if self.job_config.get(option)
         }

@@ -39,7 +39,8 @@ class TestAmazonCreateJob(object):
             'imds_version': 'v2.0',
             'upload_workers': 4,
             'upload_retries': 5,
-            'upload_timeout': 600
+            'upload_timeout': 600,
+            'write_zero_blocks': True
         }
         self.job = EC2CreateJob(job_doc, self.config)
         self.job._log_callback = Mock()
@@ -112,7 +113,8 @@ class TestAmazonCreateJob(object):
             imds_support='v2.0',
             upload_workers=4,
             upload_retries=5,
-            upload_timeout=600
+            upload_timeout=600,
+            write_zero_blocks=True
         )
         ec2_upload.set_region.assert_called_once_with('us-east-1')
         ec2_upload.create_image.assert_called_once_with('file')
@@ -165,7 +167,8 @@ class TestAmazonCreateJob(object):
             'target_regions': {'us-east-1': region_info},
             'cloud_image_name': 'name',
             'image_description': 'description',
-            'upload_workers': 4
+            'upload_workers': 4,
+            'write_zero_blocks': True
         }
         job_doc.update(kwargs)
         job = EC2CreateJob(job_doc, self.config)
@@ -204,6 +207,7 @@ class TestAmazonCreateJob(object):
         assert kwargs['launch_inst_type'] == 'm1.large'
         assert kwargs['vpc_subnet_id'] == 'subnet-123456789'
         assert kwargs['upload_workers'] == 4
+        assert kwargs['write_zero_blocks'] is True
         # The donor instance is not accessed, no ssh or security group
         for key in (
             'security_group_ids', 'ssh_key_pair_name', 'use_grub2',
