@@ -1,3 +1,22 @@
+v17.0.0 (2026-11-18)
+====================
+
+Breaking changes. Drain all running jobs before upgrading and run the
+database migration.
+
+- Remove the deprecated and ignored additional region `helper_image` from
+  the EC2 account API. Requests that still send it fail schema validation.
+  The `ec2_region.helper_image` database column is dropped, run the database
+  migration.
+- Rename the internal per region `helper_image` job document key to
+  `root_swap_ami`. It holds the donor AMI used by the root swap method. Jobs
+  created before the upgrade that use root swap still carry the old key and
+  must be drained or resubmitted.
+- Remove the unused `get_file_list_from_s3_bucket` EC2 util and unused
+  exception classes.
+- Remove the stale EC2 and GCE test strategy design docs.
+- Drop the Python 3.8 classifier.
+
 v16.13.0 (2026-11-18)
 ====================
 
