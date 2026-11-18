@@ -1,5 +1,5 @@
-Unreleased
-==========
+v16.13.0 (2026-11-18)
+====================
 
 - Create EC2 images with ec2imgutils EBS direct upload, no helper instance,
   key pair, VPC, subnet or security group is created anymore. Requires
