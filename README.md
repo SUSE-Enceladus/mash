@@ -183,7 +183,9 @@ swap. The donor instance and the temporary snapshot are removed afterwards.
 The `root_volume_size` job setting (default 10) is the size in GiB of the
 snapshot and root volume. The raw image must fit in it. The upload can be
 tuned per job with `upload_workers` (default 8), `upload_retries` (default 8)
-and `upload_timeout` in seconds (default 300).
+and `upload_timeout` in seconds (default 300). By default blocks that contain
+only zeros are not written to the snapshot. Set `write_zero_blocks` to true to
+write all blocks.
 
 For Mash to successfully test an image it will require SSH access to the
 instance in the account's chosen region. To ensure this, there are two options.

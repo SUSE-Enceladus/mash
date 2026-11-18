@@ -135,6 +135,7 @@ def test_get_create_message_upload_options():
         'upload_workers': 4,
         'upload_retries': 6,
         'upload_timeout': 120,
+        'write_zero_blocks': True,
         'launch_inst_type': 'm1.large'
     })
 
@@ -142,16 +143,19 @@ def test_get_create_message_upload_options():
     assert create_job['upload_workers'] == 4
     assert create_job['upload_retries'] == 6
     assert create_job['upload_timeout'] == 120
+    assert create_job['write_zero_blocks'] is True
     assert create_job['launch_inst_type'] == 'm1.large'
 
     # Not sent when not set so ec2imgutils keeps its defaults
     job.upload_workers = None
     job.upload_retries = None
     job.upload_timeout = None
+    job.write_zero_blocks = None
     create_job = JsonFormat.json_loads(job.get_create_message())['create_job']
     assert 'upload_workers' not in create_job
     assert 'upload_retries' not in create_job
     assert 'upload_timeout' not in create_job
+    assert 'write_zero_blocks' not in create_job
 
 
 def test_get_create_regions():

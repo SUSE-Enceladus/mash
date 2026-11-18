@@ -19,8 +19,8 @@ Unreleased
 - Deprecate and ignore the additional region `helper_image`. The
   `helper_images` config option is removed. `ec2_region.helper_image` is now
   nullable, run the database migration.
-- Add the optional `upload_workers`, `upload_retries` and `upload_timeout`
-  EC2 job settings.
+- Add the optional `upload_workers`, `upload_retries`, `upload_timeout` and
+  `write_zero_blocks` EC2 job settings.
 - `root_volume_size` is the size of the image root volume and snapshot.
 - Require `uefi` to be the first `boot_firmware` entry when `tpm_support`
   is set, as only the first entry is used for the image.
