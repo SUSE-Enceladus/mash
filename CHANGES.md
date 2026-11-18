@@ -1,3 +1,30 @@
+Unreleased
+==========
+
+- Create EC2 images with ec2imgutils EBS direct upload, no helper instance,
+  key pair, VPC, subnet or security group is created anymore. Requires
+  ec2imgutils >= 10.1.0.
+- Mash EC2 IAM users need the `ebs:StartSnapshot`, `ebs:PutSnapshotBlock`
+  and `ebs:CompleteSnapshot` permissions for image creation. Add them before
+  upgrading.
+- The root swap image creation method (`use_root_swap`, `root_swap_ami`,
+  `launch_inst_type` and account `subnet`) is still supported. With
+  ec2imgutils the image is now also written with EBS direct upload to a
+  temporary snapshot, and the donor instance only provides the meta data of
+  the image. The donor instance is never accessed over SSH, so mash does not
+  create a temporary key pair, VPC, subnet or security group for it anymore.
+  The donor instance is launched in the `subnet`, or in the default VPC of
+  the region if no subnet is set. Accounts without a default VPC must set a
+  `subnet` to use root swap.
+- Deprecate and ignore the additional region `helper_image`. The
+  `helper_images` config option is removed. `ec2_region.helper_image` is now
+  nullable, run the database migration.
+- Add the optional `upload_workers`, `upload_retries` and `upload_timeout`
+  EC2 job settings.
+- `root_volume_size` is the size of the image root volume and snapshot.
+- Require `uefi` to be the first `boot_firmware` entry when `tpm_support`
+  is set, as only the first entry is used for the image.
+
 v16.12.0 (2026-09-29)
 ====================
 

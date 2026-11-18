@@ -124,7 +124,7 @@ class EC2Region(db.Model):
     __tablename__ = 'ec2_region'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False)
-    helper_image = db.Column(db.String(32), nullable=False)
+    helper_image = db.Column(db.String(32), nullable=True)
     account_id = db.Column(
         db.Integer,
         db.ForeignKey('ec2_account.id'),

@@ -89,8 +89,6 @@ class TestJobCreatorService(object):
             'us-gov-west-1': {
                 'account': 'test-aws-gov',
                 'target_regions': ['us-gov-west-1'],
-                'helper_image': 'ami-c2b5d7e1',
-                'subnet': 'subnet-12345',
                 'partition': 'aws-us-gov',
                 'test_regions': [
                     {
@@ -108,8 +106,6 @@ class TestJobCreatorService(object):
                 'target_regions': [
                     'ap-northeast-1', 'ap-northeast-2', 'ap-northeast-3'
                 ],
-                'helper_image': 'ami-383c1956',
-                'subnet': 'subnet-54321',
                 'partition': 'aws',
                 'test_regions': [
                     {
@@ -163,12 +159,14 @@ class TestJobCreatorService(object):
         for region, info in data['target_regions'].items():
             if region == 'ap-northeast-1':
                 assert info['account'] == 'test-aws'
-                assert info['helper_image'] == 'ami-383c1956'
+                assert info['helper_image'] is None
+                assert info['use_root_swap'] is False
+                assert info['subnet'] is None
                 assert info['billing_codes'] is None
             else:
                 assert region == 'us-gov-west-1'
                 assert info['account'] == 'test-aws-gov'
-                assert info['helper_image'] == 'ami-c2b5d7e1'
+                assert info['helper_image'] is None
                 assert info['billing_codes'] is None
 
         # Test preparation Job Doc
@@ -267,11 +265,9 @@ class TestJobCreatorService(object):
 
         for region in data['publish_regions']:
             if region['account'] == 'test-aws-gov':
-                assert region['helper_image'] == 'ami-c2b5d7e1'
                 assert 'us-gov-west-1' in region['target_regions']
             else:
                 assert region['account'] == 'test-aws'
-                assert region['helper_image'] == 'ami-383c1956'
                 assert 'ap-northeast-1' in region['target_regions']
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']
@@ -283,11 +279,9 @@ class TestJobCreatorService(object):
 
         for region in data['deprecate_regions']:
             if region['account'] == 'test-aws-gov':
-                assert region['helper_image'] == 'ami-c2b5d7e1'
                 assert 'us-gov-west-1' in region['target_regions']
             else:
                 assert region['account'] == 'test-aws'
-                assert region['helper_image'] == 'ami-383c1956'
                 assert 'ap-northeast-1' in region['target_regions']
                 assert 'ap-northeast-2' in region['target_regions']
                 assert 'ap-northeast-3' in region['target_regions']

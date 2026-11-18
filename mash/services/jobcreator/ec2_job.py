@@ -56,6 +56,9 @@ class EC2Job(BaseJob):
         self.root_volume_size = self.kwargs.get('root_volume_size', 10)
         self.upload_wait_count = self.kwargs.get('upload_wait_count', 3)
         self.image_tags = self.kwargs.get('image_tags')
+        self.upload_workers = self.kwargs.get('upload_workers')
+        self.upload_retries = self.kwargs.get('upload_retries')
+        self.upload_timeout = self.kwargs.get('upload_timeout')
 
     def _get_target_regions_list(self):
         """
@@ -302,6 +305,10 @@ class EC2Job(BaseJob):
         if self.imds_version:
             create_message['create_job']['imds_version'] = self.imds_version
 
+        for option in ('upload_workers', 'upload_retries', 'upload_timeout'):
+            if getattr(self, option):
+                create_message['create_job'][option] = getattr(self, option)
+
         return JsonFormat.json_message(create_message)
 
     def get_create_regions(self):
@@ -313,10 +320,10 @@ class EC2Job(BaseJob):
         for source_region, value in self.target_account_info.items():
             target_regions[source_region] = {
                 'account': value['account'],
-                'helper_image': value['helper_image'],
+                'helper_image': value.get('helper_image'),
                 'billing_codes': self.billing_codes,
                 'use_root_swap': self.use_root_swap,
-                'subnet': value['subnet'],
+                'subnet': value.get('subnet'),
                 'regions': value['target_regions']
             }
 

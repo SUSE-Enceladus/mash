@@ -32,7 +32,7 @@ class TestBaseConfig(object):
     def test_get_cloud_data(self):
         data = self.config.get_cloud_data()
         assert data['ec2']['regions']['aws-cn'] == ['cn-north-1']
-        assert data['ec2']['helper_images']['cn-north-1'] == 'ami-bcc45885'
+        assert 'helper_images' not in data['ec2']
 
         with raises(MashConfigException) as error:
             self.empty_config.get_cloud_data()

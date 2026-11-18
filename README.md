@@ -163,6 +163,28 @@ US Gov and AWS (default).
 
 #### Requirements
 
+Images are created by writing the raw image directly to an EBS snapshot with
+the EBS direct APIs and registering an AMI from the snapshot. No helper
+instance, key pair, subnet or security group is needed for image creation.
+The `helper_image` of additional regions is deprecated and ignored.
+
+The optional root swap method (`use_root_swap` job setting) writes the image
+the same way, to a temporary snapshot. A donor instance is launched from the
+`root_swap_ami` AMI of the cloud account in the job, with the instance type
+`launch_inst_type` (default t3.micro), and its root volume is replaced with a
+volume created from the snapshot. The new image is created from the donor
+instance, which provides the meta data of the image (billing information for
+example). The donor instance is never accessed, no SSH connection, key pair or
+security group is used. It is launched in the `subnet` given for the cloud
+account in the job, or else the subnet of the mash account, or in the default
+VPC of the region if no subnet is set. An account without a default VPC must set a subnet to use root
+swap. The donor instance and the temporary snapshot are removed afterwards.
+
+The `root_volume_size` job setting (default 10) is the size in GiB of the
+snapshot and root volume. The raw image must fit in it. The upload can be
+tuned per job with `upload_workers` (default 8), `upload_retries` (default 8)
+and `upload_timeout` in seconds (default 300).
+
 For Mash to successfully test an image it will require SSH access to the
 instance in the account's chosen region. To ensure this, there are two options.
 You can set the default security group for the region to allow ingress for SSH
@@ -176,6 +198,14 @@ when it's created in mash.
 It's recommended to create a group that has the required permissions for mash.
 Then when a new IAM account is created it can be added to this group to pick
 up the permissions. The following permissions are required for mash:
+
+* Image creation (new): `ebs:StartSnapshot`, `ebs:PutSnapshotBlock` and
+  `ebs:CompleteSnapshot`, in addition to the EC2 permissions to describe
+  snapshots, register, tag and deregister images and delete snapshots
+* Root swap image creation additionally needs the permissions to launch, stop
+  and terminate instances, to create, attach, detach and delete volumes, to
+  describe subnets and to create images
+* The existing EC2 and S3 permissions used by the other services
 
 #### Creating an IAM account from AWS Console
 
@@ -239,7 +269,8 @@ mash account ec2 add \
 ```
 
 The additional regions option will provide a REPL style workflow to add the
-region.
+region. The helper image is deprecated and ignored, only the region name is
+required. The root swap AMI is set per job with `root_swap_ami`.
 
 
  __Test region__
