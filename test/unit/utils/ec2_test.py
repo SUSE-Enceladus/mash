@@ -27,7 +27,6 @@ from mash.utils.ec2 import (
     get_image,
     image_exists,
     get_session,
-    get_file_list_from_s3_bucket,
     download_file_from_s3_bucket
 )
 from mash.mash_exceptions import MashEc2UtilsException
@@ -143,83 +142,6 @@ def test_image_exists(mock_get_image):
 
     assert image_exists(client, 'image name 123')
     assert not image_exists(client, 'image name 321')
-
-
-def test_get_file_list_from_s3_bucket():
-
-    response_iterator = [
-        {
-            'Contents': [
-                {
-                    'Key': 'file_name_1.tar.gz'
-                },
-                {
-                    'Key': 'file_name_2.tar.gz'
-                },
-                {
-                    'Key': 'another_file_name_1.tar.gz'
-                }
-            ]
-        },
-        {
-            'Contents': [
-                {
-                    'Key': 'file_name_5.tar.gz'
-                },
-                {
-                    'Key': 'file_name_22.tar.gz'
-                },
-                {
-                    'Key': 'yet_another_file_name_1.tar.gz'
-                }
-            ]
-        }
-    ]
-
-    paginator_mock = Mock()
-    paginator_mock.paginate.return_value = response_iterator
-    s3_client_mock = Mock()
-    s3_client_mock.get_paginator.return_value = paginator_mock
-    boto3_session_mock = Mock()
-    boto3_session_mock.client.return_value = s3_client_mock
-
-    tests_parameters = [
-        (
-            'my_bucket_name',
-            '',
-            [
-                'file_name_1.tar.gz',
-                'file_name_2.tar.gz',
-                'another_file_name_1.tar.gz',
-                'file_name_5.tar.gz',
-                'file_name_22.tar.gz',
-                'yet_another_file_name_1.tar.gz'
-            ]
-        ),
-        (
-            'my_bucket_name',
-            r'^file_name_\d\.tar\.gz$',
-            [
-                'file_name_1.tar.gz',
-                'file_name_2.tar.gz',
-                'file_name_5.tar.gz',
-            ]
-        ),
-    ]
-
-    for bucket_name, regex, expected_output in tests_parameters:
-        assert expected_output == \
-            get_file_list_from_s3_bucket(
-                boto3_session_mock,
-                bucket_name,
-                regex
-            )
-        boto3_session_mock.client.assert_called_once_with(service_name='s3')
-        s3_client_mock.get_paginator.assert_called_once_with('list_objects_v2')
-        paginator_mock.paginate.assert_called_once_with(Bucket=bucket_name)
-        paginator_mock.reset_mock()
-        boto3_session_mock.reset_mock()
-        s3_client_mock.reset_mock()
 
 
 @patch('mash.utils.ec2.os.path.exists')
