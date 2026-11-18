@@ -135,11 +135,10 @@ def setup_ec2_networking(
         )
 
         ec2_setup = EC2Setup(
-            access_key_id,
-            region,
-            secret_access_key,
-            None,
-            False
+            access_key=access_key_id,
+            region=region,
+            secret_key=secret_access_key,
+            session_token=None
         )
 
         if not subnet_id:

@@ -129,6 +129,12 @@ def test_setup_ec2_networking_new_vpc(
             'security_group_id': 'sg-123'
         }
 
+    mock_ec2_setup.assert_called_once_with(
+        access_key='key',
+        region='us-east-1',
+        secret_key='secret',
+        session_token=None
+    )
     assert not mock_get_vpc_id_from_subnet.called
     assert client.create_security_group.call_args[1]['VpcId'] == 'vpc-123'
     client.import_key_pair.assert_called_once_with(
