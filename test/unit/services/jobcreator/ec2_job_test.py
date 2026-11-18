@@ -175,7 +175,7 @@ def test_get_create_regions():
             'us-east-1': {
                 'account': 'acnt1',
                 'target_regions': ['us-east-1', 'us-east-2'],
-                'helper_image': 'ami-123',
+                'root_swap_ami': 'ami-123',
                 'subnet': 'subnet-123'
             }
         }
@@ -184,7 +184,7 @@ def test_get_create_regions():
     assert job.get_create_regions() == {
         'us-east-1': {
             'account': 'acnt1',
-            'helper_image': 'ami-123',
+            'root_swap_ami': 'ami-123',
             'billing_codes': 'bp-123',
             'use_root_swap': True,
             'subnet': 'subnet-123',
@@ -213,5 +213,5 @@ def test_get_create_regions():
 
     info = job.get_create_regions()['us-east-1']
     assert info['use_root_swap'] is False
-    assert info['helper_image'] is None
+    assert info['root_swap_ami'] is None
     assert info['subnet'] is None

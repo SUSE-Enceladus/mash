@@ -192,7 +192,7 @@ class TestAmazonCreateJob(object):
         job = self._root_swap_job(
             {
                 'account': 'test',
-                'helper_image': 'ami-bc5b48d0',
+                'root_swap_ami': 'ami-bc5b48d0',
                 'billing_codes': None,
                 'use_root_swap': True,
                 'subnet': 'subnet-123456789',
@@ -234,7 +234,7 @@ class TestAmazonCreateJob(object):
 
         job = self._root_swap_job({
             'account': 'test',
-            'helper_image': 'ami-bc5b48d0',
+            'root_swap_ami': 'ami-bc5b48d0',
             'billing_codes': None,
             'use_root_swap': True,
             'subnet': None,
@@ -263,7 +263,7 @@ class TestAmazonCreateJob(object):
         job = self._root_swap_job(
             {
                 'account': 'test',
-                'helper_image': 'ami-bc5b48d0',
+                'root_swap_ami': 'ami-bc5b48d0',
                 'billing_codes': None,
                 'use_root_swap': False,
                 'subnet': 'subnet-123456789',

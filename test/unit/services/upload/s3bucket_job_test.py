@@ -32,7 +32,7 @@ class TestS3BucketUploadJob(object):
             'target_regions': {
                 'us-east-1': {
                     'account': 'test',
-                    'helper_image': 'ami-bc5b48d0',
+                    'root_swap_ami': 'ami-bc5b48d0',
                     'billing_codes': None,
                     'use_root_swap': False,
                     'subnet': 'subnet-123456789'

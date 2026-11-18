@@ -57,9 +57,7 @@ def test_add_target_ec2_account(mock_get_regions):
         'subnet': 'subnet-222222',
         'additional_regions': [
             {
-                'name': 'us-east-101',
-                # Deprecated and ignored, may be missing
-                'helper_image': 'ami-987'
+                'name': 'us-east-101'
             },
             {
                 'name': 'us-east-102'
@@ -84,7 +82,7 @@ def test_add_target_ec2_account(mock_get_regions):
         'account': 'acnt1',
         'partition': 'aws',
         'target_regions': accounts['us-east-100']['target_regions'],
-        'helper_image': None,
+        'root_swap_ami': None,
         'subnet': 'subnet-222222',
         'test_regions': account['test_regions']
     }
@@ -109,7 +107,7 @@ def test_add_target_ec2_account(mock_get_regions):
         {'acnt1': {'root_swap_ami': 'ami-456'}},
         use_root_swap=True
     )
-    assert accounts['us-east-100']['helper_image'] == 'ami-456'
+    assert accounts['us-east-100']['root_swap_ami'] == 'ami-456'
 
     # Root swap without root swap AMI
     with raises(MashJobException):
@@ -127,7 +125,7 @@ def test_add_target_ec2_account(mock_get_regions):
         accounts,
         {'acnt1': {'root_swap_ami': 'ami-456'}}
     )
-    assert accounts['us-east-100']['helper_image'] is None
+    assert accounts['us-east-100']['root_swap_ami'] is None
 
     accounts = {}
     add_target_ec2_account(
