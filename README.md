@@ -292,8 +292,7 @@ mash account ec2 add \
 ```
 
 The test regions option will provide a REPL style workflow to add the
-region(s). More info about this feature can be found
-[here](https://github.com/SUSE-Enceladus/mash/blob/main/doc/static/ec2_test_strategy_improvement.md)
+region(s).
 
 __More info__
 
