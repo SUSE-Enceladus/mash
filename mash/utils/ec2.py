@@ -75,6 +75,32 @@ def describe_images(client, image_ids=None, filters=None):
     return images
 
 
+def create_ssh_security_group(client, vpc_id):
+    """
+    Create a security group in the vpc with the ssh port open.
+
+    Return the id of the new security group.
+    """
+    group_name = 'mash-{0}'.format(generate_name())
+    response = client.create_security_group(
+        GroupName=group_name,
+        Description='mash temporary ssh access',
+        VpcId=vpc_id
+    )
+    security_group_id = response['GroupId']
+
+    client.authorize_security_group_ingress(
+        GroupId=security_group_id,
+        IpPermissions=[{
+            'IpProtocol': 'tcp',
+            'FromPort': 22,
+            'ToPort': 22,
+            'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+        }]
+    )
+    return security_group_id
+
+
 @contextmanager
 def setup_ec2_networking(
     access_key_id,
@@ -88,6 +114,11 @@ def setup_ec2_networking(
 
     This provides a security group with an open ssh port.
     """
+    client = None
+    ec2_setup = None
+    ssh_key_name = None
+    security_group_id = None
+
     try:
         ssh_key_name = generate_name()
         ssh_public_key = get_key_from_file(ssh_private_key_file + '.pub')
@@ -104,19 +135,19 @@ def setup_ec2_networking(
         )
 
         ec2_setup = EC2Setup(
-            access_key_id,
-            region,
-            secret_access_key,
-            None,
-            False
+            access_key=access_key_id,
+            region=region,
+            secret_key=secret_access_key,
+            session_token=None
         )
 
         if not subnet_id:
             subnet_id = ec2_setup.create_vpc_subnet()
-            security_group_id = ec2_setup.create_security_group()
+            vpc_id = ec2_setup.vpc_id
         else:
             vpc_id = get_vpc_id_from_subnet(client, subnet_id)
-            security_group_id = ec2_setup.create_security_group(vpc_id=vpc_id)
+
+        security_group_id = create_ssh_security_group(client, vpc_id)
 
         yield {
             'ssh_key_name': ssh_key_name,
@@ -124,9 +155,18 @@ def setup_ec2_networking(
             'security_group_id': security_group_id
         }
     finally:
-        with suppress(Exception):
-            client.delete_key_pair(KeyName=ssh_key_name)
-            ec2_setup.clean_up()
+        # The security group must be removed before the vpc it belongs to.
+        if client and ssh_key_name:
+            with suppress(Exception):
+                client.delete_key_pair(KeyName=ssh_key_name)
+
+        if client and security_group_id:
+            with suppress(Exception):
+                client.delete_security_group(GroupId=security_group_id)
+
+        if ec2_setup:
+            with suppress(Exception):
+                ec2_setup.clean_up()
 
 
 def wait_for_instance_termination(
