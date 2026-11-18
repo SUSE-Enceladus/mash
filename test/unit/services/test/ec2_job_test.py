@@ -111,6 +111,7 @@ class TestEC2TestJob(object):
     ):
         client = Mock()
         mock_get_client.return_value = client
+        client.create_security_group.return_value = {'GroupId': 'sg-11111111'}
         mock_generate_name.return_value = 'random_name'
         mock_get_key_from_file.return_value = 'fakekey'
         #     mock_random.choice.return_value = 't2.micro'
@@ -118,7 +119,6 @@ class TestEC2TestJob(object):
 
         ec2_setup = Mock()
         ec2_setup.create_vpc_subnet.return_value = 'subnet-1111111'
-        ec2_setup.create_security_group.return_value = 'sg-11111111'
         mock_ec2_setup.return_value = ec2_setup
 
         mock_test_image.return_value = (
@@ -306,13 +306,13 @@ class TestEC2TestJob(object):
     ):
         client = Mock()
         mock_get_client.return_value = client
+        client.create_security_group.return_value = {'GroupId': 'sg-11111111'}
         mock_generate_name.return_value = 'random_name'
         mock_get_key_from_file.return_value = 'fakekey'
         mock_get_vpc_id_from_subnet.return_value = 'vpc-123456789'
 
         ec2_setup = Mock()
         ec2_setup.create_vpc_subnet.return_value = 'subnet-1111111'
-        ec2_setup.create_security_group.return_value = 'sg-11111111'
         mock_ec2_setup.return_value = ec2_setup
 
         mock_os.path.exists.return_value = False

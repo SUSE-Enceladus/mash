@@ -20,8 +20,10 @@ import os
 from pytest import raises
 from unittest.mock import Mock, patch
 from mash.utils.ec2 import (
+    create_ssh_security_group,
     get_client,
     get_vpc_id_from_subnet,
+    setup_ec2_networking,
     cleanup_ec2_image,
     cleanup_all_ec2_images,
     get_image,
@@ -66,6 +68,156 @@ def test_get_vpc_id_from_subnet():
     client.describe_subnets.return_value = {'Subnets': [{'VpcId': 'vpc-123456789'}]}
     assert get_vpc_id_from_subnet(client, 'subnet-123456789') == 'vpc-123456789'
     client.describe_subnets.assert_called_once_with(SubnetIds=['subnet-123456789'])
+
+
+@patch('mash.utils.ec2.generate_name')
+def test_create_ssh_security_group(mock_generate_name):
+    mock_generate_name.return_value = 'abcdefgh'
+    client = Mock()
+    client.create_security_group.return_value = {'GroupId': 'sg-123'}
+
+    assert create_ssh_security_group(client, 'vpc-123') == 'sg-123'
+
+    client.create_security_group.assert_called_once_with(
+        GroupName='mash-abcdefgh',
+        Description='mash temporary ssh access',
+        VpcId='vpc-123'
+    )
+    client.authorize_security_group_ingress.assert_called_once_with(
+        GroupId='sg-123',
+        IpPermissions=[{
+            'IpProtocol': 'tcp',
+            'FromPort': 22,
+            'ToPort': 22,
+            'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+        }]
+    )
+
+
+@patch('mash.utils.ec2.get_vpc_id_from_subnet')
+@patch('mash.utils.ec2.get_key_from_file')
+@patch('mash.utils.ec2.generate_name')
+@patch('mash.utils.ec2.get_client')
+@patch('mash.utils.ec2.EC2Setup')
+def test_setup_ec2_networking_new_vpc(
+    mock_ec2_setup,
+    mock_get_client,
+    mock_generate_name,
+    mock_get_key_from_file,
+    mock_get_vpc_id_from_subnet
+):
+    client = Mock()
+    client.create_security_group.return_value = {'GroupId': 'sg-123'}
+    mock_get_client.return_value = client
+    mock_generate_name.return_value = 'random'
+    mock_get_key_from_file.return_value = 'fakekey'
+
+    ec2_setup = Mock()
+    ec2_setup.create_vpc_subnet.return_value = 'subnet-123'
+    ec2_setup.vpc_id = 'vpc-123'
+    mock_ec2_setup.return_value = ec2_setup
+
+    manager = Mock()
+    manager.attach_mock(client.delete_key_pair, 'delete_key_pair')
+    manager.attach_mock(client.delete_security_group, 'delete_sg')
+    manager.attach_mock(ec2_setup.clean_up, 'clean_up')
+
+    with setup_ec2_networking('key', 'us-east-1', 'secret', 'file') as net:
+        assert net == {
+            'ssh_key_name': 'random',
+            'subnet_id': 'subnet-123',
+            'security_group_id': 'sg-123'
+        }
+
+    assert not mock_get_vpc_id_from_subnet.called
+    assert client.create_security_group.call_args[1]['VpcId'] == 'vpc-123'
+    client.import_key_pair.assert_called_once_with(
+        KeyName='random',
+        PublicKeyMaterial='fakekey'
+    )
+    # Security group has to go before the vpc is removed
+    assert [c[0] for c in manager.mock_calls] == [
+        'delete_key_pair', 'delete_sg', 'clean_up'
+    ]
+    client.delete_security_group.assert_called_once_with(GroupId='sg-123')
+
+
+@patch('mash.utils.ec2.get_vpc_id_from_subnet')
+@patch('mash.utils.ec2.get_key_from_file')
+@patch('mash.utils.ec2.generate_name')
+@patch('mash.utils.ec2.get_client')
+@patch('mash.utils.ec2.EC2Setup')
+def test_setup_ec2_networking_existing_subnet(
+    mock_ec2_setup,
+    mock_get_client,
+    mock_generate_name,
+    mock_get_key_from_file,
+    mock_get_vpc_id_from_subnet
+):
+    client = Mock()
+    client.create_security_group.return_value = {'GroupId': 'sg-123'}
+    mock_get_client.return_value = client
+    mock_get_vpc_id_from_subnet.return_value = 'vpc-456'
+    ec2_setup = mock_ec2_setup.return_value
+
+    with setup_ec2_networking(
+        'key', 'us-east-1', 'secret', 'file', subnet_id='subnet-456'
+    ) as net:
+        assert net['subnet_id'] == 'subnet-456'
+        assert net['security_group_id'] == 'sg-123'
+
+    assert not ec2_setup.create_vpc_subnet.called
+    assert client.create_security_group.call_args[1]['VpcId'] == 'vpc-456'
+    client.delete_security_group.assert_called_once_with(GroupId='sg-123')
+    ec2_setup.clean_up.assert_called_once_with()
+
+
+@patch('mash.utils.ec2.get_key_from_file')
+@patch('mash.utils.ec2.generate_name')
+@patch('mash.utils.ec2.get_client')
+@patch('mash.utils.ec2.EC2Setup')
+def test_setup_ec2_networking_cleanup_on_error(
+    mock_ec2_setup,
+    mock_get_client,
+    mock_generate_name,
+    mock_get_key_from_file
+):
+    client = Mock()
+    client.create_security_group.return_value = {'GroupId': 'sg-123'}
+    # A failing step must not skip the remaining cleanup
+    client.delete_key_pair.side_effect = Exception('boom')
+    mock_get_client.return_value = client
+    ec2_setup = mock_ec2_setup.return_value
+
+    with raises(RuntimeError):
+        with setup_ec2_networking('key', 'us-east-1', 'secret', 'file'):
+            raise RuntimeError('test failed')
+
+    client.delete_security_group.assert_called_once_with(GroupId='sg-123')
+    ec2_setup.clean_up.assert_called_once_with()
+
+
+@patch('mash.utils.ec2.get_key_from_file')
+@patch('mash.utils.ec2.generate_name')
+@patch('mash.utils.ec2.get_client')
+@patch('mash.utils.ec2.EC2Setup')
+def test_setup_ec2_networking_sg_not_created(
+    mock_ec2_setup,
+    mock_get_client,
+    mock_generate_name,
+    mock_get_key_from_file
+):
+    client = Mock()
+    client.create_security_group.side_effect = Exception('denied')
+    mock_get_client.return_value = client
+    ec2_setup = mock_ec2_setup.return_value
+
+    with raises(Exception, match='denied'):
+        with setup_ec2_networking('key', 'us-east-1', 'secret', 'file'):
+            pass  # pragma: no cover
+
+    assert not client.delete_security_group.called
+    ec2_setup.clean_up.assert_called_once_with()
 
 
 @patch('mash.utils.ec2.EC2RemoveImage')
