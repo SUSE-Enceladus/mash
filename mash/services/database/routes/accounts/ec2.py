@@ -36,8 +36,7 @@ blueprint = Blueprint('ec2_accounts', __name__, url_prefix='/ec2_accounts')
 region = Model(
     'region', {
         'id': fields.String,
-        'name': fields.String,
-        'helper_image': fields.String
+        'name': fields.String
     }
 )
 

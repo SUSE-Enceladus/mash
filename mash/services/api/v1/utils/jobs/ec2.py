@@ -65,10 +65,10 @@ def add_target_ec2_account(
     if account.get('test_regions', []):
         test_regions = account.get('test_regions')
 
-    helper_image = None
+    root_swap_ami = None
     if use_root_swap:
         try:
-            helper_image = job_doc_data['root_swap_ami']
+            root_swap_ami = job_doc_data['root_swap_ami']
         except KeyError:
             raise MashJobException(
                 'root_swap_ami is required for account {0},'
@@ -79,7 +79,7 @@ def add_target_ec2_account(
         'account': account['name'],
         'partition': account['partition'],
         'target_regions': list(set(regions)),  # Remove any duplicates
-        'helper_image': helper_image,
+        'root_swap_ami': root_swap_ami,
         'subnet': subnet,
         'test_regions': test_regions
     }

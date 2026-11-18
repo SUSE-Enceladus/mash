@@ -191,7 +191,7 @@ class EC2CreateJob(MashJob):
                     # The donor instance provides the meta data of the
                     # image. It is launched in the subnet if one is set,
                     # otherwise in the default VPC of the region.
-                    upload_parameters['launch_ami'] = info.get('helper_image')
+                    upload_parameters['launch_ami'] = info.get('root_swap_ami')
                     upload_parameters['launch_inst_type'] = \
                         self.launch_inst_type or 't3.micro'
                     upload_parameters['vpc_subnet_id'] = \

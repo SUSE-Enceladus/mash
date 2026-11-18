@@ -159,14 +159,14 @@ class TestJobCreatorService(object):
         for region, info in data['target_regions'].items():
             if region == 'ap-northeast-1':
                 assert info['account'] == 'test-aws'
-                assert info['helper_image'] is None
+                assert info['root_swap_ami'] is None
                 assert info['use_root_swap'] is False
                 assert info['subnet'] is None
                 assert info['billing_codes'] is None
             else:
                 assert region == 'us-gov-west-1'
                 assert info['account'] == 'test-aws-gov'
-                assert info['helper_image'] is None
+                assert info['root_swap_ami'] is None
                 assert info['billing_codes'] is None
 
         # Test preparation Job Doc

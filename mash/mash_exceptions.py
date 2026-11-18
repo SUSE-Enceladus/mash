@@ -49,29 +49,9 @@ class MashRabbitConnectionException(MashException):
     """
 
 
-class MashVersionExpressionException(MashException):
-    """
-    Exception raised if the version information in a job
-    condition description is invalid
-    """
-
-
 class MashConfigException(MashException):
     """
     Exception raised if config file can not be read
-    """
-
-
-class MashCredentialsException(MashException):
-    """
-    Exception raised if no credentials handler for this cloud exists.
-    """
-
-
-class MashConventionsException(MashException):
-    """
-    Exception raised if no conventions handler for this cloud exists
-    or the validation of the naming convention has failed for a reason
     """
 
 
@@ -87,21 +67,9 @@ class MashLogSetupException(MashException):
     """
 
 
-class MashOBSLookupException(MashException):
-    """
-    Exception raised if a request to OBS failed
-    """
-
-
 class MashUploadException(MashException):
     """
     Exception raised if image upload to csp failed
-    """
-
-
-class MashUploadSetupException(MashException):
-    """
-    Exception raised if no image upload handler for this cloud exists.
     """
 
 
@@ -141,20 +109,6 @@ class MashDeprecateException(MashException):
     """
 
 
-class MashWebContentException(MashException):
-    """
-    Exception raised if a remote request from the WebContent
-    method space has failed. The origin exception message is
-    part of the WebContent exception
-    """
-
-
-class MashAzureUtilsException(MashException):
-    """
-    Exception raised if an error occurs in Azure Utils.
-    """
-
-
 class MashCredentialsDatastoreException(MashException):
     """
     Base exception for credentials datastore class.
@@ -182,12 +136,6 @@ class MashListenerServiceException(MashException):
 class MashCreateException(MashException):
     """
     Base exception for create service.
-    """
-
-
-class MashGCEUtilsException(MashException):
-    """
-    Exception raised if an error occurs in GCE Utils.
     """
 
 

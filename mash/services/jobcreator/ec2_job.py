@@ -324,7 +324,7 @@ class EC2Job(BaseJob):
         for source_region, value in self.target_account_info.items():
             target_regions[source_region] = {
                 'account': value['account'],
-                'helper_image': value.get('helper_image'),
+                'root_swap_ami': value.get('root_swap_ami'),
                 'billing_codes': self.billing_codes,
                 'use_root_swap': self.use_root_swap,
                 'subnet': value.get('subnet'),

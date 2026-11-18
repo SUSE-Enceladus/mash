@@ -31,7 +31,7 @@ authorizations = {
 }
 
 api = Api(
-    version='16.13.0',
+    version='17.0.0',
     contact='public-cloud-dev@susecloud.net',
     title='MASH API',
     description='MASH provides a set of endpoints for Image Release '

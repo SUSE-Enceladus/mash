@@ -25,12 +25,7 @@ additional_regions = {
     'items': {
         'type': 'object',
         'properties': {
-            'name': string_with_example('us-east-44'),
-            'helper_image': string_with_example(
-                'ami-1234567890',
-                description='Deprecated and ignored. No helper instance '
-                            'is used for image creation.'
-            )
+            'name': string_with_example('us-east-44')
         },
         'required': ['name'],
         'additionalProperties': False
