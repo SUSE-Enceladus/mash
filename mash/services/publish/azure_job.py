@@ -49,7 +49,6 @@ class AzurePublishJob(MashJob):
                 )
             )
 
-        self.vm_images_key = self.job_config.get('vm_images_key')
         self.generation_id = self.job_config.get('generation_id')
         self.partner_center_account = self.job_config.get('partner_center_account')
 
@@ -125,9 +124,6 @@ class AzurePublishJob(MashJob):
                 'blob_url': blob_url,
                 'generation_id': self.generation_id,
             }
-
-            if self.vm_images_key:
-                kwargs['vm_images_key'] = self.vm_images_key
 
             azure_image.add_image_to_offer(**kwargs)
 

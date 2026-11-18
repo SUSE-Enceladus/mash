@@ -12,6 +12,9 @@ database migration.
   `root_swap_ami`. It holds the donor AMI used by the root swap method. Jobs
   created before the upgrade that use root swap still carry the old key and
   must be drained or resubmitted.
+- Remove the deprecated and ignored Azure job fields `label`,
+  `cloud_image_name_generation_suffix` and `vm_images_key`. Job requests
+  that still send them fail schema validation.
 - Remove the unused `get_file_list_from_s3_bucket` EC2 util and unused
   exception classes.
 - Remove the stale EC2 and GCE test strategy design docs.

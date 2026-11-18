@@ -48,7 +48,6 @@ class AzureSIGPublishJob(MashJob):
                 )
             )
 
-        self.vm_images_key = self.job_config.get('vm_images_key')
         self.generation_id = self.job_config.get('generation_id')
 
     def run_job(self):
@@ -89,9 +88,6 @@ class AzureSIGPublishJob(MashJob):
                 'gallery_name': self.gallery_name,
                 'gallery_image_name': plan_image_name,
             }
-
-            if self.vm_images_key:
-                kwargs['vm_images_key'] = self.vm_images_key
 
             azure_image.add_sig_image_to_offer(**kwargs)
 
