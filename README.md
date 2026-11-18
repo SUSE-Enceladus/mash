@@ -166,7 +166,6 @@ US Gov and AWS (default).
 Images are created by writing the raw image directly to an EBS snapshot with
 the EBS direct APIs and registering an AMI from the snapshot. No helper
 instance, key pair, subnet or security group is needed for image creation.
-The `helper_image` of additional regions is deprecated and ignored.
 
 The optional root swap method (`use_root_swap` job setting) writes the image
 the same way, to a temporary snapshot. A donor instance is launched from the
@@ -271,8 +270,8 @@ mash account ec2 add \
 ```
 
 The additional regions option will provide a REPL style workflow to add the
-region. The helper image is deprecated and ignored, only the region name is
-required. The root swap AMI is set per job with `root_swap_ami`.
+region. Only the region name is required. The root swap AMI is set per job
+with `root_swap_ami`.
 
 
  __Test region__

@@ -52,7 +52,6 @@ def test_ec2_group_model():
 def test_ec2_region_model():
     region = EC2Region(
         name='us-east-99',
-        helper_image='ami-1234567890',
         account_id='1'
     )
     assert region.__repr__() == '<EC2 Region us-east-99>'

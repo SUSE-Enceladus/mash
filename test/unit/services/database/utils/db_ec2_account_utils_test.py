@@ -39,27 +39,9 @@ def test_create_ec2_region(mock_db):
         region='us-east-99',
         user_id=1
     )
-    result = create_new_ec2_region('us-east-99', 'ami-987654', account)
+    result = create_new_ec2_region('us-east-99', account)
 
     assert result.name == 'us-east-99'
-    assert result.helper_image == 'ami-987654'
-
-    mock_db.session.add.assert_called_once_with(result)
-
-
-@patch('mash.services.database.utils.accounts.ec2.db')
-def test_create_ec2_region_without_helper_image(mock_db):
-    # The helper image is deprecated and optional
-    account = EC2Account(
-        name='acnt1',
-        partition='aws',
-        region='us-east-99',
-        user_id=1
-    )
-    result = create_new_ec2_region('us-east-99', None, account)
-
-    assert result.name == 'us-east-99'
-    assert result.helper_image is None
 
     mock_db.session.add.assert_called_once_with(result)
 
@@ -136,7 +118,7 @@ def test_create_ec2_account(
         credentials,
         'subnet-12345',
         'group1',
-        [{'name': 'us-east-98', 'helper_image': 'ami-789'}],
+        [{'name': 'us-east-98'}],
         [{'region': 'us-east-100', 'subnet': 'subnet-54321'}]
     )
 
@@ -144,7 +126,7 @@ def test_create_ec2_account(
     assert account.group == group
 
     mock_create_region.assert_called_once_with(
-        'us-east-98', 'ami-789', account
+        'us-east-98', account
     )
 
     mock_create_test_region.assert_has_calls([
@@ -176,7 +158,7 @@ def test_create_ec2_account(
             credentials,
             'subnet-12345',
             'group1',
-            [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
+            [{'name': 'us-east-100'}],
             []
         )
 
@@ -227,7 +209,7 @@ def test_update_ec2_account(
     result = update_ec2_account_for_user(
         'acnt1',
         1,
-        [{'name': 'us-east-100', 'helper_image': 'ami-789'}],
+        [{'name': 'us-east-100'}],
         credentials,
         'group1',
         'us-east-99',
@@ -239,7 +221,7 @@ def test_update_ec2_account(
     assert account.group == group
 
     mock_create_region.assert_called_once_with(
-        'us-east-100', 'ami-789', account
+        'us-east-100', account
     )
     mock_create_test_region.assert_called_once_with(
         region='us-east-99',
@@ -256,38 +238,3 @@ def test_update_ec2_account(
 
     mock_db.session.add.assert_called_once_with(account)
     mock_db.session.commit.assert_called_once_with()
-
-
-@patch.object(LocalProxy, '_get_current_object')
-@patch('mash.services.database.utils.accounts.ec2.EC2Account')
-@patch('mash.services.database.utils.accounts.ec2.handle_request')
-@patch('mash.services.database.utils.accounts.ec2.create_new_ec2_region')
-@patch('mash.services.database.utils.accounts.ec2.create_new_ec2_test_region')
-@patch('mash.services.database.utils.accounts.ec2.db')
-def test_create_ec2_account_region_without_helper_image(
-    mock_db,
-    mock_create_test_region,
-    mock_create_region,
-    mock_handle_request,
-    mock_ec2_account,
-    mock_get_current_object
-):
-    app = Mock()
-    mock_get_current_object.return_value = app
-    app.config = {'CREDENTIALS_URL': 'http://localhost:5000/'}
-    account = Mock()
-    mock_ec2_account.return_value = account
-
-    create_new_ec2_account(
-        1,
-        'acnt1',
-        'aws',
-        'us-east-99',
-        {'super': 'secret'},
-        'subnet-12345',
-        None,
-        [{'name': 'us-east-98'}],
-        []
-    )
-
-    mock_create_region.assert_called_once_with('us-east-98', None, account)
